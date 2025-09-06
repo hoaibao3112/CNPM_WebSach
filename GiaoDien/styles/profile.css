@@ -1,0 +1,261 @@
+body {
+  font-family: Arial, sans-serif;
+  margin: 0;
+  padding: 20px;
+  background-color: #ffffff; /* Pure white background */
+  color: #000000; /* Black for all text in body */
+}
+
+.profile-container {
+  max-width: 800px;
+  margin: 0 auto;
+  background: #ffffff;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 0 10px rgba(220, 53, 69, 0.1); /* Light red shadow */
+}
+
+.header {
+  text-align: center;
+  position: relative;
+  margin-bottom: 20px;
+}
+
+.logo {
+  max-width: 200px;
+}
+
+.warning {
+  background: #fff1f1; /* Very light red background for warning */
+  color: #000000; /* Black for warning text */
+  padding: 10px;
+  border-radius: 5px;
+  margin-top: 10px;
+  border: 1px solid #f8d7da; /* Light red border */
+}
+
+.warning .update-link {
+  color: #000000; /* Black for links */
+  text-decoration: none;
+  font-weight: bold;
+}
+
+.warning .update-link:hover {
+  text-decoration: underline;
+}
+
+.sidebar {
+  width: 200px;
+  float: left;
+  padding: 10px;
+  background: #f1f1f1; /* Gray background for sidebar */
+}
+
+.sidebar ul {
+  list-style: none;
+  padding: 0;
+}
+
+.sidebar ul li {
+  padding: 10px 0;
+  cursor: pointer;
+  transition: background 0.3s, color 0.3s;
+  color: #000000; /* Black for sidebar text */
+}
+
+.sidebar ul li:hover {
+  background: #fff1f1; /* Light red background on hover */
+  border-left: 3px solid #dc3545; /* Red border on hover */
+  color: #000000; /* Black on hover */
+}
+
+.sidebar ul li i {
+  margin-right: 10px;
+}
+
+.main-content {
+  margin-left: 220px;
+}
+
+.section {
+  background: #ffffff; /* White section background */
+  padding: 20px;
+  border-radius: 5px;
+  margin-bottom: 20px;
+  border: 1px solid #e6e6e6; /* Very light gray border */
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05); /* Subtle shadow */
+}
+
+.section h2 {
+  margin-top: 0;
+  color: #000000; /* Black for headings */
+  border-bottom: 2px solid #dc3545; /* Red underline */
+  padding-bottom: 5px;
+}
+
+.info-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 15px;
+}
+
+.info-card {
+  background: #fff1f1; /* Very light red background for info cards */
+  padding: 15px;
+  text-align: center;
+  border-radius: 5px;
+  border: 1px solid #f8d7da; /* Light red border */
+  transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.info-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 5px 15px rgba(220, 53, 69, 0.2); /* Red shadow on hover */
+}
+
+.info-card h3 {
+  margin: 0 0 10px;
+  color: #000000; /* Black for card headings */
+}
+
+.info-card p {
+  margin: 0;
+  font-size: 1.2em;
+  color: #000000; /* Black for card text */
+}
+
+.detail-link {
+  color: #000000; /* Black for links */
+  text-decoration: none;
+  font-weight: bold;
+}
+
+.detail-link:hover {
+  text-decoration: underline;
+}
+
+.form-group {
+  margin-bottom: 15px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 5px;
+  color: #000000; /* Black for labels */
+}
+
+.form-group input {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #dc3545; /* Red border */
+  border-radius: 4px;
+  color: #000000; /* Black text for input */
+  background-color: #fff; /* White input background */
+  transition: border-color 0.3s;
+}
+
+.form-group input:focus {
+  border-color: #c82333; /* Darker red on focus */
+  outline: none;
+}
+
+.form-group button {
+  padding: 10px 20px;
+  background: #dc3545; /* Red for buttons */
+  color: #fff; /* White text for buttons */
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.form-group button:hover {
+  background: #c82333; /* Darker red on hover */
+}
+
+.products-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 15px;
+}
+
+.product-card {
+  background: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05); /* Subtle shadow */
+  overflow: hidden;
+  transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.product-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 5px 15px rgba(220, 53, 69, 0.2); /* Red shadow on hover */
+}
+
+.product-card img {
+  width: 100%;
+  height: 200px;
+  object-fit: cover;
+}
+
+.product-card h3 {
+  font-size: 14px;
+  margin: 10px;
+  color: #000000; /* Black for product titles */
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.price-wrapper {
+  margin: 0 10px 10px;
+}
+
+.final-price {
+  font-size: 14px;
+  color: #000000; /* Black for prices */
+  font-weight: bold;
+}
+
+.remove-btn {
+  width: 100%;
+  padding: 8px;
+  background: #dc3545; /* Red for remove button */
+  color: #fff; /* White text for button */
+  border: none;
+  cursor: pointer;
+  font-size: 12px;
+  transition: background 0.3s;
+}
+
+.remove-btn:hover {
+  background: #c82333; /* Darker red on hover */
+}
+
+.empty-wishlist {
+  text-align: center;
+  color: #000000; /* Black for empty message */
+  font-size: 14px;
+  margin: 20px 0;
+}
+
+.loading-wishlist {
+  text-align: center;
+  color: #000000; /* Black for loading message */
+  font-size: 14px;
+}
+
+/* Toggle functionality for sections */
+#account-info, #fpoint-recharge {
+  display: none;
+}
+
+.sidebar ul li#account-info-toggle:hover ~ .main-content #account-info,
+.sidebar ul li#account-info-toggle:active ~ .main-content #account-info {
+  display: block;
+}
+
+.sidebar ul li#gtgt-info-toggle:hover ~ .main-content #fpoint-recharge,
+.sidebar ul li#gtgt-info-toggle:active ~ .main-content #fpoint-recharge {
+  display: block;
+}

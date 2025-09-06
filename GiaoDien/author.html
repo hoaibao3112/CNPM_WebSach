@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Danh Sách Tác Giả</title>
+  <link rel="stylesheet" href="styles/author.css">
+</head>
+<body>
+  <div class="container">
+    <h2>Danh Sách Tác Giả</h2>
+    <div class="author-controls">
+      <input type="text" id="search-input" placeholder="Tìm kiếm tác giả...">
+      <div class="pagination">
+        <button id="prev-page" disabled>Trang trước</button>
+        <span id="page-info">Trang 1 / 1</span>
+        <button id="next-page">Trang sau</button>
+      </div>
+    </div>
+    <div class="author-container" id="author-list">
+      <div class="loading">Đang tải...</div>
+    </div>
+  </div>
+
+  <!-- Modal for Author Details -->
+  <div id="author-modal" class="modal">
+    <div class="modal-content">
+      <span class="close">&times;</span>
+      <div class="author-details">
+        <img id="modal-author-image" src="img/placeholder.jpg" alt="Tác giả">
+        <div class="author-info">
+          <h2 id="modal-author-name">Tên tác giả</h2>
+          <p><strong>Ngày sinh:</strong> <span id="modal-author-birthday">Không rõ</span></p>
+          <p><strong>Quốc tịch:</strong> <span id="modal-author-nationality">Không rõ</span></p>
+          <p><strong>Tiểu sử:</strong> <span id="modal-author-bio">Không có tiểu sử</span></p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/author.js"></script>
+</body>
+</html>

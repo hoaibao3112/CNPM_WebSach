@@ -1,0 +1,193 @@
+/* Sidebar styles */
+.sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100vh;
+  background-color: #2c3e50;
+  color: #ecf0f1;
+  display: flex;
+  flex-direction: column;
+  transition: width 0.3s ease;
+}
+
+.sidebar.open {
+  width: 200px;
+}
+
+.sidebar.closed {
+  width: 20px;
+}
+
+/* Header */
+.sidebar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px;
+}
+
+.sidebar-header h2 {
+  font-size: 18px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin: 0;
+}
+
+.btn-toggle {
+  background-color: transparent;
+  color: #ecf0f1;
+  border: none;
+  cursor: pointer;
+  font-size: 18px;
+}
+
+/* Navigation List */
+.sidebar ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  flex-grow: 1; /* Đẩy phần login xuống cuối */
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebar ul li {
+  margin-bottom: 10px;
+}
+
+.sidebar ul li a {
+  text-decoration: none;
+  color: #ecf0f1;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  padding: 10px;
+  border-radius: 5px;
+  transition: background-color 0.3s ease;
+}
+
+.sidebar ul li a span.material-icons {
+  margin-right: 10px;
+  font-size: 20px;
+}
+
+.sidebar ul li a:hover {
+  background-color: #34495e;
+}
+
+.sidebar ul li a.active {
+  background-color: #1abc9c;
+  font-weight: bold;
+}
+
+/* Đóng sidebar */
+.sidebar.closed ul li a {
+  justify-content: center;
+}
+
+.sidebar.closed ul li a span.material-icons {
+  margin-right: 0;
+}
+
+/* Login Section */
+.sidebar-login {
+  padding: 10px;
+}
+
+.sidebar-login a {
+  display: flex;
+  align-items: center;
+  text-decoration: none;
+  color: #ecf0f1;
+  font-size: 16px;
+  border-radius: 5px;
+  padding: 10px;
+  transition: background-color 0.3s ease;
+}
+
+.sidebar-login a span.material-icons {
+  margin-right: 10px;
+  font-size: 20px;
+}
+
+.sidebar-login a:hover {
+  background-color: #34495e;
+}
+
+.sidebar-login a.active {
+  background-color: #1abc9c;
+  font-weight: bold;
+}
+
+.sidebar.closed .sidebar-login a {
+  justify-content: center;
+}
+
+.sidebar.closed .sidebar-login a span.material-icons {
+  margin-right: 0;
+}
+.sidebar-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  overflow: hidden;
+}
+
+.logo-image {
+  width: 100px; /* Giảm kích thước logo */
+  height: auto;
+}
+
+.sidebar.closed .sidebar-logo h2 {
+  display: none;
+}
+
+.sidebar.closed .logo-image {
+  margin: 0 auto;
+}
+.user-info {
+  display: flex;
+  align-items: center;
+  padding: 10px;
+  color: white;
+  gap: 10px;
+}
+
+.user-info .user-name {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sidebar-footer {
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 10px;
+}
+/* Các kiểu hiện có giữ nguyên, chỉ thêm/sửa phần logout-btn */
+.logout-btn {
+  cursor: pointer;
+  padding: 10px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #fff;
+  transition: background-color 0.3s;
+  background-color: transparent; /* Mặc định không có nền */
+}
+
+.logout-btn:hover {
+  background-color: #444; /* Màu khi hover */
+}
+
+.logout-btn.logged-in {
+  background-color: #808080; /* Màu xám khi đăng nhập thành công */
+}
+
+.logout-btn.logged-in:hover {
+  background-color: #666; /* Màu xám đậm hơn khi hover */
+}

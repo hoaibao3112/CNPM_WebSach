@@ -1,0 +1,46 @@
+/* src/styles/ProductManagement.css */
+.product-management-container {
+  padding: 16px 16px 16px 216px;
+  min-height: 100vh;
+}
+.header-section {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+.page-title {
+  font-size: 18px;
+  font-weight: 600;
+  margin: 0;
+}
+.search-box {
+  width: 250px;
+}
+.info-section {
+  background: #f8f8f8;
+  padding: 12px;
+  border-radius: 4px;
+  margin-bottom: 16px;
+}
+.info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 12px;
+}
+.info-item {
+  margin-bottom: 4px;
+}
+.info-label {
+  color: #666;
+  font-size: 12px;
+  margin: 0;
+}
+.compact-product-table .ant-table-thead > tr > th {
+  padding: 8px 12px;
+}
+.compact-product-table .ant-table-tbody > tr > td {
+  padding: 8px 12px;
+}

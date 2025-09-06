@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Khuyến Mãi | Bookstore</title>
+  <link rel="stylesheet" href="styles/index.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <link rel="stylesheet" href="styles/khuyenmai.css">
+  
+</head>
+<body>
+  <!-- Top bar (giống trang chủ) -->
+  <div class="top-bar">
+    <div class="top-bar-container">
+      <img src="img/logo.png" alt="Bookstore" class="logo">
+      <div class="search-container">
+        <form action="/search" method="get">
+          <input type="text" placeholder="Tìm kiếm sách, tác giả..." name="search">
+          <button type="submit"><i class="fas fa-search"></i></button>
+        </form>
+      </div>
+      <ul class="top-links">
+        <li><a href="index.html">Trang chủ</a></li>
+        <li><a href="campany.html">Nhà xuất bản</a></li>
+        <li class="account-dropdown" id="accountDropdownContainer">
+          <a href="login.html" id="loginLink"><i class="fas fa-user"></i> Tài khoản</a>
+        </li>
+        <li><a href="cart.html"><i class="fas fa-shopping-cart"></i> Giỏ hàng</a></li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Nội dung chính -->
+  <div class="promotion-container">
+    <div class="promotion-header">
+      <h1>Chương Trình Khuyến Mãi</h1>
+      <p>Các ưu đãi hấp dẫn đang chờ bạn khám phá</p>
+    </div>
+    
+    <div class="filter-options" style="margin-bottom: 20px; text-align: center;">
+      <button id="showAllBtn" class="active">Tất cả</button>
+      <button id="showActiveBtn">Đang diễn ra</button>
+    </div>
+    
+    <div id="promotionList" class="promotion-grid">
+      <!-- Nội dung khuyến mãi sẽ được thêm vào đây bằng JavaScript -->
+      <div class="loading">Đang tải khuyến mãi...</div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer>
+    <iframe src="footer.html" frameborder="0" width="100%" height="200px"></iframe>
+  </footer>
+
+  <script src="js/khuyenmai.js"></script>
+</body>
+</html>

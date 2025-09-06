@@ -1,0 +1,21 @@
+.account-management-container {
+  padding: 16px 16px 16px 216px;
+  min-height: 100vh;
+}
+.header-section {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+.page-title {
+  font-size: 18px;
+  font-weight: 600;
+  margin: 0;
+}
+.search-box {
+  width: 250px;
+}
+/* Thêm các style khác nếu cần */

@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Đơn Hàng Của Bạn</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+  <link rel="stylesheet" href="styles/cart.css">
+</head>
+<body>
+  <div class="container">
+    <h1 class="page-title">GIỎ HÀNG CỦA BẠN</h1>
+    
+    <!-- Coupon Section -->
+    <div class="coupon-section">
+      <div class="coupon-box">
+        <i class="fas fa-ticket-alt"></i>
+        <label>Bạn có mã giảm giá? Nhập mã tại đây</label>
+        <div class="coupon-input">
+          <input type="text" id="coupon-code" placeholder="Nhập mã giảm giá">
+          <button class="apply-btn">ÁP DỤNG</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Cart Section -->
+    <div class="cart-section">
+      <div class="cart-items">
+        <table class="cart-table">
+          <thead>
+            <tr>
+              <th>CHỌN</th>
+              <th>SẢN PHẨM</th>
+              <th>GIÁ</th>
+              <th>SỐ LƯỢNG</th>
+              <th>TỔNG</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="cart-items-body">
+            <tr id="empty-cart" style="display: none;">
+              <td colspan="6">
+                <p>Giỏ hàng của bạn đang trống</p>
+                <a href="index.html" class="continue-shopping">TIẾP TỤC MUA SẮM</a>
+              </td>
+            </tr>
+          </tbody>
+          <tfoot>
+            <tr>
+              <td colspan="6">
+                <a href="index.html" class="continue-shopping">TIẾP TỤC MUA SẮM</a>
+                <button class="update-cart" onclick="updateCart()">CẬP NHẬT GIỎ HÀNG</button>
+              </td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+      
+      <!-- Checkout Summary -->
+      <div class="checkout-section">
+        <div class="summary-box">
+          <h3>THANH TOÁN</h3>
+          <div>
+            <span>Tổng phụ</span>
+            <span id="subtotal">0đ</span>
+          </div>
+          <div id="discount-row" style="display: none;">
+            <span>Giảm giá</span>
+            <span id="discount">-0đ</span>
+          </div>
+          <div>
+            <span>Phí vận chuyển</span>
+            <span>Miễn phí</span>
+          </div>
+          <div>
+            <span>Tổng cộng</span>
+            <span id="total">0đ</span>
+          </div>
+          <button id="checkout-btn" class="checkout-btn">TIẾN HÀNH THANH TOÁN</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Customer Info -->
+    <div class="customer-info">
+      <h2>THÔNG TIN KHÁCH HÀNG</h2>
+      <form>
+        <div class="form-group">
+          <label>Họ và tên người nhận *</label>
+          <input type="text" id="name" required>
+        </div>
+        <div class="form-group">
+          <label>Số điện thoại *</label>
+          <input type="text" id="phone" required>
+        </div>
+        <div class="form-group">
+          <label>Email *</label>
+          <input type="email" id="email" required>
+        </div>
+        <div class="form-group">
+          <label>Tỉnh/Thành phố *</label>
+          <select id="tinhthanh" required>
+            <option value="">-- Chọn Tỉnh/TP --</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Quận/Huyện *</label>
+          <select id="quanhuyen" required disabled>
+            <option value="">-- Chọn Quận/Huyện --</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Phường/Xã *</label>
+          <select id="phuongxa" required disabled>
+            <option value="">-- Chọn Phường/Xã --</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Địa chỉ chi tiết (số nhà, tên đường) *</label>
+          <input type="text" id="diachichitiet" required>
+        </div>
+        <div class="form-group">
+          <label>
+            <input type="checkbox" id="save-info">
+            Lưu thông tin cho lần mua sau
+          </label>
+        </div>
+        <div class="form-group">
+          <label>Phương thức thanh toán *</label>
+          <select id="payment-method" required>
+            <option value="">-- Chọn phương thức --</option>
+            <option value="COD">Thanh toán khi nhận hàng (COD)</option>
+            <option value="VNPay">Chuyển khoản Ví VNPAY</option>
+            <option value="MOMO">Ví điện tử MoMo</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Ghi chú đơn hàng (tuỳ chọn)</label>
+          <textarea id="notes"></textarea>
+        </div>
+      </form>
+    </div>
+
+    <!-- Footer -->
+    <footer>© 2025 Trung Phong. All rights reserved.</footer>
+  </div>
+
+  <!-- Order Confirmation Modal -->
+  <div id="order-confirm-modal" class="modal">
+    <div class="modal-content">
+      <span class="close-btn">&times;</span>
+      <i class="fas fa-check-circle confirmation-icon"></i>
+      <h3>Đặt hàng thành công!</h3>
+      <div id="order-details"></div>
+      <button class="close-btn">Đóng</button>
+    </div>
+  </div>
+
+  <!-- VNPay QR Modal -->
+  <div id="vnpay-qr-modal" class="modal">
+    <div class="modal-content">
+      <i class="fas fa-qrcode confirmation-icon"></i>
+      <h3>Quét mã QR để thanh toán</h3>
+      <p>Sử dụng ứng dụng VNPay để quét mã QR bên dưới hoặc nhấp vào link để thanh toán:</p>
+      <img id="vnpay-qr-image" src="" alt="VNPay QR Code">
+      <a id="vnpay-payment-link" href="#" style="display: none;">Thanh toán trực tiếp</a>
+      <p>Sau khi thanh toán, đơn hàng sẽ được xác nhận tự động.</p>
+      <button id="vnpay-cancel-btn" class="cancel-btn">Hủy</button>
+    </div>
+  </div>
+
+  <script src="js/cart.js"></script>
+</body>
+</html>

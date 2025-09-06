@@ -1,0 +1,206 @@
+/* styles.css */
+.login-container {
+    font-family: 'Roboto', sans-serif;
+    background: linear-gradient(135deg, #f5f7fa 0%, #e4e8eb 100%);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  
+  .login-form {
+    background: #2c4649;
+    width: 350px;
+    padding: 40px;
+    border-radius: 8px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+    text-align: center;
+    border: 1px solid rgba(0, 0, 0, 0.05);
+  }
+  
+  
+  .login-title {
+    color: #3498db; /* Màu xanh dương */
+    font-size: 26px;
+    font-weight: 600;
+    margin-bottom: 30px;
+    letter-spacing: 1px;
+    position: relative;
+    padding-bottom: 15px;
+  }
+  
+  .login-title::after {
+    content: "";
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 50px;
+    height: 3px;
+    background: #3498db;
+  }
+  
+  .form-group {
+    margin-bottom: 25px;
+    text-align: left;
+  }
+  
+  .form-group label {
+    display: block;
+    color: #7f8c8d;
+    font-size: 14px;
+    margin-bottom: 8px;
+    font-weight: 500;
+    letter-spacing: 0.5px;
+  }
+  
+  .form-control {
+    width: 100%;
+    padding: 12px 15px;
+    border: 1px solid #e0e0e0;
+    border-radius: 4px;
+    font-size: 14px;
+    transition: all 0.3s;
+    color: #34495e;
+    background-color: #f9f9f9;
+  }
+  
+  .form-control:focus {
+    border-color: #3498db;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+    background-color: white;
+  }
+  
+  .remember-forgot {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+  }
+  
+  .remember-me {
+    display: flex;
+    align-items: center;
+  }
+  
+  .remember-me input {
+    margin-right: 8px;
+    accent-color: #3498db;
+  }
+  
+  .remember-me label {
+    color: #7f8c8d;
+    font-size: 13px;
+    cursor: pointer;
+  }
+  
+  .forgot-password {
+    color: #3498db;
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 500;
+    transition: color 0.2s;
+  }
+  
+  .forgot-password:hover {
+    color: #2980b9;
+    text-decoration: underline;
+  }
+  
+  .login-btn {
+    background: linear-gradient(to right, #3498db, #2c3e50);
+    color: white;
+    border: none;
+    width: 100%;
+    padding: 14px;
+    border-radius: 4px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+    letter-spacing: 0.5px;
+    box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
+  }
+  
+  .login-btn:hover {
+    background: linear-gradient(to right, #2980b9, #34495e);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(52, 152, 219, 0.4);
+  }
+  
+  .login-btn:active {
+    transform: translateY(0);
+  }
+  
+  .divider {
+    margin: 25px 0;
+    color: #bdc3c7;
+    position: relative;
+    font-size: 12px;
+  }
+  
+  .divider::before {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(to right, transparent, #ecf0f1, transparent);
+    z-index: 1;
+  }
+  
+  .divider span {
+    background: white;
+    position: relative;
+    z-index: 2;
+    padding: 0 15px;
+  }
+  
+  .social-login {
+    margin: 25px 0;
+  }
+  
+  .social-login h3 {
+    color: #3498db;
+    font-size: 15px;
+    font-weight: 600;
+    margin: 12px 0;
+    cursor: pointer;
+    transition: color 0.2s;
+  }
+  
+  .social-login h3:hover {
+    color: #2980b9;
+  }
+  
+  .social-login h4 {
+    color: #1abc9c;
+    font-size: 15px;
+    font-weight: 600;
+    margin: 12px 0;
+    cursor: pointer;
+    transition: color 0.2s;
+  }
+  
+  .social-login h4:hover {
+    color: #16a085;
+  }
+  
+  .footer {
+    margin-top: 30px;
+    color: #95a5a6;
+    font-size: 12px;
+    line-height: 1.6;
+  }
+  
+  .error-message {
+    color: #e74c3c;
+    font-size: 14px;
+    margin-bottom: 20px;
+    padding: 10px;
+    background: rgba(231, 76, 60, 0.1);
+    border-radius: 4px;
+    border-left: 3px solid #e74c3c;
+  }

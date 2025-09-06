@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đơn hàng của tôi</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <!-- Thêm Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+    <link rel="stylesheet" href="styles/orders.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Section -->
+        <header class="order-header">
+            <h1><i class="fas fa-clipboard-list"></i> Đơn hàng của <span id="customer-name"></span></h1>
+            <div class="filter-orders">
+               <select id="status-filter" class="filter-select">
+    <option value="all">Tất cả đơn hàng</option>
+    <option value="pending">Chờ xử lý</option>
+    <option value="processing">Đang xử lý</option>
+    <option value="shipping">Đang giao hàng</option>
+    <option value="completed">Đã hoàn thành</option>
+    <option value="cancelled">Đã hủy</option>
+</select>
+                <button id="search-btn" class="search-btn"><i class="fas fa-search"></i></button>
+            </div>
+        </header>
+
+        <!-- Order List Section -->
+        <div class="order-list" id="order-list">
+            <!-- No Orders Message -->
+            <div class="no-orders">
+                <i class="fas fa-box-open"></i>
+                <p>Bạn chưa có đơn hàng nào</p>
+                <a href="/" class="btn">Tiếp tục mua sắm</a>
+            </div>
+        </div>
+
+        <!-- Loading Modal -->
+        <div id="loading-modal" class="modal">
+            <div class="modal-content" style="text-align: center; background: transparent; box-shadow: none;">
+                <div class="loading-spinner">
+                    <i class="fas fa-spinner fa-spin fa-3x"></i>
+                    <p>Đang tải đơn hàng...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Order Detail Modal -->
+        <div id="order-detail-modal" class="modal">
+            <div class="modal-content">
+                <span class="close-modal">×</span>
+                <div class="modal-header">
+                    <h2>Chi tiết đơn hàng <span id="order-id"></span></h2>
+                    <div class="order-status-badge" id="order-status"></div>
+                </div>
+
+                <div class="order-detail-body">
+                    <!-- Order Information -->
+                    <div class="order-info-section">
+                        <h3><i class="fas fa-info-circle"></i> Thông tin đơn hàng</h3>
+                        <div class="info-grid">
+                            <div>
+                                <p><strong>Ngày đặt:</strong> <span id="order-date"></span></p>
+                                <p><strong>Tổng tiền:</strong> <span id="order-total"></span></p>
+                            </div>
+                            <div>
+                                <p><strong>Phương thức thanh toán:</strong> <span id="payment-method"></span></p>
+                                <p><strong>Trạng thái thanh toán:</strong> <span id="payment-status"></span></p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Shipping Information -->
+                    <div class="shipping-info-section">
+                        <h3><i class="fas fa-truck"></i> Thông tin giao hàng</h3>
+                        <p><strong>Người nhận:</strong> <span id="receiver-name"></span></p>
+                        <p><strong>SĐT:</strong> <span id="receiver-phone"></span></p>
+                        <p><strong>Địa chỉ:</strong> <span id="shipping-address"></span></p>
+                        <p><strong>Ghi chú:</strong> <span id="order-notes"></span></p>
+                    </div>
+
+                    <!-- Delivery Map Section -->
+                    <div class="delivery-map-section">
+                        <h3><i class="fas fa-map-marker-alt"></i> Thông tin giao hàng trên bản đồ</h3>
+                        <div id="delivery-map" style="height: 300px; width: 100%;"></div>
+                        <p><strong>Khoảng cách:</strong> <span id="distance-info">Đang tải...</span></p>
+                        <p><strong>Thời gian dự kiến:</strong> <span id="duration-info">Đang tải...</span></p>
+                    </div>
+
+                    <!-- Order Items -->
+                    <div class="order-items-section">
+                        <h3><i class="fas fa-shopping-basket"></i> Sản phẩm đã đặt</h3>
+                        <div class="order-items" id="order-items"></div>
+                    </div>
+                </div>
+
+                <!-- Modal Actions -->
+                <div class="modal-actions">
+                    <div class="confirmation-actions">
+                        <button class="btn print-btn" onclick="window.print()">
+                            <i class="fas fa-print"></i> In hóa đơn
+                        </button>
+                        <button id="cancel-order-btn" class="btn cancel-btn" data-order-id="">
+                            Hủy đơn hàng
+                        </button>
+                        <a href="orders.html" class="btn home-btn">
+                            <i class="fas fa-home"></i> Về trang chủ
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Floating Chat Button -->
+        <div id="chat-floating-btn" class="chat-floating-btn">
+            <i class="fas fa-comments"></i>
+            <span>Hỗ trợ</span>
+        </div>
+
+        <!-- Chat Popup -->
+        <div id="chat-popup" class="chat-popup">
+            <div class="chat-popup-header">
+                <h3><i class="fas fa-headset"></i> Hỗ trợ khách hàng</h3>
+                <button class="close-chat-btn" id="close-chat-btn">×</button>
+            </div>
+            <div class="chat-popup-body">
+                <div class="chat-messages" id="chat-messages">
+                    <!-- Tin nhắn sẽ hiển thị ở đây -->
+                </div>
+                <div class="chat-input-area">
+                    <input type="text" id="chat-message-input" placeholder="Nhập tin nhắn của bạn...">
+                    <button id="send-chat-message-btn"><i class="fas fa-paper-plane"></i></button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal xác nhận hủy đơn hàng (Thêm mới) -->
+        <div id="cancel-order-modal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>Xác nhận hủy đơn hàng</h2>
+                    <span class="close-modal-cancel">×</span>
+                </div>
+                <div class="modal-body">
+                    <p>Bạn có chắc chắn muốn hủy đơn hàng này không?</p>
+                    <div class="reason-input">
+                        <label for="cancel-reason">Lý do hủy (tùy chọn):</label>
+                        <textarea id="cancel-reason" placeholder="Nhập lý do hủy đơn hàng..." rows="3"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button id="confirm-cancel-btn" class="btn confirm-btn">Xác nhận</button>
+                    <button id="cancel-cancel-btn" class="btn cancel-btn">Hủy</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Thêm Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <script src="js/orders.js"></script>
+</body>
+</html>

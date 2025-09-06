@@ -1,0 +1,117 @@
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #b80000;
+  min-height: 100vh;
+}
+.top-banner {
+  display: flex;
+  justify-content: center;
+  margin-top: 32px;
+  margin-bottom: 32px;
+}
+.top-banner img {
+  width: 90vw;
+  max-width: 900px;
+  border-radius: 24px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.12);
+}
+.voucher-list {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 32px 36px;
+  max-width: 1200px;
+  margin: 0 auto 60px auto;
+}
+.voucher-card {
+  background: #fff;
+  border-radius: 14px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.10);
+  display: flex;
+  align-items: center;
+  min-width: 340px;
+  max-width: 370px;
+  padding: 18px 20px;
+  position: relative;
+  border-left: 6px solid #ff9800;
+  transition: transform 0.15s;
+}
+.voucher-card:hover {
+  transform: translateY(-4px) scale(1.03);
+  box-shadow: 0 6px 24px rgba(0,0,0,0.13);
+}
+.voucher-card .icon {
+  font-size: 2.2rem;
+  margin-right: 18px;
+  color: #ff9800;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-weight: bold;
+}
+.voucher-card.freeship {
+  border-left-color: #4ecb71;
+}
+.voucher-card.freeship .icon {
+  color: #4ecb71;
+}
+.voucher-info {
+  flex: 1;
+}
+.voucher-title {
+  font-weight: bold;
+  font-size: 1.1rem;
+  margin-bottom: 4px;
+  color: #222;
+}
+.voucher-desc {
+  font-size: 0.98rem;
+  color: #555;
+  margin-bottom: 6px;
+  white-space: pre-line;
+}
+.voucher-expiry {
+  font-size: 0.93rem;
+  color: #1e88e5;
+  margin-bottom: 2px;
+}
+.voucher-action {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
+}
+.voucher-btn {
+  background: #1976d2;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 6px 18px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.voucher-btn:hover {
+  background: #1256a3;
+}
+.voucher-info .fa-circle-info {
+  color: #1e88e5;
+  margin-left: 6px;
+  font-size: 1rem;
+  vertical-align: middle;
+  cursor: pointer;
+}
+@media (max-width: 1200px) {
+  .voucher-list {
+    gap: 18px;
+  }
+  .voucher-card {
+    min-width: 90vw;
+    max-width: 98vw;
+  }
+  .top-banner img {
+    max-width: 98vw;
+  }
+}

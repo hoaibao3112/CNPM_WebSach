@@ -1,0 +1,539 @@
+/* Container chứa toàn bộ sản phẩm */
+#book-list,
+#textbook-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 20px;
+  padding: 10px 0;
+}
+
+/* Container cho sách khuyến mãi */
+#promotion-book-list {
+  display: grid;
+  grid-template-columns: repeat(5, 210px); /* Cố định 5 cột, mỗi cột 210px */
+  gap: 15px;
+  padding: 10px 0;
+  justify-content: center; /* Căn giữa các cột */
+}
+
+/* Một sản phẩm đơn lẻ */
+.product-item {
+  background: #fff;
+  border: 1px solid #eaeaea;
+  border-radius: 8px;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.product-item:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+  border-color: #d32f2f;
+}
+
+/* Hình ảnh sản phẩm */
+.product-image {
+  width: 100%;
+  padding-top: 140%;
+  position: relative;
+  overflow: hidden;
+  background: #f9f9f9;
+}
+
+/* Hình ảnh sản phẩm trong phần khuyến mãi */
+#promotion-book-list .product-image {
+  padding-top: 120%; /* Tăng tỷ lệ khung ảnh để ảnh lớn hơn một chút */
+}
+
+/* Hình ảnh sản phẩm trong phần sách giáo khoa */
+#textbook-list .product-image {
+  padding-top: 140%; /* Giữ tỷ lệ giống #book-list */
+}
+
+.product-image img {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  padding: 15px;
+  transition: transform 0.3s;
+}
+
+/* Ảnh trong phần khuyến mãi */
+#promotion-book-list .product-image img {
+  padding: 8px; /* Giữ padding để ảnh gọn gàng */
+}
+
+/* Ảnh trong phần sách giáo khoa */
+#textbook-list .product-image img {
+  padding: 15px; /* Giữ padding giống #book-list */
+}
+
+.product-item:hover .product-image img {
+  transform: scale(1.03);
+}
+
+/* Thông tin sản phẩm */
+.product-info {
+  padding: 15px;
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.product-title {
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 6px;
+  color: #333;
+  line-height: 1.3;
+  height: 40px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.product-author {
+  font-size: 13px;
+  color: #666;
+  margin-bottom: 8px;
+  font-style: italic;
+}
+
+.product-year {
+  font-size: 12px;
+  color: #888;
+  margin-bottom: 8px;
+}
+
+/* Giá tiền và số lượng */
+.product-price {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  margin-top: auto;
+}
+
+.price {
+  color: #d32f2f;
+  font-weight: bold;
+  font-size: 16px;
+}
+
+.quantity {
+  font-size: 12px;
+  color: #666;
+}
+
+/* Nút hành động */
+.product-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.btn-detail, .btn-add-cart {
+  flex: 1;
+  padding: 8px 0;
+  font-size: 13px;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: all 0.2s;
+  text-align: center;
+  text-decoration: none;
+}
+
+.btn-detail {
+  background: #f5f5f5;
+  color: #333;
+  border: 1px solid #ddd;
+}
+
+.btn-detail:hover {
+  background: #e0e0e0;
+}
+
+.btn-add-cart {
+  background: #d32f2f;
+  color: white;
+  border: none;
+}
+
+.btn-add-cart:hover {
+  background: #b71c1c;
+}
+
+.btn-add-cart:disabled {
+  background: #e0e0e0;
+  color: #9e9e9e;
+  cursor: not-allowed;
+}
+
+/* Badge mã sản phẩm */
+.product-badge {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  background: rgba(0, 0, 0, 0.7);
+  color: white;
+  padding: 3px 8px;
+  font-size: 11px;
+  font-weight: bold;
+  border-radius: 4px;
+  z-index: 1;
+}
+
+/* Hiệu ứng khi hết hàng */
+.stock-status {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: #c62828;
+  color: white;
+  padding: 3px 8px;
+  font-size: 11px;
+  font-weight: bold;
+  border-radius: 4px;
+  z-index: 1;
+}
+
+/* Product Section */
+.product-section {
+  margin-bottom: 40px;
+}
+
+.product-section h2 {
+  font-size: 24px;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 15px;
+  display: inline-block;
+}
+
+.product-section .view-all {
+  float: right;
+  margin-top: 5px;
+}
+
+.product-section .view-all a {
+  color: #d32f2f;
+  text-decoration: none;
+  font-size: 14px;
+}
+
+/* Promotion Section */
+.promotion-section {
+  margin-bottom: 40px;
+}
+
+.promotion-section h2 {
+  font-size: 24px;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 15px;
+  display: inline-block;
+}
+
+.promotion-section .view-all {
+  float: right;
+  margin-top: 5px;
+}
+
+.promotion-section .view-all a {
+  color: #d32f2f;
+  text-decoration: none;
+  font-size: 14px;
+}
+
+.promotion-section .view-all a:hover {
+  text-decoration: underline;
+}
+
+/* Textbook Section */
+.textbook-section {
+  margin-bottom: 40px;
+}
+
+.textbook-section h2 {
+  font-size: 24px;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 15px;
+  display: inline-block;
+}
+
+.textbook-section .view-all {
+  float: right;
+  margin-top: 5px;
+}
+
+.textbook-section .view-all a {
+  color: #d32f2f;
+  text-decoration: none;
+  font-size: 14px;
+}
+
+.textbook-section .view-all a:hover {
+  text-decoration: underline;
+}
+
+/* Badge khuyến mãi cho sản phẩm trong #promotion-book-list */
+#promotion-book-list .product-item .product-image::after {
+  content: 'KHUYẾN MÃI';
+  position: absolute;
+  bottom: 8px;
+  left: 8px;
+  background: #ff9800;
+  color: white;
+  padding: 3px 8px;
+  font-size: 11px;
+  font-weight: bold;
+  border-radius: 4px;
+  z-index: 1;
+}
+
+/* Badge cho sản phẩm trong #textbook-list */
+#textbook-list .product-item .product-image::after {
+  content: 'GIÁO KHOA';
+  position: absolute;
+  bottom: 8px;
+  left: 8px;
+  background: #0288d1; /* Màu xanh dương để phân biệt */
+  color: white;
+  padding: 3px 8px;
+  font-size: 11px;
+  font-weight: bold;
+  border-radius: 4px;
+  z-index: 1;
+}
+
+/* View More Button */
+.view-more-container {
+  text-align: center;
+  margin: 20px 0;
+}
+
+.view-more-btn {
+  padding: 10px 20px;
+  font-size: 14px;
+  background: #d32f2f;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.view-more-btn:hover {
+  background: #b71c1c;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  #book-list,
+  #promotion-book-list,
+  #textbook-list {
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  }
+
+  .product-title {
+    font-size: 14px;
+    height: 36px;
+  }
+
+  .product-author,
+  .product-year {
+    font-size: 11px;
+  }
+
+  .price {
+    font-size: 14px;
+  }
+
+  .btn-detail,
+  .btn-add-cart {
+    font-size: 11px;
+    padding: 6px 0;
+  }
+
+  #promotion-book-list .product-item .product-image::after,
+  #textbook-list .product-item .product-image::after {
+    font-size: 10px;
+    padding: 2px 6px;
+  }
+
+  #promotion-book-list .product-image {
+    padding-top: 100%; /* Giữ tỷ lệ khung ảnh cho thiết bị nhỏ */
+  }
+
+  #textbook-list .product-image {
+    padding-top: 100%; /* Giữ tỷ lệ khung ảnh cho thiết bị nhỏ */
+  }
+
+  #promotion-book-list .product-image img,
+  #textbook-list .product-image img {
+    padding: 10px; /* Giảm padding thêm cho thiết bị nhỏ */
+  }
+}
+/* --- Sách chính trị (politics-section) --- */
+.politics-section {
+  margin-bottom: 40px;
+}
+
+.politics-section h2 {
+  font-size: 24px;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 15px;
+  display: inline-block;
+}
+
+#politics-book-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 20px;
+  padding: 10px 0;
+}
+
+/* Badge cho sản phẩm trong #politics-book-list */
+#politics-book-list .product-item .product-image::after {
+  content: 'CHÍNH TRỊ';
+  position: absolute;
+  bottom: 8px;
+  left: 8px;
+  background: #388e3c; /* Màu xanh lá đậm để phân biệt */
+  color: white;
+  padding: 3px 8px;
+  font-size: 11px;
+  font-weight: bold;
+  border-radius: 4px;
+  z-index: 1;
+}
+
+/* Responsive cho phần chính trị */
+@media (max-width: 768px) {
+  #politics-book-list {
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  }
+  #politics-book-list .product-item .product-image::after {
+    font-size: 10px;
+    padding: 2px 6px;
+  }
+}
+
+
+/* --- Sách khoa học (science-section) --- */
+.science-section {
+  margin-bottom: 40px;
+}
+
+.science-section h2 {
+  font-size: 24px;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 15px;
+  display: inline-block;
+}
+
+#science-book-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 20px;
+  padding: 10px 0;
+}
+
+/* Badge cho sản phẩm trong #science-book-list */
+#science-book-list .product-item .product-image::after {
+  content: 'KHOA HỌC';
+  position: absolute;
+  bottom: 8px;
+  left: 8px;
+  background: #7b1fa2; /* Màu tím đậm để phân biệt */
+  color: white;
+  padding: 3px 8px;
+  font-size: 11px;
+  font-weight: bold;
+  border-radius: 4px;
+  z-index: 1;
+}
+
+/* Responsive cho phần khoa học */
+@media (max-width: 768px) {
+  #science-book-list {
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  }
+  #science-book-list .product-item .product-image::after {
+    font-size: 10px;
+    padding: 2px 6px;
+  }
+}
+/* Toast Notification */
+.toast-notification {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  background: #e6f4ea; /* Đổi từ #fff0e0 sang xanh lá cây nhạt */
+  color: #15881b; /* Đổi từ #d32f2f sang xanh lá cây đậm */
+  padding: 12px 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: 'Arial', sans-serif;
+  font-size: 1rem;
+  z-index: 1000;
+  opacity: 0;
+  transform: translateY(-10px);
+  animation: fadeIn 0.3s forwards;
+}
+
+.toast-notification.hide {
+  animation: fadeOut 0.3s forwards;
+}
+
+.toast-notification span {
+  flex-grow: 1;
+}
+
+.toast-close {
+  background: none;
+  border: none;
+  color: #00fc0d; /* Đổi từ #d32f2f sang xanh lá cây đậm */
+  font-size: 1.2rem;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+}
+
+@keyframes fadeIn {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeOut {
+  to {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+}
+
+@media (max-width: 900px) {
+  .toast-notification {
+    top: auto;
+    bottom: 20px;
+    right: 20px;
+    left: 20px;
+    font-size: 0.9rem;
+  }
+}

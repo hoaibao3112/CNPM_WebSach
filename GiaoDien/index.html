@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Trang Chủ | Bookstore</title>
+  <link rel="stylesheet" href="styles/index.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+  <link rel="stylesheet" href="styles/book.css" />
+  <link rel="stylesheet" href="styles/giamgia1.css">
+  <link rel="icon" href="favicon.ico" type="image/x-icon" />
+</head>
+<body>
+  <!-- Top bar -->
+  <div class="top-bar">
+    <div class="top-bar-container">
+      <img src="img/logo1.png" alt="BaoStort" class="logo">
+      <div class="search-container">
+        <form action="/search" method="get">
+          <input type="text" placeholder="Tìm kiếm sách, tác giả..." name="search">
+          <button type="submit"><i class="fas fa-search"></i></button>
+        </form>
+      </div>
+      <ul class="top-links">
+        <li class="category-top-dropdown">
+          <a href="#"><i class="fas fa-book"></i> Danh mục <i class="fas fa-chevron-down"></i></a>
+          <div class="dropdown-content">
+            <a href="#" onclick="filterProductsByCategory(1)">Truyền Tranh - Comic</a>
+            <a href="#" onclick="filterProductsByCategory(2)">Văn học nước ngoài</a>
+            <a href="#" onclick="filterProductsByCategory(3)">Sale cuối năm 2022</a>
+            <a href="#" onclick="filterProductsByCategory(4)">Sách Văn Học</a>
+            <a href="#" onclick="filterProductsByCategory(5)">Truyền Tranh BL</a>
+            <a href="#" onclick="filterProductsByCategory(6)">Sách Kỹ Năng Sống</a>
+            <a href="#" onclick="filterProductsByCategory(7)">Sách Thiếu Nhi</a>
+            <a href="#" onclick="filterProductsByCategory(8)">Light Novel</a>
+            <a href="#" onclick="filterProductsByCategory(9)">Văn Phòng Phẩm - Quà Tặng</a>
+          </div>
+        </li>
+        <li class="publisher-dropdown">
+          <a href="campany.html">Nhà xuất bản <i class="fas fa-chevron-down"></i></a>
+          <div class="dropdown-content">
+            <a href="#">Kim Đồng</a>
+            <a href="#">Nhã Nam</a>
+            <a href="#">Trẻ</a>
+            <a href="#">Phụ Nữ</a>
+            <a href="#">Giáo Dục</a>
+            <a href="#">Hội Nhà Văn</a>
+          </div>
+        </li>
+        <li class="account-dropdown" id="accountDropdownContainer">
+          <a href="login.html" id="loginLink"><i class="fas fa-user"></i> Tài khoản <i class="fas fa-chevron-down"></i></a>
+          <div class="dropdown-content">
+            <a href="login.html"><i class="fas fa-sign-in-alt"></i> Đăng nhập</a>
+            <a href="register.html"><i class="fas fa-user-plus"></i> Đăng ký</a>
+          </div>
+          <div class="logged-in-account" style="display: none;">
+            <a href="#" id="accountLink"><i class="fas fa-user"></i> Tên người dùng</a>
+            <div class="dropdown-content">
+              <a href="profile.html"><i class="fas fa-user-circle"></i> Hồ sơ</a>
+              <a href="#" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Đăng xuất</a>
+            </div>
+          </div>
+        </li>
+        <li><a href="cart.html"><i class="fas fa-shopping-cart"></i> Giỏ hàng (0)</a></li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Slideshow -->
+  <header class="slideshow-container">
+    <div class="slideshow-column">
+      <div class="mySlides fade">
+        <img src="img/anhnen/3d.jpg" alt="Slide 1">
+      </div>
+      <div class="mySlides fade">
+        <img src="img/anhnen/5d.jpg" alt="Slide 3">
+      </div>
+      <div class="mySlides fade">
+        <img src="img/anhnen/7d.jpg" alt="Slide 5">
+      </div>
+    </div>
+    <div class="slideshow-column">
+      <div class="mySlides fade">
+        <img src="img/anhnen/4d.jpg" alt="Slide 2">
+      </div>
+      <div class="mySlides fade">
+        <img src="img/anhnen/6d.jpg" alt="Slide 4">
+      </div>
+      <div class="mySlides fade">
+        <img src="img/anhnen/8d.jpg" alt="Slide 6">
+      </div>
+    </div>
+  </header>
+  <div class="promotion-buttons">
+    <img src="img/giamgia/anh1.jpg" alt="Khuyến mãi 1" class="promo-button" onclick="window.location.href='./giamgia.html'">
+    <img src="img/giamgia/anh2.jpg" alt="Khuyến mãi 2" class="promo-button" onclick="window.location.href='./giamgia1.html'">
+    <img src="img/giamgia/anh3.jpg" alt="Khuyến mãi 3" class="promo-button" onclick="window.location.href='./giamgia2.html'">
+    <img src="img/giamgia/anh4.jpg" alt="Khuyến mãi 4" class="promo-button" onclick="window.location.href='./giamgia33.html'">
+    <img src="img/giamgia/anh5.jpg" alt="Khuyến mãi 5" class="promo-button" onclick="window.location.href='./giamgia3.html'">
+    <img src="img/giamgia/anh6.jpg" alt="Khuyến mãi 6" class="promo-button" onclick="loadContent('/khuyenmai.html?id=6')">
+    <img src="img/giamgia/anh7.jpg" alt="Khuyến mãi 7" class="promo-button" onclick="loadContent('/khuyenmai.html?id=7')">
+    <img src="img/giamgia/anh8.jpg" alt="Khuyến mãi 8" class="promo-button" onclick="loadContent('/khuyenmai.html?id=8')">
+    <img src="img/giamgia/anh9.jpg" alt="Khuyến mãi 9" class="promo-button" onclick="loadContent('/khuyenmai.html?id=9')">
+  </div>
+  <!-- Main content -->
+  <div class="container">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <h3>DANH MỤC SẢN PHẨM</h3>
+      <div class="category-dropdown" id="categoryDropdown">
+        <div class="dropdown-header">
+          <span>Nổi bật</span>
+          <i class="fas fa-chevron-down"></i>
+        </div>
+        <div class="dropdown-content">
+          <a href="#" onclick="filterProductsByCategory(1)">Truyền Tranh - Comic</a>
+          <a href="#" onclick="filterProductsByCategory(2)">Văn học nước ngoài</a>
+          <a href="#" onclick="filterProductsByCategory(3)">Sale cuối năm 2022</a>
+          <a href="#" onclick="filterProductsByCategory(4)">Sách Văn Học</a>
+          <a href="#" onclick="filterProductsByCategory(5)">Truyền Tranh BL</a>
+          <a href="#" onclick="filterProductsByCategory(6)">Sách Kỹ Năng Sống</a>
+          <a href="#" onclick="filterProductsByCategory(7)">Sách Thiếu Nhi</a>
+          <a href="#" onclick="filterProductsByCategory(8)">Light Novel</a>
+          <a href="#" onclick="filterProductsByCategory(9)">Văn Phòng Phẩm - Quà Tặng</a>
+        </div>
+      </div>
+      <div class="divider"></div>
+      <div class="price-filter-section">
+        <h3>LỌC THEO GIÁ</h3>
+        <div class="price-filter">
+          <select id="priceRange" onchange="filterProductsByPrice(this.value)">
+            <option value="">Tất cả</option>
+            <option value="0-50000">Dưới 50.000đ</option>
+            <option value="50000-100000">50.000đ - 100.000đ</option>
+            <option value="100000-200000">100.000đ - 200.000đ</option>
+            <option value="200000">Trên 200.000đ</option>
+          </select>
+        </div>
+      </div>
+      <div class="divider"></div>
+      <!-- Thêm phần text-discount-section -->
+      <div class="text-discount-section">
+        <h4>DEAL HOT - GIẢM SỐC</h4>
+        <div class="discount-filter">
+          <select id="discountSelect" onchange="selectDiscount(this.value)">
+            <option value="">Chọn chương trình khuyến mãi</option>
+            <option value="skills-set">Bộ sách kỹ năng sống - 99.000đ (-34%)</option>
+            <option value="bestseller-novel">Tiểu thuyết bestseller - 79.000đ (-34%)</option>
+            <option value="children-comics">Truyện tranh thiếu nhi - 59.000đ (-34%)</option>
+            <option value="cooking-book">Sách dạy nấu ăn - 129.000đ (-28%)</option>
+            <option value="light-novel">Light Novel - 89.000đ (-31%)</option>
+            <option value="dictionary">Từ điển Anh-Việt - 199.000đ (-20%)</option>
+          </select>
+        </div>
+        <ul id="promotions-list"></ul>
+        <div id="deal-hot-list"></div>
+        <a href="#" class="text-view-more">Xem thêm deal hot <i class="fas fa-chevron-right"></i></a>
+      </div>
+      <div class="divider"></div>
+      <div class="hotline">Hotline: 0938 424 289</div>
+    </aside>
+
+    <!-- Main content area -->
+    <main class="main-content">
+      <!-- Phần Sách Mới -->
+      <div class="product-section">
+        <h2>Sách Mới</h2>
+        <div class="view-all">
+          <a href="book.html">Xem tất cả <i class="fas fa-chevron-right"></i></a>
+        </div>
+        <div id="book-list" class="product-container"></div>
+      </div>
+
+      <!-- Phần Sách Khuyến Mãi -->
+      <div class="product-section promotion-section">
+        <h2>Sách Khuyến Mãi</h2>
+        <div class="view-all">
+          <a href="book.html?category=2">Xem tất cả <i class="fas fa-chevron-right"></i></a>
+        </div>
+        <div id="promotion-book-list" class="product-container"></div>
+      </div>
+
+      <!-- Phần Sách Giáo Khoa -->
+      <div class="product-section textbook-section">
+        <h2>Sách Giáo Khoa</h2>
+        <div class="view-all">
+          <a href="book.html?category=6">Xem tất cả <i class="fas fa-chevron-right"></i></a>
+        </div>
+        <div id="textbook-list" class="product-container"></div>
+      </div>
+
+      <!-- Phần Sách Chính Trị -->
+      <div class="product-section politics-section">
+        <h2>Sách Chính Trị</h2>
+        <div class="view-all">
+          <a href="book.html?category=2">Xem tất cả <i class="fas fa-chevron-right"></i></a>
+        </div>
+        <div id="politics-book-list" class="product-container"></div>
+      </div>
+
+      <!-- Phần Sách Khoa Học -->
+      <div class="product-section science-section">
+        <h2>Sách Khoa Học</h2>
+        <div class="view-all">
+          <a href="book.html?category=4">Xem tất cả <i class="fas fa-chevron-right"></i></a>
+        </div>
+        <div id="science-book-list" class="product-container"></div>
+      </div>
+    </main>
+  </div>
+
+  <footer>
+    <div class="footer-container">
+      <div class="footer-section">
+        <div class="footer-logo">
+          <img src="img/logo1.png" alt="Fahasa Logo" class="footer-logo-img">
+          <span class="site-name">Fahasa.com</span>
+        </div>
+        <p class="footer-description">
+          Fahasa.com nhận đặt hàng trực tuyến và giao hàng tận nơi. Không hỗ trợ đặt hàng qua điện thoại tại văn phòng công ty. Hãy đến Hệ thống Fahasa trên toàn quốc.
+        </p>
+        <div class="social-media">
+          <a href="#" class="social-link" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
+          <a href="#" class="social-link" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+          <a href="#" class="social-link" aria-label="YouTube"><i class="fab fa-youtube"></i></a>
+          <a href="#" class="social-link" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
+          <a href="#" class="social-link" aria-label="Google Plus"><i class="fab fa-google-plus-g"></i></a>
+        </div>
+        <div class="app-links">
+          <a href="#"><img src="img/payment/anh8.jpg" alt="Google Play"></a>
+          <a href="#"><img src="img/payment/anh9.jpg" alt="App Store"></a>
+        </div>
+      </div>
+  
+      <div class="footer-section">
+        <h3 class="footer-title">LIÊN HỆ</h3>
+        <p class="contact-item">
+          <i class="fas fa-map-marker-alt contact-icon"></i>
+          <span>60-62 Lê Lợi, Q.1, TP. HCM</span>
+        </p>
+        <p class="contact-item">
+          <i class="fas fa-envelope contact-icon"></i>
+          <a href="mailto:info@fahasa.com" class="contact-link">info@fahasa.com</a>
+        </p>
+        <p class="contact-item">
+          <i class="fas fa-phone-alt contact-icon"></i>
+          <a href="tel:1900636467" class="contact-link">0374170367</a>
+        </p>
+      </div>
+  
+      <div class="footer-section">
+        <h3 class="footer-title">HỖ TRỢ</h3>
+        <ul class="footer-links">
+          <li><a href="#" class="footer-link">Chính sách đổi - trả</a></li>
+          <li><a href="#" class="footer-link">Chính sách bảo hành</a></li>
+          <li><a href="#" class="footer-link">Chính sách vận chuyển</a></li>
+          <li><a href="#" class="footer-link">Chính sách Khách sỉ</a></li>
+        </ul>
+      </div>
+  
+      <div class="footer-section">
+        <h3 class="footer-title">TÀI KHOẢN CỦA TÔI</h3>
+        <ul class="footer-links">
+          <li><a href="#" class="footer-link">Đăng nhập/Tạo mới tài khoản</a></li>
+          <li><a href="#" class="footer-link">Thay đổi địa chỉ</a></li>
+          <li><a href="#" class="footer-link">Chi tiết tài khoản</a></li>
+          <li><a href="#" class="footer-link">Lịch sử mua hàng</a></li>
+        </ul>
+      </div>
+    </div>
+  
+    <div class="payment-methods">
+      <img src="img/payment/anh1.jpg" alt="VNPAY">
+      <img src="img/payment/anh2.jpg" alt="Momo">
+      <img src="img/payment/anh3.jpg" alt="ShopeePay">
+      <img src="img/payment/anh4.jpg" alt="ZaloPay">
+      <img src="img/payment/anh5.jpg" alt="ZaloPay">
+      <img src="img/payment/anh6.jpg" alt="ZaloPay">
+      <img src="img/payment/anh7.jpg" alt="ZaloPay">
+    </div>
+  
+    <div class="footer-bottom">
+      <p>
+        Giấy chứng nhận Đăng ký Kinh doanh số 0304132047 do Sở Kế hoạch và Đầu tư Thành phố Hồ Chí Minh cấp ngày 20/12/2005, đăng ký thay đổi lần thứ 10, ngày 20/05/2022.
+      </p>
+    </div>
+  </footer>
+
+  <script>
+    // Hàm toggle dropdown cho sidebar
+    function toggleDropdown() {
+      const dropdown = document.getElementById('categoryDropdown');
+      dropdown.classList.toggle('dropdown-active');
+    }
+
+    // Đóng dropdown khi click ra ngoài
+    document.addEventListener('click', function(event) {
+      const dropdown = document.getElementById('categoryDropdown');
+      if (!dropdown.contains(event.target)) {
+        dropdown.classList.remove('dropdown-active');
+      }
+    });
+
+    // Hàm filter sản phẩm
+    function filterProductsByCategory(categoryId) {
+      console.log('Đã chọn danh mục:', categoryId);
+      document.getElementById('categoryDropdown').classList.remove('dropdown-active');
+    }
+  </script>
+
+  <script src="js/book.js"></script>
+  <script src="js/index.js"></script>
+</body>
+</html>

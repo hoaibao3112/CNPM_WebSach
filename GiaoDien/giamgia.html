@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Khuyến Mãi - Lịch Săn Deal Hấp Dẫn</title>
+  <link rel="stylesheet" href="styles/index.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <style>
+    body {
+      background: #fff7b2;
+      margin: 0;
+      font-family: 'Arial', sans-serif;
+    }
+    .top-banner {
+      display: flex;
+      justify-content: center;
+      margin-top: 18px;
+      margin-bottom: 10px;
+    }
+    .top-banner img {
+      max-width: 1200px; /* Tăng từ 900px lên 1200px */
+      width: 100%;
+      border-radius: 14px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.07);
+    }
+    .deal-banner {
+      display: flex;
+      justify-content: center;
+      margin: 0 0 24px 0;
+    }
+    .deal-banner img {
+      max-width: 1200px; /* Tăng từ 900px lên 1200px */
+      width: 100%;
+      border-radius: 18px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+    }
+    .voucher-list {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 32px 24px;
+      margin: 0 auto;
+      max-width: 1200px; /* Tăng từ 1100px lên 1200px để đồng bộ với banner */
+    }
+    .voucher-card {
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+      display: flex;
+      align-items: center;
+      min-width: 340px;
+      max-width: 400px; /* Tăng từ 370px lên 400px để cân đối */
+      padding: 18px 20px;
+      position: relative;
+      border-left: 6px solid #4ecb71;
+    }
+    .voucher-card.yellow {
+      border-left-color: #ffc107;
+    }
+    .voucher-card .icon {
+      font-size: 2.2rem;
+      margin-right: 18px;
+      color:Residential;
+      flex-shrink: 0;
+    }
+    .voucher-card.yellow .icon {
+      color: #ffc107;
+    }
+    .voucher-info {
+      flex: 1;
+    }
+    .voucher-title {
+      font-weight: bold;
+      font-size: 1.1rem;
+      margin-bottom: 4px;
+      color: #222;
+    }
+    .voucher-desc {
+      font-size: 0.98rem;
+      color: #555;
+      margin-bottom: 6px;
+      white-space: pre-line;
+    }
+    .voucher-expiry {
+      font-size: 0.93rem;
+      color: #1e88e5;
+      margin-bottom: 2px;
+    }
+    .voucher-action {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 4px;
+    }
+    .voucher-btn {
+      background: #1976d2;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      padding: 6px 18px;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .voucher-btn:hover {
+      background: #1256a3;
+    }
+    .voucher-status {
+      font-size: 0.95rem;
+      color: #aaa;
+      font-weight: bold;
+      margin-left: 10px;
+      border: 1px solid #eee;
+      border-radius: 4px;
+      padding: 2px 8px;
+      background: #f7f7f7;
+    }
+    .voucher-status.expired {
+      color: #e57373;
+      border-color: #f8bcbc;
+      background: #fff0f0;
+    }
+    .voucher-info .fa-circle-info {
+      color: #1e88e5;
+      margin-left: 6px;
+      font-size: 1rem;
+      vertical-align: middle;
+      cursor: pointer;
+    }
+    @media (max-width: 1200px) { /* Điều chỉnh media query để đồng bộ với max-width mới */
+      .top-banner img,
+      .deal-banner img {
+        max-width: 98vw;
+      }
+      .voucher-list {
+        flex-direction: column;
+        align-items: center;
+        gap: 18px;
+      }
+      .voucher-card {
+        min-width: 90vw;
+        max-width: 98vw;
+      }
+    }
+  </style>
+</head>
+<body>
+   <div class="top-bar">
+    <div class="top-bar-container">
+      <img src="img/logo1.png" alt="BaoStort" class="logo">
+      <div class="search-container">
+        <form action="/search" method="get">
+          <input type="text" placeholder="Tìm kiếm sách, tác giả..." name="search">
+          <button type="submit"><i class="fas fa-search"></i></button>
+        </form>
+      </div>
+      <ul class="top-links">
+        <li class="category-top-dropdown">
+          <a href="#"><i class="fas fa-book"></i> Danh mục <i class="fas fa-chevron-down"></i></a>
+          <div class="dropdown-content">
+            <a href="#" onclick="filterProductsByCategory(1)">Truyền Tranh - Comic</a>
+            <a href="#" onclick="filterProductsByCategory(2)">Văn học nước ngoài</a>
+            <a href="#" onclick="filterProductsByCategory(3)">Sale cuối năm 2022</a>
+            <a href="#" onclick="filterProductsByCategory(4)">Sách Văn Học</a>
+            <a href="#" onclick="filterProductsByCategory(5)">Truyền Tranh BL</a>
+            <a href="#" onclick="filterProductsByCategory(6)">Sách Kỹ Năng Sống</a>
+            <a href="#" onclick="filterProductsByCategory(7)">Sách Thiếu Nhi</a>
+            <a href="#" onclick="filterProductsByCategory(8)">Light Novel</a>
+            <a href="#" onclick="filterProductsByCategory(9)">Văn Phòng Phẩm - Quà Tặng</a>
+          </div>
+        </li>
+        <li class="publisher-dropdown">
+          <a href="campany.html">Nhà xuất bản <i class="fas fa-chevron-down"></i></a>
+          <div class="dropdown-content">
+            <a href="#">Kim Đồng</a>
+            <a href="#">Nhã Nam</a>
+            <a href="#">Trẻ</a>
+            <a href="#">Phụ Nữ</a>
+            <a href="#">Giáo Dục</a>
+            <a href="#">Hội Nhà Văn</a>
+          </div>
+        </li>
+        <li class="account-dropdown" id="accountDropdownContainer">
+          <a href="login.html" id="loginLink"><i class="fas fa-user"></i> Tài khoản <i class="fas fa-chevron-down"></i></a>
+          <div class="dropdown-content">
+            <a href="login.html"><i class="fas fa-sign-in-alt"></i> Đăng nhập</a>
+            <a href="register.html"><i class="fas fa-user-plus"></i> Đăng ký</a>
+          </div>
+          <div class="logged-in-account" style="display: none;">
+            <a href="#" id="accountLink"><i class="fas fa-user"></i> Tên người dùng</a>
+            <div class="dropdown-content">
+              <a href="profile.html"><i class="fas fa-user-circle"></i> Hồ sơ</a>
+              <a href="#" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Đăng xuất</a>
+            </div>
+          </div>
+        </li>
+        <li><a href="cart.html"><i class="fas fa-shopping-cart"></i> Giỏ hàng (0)</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="top-banner">
+    <img src="img/25_05/anh4.jpg" alt="Banner trên cùng">
+  </div>
+  <div class="deal-banner">
+    <img src="img/25_05/anh1.jpg" alt="Lịch săn deal hấp dẫn">
+  </div>
+  <div class="voucher-list">
+    <!-- Voucher 1 -->
+    <div class="voucher-card">
+      <span class="icon"><i class="fa-solid fa-truck"></i></span>
+      <div class="voucher-info">
+        <div class="voucher-title">Giảm 20K</div>
+        <div class="voucher-desc">ĐH từ 200K<br>Nhập mã ngay</div>
+        <div class="voucher-expiry">HSD: 31/05/25</div>
+        <div class="voucher-action">
+          <span class="voucher-status expired">HẾT MÃ</span>
+          <i class="fa-solid fa-circle-info" title="Áp dụng cho đơn hàng từ 200K"></i>
+        </div>
+      </div>
+    </div>
+    <!-- Voucher 2 -->
+    <div class="voucher-card">
+      <span class="icon"><i class="fa-solid fa-truck"></i></span>
+      <div class="voucher-info">
+        <div class="voucher-title">Freeship 100% Tối đa 20K</div>
+        <div class="voucher-desc">Đơn hàng từ 200K (Brand Day NCC)...</div>
+        <div class="voucher-expiry">HSD: 31/05/25</div>
+        <div class="voucher-action">
+          <button class="voucher-btn">Lưu mã</button>
+          <i class="fa-solid fa-circle-info" title="Áp dụng cho đơn hàng từ 200K"></i>
+        </div>
+      </div>
+    </div>
+    <!-- Voucher 3 -->
+    <div class="voucher-card yellow">
+      <span class="icon"><i class="fa-solid fa-percent"></i></span>
+      <div class="voucher-info">
+        <div class="voucher-title">Giảm 12% Brand Day</div>
+        <div class="voucher-desc">Giảm tối đa 30K cho Đơn hàng từ 119K...</div>
+        <div class="voucher-expiry">HSD: 31/05/25</div>
+        <div class="voucher-action">
+          <button class="voucher-btn">Lưu mã</button>
+          <i class="fa-solid fa-circle-info" title="Áp dụng cho đơn hàng từ 119K"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script src="js/index.js"></script>
+  <script src="js/book.js"></script>
+</body>
+</html>

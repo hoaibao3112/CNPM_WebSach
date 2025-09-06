@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đăng ký tài khoản</title>
+    <link rel="stylesheet" href="styles/register.css">
+</head>
+<body>
+    <div class="register-container">
+        <h2>Đăng ký tài khoản</h2>
+        <div id="step1">
+            <form id="registerForm">
+                <div class="form-group">
+                    <label for="username">Tên đăng nhập</label>
+                    <input type="text" id="username" name="username" required>
+                </div>
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <input type="email" id="email" name="email" required>
+                </div>
+                <button type="submit" id="sendOtpBtn">Gửi mã OTP</button>
+            </form>
+            <div id="registerMessage" style="display: none;"></div>
+        </div>
+
+        <div id="step2" style="display: none;">
+            <form id="otpForm">
+                <div class="form-group">
+                    <label for="otpCode">Mã OTP</label>
+                    <input type="text" id="otpCode" name="otpCode" required>
+                </div>
+                <button type="submit" id="verifyOtpBtn">Xác nhận OTP</button>
+            </form>
+            <div id="otpMessage" style="display: none;"></div>
+        </div>
+
+        <div id="step3" style="display: none;">
+            <form id="passwordForm">
+                <div class="form-group">
+                    <label for="password">Mật khẩu</label>
+                    <input type="password" id="password" name="password" required>
+                </div>
+                <div class="form-group">
+                    <label for="confirmPassword">Nhập lại mật khẩu</label>
+                    <input type="password" id="confirmPassword" name="confirmPassword" required>
+                </div>
+                <button type="submit" id="setPasswordBtn">Đăng ký</button>
+            </form>
+            <div id="passwordMessage" style="display: none;"></div>
+        </div>
+
+        <div class="login-link">
+            Đã có tài khoản? <a href="login.html">Đăng nhập ngay</a>
+        </div>
+    </div>
+    <script src="js/register.js"></script>
+</body>
+</html>

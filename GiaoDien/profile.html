@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Hồ Sơ Người Dùng</title>
+  <link rel="stylesheet" href="styles/profile.css" />
+  <link rel="stylesheet" href="styles/index.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+</head>
+<body>
+   <div class="top-bar">
+    <div class="top-bar-container">
+      <img src="img/logo1.png" alt="BaoStort" class="logo">
+      <div class="search-container">
+        <form action="/search" method="get">
+          <input type="text" placeholder="Tìm kiếm sách, tác giả..." name="search">
+          <button type="submit"><i class="fas fa-search"></i></button>
+        </form>
+      </div>
+      <ul class="top-links">
+        <li class="category-top-dropdown">
+          <a href="#"><i class="fas fa-book"></i> Danh mục <i class="fas fa-chevron-down"></i></a>
+          <div class="dropdown-content">
+            <a href="#" onclick="filterProductsByCategory(1)">Truyền Tranh - Comic</a>
+            <a href="#" onclick="filterProductsByCategory(2)">Văn học nước ngoài</a>
+            <a href="#" onclick="filterProductsByCategory(3)">Sale cuối năm 2022</a>
+            <a href="#" onclick="filterProductsByCategory(4)">Sách Văn Học</a>
+            <a href="#" onclick="filterProductsByCategory(5)">Truyền Tranh BL</a>
+            <a href="#" onclick="filterProductsByCategory(6)">Sách Kỹ Năng Sống</a>
+            <a href="#" onclick="filterProductsByCategory(7)">Sách Thiếu Nhi</a>
+            <a href="#" onclick="filterProductsByCategory(8)">Light Novel</a>
+            <a href="#" onclick="filterProductsByCategory(9)">Văn Phòng Phẩm - Quà Tặng</a>
+          </div>
+        </li>
+        <li class="publisher-dropdown">
+          <a href="campany.html">Nhà xuất bản <i class="fas fa-chevron-down"></i></a>
+          <div class="dropdown-content">
+            <a href="#">Kim Đồng</a>
+            <a href="#">Nhã Nam</a>
+            <a href="#">Trẻ</a>
+            <a href="#">Phụ Nữ</a>
+            <a href="#">Giáo Dục</a>
+            <a href="#">Hội Nhà Văn</a>
+          </div>
+        </li>
+        <li class="account-dropdown" id="accountDropdownContainer">
+          <a href="login.html" id="loginLink"><i class="fas fa-user"></i> Tài khoản <i class="fas fa-chevron-down"></i></a>
+          <div class="dropdown-content">
+            <a href="login.html"><i class="fas fa-sign-in-alt"></i> Đăng nhập</a>
+            <a href="register.html"><i class="fas fa-user-plus"></i> Đăng ký</a>
+          </div>
+          <div class="logged-in-account" style="display: none;">
+            <a href="#" id="accountLink"><i class="fas fa-user"></i> Tên người dùng</a>
+            <div class="dropdown-content">
+              <a href="profile.html"><i class="fas fa-user-circle"></i> Hồ sơ</a>
+              <a href="#" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Đăng xuất</a>
+            </div>
+          </div>
+        </li>
+        <li><a href="cart.html"><i class="fas fa-shopping-cart"></i> Giỏ hàng (0)</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="profile-container">
+    <div class="header">
+      <img src="img/profile/anh1.jpg" alt="Logo" class="logo">
+      <div class="warning">Bạn vui lòng cập nhật thông tin tài khoản: <a href="#" class="update-link">Cập nhật thông tin ngay</a></div>
+    </div>
+    <div class="sidebar">
+      <ul>
+        <li><i class="fas fa-crown"></i> Thành viên Bạc</li>
+        <li>F-Point tích lũy 0</li>
+        <li>Thưởng 30.000 đ từ ngân hàng Vũng</li>
+        <li data-section="account-info"><i class="fas fa-bell"></i> Thông tin tài khoản</li>
+        <li><i class="fas fa-lock"></i> Hỗ trợ cá nhân</li>
+        <li><i class="fas fa-shield-alt"></i> Số điện thoại</li>
+        <li data-section="change-password"><i class="fas fa-key"></i> Đổi mật khẩu</li>
+        <li><i class="fas fa-ticket-alt"></i> Thông tin xuất hóa đơn GTGT</li>
+        <li><i class="fas fa-user"></i> Đơn hàng của tôi</li>
+        <li><i class="fas fa-voucher"></i> Voucher <span>19</span></li>
+        <li><i class="fas fa-star"></i> Tài Khoản F-Point / Freeship</li>
+        <li><i class="fas fa-bell"></i> Thông Báo</li>
+        <li data-section="wishlist"><i class="fas fa-heart"></i> Sản phẩm yêu thích</li>
+        <li><i class="fas fa-book"></i> Sách của tôi</li>
+      </ul>
+    </div>
+    <div class="main-content">
+      <div class="section" id="account-info" style="display: block;">
+        <h2>Thông tin tài khoản</h2>
+        <div class="info-grid">
+          <div class="info-card">
+            <h3>F-Point hiện có</h3>
+            <p>0</p>
+          </div>
+          <div class="info-card">
+            <h3>Freeship hiện có</h3>
+            <p>0 Lần</p>
+          </div>
+          <div class="info-card">
+            <h3>Thành tích năm 2025</h3>
+            <p>Số đơn hàng: 0 đơn</p>
+          </div>
+          <div class="info-card">
+            <h3>Đánh giá</h3>
+            <p>0 đ</p>
+          </div>
+        </div>
+        <p><a href="#" class="detail-link">Khám phá hàng tháng viên. Xem chi tiết</a></p>
+      </div>
+      <div class="section" id="wishlist" style="display: none;">
+        <h2>Sản phẩm yêu thích</h2>
+        <div class="products-grid" id="wishlist-products">
+          <div class="loading-wishlist">Đang tải danh sách yêu thích...</div>
+        </div>
+      </div>
+      <div class="section" id="profile-form">
+        <h2>Hồ sơ cá nhân</h2>
+        <div id="errorMessage" style="display: none; color: red;"></div>
+        <div id="successMessage" style="display: none; color: green;"></div>
+        <div class="form-group">
+          <label for="hoten">Họ và Tên</label>
+          <input type="text" id="hoten" name="hoten">
+        </div>
+        <div class="form-group">
+          <label for="sodienthoai">Số điện thoại</label>
+          <input type="tel" id="sodienthoai" name="sodienthoai">
+        </div>
+        <div class="form-group">
+          <label for="email">Email</label>
+          <input type="email" id="email" name="email">
+        </div>
+        <div class="form-group">
+          <button type="button" id="updateBtn">Thay đổi</button>
+        </div>
+      </div>
+      <div class="section" id="change-password" style="display: none;">
+        <h2>Đổi mật khẩu</h2>
+        <div id="passwordErrorMessage" style="display: none; color: red;"></div>
+        <div id="passwordSuccessMessage" style="display: none; color: green;"></div>
+        <div class="form-group">
+          <label for="oldPassword">Mật khẩu cũ</label>
+          <input type="password" id="oldPassword" name="oldPassword">
+        </div>
+        <div class="form-group">
+          <label for="newPassword">Mật khẩu mới</label>
+          <input type="password" id="newPassword" name="newPassword">
+        </div>
+        <div class="form-group">
+          <label for="confirmPassword">Xác nhận mật khẩu mới</label>
+          <input type="password" id="confirmPassword" name="confirmPassword">
+        </div>
+        <div class="form-group">
+          <button type="button" id="changePasswordBtn">Thay đổi mật khẩu</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script src="js/profile.js"></script>
+</body>
+</html>

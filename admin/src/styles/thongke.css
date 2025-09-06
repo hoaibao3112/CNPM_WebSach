@@ -1,0 +1,50 @@
+.dashboard-container {
+    padding: 20px 20px 20px 170px; /* tăng padding-left thành 80px */
+    background: #f0f2f5;
+    min-height: 100vh;
+  }
+  
+.dashboard-title {
+  margin-bottom: 20px;
+  color: #1d39c4;
+}
+
+.overview-cards .statistic-card {
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  transition: all 0.3s;
+}
+
+.statistic-card:hover {
+  transform: translateY(-4px);
+}
+
+.revenue-card {
+  background: #f6ffed;
+}
+
+.order-card {
+  background: #e6f7ff;
+}
+
+.product-card {
+  background: #fff7e6;
+}
+
+.chart-card {
+  border-radius: 12px;
+  background: #ffffff;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+.empty-chart {
+  margin: 30px 0;
+  text-align: center;
+}
+
+.loading-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 60vh;
+}

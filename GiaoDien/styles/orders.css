@@ -1,0 +1,773 @@
+/* Reset và font chữ */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body {
+    background-color: #f5f5f5;
+    color: #333;
+    line-height: 1.6;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+/* Header */
+.order-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+    flex-wrap: wrap;
+    gap: 20px;
+}
+
+.order-header h1 {
+    font-size: 28px;
+    color: #2c3e50;
+}
+
+.order-header h1 i {
+    margin-right: 10px;
+    color: #3498db;
+}
+
+.filter-orders {
+    display: flex;
+    gap: 10px;
+}
+
+.filter-select {
+    padding: 8px 15px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    background-color: white;
+    font-size: 14px;
+}
+
+.search-btn {
+    padding: 8px 15px;
+    background-color: #3498db;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.search-btn:hover {
+    background-color: #2980b9;
+}
+
+/* Danh sách đơn hàng */
+.order-list {
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+}
+
+.no-orders {
+    text-align: center;
+    padding: 50px 20px;
+}
+
+.no-orders i {
+    font-size: 50px;
+    color: #bdc3c7;
+    margin-bottom: 20px;
+}
+
+.no-orders p {
+    font-size: 18px;
+    color: #7f8c8d;
+    margin-bottom: 20px;
+}
+
+.order-card {
+    border: 1px solid #eee;
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 15px;
+    transition: box-shadow 0.3s;
+    cursor: pointer;
+}
+
+.order-card:hover {
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+.order-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #eee;
+}
+
+.order-id {
+    font-weight: bold;
+    color: #3498db;
+}
+
+.order-date {
+    color: #7f8c8d;
+    font-size: 14px;
+}
+
+.order-status {
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.status-pending {
+    background-color: #fff3cd;
+    color: #856404;
+}
+
+.status-processing {
+    background-color: #cce5ff;
+    color: #004085;
+}
+
+.status-shipping {
+    background-color: #d4edda;
+    color: #155724;
+}
+
+.status-completed {
+    background-color: #e2e3e5;
+    color: #383d41;
+}
+
+.status-cancelled {
+    background-color: #f8d7da;
+    color: #721c24;
+}
+
+.order-summary {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 10px;
+}
+
+.order-items-count {
+    color: #7f8c8d;
+}
+
+.order-total {
+    font-weight: bold;
+    color: #e74c3c;
+}
+
+/* Modal chi tiết đơn hàng */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    overflow-y: auto;
+}
+
+.modal-content {
+    background-color: white;
+    margin: 50px auto;
+    padding: 25px;
+    border-radius: 8px;
+    width: 90%;
+    max-width: 800px;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+    position: relative;
+}
+
+.close-modal {
+    position: absolute;
+    top: 15px;
+    right: 20px;
+    font-size: 28px;
+    color: #aaa;
+    cursor: pointer;
+}
+
+.close-modal:hover {
+    color: #333;
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #eee;
+}
+
+.modal-header h2 {
+    font-size: 22px;
+    color: #2c3e50;
+}
+
+.order-detail-body {
+    margin-bottom: 20px;
+}
+
+.order-info-section, .shipping-info-section, .order-items-section {
+    margin-bottom: 25px;
+}
+
+.order-info-section h3, .shipping-info-section h3, .order-items-section h3 {
+    margin-bottom: 15px;
+    color: #3498db;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.info-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+    margin-bottom: 15px;
+}
+
+.order-item {
+    display: flex;
+    padding: 10px 0;
+    border-bottom: 1px solid #eee;
+}
+
+.order-item:last-child {
+    border-bottom: none;
+}
+
+.order-item-img {
+    width: 80px;
+    height: 80px;
+    object-fit: cover;
+    border-radius: 4px;
+    margin-right: 15px;
+}
+
+.order-item-info {
+    flex: 1;
+}
+
+.order-item-name {
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.order-item-price {
+    color: #e74c3c;
+    font-weight: bold;
+}
+
+.order-item-quantity {
+    color: #7f8c8d;
+}
+
+.modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.btn {
+    padding: 8px 15px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.3s;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.print-btn {
+    background-color: #3498db;
+    color: white;
+}
+
+.print-btn:hover {
+    background-color: #2980b9;
+}
+
+.cancel-order-btn {
+    background-color: #f8d7da;
+    color: #721c24;
+}
+
+.cancel-order-btn:hover {
+    background-color: #f5c6cb;
+}
+
+.track-order-btn {
+    background-color: #d4edda;
+    color: #155724;
+}
+
+.track-order-btn:hover {
+    background-color: #c3e6cb;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .info-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .modal-actions {
+        flex-direction: column;
+    }
+    
+    .btn {
+        width: 100%;
+        justify-content: center;
+    }
+}
+.loading-spinner {
+    color: #fff;
+    text-align: center;
+    margin-top: 50px;
+}
+
+.loading-spinner i {
+    color: #4CAF50;
+}
+
+#loading-modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.7);
+}
+/* Phần sản phẩm */
+.order-items {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.order-item {
+    display: flex;
+    gap: 1rem;
+    padding: 1rem;
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.item-image img {
+    width: 80px;
+    height: 80px;
+    object-fit: cover;
+    border-radius: 4px;
+}
+
+.item-info {
+    flex: 1;
+}
+
+.item-name {
+    margin: 0 0 0.5rem 0;
+    color: #333;
+}
+
+.item-details {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+.item-price {
+    color: #e74c3c;
+    font-weight: 500;
+}
+
+.item-quantity {
+    color: #666;
+}
+
+.item-total {
+    font-weight: bold;
+    color: #2c3e50;
+}
+/* Floating chat button */
+.chat-floating-btn {
+    position: fixed;
+    left: 20px;
+    bottom: 20px;
+    background-color: #4CAF50;
+    color: white;
+    padding: 12px 20px;
+    border-radius: 30px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    z-index: 1000;
+    transition: all 0.3s ease;
+}
+
+.chat-floating-btn:hover {
+    background-color: #45a049;
+    transform: translateY(-3px);
+}
+
+.chat-floating-btn i {
+    font-size: 18px;
+}
+
+/* Chat popup */
+.chat-popup {
+    position: fixed;
+    left: 20px;
+    bottom: 80px;
+    width: 350px;
+    height: 450px;
+    background-color: white;
+    border-radius: 10px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    display: none;
+    flex-direction: column;
+    z-index: 1001;
+    overflow: hidden;
+}
+
+.chat-popup.show {
+    display: flex;
+    animation: fadeInUp 0.3s ease;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.chat-popup-header {
+    background-color: #4CAF50;
+    color: white;
+    padding: 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.chat-popup-header h3 {
+    margin: 0;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.close-chat-btn {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 24px;
+    cursor: pointer;
+    padding: 0;
+    line-height: 1;
+}
+
+.chat-popup-body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.chat-messages {
+    flex: 1;
+    padding: 15px;
+    overflow-y: auto;
+    background-color: #f5f5f5;
+}
+
+.chat-input-area {
+    display: flex;
+    padding: 10px;
+    border-top: 1px solid #ddd;
+    background-color: white;
+}
+
+.chat-input-area input {
+    flex: 1;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 20px;
+    outline: none;
+}
+
+.chat-input-area button {
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    margin-left: 10px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.chat-input-area button:hover {
+    background-color: #45a049;
+}
+
+/* Chat message styles */
+.chat-message {
+    margin-bottom: 10px;
+    padding: 8px 12px;
+    border-radius: 15px;
+    max-width: 80%;
+    word-wrap: break-word;
+    font-size: 14px;
+}
+
+.chat-message.sent {
+    background-color: #dcf8c6;
+    margin-left: auto;
+    border-bottom-right-radius: 0;
+}
+
+.chat-message.received {
+    background-color: #fff;
+    margin-right: auto;
+    border-bottom-left-radius: 0;
+    border: 1px solid #eee;
+}
+
+.message-time {
+    font-size: 0.7rem;
+    color: #666;
+    text-align: right;
+    margin-top: 3px;
+}
+#cancel-order-btn {
+    display: inline-flex;
+    align-items: center;
+    padding: 8px 16px;
+    background-color: #dc3545;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-right: 10px;
+}
+#cancel-order-btn:hover {
+    background-color: #c82333;
+}
+#cancel-order-btn[style*="display: none"] {
+    display: none !important;
+}
+
+/* Delivery Map Section */
+.delivery-map-section {
+    margin: 20px 0;
+    padding: 15px;
+    background-color: #f9f9f9;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.delivery-map-section h3 {
+    font-size: 1.2em;
+    margin-bottom: 10px;
+    color: #333;
+    display: flex;
+    align-items: center;
+}
+
+.delivery-map-section h3 i {
+    margin-right: 8px;
+    color: #007bff;
+}
+
+#delivery-map {
+    width: 100%;
+    height: 300px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.delivery-map-section p {
+    margin: 10px 0;
+    font-size: 0.95em;
+    color: #555;
+}
+
+.delivery-map-section p strong {
+    color: #222;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    #delivery-map {
+        height: 200px;
+    }
+
+    .delivery-map-section h3 {
+        font-size: 1.1em;
+    }
+
+    .delivery-map-section p {
+        font-size: 0.9em;
+    }
+}
+
+@media (max-width: 480px) {
+    #delivery-map {
+        height: 150px;
+    }
+
+    .delivery-map-section {
+        padding: 10px;
+    }
+}
+/* Modal xác nhận hủy đơn hàng */
+#cancel-order-modal {
+    display: none;
+    position: fixed;
+    z-index: 1001;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    overflow-y: auto;
+}
+
+#cancel-order-modal .modal-content {
+    background-color: white;
+    margin: 15% auto;
+    padding: 20px;
+    border-radius: 8px;
+    width: 90%;
+    max-width: 500px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    position: relative;
+}
+
+#cancel-order-modal .modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    border-bottom: 1px solid #eee;
+}
+
+#cancel-order-modal .modal-header h2 {
+    font-size: 20px;
+    color: #e74c3c;
+    margin: 0;
+}
+
+#cancel-order-modal .close-modal-cancel {
+    font-size: 24px;
+    color: #aaa;
+    cursor: pointer;
+}
+
+#cancel-order-modal .close-modal-cancel:hover {
+    color: #333;
+}
+
+#cancel-order-modal .modal-body {
+    margin-bottom: 20px;
+}
+
+#cancel-order-modal .modal-body p {
+    font-size: 16px;
+    color: #333;
+    margin-bottom: 15px;
+}
+
+#cancel-order-modal .reason-input {
+    margin-bottom: 15px;
+}
+
+#cancel-order-modal .reason-input label {
+    display: block;
+    font-size: 14px;
+    color: #2c3e50;
+    margin-bottom: 5px;
+}
+
+#cancel-order-modal .reason-input textarea {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    resize: vertical;
+    font-size: 14px;
+    box-sizing: border-box;
+}
+
+#cancel-order-modal .modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+#cancel-order-modal .confirm-btn {
+    background-color: #e74c3c;
+    color: white;
+    padding: 8px 15px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+#cancel-order-modal .confirm-btn:hover {
+    background-color: #c0392b;
+}
+
+#cancel-order-modal .cancel-btn {
+    background-color: #3498db;
+    color: white;
+    padding: 8px 15px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+#cancel-order-modal .cancel-btn:hover {
+    background-color: #2980b9;
+}
+
+@media (max-width: 768px) {
+    #cancel-order-modal .modal-content {
+        margin: 20% auto;
+    }
+}
