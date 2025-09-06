@@ -1,0 +1,10 @@
+# Ignore everything
+*
+
+# But keep these 3 folders
+!/GiaoDien/
+!/server/
+!/admin/
+
+# Keep gitignore file itself
+!.gitignore
