@@ -6,7 +6,7 @@ const router = express.Router();
 
 const authenticate = async (req, res, next) => {
     try {
-        console.log('Headers:', req.headers); // Log toàn bộ headers
+        console.log('Headers:', req.headers);
         console.log('Authorization header:', req.headers.authorization);
         
         const authHeader = req.headers.authorization;
@@ -22,16 +22,16 @@ const authenticate = async (req, res, next) => {
         }
 
         console.log('Token:', token);
-        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your_secret_key'); // Thêm 
+        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your_secret_key');
         console.log('Decoded token:', decoded);
         
         let user;
         if (decoded.userType === 'customer') {
-            console.log('Querying customer with ID:', decoded.userId);
-            [user] = await db.query('SELECT * FROM khachhang WHERE makh = ?', [decoded.userId]);
+            console.log('Querying customer with ID:', decoded.makh);
+            [user] = await db.query('SELECT * FROM khachhang WHERE makh = ?', [decoded.makh]);
         } else if (decoded.userType === 'staff') {
-            console.log('Querying staff with username:', decoded.userId);
-[user] = await db.query('SELECT * FROM taikhoan WHERE TenTK = ?', [decoded.userId]);
+            console.log('Querying staff with username:', decoded.makh);
+            [user] = await db.query('SELECT * FROM taikhoan WHERE TenTK = ?', [decoded.makh]);
         } else {
             console.log('Invalid user type:', decoded.userType);
             return res.status(401).json({ error: 'Invalid user type' });
@@ -63,6 +63,27 @@ router.post('/rooms', authenticate, async (req, res) => {
     try {
         const { customer_id } = req.body;
         
+        // Validate input
+        if (!customer_id) {
+            console.log('Missing customer_id in body:', req.body);
+            return res.status(400).json({ 
+                success: false, 
+                error: 'customer_id is required in request body' 
+            });
+        }
+
+        console.log(`Creating room for customer_id: ${customer_id}`);
+
+        // Optional: Check if customer exists
+        const [customer] = await db.query('SELECT makh FROM khachhang WHERE makh = ?', [customer_id]);
+        if (customer.length === 0) {
+            console.log(`Customer ${customer_id} not found`);
+            return res.status(400).json({ 
+                success: false, 
+                error: 'Invalid customer_id: Customer not found' 
+            });
+        }
+
         // Tạo phòng chat mới
         const [result] = await db.query(
             `INSERT INTO chat_rooms 
@@ -70,6 +91,8 @@ router.post('/rooms', authenticate, async (req, res) => {
              VALUES (?)`,
             [customer_id]
         );
+
+        console.log(`Room created with ID: ${result.insertId}`);
 
         const [newRoom] = await db.query(
             'SELECT * FROM chat_rooms WHERE room_id = ?',
@@ -81,15 +104,15 @@ router.post('/rooms', authenticate, async (req, res) => {
             room: newRoom[0]
         });
     } catch (error) {
-        console.error('Create room error:', error);
+        console.error('Create room error details:', error);  // Log full error for debug
         res.status(500).json({ 
             success: false,
-            error: 'Server error' 
+            error: error.message || 'Server error'  // Trả error cụ thể hơn
         });
     }
 });
 
-// Lấy thông tin phòng chat
+// Các route khác giữ nguyên (copy từ code cũ của bạn nếu cần)
 router.get('/rooms/:room_id', authenticate, async (req, res) => {
     try {
         const { room_id } = req.params;
@@ -112,20 +135,24 @@ router.get('/rooms/:room_id', authenticate, async (req, res) => {
             room: room[0]
         });
     } catch (error) {
-        console.error('Get room error:', error);
+        console.error('Get room error details:', error);
         res.status(500).json({ 
             success: false,
-            error: 'Server error' 
+            error: error.message || 'Server error' 
         });
     }
 });
+
 router.post('/messages', authenticate, async (req, res) => {
     try {
         const { room_id, message } = req.body;
-        const sender_type = req.user.userType; // 'customer' hoặc 'staff'
+        const sender_type = req.user.userType;
         const sender_id = req.user.userType === 'staff' ? req.user.TenTK : req.user.makh;
 
-        // Insert message
+        if (!room_id || !message) {
+            return res.status(400).json({ success: false, error: 'room_id and message are required' });
+        }
+
         const [result] = await db.query(
             `INSERT INTO chat_messages 
              (room_id, sender_id, sender_type, message) 
@@ -133,7 +160,6 @@ router.post('/messages', authenticate, async (req, res) => {
             [room_id, sender_id, sender_type, message]
         );
 
-        // Update room timestamp
         await db.query(
             `UPDATE chat_rooms SET updated_at = CURRENT_TIMESTAMP 
              WHERE room_id = ?`,
@@ -152,15 +178,14 @@ router.post('/messages', authenticate, async (req, res) => {
             }
         });
     } catch (error) {
-        console.error('Send message error:', error);
+        console.error('Send message error details:', error);
         res.status(500).json({ 
             success: false,
-            error: 'Server error' 
+            error: error.message || 'Server error' 
         });
     }
 });
 
-// Lấy tin nhắn
 router.get('/rooms/:room_id/messages', authenticate, async (req, res) => {
     try {
         const { room_id } = req.params;
@@ -177,10 +202,10 @@ router.get('/rooms/:room_id/messages', authenticate, async (req, res) => {
             messages
         });
     } catch (error) {
-        console.error('Get messages error:', error);
+        console.error('Get messages error details:', error);
         res.status(500).json({ 
             success: false,
-            error: 'Server error' 
+            error: error.message || 'Server error' 
         });
     }
 });
@@ -200,7 +225,6 @@ router.get('/rooms', authenticate, async (req, res) => {
                 ORDER BY cr.updated_at DESC
             `;
         } else {
-            // Khách hàng chỉ xem phòng của mình
             query = `
                 SELECT cr.*, 
                        COUNT(cm.message_id) AS message_count
@@ -219,10 +243,10 @@ router.get('/rooms', authenticate, async (req, res) => {
             rooms
         });
     } catch (error) {
-        console.error('Get rooms error:', error);
+        console.error('Get rooms error details:', error);
         res.status(500).json({ 
             success: false,
-            error: 'Server error' 
+            error: error.message || 'Server error' 
         });
     }
 });

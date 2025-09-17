@@ -12,6 +12,7 @@ document.addEventListener('DOMContentLoaded', function() {
         console.log('Product data from localStorage:', productInfo.data);
         displayProductDetail(productInfo.data);
         fetchRelatedProducts(productInfo.data.MaSP);
+        fetchRatings(productInfo.data.MaSP); // Thêm gọi API đánh giá
         if (productInfo.data.MaTG && productInfo.data.MaTG !== 'null' && productInfo.data.MaTG !== '') {
             fetchRelatedAuthor(productInfo.data.MaTG);
         } else {
@@ -25,6 +26,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // 3. Thiết lập các sự kiện
     setupEventListeners();
     setupCommentSection(productInfo.data.MaSP || productInfo.data);
+    setupRatingSection(productInfo.data.MaSP || productInfo.data); // Thêm thiết lập phần đánh giá
 });
 
 /**
@@ -94,6 +96,241 @@ function setupEventListeners() {
 }
 
 /**
+ * Thiết lập phần đánh giá
+ */
+function setupRatingSection(productId) {
+    const ratingForm = document.getElementById('rating-form');
+    if (!ratingForm) return; // Nếu không có form đánh giá
+
+    const ratingInput = document.getElementById('rating-comment');
+    const submitRatingBtn = document.getElementById('submit-rating');
+    const ratingMessage = document.getElementById('rating-message');
+    const charCount = document.getElementById('rating-char-count');
+    const starInputs = document.querySelectorAll('#star-input i');
+
+    // Kiểm tra trạng thái đăng nhập
+    const user = JSON.parse(localStorage.getItem('user') || localStorage.getItem('loggedInUser'));
+    const token = localStorage.getItem('token');
+
+    if (!user || !token) {
+        ratingInput.disabled = true;
+        submitRatingBtn.disabled = true;
+        ratingMessage.textContent = 'Vui lòng đăng nhập để gửi đánh giá.';
+        ratingMessage.classList.add('error');
+        return;
+    }
+
+    ratingInput.disabled = false;
+    submitRatingBtn.disabled = true;
+
+    let selectedStars = 0;
+    let isEditing = false;
+    let editingRatingId = null;
+
+    // Xử lý chọn sao
+    starInputs.forEach(star => {
+        star.addEventListener('click', () => {
+            selectedStars = parseInt(star.dataset.value);
+            starInputs.forEach(s => {
+                s.classList.toggle('fas', parseInt(s.dataset.value) <= selectedStars);
+                s.classList.toggle('far', parseInt(s.dataset.value) > selectedStars);
+            });
+            submitRatingBtn.disabled = selectedStars === 0;
+        });
+    });
+
+    // Đếm ký tự nhận xét
+    const updateCharCount = () => {
+        const length = ratingInput.value.length;
+        charCount.textContent = `${length}/500`;
+        charCount.classList.toggle('warning', length > 450);
+        submitRatingBtn.disabled = selectedStars === 0;
+    };
+    ratingInput.addEventListener('input', updateCharCount);
+    updateCharCount();
+
+    // Xử lý submit form đánh giá
+    ratingForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        if (selectedStars === 0) {
+            showAlert('Vui lòng chọn số sao!', 'error');
+            return;
+        }
+
+        const method = isEditing ? 'PUT' : 'POST';
+        const url = isEditing ? `http://localhost:5000/api/ratings/${editingRatingId}` : `http://localhost:5000/api/ratings`;
+        const body = {
+            masp: productId,
+            sosao: selectedStars,
+            nhanxet: ratingInput.value.trim() || null
+        };
+
+        try {
+            const response = await fetch(url, {
+                method,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify(body)
+            });
+
+            const result = await response.json();
+            if (response.ok) {
+                showAlert(result.message, 'success');
+                // Reset form
+                ratingInput.value = '';
+                selectedStars = 0;
+                starInputs.forEach(s => s.classList.replace('fas', 'far'));
+                submitRatingBtn.disabled = true;
+                submitRatingBtn.textContent = 'Gửi đánh giá';
+                submitRatingBtn.dataset.ratingId = '';
+                isEditing = false;
+                editingRatingId = null;
+                // Reload đánh giá
+                fetchRatings(productId);
+            } else {
+                showAlert(result.error || 'Lỗi khi gửi đánh giá', 'error');
+            }
+        } catch (error) {
+            console.error('Error submitting rating:', error);
+            showAlert('Lỗi khi gửi đánh giá', 'error');
+        }
+    });
+}
+
+/**
+ * Lấy danh sách đánh giá từ API
+ */
+async function fetchRatings(productId) {
+    try {
+        const response = await fetch(`http://localhost:5000/api/ratings/${productId}`);
+        if (response.ok) {
+            const result = await response.json();
+            displayRatings(result.ratings, result.averageRating, result.totalRatings, productId);
+        } else {
+            const result = await response.json();
+            showAlert(result.error || 'Lỗi khi tải đánh giá', 'error');
+        }
+    } catch (error) {
+        console.error('Error fetching ratings:', error);
+        showAlert('Lỗi khi tải đánh giá', 'error');
+    }
+}
+
+/**
+ * Hiển thị danh sách đánh giá
+ */
+function displayRatings(ratings, averageRating, totalRatings, productId) {
+    const ratingsList = document.getElementById('ratings-list');
+    const averageRatingEl = document.getElementById('average-rating');
+    const totalRatingsEl = document.getElementById('total-ratings');
+    const starDisplay = document.getElementById('star-display');
+    const user = JSON.parse(localStorage.getItem('user') || localStorage.getItem('loggedInUser'));
+    const token = localStorage.getItem('token');
+
+    if (!ratingsList || !averageRatingEl || !totalRatingsEl || !starDisplay) return;
+
+    averageRatingEl.textContent = averageRating.toFixed(1);
+    totalRatingsEl.textContent = `(${totalRatings} đánh giá)`;
+    starDisplay.innerHTML = generateStarDisplay(averageRating);
+
+    if (ratings.length === 0) {
+        ratingsList.innerHTML = '<p>Chưa có đánh giá nào.</p>';
+        return;
+    }
+
+    ratingsList.innerHTML = ratings.map(rating => {
+        const isOwnRating = user && user.makh === rating.MaKH;
+        return `
+            <div class="rating-item">
+                <div class="rating-header">
+                    <span class="rating-user">${escapeHtml(rating.TenKH)}</span>
+                    <span class="rating-stars">${generateStarDisplay(rating.SoSao)}</span>
+                    <span class="rating-date">${formatDate(rating.NgayDanhGia)}</span>
+                </div>
+                <p class="rating-comment">${rating.NhanXet ? escapeHtml(rating.NhanXet) : 'Không có nhận xét'}</p>
+                ${isOwnRating ? `
+                    <div class="rating-actions">
+                        <button class="edit-rating" data-id="${rating.MaDG}" data-stars="${rating.SoSao}" data-comment="${escapeHtml(rating.NhanXet || '')}">Chỉnh sửa</button>
+                        <button class="delete-rating" data-id="${rating.MaDG}">Xóa</button>
+                    </div>
+                ` : ''}
+            </div>
+        `;
+    }).join('');
+
+    // Xử lý nút chỉnh sửa
+    document.querySelectorAll('.edit-rating').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const ratingId = btn.dataset.id;
+            const stars = parseInt(btn.dataset.stars);
+            const comment = btn.dataset.comment;
+            const starInputs = document.querySelectorAll('#star-input i');
+            const submitRatingBtn = document.getElementById('submit-rating');
+
+            // Điền sao
+            starInputs.forEach(s => {
+                s.classList.toggle('fas', parseInt(s.dataset.value) <= stars);
+                s.classList.toggle('far', parseInt(s.dataset.value) > stars);
+            });
+
+            // Điền nhận xét
+            document.getElementById('rating-comment').value = comment;
+
+            // Chuyển sang chế độ chỉnh sửa
+            submitRatingBtn.textContent = 'Cập nhật đánh giá';
+            submitRatingBtn.dataset.ratingId = ratingId;
+            document.getElementById('rating-form').scrollIntoView({ behavior: 'smooth' });
+        });
+    });
+
+    // Xử lý nút xóa
+    document.querySelectorAll('.delete-rating').forEach(btn => {
+        btn.addEventListener('click', async () => {
+            if (!confirm('Bạn có chắc muốn xóa đánh giá này?')) return;
+
+            const ratingId = btn.dataset.id;
+            try {
+                const response = await fetch(`http://localhost:5000/api/ratings/${ratingId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                const result = await response.json();
+                if (response.ok) {
+                    showAlert(result.message, 'success');
+                    fetchRatings(productId);
+                } else {
+                    showAlert(result.error || 'Lỗi khi xóa đánh giá', 'error');
+                }
+            } catch (error) {
+                console.error('Error deleting rating:', error);
+                showAlert('Lỗi khi xóa đánh giá', 'error');
+            }
+        });
+    });
+}
+
+/**
+ * Tạo HTML hiển thị sao
+ */
+function generateStarDisplay(rating) {
+    let html = '';
+    for (let i = 1; i <= 5; i++) {
+        if (i <= Math.floor(rating)) {
+            html += '<i class="fas fa-star"></i>';
+        } else if (i === Math.ceil(rating) && rating % 1 >= 0.5) {
+            html += '<i class="fas fa-star-half-alt"></i>';
+        } else {
+            html += '<i class="far fa-star"></i>';
+        }
+    }
+    return html;
+}
+
+/**
  * Thiết lập phần bình luận
  */
 function setupCommentSection(productId) {
@@ -102,6 +339,7 @@ function setupCommentSection(productId) {
     const submitCommentBtn = document.getElementById('submit-comment');
     const commentMessage = document.getElementById('comment-message');
     const charCount = document.getElementById('comment-char-count');
+    const commentsList = document.getElementById('comments-list');
 
     // Kiểm tra trạng thái đăng nhập
     const user = JSON.parse(localStorage.getItem('user') || localStorage.getItem('loggedInUser'));
@@ -114,11 +352,9 @@ function setupCommentSection(productId) {
         return;
     }
 
-    // Kích hoạt input và nút gửi
     commentInput.disabled = false;
     submitCommentBtn.disabled = true;
 
-    // Cập nhật bộ đếm ký tự
     const updateCharCount = () => {
         const length = commentInput.value.length;
         charCount.textContent = `${length}/500`;
@@ -131,7 +367,8 @@ function setupCommentSection(productId) {
     // Tải và hiển thị bình luận
     displayComments(productId);
 
-    // Sự kiện gửi bình luận
+    // Sự kiện gửi bình luận (hỗ trợ reply - mabl_cha sẽ được set nếu reply)
+    let currentReplyTo = null; // Để track nếu đang reply comment nào
     commentForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         const commentText = commentInput.value.trim();
@@ -148,7 +385,11 @@ function setupCommentSection(productId) {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${token}`
                 },
-                body: JSON.stringify({ masp: productId, noidung: commentText })
+                body: JSON.stringify({
+                    masp: productId,
+                    noidung: commentText,
+                    mabl_cha: currentReplyTo || null
+                })
             });
 
             const result = await response.json();
@@ -158,10 +399,11 @@ function setupCommentSection(productId) {
 
             commentInput.value = '';
             updateCharCount();
+            currentReplyTo = null; // Reset reply mode
             commentMessage.textContent = 'Bình luận đã được gửi!';
             commentMessage.classList.remove('error');
             commentMessage.classList.add('success');
-            displayComments(productId);
+            displayComments(productId); // Reload comments
         } catch (error) {
             commentMessage.textContent = error.message;
             commentMessage.classList.add('error');
@@ -173,15 +415,57 @@ function setupCommentSection(productId) {
         commentMessage.textContent = '';
         commentMessage.classList.remove('error', 'success');
     });
+
+    // Event delegation cho like và reply buttons
+    commentsList.addEventListener('click', async (e) => {
+        const likeBtn = e.target.closest('.like-btn');
+        if (likeBtn) {
+            const mabl = likeBtn.dataset.mabl;
+            try {
+                const response = await fetch(`http://localhost:5000/api/comments/${mabl}/like`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                const result = await response.json();
+                if (response.ok) {
+                    likeBtn.textContent = result.action === 'liked' ? `Unlike (${result.like_count})` : `Like (${result.like_count})`;
+                    likeBtn.classList.toggle('liked', result.action === 'liked');
+                }
+            } catch (error) {
+                console.error('Error liking comment:', error);
+                showAlert('Lỗi khi like bình luận', 'error');
+            }
+            return;
+        }
+
+        const replyBtn = e.target.closest('.reply-btn');
+        if (replyBtn) {
+            currentReplyTo = replyBtn.dataset.mabl;
+            const placeholder = currentReplyTo ? `Trả lời ${replyBtn.dataset.tenkh}...` : 'Viết bình luận...';
+            commentInput.placeholder = placeholder;
+            commentInput.focus();
+            return;
+        }
+
+        const cancelReplyBtn = e.target.closest('.cancel-reply-btn');
+        if (cancelReplyBtn) {
+            currentReplyTo = null;
+            commentInput.placeholder = 'Viết bình luận...';
+            return;
+        }
+    });
 }
 
 /**
- * Hiển thị danh sách bình luận
+ * Hiển thị danh sách bình luận (hỗ trợ phân cấp replies và like_count)
  */
 async function displayComments(productId) {
     const commentsList = document.getElementById('comments-list');
     try {
-        const response = await fetch(`http://localhost:5000/api/comments/product/${productId}`);
+        const response = await fetch(`http://localhost:5000/api/comments/product/${productId}?page=1&limit=10`);
         if (!response.ok) throw new Error('Lỗi khi tải bình luận');
         const { data: comments } = await response.json();
 
@@ -190,22 +474,41 @@ async function displayComments(productId) {
             return;
         }
 
-        commentsList.innerHTML = comments.map(comment => `
-            <div class="comment-item">
-                <div class="comment-avatar">${escapeHtml(comment.tenkh[0].toUpperCase())}</div>
-                <div class="comment-content">
-                    <div class="comment-header">
-                        <span class="comment-user">${escapeHtml(comment.tenkh)}</span>
-                        <span class="comment-date">${formatDate(comment.ngaybinhluan)}</span>
-                    </div>
-                    <p class="comment-text">${escapeHtml(comment.noidung)}</p>
-                </div>
-            </div>
-        `).join('');
+        // Render comments với replies nested
+        const renderedComments = comments.map(comment => renderComment(comment, true)).join('');
+        commentsList.innerHTML = renderedComments;
     } catch (error) {
         console.error('Error:', error);
         commentsList.innerHTML = '<p class="error">Lỗi khi tải bình luận.</p>';
     }
+}
+
+/**
+ * Render một comment (recursive cho replies)
+ */
+function renderComment(comment, isTopLevel = false) {
+    const repliesHtml = comment.replies ? comment.replies.map(reply => renderComment(reply, false)).join('') : '';
+    const replySection = repliesHtml ? `<div class="replies">${repliesHtml}</div>` : '';
+
+    return `
+        <div class="comment-item ${!isTopLevel ? 'reply' : ''}">
+            <div class="comment-avatar">${escapeHtml(comment.tenkh[0].toUpperCase())}</div>
+            <div class="comment-content">
+                <div class="comment-header">
+                    <span class="comment-user">${escapeHtml(comment.tenkh)}</span>
+                    <span class="comment-date">${formatDate(comment.ngaybinhluan)}</span>
+                </div>
+                <p class="comment-text">${escapeHtml(comment.noidung)}</p>
+                ${replySection}
+                <div class="comment-actions">
+                    <button class="reply-btn" data-mabl="${comment.mabl}" data-tenkh="${escapeHtml(comment.tenkh)}">Trả lời</button>
+                    ${!isTopLevel ? '<button class="cancel-reply-btn">Hủy trả lời</button>' : ''}
+                    <button class="like-btn ${comment.like_count > 0 ? 'liked' : ''}" data-mabl="${comment.mabl}">Like (${comment.like_count || 0})</button>
+                    <span class="reply-count">${comment.reply_count || 0} trả lời</span>
+                </div>
+            </div>
+        </div>
+    `;
 }
 
 /**
@@ -223,6 +526,7 @@ async function fetchProductDetail(productId) {
         localStorage.setItem('currentProduct', JSON.stringify(product));
         displayProductDetail(product);
         fetchRelatedProducts(product.MaSP);
+        fetchRatings(product.MaSP); // Thêm gọi API đánh giá
         if (product.MaTG && product.MaTG !== 'null' && product.MaTG !== '') {
             fetchRelatedAuthor(product.MaTG);
         } else {
@@ -478,28 +782,24 @@ const formatPrice = (price) => new Intl.NumberFormat('vi-VN').format(price) + ' 
  * Hiển thị thông báo dạng toast
  */
 function showAlert(message, type = 'success') {
-    // Tạo phần tử toast
     const toast = document.createElement('div');
     toast.className = `toast-notification toast-${type}`;
     toast.textContent = message;
 
-    // Thêm toast vào container
     const container = document.createElement('div');
     container.className = 'toast-container';
     container.appendChild(toast);
     document.body.appendChild(container);
 
-    // Kích hoạt animation
     setTimeout(() => {
         toast.classList.add('show');
     }, 100);
 
-    // Xóa toast sau 3 giây
     setTimeout(() => {
         toast.classList.remove('show');
         setTimeout(() => {
             container.remove();
-        }, 300); // Đợi animation hoàn tất
+        }, 300);
     }, 3000);
 }
 

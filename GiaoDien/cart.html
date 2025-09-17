@@ -3,172 +3,215 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Đơn Hàng Của Bạn</title>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+  <title>Giỏ hàng - Trung Phong</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="stylesheet" href="styles/cart.css">
 </head>
 <body>
+  <div class="top-right-button">
+    <a href="orders.html" class="my-orders-btn">
+      <i class="fas fa-receipt"></i> Đơn hàng của tôi
+    </a>
+  </div>
+  
   <div class="container">
     <h1 class="page-title">GIỎ HÀNG CỦA BẠN</h1>
     
-    <!-- Coupon Section -->
     <div class="coupon-section">
       <div class="coupon-box">
-        <i class="fas fa-ticket-alt"></i>
-        <label>Bạn có mã giảm giá? Nhập mã tại đây</label>
+        <i class="fas fa-tag"></i>
+        <p>Bạn có mã giảm giá? Nhập mã tại đây</p>
         <div class="coupon-input">
-          <input type="text" id="coupon-code" placeholder="Nhập mã giảm giá">
-          <button class="apply-btn">ÁP DỤNG</button>
+          <input type="text" placeholder="Nhập mã giảm giá" id="coupon-code">
+          <button class="apply-btn" id="apply-coupon">ÁP DỤNG</button>
         </div>
       </div>
     </div>
-
-    <!-- Cart Section -->
+    
     <div class="cart-section">
       <div class="cart-items">
         <table class="cart-table">
-          <thead>
-            <tr>
-              <th>CHỌN</th>
-              <th>SẢN PHẨM</th>
-              <th>GIÁ</th>
-              <th>SỐ LƯỢNG</th>
-              <th>TỔNG</th>
-              <th></th>
-            </tr>
-          </thead>
+       <thead>
+  <tr>
+    <th class="select-col">CHỌN</th>
+    <th class="product-col">SẢN PHẨM</th>
+    <th class="price-col">GIÁ</th>
+    <th class="quantity-col">SỐ LƯỢNG</th>
+    <th class="total-col">TỔNG</th>
+    <th></th>
+  </tr>
+</thead>
           <tbody id="cart-items-body">
-            <tr id="empty-cart" style="display: none;">
-              <td colspan="6">
-                <p>Giỏ hàng của bạn đang trống</p>
-                <a href="index.html" class="continue-shopping">TIẾP TỤC MUA SẮM</a>
-              </td>
-            </tr>
+            <!-- Cart items will be loaded by JavaScript -->
           </tbody>
-          <tfoot>
-            <tr>
-              <td colspan="6">
-                <a href="index.html" class="continue-shopping">TIẾP TỤC MUA SẮM</a>
-                <button class="update-cart" onclick="updateCart()">CẬP NHẬT GIỎ HÀNG</button>
-              </td>
-            </tr>
-          </tfoot>
         </table>
+        
+        <div id="empty-cart" class="empty-cart-message">
+          <div class="empty-cart">
+            <i class="fas fa-shopping-cart"></i>
+            <p>Giỏ hàng của bạn đang trống</p>
+            <a href="book.html" class="continue-btn">
+              <i class="fas fa-arrow-left"></i> TIẾP TỤC MUA SẮM
+            </a>
+          </div>
+        </div>
+        
+        <div class="cart-actions">
+          <a href="book.html" class="continue-btn">
+            <i class="fas fa-arrow-left"></i> TIẾP TỤC MUA SẮM
+          </a>
+          <button class="update-btn" id="update-cart">
+            <i class="fas fa-sync-alt"></i> CẬP NHẬT GIỎ HÀNG
+          </button>
+        </div>
       </div>
       
-      <!-- Checkout Summary -->
       <div class="checkout-section">
-        <div class="summary-box">
-          <h3>THANH TOÁN</h3>
-          <div>
-            <span>Tổng phụ</span>
-            <span id="subtotal">0đ</span>
+        <div class="order-summary">
+          <h2>THANH TOÁN</h2>
+          
+          <div class="order-totals">
+            <div class="order-row">
+              <span>Tổng phụ</span>
+              <span id="subtotal">0đ</span>
+            </div>
+            <div class="order-row" id="discount-row" style="display: none;">
+              <span>Giảm giá</span>
+              <span id="discount">-0đ</span>
+            </div>
+            <div class="order-row">
+              <span>Phí vận chuyển</span>
+              <span id="shipping">Miễn phí</span>
+            </div>
+            <div class="order-row order-total">
+              <span>Tổng cộng</span>
+              <span id="total">0đ</span>
+            </div>
           </div>
-          <div id="discount-row" style="display: none;">
-            <span>Giảm giá</span>
-            <span id="discount">-0đ</span>
-          </div>
-          <div>
-            <span>Phí vận chuyển</span>
-            <span>Miễn phí</span>
-          </div>
-          <div>
-            <span>Tổng cộng</span>
-            <span id="total">0đ</span>
-          </div>
-          <button id="checkout-btn" class="checkout-btn">TIẾN HÀNH THANH TOÁN</button>
+          
+          <button class="checkout-btn" id="checkout-btn">
+            <i class="fas fa-credit-card"></i> TIẾN HÀNH THANH TOÁN
+          </button>
         </div>
       </div>
     </div>
-
-    <!-- Customer Info -->
-    <div class="customer-info">
+    
+    <div class="customer-info-section">
       <h2>THÔNG TIN KHÁCH HÀNG</h2>
-      <form>
+      
+      <div class="customer-form" id="customer-form">
         <div class="form-group">
-          <label>Họ và tên người nhận *</label>
-          <input type="text" id="name" required>
+          <label for="name">Họ và tên người nhận *</label>
+          <input type="text" id="name" class="form-input" required>
         </div>
+        
         <div class="form-group">
-          <label>Số điện thoại *</label>
-          <input type="text" id="phone" required>
+          <label for="phone">Số điện thoại *</label>
+          <input type="tel" id="phone" class="form-input" required>
         </div>
+        
         <div class="form-group">
-          <label>Email *</label>
-          <input type="email" id="email" required>
+          <label for="email">Email *</label>
+          <input type="email" id="email" class="form-input" required>
         </div>
-        <div class="form-group">
-          <label>Tỉnh/Thành phố *</label>
-          <select id="tinhthanh" required>
-            <option value="">-- Chọn Tỉnh/TP --</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label>Quận/Huyện *</label>
-          <select id="quanhuyen" required disabled>
-            <option value="">-- Chọn Quận/Huyện --</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label>Phường/Xã *</label>
-          <select id="phuongxa" required disabled>
-            <option value="">-- Chọn Phường/Xã --</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label>Địa chỉ chi tiết (số nhà, tên đường) *</label>
-          <input type="text" id="diachichitiet" required>
-        </div>
-        <div class="form-group">
-          <label>
+        
+        <!-- Phần địa chỉ chi tiết -->
+        <div class="address-section">
+          <div class="form-group">
+            <label for="tinhthanh">Tỉnh/Thành phố *</label>
+            <select id="tinhthanh" class="form-input" required>
+              <option value="">-- Chọn Tỉnh/TP --</option>
+              <!-- Will be populated by JavaScript -->
+            </select>
+          </div>
+          
+          <div class="form-group">
+            <label for="quanhuyen">Quận/Huyện *</label>
+            <select id="quanhuyen" class="form-input" required disabled>
+              <option value="">-- Chọn Quận/Huyện --</option>
+            </select>
+          </div>
+          
+          <div class="form-group">
+            <label for="phuongxa">Phường/Xã *</label>
+            <select id="phuongxa" class="form-input" required disabled>
+              <option value="">-- Chọn Phường/Xã --</option>
+            </select>
+          </div>
+          
+          <div class="form-group">
+            <label for="diachichitiet">Địa chỉ chi tiết (số nhà, tên đường) *</label>
+            <input type="text" id="diachichitiet" class="form-input" required placeholder="Ví dụ: 123 Đường Lê Lợi">
+          </div>
+          
+          <div class="form-group checkbox-group">
             <input type="checkbox" id="save-info">
-            Lưu thông tin cho lần mua sau
-          </label>
+            <label for="save-info">Lưu thông tin cho lần mua sau</label>
+          </div>
         </div>
+        
         <div class="form-group">
-          <label>Phương thức thanh toán *</label>
-          <select id="payment-method" required>
+          <label for="payment-method">Phương thức thanh toán *</label>
+          <select id="payment-method" class="form-input" required>
             <option value="">-- Chọn phương thức --</option>
             <option value="COD">Thanh toán khi nhận hàng (COD)</option>
-            <option value="VNPay">Chuyển khoản Ví VNPAY</option>
-            <option value="MOMO">Ví điện tử MoMo</option>
+           <option value="VNPAY">Thanh toán qua VNPay</option>
           </select>
         </div>
+        
         <div class="form-group">
-          <label>Ghi chú đơn hàng (tuỳ chọn)</label>
-          <textarea id="notes"></textarea>
+          <label for="notes">Ghi chú đơn hàng (tuỳ chọn)</label>
+          <textarea id="notes" class="form-textarea" rows="4" placeholder="Ghi chú về đơn hàng của bạn..."></textarea>
         </div>
-      </form>
+      </div>
     </div>
-
-    <!-- Footer -->
-    <footer>© 2025 Trung Phong. All rights reserved.</footer>
+    
+    <footer class="page-footer">
+      <p>© 2023 Trung Phong. All rights reserved.</p>
+    </footer>
   </div>
 
-  <!-- Order Confirmation Modal -->
-  <div id="order-confirm-modal" class="modal">
+  <!-- Modal xác nhận đơn hàng -->
+  <div id="order-confirmation-modal" class="modal">
     <div class="modal-content">
-      <span class="close-btn">&times;</span>
-      <i class="fas fa-check-circle confirmation-icon"></i>
-      <h3>Đặt hàng thành công!</h3>
-      <div id="order-details"></div>
-      <button class="close-btn">Đóng</button>
+      <span class="close-modal">&times;</span>
+      <div class="modal-body" id="order-confirmation-content">
+        <!-- Nội dung sẽ được điền bằng JavaScript -->
+      </div>
     </div>
   </div>
 
-  <!-- VNPay QR Modal -->
-  <div id="vnpay-qr-modal" class="modal">
+  <!-- Modal chọn phương thức thanh toán -->
+  <div id="payment-method-modal" class="modal">
     <div class="modal-content">
-      <i class="fas fa-qrcode confirmation-icon"></i>
-      <h3>Quét mã QR để thanh toán</h3>
-      <p>Sử dụng ứng dụng VNPay để quét mã QR bên dưới hoặc nhấp vào link để thanh toán:</p>
-      <img id="vnpay-qr-image" src="" alt="VNPay QR Code">
-      <a id="vnpay-payment-link" href="#" style="display: none;">Thanh toán trực tiếp</a>
-      <p>Sau khi thanh toán, đơn hàng sẽ được xác nhận tự động.</p>
-      <button id="vnpay-cancel-btn" class="cancel-btn">Hủy</button>
+      <span class="close-modal">&times;</span>
+      <div class="modal-body">
+        <h2>Chọn phương thức thanh toán</h2>
+        <div class="payment-options">
+          <button class="payment-option-btn" data-method="ONLINE">Thanh toán trực tuyến</button>
+          <button class="payment-option-btn" data-method="COD">Thanh toán khi nhận hàng</button>
+        </div>
+      </div>
     </div>
   </div>
 
+  <!-- Modal hiển thị mã QR VNPAY -->
+  <div id="VNPAY" class="modal">
+    <div class="modal-content">
+      <span class="close-modal">&times;</span>
+      <div class="modal-body">
+        <h2>Quét mã QR để thanh toán</h2>
+        <p>Sử dụng ứng dụng VNPAY để quét mã QR bên dưới:</p>
+        <div id="vnpay-qr-code" class="qr-code">
+          <!-- Mã QR sẽ được chèn bằng JavaScript -->
+        </div>
+        <p class="qr-instruction">Sau khi thanh toán, đơn hàng sẽ được xác nhận tự động.</p>
+        <button class="btn cancel-btn" onclick="document.getElementById('VNPAY').style.display='none'">Hủy</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <script src="js/cart.js"></script>
 </body>
 </html>

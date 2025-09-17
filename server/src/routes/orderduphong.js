@@ -163,19 +163,9 @@ router.post('/place-order', authenticateToken, async (req, res) => {
     res.status(500).json({ error: 'Lỗi khi đặt hàng', details: error.message });
   }
 });
-// API lấy danh sách hóa đơn (BỎ TOKEN AUTHENTICATION - CHỈ CHO DEV/TEST)
-router.get('/hoadon', async (req, res) => {
+// API lấy danh sách hóa đơn
+router.get('/hoadon', authenticateToken, async (req, res) => {
   try {
-    // Log thông tin request để debug (không cần token)
-    console.log('Anonymous access to /hoadon:', {
-      ip: req.ip,
-      userAgent: req.get('User-Agent'),
-      timestamp: new Date().toISOString()
-    });
-
-    // CẢNH BÁO: KHÔNG CHECK QUYỀN - BẤT KỲ AI CŨNG ĐỌC ĐƯỢC DATA
-    // console.warn('⚠️ WARNING: No authentication - Exposed to all users!');
-
     const [hoadon] = await pool.query(`
       SELECT 
         dh.MaHD AS id,
@@ -187,27 +177,21 @@ router.get('/hoadon', async (req, res) => {
         kh.sdt AS customerPhone,
         dc.DiaChiChiTiet AS shippingAddress,
         dc.TinhThanh AS province,
-        dc.QuanHuyen AS district,
-        dh.PhuongThucThanhToan AS paymentMethod,
-        dh.TrangThaiThanhToan AS paymentStatus
+        dc.QuanHuyen AS district
       FROM hoadon dh
       LEFT JOIN khachhang kh ON dh.makh = kh.makh
       LEFT JOIN diachi dc ON dh.MaDiaChi = dc.MaDiaChi
       ORDER BY dh.NgayTao DESC
     `);
 
-    console.log(`Returned ${hoadon.length} invoices (no auth)`);
-
     res.json(hoadon);
   } catch (error) {
-    console.error('Lỗi khi lấy danh sách hóa đơn (no auth):', {
+    console.error('Lỗi khi lấy danh sách hóa đơn:', {
       timestamp: new Date(),
-      ip: req.ip,
       errorDetails: {
         message: error.message,
         sqlQuery: error.sql,
-        sqlMessage: error.sqlMessage,
-        stack: error.stack
+        sqlMessage: error.sqlMessage
       }
     });
     res.status(500).json({
@@ -215,29 +199,17 @@ router.get('/hoadon', async (req, res) => {
       details: process.env.NODE_ENV === 'development' ? {
         type: 'SQL_ERROR',
         message: error.sqlMessage,
-        faultyQuery: error.sql,
-        stack: error.stack
+        faultyQuery: error.sql
       } : null
     });
   }
 });
 
-// API lấy chi tiết hóa đơn (BỎ TOKEN AUTHENTICATION - CHỈ CHO DEV/TEST)
-router.get('/hoadon/:id', async (req, res) => {
+// API lấy chi tiết hóa đơn
+router.get('/hoadon/:id', authenticateToken, async (req, res) => {
   const { id } = req.params;
 
   try {
-    // Log thông tin request để debug (không cần token)
-    console.log('Anonymous access to /hoadon/:id:', {
-      ip: req.ip,
-      userAgent: req.get('User-Agent'),
-      invoiceId: id,
-      timestamp: new Date().toISOString()
-    });
-
-    // CẢNH BÁO: KHÔNG CHECK QUYỀN - BẤT KỲ AI CŨNG ĐỌC ĐƯỢC CHI TIẾT HÓA ĐƠN
-    // console.warn('⚠️ WARNING: No authentication - Exposed to all users!');
-
     const [hoadon] = await pool.query(`
       SELECT 
         hd.MaHD,
@@ -263,7 +235,6 @@ router.get('/hoadon/:id', async (req, res) => {
     `, [id]);
 
     if (hoadon.length === 0) {
-      console.log(`Invoice ID ${id} not found`);
       return res.status(404).json({ error: `Không tìm thấy hóa đơn ID: ${id}` });
     }
 
@@ -280,8 +251,6 @@ router.get('/hoadon/:id', async (req, res) => {
       WHERE ct.MaHD = ?
     `, [id]);
 
-    console.log(`Returned details for invoice ID ${id}, items: ${chitiet.length}`);
-
     res.json({
       ...hoadon[0],
       GhiChu: hoadon[0].GhiChu || '',
@@ -290,13 +259,11 @@ router.get('/hoadon/:id', async (req, res) => {
   } catch (error) {
     console.error('Lỗi khi lấy chi tiết hóa đơn:', {
       timestamp: new Date(),
-      ip: req.ip,
-      invoiceId: id,
+      id,
       errorDetails: {
         message: error.message,
         sqlQuery: error.sql,
-        sqlMessage: error.sqlMessage,
-        stack: error.stack
+        sqlMessage: error.sqlMessage
       }
     });
     res.status(500).json({
@@ -305,14 +272,13 @@ router.get('/hoadon/:id', async (req, res) => {
       details: process.env.NODE_ENV === 'development' ? {
         type: 'SQL_ERROR',
         message: error.sqlMessage,
-        faultyQuery: error.sql,
-        stack: error.stack
+        faultyQuery: error.sql
       } : null
     });
   }
 });
 
-//API cập nhật trạng thái hóa đơn (BỎ TOKEN AUTHENTICATION - CHỈ CHO DEV/TEST)
+// API cập nhật trạng thái hóa đơn (BỎ TOKEN AUTHENTICATION - CHỈ CHO DEV/TEST)
 router.put('/hoadon/:id/trangthai', async (req, res) => {
   const { id } = req.params;
   const { trangthai, ghichu } = req.body;
@@ -476,6 +442,7 @@ router.put('/hoadon/:id/huy', async (req, res) => {
     connection.release();
   }
 });
+
 // API lấy danh sách đơn hàng của khách hàng
 router.get('/customer-orders/:customerId', authenticateToken, async (req, res) => {
   const { customerId } = req.params;

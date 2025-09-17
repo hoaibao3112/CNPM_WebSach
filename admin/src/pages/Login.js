@@ -1,35 +1,47 @@
 import React, { useState, useContext } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import { Checkbox } from 'antd'; // Import Checkbox từ antd
 import '../styles/Login.css';
 import { PermissionContext } from '../components/PermissionContext';
 import { Modal, Form, Input, Button, Card, message } from 'antd';
 
 const Login = () => {
+  // State cho form đăng nhập
   const [TenTK, setTenTK] = useState('');
   const [MatKhau, setMatKhau] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+
+  // State cho modal quên mật khẩu
   const [forgotVisible, setForgotVisible] = useState(false);
   const [forgotStep, setForgotStep] = useState(1);
   const [forgotEmail, setForgotEmail] = useState('');
   const [forgotOtp, setForgotOtp] = useState('');
+  const [resetToken, setResetToken] = useState(''); // Lưu resetToken từ verify OTP
   const [forgotLoading, setForgotLoading] = useState(false);
 
   const navigate = useNavigate();
   const { setPermissions } = useContext(PermissionContext);
   const [form] = Form.useForm();
 
-  // Đăng nhập
+  // Hàm đăng nhập
   const handleLogin = async (e) => {
     e.preventDefault();
+    setErrorMsg(''); // Reset lỗi
     try {
-      const res = await axios.post('http://localhost:5000/api/login', { TenTK, MatKhau });
+      const res = await axios.post('http://localhost:5000/api/login', { 
+        TenTK, 
+        MatKhau 
+      });
 
       if (res.data.token) {
+        // Lưu token và user info
         localStorage.setItem('authToken', res.data.token);
         localStorage.setItem('userInfo', JSON.stringify(res.data.user));
+
+        // Lấy permissions
         const permissionRes = await axios.get('http://localhost:5000/api/roles/user/permissions', {
           headers: {
             Authorization: `Bearer ${res.data.token}`,
@@ -42,251 +54,299 @@ const Login = () => {
           setPermissions([]);
         }
 
+        message.success('Đăng nhập thành công!');
         setTimeout(() => {
           navigate('/admin', { replace: true });
         }, 100);
       } else {
-        setErrorMsg('Token không hợp lệ');
+        const errorMessage = 'Token không hợp lệ';
+        setErrorMsg(errorMessage);
+        message.error(errorMessage);
       }
     } catch (error) {
+      let errorMessage = 'Đăng nhập thất bại';
       if (error.response) {
-        setErrorMsg(error.response.data.message || 'Đăng nhập thất bại');
+        errorMessage = error.response.data.message || error.response.data.error || errorMessage;
       } else if (error.request) {
-        setErrorMsg('Không thể kết nối tới server');
+        errorMessage = 'Không thể kết nối tới server';
       } else {
-        setErrorMsg('Lỗi khi gửi yêu cầu');
+        errorMessage = 'Lỗi khi gửi yêu cầu';
       }
+      setErrorMsg(errorMessage);
+      message.error(errorMessage);
     }
   };
 
-  // Quên mật khẩu: Gửi OTP
+  // Bước 1: Gửi OTP quên mật khẩu
   const handleSendOtp = async (values) => {
     setForgotLoading(true);
+    setErrorMsg(''); // Reset lỗi
     try {
       const res = await axios.post('http://localhost:5000/api/forgot-password/send-otp', {
         email: values.email
       });
-      if (res.data.success) {
+
+      if (res.status === 200) {
         setForgotEmail(values.email);
         setForgotStep(2);
-        message.success('Đã gửi mã OTP về email!');
+        message.success(res.data.message || 'Đã gửi mã OTP về email!');
       } else {
-        message.error(res.data.message || 'Không tìm thấy email!');
+        const errorMessage = res.data.error || res.data.message || 'Không tìm thấy email!';
+        message.error(errorMessage);
       }
-    } catch {
-      message.error('Không gửi được OTP!');
+    } catch (error) {
+      let errorMessage = 'Không gửi được OTP!';
+      if (error.response) {
+        errorMessage = error.response.data.error || error.response.data.message || errorMessage;
+      }
+      message.error(errorMessage);
+    } finally {
+      setForgotLoading(false);
     }
-    setForgotLoading(false);
   };
 
-  // Quên mật khẩu: Xác thực OTP
+  // Bước 2: Xác thực OTP
   const handleVerifyOtp = async (values) => {
     setForgotLoading(true);
+    setErrorMsg(''); // Reset lỗi
     try {
       const res = await axios.post('http://localhost:5000/api/forgot-password/verify-otp', {
         email: forgotEmail,
         otp: values.otp
       });
-      if (res.data.success) {
+
+      if (res.status === 200) {
         setForgotStep(3);
         setForgotOtp(values.otp);
-        message.success('Xác thực OTP thành công!');
+        setResetToken(res.data.resetToken); // Lưu resetToken từ response
+        message.success(res.data.message || 'Xác thực OTP thành công!');
       } else {
-        message.error(res.data.message || 'OTP không đúng!');
+        const errorMessage = res.data.error || res.data.message || 'OTP không đúng!';
+        message.error(errorMessage);
       }
-    } catch {
-      message.error('Xác thực OTP thất bại!');
+    } catch (error) {
+      let errorMessage = 'Xác thực OTP thất bại!';
+      if (error.response) {
+        errorMessage = error.response.data.error || error.response.data.message || errorMessage;
+      }
+      message.error(errorMessage);
+    } finally {
+      setForgotLoading(false);
     }
-    setForgotLoading(false);
   };
 
-  // Quên mật khẩu: Đặt lại mật khẩu
+  // Bước 3: Đặt lại mật khẩu
   const handleResetPassword = async (values) => {
     if (values.newPassword !== values.confirmPassword) {
       message.error('Mật khẩu xác nhận không khớp!');
       return;
     }
+
     setForgotLoading(true);
+    setErrorMsg(''); // Reset lỗi
     try {
-      const res = await axios.post('http://localhost:5000/api/forgot-password/reset', {
+      const res = await axios.post('http://localhost:5000/api/forgot-password/reset-password', {
         email: forgotEmail,
-        otp: forgotOtp,
-        newPassword: values.newPassword
+        resetToken: resetToken, // Gửi resetToken
+        newPassword: values.newPassword,
+        confirmPassword: values.confirmPassword
       });
-      if (res.data.success) {
-        message.success('Đặt lại mật khẩu thành công! Vui lòng đăng nhập lại.');
-        setForgotVisible(false);
-        setForgotStep(1);
-        form.resetFields();
+
+      if (res.status === 200) {
+        message.success(res.data.message || 'Đặt lại mật khẩu thành công!');
+        // Reset modal sau 1.5s
+        setTimeout(() => {
+          setForgotVisible(false);
+          setForgotStep(1);
+          form.resetFields();
+          setResetToken(''); // Reset token
+          setForgotEmail('');
+          setForgotOtp('');
+        }, 1500);
       } else {
-        message.error(res.data.message || 'Đặt lại mật khẩu thất bại!');
+        const errorMessage = res.data.error || res.data.message || 'Đặt lại mật khẩu thất bại!';
+        message.error(errorMessage);
       }
-    } catch {
-      message.error('Đặt lại mật khẩu thất bại!');
+    } catch (error) {
+      let errorMessage = 'Đặt lại mật khẩu thất bại!';
+      if (error.response) {
+        errorMessage = error.response.data.error || error.response.data.message || errorMessage;
+      }
+      message.error(errorMessage);
+    } finally {
+      setForgotLoading(false);
     }
-    setForgotLoading(false);
   };
 
+  // Đóng modal và reset
+  const handleCancelForgot = () => {
+    setForgotVisible(false);
+    setForgotStep(1);
+    form.resetFields();
+    setResetToken('');
+    setForgotEmail('');
+    setForgotOtp('');
+  };
+
+  // Render form đăng nhập
   return (
     <div className="login-container">
-      <form className="login-form" onSubmit={handleLogin}>
-        <h2 className="login-title">Đăng nhập</h2>
-
-        {errorMsg && <div className="error-message">{errorMsg}</div>}
-
-        <div className="form-group">
-          <label htmlFor="username">Tên tài khoản</label>
-          <input
-            id="username"
-            type="text"
-            className="form-control"
-            value={TenTK}
-            onChange={(e) => setTenTK(e.target.value)}
-            placeholder="Nhập tên tài khoản"
-          />
+      <div className="login-form">
+        <div className="login-header">
+          <h2>Đăng nhập</h2>
+          <p>Vui lòng nhập thông tin để đăng nhập</p>
         </div>
 
-        <div className="form-group">
-          <label htmlFor="matKhau">Mật khẩu</label>
-          <div style={{ position: 'relative' }}>
-            <input
-              id="matKhau"
-              type={showPassword ? "text" : "password"}
-              className="form-control"
+        {errorMsg && (
+          <div className="error-message">
+            <span>{errorMsg}</span>
+          </div>
+        )}
+
+        <form onSubmit={handleLogin}>
+          <div className="form-group">
+            <label htmlFor="TenTK">Tên đăng nhập</label>
+            <Input
+              id="TenTK"
+              value={TenTK}
+              onChange={(e) => setTenTK(e.target.value)}
+              placeholder="Nhập tên đăng nhập"
+              size="large"
+            />
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="MatKhau">Mật khẩu</label>
+            <Input.Password
+              id="MatKhau"
               value={MatKhau}
               onChange={(e) => setMatKhau(e.target.value)}
-              placeholder="••••••••"
-              style={{ paddingRight: 40 }}
-            />
-            <span
-              onClick={() => setShowPassword(!showPassword)}
-              style={{
-                position: 'absolute',
-                right: 10,
-                top: '50%',
-                transform: 'translateY(-50%)',
-                cursor: 'pointer',
-                color: '#888',
-                fontSize: 18
+              placeholder="Nhập mật khẩu"
+              visibilityToggle={{
+                visible: showPassword,
+                onVisibleChange: setShowPassword,
               }}
-              title={showPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
-            >
-              {showPassword ? '👁️' : '👁️‍🗨️'}
-            </span>
-          </div>
-        </div>
-
-        <div className="remember-forgot">
-          <div className="remember-me">
-            <input
-              type="checkbox"
-              id="remember-me"
-              checked={rememberMe}
-              onChange={(e) => setRememberMe(e.target.checked)}
+              size="large"
             />
-            <label htmlFor="remember-me">Ghi nhớ đăng nhập</label>
           </div>
-          <span
-            className="forgot-password"
-            style={{ color: '#3498db', cursor: 'pointer' }}
-            onClick={() => setForgotVisible(true)}
-          >
-            Quên mật khẩu?
-          </span>
-        </div>
 
-        <button type="submit" className="login-btn">Đăng nhập</button>
+          <div className="form-options">
+            <div className="checkbox-group">
+              <Checkbox
+                checked={rememberMe}
+                onChange={(e) => setRememberMe(e.target.checked)}
+              >
+                Ghi nhớ mật khẩu
+              </Checkbox>
+            </div>
+            <button
+              type="button"
+              className="forgot-password-link"
+              onClick={() => setForgotVisible(true)}
+            >
+              Quên mật khẩu?
+            </button>
+          </div>
 
-        <div className="divider">
-          <span>---</span>
-        </div>
+          <button type="submit" className="login-btn">
+            Đăng nhập
+          </button>
 
-        <div className="social-login">
-          <h3>Facebook</h3>
-          <h4>Twitter</h4>
-        </div>
-      </form>
+          <div className="divider">
+            <span>---</span>
+          </div>
 
-      {/* Modal Quên mật khẩu */}
-      <Modal
-        open={forgotVisible}
-        onCancel={() => { setForgotVisible(false); setForgotStep(1); form.resetFields(); }}
-        footer={null}
-        title="Quên mật khẩu"
-        destroyOnClose
-      >
-        <Card bordered={false} style={{ boxShadow: 'none', padding: 0 }}>
-          {forgotStep === 1 && (
-            <Form layout="vertical" onFinish={handleSendOtp} form={form}>
-              <Form.Item
-                label="Email đăng ký"
-                name="email"
-                rules={[
-                  { required: true, message: 'Vui lòng nhập email!' },
-                  { type: 'email', message: 'Email không hợp lệ!' }
-                ]}
-              >
-                <Input placeholder="Nhập email của bạn" />
-              </Form.Item>
-              <Button type="primary" htmlType="submit" block loading={forgotLoading}>
-                Gửi mã OTP
-              </Button>
-            </Form>
-          )}
-          {forgotStep === 2 && (
-            <Form layout="vertical" onFinish={handleVerifyOtp} form={form}>
-              <Form.Item
-                label="Mã OTP"
-                name="otp"
-                rules={[{ required: true, message: 'Vui lòng nhập mã OTP!' }]}
-              >
-                <Input
-                  placeholder="Nhập mã OTP gửi về email"
-                  maxLength={6}
-                />
-              </Form.Item>
-              <Button type="primary" htmlType="submit" block loading={forgotLoading}>
-                Xác nhận OTP
-              </Button>
-            </Form>
-          )}
-          {forgotStep === 3 && (
-            <Form layout="vertical" onFinish={handleResetPassword} form={form}>
-              <Form.Item
-                label="Mật khẩu mới"
-                name="newPassword"
-                rules={[
-                  { required: true, message: 'Vui lòng nhập mật khẩu mới!' },
-                  { min: 6, message: 'Mật khẩu phải có ít nhất 6 ký tự!' }
-                ]}
-              >
-                <Input.Password placeholder="Nhập mật khẩu mới" />
-              </Form.Item>
-              <Form.Item
-                label="Xác nhận mật khẩu mới"
-                name="confirmPassword"
-                dependencies={['newPassword']}
-                rules={[
-                  { required: true, message: 'Vui lòng xác nhận mật khẩu mới!' },
-                  ({ getFieldValue }) => ({
-                    validator(_, value) {
-                      if (!value || getFieldValue('newPassword') === value) {
-                        return Promise.resolve();
-                      }
-                      return Promise.reject(new Error('Mật khẩu xác nhận không khớp!'));
-                    },
-                  }),
-                ]}
-              >
-                <Input.Password placeholder="Nhập lại mật khẩu mới" />
-              </Form.Item>
-              <Button type="primary" htmlType="submit" block loading={forgotLoading}>
-                Đặt lại mật khẩu
-              </Button>
-            </Form>
-          )}
-        </Card>
-      </Modal>
+          <div className="social-login">
+            <h3>Facebook</h3>
+            <h4>Twitter</h4>
+          </div>
+        </form>
+
+        {/* Modal Quên mật khẩu */}
+        <Modal
+          open={forgotVisible}
+          onCancel={handleCancelForgot}
+          footer={null}
+          title="Quên mật khẩu"
+          destroyOnClose
+          width={400}
+        >
+          <Card bordered={false} style={{ boxShadow: 'none', padding: 0 }}>
+            {forgotStep === 1 && (
+              <Form layout="vertical" onFinish={handleSendOtp} form={form}>
+                <Form.Item
+                  label="Email đăng ký"
+                  name="email"
+                  rules={[
+                    { required: true, message: 'Vui lòng nhập email!' },
+                    { type: 'email', message: 'Email không hợp lệ!' },
+                  ]}
+                >
+                  <Input placeholder="Nhập email của bạn" />
+                </Form.Item>
+                <Button type="primary" htmlType="submit" block loading={forgotLoading}>
+                  Gửi mã OTP
+                </Button>
+              </Form>
+            )}
+
+            {forgotStep === 2 && (
+              <Form layout="vertical" onFinish={handleVerifyOtp} form={form}>
+                <Form.Item
+                  label="Mã OTP (gửi về email)"
+                  name="otp"
+                  rules={[{ required: true, message: 'Vui lòng nhập mã OTP!' }]}
+                >
+                  <Input
+                    placeholder="Nhập mã OTP (6 chữ số)"
+                    maxLength={6}
+                    type="number"
+                  />
+                </Form.Item>
+                <Button type="primary" htmlType="submit" block loading={forgotLoading}>
+                  Xác nhận OTP
+                </Button>
+              </Form>
+            )}
+
+            {forgotStep === 3 && (
+              <Form layout="vertical" onFinish={handleResetPassword} form={form}>
+                <Form.Item
+                  label="Mật khẩu mới"
+                  name="newPassword"
+                  rules={[
+                    { required: true, message: 'Vui lòng nhập mật khẩu mới!' },
+                    { min: 6, message: 'Mật khẩu phải có ít nhất 6 ký tự!' },
+                  ]}
+                >
+                  <Input.Password placeholder="Nhập mật khẩu mới" />
+                </Form.Item>
+                <Form.Item
+                  label="Xác nhận mật khẩu mới"
+                  name="confirmPassword"
+                  dependencies={['newPassword']}
+                  rules={[
+                    { required: true, message: 'Vui lòng xác nhận mật khẩu mới!' },
+                    ({ getFieldValue }) => ({
+                      validator(_, value) {
+                        if (!value || getFieldValue('newPassword') === value) {
+                          return Promise.resolve();
+                        }
+                        return Promise.reject(new Error('Mật khẩu xác nhận không khớp!'));
+                      },
+                    }),
+                  ]}
+                >
+                  <Input.Password placeholder="Nhập lại mật khẩu mới" />
+                </Form.Item>
+                <Button type="primary" htmlType="submit" block loading={forgotLoading}>
+                  Đặt lại mật khẩu
+                </Button>
+              </Form>
+            )}
+          </Card>
+        </Modal>
+      </div>
     </div>
   );
 };

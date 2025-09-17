@@ -1,261 +1,325 @@
+/* profile.css được viết lại để đồng bộ với index.css, thêm hiệu ứng và responsive */
+
+/* Reset và font chữ (đồng bộ từ index.css) */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Arial', sans-serif;
+}
+
 body {
-  font-family: Arial, sans-serif;
-  margin: 0;
-  padding: 20px;
-  background-color: #ffffff; /* Pure white background */
-  color: #000000; /* Black for all text in body */
+    background-color: #f5f5f5;
+    color: #333;
+    line-height: 1.6;
 }
 
+/* Profile Container (đồng bộ từ index.css) */
 .profile-container {
-  max-width: 800px;
-  margin: 0 auto;
-  background: #ffffff;
-  padding: 20px;
-  border-radius: 10px;
-  box-shadow: 0 0 10px rgba(220, 53, 69, 0.1); /* Light red shadow */
+    max-width: 1200px;
+    margin: 20px auto;
+    background: white;
+    padding: 20px;
+    border-radius: 5px; /* Đồng bộ với index.css */
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1); /* Đồng bộ shadow */
+    transition: box-shadow 0.3s ease;
 }
 
+.profile-container:hover {
+    box-shadow: 0 2px 8px rgba(211, 47, 47, 0.2); /* Nhẹ hơn so với index.css nhưng vẫn nổi bật */
+}
+
+/* Header (đồng bộ từ index.css) */
 .header {
-  text-align: center;
-  position: relative;
-  margin-bottom: 20px;
+    text-align: center;
+    margin-bottom: 20px;
 }
 
-.logo {
-  max-width: 200px;
+.logo img {
+    max-height: 40px; /* Đồng bộ với navbar logo */
+    transition: transform 0.3s ease;
+}
+
+.logo:hover img {
+    transform: scale(1.05);
 }
 
 .warning {
-  background: #fff1f1; /* Very light red background for warning */
-  color: #000000; /* Black for warning text */
-  padding: 10px;
-  border-radius: 5px;
-  margin-top: 10px;
-  border: 1px solid #f8d7da; /* Light red border */
+    background-color: #ffebee; /* Đồng bộ với marquee trong index.css */
+    color: #d32f2f;
+    padding: 12px;
+    border-radius: 5px; /* Đồng bộ border-radius */
+    margin-top: 15px;
+    border: 1px solid #ffcdd2; /* Đồng bộ với marquee border */
+    font-weight: 500;
+    animation: fadeIn 0.5s ease-in-out; /* Giữ animation từ index.css */
 }
 
 .warning .update-link {
-  color: #000000; /* Black for links */
-  text-decoration: none;
-  font-weight: bold;
+    color: #d32f2f;
+    text-decoration: none;
+    font-weight: bold;
+    transition: color 0.3s;
 }
 
 .warning .update-link:hover {
-  text-decoration: underline;
+    color: #b71c1c;
+    text-decoration: underline;
 }
 
+/* Sidebar (đồng bộ từ index.css) */
 .sidebar {
-  width: 200px;
-  float: left;
-  padding: 10px;
-  background: #f1f1f1; /* Gray background for sidebar */
+    width: 200px; /* Đồng bộ với sidebar trong index.css */
+    min-width: 200px;
+    float: left;
+    padding: 15px;
+    background: white;
+    border-radius: 5px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
 }
 
 .sidebar ul {
-  list-style: none;
-  padding: 0;
+    list-style: none;
 }
 
 .sidebar ul li {
-  padding: 10px 0;
-  cursor: pointer;
-  transition: background 0.3s, color 0.3s;
-  color: #000000; /* Black for sidebar text */
+    margin-bottom: 8px;
+    padding: 3px 0;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    color: #333;
+    display: flex;
+    align-items: center;
+    gap: 5px; /* Đồng bộ với top-links trong index.css */
 }
 
 .sidebar ul li:hover {
-  background: #fff1f1; /* Light red background on hover */
-  border-left: 3px solid #dc3545; /* Red border on hover */
-  color: #000000; /* Black on hover */
+    color: #d32f2f;
 }
 
 .sidebar ul li i {
-  margin-right: 10px;
+    font-size: 16px; /* Đồng bộ với top-links icon */
+    color: #d32f2f;
 }
 
-.main-content {
-  margin-left: 220px;
+/* Content */
+.content {
+    margin-left: 220px; /* Điều chỉnh để phù hợp với sidebar width */
+    padding: 15px;
 }
 
+/* Section (đồng bộ với product-section trong index.css) */
 .section {
-  background: #ffffff; /* White section background */
-  padding: 20px;
-  border-radius: 5px;
-  margin-bottom: 20px;
-  border: 1px solid #e6e6e6; /* Very light gray border */
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05); /* Subtle shadow */
+    background: white;
+    padding: 20px;
+    border-radius: 5px;
+    margin-bottom: 20px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.section:hover {
+    transform: translateY(-2px); /* Nhẹ hơn so với profile ban đầu */
+    box-shadow: 0 2px 8px rgba(211, 47, 47, 0.2);
 }
 
 .section h2 {
-  margin-top: 0;
-  color: #000000; /* Black for headings */
-  border-bottom: 2px solid #dc3545; /* Red underline */
-  padding-bottom: 5px;
+    font-size: 24px; /* Đồng bộ với product-section h2 */
+    color: #333;
+    margin-bottom: 15px;
+    font-weight: bold;
+    border-bottom: 1px solid #eee; /* Đồng bộ với sidebar h3 */
 }
 
+/* Info Grid */
 .info-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 15px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 15px;
 }
 
 .info-card {
-  background: #fff1f1; /* Very light red background for info cards */
-  padding: 15px;
-  text-align: center;
-  border-radius: 5px;
-  border: 1px solid #f8d7da; /* Light red border */
-  transition: transform 0.3s, box-shadow 0.3s;
+    background: #ffebee; /* Đồng bộ với marquee */
+    padding: 15px;
+    text-align: center;
+    border-radius: 5px;
+    border: 1px solid #ffcdd2;
+    transition: all 0.3s ease;
 }
 
 .info-card:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 5px 15px rgba(220, 53, 69, 0.2); /* Red shadow on hover */
+    transform: translateY(-2px);
+    box-shadow: 0 2px 8px rgba(211, 47, 47, 0.2);
 }
 
 .info-card h3 {
-  margin: 0 0 10px;
-  color: #000000; /* Black for card headings */
+    font-size: 16px;
+    color: #d32f2f;
+    margin-bottom: 10px;
 }
 
 .info-card p {
-  margin: 0;
-  font-size: 1.2em;
-  color: #000000; /* Black for card text */
+    font-size: 14px; /* Đồng bộ với font-size trong index.css */
+    color: #333;
+    font-weight: bold;
 }
 
 .detail-link {
-  color: #000000; /* Black for links */
-  text-decoration: none;
-  font-weight: bold;
+    color: #d32f2f;
+    text-decoration: none;
+    font-size: 14px; /* Đồng bộ với view-all */
+    font-weight: 500;
+    transition: color 0.3s;
 }
 
 .detail-link:hover {
-  text-decoration: underline;
+    color: #b71c1c;
+    text-decoration: underline;
 }
 
+/* Form Group (đồng bộ với faq-form trong index.css) */
 .form-group {
-  margin-bottom: 15px;
+    margin-bottom: 20px;
 }
 
 .form-group label {
-  display: block;
-  margin-bottom: 5px;
-  color: #000000; /* Black for labels */
+    display: block;
+    margin-bottom: 8px;
+    color: #333;
+    font-weight: 500;
 }
 
 .form-group input {
-  width: 100%;
-  padding: 8px;
-  border: 1px solid #dc3545; /* Red border */
-  border-radius: 4px;
-  color: #000000; /* Black text for input */
-  background-color: #fff; /* White input background */
-  transition: border-color 0.3s;
+    width: 100%;
+    padding: 12px 15px; /* Đồng bộ với faq-form input */
+    border: 1px solid #ddd;
+    border-radius: 20px;
+    font-size: 14px;
+    outline: none;
+    transition: border-color 0.3s, box-shadow 0.3s;
 }
 
 .form-group input:focus {
-  border-color: #c82333; /* Darker red on focus */
-  outline: none;
+    border-color: #d32f2f;
+    box-shadow: 0 0 0 2px rgba(211, 47, 47, 0.1); /* Đồng bộ với faq-form */
 }
 
 .form-group button {
-  padding: 10px 20px;
-  background: #dc3545; /* Red for buttons */
-  color: #fff; /* White text for buttons */
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: background 0.3s;
+    padding: 12px 20px; /* Đồng bộ với faq-form button */
+    background-color: #d32f2f;
+    color: white;
+    border: none;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.3s ease;
 }
 
 .form-group button:hover {
-  background: #c82333; /* Darker red on hover */
+    background-color: #b71c1c;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(211, 47, 47, 0.3); /* Đồng bộ với faq-form button */
 }
 
+/* Products Grid */
 .products-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-  gap: 15px;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 20px;
 }
 
 .product-card {
-  background: #ffffff;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05); /* Subtle shadow */
-  overflow: hidden;
-  transition: transform 0.3s, box-shadow 0.3s;
+    background: white;
+    border-radius: 5px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1); /* Đồng bộ với index.css */
+    overflow: hidden;
+    transition: all 0.3s ease;
 }
 
 .product-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 5px 15px rgba(220, 53, 69, 0.2); /* Red shadow on hover */
+    transform: translateY(-2px);
+    box-shadow: 0 2px 8px rgba(211, 47, 47, 0.2);
 }
 
 .product-card img {
-  width: 100%;
-  height: 200px;
-  object-fit: cover;
+    width: 100%;
+    height: 220px;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+}
+
+.product-card:hover img {
+    transform: scale(1.05);
 }
 
 .product-card h3 {
-  font-size: 14px;
-  margin: 10px;
-  color: #000000; /* Black for product titles */
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
+    font-size: 14px; /* Đồng bộ font-size */
+    margin: 10px;
+    color: #333;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .price-wrapper {
-  margin: 0 10px 10px;
+    margin: 0 10px 10px;
 }
 
 .final-price {
-  font-size: 14px;
-  color: #000000; /* Black for prices */
-  font-weight: bold;
+    font-size: 14px;
+    color: #d32f2f;
+    font-weight: bold;
 }
 
 .remove-btn {
-  width: 100%;
-  padding: 8px;
-  background: #dc3545; /* Red for remove button */
-  color: #fff; /* White text for button */
-  border: none;
-  cursor: pointer;
-  font-size: 12px;
-  transition: background 0.3s;
+    width: 100%;
+    padding: 10px;
+    background: #d32f2f;
+    color: white;
+    border: none;
+    cursor: pointer;
+    font-size: 14px;
+    border-radius: 5px;
+    transition: background 0.3s;
 }
 
 .remove-btn:hover {
-  background: #c82333; /* Darker red on hover */
+    background: #b71c1c;
 }
 
-.empty-wishlist {
-  text-align: center;
-  color: #000000; /* Black for empty message */
-  font-size: 14px;
-  margin: 20px 0;
+/* Empty and Loading Messages */
+.empty-wishlist, .loading-wishlist {
+    text-align: center;
+    color: #888;
+    font-size: 14px; /* Đồng bộ với index.css */
+    margin: 30px 0;
+    animation: fadeIn 0.5s ease;
 }
 
-.loading-wishlist {
-  text-align: center;
-  color: #000000; /* Black for loading message */
-  font-size: 14px;
+/* Animation Keyframes (đồng bộ từ index.css) */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
 }
 
-/* Toggle functionality for sections */
-#account-info, #fpoint-recharge {
-  display: none;
-}
+/* Responsive Design (đồng bộ từ index.css) */
+@media (max-width: 768px) {
+    .sidebar {
+        width: 100%;
+        float: none;
+        margin-bottom: 20px;
+    }
 
-.sidebar ul li#account-info-toggle:hover ~ .main-content #account-info,
-.sidebar ul li#account-info-toggle:active ~ .main-content #account-info {
-  display: block;
-}
+    .content {
+        margin-left: 0;
+    }
 
-.sidebar ul li#gtgt-info-toggle:hover ~ .main-content #fpoint-recharge,
-.sidebar ul li#gtgt-info-toggle:active ~ .main-content #fpoint-recharge {
-  display: block;
+    .info-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .products-grid {
+        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    }
 }

@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Table, Button, Modal, Form, Select, Input, notification, Space } from 'antd';
-import { PlusOutlined, EyeOutlined, SyncOutlined } from '@ant-design/icons';
+import { Table, Button, Modal, Form, Select, Input, notification, Space, DatePicker } from 'antd';
+import { PlusOutlined, EyeOutlined, SyncOutlined, SearchOutlined } from '@ant-design/icons';
+import moment from 'moment';
 
 const { Column } = Table;
 const { Option } = Select;
+const { RangePicker } = DatePicker;
 
 const NhapHang = () => {
   const [phiếuNhập, setPhiếuNhập] = useState([]);
@@ -14,6 +16,12 @@ const NhapHang = () => {
   const [chiTiếtVisible, setChiTiếtVisible] = useState(false);
   const [selectedPhiếu, setSelectedPhiếu] = useState(null);
   const [form] = Form.useForm();
+  const [searchParams, setSearchParams] = useState({
+    MaNCC: '',
+    TenNCC: '',
+    fromDate: '',
+    toDate: ''
+  });
 
   useEffect(() => {
     fetchPhiếuNhập();
@@ -46,7 +54,7 @@ const NhapHang = () => {
     } catch (error) {
       console.error('Lỗi khi lấy danh sách sản phẩm:', error);
       notification.error({ message: 'Không thể tải danh sách sản phẩm. Vui lòng kiểm tra server.' });
-      setSảnPhẩm([]); // Đặt giá trị mặc định là mảng rỗng
+      setSảnPhẩm([]);
     }
   };
 
@@ -76,7 +84,12 @@ const NhapHang = () => {
   };
 
   const calculateTotal = (items) => {
-    return (items || []).reduce((total, item) => total + ((item?.SoLuong || 0) * (item?.DonGiaNhap || 0)), 0);
+    return (items || []).reduce((total, item) => {
+      if (!item) return total;
+      const profitPercentage = item.ProfitPercentage || 0;
+      const originalPrice = item.DonGiaNhap ? item.DonGiaNhap / (1 + profitPercentage / 100) : 0;
+      return total + (item.SoLuong || 0) * (originalPrice || 0);
+    }, 0);
   };
 
   const applyProfitPercentage = (percentage) => {
@@ -84,6 +97,7 @@ const NhapHang = () => {
     const updatedItems = items.map(item => ({
       ...item,
       DonGiaNhap: item.DonGiaNhap ? item.DonGiaNhap * (1 + percentage / 100) : 0,
+      ProfitPercentage: percentage,
     }));
     form.setFieldsValue({ items: updatedItems });
   };
@@ -91,83 +105,140 @@ const NhapHang = () => {
   const handleRefresh = () => {
     fetchPhiếuNhập();
     notification.info({ message: 'Danh sách đã được làm mới' });
+    setSearchParams({ MaNCC: '', TenNCC: '', fromDate: '', toDate: '' });
+  };
+
+  const handleSearch = async () => {
+    try {
+      const params = new URLSearchParams();
+      if (searchParams.MaNCC) params.append('MaNCC', searchParams.MaNCC);
+      if (searchParams.TenNCC) params.append('TenNCC', searchParams.TenNCC);
+      if (searchParams.fromDate) params.append('fromDate', searchParams.fromDate);
+      if (searchParams.toDate) params.append('toDate', searchParams.toDate);
+
+      const res = await axios.get(`http://localhost:5000/api/receipt/search?${params.toString()}`);
+      setPhiếuNhập(res.data);
+    } catch (error) {
+      notification.error({ message: 'Lỗi khi tìm kiếm phiếu nhập' });
+    }
+  };
+
+  const handleDateChange = (dates) => {
+    setSearchParams({
+      ...searchParams,
+      fromDate: dates ? dates[0]?.format('YYYY-MM-DD') : '',
+      toDate: dates ? dates[1]?.format('YYYY-MM-DD') : ''
+    });
   };
 
   return (
     <div style={{ padding: '16px 32px' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16 }}>
-        <Button 
-          icon={<SyncOutlined />} 
-          onClick={handleRefresh}
-        >
-          Làm mới
-        </Button>
-        <Button 
-          type="primary" 
-          icon={<PlusOutlined />} 
+      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16, alignItems: 'center' }}>
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginLeft: '180px' }}>
+          <Select
+            placeholder="Chọn nhà cung cấp"
+            value={searchParams.MaNCC}
+            onChange={(value) => setSearchParams({ ...searchParams, MaNCC: value })}
+            style={{ width: 200 }}
+            allowClear
+          >
+            {nhàCungCấp.map(ncc => (
+              <Option key={ncc.MaNCC} value={ncc.MaNCC}>
+                {ncc.TenNCC}
+              </Option>
+            ))}
+          </Select>
+          <Input
+            placeholder="Tên nhà cung cấp"
+            value={searchParams.TenNCC}
+            onChange={(e) => setSearchParams({ ...searchParams, TenNCC: e.target.value })}
+            style={{ width: 200 }}
+            onPressEnter={handleSearch}
+          />
+          <RangePicker
+            format="YYYY-MM-DD"
+            onChange={handleDateChange}
+            style={{ width: 250 }}
+          />
+          <Button
+            icon={<SearchOutlined />}
+            onClick={handleSearch}
+          >
+            Tìm kiếm
+          </Button>
+          <Button
+            icon={<SyncOutlined />}
+            onClick={handleRefresh}
+          >
+            Làm mới
+          </Button>
+        </div>
+        <Button
+          type="primary"
+          icon={<PlusOutlined />}
           onClick={() => setModalVisible(true)}
         >
           Tạo phiếu nhập
         </Button>
       </div>
 
-      <div style={{ 
+      <div style={{
         background: 'white',
         borderRadius: 8,
         boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
         padding: 12,
-        maxWidth: '1280px',
-        marginLeft: 'auto',
+        width: 1000,
+        margin: '0 0 0 auto',
         overflowX: 'auto'
       }}>
-        <Table 
-          dataSource={phiếuNhập} 
-          rowKey="MaPN" 
+        <Table
+          dataSource={phiếuNhập}
+          rowKey="MaPN"
           pagination={{ pageSize: 5 }}
           bordered
           size="small"
           scroll={{ x: 600 }}
         >
-          <Column 
-            title="ID Phiếu nhập" 
-            dataIndex="MaPN" 
+          <Column
+            title="ID Phiếu nhập"
+            dataIndex="MaPN"
             width={80}
             align="center"
           />
-          <Column 
-            title="Tên sản phẩm" 
-            dataIndex="TenSPDisplay" 
+          <Column
+            title="Tên sản phẩm"
+            dataIndex="TenSPDisplay"
             width={150}
             ellipsis
           />
-          <Column 
-            title="Tên tác giả" 
-            dataIndex="TacGiaDisplay" 
+          <Column
+            title="Tên tác giả"
+            dataIndex="TacGiaDisplay"
             width={120}
             align="center"
           />
-          <Column 
-            title="Thể loại" 
-            dataIndex="TheLoaiDisplay" 
+          <Column
+            title="Thể loại"
+            dataIndex="TheLoaiDisplay"
             width={100}
             align="center"
           />
-          <Column 
-            title="Số lượng" 
-            dataIndex="SoLuongDisplay" 
+          <Column
+            title="Số lượng"
+            dataIndex="SoLuongDisplay"
             width={80}
             align="center"
           />
-          <Column 
-            title="Đơn giá" 
-            dataIndex="DonGiaDisplay" 
+          <Column
+            title="Đơn giá"
+            dataIndex="DonGiaDisplay"
             width={100}
             align="right"
             render={(value) => (value ? value.toLocaleString() : 0) + ' đ'}
           />
-          <Column 
-            title="Nhà cung cấp" 
-            dataIndex="TenNCC" 
+          <Column
+            title="Nhà cung cấp"
+            dataIndex="TenNCC"
             width={120}
             align="center"
           />
@@ -182,8 +253,8 @@ const NhapHang = () => {
             width={100}
             align="center"
             render={(_, record) => (
-              <Button 
-                icon={<EyeOutlined />} 
+              <Button
+                icon={<EyeOutlined />}
                 onClick={() => xemChiTiết(record.MaPN)}
                 type="link"
               >
@@ -207,7 +278,15 @@ const NhapHang = () => {
         footer={null}
         width={900}
       >
-        <Form form={form} onFinish={handleSubmit} layout="vertical">
+        <Form
+          form={form}
+          onFinish={handleSubmit}
+          layout="vertical"
+          onValuesChange={(changedValues, allValues) => {
+            const total = calculateTotal(allValues.items || []);
+            form.setFieldsValue({ total: total });
+          }}
+        >
           <Form.Item name="MaNCC" label="Nhà cung cấp" rules={[{ required: true, message: 'Vui lòng chọn nhà cung cấp' }]}>
             <Select showSearch optionFilterProp="children">
               {nhàCungCấp.map(ncc => (
@@ -222,7 +301,7 @@ const NhapHang = () => {
             <Input />
           </Form.Item>
 
-          <Form.List name="items">
+          <Form.List name="items" initialValue={[{ ProfitPercentage: 0 }]}>
             {(fields, { add, remove }) => (
               <>
                 {fields.map(({ key, name, ...restField }) => (
@@ -233,14 +312,14 @@ const NhapHang = () => {
                       label="ID Sản phẩm"
                       rules={[{ required: true, message: 'Vui lòng chọn sản phẩm' }]}
                     >
-                      <Select 
-                        style={{ width: 150 }} 
+                      <Select
+                        style={{ width: 150 }}
                         onChange={(value) => {
                           const product = sảnPhẩm.find(sp => sp.MaSP === value);
                           form.setFieldsValue({
                             items: form.getFieldValue('items').map((item, index) =>
                               index === name
-                                ? { ...item, TenSP: product?.TenSP || '' }
+                                ? { ...item, TenSP: product?.TenSP || '', DonGiaNhap: product?.DonGia || 0, ProfitPercentage: 0 }
                                 : item
                             ),
                           });
@@ -268,11 +347,10 @@ const NhapHang = () => {
                       label="Số lượng"
                       rules={[{ required: true, message: 'Vui lòng nhập số lượng' }]}
                     >
-                      <Input 
-                        type="number" 
-                        style={{ width: 100 }} 
+                      <Input
+                        type="number"
+                        style={{ width: 100 }}
                         min={1}
-                        onChange={() => form.setFieldsValue({ items: form.getFieldValue('items') })}
                       />
                     </Form.Item>
 
@@ -282,20 +360,27 @@ const NhapHang = () => {
                       label="Đơn giá nhập"
                       rules={[{ required: true, message: 'Vui lòng nhập đơn giá' }]}
                     >
-                      <Input 
-                        type="number" 
-                        style={{ width: 150 }} 
+                      <Input
+                        type="number"
+                        style={{ width: 150 }}
                         min={0}
-                        onChange={() => form.setFieldsValue({ items: form.getFieldValue('items') })}
                       />
+                    </Form.Item>
+
+                    <Form.Item
+                      {...restField}
+                      name={[name, 'ProfitPercentage']}
+                      noStyle
+                    >
+                      <Input type="hidden" />
                     </Form.Item>
 
                     <Button type="danger" onClick={() => remove(name)}>Xóa</Button>
                   </div>
                 ))}
-                <Button 
-                  type="dashed" 
-                  onClick={() => add()} 
+                <Button
+                  type="dashed"
+                  onClick={() => add({ ProfitPercentage: 0 })}
                   block
                   style={{ marginBottom: 16 }}
                 >
@@ -321,23 +406,23 @@ const NhapHang = () => {
             )}
           </Form.List>
 
-          <Form.Item label="Tổng tiền">
-            <Input 
-              value={calculateTotal(form.getFieldValue('items')).toLocaleString() + ' đ'} 
-              disabled 
+          <Form.Item name="total" label="Tổng tiền">
+            <Input
+              value={form.getFieldValue('total')?.toLocaleString() + ' đ' || '0 đ'}
+              disabled
             />
           </Form.Item>
 
           <div style={{ display: 'flex', gap: 8 }}>
-            <Button 
-              type="primary" 
-              htmlType="submit" 
+            <Button
+              type="primary"
+              htmlType="submit"
               style={{ marginTop: 16 }}
             >
               Lưu phiếu nhập
             </Button>
-            <Button 
-              onClick={() => setModalVisible(false)} 
+            <Button
+              onClick={() => setModalVisible(false)}
               style={{ marginTop: 16 }}
             >
               Hủy
@@ -358,9 +443,9 @@ const NhapHang = () => {
             <h3>Nhà cung cấp: {selectedPhiếu.TenNCC || 'Không có'}</h3>
             <p>Địa chỉ: {selectedPhiếu.DiaChi || 'Không có'}</p>
             <p>SĐT: {selectedPhiếu.SDT || 'Không có'}</p>
-            
-            <Table 
-              dataSource={selectedPhiếu.items} 
+
+            <Table
+              dataSource={selectedPhiếu.items}
               rowKey="MaSP"
               pagination={false}
             >
@@ -384,10 +469,10 @@ const NhapHang = () => {
         .ant-table-thead > tr > th {
           background: #e6f7ff !important;
           font-weight: 600;
-          font-size: 14px !important; /* Tăng kích thước chữ lên 14px */
+          font-size: 14px !important;
         }
         .ant-table-tbody > tr > td {
-          font-size: 14px !important; /* Tăng kích thước chữ lên 14px */
+          font-size: 14px !important;
         }
         .ant-table-row:hover {
           background: #fafafa !important;

@@ -49,7 +49,66 @@ router.get('/', async (req, res) => {
         res.status(500).json({ error: 'Lỗi khi lấy danh sách phiếu nhập' });
     }
 });
+// Tìm kiếm phiếu nhập
+router.get('/search', async (req, res) => {
+    const { MaNCC, TenNCC, fromDate, toDate } = req.query;
+    try {
+        let query = `
+            SELECT 
+                pn.MaPN,
+                ncc.TenNCC,
+                sp.TenSP AS TenSPDisplay,
+                tg.TenTG AS TacGiaDisplay,
+                tl.TenTL AS TheLoaiDisplay,
+                ct.SoLuong AS SoLuongDisplay,
+                ct.DonGiaNhap AS DonGiaDisplay,
+                SUM(ct.SoLuong * ct.DonGiaNhap) AS TongTien,
+                pn.TinhTrang,
+                pn.NgayTao,
+                'N/A' AS GhiChu
+            FROM phieunhap pn
+            JOIN nhacungcap ncc ON pn.MaNCC = ncc.MaNCC
+            JOIN chitietphieunhap ct ON pn.MaPN = ct.MaPN
+            JOIN sanpham sp ON ct.MaSP = sp.MaSP
+            LEFT JOIN tacgia tg ON sp.MaTG = tg.MaTG
+            LEFT JOIN theloai tl ON sp.MaTL = tl.MaTL
+        `;
+        const queryParams = [];
+        const conditions = [];
 
+        if (MaNCC) {
+            conditions.push('pn.MaNCC = ?');
+            queryParams.push(MaNCC);
+        }
+        if (TenNCC) {
+            conditions.push('ncc.TenNCC LIKE ?');
+            queryParams.push(`%${TenNCC}%`);
+        }
+        if (fromDate) {
+            conditions.push('pn.NgayTao >= ?');
+            queryParams.push(fromDate);
+        }
+        if (toDate) {
+            conditions.push('pn.NgayTao <= ?');
+            queryParams.push(toDate);
+        }
+
+        if (conditions.length > 0) {
+            query += ' WHERE ' + conditions.join(' AND ');
+        }
+
+        query += `
+            GROUP BY pn.MaPN, ncc.TenNCC, sp.TenSP, tg.TenTG, tl.TenTL, ct.SoLuong, ct.DonGiaNhap, pn.TinhTrang
+            ORDER BY pn.NgayTao DESC
+        `;
+
+        const [rows] = await pool.query(query, queryParams);
+        res.json(rows);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Lỗi khi tìm kiếm phiếu nhập' });
+    }
+});
 // Tạo phiếu nhập mới
 router.post('/', async (req, res) => {
     const { MaNCC, TenTK, items } = req.body;

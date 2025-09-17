@@ -11,6 +11,7 @@
   --border-radius: 4px;
   --shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   --transition: all 0.3s ease;
+     --star-color: #FFD700; /* Thêm biến màu vàng cho ngôi sao */
 }
 
 * {
@@ -416,69 +417,77 @@ body {
 .comments-list::-webkit-scrollbar-thumb:hover {
   background: #2980b9;
 }
-
 /* Related Authors */
 .related-authors {
-  margin-bottom: 40px;
+    margin-bottom: 40px;
 }
 
 .related-authors h2 {
-  margin-bottom: 20px;
-  color: var(--primary-color);
-}
-
-.authors-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-  gap: 20px;
+    margin-bottom: 20px;
+    color: var(--primary-color);
 }
 
 .author-card {
-  border: 1px solid var(--medium-gray);
-  border-radius: var(--border-radius);
-  padding: 15px;
-  transition: transform 0.3s;
-  text-align: center;
-}
-
-.author-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    border: 1px solid var(--medium-gray);
+    border-radius: var(--border-radius);
+    padding: 20px; /* Tăng padding để chứa ảnh lớn hơn */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    max-width: 300px; /* Đảm bảo container đủ rộng */
 }
 
 .author-card img {
-  width: 100%;
-  height: 200px;
-  object-fit: cover;
-  border-radius: var(--border-radius);
-  margin-bottom: 10px;
+    width: 150px; /* Tăng kích thước ảnh */
+    height: 150px; /* Tăng kích thước ảnh */
+    border-radius: 50%;
+    margin-bottom: 15px;
+    object-fit: cover; /* Đảm bảo ảnh không bị méo, hiển thị đầy đủ */
+    object-position: center; /* Căn giữa ảnh */
 }
 
 .author-card h3 {
-  font-size: 1.2rem;
-  margin-bottom: 10px;
-  color: var(--primary-color);
+    font-size: 1.2rem;
+    margin-bottom: 10px;
+    color: var(--primary-color);
 }
 
 .author-card p {
-  font-size: 0.9rem;
-  color: #666;
-  margin-bottom: 5px;
+    font-size: 0.9rem;
+    color: #666;
+    margin-bottom: 5px;
 }
 
 .author-card .author-bio {
-  font-size: 0.85rem;
-  line-height: 1.5;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
+    font-size: 0.85rem;
+    line-height: 1.5;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
 }
 
 .loading-authors {
-  text-align: center;
-  padding: 20px;
-  color: #888;
+    text-align: center;
+    padding: 20px;
+    color: #888;
+}
+
+.view-author-detail-btn {
+    padding: 8px 15px;
+    margin-top: 10px;
+    background-color: var(--secondary-color);
+    color: white;
+    border: none;
+    border-radius: var(--border-radius);
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.view-author-detail-btn:hover {
+    background-color: #2980b9;
 }
 
 /* Related Products */
@@ -628,4 +637,314 @@ body {
 
 .view-author-detail-btn:hover {
   background-color: #2980b9;
+}
+/* Product Ratings */
+.product-ratings {
+    margin-bottom: 40px;
+    padding: 20px;
+    background-color: #fff;
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow);
+}
+
+.product-ratings h2 {
+    margin-bottom: 20px;
+    color: var(--primary-color);
+    font-size: 1.5rem;
+    font-weight: 600;
+}
+
+.rating-summary {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 25px;
+    padding: 10px;
+    background-color: var(--light-gray);
+    border-radius: var(--border-radius);
+}
+
+.rating-summary .average-rating {
+    font-size: 2rem;
+    font-weight: bold;
+    color: var(--primary-color);
+}
+
+.rating-summary .star-display {
+        color: var(--star-color); /* Sử dụng màu vàng cho ngôi sao */
+    font-size: 1.4rem;
+}
+
+.rating-summary .star-display i {
+    margin-right: 3px;
+}
+
+.rating-summary .total-ratings {
+    font-size: 1rem;
+    color: #666;
+    font-weight: 500;
+}
+
+#rating-form {
+    margin-bottom: 25px;
+    padding: 15px;
+    border: 1px solid var(--medium-gray);
+    border-radius: var(--border-radius);
+    background-color: var(--light-gray);
+}
+
+.rating-input {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+#star-input {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+#star-input i {
+    font-size: 1.8rem;
+    color: var(--medium-gray);
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+#star-input i.fas, #star-input i.fa-star-half-alt {
+    color: var(--warning-color);
+}
+
+#star-input i:hover {
+    color: var(--warning-color);
+    transform: scale(1.1);
+}
+
+#rating-comment {
+    width: 100%;
+    min-height: 100px;
+    padding: 12px;
+    border: 1px solid var(--medium-gray);
+    border-radius: var(--border-radius);
+    font-size: 0.95rem;
+    resize: vertical;
+    font-family: inherit;
+    transition: border-color 0.3s ease;
+}
+
+#rating-comment:focus {
+    border-color: var(--secondary-color);
+    outline: none;
+}
+
+#rating-comment:disabled {
+    background-color: #f0f0f0;
+    cursor: not-allowed;
+}
+
+#rating-char-count {
+    font-size: 0.9rem;
+    color: #666;
+    align-self: flex-end;
+    transition: color 0.3s ease;
+}
+
+#rating-char-count.warning {
+    color: var(--accent-color);
+    font-weight: 500;
+}
+
+#rating-message {
+    font-size: 0.95rem;
+    margin: 8px 0;
+    min-height: 1.2rem;
+}
+
+#rating-message.error {
+    color: var(--accent-color);
+}
+
+#rating-message.success {
+    color: var(--success-color);
+}
+
+#submit-rating {
+    padding: 12px 25px;
+    background-color: var(--secondary-color);
+    color: white;
+    border: none;
+    border-radius: var(--border-radius);
+    font-size: 0.95rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: var(--transition);
+    align-self: flex-start;
+}
+
+#submit-rating:disabled {
+    background-color: var(--medium-gray);
+    cursor: not-allowed;
+}
+
+#submit-rating:hover:not(:disabled) {
+    background-color: #2980b9;
+    transform: translateY(-2px);
+}
+
+.ratings-list {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.rating-item {
+    border: 1px solid var(--medium-gray);
+    border-radius: var(--border-radius);
+    padding: 20px;
+    background-color: var(--light-gray);
+    transition: var(--transition);
+}
+
+.rating-item:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.rating-header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 12px;
+}
+
+.rating-user {
+    font-weight: bold;
+    color: var(--primary-color);
+    font-size: 1.1rem;
+}
+
+.rating-stars {
+    color: var(--warning-color);
+    font-size: 1.2rem;
+}
+
+.rating-stars i {
+    margin-right: 3px;
+}
+
+.rating-date {
+    font-size: 0.9rem;
+    color: #666;
+    font-style: italic;
+}
+
+.rating-comment {
+    font-size: 0.95rem;
+    line-height: 1.5;
+    margin-bottom: 12px;
+    color: var(--dark-gray);
+}
+
+.rating-actions {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.rating-actions button {
+    padding: 10px 20px;
+    border: none;
+    border-radius: var(--border-radius);
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.edit-rating {
+    background-color: var(--secondary-color);
+    color: white;
+}
+
+.edit-rating:hover {
+    background-color: #2980b9;
+    transform: translateY(-2px);
+}
+
+.delete-rating {
+    background-color: var(--accent-color);
+    color: white;
+}
+
+.delete-rating:hover {
+    background-color: #c0392b;
+    transform: translateY(-2px);
+}
+
+/* Responsive for Product Ratings */
+@media (max-width: 768px) {
+    .product-ratings {
+        padding: 15px;
+    }
+
+    #rating-form {
+        padding: 10px;
+    }
+
+    #star-input i {
+        font-size: 1.4rem;
+    }
+
+    .rating-input {
+        gap: 8px;
+    }
+
+    #rating-comment {
+        min-height: 80px;
+        font-size: 0.9rem;
+    }
+
+    #submit-rating {
+        align-self: stretch;
+        padding: 10px;
+    }
+
+    .rating-item {
+        padding: 12px;
+    }
+
+    .rating-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+
+    .rating-user {
+        font-size: 1rem;
+    }
+
+    .rating-stars {
+        font-size: 1rem;
+    }
+
+    .rating-date {
+        font-size: 0.85rem;
+    }
+
+    .rating-comment {
+        font-size: 0.9rem;
+    }
+
+    .rating-actions {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+
+    .rating-actions button {
+        padding: 8px 15px;
+        font-size: 0.85rem;
+        width: 100%;
+    }
 }

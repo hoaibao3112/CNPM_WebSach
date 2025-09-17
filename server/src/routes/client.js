@@ -24,7 +24,11 @@ const authenticateToken = (req, res, next) => {
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    console.log('Decoded JWT:', decoded); // Debug payload token
     req.user = decoded;
+    if (!decoded.makh) {
+      return res.status(403).json({ error: 'Token không chứa makh' });
+    }
     next();
   } catch (error) {
     console.error('Lỗi xác minh token:', error);
@@ -32,6 +36,7 @@ const authenticateToken = (req, res, next) => {
   }
 };
 
+// Hàm kiểm tra dữ liệu khách hàng
 const validateCustomer = (customerData, isUpdate = false, requirePassword = false) => {
   const errors = [];
 
@@ -51,789 +56,508 @@ const validateCustomer = (customerData, isUpdate = false, requirePassword = fals
     }
   }
 
-  // if (requirePassword && (!isUpdate || customerData.matkhau !== undefined)) {
-  //   if (!customerData.matkhau || customerData.matkhau.trim() === '') {
-  //     errors.push('Mật khẩu là bắt buộc');
-  //   } else if (customerData.matkhau.length > 100) {
-  //     errors.push('Mật khẩu không được vượt quá 100 ký tự');
-  //   }
-  // }
+  if (requirePassword && (!isUpdate || customerData.matkhau !== undefined)) {
+    if (!customerData.matkhau || customerData.matkhau.trim() === '') {
+      errors.push('Mật khẩu là bắt buộc');
+    } else if (customerData.matkhau.length > 100) {
+      errors.push('Mật khẩu không được vượt quá 100 ký tự');
+    }
+  }
 
-  // if (customerData.diachi && customerData.diachi.length > 255) {
-  //   errors.push('Địa chỉ không được vượt quá 255 ký tự');
-  // }
+  if (customerData.sdt && !/^\d{10,11}$/.test(customerData.sdt)) {
+    errors.push('Số điện thoại không hợp lệ (phải có 10-11 số)');
+  }
 
-  // if (customerData.sdt && !/^\d{10,11}$/.test(customerData.sdt)) {
-  //   errors.push('Số điện thoại không hợp lệ (phải có 10-11 số)');
-  // }
-console.log('Kết quả kiểm tra:', errors); // Debug
+  if (customerData.diachi && customerData.diachi.length > 255) {
+    errors.push('Địa chỉ không được vượt quá 255 ký tự');
+  }
+
+  console.log('Kết quả kiểm tra:', errors); // Debug
   return errors;
 };
 
+// POST /register/send-otp - Gửi OTP đăng ký
 router.post('/register/send-otp', async (req, res) => {
   try {
     const { tenkh, email } = req.body;
-console.log('Nhận yêu cầu OTP:', { tenkh, email }); // Debug
-    const validationErrors = validateCustomer({ tenkh, email }, false, false); // Không yêu cầu mật khẩu
+    console.log('Nhận yêu cầu OTP đăng ký:', { tenkh, email });
+
+    const validationErrors = validateCustomer({ tenkh, email }, false, false);
     if (validationErrors.length > 0) {
-      console.log('Lỗi kiểm tra:', validationErrors); // Debug
       return res.status(400).json({ errors: validationErrors });
     }
 
-    const [[existingUser]] = await pool.query(
-      'SELECT * FROM khachhang WHERE email = ?',
-      [email]
-    );
-
+    const [[existingUser]] = await pool.query('SELECT * FROM khachhang WHERE email = ?', [email]);
     if (existingUser) {
       return res.status(400).json({ error: 'Email đã được sử dụng' });
     }
 
     const [recentRequests] = await pool.query(
-      `SELECT COUNT(*) as count FROM otp_verifications 
-       WHERE email = ? AND created_at > DATE_SUB(NOW(), INTERVAL 1 HOUR)`,
+      'SELECT COUNT(*) as count FROM otp_requests WHERE email = ? AND created_at > DATE_SUB(NOW(), INTERVAL 5 MINUTE)',
       [email]
     );
-
-    if (recentRequests[0].count >= 5) {
-      return res.status(429).json({ error: 'Bạn đã yêu cầu quá nhiều OTP. Vui lòng đợi 1 tiếng' });
+    if (recentRequests[0].count >= 3) {
+      return res.status(429).json({ error: 'Quá nhiều yêu cầu OTP. Vui lòng thử lại sau 5 phút.' });
     }
 
     const otp = generateOTP();
-    const expiresAt = new Date(Date.now() + 5 * 60 * 1000);
+    const otpToken = generateResetToken();
 
     await pool.query(
-      'INSERT INTO otp_verifications (email, otp, expires_at, ip_address) VALUES (?, ?, ?, ?)',
-      [email, otp, expiresAt, req.ip]
+      'INSERT INTO otp_requests (email, otp, token, created_at, type) VALUES (?, ?, ?, NOW(), ?) ON DUPLICATE KEY UPDATE otp = VALUES(otp), token = VALUES(token), created_at = VALUES(created_at)',
+      [email, otp, otpToken, 'register']
     );
 
-    const sent = await sendOTPEmail(email, otp);
+    await sendOTPEmail(email, otp, tenkh);
 
-    if (!sent) {
-      return res.status(500).json({ error: 'Không thể gửi OTP' });
-    }
-
-    res.json({ 
-      success: true, 
-      message: 'Mã OTP đã được gửi đến email của bạn' 
-    });
+    res.status(200).json({ message: 'OTP đã được gửi đến email của bạn', token: otpToken });
   } catch (error) {
     console.error('Lỗi gửi OTP đăng ký:', error);
-    res.status(500).json({ error: 'Lỗi server' });
+    res.status(500).json({ error: 'Lỗi khi gửi OTP' });
   }
 });
 
-// Xác nhận OTP cho đăng ký
+// POST /register/verify-otp - Xác thực OTP đăng ký
 router.post('/register/verify-otp', async (req, res) => {
   try {
-    const { email, otp } = req.body;
+    const { email, otp, token } = req.body;
+    console.log('Xác thực OTP đăng ký:', { email, otp, token });
+
+    if (!email || !otp || !token) {
+      return res.status(400).json({ error: 'Thiếu thông tin OTP' });
+    }
 
     const [[otpRecord]] = await pool.query(
-      `SELECT * FROM otp_verifications 
-       WHERE email = ? AND otp = ? 
-       AND expires_at > NOW() 
-       AND is_used = FALSE
-       AND attempt_count < 5
-       ORDER BY created_at DESC LIMIT 1`,
-      [email, otp]
+      'SELECT * FROM otp_requests WHERE email = ? AND token = ? AND otp = ? AND created_at > DATE_SUB(NOW(), INTERVAL 10 MINUTE) AND type = ?',
+      [email, token, otp, 'register']
     );
 
     if (!otpRecord) {
-      await pool.query(
-        'UPDATE otp_verifications SET attempt_count = attempt_count + 1 WHERE email = ?',
-        [email]
-      );
-      return res.status(400).json({ error: 'Mã OTP không hợp lệ hoặc đã hết hạn' });
+      return res.status(400).json({ error: 'OTP không hợp lệ hoặc đã hết hạn' });
     }
 
-    await pool.query(
-      'UPDATE otp_verifications SET is_used = TRUE WHERE id = ?',
-      [otpRecord.id]
-    );
+    await pool.query('DELETE FROM otp_requests WHERE email = ? AND token = ?', [email, token]);
 
-    const resetToken = generateResetToken();
-    const tokenExpires = new Date(Date.now() + 15 * 60 * 1000);
-
-    await pool.query(
-      'INSERT INTO password_reset_tokens (email, token, expires_at) VALUES (?, ?, ?)',
-      [email, resetToken, tokenExpires]
-    );
-
-    res.json({ 
-      success: true, 
-      message: 'Xác nhận OTP thành công',
-      resetToken
-    });
+    res.status(200).json({ message: 'OTP xác thực thành công', verified: true });
   } catch (error) {
-    console.error('Lỗi xác nhận OTP:', error);
-    res.status(500).json({ error: 'Lỗi server', details: error.message });
+    console.error('Lỗi xác thực OTP đăng ký:', error);
+    res.status(500).json({ error: 'Lỗi khi xác thực OTP' });
   }
 });
 
-// Đặt mật khẩu và hoàn tất đăng ký
+// POST /register/set-password - Đặt mật khẩu sau khi xác thực OTP
 router.post('/register/set-password', async (req, res) => {
-    try {
-        const { email, tenkh, matkhau, token } = req.body;
-
-        const [[tokenRecord]] = await pool.query(
-            'SELECT * FROM password_reset_tokens WHERE token = ? AND expires_at > NOW()',
-            [token]
-        );
-
-        if (!tokenRecord) {
-            return res.status(400).json({ error: 'Token không hợp lệ hoặc đã hết hạn' });
-        }
-
-        const validationErrors = validateCustomer({ tenkh, email, matkhau });
-        if (validationErrors.length > 0) {
-            return res.status(400).json({ errors: validationErrors });
-        }
-
-        const hashedPassword = await bcrypt.hash(matkhau.trim(), 10);
-
-        // Thêm sdt và diachi với giá trị NULL
-        const [{ insertId }] = await pool.query(
-            `INSERT INTO khachhang 
-             (tenkh, email, matkhau, tinhtrang, sdt, diachi) 
-             VALUES (?, ?, ?, ?, ?, ?)`,
-            [tenkh.trim(), email.trim(), hashedPassword, 'Hoạt động', null, null]
-        );
-
-        await pool.query(
-            'DELETE FROM password_reset_tokens WHERE token = ?',
-            [token]
-        );
-
-        const [[newCustomer]] = await pool.query(
-            'SELECT * FROM khachhang WHERE makh = ?',
-            [insertId]
-        );
-
-        res.status(201).json({ 
-            message: 'Đăng ký thành công!',
-            data: newCustomer
-        });
-    } catch (error) {
-        console.error('Lỗi đăng ký:', error);
-        if (error.code === 'ER_DUP_ENTRY') {
-            return res.status(400).json({ 
-                errors: ['Email đã tồn tại']
-            });
-        }
-        res.status(500).json({ error: 'Lỗi server' });
-    }
-});
-
-// Lấy tất cả khách hàng với phân trang
-router.get('/', async (req, res) => {
   try {
-    const { page = 1, limit = 10, search = '' } = req.query;
-    const offset = (page - 1) * limit;
-    const searchTerm = `%${search}%`;
+    const { email, tenkh, matkhau, sdt, diachi } = req.body;
+    console.log('Đặt mật khẩu:', { email, tenkh });
 
-    const [customers] = await pool.query(
-      `SELECT * FROM khachhang 
-       WHERE 
-         makh LIKE ? OR 
-         tenkh LIKE ? OR 
-         sdt LIKE ? OR 
-         email LIKE ? OR 
-         diachi LIKE ?
-       ORDER BY makh DESC
-       LIMIT ? OFFSET ?`,
-      [searchTerm, searchTerm, searchTerm, searchTerm, searchTerm, parseInt(limit), parseInt(offset)]
-    );
-
-    const [[{ total }]] = await pool.query(
-      `SELECT COUNT(*) as total FROM khachhang
-       WHERE 
-         makh LIKE ? OR 
-         tenkh LIKE ? OR 
-         sdt LIKE ? OR 
-         email LIKE ? OR 
-         diachi LIKE ?`,
-      [searchTerm, searchTerm, searchTerm, searchTerm, searchTerm]
-    );
-
-    res.status(200).json({
-      data: customers,
-      pagination: {
-        total,
-        page: parseInt(page),
-        limit: parseInt(limit),
-        totalPages: Math.ceil(total / limit)
-      }
-    });
-  } catch (error) {
-    console.error('Lỗi khi lấy danh sách khách hàng:', error);
-    res.status(500).json({ 
-      error: 'Lỗi khi lấy danh sách khách hàng',
-      details: error.message
-    });
-  }
-});
-
-// Lấy khách hàng theo ID
-router.get('/:id', async (req, res) => {
-  try {
-    const [[customer]] = await pool.query(
-      'SELECT * FROM khachhang WHERE makh = ?', 
-      [req.params.id]
-    );
-
-    if (!customer) {
-      return res.status(404).json({ error: 'Không tìm thấy khách hàng' });
-    }
-
-    res.status(200).json(customer);
-  } catch (error) {
-    console.error('Lỗi khi lấy thông tin khách hàng:', error);
-    res.status(500).json({ 
-      error: 'Lỗi khi lấy thông tin khách hàng',
-      details: error.message
-    });
-  }
-});
-
-// Tạo khách hàng mới
-router.post('/', async (req, res) => {
-  try {
-    const { tenkh, sdt, email, diachi, tinhtrang, matkhau } = req.body;
-
-    const validationErrors = validateCustomer(req.body);
+    const validationErrors = validateCustomer({ tenkh, email, matkhau, sdt, diachi }, false, true);
     if (validationErrors.length > 0) {
       return res.status(400).json({ errors: validationErrors });
     }
 
-    const hashedPassword = await bcrypt.hash(matkhau.trim(), 10);
-
-    const [{ insertId }] = await pool.query(
-      `INSERT INTO khachhang 
-       (tenkh, sdt, email, diachi, tinhtrang, matkhau) 
-       VALUES (?, ?, ?, ?, ?, ?)`,
-      [
-        tenkh.trim(),
-        sdt,
-        email ? email.trim() : null,
-        diachi ? diachi.trim() : null,
-        tinhtrang || 'Hoạt động',
-        hashedPassword
-      ]
-    );
-
-    const [[newCustomer]] = await pool.query(
-      'SELECT * FROM khachhang WHERE makh = ?',
-      [insertId]
-    );
-
-    res.status(201).json({ 
-      message: 'Thêm khách hàng thành công!',
-      data: newCustomer
-    });
-  } catch (error) {
-    console.error('Lỗi khi thêm khách hàng:', error);
-
-    if (error.code === 'ER_DUP_ENTRY') {
-      return res.status(400).json({ 
-        errors: [error.sqlMessage.includes('email') 
-          ? 'Email đã tồn tại' 
-          : 'Số điện thoại đã tồn tại']
-      });
-    }
-
-    res.status(500).json({ 
-      error: 'Lỗi khi thêm khách hàng',
-      details: error.message
-    });
-  }
-});
-
-// Cập nhật khách hàng
-router.put('/:id', async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { tenkh, sdt, email, diachi, tinhtrang, matkhau } = req.body;
-
-    const [[existing]] = await pool.query(
-      'SELECT * FROM khachhang WHERE makh = ?',
-      [id]
-    );
-
-    if (!existing) {
-      return res.status(404).json({ error: 'Không tìm thấy khách hàng' });
-    }
-
-    const validationErrors = validateCustomer(req.body, true);
-    if (validationErrors.length > 0) {
-      return res.status(400).json({ errors: validationErrors });
-    }
-
-    const hashedPassword = matkhau ? await bcrypt.hash(matkhau.trim(), 10) : existing.matkhau;
-
-    await pool.query(
-      `UPDATE khachhang 
-       SET 
-         tenkh = ?, 
-         sdt = ?, 
-         email = ?, 
-         diachi = ?, 
-         tinhtrang = ?,
-         matkhau = ?
-       WHERE makh = ?`,
-      [
-        tenkh ? tenkh.trim() : existing.tenkh,
-        sdt || existing.sdt,
-        email ? email.trim() : existing.email,
-        diachi ? diachi.trim() : existing.diachi,
-        tinhtrang || existing.tinhtrang,
-        hashedPassword,
-        id
-      ]
-    );
-
-    const [[updatedCustomer]] = await pool.query(
-      'SELECT * FROM khachhang WHERE makh = ?',
-      [id]
-    );
-
-    res.status(200).json({ 
-      message: 'Cập nhật khách hàng thành công!',
-      data: updatedCustomer
-    });
-  } catch (error) {
-    console.error('Lỗi khi cập nhật khách hàng:', error);
-
-    if (error.code === 'ER_DUP_ENTRY') {
-      return res.status(400).json({ 
-        errors: [error.sqlMessage.includes('email') 
-          ? 'Email đã tồn tại' 
-          : 'Số điện thoại đã tồn tại']
-      });
-    }
-
-    res.status(500).json({ 
-      error: 'Lỗi khi cập nhật khách hàng',
-      details: error.message
-    });
-  }
-});
-
-// Xóa khách hàng
-router.delete('/:id', async (req, res) => {
-  try {
-    const { id } = req.params;
-
-    const [[existing]] = await pool.query(
-      'SELECT * FROM khachhang WHERE makh = ?',
-      [id]
-    );
-
-    if (!existing) {
-      return res.status(404).json({ error: 'Không tìm thấy khách hàng' });
-    }
-
-    await pool.query('DELETE FROM khachhang WHERE makh = ?', [id]);
-
-    res.status(200).json({ 
-      message: 'Xóa khách hàng thành công!',
-      deletedCustomer: existing
-    });
-  } catch (error) {
-    console.error('Lỗi khi xóa khách hàng:', error);
-
-    if (error.code === 'ER_ROW_IS_REFERENCED_2') {
-      return res.status(400).json({ 
-        error: 'Không thể xóa khách hàng',
-        details: 'Đang được tham chiếu trong các giao dịch khác'
-      });
-    }
-
-    res.status(500).json({ 
-      error: 'Lỗi khi xóa khách hàng',
-      details: error.message
-    });
-  }
-});
-
-// Chuyển đổi trạng thái
-router.patch('/:id/toggle-status', async (req, res) => {
-  try {
-    const { id } = req.params;
-
-    const [customer] = await pool.query(
-      'SELECT tinhtrang FROM khachhang WHERE makh = ?',
-      [id]
-    );
-
-    if (customer.length === 0) {
-      return res.status(404).json({ error: 'Khách hàng không tồn tại' });
-    }
-
-    const newStatus = customer[0].tinhtrang === 'Hoạt động' 
-      ? 'Ngừng hoạt động' 
-      : 'Hoạt động';
+    const hashedPassword = await bcrypt.hash(matkhau, 10);
 
     const [result] = await pool.query(
-      'UPDATE khachhang SET tinhtrang = ? WHERE makh = ?',
-      [newStatus, id]
+      'INSERT INTO khachhang (tenkh, email, matkhau, sdt, diachi) VALUES (?, ?, ?, ?, ?)',
+      [tenkh, email, hashedPassword, sdt || null, diachi || null]
     );
 
-    if (result.affectedRows === 0) {
-      return res.status(500).json({ error: 'Cập nhật thất bại' });
-    }
+    const makh = result.insertId;
+    const accessToken = generateToken(makh, 'customer');
+    const refreshToken = generateRefreshToken(makh, 'customer');
 
-    res.json({
-      message: 'Đã đổi trạng thái!',
-      newStatus,
-      makh: id
+    res.status(201).json({
+      message: 'Đăng ký thành công',
+      user: { makh, tenkh, email },
+      token: accessToken,
+      refreshToken
     });
   } catch (error) {
-    console.error('Lỗi chuyển đổi trạng thái:', error);
-    res.status(500).json({
-      error: 'Lỗi server',
-      details: error.message
-    });
+    console.error('Lỗi đặt mật khẩu:', error);
+    res.status(500).json({ error: 'Lỗi khi đăng ký tài khoản' });
   }
 });
 
-// Đăng nhập
+// POST /login - Đăng nhập
 router.post('/login', async (req, res) => {
   try {
     const { email, matkhau } = req.body;
+    console.log('Yêu cầu đăng nhập:', { email });
 
     if (!email || !matkhau) {
-      return res.status(400).json({ error: 'Vui lòng nhập đầy đủ email và mật khẩu' });
+      return res.status(400).json({ error: 'Thiếu email hoặc mật khẩu' });
     }
 
     const [[user]] = await pool.query(
-      'SELECT * FROM khachhang WHERE email = ?',
-      [email.trim()]
+      'SELECT makh, tenkh, email, matkhau FROM khachhang WHERE email = ?',
+      [email]
     );
 
-    if (!user || !(await bcrypt.compare(matkhau.trim(), user.matkhau))) {
+    if (!user || !(await bcrypt.compare(matkhau, user.matkhau))) {
       return res.status(401).json({ error: 'Email hoặc mật khẩu không đúng' });
     }
 
-    const token = generateToken(user.makh);
-    const refreshToken = generateRefreshToken(user.makh);
+    const accessToken = generateToken(user.makh, 'customer');
+    const refreshToken = generateRefreshToken(user.makh, 'customer');
 
-    res.status(200).json({ 
+    res.status(200).json({
       message: 'Đăng nhập thành công',
-      user: {
-        makh: user.makh,
-        tenkh: user.tenkh,
-        email: user.email,
-        sdt: user.sdt
-      },
-      token,
+      user: { makh: user.makh, tenkh: user.tenkh, email: user.email },
+      token: accessToken,
       refreshToken
     });
   } catch (error) {
     console.error('Lỗi đăng nhập:', error);
-    res.status(500).json({ error: 'Lỗi server khi đăng nhập', details: error.message });
+    res.status(500).json({ error: 'Lỗi khi đăng nhập' });
   }
 });
 
-// Làm mới token
-router.post('/refresh-token', async (req, res) => {
-  try {
-    const { refreshToken } = req.body;
-    if (!refreshToken) {
-      return res.status(401).json({ error: 'Không có refresh token' });
-    }
-
-    const decoded = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET);
-    const newAccessToken = generateToken(decoded.userId);
-
-    res.status(200).json({ token: newAccessToken });
-  } catch (error) {
-    console.error('Lỗi làm mới token:', error);
-    res.status(403).json({ error: 'Refresh token không hợp lệ hoặc đã hết hạn' });
-  }
-});
-
-// Quên mật khẩu - Gửi OTP
-router.post('/forgot-password', async (req, res) => {
+router.post('/forgot-password/send-otp', async (req, res) => {
   try {
     const { email } = req.body;
-    
-    const [[user]] = await pool.query(
-      'SELECT * FROM khachhang WHERE email = ?',
-      [email]
-    );
-    
+    console.log('Gửi OTP quên mật khẩu:', { email });
+
+    const [[user]] = await pool.query('SELECT makh, tenkh FROM khachhang WHERE email = ?', [email]);
     if (!user) {
-      return res.status(404).json({ error: 'Email không tồn tại trong hệ thống' });
+      return res.status(404).json({ error: 'Email không tồn tại' });
     }
-    
+
     const [recentRequests] = await pool.query(
-      `SELECT COUNT(*) as count FROM otp_verifications 
-       WHERE email = ? AND created_at > DATE_SUB(NOW(), INTERVAL 1 HOUR)`,
+      'SELECT COUNT(*) as count FROM otp_requests WHERE email = ? AND created_at > DATE_SUB(NOW(), INTERVAL 5 MINUTE)',
       [email]
     );
-    
-    if (recentRequests[0].count >= 5) {
-      return res.status(429).json({ error: 'Bạn đã yêu cầu quá nhiều OTP. Vui lòng đợi 1 tiếng' });
+    if (recentRequests[0].count >= 3) {
+      return res.status(429).json({ error: 'Quá nhiều yêu cầu OTP. Vui lòng thử lại sau 5 phút.' });
     }
-    
+
     const otp = generateOTP();
-    const expiresAt = new Date(Date.now() + 5 * 60 * 1000);
+    const token = generateResetToken();
 
     await pool.query(
-      'INSERT INTO otp_verifications (email, otp, expires_at, ip_address) VALUES (?, ?, ?, ?)',
-      [email, otp, expiresAt, req.ip]
+      'INSERT INTO otp_requests (email, otp, token, created_at, type) VALUES (?, ?, ?, NOW(), ?) ON DUPLICATE KEY UPDATE otp = VALUES(otp), token = VALUES(token), created_at = VALUES(created_at)',
+      [email, otp, token, 'forgot-password']
     );
-    
-    const sent = await sendOTPEmail(email, otp);
-    
-    if (!sent) {
-      return res.status(500).json({ error: 'Không thể gửi OTP' });
-    }
-    
-    res.json({ 
-      success: true, 
-      message: 'Mã OTP đã được gửi đến email của bạn' 
-    });
+
+    await sendOTPEmail(email, otp, user.tenkh, true);
+
+    res.status(200).json({ message: 'OTP đã được gửi đến email của bạn', token });
   } catch (error) {
-    console.error('Lỗi quên mật khẩu:', error);
-    res.status(500).json({ error: 'Lỗi server' });
+    console.error('Lỗi gửi OTP quên mật khẩu:', error);
+    res.status(500).json({ error: 'Lỗi khi gửi OTP' });
   }
 });
 
-// Xác nhận OTP
-router.post('/verify-otp', async (req, res) => {
+  
+router.post('/forgot-password/verify-otp', async (req, res) => {
   try {
-    const { email, otp } = req.body;
-
+    const { email, otp, token } = req.body;
+    console.log('Xác thực OTP quên mật khẩu:', { email, otp, token }); // Xác nhận log này
+    if (!email || !otp || !token) {
+      return res.status(400).json({ error: 'Thiếu thông tin OTP hoặc token' });
+    }
     const [[otpRecord]] = await pool.query(
-      `SELECT * FROM otp_verifications 
-       WHERE email = ? AND otp = ? 
-       AND expires_at > NOW() 
-       AND is_used = FALSE
-       AND attempt_count < 5
-       ORDER BY created_at DESC LIMIT 1`,
-      [email, otp]
+      'SELECT * FROM otp_requests WHERE email = ? AND otp = ? AND token = ? AND created_at > DATE_SUB(NOW(), INTERVAL 10 MINUTE) AND type = ?',
+      [email, otp, token, 'forgot-password']
     );
-
     if (!otpRecord) {
-      await pool.query(
-        'UPDATE otp_verifications SET attempt_count = attempt_count + 1 WHERE email = ?',
-        [email]
-      );
-      return res.status(400).json({ error: 'Mã OTP không hợp lệ hoặc đã hết hạn' });
+      return res.status(400).json({ error: 'OTP, token không hợp lệ hoặc đã hết hạn' });
     }
-
-    await pool.query(
-      'UPDATE otp_verifications SET is_used = TRUE WHERE id = ?',
-      [otpRecord.id]
-    );
-
     const resetToken = generateResetToken();
-    const tokenExpires = new Date(Date.now() + 15 * 60 * 1000);
-    
     await pool.query(
-      'INSERT INTO password_reset_tokens (email, token, expires_at) VALUES (?, ?, ?)',
-      [email, resetToken, tokenExpires]
+      'UPDATE khachhang SET reset_token = ?, reset_token_expires = DATE_ADD(NOW(), INTERVAL 1 HOUR) WHERE email = ?',
+      [resetToken, email]
     );
-    
-    res.json({ 
-      success: true, 
-      message: 'Xác nhận OTP thành công',
-      resetToken
-    });
+    await pool.query('DELETE FROM otp_requests WHERE email = ? AND otp = ? AND token = ?', [email, otp, token]);
+    res.status(200).json({ message: 'OTP xác thực thành công', resetToken });
   } catch (error) {
-    console.error('Lỗi xác nhận OTP:', error);
-    res.status(500).json({ error: 'Lỗi server', details: error.message });
+    console.error('Lỗi xác thực OTP quên mật khẩu:', error);
+    res.status(500).json({ error: 'Lỗi khi xác thực OTP' });
   }
 });
 
-// Đặt lại mật khẩu
-router.post('/reset-password', async (req, res) => {
+// POST /forgot-password/reset - Đặt lại mật khẩu
+router.post('/forgot-password/reset', async (req, res) => {
   try {
-    const { token, newPassword, confirmPassword } = req.body;
-    
-    if (newPassword !== confirmPassword) {
-      return res.status(400).json({ error: 'Mật khẩu không khớp' });
+    const { email, matkhau, resetToken } = req.body;
+    console.log('Đặt lại mật khẩu:', { email, resetToken });
+
+    if (!email || !matkhau || !resetToken) {
+      return res.status(400).json({ error: 'Thiếu thông tin' });
     }
-    
-    if (newPassword.length < 8) {
-      return res.status(400).json({ error: 'Mật khẩu phải có ít nhất 8 ký tự' });
-    }
-    
-    const [[tokenRecord]] = await pool.query(
-      'SELECT * FROM password_reset_tokens WHERE token = ? AND expires_at > NOW()',
-      [token]
+
+    const [[user]] = await pool.query(
+      'SELECT makh FROM khachhang WHERE email = ? AND reset_token = ? AND reset_token_expires > NOW()',
+      [email, resetToken]
     );
-    
-    if (!tokenRecord) {
-      return res.status(400).json({ error: 'Token không hợp lệ hoặc đã hết hạn' });
+
+    if (!user) {
+      return res.status(400).json({ error: 'Reset token không hợp lệ hoặc đã hết hạn' });
     }
-    
-    const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+    const hashedPassword = await bcrypt.hash(matkhau, 10);
+
     await pool.query(
-      'UPDATE khachhang SET matkhau = ? WHERE email = ?',
-      [hashedPassword, tokenRecord.email]
+      'UPDATE khachhang SET matkhau = ?, reset_token = NULL, reset_token_expires = NULL WHERE makh = ?',
+      [hashedPassword, user.makh]
     );
-    
-    await pool.query(
-      'DELETE FROM password_reset_tokens WHERE token = ?',
-      [token]
-    );
-    
-    res.json({ 
-      success: true, 
-      message: 'Đặt lại mật khẩu thành công' 
-    });
+
+    res.status(200).json({ message: 'Đặt lại mật khẩu thành công' });
   } catch (error) {
     console.error('Lỗi đặt lại mật khẩu:', error);
-    res.status(500).json({ error: 'Lỗi server' });
+    res.status(500).json({ error: 'Lỗi khi đặt lại mật khẩu' });
   }
 });
 
-// Đổi mật khẩu
-router.post('/change-password/:id', authenticateToken, async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { oldPassword, newPassword, confirmPassword } = req.body;
-
-    if (!oldPassword || !newPassword || !confirmPassword) {
-      return res.status(400).json({ error: 'Vui lòng nhập đầy đủ mật khẩu cũ và mật khẩu mới' });
-    }
-
-    if (newPassword !== confirmPassword) {
-      return res.status(400).json({ error: 'Mật khẩu mới và xác nhận mật khẩu không khớp' });
-    }
-
-    if (newPassword.length < 8) {
-      return res.status(400).json({ error: 'Mật khẩu mới phải có ít nhất 8 ký tự' });
-    }
-
-    if (id !== req.user.userId) {
-      return res.status(403).json({ error: 'Không có quyền đổi mật khẩu này' });
-    }
-
-    const [[customer]] = await pool.query(
-      'SELECT * FROM khachhang WHERE makh = ?',
-      [id]
-    );
-
-    if (!customer) {
-      return res.status(404).json({ error: 'Không tìm thấy khách hàng' });
-    }
-
-    const isMatch = await bcrypt.compare(oldPassword, customer.matkhau);
-    if (!isMatch) {
-      return res.status(401).json({ error: 'Mật khẩu cũ không đúng' });
-    }
-
-    const hashedPassword = await bcrypt.hash(newPassword, 10);
-    await pool.query(
-      'UPDATE khachhang SET matkhau = ? WHERE makh = ?',
-      [hashedPassword, id]
-    );
-
-    res.status(200).json({ 
-      message: 'Đổi mật khẩu thành công' 
-    });
-  } catch (error) {
-    console.error('Lỗi khi đổi mật khẩu:', error);
-    res.status(500).json({ error: 'Lỗi server khi đổi mật khẩu', details: error.message });
-  }
-});
-
-// Lấy hồ sơ khách hàng
+// GET /profile - Lấy thông tin profile
 router.get('/profile', authenticateToken, async (req, res) => {
   try {
-    const [[customer]] = await pool.query(
-      'SELECT makh, tenkh, sdt, email, diachi, tinhtrang FROM khachhang WHERE makh = ?',
-      [req.user.userId]
+    console.log('Lấy profile cho makh:', req.user.makh);
+    const [[user]] = await pool.query(
+      'SELECT makh, tenkh, email, sdt, diachi FROM khachhang WHERE makh = ?',
+      [req.user.makh]
     );
 
-    if (!customer) {
-      return res.status(404).json({ error: 'Không tìm thấy hồ sơ khách hàng' });
+    if (!user) {
+      return res.status(404).json({ error: 'Người dùng không tồn tại' });
     }
 
-    res.status(200).json({
-      message: 'Lấy thông tin hồ sơ thành công',
-      data: customer
-    });
+    res.status(200).json({ user });
   } catch (error) {
-    console.error('Lỗi khi lấy hồ sơ:', error);
-    res.status(500).json({
-      error: 'Lỗi khi lấy thông tin hồ sơ',
-      details: error.message
-    });
+    console.error('Lỗi lấy profile:', error);
+    res.status(500).json({ error: 'Lỗi khi lấy thông tin profile' });
   }
 });
 
-// Cập nhật hồ sơ khách hàng
-router.put('/profile/:id', authenticateToken, async (req, res) => {
+// PUT /profile - Cập nhật profile
+router.put('/profile', authenticateToken, async (req, res) => {
   try {
-    const { id } = req.params;
-    const { tenkh, sdt, email, diachi } = req.body;
+    const { tenkh, sdt, diachi } = req.body;
+    console.log('Cập nhật profile:', { makh: req.user.makh, tenkh, sdt, diachi });
 
-    if (id !== req.user.userId) {
-      return res.status(403).json({ error: 'Không có quyền cập nhật hồ sơ này' });
-    }
-
-    const [[existing]] = await pool.query(
-      'SELECT * FROM khachhang WHERE makh = ?',
-      [id]
-    );
-
-    if (!existing) {
-      return res.status(404).json({ error: 'Không tìm thấy hồ sơ khách hàng' });
-    }
-
-   
-
- const customerData = { tenkh, sdt, email, diachi };
-    const validationErrors = validateCustomer(customerData, true);
+    const validationErrors = validateCustomer({ tenkh, sdt, diachi }, true, false);
     if (validationErrors.length > 0) {
       return res.status(400).json({ errors: validationErrors });
     }
 
-    await pool.query(
-      `UPDATE khachhang 
-       SET 
-         tenkh = ?, 
-         sdt = ?, 
-         email = ?, 
-         diachi = ?
-       WHERE makh = ?`,
-      [
-        tenkh ? tenkh.trim() : existing.tenkh,
-        sdt || existing.sdt,
-        email ? email.trim() : existing.email,
-        diachi ? diachi.trim() : existing.diachi,
-        id
-      ]
+    const [result] = await pool.query(
+      'UPDATE khachhang SET tenkh = ?, sdt = ?, diachi = ? WHERE makh = ?',
+      [tenkh, sdt || null, diachi || null, req.user.makh]
     );
 
-    const [[updatedCustomer]] = await pool.query(
-      'SELECT makh, tenkh, sdt, email, diachi, tinhtrang FROM khachhang WHERE makh = ?',
-      [id]
-    );
-
-    res.status(200).json({
-      message: 'Cập nhật hồ sơ thành công',
-      data: updatedCustomer
-    });
-  } catch (error) {
-    console.error('Lỗi khi cập nhật hồ sơ:', error);
-
-    if (error.code === 'ER_DUP_ENTRY') {
-      return res.status(400).json({
-        errors: [error.sqlMessage.includes('email') 
-          ? 'Email đã tồn tại' 
-          : 'Số điện thoại đã tồn tại']
-      });
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: 'Không tìm thấy người dùng' });
     }
 
-    res.status(500).json({
-      error: 'Lỗi khi cập nhật hồ sơ',
-      details: error.message
-    });
+    res.status(200).json({ message: 'Cập nhật profile thành công' });
+  } catch (error) {
+    console.error('Lỗi cập nhật profile:', error);
+    res.status(500).json({ error: 'Lỗi khi cập nhật profile' });
+  }
+});
+
+// PUT /profile/change-password - Đổi mật khẩu
+router.put('/profile/change-password', authenticateToken, async (req, res) => {
+  try {
+    const { matkhau_cu, matkhau_moi } = req.body;
+    console.log('Đổi mật khẩu cho makh:', req.user.makh);
+
+    if (!matkhau_cu || !matkhau_moi) {
+      return res.status(400).json({ error: 'Thiếu mật khẩu cũ hoặc mới' });
+    }
+
+    const [[user]] = await pool.query(
+      'SELECT matkhau FROM khachhang WHERE makh = ?',
+      [req.user.makh]
+    );
+
+    if (!user || !(await bcrypt.compare(matkhau_cu, user.matkhau))) {
+      return res.status(400).json({ error: 'Mật khẩu cũ không đúng' });
+    }
+
+    const hashedNewPassword = await bcrypt.hash(matkhau_moi, 10);
+
+    await pool.query(
+      'UPDATE khachhang SET matkhau = ? WHERE makh = ?',
+      [hashedNewPassword, req.user.makh]
+    );
+
+    res.status(200).json({ message: 'Đổi mật khẩu thành công' });
+  } catch (error) {
+    console.error('Lỗi đổi mật khẩu:', error);
+    res.status(500).json({ error: 'Lỗi khi đổi mật khẩu' });
+  }
+});
+
+// GET /cart - Lấy danh sách giỏ hàng
+// Trong file client.js, cập nhật endpoint GET /cart
+router.get('/cart', authenticateToken, async (req, res) => {
+  try {
+    console.log('Lấy giỏ hàng cho makh:', req.user.makh);
+    if (!req.user.makh) {
+      return res.status(400).json({ error: 'Không tìm thấy mã khách hàng' });
+    }
+
+    const [cartItems] = await pool.query(
+      `SELECT g.MaSP, g.SoLuong AS quantity, g.Selected,
+              s.TenSP AS name, s.DonGia AS price, s.HinhAnh AS image, s.SoLuong AS stock
+       FROM giohang g
+       JOIN sanpham s ON g.MaSP = s.MaSP
+       WHERE g.MaKH = ?`,
+      [req.user.makh]
+    );
+
+    res.status(200).json(cartItems);
+  } catch (error) {
+    console.error('Lỗi lấy giỏ hàng:', error);
+    res.status(500).json({ error: 'Lỗi khi lấy giỏ hàng', details: error.message });
+  }
+});
+
+// POST /cart/add - Thêm sản phẩm vào giỏ hàng
+router.post('/cart/add', authenticateToken, async (req, res) => {
+  const { productId, quantity = 1 } = req.body;
+  console.log('Thêm vào giỏ hàng:', { makh: req.user.makh, productId, quantity });
+
+  try {
+    if (!req.user.makh) {
+      return res.status(400).json({ error: 'Không tìm thấy mã khách hàng' });
+    }
+    if (!productId || quantity < 1) {
+      return res.status(400).json({ error: 'Thông tin sản phẩm không hợp lệ' });
+    }
+
+    const [product] = await pool.query('SELECT SoLuong FROM sanpham WHERE MaSP = ?', [productId]);
+    if (!product.length || product[0].SoLuong < quantity) {
+      return res.status(400).json({ error: 'Sản phẩm không đủ hàng' });
+    }
+
+    await pool.query(
+      `INSERT INTO giohang (MaKH, MaSP, SoLuong, Selected)
+       VALUES (?, ?, ?, TRUE)
+       ON DUPLICATE KEY UPDATE SoLuong = SoLuong + VALUES(SoLuong)`,
+      [req.user.makh, productId, quantity]
+    );
+
+    res.status(200).json({ message: 'Thêm vào giỏ hàng thành công' });
+  } catch (error) {
+    console.error('Lỗi thêm giỏ hàng:', error);
+    res.status(500).json({ error: 'Lỗi khi thêm vào giỏ hàng', details: error.message });
+  }
+});
+
+// PUT /cart/update - Cập nhật số lượng
+router.put('/cart/update', authenticateToken, async (req, res) => {
+  const { productId, quantity } = req.body;
+  console.log('Cập nhật giỏ hàng:', { makh: req.user.makh, productId, quantity });
+
+  try {
+    if (!req.user.makh) {
+      return res.status(400).json({ error: 'Không tìm thấy mã khách hàng' });
+    }
+    if (!productId || quantity < 1) {
+      return res.status(400).json({ error: 'Thông tin không hợp lệ' });
+    }
+
+    const [product] = await pool.query('SELECT SoLuong FROM sanpham WHERE MaSP = ?', [productId]);
+    if (!product.length || product[0].SoLuong < quantity) {
+      return res.status(400).json({ error: 'Sản phẩm không đủ hàng' });
+    }
+
+    const [result] = await pool.query(
+      'UPDATE giohang SET SoLuong = ? WHERE MaKH = ? AND MaSP = ?',
+      [quantity, req.user.makh, productId]
+    );
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: 'Sản phẩm không tồn tại trong giỏ hàng' });
+    }
+
+    res.status(200).json({ message: 'Cập nhật giỏ hàng thành công' });
+  } catch (error) {
+    console.error('Lỗi cập nhật giỏ hàng:', error);
+    res.status(500).json({ error: 'Lỗi khi cập nhật giỏ hàng', details: error.message });
+  }
+});
+
+// PUT /cart/select - Cập nhật trạng thái selected
+router.put('/cart/select', authenticateToken, async (req, res) => {
+  const { productId, selected } = req.body;
+  console.log('Cập nhật selected:', { makh: req.user.makh, productId, selected });
+
+  try {
+    if (!req.user.makh) {
+      return res.status(400).json({ error: 'Không tìm thấy mã khách hàng' });
+    }
+
+    const [result] = await pool.query(
+      'UPDATE giohang SET Selected = ? WHERE MaKH = ? AND MaSP = ?',
+      [selected, req.user.makh, productId]
+    );
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: 'Sản phẩm không tồn tại trong giỏ hàng' });
+    }
+
+    res.status(200).json({ message: 'Cập nhật trạng thái chọn thành công' });
+  } catch (error) {
+    console.error('Lỗi cập nhật selected:', error);
+    res.status(500).json({ error: 'Lỗi khi cập nhật trạng thái chọn', details: error.message });
+  }
+});
+
+// DELETE /cart/remove/:productId - Xóa sản phẩm khỏi giỏ hàng
+router.delete('/cart/remove/:productId', authenticateToken, async (req, res) => {
+  const { productId } = req.params;
+  console.log('Xóa sản phẩm khỏi giỏ:', { makh: req.user.makh, productId });
+
+  try {
+    if (!req.user.makh) {
+      return res.status(400).json({ error: 'Không tìm thấy mã khách hàng' });
+    }
+
+    const [result] = await pool.query('DELETE FROM giohang WHERE MaKH = ? AND MaSP = ?', [req.user.makh, productId]);
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: 'Sản phẩm không tồn tại trong giỏ hàng' });
+    }
+
+    res.status(200).json({ message: 'Xóa khỏi giỏ hàng thành công' });
+  } catch (error) {
+    console.error('Lỗi xóa giỏ hàng:', error);
+    res.status(500).json({ error: 'Lỗi khi xóa khỏi giỏ hàng', details: error.message });
+  }
+});
+
+// DELETE /cart/clear - Xóa toàn bộ giỏ hàng
+router.delete('/cart/clear', authenticateToken, async (req, res) => {
+  console.log('Xóa toàn bộ giỏ hàng:', { makh: req.user.makh });
+
+  try {
+    if (!req.user.makh) {
+      return res.status(400).json({ error: 'Không tìm thấy mã khách hàng' });
+    }
+
+    const [result] = await pool.query('DELETE FROM giohang WHERE MaKH = ?', [req.user.makh]);
+
+    res.status(200).json({ message: `Đã xóa ${result.affectedRows} sản phẩm khỏi giỏ hàng` });
+  } catch (error) {
+    console.error('Lỗi xóa giỏ hàng:', error);
+    res.status(500).json({ error: 'Lỗi khi xóa giỏ hàng', details: error.message });
+  }
+});
+
+// POST /logout - Đăng xuất
+router.post('/logout', authenticateToken, async (req, res) => {
+  try {
+    console.log('Đăng xuất cho makh:', req.user.makh);
+    // Xóa refresh token từ DB nếu có
+    // await pool.query('DELETE FROM refresh_tokens WHERE makh = ?', [req.user.makh]);
+
+    res.status(200).json({ message: 'Đăng xuất thành công' });
+  } catch (error) {
+    console.error('Lỗi đăng xuất:', error);
+    res.status(500).json({ error: 'Lỗi khi đăng xuất' });
   }
 });
 

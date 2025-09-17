@@ -3,15 +3,21 @@ import pool from '../config/connectDatabase.js';
 import { authenticateToken } from '../utils/generateToken.js';
 const router = express.Router();
 
-// API lấy danh sách tài khoản
+// account.js
 router.get('/', async (req, res) => {
   try {
     const [accounts] = await pool.query('SELECT * FROM taikhoan');
-    res.status(200).json(accounts);
+    const formatted = accounts.map(acc => ({
+      ...acc,
+      TinhTrang: Buffer.isBuffer(acc.TinhTrang) ? acc.TinhTrang[0] : acc.TinhTrang
+    }));
+    res.status(200).json(formatted);
   } catch (error) {
     res.status(500).json({ error: 'Lỗi khi lấy danh sách tài khoản', details: error.message });
   }
 });
+
+
 
 // API lấy tài khoản theo ID
 router.get('/:id', async (req, res) => {

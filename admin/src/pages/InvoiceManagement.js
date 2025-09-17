@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Modal, Button, Select, message, Table, Tag, Space, Input } from 'antd';
 import { ExclamationCircleFilled, EyeOutlined, DeleteOutlined, MessageOutlined } from '@ant-design/icons';
@@ -7,7 +7,6 @@ const { confirm } = Modal;
 const { Search, TextArea } = Input;
 
 const InvoiceManagement = () => {
-  // State declarations moved inside the component
   const [invoices, setInvoices] = useState([]);
   const [loading, setLoading] = useState(false);
   const [selectedInvoice, setSelectedInvoice] = useState(null);
@@ -25,27 +24,43 @@ const InvoiceManagement = () => {
     { value: 'Đã giao hàng', color: 'green' },
     { value: 'Đã hủy', color: 'red' }
   ];
-  
+
+  // Tự động load danh sách hóa đơn khi component mount
+  useEffect(() => {
+    fetchInvoices();
+  }, []);
+
   const fetchInvoices = async () => {
     setLoading(true);
     try {
-      const res = await axios.get('http://localhost:5000/api/orders/hoadon');
+      console.log('📡 Gọi API /hoadon (không cần token)');
+
+      const res = await axios.get('http://localhost:5000/api/orders/hoadon', {
+        // Không cần headers Authorization vì backend đã bỏ auth cho route này
+      });
+
+      console.log('✅ API Success - Data:', res.data);
       setInvoices(res.data);
     } catch (error) {
-      console.error('Lỗi khi lấy danh sách hóa đơn:', error);
+      console.error('❌ Full Error:', error.response?.status, error.response?.data || error.message);
       message.error('Lỗi khi tải danh sách hóa đơn');
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => {
-    fetchInvoices();
-  }, []);
-
   const handleViewInvoice = async (id) => {
     try {
-      const res = await axios.get(`http://localhost:5000/api/orders/hoadon/${id}`);
+      const token = localStorage.getItem('token');
+      console.log('Token in handleViewInvoice:', token);
+      if (!token) {
+        throw new Error('Không tìm thấy token. Vui lòng đăng nhập lại.');
+      }
+      const res = await axios.get(`http://localhost:5000/api/orders/hoadon/${id}`, {
+        headers: {
+          Authorization: `Bearer ${token.trim()}`
+        }
+      });
       setSelectedInvoice({
         ...res.data,
         items: res.data.items.map(item => ({
@@ -53,9 +68,8 @@ const InvoiceManagement = () => {
           unitPrice: item.price,
           productImage: item.productImage || 'https://via.placeholder.com/50'
         })),
-         // Map lại tên trường cho React dùng
-  note: res.data.GhiChu || '', // Thêm dòng này
-  status: res.data.tinhtrang   // Thêm dòng này
+        note: res.data.GhiChu || '',
+        status: res.data.tinhtrang
       });
       setIsModalVisible(true);
     } catch (error) {
@@ -63,21 +77,19 @@ const InvoiceManagement = () => {
       message.error('Lỗi khi tải chi tiết hóa đơn');
     }
   };
+
   const handleChatWithCustomer = async (customerId) => {
     try {
-      // Tạo/truy vấn phòng chat
+      const token = localStorage.getItem('token');
+      console.log('Token in handleChatWithCustomer:', token);
       const res = await axios.post(
-        'http://localhost:5000/api/chat/rooms',
+        '/api/chat/rooms',
         { customer_id: customerId },
-        { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
+        { headers: { Authorization: `Bearer ${token}` } }
       );
-      
-      // Lấy tin nhắn
       const msgRes = await axios.get(`http://localhost:5000/api/chat/rooms/${res.data.room.room_id}/messages`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+        headers: { Authorization: `Bearer ${token}` }
       });
-  
-      // Cập nhật state
       setCurrentRoom(res.data.room);
       setMessages(msgRes.data.messages);
       setChatVisible(true);
@@ -85,33 +97,36 @@ const InvoiceManagement = () => {
       message.error(error.response?.data.error || 'Lỗi kết nối chat');
     }
   };
+
   const handleSendMessage = async () => {
     if (!newMessage.trim()) return;
-  
     try {
-      // Gửi tin nhắn
+      const token = localStorage.getItem('token');
+      console.log('Token in handleSendMessage:', token);
       await axios.post('http://localhost:5000/api/chat/messages', {
         room_id: currentRoom.room_id,
         message: newMessage
       }, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+        headers: { Authorization: `Bearer ${token}` }
       });
-  
-      // Cập nhật tin nhắn
       const msgRes = await axios.get(`http://localhost:5000/api/chat/rooms/${currentRoom.room_id}/messages`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+        headers: { Authorization: `Bearer ${token}` }
       });
-      
       setMessages(msgRes.data.messages);
       setNewMessage('');
     } catch (error) {
       message.error('Gửi tin nhắn thất bại');
     }
   };
+
   const handleStatusChange = async (id, newStatus) => {
     try {
+      const token = localStorage.getItem('token');
+      console.log('Token in handleStatusChange:', token);
       await axios.put(`http://localhost:5000/api/orders/hoadon/${id}/trangthai`, { 
         trangthai: newStatus 
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
       });
       message.success('Cập nhật trạng thái thành công');
       fetchInvoices();
@@ -131,8 +146,12 @@ const InvoiceManagement = () => {
       cancelText: 'Thoát',
       async onOk() {
         try {
+          const token = localStorage.getItem('token');
+          console.log('Token in handleCancelInvoice:', token);
           await axios.put(`http://localhost:5000/api/orders/hoadon/${id}/huy`, {
             lyDo: 'Hủy bởi quản trị viên'
+          }, {
+            headers: { Authorization: `Bearer ${token}` }
           });
           message.success('Hủy hóa đơn thành công');
           fetchInvoices();
@@ -246,97 +265,43 @@ const InvoiceManagement = () => {
           )}
         </Space>
       ),
-      fixed: 'right',
-    }
+      width: 120,
+    },
   ];
+
+  const handleSearch = (value) => {
+    setSearchTerm(value);
+  };
 
   return (
     <div className="invoice-management-container">
       <div className="header-section">
-        <h1 className="page-title">Quản lý Hóa đơn</h1>
-        <div className="search-box">
-          <Search
-            placeholder="Tìm hóa đơn..."
-            allowClear
-            enterButton
-            size="small"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-        </div>
+        <h1 className="page-title">Quản lý hóa đơn</h1>
+        <Search
+          placeholder="Tìm kiếm theo mã HĐ, tên KH hoặc SĐT"
+          onSearch={handleSearch}
+          className="search-box"
+          allowClear
+        />
+        <Button onClick={fetchInvoices} loading={loading}>
+          Tải lại
+        </Button>
       </div>
-      
+
       <Table
         columns={columns}
         dataSource={filteredInvoices}
         rowKey="id"
         loading={loading}
-        scroll={{ x: 750 }}
-        pagination={{ 
-          pageSize: 10,
-          showSizeChanger: false,
-          size: 'small'
-        }}
-        size="small"
+        scroll={{ x: 1000 }}
+        pagination={{ pageSize: 10 }}
         className="compact-invoice-table"
-        style={{ fontSize: '13px' }}
       />
-{/* Thêm modal chat vào cuối component */}
-<Modal
-  title={`Chat với khách hàng #${currentRoom?.customer_id || ''}`}
-  open={chatVisible}
-  onCancel={() => setChatVisible(false)}
-  footer={null}
-  width={600}
->
-  <div className="chat-container">
-    <div className="message-area">
-      {messages.map(msg => (
-        <div 
-          key={msg.message_id} 
-          className={`message ${msg.sender_type === 'staff' ? 'staff' : 'customer'}`}
-        >
-          <div className="message-header">
-            <span className="sender">{msg.sender_type === 'staff' ? 'Bạn' : 'Khách hàng'}</span>
-            <span className="time">{new Date(msg.created_at).toLocaleTimeString()}</span>
-          </div>
-          <div className="message-content">{msg.message}</div>
-        </div>
-      ))}
-    </div>
-    
-    <div className="input-area">
-      <TextArea
-        rows={3}
-        value={newMessage}
-        onChange={(e) => setNewMessage(e.target.value)}
-        onPressEnter={(e) => {
-          if (!e.shiftKey) {
-            e.preventDefault();
-            handleSendMessage();
-          }
-        }}
-      />
-      <Button 
-        type="primary" 
-        onClick={handleSendMessage}
-        style={{ marginTop: 8 }}
-      >
-        Gửi
-      </Button>
-    </div>
-  </div>
-</Modal>
 
-
-
-
-
-
-      {/* Invoice Detail Modal */}
+      {/* Modal chi tiết hóa đơn */}
       <Modal
         title={`Chi tiết hóa đơn #${selectedInvoice?.id || ''}`}
-        open={isModalVisible} // Đã sửa từ visible thành open
+        visible={isModalVisible}
         onCancel={() => setIsModalVisible(false)}
         footer={[
           <Button key="close" onClick={() => setIsModalVisible(false)}>
@@ -348,7 +313,6 @@ const InvoiceManagement = () => {
       >
         {selectedInvoice && (
           <div className="invoice-detail-content">
-            {/* Customer Info Section */}
             <div className="info-section">
               <h3 className="section-title">Thông tin khách hàng</h3>
               <div className="info-grid">
@@ -376,23 +340,21 @@ const InvoiceManagement = () => {
                 </div>
               </div>
             </div>
-
-            {/* Invoice Info Section */}
             <div className="info-section">
               <h3 className="section-title">Thông tin hóa đơn</h3>
               <div className="info-grid">
-              <div>
+                <div>
                   <p className="text-gray-600 text-sm">Ngày tạo:</p>
                   <p className="font-medium">{formatDate(selectedInvoice.NgayTao)}</p>
                 </div>
                 <div className="info-item">
-   <p className="text-gray-600 text-sm">Tổng tiền:</p>
-  <p className="font-medium">
-     {selectedInvoice?.TongTien !== undefined 
-      ? formatCurrency(selectedInvoice.TongTien) 
-      : 'Chưa có dữ liệu'}
-  </p>
-</div>
+                  <p className="text-gray-600 text-sm">Tổng tiền:</p>
+                  <p className="font-medium">
+                    {selectedInvoice?.TongTien !== undefined 
+                      ? formatCurrency(selectedInvoice.TongTien) 
+                      : 'Chưa có dữ liệu'}
+                  </p>
+                </div>
                 <div className="info-item">
                   <p className="info-label">Phương thức TT:</p>
                   <p className="info-value">COD</p>
@@ -409,8 +371,6 @@ const InvoiceManagement = () => {
                 </div>
               </div>
             </div>
-
-            {/* Products Section */}
             <div className="products-section">
               <h3 className="section-title">Danh sách sản phẩm</h3>
               <Table
@@ -475,6 +435,47 @@ const InvoiceManagement = () => {
           </div>
         )}
       </Modal>
+
+      {/* Modal chat (nếu cần mở rộng) */}
+      {chatVisible && (
+        <Modal
+          title={`Chat với khách hàng ${currentRoom?.customer_name || ''}`}
+          visible={chatVisible}
+          onCancel={() => setChatVisible(false)}
+          footer={[
+            <div key="input-area" className="input-area">
+              <TextArea
+                value={newMessage}
+                onChange={(e) => setNewMessage(e.target.value)}
+                placeholder="Nhập tin nhắn..."
+                autoSize={{ minRows: 1, maxRows: 3 }}
+                onPressEnter={handleSendMessage}
+              />
+              <Button type="primary" onClick={handleSendMessage} style={{ marginTop: 8 }}>
+                Gửi
+              </Button>
+            </div>
+          ]}
+          width={500}
+        >
+          <div className="chat-container">
+            <div className="message-area">
+              {messages.map((msg) => (
+                <div
+                  key={msg.id}
+                  className={`message ${msg.sender_type === 'staff' ? 'staff' : 'customer'}`}
+                >
+                  <div className="message-header">
+                    <span>{msg.sender_name}</span>
+                    <span>{formatDate(msg.created_at)}</span>
+                  </div>
+                  <div className="message-content">{msg.content}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </Modal>
+      )}
 
       <style jsx>{`
         .invoice-management-container {
@@ -542,7 +543,7 @@ const InvoiceManagement = () => {
         .product-image {
           width: 32px;
           height: 32px;
-          object-fit: cover;
+          objectFit: 'cover';
           margin-right: 8px;
           border-radius: 2px;
         }
@@ -550,8 +551,8 @@ const InvoiceManagement = () => {
           font-size: 13px;
         }
         .text-red {
-  color: #ef4444; /* Mã màu đỏ */
-}
+          color: #ef4444;
+        }
         .compact-invoice-table :global(.ant-table-thead > tr > th) {
           padding: 8px 12px;
         }
@@ -559,54 +560,47 @@ const InvoiceManagement = () => {
           padding: 8px 12px;
         }
         .chat-container {
-    height: 500px;
-    display: flex;
-    flex-direction: column;
-  }
-  
-  .message-area {
-    flex: 1;
-    overflow-y: auto;
-    border: 1px solid #ddd;
-    padding: 12px;
-    margin-bottom: 12px;
-    border-radius: 4px;
-  }
-
-  .message {
-    margin-bottom: 12px;
-    padding: 8px;
-    border-radius: 4px;
-    max-width: 80%;
-  }
-
-  .message.staff {
-    background: #e6f7ff;
-    margin-left: auto;
-  }
-
-  .message.customer {
-    background: #f5f5f5;
-    margin-right: auto;
-  }
-
-  .message-header {
-    display: flex;
-    justify-content: space-between;
-    font-size: 12px;
-    color: #666;
-    margin-bottom: 4px;
-  }
-
-  .message-content {
-    white-space: pre-wrap;
-    word-break: break-word;
-  }
-
-  .input-area {
-    border-top: 1px solid #ddd;
-    padding-top: 12px;
-  }
+          height: 500px;
+          display: flex;
+          flex-direction: column;
+        }
+        .message-area {
+          flex: 1;
+          overflow-y: auto;
+          border: 1px solid #ddd;
+          padding: 12px;
+          margin-bottom: 12px;
+          border-radius: 4px;
+        }
+        .message {
+          margin-bottom: 12px;
+          padding: 8px;
+          border-radius: 4px;
+          max-width: 80%;
+        }
+        .message.staff {
+          background: #e6f7ff;
+          margin-left: auto;
+        }
+        .message.customer {
+          background: #f5f5f5;
+          margin-right: auto;
+        }
+        .message-header {
+          display: flex;
+          justify-content: space-between;
+          font-size: 12px;
+          color: #666;
+          margin-bottom: 4px;
+        }
+        .message-content {
+          white-space: pre-wrap;
+          word-break: break-word;
+        }
+        .input-area {
+          border-top: 1px solid #ddd;
+          padding-top: 12px;
+        }
       `}</style>
     </div>
   );

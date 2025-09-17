@@ -123,7 +123,7 @@ async function handleSendOTP() {
         sendOtpBtn.disabled = true;
         sendOtpBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang gửi...';
 
-        const response = await fetch('http://localhost:5000/api/client/forgot-password', {
+        const response = await fetch('http://localhost:5000/api/client/forgot-password/send-otp', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -135,6 +135,8 @@ async function handleSendOTP() {
 
         if (response.ok) {
             showMessage(messageElement, data.message || 'Mã OTP đã được gửi đến email của bạn', 'success');
+            // Lưu token từ OTP request
+            sessionStorage.setItem('otpToken', data.token);
             document.getElementById('step1').style.display = 'none';
             document.getElementById('step2').style.display = 'block';
             
@@ -154,6 +156,7 @@ async function handleSendOTP() {
 
 async function handleVerifyOTP() {
     const email = sessionStorage.getItem('resetEmail');
+    const otpToken = sessionStorage.getItem('otpToken');
     const otp = document.getElementById('otpCode').value;
     const messageElement = document.getElementById('forgotPasswordMessage');
     const verifyOtpBtn = document.getElementById('verifyOtpBtn');
@@ -163,26 +166,33 @@ async function handleVerifyOTP() {
         return;
     }
 
+    if (!otpToken) {
+        showMessage(messageElement, 'Token OTP không hợp lệ. Vui lòng gửi lại OTP.', 'error');
+        return;
+    }
+
     try {
         verifyOtpBtn.disabled = true;
         verifyOtpBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang xác nhận...';
 
-        const response = await fetch('http://localhost:5000/api/client/verify-otp', {
+        const response = await fetch('http://localhost:5000/api/client/forgot-password/verify-otp', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ email, otp })
+            body: JSON.stringify({ email, otp, token: otpToken })
         });
 
         const data = await response.json();
 
         if (response.ok) {
             showMessage(messageElement, data.message || 'Xác nhận OTP thành công', 'success');
+            // Xóa otpToken sau khi sử dụng
+            sessionStorage.removeItem('otpToken');
             document.getElementById('step2').style.display = 'none';
             document.getElementById('step3').style.display = 'block';
             
-            // Lưu token reset nếu có
+            // Lưu resetToken nếu có
             if (data.resetToken) {
                 sessionStorage.setItem('resetToken', data.resetToken);
             }
@@ -216,22 +226,22 @@ async function handleResetPassword() {
         return;
     }
 
+    if (!resetToken) {
+        showMessage(messageElement, 'Reset token không hợp lệ. Vui lòng xác nhận OTP lại.', 'error');
+        return;
+    }
+
     try {
         resetPasswordBtn.disabled = true;
         resetPasswordBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang xử lý...';
 
         const payload = { 
             email, 
-            newPassword,
-            confirmPassword
+            matkhau: newPassword,
+            resetToken
         };
 
-        // Thêm token nếu có
-        if (resetToken) {
-            payload.token = resetToken;
-        }
-
-        const response = await fetch('http://localhost:5000/api/client/reset-password', {
+        const response = await fetch('http://localhost:5000/api/client/forgot-password/reset', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -319,4 +329,8 @@ function resetForgotPasswordForm() {
     document.getElementById('step1').style.display = 'block';
     document.getElementById('step2').style.display = 'none';
     document.getElementById('step3').style.display = 'none';
+    // Xóa các session storage liên quan
+    sessionStorage.removeItem('resetEmail');
+    sessionStorage.removeItem('otpToken');
+    sessionStorage.removeItem('resetToken');
 }

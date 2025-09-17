@@ -645,6 +645,7 @@ async function loadChatHistory() {
     }
 }
 
+// Gửi tin nhắn qua WebSocket với retry logic
 async function sendMessageToServer(message) {
     if (!chatSocket || chatSocket.readyState !== WebSocket.OPEN) {
         console.log('WebSocket chưa kết nối, thử kết nối...');
@@ -680,35 +681,6 @@ async function sendMessageToServer(message) {
         console.error('WebSocket vẫn chưa kết nối');
         showErrorToast('Không thể gửi tin nhắn: WebSocket chưa kết nối');
     }
-}
-
-function connectWebSocket(roomId, retryCount = 3) {
-    if (chatSocket) chatSocket.close();
-    const token = getToken();
-    if (!token || token === 'null') {
-        console.error('Không tìm thấy token hợp lệ');
-        redirectToLogin();
-        return;
-    }
-    chatSocket = new WebSocket(`ws://localhost:5001/chat?room_id=${roomId}&token=${token}`);
-    chatSocket.onopen = () => console.log('WebSocket đã kết nối');
-    chatSocket.onmessage = (event) => {
-        const data = JSON.parse(event.data);
-        if (data.action === 'new_message') handleNewMessage(data.message);
-        else if (data.action === 'chat_history') displayChatHistory(data.messages);
-        else if (data.action === 'error') showErrorToast(data.message);
-    };
-    chatSocket.onclose = () => {
-        console.log('WebSocket đã ngắt kết nối');
-        if (retryCount > 0) {
-            console.log(`Thử kết nối lại... (${retryCount} lần còn lại)`);
-            setTimeout(() => connectWebSocket(roomId, retryCount - 1), 2000);
-        }
-    };
-    chatSocket.onerror = (error) => {
-        console.error('Lỗi WebSocket:', error);
-        showErrorToast('Lỗi kết nối chat');
-    };
 }
 
 // Hiển thị lịch sử chat

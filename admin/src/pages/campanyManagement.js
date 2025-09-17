@@ -1,10 +1,11 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import axios from 'axios';
-import { Button, Input, message, Table, Modal, Space } from 'antd';
+import { Button, Input, message, Table, Modal, Space, Select } from 'antd';
 import { EditOutlined, DeleteOutlined, ExclamationCircleFilled, LockOutlined, UnlockOutlined } from '@ant-design/icons';
 
-const { Search } = Input;
+const { Search: SearchInput } = Input;
 const { confirm } = Modal;
+const { Option } = Select;
 
 const CompanyManagement = () => {
   const [state, setState] = useState({
@@ -25,18 +26,35 @@ const CompanyManagement = () => {
 
   const { companies, newCompany, editingCompany, searchTerm, isModalVisible, loading } = state;
   const API_URL = 'http://localhost:5000/api/company';
+  const debounceRef = useRef(null); // Để debounce search
 
-  const fetchCompanies = async () => {
+  // Helper để convert Buffer to string nếu cần (fallback)
+  const convertStatusIfBuffer = (company) => {
+    let statusValue = company.TinhTrang;
+    if (statusValue && typeof statusValue === 'object' && statusValue.type === 'Buffer' && statusValue.data && statusValue.data.length > 0) {
+      statusValue = statusValue.data[0].toString();
+    }
+    return statusValue;
+  };
+
+  const fetchCompanies = async (keyword = '') => {
     try {
       setState(prev => ({ ...prev, loading: true, error: null }));
-      const response = await axios.get(API_URL);
+      let url = API_URL;
+      if (keyword) {
+        url = `${API_URL}/search?keyword=${encodeURIComponent(keyword)}`;
+      }
+      const response = await axios.get(url);
       
       if (Array.isArray(response.data)) {
-        const processedCompanies = response.data.map(company => ({
-          ...company,
-          TinhTrang: company.TinhTrang === '1' ? 'Hoạt động' : 'Ngừng hoạt động',
-          TinhTrangValue: company.TinhTrang,
-        }));
+        const processedCompanies = response.data.map(company => {
+          const statusValue = convertStatusIfBuffer(company);
+          return {
+            ...company,
+            TinhTrang: statusValue === '1' ? 'Hoạt động' : 'Ngừng hoạt động',
+            TinhTrangValue: statusValue,
+          };
+        });
         setState(prev => ({ ...prev, companies: processedCompanies }));
       } else {
         throw new Error('Dữ liệu nhà cung cấp không hợp lệ');
@@ -52,6 +70,34 @@ const CompanyManagement = () => {
   useEffect(() => {
     fetchCompanies();
   }, []);
+
+  // Debounce search khi type
+  useEffect(() => {
+    if (debounceRef.current) {
+      clearTimeout(debounceRef.current);
+    }
+    debounceRef.current = setTimeout(() => {
+      fetchCompanies(searchTerm);
+    }, 500); // Delay 500ms sau khi ngừng type
+
+    return () => clearTimeout(debounceRef.current);
+  }, [searchTerm]);
+
+  // Gợi ý MaNCC tự động khi thêm mới (max +1, giả sử MaNCC là số)
+  const suggestMaNCC = () => {
+    if (companies.length === 0) return '1';
+    const maxId = Math.max(...companies.map(c => parseInt(c.MaNCC) || 0));
+    return (maxId + 1).toString();
+  };
+
+  const handleSearchChange = (e) => {
+    setState(prev => ({ ...prev, searchTerm: e.target.value }));
+  };
+
+  const onSearch = (value) => {
+    setState(prev => ({ ...prev, searchTerm: value }));
+    fetchCompanies(value); // Gọi ngay khi nhấn Enter/button
+  };
 
   const handleInputChange = (field, value) => {
     if (editingCompany) {
@@ -74,33 +120,49 @@ const CompanyManagement = () => {
     }
   };
 
-  const validateCompanyData = (data) => {
+  const validateCompanyData = (data, isEditing = false) => {
     if (!data.MaNCC || !data.TenNCC || !data.SDT || !data.DiaChi) {
       message.error('Vui lòng nhập đầy đủ thông tin bắt buộc (Mã NCC, Tên NCC, SĐT, Địa chỉ)!');
       return false;
     }
+    if (!/^\d{1,10}$/.test(data.MaNCC)) { // Giả sử MaNCC là số, điều chỉnh nếu cần
+      message.error('Mã NCC không hợp lệ (chỉ số)!');
+      return false;
+    }
+    if (!isEditing) {
+      // Kiểm tra duplicate client-side
+      const exists = companies.some(c => c.MaNCC === data.MaNCC);
+      if (exists) {
+        message.error('Mã NCC đã tồn tại! Vui lòng chọn mã khác.');
+        return false;
+      }
+    }
     if (!/^\d{10,11}$/.test(data.SDT)) {
       message.error('Số điện thoại không hợp lệ (10-11 số)!');
+      return false;
+    }
+    if (!['1', '0'].includes(data.TinhTrang)) {
+      message.error('Trạng thái không hợp lệ!');
       return false;
     }
     return true;
   };
 
   const handleAddCompany = async () => {
-    if (!validateCompanyData(newCompany)) return;
+    if (!validateCompanyData(newCompany, false)) return;
 
     try {
       const payload = {
         ...newCompany,
-        TinhTrang: newCompany.TinhTrang,
+        TinhTrang: newCompany.TinhTrang, // Đảm bảo là string '1' or '0'
       };
 
       await axios.post(API_URL, payload);
-      await fetchCompanies();
+      await fetchCompanies(searchTerm); // Giữ nguyên search term sau khi thêm
       setState(prev => ({
         ...prev,
         newCompany: {
-          MaNCC: '',
+          MaNCC: suggestMaNCC(), // Reset với gợi ý mới
           TenNCC: '',
           SDT: '',
           DiaChi: '',
@@ -110,21 +172,23 @@ const CompanyManagement = () => {
       }));
       message.success('Thêm nhà cung cấp thành công!');
     } catch (error) {
-      message.error(`Lỗi khi thêm nhà cung cấp: ${error.response?.data?.error || error.message}`);
+      console.error('Add error:', error); // Log để debug
+      const errorMsg = error.response?.data?.error || error.message;
+      message.error(`Lỗi khi thêm nhà cung cấp: ${errorMsg}`);
     }
   };
 
   const handleUpdateCompany = async () => {
-    if (!validateCompanyData(editingCompany)) return;
+    if (!validateCompanyData(editingCompany, true)) return;
 
     try {
       const payload = {
         ...editingCompany,
-        TinhTrang: editingCompany.TinhTrang,
+        TinhTrang: editingCompany.TinhTrang, // Đảm bảo là string '1' or '0'
       };
 
       await axios.put(`${API_URL}/${editingCompany.MaNCC}`, payload);
-      await fetchCompanies();
+      await fetchCompanies(searchTerm); // Giữ nguyên search term sau khi cập nhật
       setState(prev => ({
         ...prev,
         editingCompany: null,
@@ -132,7 +196,9 @@ const CompanyManagement = () => {
       }));
       message.success('Cập nhật nhà cung cấp thành công!');
     } catch (error) {
-      message.error(`Lỗi khi cập nhật nhà cung cấp: ${error.response?.data?.error || error.message}`);
+      console.error('Update error:', error); // Log để debug
+      const errorMsg = error.response?.data?.error || error.message;
+      message.error(`Lỗi khi cập nhật nhà cung cấp: ${errorMsg}`);
     }
   };
 
@@ -147,10 +213,12 @@ const CompanyManagement = () => {
       async onOk() {
         try {
           await axios.delete(`${API_URL}/${MaNCC}`);
-          await fetchCompanies();
+          await fetchCompanies(searchTerm); // Giữ nguyên search term sau khi xóa
           message.success('Xóa nhà cung cấp thành công!');
         } catch (error) {
-          message.error(`Lỗi khi xóa nhà cung cấp: ${error.message}`);
+          console.error('Delete error:', error); // Log để debug
+          const errorMsg = error.response?.data?.error || error.message;
+          message.error(`Lỗi khi xóa nhà cung cấp: ${errorMsg}`);
         }
       },
     });
@@ -169,19 +237,16 @@ const CompanyManagement = () => {
             ...company,
             TinhTrang: newStatus,
           });
-          await fetchCompanies();
+          await fetchCompanies(searchTerm); // Giữ nguyên search term sau khi toggle
           message.success(`Đã ${newStatus === '1' ? 'kích hoạt' : 'ngừng'} nhà cung cấp!`);
         } catch (error) {
-          message.error(`Lỗi khi đổi trạng thái: ${error.message}`);
+          console.error('Toggle error:', error); // Log để debug
+          const errorMsg = error.response?.data?.error || error.message;
+          message.error(`Lỗi khi đổi trạng thái: ${errorMsg}`);
         }
       },
     });
   };
-
-  const filteredCompanies = companies.filter(c =>
-    c.TenNCC.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    c.MaNCC.toLowerCase().includes(searchTerm.toLowerCase())
-  );
 
   const columns = [
     {
@@ -237,7 +302,7 @@ const CompanyManagement = () => {
                 ...prev,
                 editingCompany: {
                   ...record,
-                  TinhTrang: record.TinhTrangValue,
+                  TinhTrang: record.TinhTrangValue, // Đảm bảo dùng value string
                 },
                 isModalVisible: true,
               }));
@@ -261,29 +326,35 @@ const CompanyManagement = () => {
     },
   ];
 
+  // Current form data cho modal
+  const currentCompany = editingCompany || newCompany;
+  const isEditing = !!editingCompany;
+
   return (
     <div className="company-management-container">
       <div className="header-section">
         <h1 className="page-title">Quản lý Nhà Cung Cấp</h1>
         <div className="search-box">
-          <Search
-            placeholder="Tìm nhà cung cấp..."
+          <SearchInput
+            placeholder="Tìm nhà cung cấp theo tên, mã, SĐT hoặc địa chỉ..."
             allowClear
             enterButton
             size="small"
             value={searchTerm}
-            onChange={(e) => setState(prev => ({ ...prev, searchTerm: e.target.value }))}
+            onChange={handleSearchChange} // Thêm onChange để input responsive
+            onSearch={onSearch} // Giữ onSearch cho Enter/button
           />
         </div>
         <Button
           type="primary"
           size="small"
           onClick={() => {
+            const suggestedId = suggestMaNCC();
             setState(prev => ({
               ...prev,
               editingCompany: null,
               newCompany: {
-                MaNCC: '',
+                MaNCC: suggestedId, // Gợi ý MaNCC tự động
                 TenNCC: '',
                 SDT: '',
                 DiaChi: '',
@@ -299,7 +370,7 @@ const CompanyManagement = () => {
 
       <Table
         columns={columns}
-        dataSource={filteredCompanies}
+        dataSource={companies}
         rowKey="MaNCC"
         loading={loading}
         scroll={{ x: 1000 }}
@@ -314,8 +385,8 @@ const CompanyManagement = () => {
       />
 
       <Modal
-        title={editingCompany ? 'Chỉnh sửa nhà cung cấp' : 'Thêm nhà cung cấp mới'}
-        visible={isModalVisible}
+        title={isEditing ? 'Chỉnh sửa nhà cung cấp' : 'Thêm nhà cung cấp mới'}
+        open={isModalVisible}
         onCancel={() => {
           setState(prev => ({
             ...prev,
@@ -339,9 +410,9 @@ const CompanyManagement = () => {
           <Button
             key="submit"
             type="primary"
-            onClick={editingCompany ? handleUpdateCompany : handleAddCompany}
+            onClick={isEditing ? handleUpdateCompany : handleAddCompany}
           >
-            {editingCompany ? 'Lưu' : 'Thêm'}
+            {isEditing ? 'Lưu' : 'Thêm'}
           </Button>,
         ]}
         width={600}
@@ -353,16 +424,17 @@ const CompanyManagement = () => {
               <p className="info-label">Mã NCC:</p>
               <Input
                 size="small"
-                value={editingCompany ? editingCompany.MaNCC : newCompany.MaNCC}
+                value={currentCompany.MaNCC}
                 onChange={(e) => handleInputChange('MaNCC', e.target.value)}
-                disabled={!!editingCompany}
+                disabled={isEditing}
+                placeholder={isEditing ? '' : `Gợi ý: ${suggestMaNCC()}`}
               />
             </div>
             <div className="info-item">
               <p className="info-label">Tên NCC:</p>
               <Input
                 size="small"
-                value={editingCompany ? editingCompany.TenNCC : newCompany.TenNCC}
+                value={currentCompany.TenNCC}
                 onChange={(e) => handleInputChange('TenNCC', e.target.value)}
               />
             </div>
@@ -370,7 +442,7 @@ const CompanyManagement = () => {
               <p className="info-label">SĐT:</p>
               <Input
                 size="small"
-                value={editingCompany ? editingCompany.SDT : newCompany.SDT}
+                value={currentCompany.SDT}
                 onChange={(e) => handleInputChange('SDT', e.target.value)}
               />
             </div>
@@ -378,17 +450,21 @@ const CompanyManagement = () => {
               <p className="info-label">Địa chỉ:</p>
               <Input
                 size="small"
-                value={editingCompany ? editingCompany.DiaChi : newCompany.DiaChi}
+                value={currentCompany.DiaChi}
                 onChange={(e) => handleInputChange('DiaChi', e.target.value)}
               />
             </div>
             <div className="info-item">
               <p className="info-label">Trạng thái:</p>
-              <Input
+              <Select
                 size="small"
-                value={editingCompany ? editingCompany.TinhTrang : newCompany.TinhTrang}
-                onChange={(e) => handleInputChange('TinhTrang', e.target.value)}
-              />
+                value={currentCompany.TinhTrang}
+                onChange={(value) => handleInputChange('TinhTrang', value)}
+                style={{ width: '100%' }}
+              >
+                <Option value="1">Hoạt động</Option>
+                <Option value="0">Ngừng hoạt động</Option>
+              </Select>
             </div>
           </div>
         </div>
@@ -413,7 +489,11 @@ const CompanyManagement = () => {
           margin: 0;
         }
         .search-box {
-          width: 250px;
+          width: 300px; /* Tăng width để dễ nhập hơn */
+        }
+        .search-box :global(.ant-input) {
+          pointer-events: auto !important; /* Đảm bảo có thể click/type */
+          user-select: text !important;
         }
         .info-section {
           background: #f8f8f8;
@@ -432,7 +512,7 @@ const CompanyManagement = () => {
         .info-label {
           color: #666;
           font-size: 12px;
-          margin: 0;
+          margin: 0 0 4px 0;
         }
         .compact-company-table :global(.ant-table-thead > tr > th) {
           padding: 8px 12px;

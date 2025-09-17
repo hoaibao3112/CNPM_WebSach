@@ -1,11 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import { Button, Input, message, Table, Modal, Space, Select } from 'antd';
+import { Button, Input, message, Table, Modal, Space } from 'antd';
 import { EditOutlined, DeleteOutlined, ExclamationCircleFilled } from '@ant-design/icons';
 import '../styles/ProductManagement.css';
 const { Search } = Input;
 const { confirm } = Modal;
-const { Option } = Select;
 
 const ProductManagement = () => {
   const [products, setProducts] = useState([]);
@@ -15,7 +14,9 @@ const ProductManagement = () => {
     HinhAnh: null,
     MaTG: '',
     NamXB: '',
-    TinhTrang: 'Còn hàng',
+    TinhTrang: 'Hết hàng',
+    DonGia: 0,
+    SoLuong: 0,
   });
   const [editingProduct, setEditingProduct] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
@@ -29,18 +30,13 @@ const ProductManagement = () => {
       setLoading(true);
       const response = await axios.get(API_URL);
       if (Array.isArray(response.data)) {
-        const processedProducts = response.data.map((product) => {
-          const imageUrl = product.HinhAnh && product.HinhAnh !== 'null'
+        const processedProducts = response.data.map((product) => ({
+          ...product,
+          HinhAnh: product.HinhAnh && product.HinhAnh !== 'null'
             ? `/img/products/${product.HinhAnh}`
-            : 'https://via.placeholder.com/50';
-          console.log(`[DEBUG] URL ảnh cho sản phẩm ${product.MaSP}: ${imageUrl}`);
-
-          return {
-            ...product,
-            HinhAnh: imageUrl,
-            TinhTrang: product.TinhTrang ? (product.TinhTrang === 1 ? 'Còn hàng' : 'Hết hàng') : 'Không xác định',
-          };
-        });
+            : 'https://via.placeholder.com/50',
+          TinhTrang: product.TinhTrang ? (product.TinhTrang === 1 ? 'Còn hàng' : 'Hết hàng') : 'Không xác định',
+        }));
         setProducts(processedProducts);
       } else {
         throw new Error('Dữ liệu sản phẩm không hợp lệ');
@@ -83,38 +79,38 @@ const ProductManagement = () => {
   };
 
   const handleAddProduct = async () => {
-    const maTL = newProduct.MaTL;
+    const maTL = newProduct.MaTL.trim();
     const tenSP = newProduct.TenSP.trim();
-    const maTG = newProduct.MaTG;
+    const maTG = newProduct.MaTG.trim();
+    const namXB = newProduct.NamXB.trim();
 
-    if (!maTL || !tenSP || !maTG) {
-      message.error('Vui lòng nhập đầy đủ thông tin bắt buộc (Mã TL, Tên SP, Mã TG)!');
+    // Kiểm tra các trường bắt buộc
+    if (!maTL || !tenSP) {
+      message.error('Vui lòng nhập đầy đủ thông tin bắt buộc (Mã TL, Tên SP)!');
       return;
     }
-
-    const maTLNumber = parseInt(maTL);
-    const maTGNumber = parseInt(maTG);
-    if (isNaN(maTLNumber) || isNaN(maTGNumber)) {
-      message.error('Mã thể loại và Mã tác giả phải là số hợp lệ!');
+    if (isNaN(parseInt(maTL)) || parseInt(maTL) <= 0) {
+      message.error('Mã thể loại phải là số nguyên dương hợp lệ!');
       return;
     }
 
     try {
       const formData = new FormData();
       formData.append('MaSP', generateNewMaSP());
-      formData.append('MaTL', maTLNumber);
+      formData.append('MaTL', parseInt(maTL));
       formData.append('TenSP', tenSP);
       if (newProduct.HinhAnh) {
-        formData.append('HinhAnh', newProduct.HinhAnh.name);
+        formData.append('HinhAnh', newProduct.HinhAnh);
       }
-      formData.append('MaTG', maTGNumber);
-      if (newProduct.NamXB) {
-        const namXB = parseInt(newProduct.NamXB);
-        if (!isNaN(namXB)) {
-          formData.append('NamXB', namXB);
-        }
+      if (maTG && !isNaN(parseInt(maTG))) {
+        formData.append('MaTG', parseInt(maTG));
       }
-      formData.append('TinhTrang', newProduct.TinhTrang === 'Còn hàng' ? 1 : 0);
+      if (namXB && !isNaN(parseInt(namXB))) {
+        formData.append('NamXB', parseInt(namXB));
+      }
+      formData.append('TinhTrang', 0);
+      formData.append('DonGia', 0);
+      formData.append('SoLuong', 0);
 
       const response = await axios.post(API_URL, formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
@@ -126,7 +122,9 @@ const ProductManagement = () => {
         HinhAnh: null,
         MaTG: '',
         NamXB: '',
-        TinhTrang: 'Còn hàng',
+        TinhTrang: 'Hết hàng',
+        DonGia: 0,
+        SoLuong: 0,
       });
       setIsModalVisible(false);
       message.success(response.data.message || 'Thêm sản phẩm thành công!');
@@ -138,39 +136,38 @@ const ProductManagement = () => {
   };
 
   const handleUpdateProduct = async () => {
-    const maTL = editingProduct.MaTL;
+    const maTL = editingProduct.MaTL.trim();
     const tenSP = editingProduct.TenSP.trim();
-    const maTG = editingProduct.MaTG;
+    const maTG = editingProduct.MaTG.trim();
+    const namXB = editingProduct.NamXB.trim();
 
-    if (!maTL || !tenSP || !maTG) {
-      message.error('Vui lòng nhập đầy đủ thông tin bắt buộc (Mã TL, Tên SP, Mã TG)!');
+    if (!maTL || !tenSP) {
+      message.error('Vui lòng nhập đầy đủ thông tin bắt buộc (Mã TL, Tên SP)!');
       return;
     }
-
-    const maTLNumber = parseInt(maTL);
-    const maTGNumber = parseInt(maTG);
-    if (isNaN(maTLNumber) || isNaN(maTGNumber)) {
-      message.error('Mã thể loại và Mã tác giả phải là số hợp lệ!');
+    if (isNaN(parseInt(maTL)) || parseInt(maTL) <= 0) {
+      message.error('Mã thể loại phải là số nguyên dương hợp lệ!');
       return;
     }
 
     try {
       const formData = new FormData();
-      formData.append('MaTL', maTLNumber);
+      formData.append('MaTL', parseInt(maTL));
       formData.append('TenSP', tenSP);
       if (editingProduct.HinhAnh instanceof File) {
-        formData.append('HinhAnh', editingProduct.HinhAnh.name);
+        formData.append('HinhAnh', editingProduct.HinhAnh);
       } else if (editingProduct.HinhAnh) {
         formData.append('HinhAnh', editingProduct.HinhAnh.replace('/img/products/', ''));
       }
-      formData.append('MaTG', maTGNumber);
-      if (editingProduct.NamXB) {
-        const namXB = parseInt(editingProduct.NamXB);
-        if (!isNaN(namXB)) {
-          formData.append('NamXB', namXB);
-        }
+      if (maTG && !isNaN(parseInt(maTG))) {
+        formData.append('MaTG', parseInt(maTG));
       }
-      formData.append('TinhTrang', editingProduct.TinhTrang === 'Còn hàng' ? 1 : 0);
+      if (namXB && !isNaN(parseInt(namXB))) {
+        formData.append('NamXB', parseInt(namXB));
+      }
+      formData.append('TinhTrang', 0);
+      formData.append('DonGia', 0);
+      formData.append('SoLuong', 0);
 
       const response = await axios.put(`${API_URL}/${editingProduct.MaSP}`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
@@ -336,7 +333,9 @@ const ProductManagement = () => {
               HinhAnh: null,
               MaTG: '',
               NamXB: '',
-              TinhTrang: 'Còn hàng',
+              TinhTrang: 'Hết hàng',
+              DonGia: 0,
+              SoLuong: 0,
             });
             setIsModalVisible(true);
           }}
@@ -412,6 +411,7 @@ const ProductManagement = () => {
                     : setNewProduct({ ...newProduct, MaTL: e.target.value })
                 }
                 required
+                placeholder="Nhập mã thể loại"
               />
             </div>
             <div className="info-item">
@@ -425,6 +425,7 @@ const ProductManagement = () => {
                     : setNewProduct({ ...newProduct, TenSP: e.target.value })
                 }
                 required
+                placeholder="Nhập tên sản phẩm"
               />
             </div>
             <div className="info-item">
@@ -443,7 +444,7 @@ const ProductManagement = () => {
               )}
             </div>
             <div className="info-item">
-              <p className="info-label">Mã tác giả <span style={{ color: 'red' }}>*</span></p>
+              <p className="info-label">Mã tác giả:</p>
               <Input
                 size="small"
                 type="number"
@@ -453,7 +454,7 @@ const ProductManagement = () => {
                     ? setEditingProduct({ ...editingProduct, MaTG: e.target.value })
                     : setNewProduct({ ...newProduct, MaTG: e.target.value })
                 }
-                required
+                placeholder="Nhập mã tác giả (tùy chọn)"
               />
             </div>
             <div className="info-item">
@@ -467,23 +468,20 @@ const ProductManagement = () => {
                     ? setEditingProduct({ ...editingProduct, NamXB: e.target.value })
                     : setNewProduct({ ...newProduct, NamXB: e.target.value })
                 }
+                placeholder="Nhập năm xuất bản (tùy chọn)"
               />
             </div>
             <div className="info-item">
               <p className="info-label">Tình trạng:</p>
-              <Select
-                size="small"
-                value={editingProduct ? editingProduct.TinhTrang : newProduct.TinhTrang}
-                onChange={(value) =>
-                  editingProduct
-                    ? setEditingProduct({ ...editingProduct, TinhTrang: value })
-                    : setNewProduct({ ...newProduct, TinhTrang: value })
-                }
-                style={{ width: '100%' }}
-              >
-                <Option value="Còn hàng">Còn hàng</Option>
-                <Option value="Hết hàng">Hết hàng</Option>
-              </Select>
+              <Input size="small" value="Hết hàng" disabled />
+            </div>
+            <div className="info-item">
+              <p className="info-label">Đơn giá:</p>
+              <Input size="small" value="0 VND" disabled />
+            </div>
+            <div className="info-item">
+              <p className="info-label">Số lượng:</p>
+              <Input size="small" value="0" disabled />
             </div>
           </div>
         </div>

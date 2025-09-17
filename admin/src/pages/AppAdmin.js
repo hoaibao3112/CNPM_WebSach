@@ -79,7 +79,7 @@ const AppAdmin = () => {
           <Route
             path="statistical"
             element={<RestrictedRoute component={Statistical} permission="Thống kê" />}
-          />
+          /> 
           <Route
             path="authorities"
             element={<RestrictedRoute component={AuthorManagement} permission="tác giả" />}

@@ -1,8 +1,123 @@
 import express from 'express';
 import pool from '../config/connectDatabase.js';
+import multer from 'multer';
 
 const router = express.Router();
 
+// Config multer để lưu file vào thư mục product
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    const dir = 'C:/Users/PC/Desktop/CNPM/server/backend/product/';
+    console.log(`📂 Attempting to save file to: ${dir}`);
+    cb(null, dir); // Đường dẫn tuyệt đối
+  },
+  filename: (req, file, cb) => {
+    const uniqueName = Date.now() + '-' + file.originalname;
+    console.log(`📄 Filename generated: ${uniqueName}`);
+    cb(null, uniqueName); // Tạo tên file duy nhất
+  }
+});
+const upload = multer({ storage });
+
+// Middleware để log file nhận được
+const logFileMiddleware = (req, res, next) => {
+  console.log('📤 Received file:', req.file);
+  console.log('📋 Request body:', req.body);
+  next();
+};
+// Route tìm sản phẩm bằng tên (case-insensitive, partial match)
+router.get('/search', async (req, res) => {
+  const { name } = req.query;
+  if (!name) {
+    return res.status(400).json({ error: 'Vui lòng cung cấp tên sản phẩm' });
+  }
+
+  try {
+    const [products] = await pool.query(
+      `SELECT s.*, m.TenTG AS TacGia 
+       FROM sanpham s 
+       LEFT JOIN tacgia m ON s.MaTG = m.MaTG 
+       WHERE LOWER(s.TenSP) LIKE LOWER(?)`,
+      [`%${name}%`]
+    );
+
+    if (products.length === 0) {
+      return res.status(404).json({ error: 'Không tìm thấy sản phẩm' });
+    }
+
+    // Trả về sản phẩm đầu tiên (hoặc tất cả nếu muốn, nhưng để đơn giản giả sử unique name)
+    res.status(200).json(products[0]);
+  } catch (error) {
+    console.error('Lỗi search sản phẩm:', error);
+    res.status(500).json({ error: 'Lỗi khi tìm sản phẩm', details: error.message });
+  }
+});
+router.post('/', upload.single('HinhAnh'), logFileMiddleware, async (req, res) => {
+  try {
+    const { MaTL, TenSP, MaTG, NamXB, TinhTrang, DonGia, SoLuong } = req.body;
+    console.log('🔍 Raw request body:', req.body); // Debug toàn bộ body
+    console.log('🔍 Received file:', req.file); // Debug file
+
+    const HinhAnh = req.file ? req.file.filename : null; // Lấy tên file nếu upload
+
+    const maTLNumber = parseInt(MaTL);
+    const maTGNumber = parseInt(MaTG);
+    const tenSPTrimmed = TenSP ? TenSP.trim() : '';
+
+    // Validation bắt buộc: MaTL và TenSP
+    if (isNaN(maTLNumber) || !tenSPTrimmed) {
+      return res.status(400).json({ error: 'Vui lòng cung cấp đầy đủ thông tin bắt buộc (Mã TL, Tên SP)!' });
+    }
+
+    // Validation NamXB
+    const namXBNumber = parseInt(NamXB);
+    if (!isNaN(namXBNumber) && (namXBNumber < 1900 || namXBNumber > new Date().getFullYear())) {
+      return res.status(400).json({ error: 'Năm xuất bản phải nằm trong khoảng từ 1900 đến năm hiện tại!' });
+    }
+
+    // Kiểm tra MaTG tồn tại nếu cung cấp
+    if (!isNaN(maTGNumber)) {
+      const [existingTacGia] = await pool.query('SELECT MaTG FROM tacgia WHERE MaTG = ?', [maTGNumber]);
+      if (existingTacGia.length === 0) {
+        return res.status(400).json({ error: `Mã tác giả (MaTG: ${maTGNumber}) không tồn tại trong bảng tacgia!` });
+      }
+    }
+
+    // Mặc định TinhTrang là 0 nếu không cung cấp
+    const tinhTrangValue = TinhTrang === '1' || TinhTrang === 1 ? 1 : 0;
+
+    // Mặc định DonGia và SoLuong là 0 nếu không hợp lệ
+    const donGiaValue = parseFloat(DonGia) || 0;
+    const soLuongValue = parseInt(SoLuong) || 0;
+
+    // Log dữ liệu để debug
+    console.log('Dữ liệu nhận được từ frontend:', {
+      MaTL: maTLNumber,
+      TenSP: tenSPTrimmed,
+      HinhAnh,
+      MaTG: maTGNumber,
+      NamXB: namXBNumber,
+      TinhTrang: tinhTrangValue,
+      DonGia: donGiaValue,
+      SoLuong: soLuongValue,
+    });
+
+    // Insert vào database
+    const [result] = await pool.query(
+      'INSERT INTO sanpham (MaTL, TenSP, HinhAnh, MaTG, NamXB, TinhTrang, DonGia, SoLuong) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+      [maTLNumber, tenSPTrimmed, HinhAnh, isNaN(maTGNumber) ? null : maTGNumber, isNaN(namXBNumber) ? null : namXBNumber, tinhTrangValue, donGiaValue, soLuongValue]
+    );
+
+    if (result.affectedRows === 0) {
+      return res.status(500).json({ error: 'Không thể thêm sản phẩm. Vui lòng kiểm tra lại dữ liệu hoặc cơ sở dữ liệu!' });
+    }
+
+    res.status(201).json({ message: 'Thêm sản phẩm thành công!', MaSP: result.insertId });
+  } catch (error) {
+    console.error('Lỗi khi thêm sản phẩm:', error.message || error);
+    res.status(500).json({ error: 'Lỗi khi thêm sản phẩm', details: error.message || 'Không xác định' });
+  }
+});
 // Route lấy danh sách sản phẩm
 router.get('/', async (req, res) => {
   try {
@@ -59,77 +174,30 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-// Route thêm sản phẩm mới
-router.post('/', async (req, res) => {
-  try {
-    const { MaTL, TenSP, HinhAnh, MaTG, NamXB, TinhTrang } = req.body;
-
-    const maTLNumber = parseInt(MaTL);
-    const maTGNumber = parseInt(MaTG);
-    const tenSPTrimmed = TenSP ? TenSP.trim() : '';
-
-    if (isNaN(maTLNumber) || !tenSPTrimmed) {
-      return res.status(400).json({ error: 'Vui lòng cung cấp đầy đủ thông tin bắt buộc (Mã TL, Tên SP)!' });
-    }
-
-    const namXBNumber = parseInt(NamXB);
-    if (!isNaN(namXBNumber) && (namXBNumber < 1900 || namXBNumber > new Date().getFullYear())) {
-      return res.status(400).json({ error: 'Năm xuất bản phải nằm trong khoảng từ 1900 đến năm hiện tại!' });
-    }
-
-    if (!isNaN(maTGNumber)) {
-      const [existingTacGia] = await pool.query('SELECT MaTG FROM tacgia WHERE MaTG = ?', [maTGNumber]);
-      if (existingTacGia.length === 0) {
-        return res.status(400).json({ error: `Mã tác giả (MaTG: ${maTGNumber}) không tồn tại trong bảng tacgia!` });
-      }
-    }
-
-    const tinhTrangValue = TinhTrang === '1' || TinhTrang === 1 ? 1 : 0;
-
-    console.log('Dữ liệu nhận được từ frontend:', {
-      MaTL: maTLNumber,
-      TenSP: tenSPTrimmed,
-      HinhAnh,
-      MaTG: maTGNumber,
-      NamXB: namXBNumber,
-      TinhTrang: tinhTrangValue,
-    });
-
-    const [result] = await pool.query(
-      'INSERT INTO sanpham (MaTL, TenSP, HinhAnh, MaTG, NamXB, TinhTrang) VALUES (?, ?, ?, ?, ?, ?)',
-      [maTLNumber, tenSPTrimmed, HinhAnh || null, isNaN(maTGNumber) ? null : maTGNumber, isNaN(namXBNumber) ? null : namXBNumber, tinhTrangValue]
-    );
-
-    if (result.affectedRows === 0) {
-      return res.status(500).json({ error: 'Không thể thêm sản phẩm. Vui lòng kiểm tra lại dữ liệu hoặc cơ sở dữ liệu!' });
-    }
-
-    res.status(201).json({ message: 'Thêm sản phẩm thành công!', MaSP: result.insertId });
-  } catch (error) {
-    console.error('Lỗi khi thêm sản phẩm:', error.message || error);
-    res.status(500).json({ error: 'Lỗi khi thêm sản phẩm', details: error.message || 'Không xác định' });
-  }
-});
 
 // Route cập nhật sản phẩm
-router.put('/:id', async (req, res) => {
+router.put('/:id', upload.single('HinhAnh'), async (req, res) => {
   try {
     const { id } = req.params;
-    const { MaTL, TenSP, HinhAnh, MaTG, NamXB, TinhTrang } = req.body;
+    const { MaTL, TenSP, MaTG, NamXB, TinhTrang, DonGia, SoLuong } = req.body;
+    const HinhAnh = req.file ? req.file.filename : undefined; // Lấy tên file mới nếu upload
 
     const maTLNumber = parseInt(MaTL);
     const maTGNumber = parseInt(MaTG);
     const tenSPTrimmed = TenSP ? TenSP.trim() : '';
 
+    // Validation bắt buộc
     if (isNaN(maTLNumber) || !tenSPTrimmed) {
       return res.status(400).json({ error: 'Vui lòng cung cấp đầy đủ thông tin bắt buộc (Mã TL, Tên SP)!' });
     }
 
+    // Validation NamXB
     const namXBNumber = parseInt(NamXB);
     if (!isNaN(namXBNumber) && (namXBNumber < 1900 || namXBNumber > new Date().getFullYear())) {
       return res.status(400).json({ error: 'Năm xuất bản phải nằm trong khoảng từ 1900 đến năm hiện tại!' });
     }
 
+    // Kiểm tra MaTG tồn tại nếu cung cấp
     if (!isNaN(maTGNumber)) {
       const [existingTacGia] = await pool.query('SELECT MaTG FROM tacgia WHERE MaTG = ?', [maTGNumber]);
       if (existingTacGia.length === 0) {
@@ -137,30 +205,44 @@ router.put('/:id', async (req, res) => {
       }
     }
 
+    // Mặc định TinhTrang là 0 nếu không cung cấp
     const tinhTrangValue = TinhTrang === '1' || TinhTrang === 1 ? 1 : 0;
 
-    console.log('Dữ liệu nhận được để sửa:', {
-      MaTL: maTLNumber,
-      TenSP: tenSPTrimmed,
-      HinhAnh,
-      MaTG: maTGNumber,
-      NamXB: namXBNumber,
-      TinhTrang: tinhTrangValue,
-    });
+    // Mặc định DonGia và SoLuong là 0 nếu không hợp lệ
+    const donGiaValue = parseFloat(DonGia) || 0;
+    const soLuongValue = parseInt(SoLuong) || 0;
 
-    const [result] = await pool.query(
-      'UPDATE sanpham SET MaTL = ?, TenSP = ?, HinhAnh = ?, MaTG = ?, NamXB = ?, TinhTrang = ? WHERE MaSP = ?',
-      [maTLNumber, tenSPTrimmed, HinhAnh || null, isNaN(maTGNumber) ? null : maTGNumber, isNaN(namXBNumber) ? null : namXBNumber, tinhTrangValue, id]
-    );
+    // Xây dựng câu query cập nhật
+    let updateQuery = 'UPDATE sanpham SET MaTL = ?, TenSP = ?, ';
+    const updateParams = [maTLNumber, tenSPTrimmed];
+
+    if (HinhAnh !== undefined) updateParams.push(HinhAnh);
+    if (isNaN(maTGNumber)) {
+      updateQuery += 'MaTG = NULL, ';
+    } else {
+      updateQuery += 'MaTG = ?, ';
+      updateParams.push(maTGNumber);
+    }
+    if (isNaN(namXBNumber)) {
+      updateQuery += 'NamXB = NULL, ';
+    } else {
+      updateQuery += 'NamXB = ?, ';
+      updateParams.push(namXBNumber);
+    }
+    updateQuery += 'TinhTrang = ?, DonGia = ?, SoLuong = ? WHERE MaSP = ?';
+    updateParams.push(tinhTrangValue, donGiaValue, soLuongValue, id);
+
+    // Thực hiện cập nhật
+    const [result] = await pool.query(updateQuery, updateParams);
 
     if (result.affectedRows === 0) {
-      return res.status(404).json({ error: 'Không tìm thấy sản phẩm để sửa!' });
+      return res.status(404).json({ error: 'Sản phẩm không tồn tại hoặc không có thay đổi!' });
     }
 
-    res.status(200).json({ message: 'Sửa sản phẩm thành công!', MaSP: id });
+    res.status(200).json({ message: 'Cập nhật sản phẩm thành công!' });
   } catch (error) {
-    console.error('Lỗi khi sửa sản phẩm:', error.message || error);
-    res.status(500).json({ error: 'Lỗi khi sửa sản phẩm', details: error.message || 'Không xác định' });
+    console.error('Lỗi khi cập nhật sản phẩm:', error.message || error);
+    res.status(500).json({ error: 'Lỗi khi cập nhật sản phẩm', details: error.message || 'Không xác định' });
   }
 });
 
@@ -169,10 +251,12 @@ router.delete('/:id', async (req, res) => {
   try {
     const { id } = req.params;
     const [result] = await pool.query('DELETE FROM sanpham WHERE MaSP = ?', [id]);
+
     if (result.affectedRows === 0) {
-      return res.status(404).json({ error: 'Không tìm thấy sản phẩm để xóa!' });
+      return res.status(404).json({ error: 'Sản phẩm không tồn tại!' });
     }
-    res.status(200).json({ message: 'Xóa sản phẩm thành công!', MaSP: id });
+
+    res.status(200).json({ message: 'Xóa sản phẩm thành công!' });
   } catch (error) {
     console.error('Lỗi khi xóa sản phẩm:', error);
     res.status(500).json({ error: 'Lỗi khi xóa sản phẩm', details: error.message });

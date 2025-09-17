@@ -15,10 +15,13 @@ import reportRoutes from './reportRoutes.js';
 import ChatRoutes from './chatRoute.js';
 import permissionRoutes from './authMiddleware.js';
 import Author from './author.js';
+import ratingsRoutes from './ratings.js';
 import Comment from './comment.js';
 import Salary from './salary.js';
 import attendanceRoutes from './attendance.js';
 import leaveRoutes from './leave.js';
+import faq from './faq.js'; // Thêm route FAQ
+import ChatRoutesOpenAI from './chatRouteOpenAI.js';
 import cart from './cart.js';
 export const initRoutes = (app) => {
   app.use('/auth', authRoutes);
@@ -41,7 +44,10 @@ export const initRoutes = (app) => {
   app.use('/api/author',Author);
   app.use('/api/comments',Comment);
   app.use('/api/salary',Salary);
+  app.use('/api/support', faq);
   app.use('/api/leave', leaveRoutes);
+  app.use('/api/openai', ChatRoutesOpenAI);
+  app.use('/api/ratings', ratingsRoutes);
   app.use('/api/attendance', attendanceRoutes);
   app.use('/api/cart',cart);
 };

@@ -1,4 +1,4 @@
-// Biến toàn cục để lưu trữ danh sách sản phẩm
+// Updated book.js (Frontend - Trang sách)
 let allProducts = {};
 
 // Hàm định dạng giá
@@ -9,11 +9,11 @@ function formatPrice(price) {
 // Hàm thoát ký tự HTML
 function escapeHtml(unsafe) {
   return unsafe
-    .replace(/&/g, '&')
-    .replace(/</g, '<')
-    .replace(/>/g, '>')
-    .replace(/"/g, '"')
-    .replace(/'/g, '');
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
 }
 
 // Hàm hiển thị toast notification
@@ -41,6 +41,59 @@ function showToast(message) {
     toast.classList.add('hide');
     setTimeout(() => toast.remove(), 300);
   });
+}
+
+// Hàm thêm sản phẩm vào giỏ hàng (cập nhật để sử dụng API nếu đăng nhập)
+async function addToCart(productId, productName, price, image) {
+  const user = JSON.parse(localStorage.getItem('user') || localStorage.getItem('loggedInUser') || '{}');
+  const token = localStorage.getItem('token');
+
+  if (user && (user.makh || user.tenkh) && token) {
+    // Nếu đã đăng nhập, sử dụng API
+    try {
+      const response = await fetch('http://localhost:5000/api/client/cart/add', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ productId, quantity: 1 })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        showToast(`Đã thêm ${productName} vào giỏ hàng!`);
+        updateCartCount(); // Cập nhật UI từ index.js
+        return;
+      } else {
+        const errorData = await response.json();
+        showToast(errorData.error || 'Lỗi khi thêm vào giỏ hàng');
+      }
+    } catch (error) {
+      console.error('Lỗi thêm vào giỏ hàng:', error);
+      showToast('Lỗi kết nối. Vui lòng thử lại!');
+    }
+  } else {
+    // Nếu chưa đăng nhập, sử dụng localStorage (fallback)
+    let cart = JSON.parse(localStorage.getItem('cart') || '[]');
+    const existingItem = cart.find(item => item.id === productId);
+
+    if (existingItem) {
+      existingItem.quantity += 1;
+    } else {
+      cart.push({
+        id: productId,
+        name: productName,
+        price: price,
+        image: image,
+        quantity: 1,
+      });
+    }
+
+    localStorage.setItem('cart', JSON.stringify(cart));
+    showToast(`Đã thêm ${productName} vào giỏ hàng! (Vui lòng đăng nhập để lưu vĩnh viễn)`);
+    updateCartCount(); // Cập nhật UI
+  }
 }
 
 // Hàm hiển thị danh sách sản phẩm
@@ -133,28 +186,6 @@ function showAllProducts(containerId) {
   }
 }
 
-// Thêm sản phẩm vào giỏ hàng
-function addToCart(productId, productName, price, image) {
-  let cart = JSON.parse(localStorage.getItem('cart') || '[]');
-  const existingItem = cart.find(item => item.id === productId);
-
-  if (existingItem) {
-    existingItem.quantity += 1;
-  } else {
-    cart.push({
-      id: productId,
-      name: productName,
-      price: price,
-      image: image,
-      quantity: 1,
-    });
-  }
-
-  localStorage.setItem('cart', JSON.stringify(cart));
-  updateCartCount();
-  showToast(`Đã thêm ${productName} vào giỏ hàng!`);
-}
-
 // Xem chi tiết sản phẩm
 function viewDetail(productId) {
   localStorage.setItem('selectedProductId', productId);
@@ -206,18 +237,11 @@ async function filterProductsByPriceRange(priceRange, containerId = 'book-list')
     if (!productList) throw new Error(`Không tìm thấy phần tử #${containerId}`);
     productList.innerHTML = '<div class="loading">Đang tải sản phẩm...</div>';
 
-    let url = containerId === 'deal-hot-list'
-      ? 'http://localhost:5000/api/product/deal-hot'
-      : 'http://localhost:5000/api/product';
+    let url = 'http://localhost:5000/api/product';
+    const categoryId = localStorage.getItem(`currentCategory_${containerId}`);
     const params = new URLSearchParams();
+    if (categoryId) params.append('MaTL', categoryId);
     if (priceRange) params.append('priceRange', priceRange);
-    if (containerId === 'deal-hot-list') {
-      const MaKM = localStorage.getItem('currentPromotion');
-      if (MaKM) params.append('MaKM', MaKM);
-    } else {
-      const categoryId = localStorage.getItem(`currentCategory_${containerId}`);
-      if (categoryId) params.append('MaTL', categoryId);
-    }
 
     if (params.toString()) url += `?${params.toString()}`;
 
@@ -240,7 +264,7 @@ async function filterProductsByPriceRange(priceRange, containerId = 'book-list')
   }
 }
 
-// Tải sản phẩm (danh sách chính)
+// Tải sản phẩm chính (danh sách chính)
 async function fetchAndDisplayProducts() {
   const productList = document.getElementById('book-list');
   if (!productList) return;
@@ -437,6 +461,7 @@ document.addEventListener('DOMContentLoaded', () => {
   fetchAndDisplayTextbooks();
   fetchAndDisplayPoliticsBooks();
   fetchAndDisplayScienceBooks();
+  updateCartCount(); // Cập nhật giỏ hàng khi load trang
 });
 
 // Gán các hàm vào window
@@ -445,3 +470,4 @@ window.viewDetail = viewDetail;
 window.showAllProducts = showAllProducts;
 window.filterProductsByCategory = filterProductsByCategory;
 window.filterProductsByPriceRange = filterProductsByPriceRange;
+window.updateCartCount = updateCartCount; // Export để sử dụng ở nơi khác

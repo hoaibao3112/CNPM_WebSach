@@ -66,13 +66,16 @@ const AccountManagement = () => {
 
       setState(prev => ({
         ...prev,
-        accounts: accountsResp.data.map(account => ({
+         accounts: accountsResp.data.map(account => {
+        const tinhTrangValue = Number(account.TinhTrang);
+        return {
           ...account,
-          TinhTrang: account.TinhTrang === 1 ? 'Hoạt động' : 'Bị khóa',
-          TinhTrangValue: account.TinhTrang,
-        })),
-        quyenList: rolesResp.data.data || [],
-      }));
+          TinhTrang: tinhTrangValue === 1 ? 'Hoạt động' : 'Bị khóa',
+          TinhTrangValue: tinhTrangValue,
+        };
+      }),
+      quyenList: rolesResp.data.data || [],
+    }));
     } catch (error) {
       setState(prev => ({ ...prev, error: error.message }));
       message.error(`Lỗi khi tải dữ liệu: ${error.response?.data?.error || error.message}`);

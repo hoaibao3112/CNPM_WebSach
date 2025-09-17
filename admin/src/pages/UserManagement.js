@@ -383,9 +383,9 @@ const UserManagement = () => {
                 style={{ width: '100%' }}
               >
                 <Option value="">Chọn giới tính</Option>
-                <Option value="Male">Nam</Option>
-                <Option value="Female">Nữ</Option>
-                <Option value="Other">Khác</Option>
+                <Option value="Nam">Nam</Option>
+                <Option value="Nữ">Nữ</Option>
+                <Option value="Khác">Khác</Option>
               </Select>
             </div>
             <div className="info-item">

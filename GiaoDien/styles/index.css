@@ -1106,3 +1106,614 @@ footer iframe {
     height: 60px; /* Giảm từ 80px xuống 60px */
   }
 }
+
+/* Chat Icon (giữ nguyên) */
+.chat-icon {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 60px;
+    height: 60px;
+    cursor: pointer;
+    z-index: 1000;
+    transition: transform 0.3s ease;
+}
+
+.chat-icon:hover {
+    transform: scale(1.1);
+}
+
+.chat-icon img {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+}
+
+/* Chat Modal */
+.chat-modal {
+    display: none;
+    position: fixed;
+    bottom: 90px;
+    right: 20px;
+    width: 350px;
+    max-height: 70vh;
+    z-index: 1001;
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    overflow: hidden;
+}
+
+.chat-modal-content {
+    display: flex;
+    flex-direction: column;
+    height: 100%; /* Đảm bảo modal chiếm full height để flex hoạt động */
+    position: relative; /* Để position absolute cho close */
+}
+
+.chat-close {
+    color: #aaa;
+    position: absolute;
+    top: 10px;
+    right: 15px;
+    font-size: 24px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: color 0.3s;
+    z-index: 2;
+}
+
+.chat-close:hover,
+.chat-close:focus {
+    color: #d32f2f;
+    text-decoration: none;
+}
+
+.chat-header {
+    flex-shrink: 0; /* Không co lại */
+    border-bottom: 1px solid #eee;
+    padding: 15px 15px 10px 15px; /* Padding đều hơn */
+    margin-bottom: 0;
+}
+
+.chat-header h3 {
+    font-size: 16px;
+    color: #d32f2f;
+    margin: 0;
+    font-weight: 500;
+}
+
+.chat-messages {
+  height: 350px; /* Chiều cao cố định */
+  overflow-y: auto; /* Thanh cuộn dọc */
+  padding: 10px;
+  background: #f9f9f9;
+  border-bottom: 1px solid #ddd;
+}
+
+.chat-message {
+    margin-bottom: 10px;
+    padding: 8px 12px;
+    border-radius: 18px; /* Bo góc hơn cho bubble chat */
+    font-size: 14px;
+    max-width: 85%;
+    word-wrap: break-word;
+}
+
+.chat-message.user {
+    background-color: #d32f2f;
+    color: white;
+    text-align: right;
+    margin-left: auto;
+    border-bottom-right-radius: 4px; /* Góc phẳng bên phải dưới */
+}
+
+.chat-message.ai {
+    background-color: #e3f2fd; /* Màu xanh nhạt cho AI */
+    color: #333;
+    text-align: left;
+    border-bottom-left-radius: 4px; /* Góc phẳng bên trái dưới */
+}
+
+/* Style cho suggestion như một tin nhắn đặc biệt từ AI */
+.chat-message.suggestion {
+    background-color: #e8f5e8; /* Xanh lá nhạt */
+    border-left: 3px solid #4CAF50;
+    margin-top: 5px;
+    padding: 12px;
+    border-radius: 6px;
+    animation: slideInUp 0.3s ease-out;
+}
+
+.chat-message.suggestion h4 {
+    margin: 0 0 8px 0;
+    color: #2e7d32;
+    font-size: 14px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.chat-message.suggestion h4::before {
+    content: "💡"; /* Icon gợi ý */
+}
+
+.chat-message.suggestion p {
+    margin: 0 0 10px 0;
+    font-size: 13px;
+    color: #388e3c;
+    line-height: 1.4;
+}
+
+.chat-message.suggestion button {
+    padding: 8px 16px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 20px; /* Bo tròn hơn */
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    width: 100%; /* Chiếm full width trong bubble */
+}
+
+.chat-message.suggestion button:hover {
+    background-color: #45a049;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(76, 175, 80, 0.3);
+}
+
+/* Form luôn ở bottom */
+.chat-form {
+    flex-shrink: 0; /* Không co lại */
+    display: flex;
+    flex-direction: row; /* Quay lại row để input + button ngang nhau */
+    gap: 8px;
+    padding: 10px 15px; /* Padding đều */
+    background-color: #fff; /* Nền trắng để nổi bật bottom */
+    border-top: 1px solid #eee; /* Viền trên để tách biệt */
+    align-items: center;
+}
+
+.chat-form input {
+    flex: 1;
+    padding: 10px 12px;
+    border: 1px solid #ddd;
+    border-radius: 20px; /* Bo tròn input */
+    font-size: 14px;
+    outline: none;
+    transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+.chat-form input:focus {
+    border-color: #d32f2f;
+    box-shadow: 0 0 0 2px rgba(211, 47, 47, 0.1);
+}
+
+.chat-form button {
+    padding: 10px 16px;
+    background-color: #d32f2f;
+    color: white;
+    border: none;
+    border-radius: 20px; /* Bo tròn button */
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    white-space: nowrap;
+    min-width: 60px; /* Đảm bảo button không quá nhỏ */
+}
+
+.chat-form button:hover:not(:disabled) {
+    background-color: #b71c1c;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(211, 47, 47, 0.3);
+}
+
+.chat-form button:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* Animations */
+@keyframes slideInUp {
+    from { 
+        opacity: 0; 
+        transform: translateY(10px); 
+    }
+    to { 
+        opacity: 1; 
+        transform: translateY(0); 
+    }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .chat-modal {
+        width: 90%;
+        max-width: 300px;
+        bottom: 80px;
+        right: 10px;
+    }
+
+    .chat-messages {
+        max-height: none; /* Để flex xử lý */
+    }
+
+    .chat-form {
+        flex-direction: column; /* Dọc trên mobile để dễ gõ */
+        gap: 10px;
+    }
+
+    .chat-form button {
+        align-self: stretch; /* Chiếm full width */
+    }
+}
+
+@media (max-width: 480px) {
+    .chat-modal {
+        width: 95%;
+        max-width: 280px;
+        bottom: 70px;
+        right: 5px;
+    }
+
+    .chat-form input,
+    .chat-form button {
+        padding: 8px 12px;
+        font-size: 13px;
+    }
+
+    .chat-message {
+        font-size: 13px;
+        padding: 6px 10px;
+    }
+
+    .chat-message.suggestion {
+        padding: 10px;
+    }
+
+    .chat-message.suggestion button {
+        padding: 6px 12px;
+        font-size: 12px;
+    }
+}
+/* Overlay cho chi tiết sản phẩm */
+.product-detail-overlay {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 1002; /* Cao hơn chat-modal */
+  justify-content: center;
+  align-items: center;
+}
+
+.product-detail-content {
+  background-color: #fff;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  max-width: 400px;
+  width: 90%;
+  text-align: center;
+  position: relative;
+}
+
+.overlay-close {
+  position: absolute;
+  top: 10px;
+  right: 15px;
+  font-size: 24px;
+  font-weight: bold;
+  color: #aaa;
+  cursor: pointer;
+  transition: color 0.3s;
+}
+
+.overlay-close:hover {
+  color: #d32f2f;
+}
+
+.product-detail-content h2 {
+  font-size: 20px;
+  color: #333;
+  margin-bottom: 15px;
+}
+
+.product-detail-content p {
+  font-size: 14px;
+  color: #555;
+  margin-bottom: 10px;
+}
+
+.product-detail-content button {
+  padding: 8px 16px;
+  background-color: #d32f2f;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.3s;
+}
+
+.product-detail-content button:hover {
+  background-color: #b71c1c;
+}
+
+/* Đảm bảo chat-modal không bị che khuất */
+.chat-modal {
+  /* Giữ nguyên các style cũ */
+  z-index: 1001; /* Dưới overlay nhưng trên content chính */
+}
+
+
+
+/* Cập nhật cho index.css: Thêm style cho FAQ section để làm đẹp. Tôi thiết kế nó đơn giản, hiện đại, với animation fade-in cho kết quả. */
+
+/* FAQ Section */
+.faq-section {
+  margin: 40px 0;
+  padding: 20px;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.faq-section h2 {
+  font-size: 22px;
+  color: #d32f2f;
+  margin-bottom: 15px;
+  text-align: center;
+}
+
+.faq-form {
+  display: flex;
+  gap: 10px;
+  max-width: 600px;
+  margin: 0 auto 20px;
+}
+
+.faq-form input {
+  flex: 1;
+  padding: 12px 15px;
+  border: 1px solid #ddd;
+  border-radius: 20px;
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+.faq-form input:focus {
+  border-color: #d32f2f;
+  box-shadow: 0 0 0 2px rgba(211, 47, 47, 0.1);
+}
+
+.faq-form button {
+  padding: 12px 20px;
+  background-color: #d32f2f;
+  color: white;
+  border: none;
+  border-radius: 20px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.faq-form button:hover {
+  background-color: #b71c1c;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(211, 47, 47, 0.3);
+}
+
+.faq-results {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.faq-item {
+  background: #f9f9f9;
+  border-radius: 8px;
+  padding: 15px;
+  margin-bottom: 15px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  animation: fadeIn 0.5s ease-in-out;
+  transition: transform 0.3s;
+}
+
+.faq-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+}
+
+.faq-item h3 {
+  font-size: 16px;
+  color: #333;
+  margin-bottom: 8px;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.faq-item h3::after {
+  content: '\25BC'; /* Mũi tên xuống */
+  font-size: 12px;
+  transition: transform 0.3s;
+}
+
+.faq-item.active h3::after {
+  transform: rotate(180deg); /* Xoay mũi tên lên khi mở */
+}
+
+.faq-item p {
+  font-size: 14px;
+  color: #555;
+  line-height: 1.6;
+  display: none; /* Ẩn câu trả lời ban đầu */
+}
+
+.faq-item.active p {
+  display: block; /* Hiện khi click */
+}
+
+.faq-item .category {
+  font-size: 12px;
+  color: #888;
+  margin-top: 10px;
+}
+
+.faq-item .keywords {
+  font-size: 12px;
+  color: #d32f2f;
+  margin-top: 5px;
+  font-style: italic;
+}
+
+.no-results {
+  text-align: center;
+  color: #888;
+  font-style: italic;
+  margin-top: 20px;
+}
+
+/* Animation */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+/* Thêm hoặc sửa trong index.css */
+#chat-modal {
+  display: none;
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  width: 400px;
+  height: 500px;
+  background: white;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+  border-radius: 8px;
+  z-index: 1000;
+  overflow: hidden; /* Đảm bảo modal không tràn */
+}
+
+.chat-messages {
+  height: 350px; /* Chiều cao cố định */
+  overflow-y: auto; /* Thanh cuộn dọc */
+  padding: 10px;
+  background: #f9f9f9;
+  border-bottom: 1px solid #ddd;
+}
+
+.chat-message {
+  margin: 10px 0;
+  padding: 10px;
+  border-radius: 5px;
+}
+
+.chat-message.user {
+  background: #d32f2f;
+  color: white;
+  text-align: right;
+}
+
+.chat-message.ai {
+  background: #e0e0e0;
+  color: #333;
+  text-align: left;
+}
+
+#product-suggestion {
+  padding: 10px;
+  background: #fff;
+  border-top: 1px solid #ddd;
+  max-height: 150px; /* Chiều cao tối đa */
+  overflow-y: auto; /* Thanh cuộn dọc */
+}
+.product-suggestion-content {
+  padding: 10px;
+  text-align: left;
+}
+.product-suggestion-content h4 {
+  margin-bottom: 5px;
+  font-size: 16px;
+  color: #333;
+}
+.product-suggestion-content p {
+  margin-bottom: 10px;
+  font-size: 14px;
+  color: #555;
+}
+.view-detail-btn {
+  padding: 8px 16px;
+  background-color: #d32f2f;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+}
+.view-detail-btn:hover {
+  background-color: #b71c1c;
+}
+.chat-close {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  font-size: 20px;
+  cursor: pointer;
+  color: #d32f2f;
+}
+
+#chat-form {
+  display: flex;
+  padding: 10px;
+  background: white;
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+}
+
+#chat-input {
+  flex: 1;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 20px;
+  outline: none;
+}
+
+#chat-form button {
+  padding: 10px 20px;
+  margin-left: 10px;
+  background: #d32f2f;
+  color: white;
+  border: none;
+  border-radius: 20px;
+  cursor: pointer;
+}
+
+/* Đảm bảo modal hiển thị đúng */
+.chat-modal-content {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+/* Responsive cho mobile */
+@media (max-width: 768px) {
+  .faq-form {
+    flex-direction: column;
+  }
+
+  .faq-form button {
+    width: 100%;
+  }
+}
