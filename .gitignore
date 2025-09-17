@@ -1,38 +1,3 @@
-# Node modules
 node_modules/
-**/node_modules/
-
-# Build output
-dist/
-build/
-out/
-
-# Logs
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-pnpm-debug.log*
-logs/
-
-# Cache
 .cache/
-.next/
-coverage/
-.tmp/
-
-# Environment files
 .env
-.env.local
-.env.*.local
-
-# OS files
-.DS_Store
-Thumbs.db
-
-# IDE/editor files
-.vscode/
-.idea/
-
-# Misc
-*.swp
-*.swo
