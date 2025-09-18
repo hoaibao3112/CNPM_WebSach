@@ -540,5 +540,6 @@ router.get('/category/4', async (req, res) => {
     res.status(500).json({ error: 'Lỗi khi lấy sản phẩm thể loại 4', details: error.message });
   }
 });
+//Tim kiem san pham theo ten hoac theo tac gia 
 
 export default router;

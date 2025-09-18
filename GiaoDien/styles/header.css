@@ -1,0 +1,355 @@
+/* CSS cho thanh tìm kiếm */
+:root {
+  --primary-color: #4CAF50;
+  --secondary-color: #45a049;
+  --background-light: #f8fff8;
+  --text-color: #2d2d2d;
+  --hover-color: #f0fff0;
+  --border-color: #c8e6c9;
+}
+.top-links li a:hover {
+  opacity: 0.8;
+}
+
+.top-links li a i {
+  font-size: 16px;
+}
+/* Đảm bảo top-links không bị ảnh hưởng */
+.top-links {
+  display: flex;
+  list-style: none;
+  align-items: center; /* Căn giữa các phần tử */
+  padding: 0; /* Loại bỏ padding không cần thiết */
+}
+
+.top-links li {
+  margin-left: 20px; /* Giữ khoảng cách giữa các nút */
+  position: relative; /* Đảm bảo các li khác không bị ảnh hưởng bởi position absolute */
+}
+
+/* Top bar */
+.top-bar {
+  background-color: #d32f2f;
+  color: white;
+  padding: 10px 0;
+  font-size: 14px;
+  /* chỉnh lại cho header cố dịnh và luôn ở lớp cao nhất*/
+  position: fixed; 
+  width: 100%;
+  z-index: 9999;
+  top: 0;
+}
+
+.top-bar-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  max-width: 1200px;
+  margin: 0 auto;
+
+}
+
+.top-links {
+  display: flex;
+  list-style: none;
+}
+
+.top-links li a {
+  color: white;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  transition: opacity 0.3s;
+  padding: 0;
+}
+.search-container {
+  flex: 1;
+  max-width: 500px;
+  margin: 0 20px;
+}
+
+.search-container form {
+  display: flex;
+  width: 100%;
+}
+
+.search-container input {
+  flex: 1;
+  padding: 8px 15px;
+  border: 1px solid #ddd;
+  border-radius: 20px 0 0 20px;
+  font-size: 14px;
+  outline: none;
+  /* thêm viền đen */
+  border: black  solid 1px ;
+}
+
+.search-container button {
+  background: #d32f2f;
+  color: white;
+  border: black solid 1px;
+  border-radius: 0 20px 20px 0;
+  padding: 0 15px;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+.search-container button:hover {
+  background: #b71c1c;
+}
+
+/* Logo */
+.logo {
+  height: 40px;
+  width: auto;
+}
+#logoutBtn {
+  color: white !important;
+  background-color: #0066cc;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+  border: none;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+#logoutBtn:hover {
+  background-color: #0052a3 !important;
+  transform: translateY(-1px);
+}
+
+#logoutBtn::before {
+  content: "";
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23ffffff'%3E%3Cpath d='M16 13v-2H7V8l-5 4 5 4v-3h9zM20 3h-9c-1.103 0-2 .897-2 2v4h2V5h9v14h-9v-4h-2v4c0 1.103.897 2 2 2h9c1.103 0 2-.897 2-2V5c0-1.103-.897-2-2-2z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: center;
+  filter: brightness(0) invert(1);
+}
+/* Style cho tất dropdown r */
+.category-top-dropdown,
+.publisher-dropdown,
+.account-dropdown
+ {
+  position: relative;
+  display: inline-block; /* Giữ nguyên hành vi inline với các phần tử khác */
+  vertical-align: middle; /* Đảm bảo căn giữa theo chiều dọc với các nút khác */
+  margin: 0; /* Loại bỏ margin không cần thiết */
+}
+/* tăng kích thước tạo khối cho thẻ a */
+.category-top-dropdown > a,
+.publisher-dropdown > a,
+.account-dropdown > a
+{
+    display: inline-block;
+    line-height: 40px;
+    color: white; /* Đảm bảo màu chữ khớp với top-links */
+    text-decoration: none;
+    padding: 10px 15px; /* Điều chỉnh padding để khớp với các nút khác */
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 14px; /* Đảm bảo kích thước chữ đồng nhất */
+    transition: color 0.3s; /* Hiệu ứng khi hover */
+}
+    
+/* Style cho .category-top-dropdown */
+.category-top-dropdown .dropdown-content a {
+  color: #333;
+  padding: 10px 16px;
+  text-decoration: none;
+  display: block;
+  font-size: 14px; /* Đảm bảo kích thước chữ đồng nhất */
+  transition: background-color 0.3s; /* Hiệu ứng mượt mà khi hover */
+}
+/* style cho .publisher-dropdown */
+.publisher-dropdown .dropdown-content a {
+  padding: 10px 15px;
+  color: #333;
+  text-decoration: none;
+  display: block;
+  transition: all 0.2s;
+}
+.publisher-dropdown .dropdown-content a:hover {
+  background: #f5f5f5;
+  color: #d32f2f;
+}
+
+.publisher-dropdown .fa-chevron-down {
+  font-size: 12px;
+  margin-left: 5px;
+}
+
+/* style cho .account-dropdown*/
+.account-dropdown:hover .dropdown-content {
+  display: block;
+}
+
+.account-dropdown .dropdown-content a {
+  color: #333;
+  padding: 10px 16px;
+  text-decoration: none;
+  display: block;
+  font-size: 14px;
+  transition: all 0.3s;
+}
+
+.account-dropdown .dropdown-content a:hover {
+  background-color: #f1f1f1;
+  color: #d32f2f;
+}
+
+.account-dropdown .dropdown-content i {
+  width: 20px;
+  text-align: center;
+  margin-right: 8px;
+}
+
+
+.publisher-dropdown:hover .dropdown-content,
+.category-top-dropdown:hover .dropdown-content,
+.account-dropdown:hover .dropdown-content {
+  display: block;
+}
+
+/* Hiệu ứng cho icon mũi tên */
+.category-top-dropdown > a > .fa-chevron-down,
+.publisher-dropdown > a > .fa-chevron-down,
+.account-dropdown > a > .fa-chevron-down {
+  margin-left: 5px;
+  transition: transform 0.3s;
+}
+
+.category-top-dropdown:hover > a > .fa-chevron-down,
+.publisher-dropdown:hover > a > .fa-chevron-down,
+.account-dropdown:hover > a > .fa-chevron-down {
+  transform: rotate(180deg);
+}
+.category-dropdown {
+  position: relative;
+  margin: 15px 0;
+  font-family: 'Segoe UI', sans-serif;
+}
+
+.dropdown-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 20px;
+  background-color: var(--background-light);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 2px solid var(--border-color);
+  color: var(--text-color);
+}
+
+.dropdown-header:hover {
+  background-color: var(--hover-color);
+  box-shadow: 0 2px 8px rgba(76, 175, 80, 0.1);
+  transform: translateY(-1px);
+}
+
+.dropdown-header i {
+  transition: transform 0.3s ease;
+  color: var(--primary-color);
+  font-size: 1.2em;
+}
+
+.dropdown-content {
+  background-color: white;
+  min-width: 200px;
+  display: none;
+  position: absolute;
+  width: 100%;
+  background: linear-gradient(145deg, #ffffff, var(--background-light));
+  box-shadow: 0 6px 12px rgba(0,0,0,0.12);
+  border-radius: 8px;
+  z-index: 100;
+  max-height: 300px;
+  overflow-y: auto;
+  border: 2px solid var(--border-color);
+  animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* bỏ đi padding và margin-top */
+.dropdown-content a {
+  border-left: none;
+  padding: 10px 16px;
+  border-radius: 4px;
+  display: block;
+  padding: 12px 20px;
+  color: var(--text-color);
+  text-decoration: none;
+  transition: all 0.2s ease;
+  font-size: 0.95em;
+  border-bottom: 1px solid #eeeeee;
+}
+
+.dropdown-content a:last-child {
+  border-bottom: none;
+}
+
+.dropdown-content a:hover {
+  background-color: var(--hover-color);
+  padding-left: 25px;
+  font-weight: 600;
+  background-color: #f0f7ff;
+  color: #0066cc;
+}
+
+.dropdown-content a::before {
+  color: var(--primary-color);
+  margin-right: 10px;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.dropdown-content a:hover::before {
+  opacity: 1;
+}
+
+.dropdown-active .dropdown-content {
+  display: block;
+}
+
+.dropdown-active .dropdown-header {
+  background-color: var(--primary-color);
+  color: white;
+  border-color: var(--secondary-color);
+}
+
+.dropdown-active .dropdown-header i {
+  transform: rotate(180deg);
+  color: white;
+}
+
+/* Scrollbar styling */
+.dropdown-content::-webkit-scrollbar {
+  width: 8px;
+}
+
+.dropdown-content::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+.dropdown-content::-webkit-scrollbar-thumb {
+  background: var(--primary-color);
+  border-radius: 4px;
+}
+
+.dropdown-content::-webkit-scrollbar-thumb:hover {
+  background: var(--secondary-color);
+}
