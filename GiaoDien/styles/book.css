@@ -15,7 +15,7 @@ body {
 #book-list,
 #textbook-list {
   display: grid;
-  grid-template-columns: repeat(5, 210px);
+  grid-template-columns: repeat(5, 18%);
   gap: 20px;
   padding: 10px 0;
   justify-content: center;

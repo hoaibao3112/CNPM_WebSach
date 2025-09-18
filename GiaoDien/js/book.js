@@ -461,7 +461,6 @@ document.addEventListener('DOMContentLoaded', () => {
   fetchAndDisplayTextbooks();
   fetchAndDisplayPoliticsBooks();
   fetchAndDisplayScienceBooks();
-  updateCartCount(); // Cập nhật giỏ hàng khi load trang
 });
 
 // Gán các hàm vào window
@@ -470,4 +469,3 @@ window.viewDetail = viewDetail;
 window.showAllProducts = showAllProducts;
 window.filterProductsByCategory = filterProductsByCategory;
 window.filterProductsByPriceRange = filterProductsByPriceRange;
-window.updateCartCount = updateCartCount; // Export để sử dụng ở nơi khác
