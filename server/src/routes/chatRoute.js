@@ -1,63 +1,51 @@
 import express from 'express';
 import db from '../config/connectDatabase.js';
 import jwt from 'jsonwebtoken';
-
 const router = express.Router();
-
 const authenticate = async (req, res, next) => {
-    try {
-        console.log('Headers:', req.headers);
-        console.log('Authorization header:', req.headers.authorization);
-        
-        const authHeader = req.headers.authorization;
-        if (!authHeader) {
-            console.log('No authorization header');
-            return res.status(401).json({ error: 'No authorization header' });
-        }
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader) return res.status(401).json({ error: 'No authorization header' });
 
-        const token = authHeader.split(' ')[1];
-        if (!token) {
-            console.log('No token provided');
-            return res.status(401).json({ error: 'No token provided' });
-        }
+    const token = authHeader.split(' ')[1];
+    if (!token) return res.status(401).json({ error: 'No token provided' });
 
-        console.log('Token:', token);
-        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your_secret_key');
-        console.log('Decoded token:', decoded);
-        
-        let user;
-        if (decoded.userType === 'customer') {
-            console.log('Querying customer with ID:', decoded.makh);
-            [user] = await db.query('SELECT * FROM khachhang WHERE makh = ?', [decoded.makh]);
-        } else if (decoded.userType === 'staff') {
-            console.log('Querying staff with username:', decoded.makh);
-            [user] = await db.query('SELECT * FROM taikhoan WHERE TenTK = ?', [decoded.makh]);
-        } else {
-            console.log('Invalid user type:', decoded.userType);
-            return res.status(401).json({ error: 'Invalid user type' });
-        }
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your_secret_key');
+    console.log('Decoded token:', decoded);
 
-        console.log('User found:', user);
-        if (!user || !user.length) {
-            console.log('User not found in database');
-            return res.status(401).json({ error: 'User not found' });
-        }
-        
-        req.user = user[0];
-        req.user.userType = decoded.userType;
-        next();
-    } catch (error) {
-        console.error('Authentication error:', error);
-        if (error.name === 'JsonWebTokenError') {
-            return res.status(401).json({ error: 'Invalid token' });
-        }
-        if (error.name === 'TokenExpiredError') {
-            return res.status(401).json({ error: 'Token expired' });
-        }
-        res.status(401).json({ error: 'Authentication failed' });
+    let user;
+    if (decoded.userType === 'staff' || (decoded.MaTK && decoded.TenTK)) {
+      // Staff: query taikhoan
+      const queryParam = decoded.MaTK || decoded.TenTK;
+      [user] = await db.query('SELECT * FROM taikhoan WHERE MaTK = ? OR TenTK = ?', [queryParam, queryParam]);
+      if (user && user.length) {
+        req.user = { ...user[0], userType: 'staff' };
+      } else {
+        return res.status(401).json({ error: 'Staff not found' });
+      }
+    } else if (decoded.userType === 'customer' || decoded.makh) {
+      // Customer: query khachhang
+      const queryParam = decoded.makh;
+      [user] = await db.query('SELECT * FROM khachhang WHERE makh = ?', [queryParam]);
+      if (user && user.length) {
+        req.user = { ...user[0], userType: 'customer' };
+      } else {
+        return res.status(401).json({ error: 'Customer not found' });
+      }
+    } else {
+      console.log('Invalid user type or payload:', decoded);
+      return res.status(401).json({ error: 'Invalid user type or payload' });
     }
-};
 
+    console.log('Authenticated user:', req.user);
+    next();
+  } catch (error) {
+    console.error('Authentication error:', error);
+    if (error.name === 'JsonWebTokenError') return res.status(401).json({ error: 'Invalid token (malformed)' });
+    if (error.name === 'TokenExpiredError') return res.status(401).json({ error: 'Token expired' });
+    res.status(401).json({ error: 'Authentication failed' });
+  }
+};
 // Tạo hoặc lấy phòng chat
 router.post('/rooms', authenticate, async (req, res) => {
     try {
@@ -187,27 +175,47 @@ router.post('/messages', authenticate, async (req, res) => {
 });
 
 router.get('/rooms/:room_id/messages', authenticate, async (req, res) => {
-    try {
-        const { room_id } = req.params;
+  try {
+    const { room_id } = req.params;
 
-        const [messages] = await db.query(
-            `SELECT * FROM chat_messages 
-             WHERE room_id = ? 
-             ORDER BY created_at ASC`,
-            [room_id]
-        );
+    let query = `
+      SELECT 
+        cm.*, 
+        CASE 
+          WHEN cm.sender_type = 'customer' THEN kh.tenkh 
+          WHEN cm.sender_type = 'staff' THEN tk.TenTK 
+          ELSE 'Unknown' 
+        END as sender_name
+      FROM chat_messages cm
+      LEFT JOIN khachhang kh ON cm.sender_type = 'customer' AND cm.sender_id = kh.makh
+      LEFT JOIN taikhoan tk ON cm.sender_type = 'staff' AND cm.sender_id = tk.TenTK
+      WHERE cm.room_id = ? 
+      ORDER BY cm.created_at ASC
+    `;
+    const [messages] = await db.query(query, [room_id]);
 
-        res.json({
-            success: true,
-            messages
-        });
-    } catch (error) {
-        console.error('Get messages error details:', error);
-        res.status(500).json({ 
-            success: false,
-            error: error.message || 'Server error' 
-        });
-    }
+    // Format created_at nếu cần (string ISO)
+    messages.forEach(msg => {
+      msg.created_at = new Date(msg.created_at).toISOString(); // Để formatDate dễ dùng
+    });
+
+    res.json({
+      success: true,
+      messages: messages.map(msg => ({
+        id: msg.message_id,
+        content: msg.message,  // Alias cho UI
+        sender_name: msg.sender_name,
+        sender_type: msg.sender_type,
+        created_at: msg.created_at
+      }))
+    });
+  } catch (error) {
+    console.error('Get messages error details:', error);
+    res.status(500).json({ 
+      success: false,
+      error: error.message || 'Server error' 
+    });
+  }
 });
 
 router.get('/rooms', authenticate, async (req, res) => {

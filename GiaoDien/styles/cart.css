@@ -846,3 +846,62 @@ h2 {
     color: #fff !important;
     text-decoration: none;
 }
+
+/* Modal chat hỗ trợ - Phần được sửa */
+#support-chat-modal .chat-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 10px;
+  background-color: #f8f9fa;
+  border-radius: 4px;
+  margin-bottom: 15px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+#support-chat-modal .message {
+  padding: 10px 15px;
+  border-radius: 20px;
+  max-width: 80%;
+  font-size: 14px;
+  line-height: 1.4;
+  word-wrap: break-word;
+}
+
+#support-chat-modal .message.admin {
+  background-color: #ffffff;   /* Trắng cho admin */
+  color: #000000;              /* Chữ đen */
+  align-self: flex-start;
+  border: 1px solid #e0e0e0;   /* Viền nhẹ để phân biệt */
+}
+
+#support-chat-modal .message.customer {
+  background-color: #007bff;   /* Xanh dương cho khách hàng */
+  color: #ffffff;
+  align-self: flex-end;
+}
+
+#support-chat-modal .message-timestamp {
+  font-size: 11px;
+  color: #999999;
+  margin-top: 5px;
+  text-align: right;
+}
+
+#support-chat-modal .chat-input {
+  display: flex;
+  gap: 10px;
+  padding-top: 10px;
+  border-top: 1px solid #eeeeee;
+}
+
+#support-chat-modal .chat-input textarea {
+  flex: 1;
+  padding: 10px;
+  border: 1px solid #dddddd;
+  border-radius: 4px;
+  resize: none;
+  font-size: 14px;
+  height: 50px;
+}

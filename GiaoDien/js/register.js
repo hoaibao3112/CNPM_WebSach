@@ -48,8 +48,8 @@ async function handleSendOTP(e) {
         sendOtpBtn.disabled = true;
         sendOtpBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang gửi...';
 
-        const payload = { tenkh: username, email }; // Chỉ gửi tenkh và email
-        console.log('Payload gửi:', payload); // Debug
+        const payload = { tenkh: username, email };
+        console.log('Payload gửi:', payload);
 
         const response = await fetch('http://localhost:5000/api/client/register/send-otp', {
             method: 'POST',
@@ -68,6 +68,7 @@ async function handleSendOTP(e) {
             document.getElementById('step2').style.display = 'block';
             sessionStorage.setItem('registerEmail', email);
             sessionStorage.setItem('registerUsername', username);
+            sessionStorage.setItem('otpToken', data.token); // Lưu token từ server
         } else {
             const errorMsg = data.error || (data.errors ? data.errors.join(', ') : 'Lỗi không xác định');
             showMessage(messageElement, errorMsg, 'error');
@@ -87,12 +88,18 @@ async function handleVerifyOTP(e) {
     e.preventDefault();
 
     const email = sessionStorage.getItem('registerEmail');
-    const otp = document.getElementById('otpCode').value;
+    const otp = document.getElementById('otpCode').value.trim();
+    const token = sessionStorage.getItem('otpToken'); // Lấy token từ sessionStorage
     const messageElement = document.getElementById('otpMessage');
     const verifyOtpBtn = document.getElementById('verifyOtpBtn');
 
     if (!otp) {
         showMessage(messageElement, 'Vui lòng nhập mã OTP', 'error');
+        return;
+    }
+
+    if (!token) {
+        showMessage(messageElement, 'Không tìm thấy token OTP, vui lòng gửi lại OTP', 'error');
         return;
     }
 
@@ -105,18 +112,16 @@ async function handleVerifyOTP(e) {
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ email, otp })
+            body: JSON.stringify({ email, otp, token }) // Gửi cả token
         });
 
         const data = await response.json();
+        console.log('Phản hồi từ server:', data);
 
         if (response.ok) {
             showMessage(messageElement, data.message || 'Xác nhận OTP thành công', 'success');
             document.getElementById('step2').style.display = 'none';
             document.getElementById('step3').style.display = 'block';
-            if (data.resetToken) {
-                sessionStorage.setItem('registerToken', data.resetToken);
-            }
         } else {
             showMessage(messageElement, data.error || 'Mã OTP không đúng hoặc đã hết hạn', 'error');
         }
@@ -137,7 +142,6 @@ async function handleSetPassword(e) {
     const username = sessionStorage.getItem('registerUsername');
     const password = document.getElementById('password').value;
     const confirmPassword = document.getElementById('confirmPassword').value;
-    const resetToken = sessionStorage.getItem('registerToken');
     const messageElement = document.getElementById('passwordMessage');
     const setPasswordBtn = document.getElementById('setPasswordBtn');
 
@@ -169,18 +173,19 @@ async function handleSetPassword(e) {
                 email,
                 tenkh: username,
                 matkhau: password,
-                token: resetToken
-                // sdt: null (nếu không bắt buộc, có thể bỏ qua)
+                sdt: null, // Có thể bỏ qua nếu không bắt buộc
+                diachi: null // Có thể bỏ qua nếu không bắt buộc
             })
         });
 
         const data = await response.json();
+        console.log('Phản hồi từ server:', data);
 
         if (response.ok) {
             showMessage(messageElement, data.message || 'Đăng ký thành công!', 'success');
             sessionStorage.removeItem('registerEmail');
             sessionStorage.removeItem('registerUsername');
-            sessionStorage.removeItem('registerToken');
+            sessionStorage.removeItem('otpToken');
             setTimeout(() => {
                 window.location.href = 'login.html';
             }, 2000);
@@ -195,15 +200,15 @@ async function handleSetPassword(e) {
         setPasswordBtn.innerHTML = 'Đặt mật khẩu';
     }
 }
-      // ========== HÀM HIỂN THỊ THÔNG BÁO ==========
 
-      function showMessage(element, message, type = 'info') {
-          if (!element) return;
-          element.textContent = message;
-          element.className = '';
-          element.classList.add('message', type);
-          element.style.display = 'block';
-          setTimeout(() => {
+// ========== HÀM HIỂN THỊ THÔNG BÁO ==========
+function showMessage(element, message, type = 'info') {
+    if (!element) return;
+    element.textContent = message;
+    element.className = '';
+    element.classList.add('message', type);
+    element.style.display = 'block';
+    setTimeout(() => {
         element.style.display = 'none';
-          }, 4000);
-      }
+    }, 4000);
+}

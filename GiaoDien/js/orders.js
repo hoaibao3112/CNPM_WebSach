@@ -450,12 +450,14 @@ function attachEventListeners() {
 }
 
 // ========== Hệ thống Chat ==========
-let chatSocket = null;
-let currentChatRoom = null;
+let currentChatRoom = null; // { room_id, customer_id }
 let unreadMessages = 0;
 
 // Khởi tạo hệ thống chat
 function initializeChatSystem() {
+    if (!checkAuth()) return;
+
+    const customerId = getCustomerId();
     const chatBtn = document.getElementById('chat-floating-btn');
     const chatPopup = document.getElementById('chat-popup');
     const closeBtn = document.getElementById('close-chat-btn');
@@ -464,8 +466,28 @@ function initializeChatSystem() {
 
     if (!chatBtn || !chatPopup || !closeBtn || !sendBtn || !chatInput) {
         console.error('Chat elements not found');
+        showErrorToast('Không thể khởi tạo chat: Thiếu phần tử giao diện');
         return;
     }
+
+    // Tạo hoặc lấy phòng chat
+    fetchChatRooms().then(rooms => {
+        if (rooms.length === 0) {
+            createChatRoom(customerId).then(room => {
+                currentChatRoom = room;
+                updateUnreadCount();
+            }).catch(error => {
+                console.error('Lỗi khởi tạo phòng chat:', error);
+                showErrorToast('Không thể khởi tạo phòng chat');
+            });
+        } else {
+            currentChatRoom = rooms[0]; // Lấy phòng mới nhất
+            updateUnreadCount();
+        }
+    }).catch(error => {
+        console.error('Lỗi lấy danh sách phòng chat:', error);
+        showErrorToast('Không thể tải danh sách phòng chat');
+    });
 
     // Mở/đóng popup chat
     chatBtn.addEventListener('click', () => {
@@ -488,6 +510,53 @@ function initializeChatSystem() {
     });
 }
 
+// Tạo phòng chat mới
+async function createChatRoom(customerId) {
+    if (!checkAuth()) throw new Error('Chưa đăng nhập');
+
+    try {
+        const response = await fetch('http://localhost:5000/api/chat/rooms', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${getToken()}`
+            },
+            body: JSON.stringify({ customer_id: customerId })
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || `HTTP ${response.status}: Không thể tạo phòng chat`);
+        }
+
+        const data = await response.json();
+        console.log('Phòng chat mới:', data.room);
+        return data.room;
+    } catch (error) {
+        console.error('Lỗi createChatRoom:', error);
+        throw error;
+    }
+}
+
+// Lấy danh sách phòng chat
+async function fetchChatRooms() {
+    if (!checkAuth()) return [];
+
+    try {
+        const response = await fetch('http://localhost:5000/api/chat/rooms', {
+            headers: { 'Authorization': `Bearer ${getToken()}` }
+        });
+
+        if (!response.ok) throw new Error(`HTTP ${response.status}: Không thể lấy danh sách phòng chat`);
+
+        const data = await response.json();
+        return data.rooms || [];
+    } catch (error) {
+        console.error('Lỗi fetchChatRooms:', error);
+        throw error;
+    }
+}
+
 // Gửi tin nhắn
 async function sendMessage() {
     const chatInput = document.getElementById('chat-message-input');
@@ -495,48 +564,53 @@ async function sendMessage() {
     if (!message) return;
 
     if (!currentChatRoom) {
-        currentChatRoom = await createChatRoom();
-        if (!currentChatRoom) return;
+        const customerId = getCustomerId();
+        try {
+            currentChatRoom = await createChatRoom(customerId);
+            if (!currentChatRoom) return;
+        } catch (error) {
+            showErrorToast('Không thể tạo phòng chat để gửi tin nhắn');
+            return;
+        }
     }
 
-    const msg = {
-        message_id: Date.now(),
-        message,
-        sender_type: 'customer',
-        created_at: new Date().toISOString()
-    };
-
-    displayMessage(msg);
-    sendMessageToServer(msg.message);
-    chatInput.value = '';
-}
-
-// Gửi tin nhắn qua WebSocket
-function sendMessageToServer(message) {
-    console.log('Trạng thái WebSocket:', chatSocket ? chatSocket.readyState : 'chatSocket không tồn tại');
-    if (chatSocket && chatSocket.readyState === WebSocket.OPEN) {
-        chatSocket.send(JSON.stringify({
-            action: 'send_message',
-            message: {
+    try {
+        const response = await fetch('http://localhost:5000/api/chat/messages', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${getToken()}`
+            },
+            body: JSON.stringify({
                 room_id: currentChatRoom.room_id,
-                sender_id: getCustomerId(),
-                sender_type: 'customer',
-                message: message,
-            }
-        }));
-    } else {
-        console.error('WebSocket not connected');
-        showErrorToast('Không thể gửi tin nhắn: WebSocket chưa kết nối');
-        if (currentChatRoom) {
-            console.log('Thử kết nối lại WebSocket...');
-            connectWebSocket(currentChatRoom.room_id);
+                message
+            })
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || `HTTP ${response.status}: Không thể gửi tin nhắn`);
         }
+
+        const data = await response.json();
+        const newMessage = {
+            ...data.message,
+            sender_type: 'customer',
+            created_at: new Date().toISOString()
+        };
+        displayMessage(newMessage);
+        chatInput.value = '';
+    } catch (error) {
+        console.error('Lỗi sendMessage:', error);
+        showErrorToast(`Không thể gửi tin nhắn: ${error.message}`);
     }
 }
 
 // Hiển thị tin nhắn
 function displayMessage(msg) {
     const chatBody = document.getElementById('chat-messages');
+    if (!chatBody) return;
+
     const messageDiv = document.createElement('div');
     messageDiv.className = `chat-message message-${msg.sender_type === 'customer' ? 'sent' : 'received'}`;
     messageDiv.innerHTML = `
@@ -547,145 +621,30 @@ function displayMessage(msg) {
     chatBody.scrollTop = chatBody.scrollHeight;
 }
 
-async function createChatRoom() {
-    if (!checkAuth()) return null;
-    try {
-        const response = await fetch('http://localhost:5000/api/chat/rooms', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${getToken()}`
-            },
-            body: JSON.stringify({ customer_id: getCustomerId() })
-        });
-        if (!response.ok) {
-            const errorText = await response.text();
-            throw new Error(`Không thể tạo phòng chat: ${errorText}`);
-        }
-        const room = await response.json();
-        console.log('Created Room:', room); // Kiểm tra room_id
-        connectWebSocket(room.room_id);
-        return room;
-    } catch (error) {
-        console.error('Lỗi tạo phòng chat:', error);
-        showErrorToast('Không thể tạo phòng chat');
-        return null;
-    }
-}
-
-// Kết nối WebSocket
-function connectWebSocket(roomId) {
-    if (chatSocket) chatSocket.close();
-
-    const token = getToken();
-    if (!token || token === 'null') {
-        console.error('Không tìm thấy token hợp lệ, chuyển hướng đến trang đăng nhập');
-        redirectToLogin();
-        return;
-    }
-
-    console.log('Kết nối WebSocket với token:', token); // Debug token
-    chatSocket = new WebSocket(`ws://localhost:5001/chat?room_id=${roomId}&token=${token}`);
-
-    chatSocket.onopen = () => console.log('WebSocket đã kết nối');
-    chatSocket.onmessage = (event) => {
-        const data = JSON.parse(event.data);
-        if (data.action === 'new_message') {
-            handleNewMessage(data.message);
-        } else if (data.action === 'chat_history') {
-            displayChatHistory(data.messages);
-        } else if (data.action === 'error') {
-            showErrorToast(data.message);
-        }
-    };
-    chatSocket.onclose = () => console.log('WebSocket đã ngắt kết nối');
-    chatSocket.onerror = (error) => {
-        console.error('Lỗi WebSocket:', error);
-        showErrorToast('Lỗi kết nối chat');
-    };
-}
-
-// Xử lý tin nhắn mới
-function handleNewMessage(message) {
-    const chatPopup = document.getElementById('chat-popup');
-    if (chatPopup.classList.contains('show')) {
-        displayMessage(message);
-    } else {
-        unreadMessages++;
-        updateUnreadCount();
-        console.log('New message:', message);
-    }
-}
-
-// Cập nhật số tin nhắn chưa đọc
-function updateUnreadCount() {
-    // Ghi chú: HTML không có phần tử unread-count, nên hàm này tạm thời không hoạt động
-    // Nếu cần hiển thị số tin nhắn chưa đọc, bạn cần thêm phần tử vào HTML
-    console.log('Unread messages:', unreadMessages);
-}
-
 // Tải lịch sử chat
 async function loadChatHistory() {
     if (!currentChatRoom || !checkAuth()) return;
 
     try {
         const response = await fetch(`http://localhost:5000/api/chat/rooms/${currentChatRoom.room_id}/messages`, {
-            headers: {
-                'Authorization': `Bearer ${getToken()}`
-            }
+            headers: { 'Authorization': `Bearer ${getToken()}` }
         });
 
-        if (!response.ok) throw new Error('Không thể tải lịch sử chat');
+        if (!response.ok) throw new Error(`HTTP ${response.status}: Không thể tải lịch sử chat`);
 
-        const messages = await response.json();
-        displayChatHistory(messages);
+        const data = await response.json();
+        displayChatHistory(data.messages || []);
     } catch (error) {
-        console.error('Lỗi tải lịch sử chat:', error);
+        console.error('Lỗi loadChatHistory:', error);
         showErrorToast('Không thể tải lịch sử chat');
-    }
-}
-
-// Gửi tin nhắn qua WebSocket với retry logic
-async function sendMessageToServer(message) {
-    if (!chatSocket || chatSocket.readyState !== WebSocket.OPEN) {
-        console.log('WebSocket chưa kết nối, thử kết nối...');
-        if (currentChatRoom) {
-            await new Promise((resolve) => {
-                connectWebSocket(currentChatRoom.room_id);
-                chatSocket.onopen = () => {
-                    console.log('WebSocket đã kết nối');
-                    resolve();
-                };
-                chatSocket.onerror = (error) => {
-                    console.error('Lỗi kết nối WebSocket:', error);
-                    resolve(); // Thoát dù lỗi
-                };
-            });
-        } else {
-            console.error('Không có phòng chat');
-            showErrorToast('Không thể gửi tin nhắn: Không có phòng chat');
-            return;
-        }
-    }
-    if (chatSocket.readyState === WebSocket.OPEN) {
-        chatSocket.send(JSON.stringify({
-            action: 'send_message',
-            message: {
-                room_id: currentChatRoom.room_id,
-                sender_id: getCustomerId(),
-                sender_type: 'customer',
-                message: message,
-            }
-        }));
-    } else {
-        console.error('WebSocket vẫn chưa kết nối');
-        showErrorToast('Không thể gửi tin nhắn: WebSocket chưa kết nối');
     }
 }
 
 // Hiển thị lịch sử chat
 function displayChatHistory(messages) {
     const chatBody = document.getElementById('chat-messages');
+    if (!chatBody) return;
+
     chatBody.innerHTML = messages.length === 0
         ? '<div class="welcome-message"><p>Bắt đầu trò chuyện với hỗ trợ viên</p></div>'
         : messages.map(msg => `
@@ -695,6 +654,31 @@ function displayChatHistory(messages) {
             </div>
         `).join('');
     chatBody.scrollTop = chatBody.scrollHeight;
+}
+
+// Cập nhật số tin nhắn chưa đọc
+async function updateUnreadCount() {
+    if (!currentChatRoom) return;
+
+    try {
+        const response = await fetch(`http://localhost:5000/api/chat/rooms/${currentChatRoom.room_id}/messages`, {
+            headers: { 'Authorization': `Bearer ${getToken()}` }
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            unreadMessages = data.messages?.filter(msg => msg.sender_type !== 'customer').length || 0;
+            console.log('Unread messages:', unreadMessages);
+
+            const unreadElement = document.getElementById('unread-count');
+            if (unreadElement) {
+                unreadElement.textContent = unreadMessages > 0 ? unreadMessages : '';
+                unreadElement.style.display = unreadMessages > 0 ? 'inline' : 'none';
+            }
+        }
+    } catch (error) {
+        console.error('Lỗi updateUnreadCount:', error);
+    }
 }
 
 // Khởi tạo bản đồ với Leaflet

@@ -51,16 +51,7 @@ const InvoiceManagement = () => {
 
   const handleViewInvoice = async (id) => {
     try {
-      const token = localStorage.getItem('token');
-      console.log('Token in handleViewInvoice:', token);
-      if (!token) {
-        throw new Error('Không tìm thấy token. Vui lòng đăng nhập lại.');
-      }
-      const res = await axios.get(`http://localhost:5000/api/orders/hoadon/${id}`, {
-        headers: {
-          Authorization: `Bearer ${token.trim()}`
-        }
-      });
+      const res = await axios.get(`http://localhost:5000/api/orders/hoadon/${id}`);
       setSelectedInvoice({
         ...res.data,
         items: res.data.items.map(item => ({
@@ -80,41 +71,62 @@ const InvoiceManagement = () => {
 
   const handleChatWithCustomer = async (customerId) => {
     try {
-      const token = localStorage.getItem('token');
-      console.log('Token in handleChatWithCustomer:', token);
+      const token = localStorage.getItem('authToken'); // Thay 'token' bằng 'authToken'
+      if (!token || token.split('.').length !== 3) {
+        message.error('Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại.');
+        window.location.href = '/admin/login';
+        return;
+      }
+      console.log('📡 Initiating chat with token:', token.substring(0, 20) + '...');
+
+      // Tạo phòng chat nếu chưa có
       const res = await axios.post(
-        '/api/chat/rooms',
+        'http://localhost:5000/api/chat/rooms',
         { customer_id: customerId },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      const msgRes = await axios.get(`http://localhost:5000/api/chat/rooms/${res.data.room.room_id}/messages`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+
+      // Tải messages ban đầu
+      const msgRes = await axios.get(
+        `http://localhost:5000/api/chat/rooms/${res.data.room.room_id}/messages`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
       setCurrentRoom(res.data.room);
-      setMessages(msgRes.data.messages);
+      setMessages(msgRes.data.messages || []);
       setChatVisible(true);
     } catch (error) {
-      message.error(error.response?.data.error || 'Lỗi kết nối chat');
+      console.error('❌ Chat initiation error:', error.response?.data || error.message);
+      message.error(error.response?.data?.error || 'Lỗi kết nối chat');
     }
   };
 
   const handleSendMessage = async () => {
     if (!newMessage.trim()) return;
     try {
-      const token = localStorage.getItem('token');
-      console.log('Token in handleSendMessage:', token);
-      await axios.post('http://localhost:5000/api/chat/messages', {
-        room_id: currentRoom.room_id,
-        message: newMessage
-      }, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      const msgRes = await axios.get(`http://localhost:5000/api/chat/rooms/${currentRoom.room_id}/messages`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const token = localStorage.getItem('authToken'); // Thay 'token' bằng 'authToken'
+      if (!token) {
+        message.error('Phiên đăng nhập hết hạn');
+        return;
+      }
+      console.log('📡 Sending message with token:', token.substring(0, 20) + '...');
+
+      // Gửi tin nhắn qua HTTP để lưu vào DB
+      await axios.post(
+        'http://localhost:5000/api/chat/messages',
+        { room_id: currentRoom.room_id, message: newMessage },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      // Tải lại danh sách tin nhắn để đồng bộ
+      const msgRes = await axios.get(
+        `http://localhost:5000/api/chat/rooms/${currentRoom.room_id}/messages`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
       setMessages(msgRes.data.messages);
       setNewMessage('');
     } catch (error) {
+      console.error('❌ Send message error:', error.response?.data || error.message);
       message.error('Gửi tin nhắn thất bại');
     }
   };

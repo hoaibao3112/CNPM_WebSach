@@ -38,38 +38,21 @@ const authenticateToken = (req, res, next) => {
   }
 };
 
-// Hàm sinh mã địa chỉ duy nhất
-async function generateMaDiaChi(connection) {
-  let isUnique = false;
-  let MaDiaChi;
-  while (!isUnique) {
-    MaDiaChi = Math.floor(10000000 + Math.random() * 90000000);
-    const [existingAddress] = await connection.query(
-      `SELECT MaDiaChi FROM diachi WHERE MaDiaChi = ?`,
-      [MaDiaChi]
-    );
-    if (existingAddress.length === 0) {
-      isUnique = true;
-    }
-  }
-  return MaDiaChi;
-}
-
-// API đặt đơn hàng
 // API đặt đơn hàng
 router.post('/place-order', authenticateToken, async (req, res) => {
   try {
-    const { customer, shippingAddress, paymentMethod, notes } = req.body;
+    const { customer, items, shippingAddress, paymentMethod, notes } = req.body;
     console.log('Request Body:', req.body);
     console.log('req.user:', req.user);
 
     // Kiểm tra dữ liệu đầu vào
-    if (!customer || !shippingAddress || !paymentMethod) {
+    if (!customer || !items || !shippingAddress || !paymentMethod) {
       return res.status(400).json({ error: 'Thiếu thông tin bắt buộc' });
     }
 
     // Kiểm tra các trường bắt buộc trong customer và shippingAddress
-    if (!customer.name || !customer.phone || !shippingAddress.detail || !shippingAddress.province || !shippingAddress.district || !shippingAddress.ward) {
+    if (!customer.makh || !customer.name || !customer.phone || !shippingAddress.detail || 
+        !shippingAddress.province || !shippingAddress.district || !shippingAddress.ward) {
       return res.status(400).json({ error: 'Thông tin khách hàng hoặc địa chỉ không đầy đủ' });
     }
 
@@ -79,32 +62,40 @@ router.post('/place-order', authenticateToken, async (req, res) => {
       return res.status(400).json({ error: 'Khách hàng không tồn tại' });
     }
 
-    // Lấy items từ giỏ hàng
-    const [cartItems] = await pool.query(
-      `SELECT g.MaSP as productId, g.SoLuong as quantity, g.Selected, s.DonGia as price 
-       FROM giohang g 
-       JOIN sanpham s ON g.MaSP = s.MaSP 
-       WHERE g.MaKH = ? AND g.Selected = TRUE`,
-      [customer.makh]
-    );
-
-    if (!cartItems.length) {
-      return res.status(400).json({ error: 'Giỏ hàng trống hoặc không có sản phẩm được chọn' });
+    // Kiểm tra items từ body
+    if (!Array.isArray(items) || items.length === 0) {
+      return res.status(400).json({ error: 'Không có sản phẩm được chọn' });
     }
 
-    // Kiểm tra số lượng tồn kho
-    for (const item of cartItems) {
-      const [product] = await pool.query('SELECT MaSP, SoLuong FROM sanpham WHERE MaSP = ?', [item.productId]);
-      if (!product.length || product[0].SoLuong < item.quantity) {
-        return res.status(400).json({ error: `Sản phẩm ${item.productId} không đủ số lượng` });
+    // Validate sản phẩm và tồn kho
+    const cartItems = [];
+    for (const item of items) {
+      if (!item.MaSP || !item.SoLuong || item.SoLuong < 1) {
+        return res.status(400).json({ error: `Sản phẩm ${item.MaSP} không hợp lệ` });
       }
+      const [product] = await pool.query(
+        'SELECT MaSP, DonGia as price, SoLuong as stock FROM sanpham WHERE MaSP = ?',
+        [item.MaSP]
+      );
+      if (!product.length) {
+        return res.status(400).json({ error: `Sản phẩm ${item.MaSP} không tồn tại` });
+      }
+      if (product[0].stock < item.SoLuong) {
+        return res.status(400).json({ error: `Sản phẩm ${item.MaSP} không đủ tồn kho (${product[0].stock} < ${item.SoLuong})` });
+      }
+      cartItems.push({
+        productId: item.MaSP,
+        quantity: item.SoLuong,
+        price: product[0].price
+      });
     }
 
     // Tính tổng tiền
     const totalAmount = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
+    console.log('Validated cart items:', cartItems, 'Total:', totalAmount);
 
     // Lưu địa chỉ
-   const [addressResult] = await pool.query(
+    const [addressResult] = await pool.query(
       'INSERT INTO diachi (MaKH, TenNguoiNhan, SDT, DiaChiChiTiet, TinhThanh, QuanHuyen, PhuongXa) VALUES (?, ?, ?, ?, ?, ?, ?)',
       [customer.makh, customer.name, customer.phone, shippingAddress.detail, shippingAddress.province, shippingAddress.district, shippingAddress.ward]
     );
@@ -114,7 +105,7 @@ router.post('/place-order', authenticateToken, async (req, res) => {
     const [orderResult] = await pool.query(
       `INSERT INTO hoadon (makh, MaDiaChi, NgayTao, TongTien, PhuongThucThanhToan, GhiChu, tinhtrang, TrangThaiThanhToan) 
        VALUES (?, ?, NOW(), ?, ?, ?, ?, ?)`,
-      [customer.makh, addressId, totalAmount, paymentMethod, notes, 'Chờ xử lý', 'Chưa thanh toán']
+      [customer.makh, addressId, totalAmount, paymentMethod, notes || '', 'Chờ xử lý', 'Chưa thanh toán']
     );
     const orderId = orderResult.insertId;
 
@@ -124,12 +115,11 @@ router.post('/place-order', authenticateToken, async (req, res) => {
         'INSERT INTO chitiethoadon (MaHD, MaSP, SoLuong, DonGia) VALUES (?, ?, ?, ?)',
         [orderId, item.productId, item.quantity, item.price]
       );
-      // Cập nhật số lượng sản phẩm
       await pool.query('UPDATE sanpham SET SoLuong = SoLuong - ? WHERE MaSP = ?', [item.quantity, item.productId]);
     }
 
-    // Xóa giỏ hàng sau khi đặt hàng
-    await pool.query('DELETE FROM giohang WHERE MaKH = ? AND Selected = TRUE', [customer.makh]);
+    // Xóa giỏ hàng
+    await pool.query('DELETE FROM giohang WHERE MaKH = ? AND MaSP IN (?)', [customer.makh, cartItems.map(i => i.productId)]);
 
     // Tạo URL thanh toán VNPay
     if (paymentMethod === 'VNPAY') {

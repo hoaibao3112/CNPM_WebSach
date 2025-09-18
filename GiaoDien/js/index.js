@@ -9,6 +9,7 @@ document.addEventListener('DOMContentLoaded', () => {
   setupFAQ();
 });
 
+// Cập nhật số lượng giỏ hàng
 async function updateCartCount() {
   const user = JSON.parse(localStorage.getItem('user') || localStorage.getItem('loggedInUser') || '{}');
   const cartLink = document.querySelector('.top-links li a[href="cart.html"]');
@@ -39,6 +40,7 @@ async function updateCartCount() {
   cartLink.innerHTML = `<i class="fas fa-shopping-cart"></i> Giỏ hàng (${localCartCount})`;
 }
 
+// Kiểm tra trạng thái đăng nhập
 function checkLoginStatus() {
   const user = JSON.parse(localStorage.getItem('user') || localStorage.getItem('loggedInUser') || '{}');
   const loginLink = document.getElementById('loginLink');
@@ -58,6 +60,7 @@ function checkLoginStatus() {
   }
 }
 
+// Thiết lập đăng xuất
 function setupLogout() {
   const logoutBtn = document.getElementById('logoutBtn');
   if (logoutBtn) {
@@ -85,6 +88,7 @@ function setupLogout() {
   }
 }
 
+// Hiển thị slideshow
 let slideIndex = [0, 0];
 const slideColumns = document.querySelectorAll('.slideshow-column');
 
@@ -101,6 +105,7 @@ function showSlides() {
   setTimeout(showSlides, 3000);
 }
 
+// Thiết lập dropdown danh mục
 function setupCategoryDropdown() {
   const categoryDropdown = document.getElementById('categoryDropdown');
   if (!categoryDropdown) return;
@@ -119,20 +124,20 @@ function setupCategoryDropdown() {
   });
 }
 
-
+// Định dạng giá
 function formatPrice(price) {
   return new Intl.NumberFormat('vi-VN').format(price);
 }
 
+// Định dạng ngày
 function formatDate(dateString) {
   const options = { day: '2-digit', month: '2-digit', year: 'numeric' };
   return new Date(dateString).toLocaleDateString('vi-VN', options);
 }
 
+// Bảo vệ chống XSS
 function escapeHtml(unsafe) {
-  if (typeof unsafe !== 'string') {
-    return ''; // Trả về chuỗi rỗng nếu unsafe không phải chuỗi
-  }
+  if (typeof unsafe !== 'string') return '';
   return unsafe
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
@@ -141,8 +146,7 @@ function escapeHtml(unsafe) {
     .replace(/'/g, '&#039;');
 }
 
-let debounceTimer;
-
+// Tải danh sách khuyến mãi
 function loadPromotions() {
   const discountSelect = document.getElementById('discountSelect');
   const promotionsList = document.getElementById('promotions-list');
@@ -213,6 +217,7 @@ function loadPromotions() {
     });
 }
 
+// Chọn khuyến mãi
 function selectPromotion(promotionId) {
   const dealHotContainer = document.getElementById('deal-hot-list');
   dealHotContainer.innerHTML = '<div class="loading">Đang tải sản phẩm khuyến mãi...</div>';
@@ -251,17 +256,20 @@ function selectPromotion(promotionId) {
     });
 }
 
+// Lọc sản phẩm theo giá
 window.filterProductsByPrice = function (priceRange) {
   console.log('Đã chọn khoảng giá:', priceRange);
   filterProductsByPriceRange(priceRange, 'book-list');
 };
 
+// Lọc sản phẩm theo danh mục
 window.filterProductsByCategory = function (categoryId) {
   console.log('Đã chọn danh mục:', categoryId);
   localStorage.setItem('currentCategory_book-list', categoryId);
   window.location.href = '/book.html';
 };
 
+// Tải nội dung trang
 function loadContent(url) {
   console.log('Đang tải:', url);
   fetch(url, {
@@ -298,6 +306,7 @@ function loadContent(url) {
     });
 }
 
+// Danh sách từ khóa FAQ
 const FAQ_KEYWORDS = [
   'đặt hàng', 'mua sách', 'thanh toán',
   'đổi trả', 'hoàn hàng', 'chính sách', 'hoàn tiền',
@@ -305,6 +314,7 @@ const FAQ_KEYWORDS = [
   'theo dõi', 'đơn hàng', 'tracking'
 ];
 
+// Kiểm tra xem câu hỏi có phải FAQ không
 function isFAQQuestion(message) {
   const lowerMessage = message.toLowerCase().replace(/\s+/g, ' ').trim();
   console.log('Kiểm tra từ khóa FAQ cho câu hỏi:', lowerMessage);
@@ -317,6 +327,7 @@ function isFAQQuestion(message) {
   return matched;
 }
 
+// Xử lý FAQ trong chat
 async function handleFAQInChat(message, chatMessages) {
   try {
     const words = message.toLowerCase().split(/\s+/);
@@ -351,6 +362,7 @@ async function handleFAQInChat(message, chatMessages) {
   }
 }
 
+// Thiết lập chat box
 function setupChat() {
   const chatIcon = document.getElementById('chat-icon');
   const chatModal = document.getElementById('chat-modal');
@@ -360,18 +372,24 @@ function setupChat() {
   const chatMessages = document.getElementById('chat-messages');
   const productSuggestion = document.getElementById('product-suggestion');
 
-  if (!chatIcon || !chatModal) return;
+  if (!chatIcon || !chatModal || !chatForm || !chatInput || !chatMessages) {
+    console.error('Không tìm thấy các phần tử chat cần thiết');
+    return;
+  }
 
+  // Mở modal khi nhấn icon chat
   chatIcon.addEventListener('click', () => {
     chatModal.style.display = 'block';
     scrollToBottom(chatMessages);
   });
 
+  // Đóng modal
   chatClose.addEventListener('click', () => {
     chatModal.style.display = 'none';
     clearChat();
   });
 
+  // Đóng modal khi nhấn bên ngoài
   window.addEventListener('click', (event) => {
     if (event.target === chatModal) {
       chatModal.style.display = 'none';
@@ -379,20 +397,27 @@ function setupChat() {
     }
   });
 
+  // Xử lý gửi tin nhắn
   chatForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     const message = chatInput.value.trim();
-    if (!message) return;
+    if (!message) {
+      alert('Vui lòng nhập câu hỏi!');
+      return;
+    }
 
+    // Thêm tin nhắn người dùng
     addMessage('user', message);
     chatInput.value = '';
     chatInput.disabled = true;
     chatForm.querySelector('button').disabled = true;
 
-    if (isFAQQuestion(message)) {
-      await handleFAQInChat(message, chatMessages);
-    } else {
-      try {
+    try {
+      // Kiểm tra FAQ trước
+      if (isFAQQuestion(message)) {
+        await handleFAQInChat(message, chatMessages);
+      } else {
+        // Gửi yêu cầu đến API Gemini
         const response = await fetch('http://localhost:5000/api/openai/chat', {
           method: 'POST',
           headers: {
@@ -407,35 +432,38 @@ function setupChat() {
 
         const data = await response.json();
         console.log('Phản hồi OpenAI API:', data);
-        const reply = data.reply;
+        const reply = data.reply || 'Không có phản hồi từ AI.';
 
+        // Thêm phản hồi AI
         addMessage('ai', reply);
 
+        // Trích xuất và hiển thị gợi ý sản phẩm
         const productInfo = extractProductFromReply(reply);
         if (productInfo) {
           await searchAndShowProductSuggestion(productInfo);
         } else {
-          const suggestionDiv = document.getElementById('product-suggestion');
-          suggestionDiv.innerHTML = `
-            <h4>Sản phẩm gợi ý:</h4>
-            <p>Chúng tôi không tìm thấy sản phẩm phù hợp từ câu hỏi của bạn. Hãy thử hỏi chi tiết hơn!</p>
+          productSuggestion.innerHTML = `
+            <div class="product-suggestion-content">
+              <h4>Sản phẩm gợi ý:</h4>
+              <p>Không tìm thấy sản phẩm phù hợp từ câu hỏi của bạn. Hãy thử hỏi chi tiết hơn!</p>
+            </div>
           `;
-          suggestionDiv.style.display = 'block';
-          scrollToBottom(suggestionDiv);
+          productSuggestion.style.display = 'block';
+          scrollToBottom(productSuggestion);
         }
-
-      } catch (error) {
-        console.error('Lỗi chat:', error);
-        addMessage('ai', 'Xin lỗi, có lỗi xảy ra khi xử lý câu hỏi. Vui lòng thử lại sau.');
       }
+    } catch (error) {
+      console.error('Lỗi chat:', error);
+      addMessage('ai', 'Xin lỗi, có lỗi xảy ra khi xử lý câu hỏi. Vui lòng thử lại sau.');
+    } finally {
+      chatInput.disabled = false;
+      chatForm.querySelector('button').disabled = false;
+      chatInput.focus();
     }
-
-    chatInput.disabled = false;
-    chatForm.querySelector('button').disabled = false;
-    chatInput.focus();
   });
 }
 
+// Thêm tin nhắn vào chat
 function addMessage(type, text) {
   const chatMessages = document.getElementById('chat-messages');
   const messageDiv = document.createElement('div');
@@ -447,6 +475,7 @@ function addMessage(type, text) {
   scrollToBottom(chatMessages);
 }
 
+// Xóa nội dung chat
 function clearChat() {
   const chatMessages = document.getElementById('chat-messages');
   const productSuggestion = document.getElementById('product-suggestion');
@@ -455,28 +484,29 @@ function clearChat() {
   productSuggestion.innerHTML = '';
 }
 
+// Cuộn xuống cuối
 function scrollToBottom(element) {
   if (element) {
     element.scrollTop = element.scrollHeight;
   }
 }
 
+// Trích xuất thông tin sản phẩm từ phản hồi
 function extractProductFromReply(reply) {
+  const idMatch = reply.match(/\[PRODUCT_ID:\s*(\d+)\]/i);
   const nameMatch = reply.match(/"([^"]+)"\s*(?:có|trong kho|khuyến mãi|có sẵn)\s*\d+/i) ||
                    reply.match(/'([^']+)'\s*(?:có|trong kho|khuyến mãi|có sẵn)/i) ||
                    reply.match(/(?:sách|quyển|cuốn)\s+"([^"]+)"/i);
-  
-  const idMatch = reply.match(/\[PRODUCT_ID:\s*(\d+)\]/i); // Sửa để khớp đúng định dạng [PRODUCT_ID: 1]
 
   if (idMatch) {
     return { type: 'id', value: idMatch[1] };
   } else if (nameMatch) {
     return { type: 'name', name: nameMatch[1] };
   }
-
   return null;
 }
 
+// Tìm và hiển thị gợi ý sản phẩm
 async function searchAndShowProductSuggestion(productInfo) {
   const suggestionDiv = document.getElementById('product-suggestion');
   try {
@@ -506,23 +536,27 @@ async function searchAndShowProductSuggestion(productInfo) {
     } else {
       product = data.data && data.data.length > 0 ? data.data[0] : null;
     }
-
-    if (product && product.MaSP && product.TenSP) {
-      const productId = String(product.MaSP || product.id || '');
-      const productName = String(product.TenSP || product.name || '');
-      suggestionDiv.innerHTML = `
-        <div class="product-suggestion-content">
-          <h4>Sản phẩm: ${escapeHtml(productName)}</h4>
-          <p>Mã sản phẩm: ${escapeHtml(productId)}</p>
-          <button class="view-detail-btn" onclick="loadProductDetail('${productId}')">Xem chi tiết</button>
-        </div>
-      `;
-    } else {
-      suggestionDiv.innerHTML = `
-        <h4>Sản phẩm gợi ý:</h4>
-        <p>Không tìm thấy sản phẩm "${escapeHtml(productInfo.name || 'không xác định')}" lúc này. Hãy thử tìm kiếm thêm!</p>
-      `;
-    }
+if (product && product.MaSP && product.TenSP) {
+  const productId = String(product.MaSP || product.id || '');
+  const productName = String(product.TenSP || product.name || '');
+  suggestionDiv.innerHTML = `
+    <div class="product-suggestion-content">
+      <div class="product-info">
+        <h4>Sản phẩm: ${escapeHtml(productName)}</h4>
+        <p>Mã sản phẩm: ${escapeHtml(productId)}</p>
+      </div>
+      <button class="view-detail-btn" onclick="loadProductDetail('${productId}')">Xem chi tiết</button>
+    </div>
+  `;
+} else {
+  // Phần không tìm thấy giữ nguyên
+  suggestionDiv.innerHTML = `
+    <div class="product-suggestion-content">
+      <h4>Sản phẩm gợi ý:</h4>
+      <p>Không tìm thấy sản phẩm "${escapeHtml(productInfo.name || 'không xác định')}" lúc này. Hãy thử tìm kiếm thêm!</p>
+    </div>
+  `;
+}
     suggestionDiv.style.display = 'block';
     suggestionDiv.style.maxHeight = '150px';
     suggestionDiv.style.overflowY = 'auto';
@@ -530,8 +564,10 @@ async function searchAndShowProductSuggestion(productInfo) {
   } catch (error) {
     console.error('Lỗi tìm kiếm sản phẩm:', error);
     suggestionDiv.innerHTML = `
-      <h4>Sản phẩm gợi ý:</h4>
-      <p>Không tìm thấy sản phẩm "${escapeHtml(productInfo.name || 'không xác định')}" lúc này. Hãy thử tìm kiếm thêm!</p>
+      <div class="product-suggestion-content">
+        <h4>Sản phẩm gợi ý:</h4>
+        <p>Không tìm thấy sản phẩm "${escapeHtml(productInfo.name || 'không xác định')}" lúc này. Hãy thử tìm kiếm thêm!</p>
+      </div>
     `;
     suggestionDiv.style.display = 'block';
     suggestionDiv.style.maxHeight = '150px';
@@ -540,11 +576,13 @@ async function searchAndShowProductSuggestion(productInfo) {
   }
 }
 
+// Chuyển hướng đến trang chi tiết sản phẩm
 window.loadProductDetail = function(productId) {
   localStorage.setItem('selectedProductId', productId);
   window.location.href = 'product_detail.html';
 };
 
+// Thiết lập FAQ
 function setupFAQ() {
   const faqForm = document.getElementById('faq-form');
   const faqInput = document.getElementById('faq-input');
@@ -601,7 +639,6 @@ function setupFAQ() {
           faqItem.classList.toggle('active');
         });
       });
-
     } catch (error) {
       console.error('Lỗi FAQ:', error);
       faqResults.innerHTML = '<p class="no-results">Có lỗi xảy ra. Vui lòng thử lại sau!</p>';
