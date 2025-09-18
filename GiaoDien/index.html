@@ -284,22 +284,18 @@
   </div>
   <div id="chat-modal" class="chat-modal">
     <div class="chat-modal-content">
-      <span class="chat-close">&times;</span>
+      <span class="chat-close" onclick="closeChat()">&times;</span>
       <div class="chat-header">
         <h3>Chat với AI về sản phẩm</h3>
       </div>
       <div id="chat-messages" class="chat-messages"></div>
+      <div id="product-suggestion" style="display: none;"></div> <!-- Khu vực hiển thị gợi ý sản phẩm -->
       <form id="chat-form" class="chat-form">
         <input type="text" id="chat-input" placeholder="Nhập câu hỏi về sản phẩm..." required>
         <button type="submit">Gửi</button>
       </form>
     </div>
-  </div>
-  <div class="faq-section">
-  <h2>Hỏi đáp nhanh (FAQ)</h2>
-  <form id="faq-form" class="faq-form">
-    <input type="text" id="faq-input" placeholder="Nhập câu hỏi của bạn (ví dụ: đặt hàng, đổi trả...)" required>
-    <button type="submit">Tìm kiếm</button>
+</div>
   </form>
   <div id="faq-results" class="faq-results"></div>
 </div>
