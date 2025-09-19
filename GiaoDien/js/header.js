@@ -92,4 +92,47 @@ async function updateCartCount() {
   cartLink.innerHTML = `<i class="fas fa-shopping-cart"></i> Giỏ hàng (${localCartCount})`;
 }
 
-console.log("header.js đã được tải xong và sẵn sàng sử dụng.");
+
+async function searchProduct(value) {
+  console.log(value)
+  try {
+    const response = await fetch(`http://localhost:5000/api/product/search-product?search=${value}`);
+    if (response.ok) {
+      const result = await response.json();
+      console.log(result);
+    }
+  } catch (error) {
+    console.error('Error fetching products:', error);
+    showAlert('Lỗi khi tải sản phẩm', 'error');
+  }
+}
+// js cho phầm tìm kiếm sản phẩm
+let searchHistory = JSON.parse(localStorage.getItem("historySearch")) || [];
+const saveHistory = (value) => {
+
+  history.push(value);
+  localStorage.setItem("historySearch", JSON.stringify(history));
+
+}
+
+function renderHistory() {
+  const historyContainer = document.getElementById("history");
+  historyContainer.innerHTML = "";
+  searchHistory.forEach((word, index) => {
+    let tag = document.createElement("div");
+    tag.classList.add("tag");
+    tag.innerHTML = `${word} <span onclick="removeHistory(${index})">&times;</span>`;
+    historyContainer.appendChild(tag);
+  });
+}
+
+function removeHistory(index) {
+  searchHistory.splice(index, 1);
+  renderHistory();
+}
+
+function clearHistory() {
+  searchHistory = [];
+  renderHistory();
+}
+

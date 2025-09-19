@@ -25,13 +25,33 @@ const logFileMiddleware = (req, res, next) => {
   console.log('📋 Request body:', req.body);
   next();
 };
+// Tim kiem san pham theo ten hoac theo tac gia  /search-product?q=keyWordSearch
+router.get('/search-product', async (req, res) => {
+  const keyWordSearch = req.query.search
+
+  const sql = `
+    SELECT sp.*
+    FROM SanPham sp
+    JOIN TacGia tg ON sp.MaTG = tg.MaTG
+    WHERE sp.TenSP LIKE CONCAT('%', ?, '%')
+       OR tg.TenTG LIKE CONCAT('%', ?, '%')
+    LIMIT 0, 50;
+  `;
+  try {
+    const [results] = await pool.query(sql, [keyWordSearch, keyWordSearch]);
+    res.status(200).json(results);
+  } catch (err) {
+    console.error("Lỗi truy vấn:", err);
+    res.status(500).json({ error: "Lỗi server" });
+  }
+});
 // Route tìm sản phẩm bằng tên (case-insensitive, partial match)
 router.get('/search', async (req, res) => {
   const { name } = req.query;
   if (!name) {
     return res.status(400).json({ error: 'Vui lòng cung cấp tên sản phẩm' });
   }
-
+  
   try {
     const [products] = await pool.query(
       `SELECT s.*, m.TenTG AS TacGia 
@@ -52,6 +72,7 @@ router.get('/search', async (req, res) => {
     res.status(500).json({ error: 'Lỗi khi tìm sản phẩm', details: error.message });
   }
 });
+
 router.post('/', upload.single('HinhAnh'), logFileMiddleware, async (req, res) => {
   try {
     const { MaTL, TenSP, MaTG, NamXB, TinhTrang, DonGia, SoLuong } = req.body;
@@ -443,7 +464,7 @@ router.get('/deal-hot', async (req, res) => {
       new Map(enhancedProducts.map(p => [p.MaSP, p])).values()
     );
 
-    console.log('Sản phẩm khuyến mãi sau xử lý:', uniqueProducts);
+    // console.log('Sản phẩm khuyến mãi sau xử lý:', uniqueProducts);
 
     res.status(200).json(uniqueProducts);
   } catch (error) {
@@ -494,7 +515,7 @@ router.get('/tacgia', async (req, res) => {
     );
 
     // Thêm log để debug
-    console.log('Sản phẩm với MaTG = 7:', products);
+    // console.log('Sản phẩm với MaTG = 7:', products);
 
     // Kiểm tra và trả về dữ liệu
     if (products.length === 0) {
@@ -540,6 +561,5 @@ router.get('/category/4', async (req, res) => {
     res.status(500).json({ error: 'Lỗi khi lấy sản phẩm thể loại 4', details: error.message });
   }
 });
-//Tim kiem san pham theo ten hoac theo tac gia 
 
 export default router;
