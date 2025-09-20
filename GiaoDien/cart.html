@@ -22,7 +22,11 @@
         <i class="fas fa-tag"></i>
         <p>Bạn có mã giảm giá? Nhập mã tại đây</p>
         <div class="coupon-input">
-          <input type="text" placeholder="Nhập mã giảm giá" id="coupon-code">
+          <!--<input type="text" placeholder="Nhập mã giảm giá" id="coupon-code">-->
+          <input type="text" placeholder="Nhập mã giảm giá" id="coupon-code" list="saved-coupons">
+          <datalist id="saved-coupons">
+            <!-- JS sẽ tự động thêm option -->
+          </datalist>
           <button class="apply-btn" id="apply-coupon">ÁP DỤNG</button>
         </div>
       </div>

@@ -8,7 +8,7 @@ dotenv.config();
 const dbConfig = {
   host: process.env.DB_HOST || '127.0.0.1', // Sử dụng 127.0.0.1 thay vì localhost để tránh DNS lookup
   user: process.env.DB_USER || 'root',
-  password: process.env.DB_PASSWORD || 'kimloan12345cd',
+  password: process.env.DB_PASSWORD || '12345',
   database: process.env.DB_NAME || 'qlbs',
   port: parseInt(process.env.DB_PORT) || 3306,
   waitForConnections: true,

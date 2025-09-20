@@ -9,7 +9,21 @@ body {
   justify-content: center;
   margin-top: 32px;
   margin-bottom: 32px;
+}.voucher-btn {
+  background: #1976d2;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 6px 18px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.15s ease;
 }
+.voucher-btn:hover {
+  background: #1256a3;
+  transform: scale(1.05);
+}
+
 .top-banner img {
   width: 90vw;
   max-width: 900px;
@@ -36,6 +50,16 @@ body {
   position: relative;
   border-left: 6px solid #ff9800;
   transition: transform 0.15s;
+  min-height: 150px; 
+}
+.voucher-title {
+  font-weight: bold;
+  font-size: 1.1rem;
+  margin-bottom: 4px;
+  color: #222;
+  white-space: normal;     
+  word-break: break-word; 
+  line-height: 1.4;       
 }
 .voucher-card:hover {
   transform: translateY(-4px) scale(1.03);
@@ -91,10 +115,11 @@ body {
   padding: 6px 18px;
   font-size: 1rem;
   cursor: pointer;
-  transition: background 0.2s;
+  transition: background 0.2s ease, transform 0.15s ease;
 }
 .voucher-btn:hover {
   background: #1256a3;
+  transform: scale(1.05);
 }
 .voucher-info .fa-circle-info {
   color: #1e88e5;
@@ -115,3 +140,4 @@ body {
     max-width: 98vw;
   }
 }
+

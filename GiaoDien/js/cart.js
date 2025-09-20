@@ -727,3 +727,26 @@ document.addEventListener('DOMContentLoaded', async () => {
 // Export functions
 window.addToCart = addToCart;
 window.getCart = getCart;
+
+
+// Lấy dữ liệu từ localStorage
+document.addEventListener('DOMContentLoaded', () => {
+  const couponInput = document.getElementById('coupon-code');
+  const datalist = document.getElementById('saved-coupons');
+
+  if (couponInput && datalist) {
+    couponInput.addEventListener('focus', () => {
+      const savedVouchers = JSON.parse(localStorage.getItem('savedVouchers') || '[]');
+
+      // Xoá option cũ
+      datalist.innerHTML = '';
+
+      // Thêm option mới
+      savedVouchers.forEach(code => {
+        const option = document.createElement('option');
+        option.value = code;
+        datalist.appendChild(option);
+      });
+    });
+  }
+});

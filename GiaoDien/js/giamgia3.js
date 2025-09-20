@@ -1,3 +1,4 @@
+/*
 const vouchers = [
   {
     type: "discount",
@@ -86,3 +87,90 @@ voucherList.innerHTML = vouchers.map(voucher => `
     </div>
   </div>
 `).join('');
+*/
+
+// Hàm lưu mã vào localStorage
+function saveVoucher(code, btn) {
+  let saved = JSON.parse(localStorage.getItem("savedVouchers")) || [];
+
+  if (!saved.includes(code)) {
+    saved.push(code);
+    localStorage.setItem("savedVouchers", JSON.stringify(saved));
+
+    // Đổi giao diện nút
+    btn.innerText = "Đã lưu";
+    btn.disabled = true;
+    btn.style.background = "#ccc";
+    btn.style.cursor = "not-allowed";
+  }
+}
+
+async function loadVouchers() {
+  try {
+    const res = await fetch("http://localhost:5000/api/voucher/");
+    const vouchers = await res.json();
+
+    const voucherList = document.getElementById("voucherList");
+
+    if (!vouchers || vouchers.length === 0) {
+      voucherList.innerHTML = "<p style='text-align:center;'>Chưa có mã giảm giá</p>";
+      return;
+    }
+
+    // Lấy danh sách mã đã lưu từ localStorage để check trạng thái
+    const saved = JSON.parse(localStorage.getItem("savedVouchers")) || [];
+
+    voucherList.innerHTML = vouchers.map(voucher => {
+      let expiryText = "";
+      if (voucher.NgayHetHan) {
+        const date = new Date(voucher.NgayHetHan);
+        expiryText = `HSD: ${date.toLocaleDateString("vi-VN")}`;
+      }
+
+      const type = voucher.LoaiKM || "giam_phan_tram";
+      const typeMap = {
+        giam_phan_tram: { icon: '<i class="fa-solid fa-percent"></i>', color: "#FF6B6B" },
+        giam_tien_mat: { icon: '<i class="fa-solid fa-money-bill-wave"></i>', color: "#4ECDC4" },
+        mua_x_tang_y: { icon: '<i class="fa-solid fa-cart-plus"></i>', color: "#45B7D1" },
+        qua_tang: { icon: '<i class="fa-solid fa-gift"></i>', color: "#9B5DE5" },
+        combo: { icon: '<i class="fa-solid fa-boxes-stacked"></i>', color: "#F15BB5" },
+        freeship: { icon: '<i class="fa-solid fa-truck"></i>', color: "#00BBF9" }
+      };
+
+      const { icon, color } = typeMap[type] || typeMap["giam_phan_tram"];
+      const programName = voucher.TenChuongTrinh || voucher.MaCode || "Voucher đặc biệt";
+      const desc = voucher.MoTa || `Giới hạn: ${voucher.GioiHanSuDung ?? "∞"} | Đã dùng: ${voucher.DaSuDung ?? 0}`;
+
+      // Check xem mã này đã lưu chưa
+      const isSaved = saved.includes(voucher.MaCode);
+
+      return `
+        <div class="voucher-card" style="border-left:6px solid ${color};">
+          <div class="icon" style="color:${color};">${icon}</div>
+          <div class="voucher-info">
+            <div class="voucher-title">${programName}</div>
+            <div class="voucher-desc">${desc}</div>
+            <div class="voucher-expiry">${expiryText}</div>
+            <div class="voucher-action">
+              <button 
+                class="voucher-btn" 
+                style="${isSaved ? 'background:#ccc;cursor:not-allowed;' : ''}"
+                ${isSaved ? "disabled" : ""}
+                onclick="saveVoucher('${voucher.MaCode}', this)"
+              >
+                ${isSaved ? "Đã lưu" : "Lưu mã"}
+              </button>
+              <i class="fa-solid fa-circle-info" title="Xem chi tiết"></i>
+            </div>
+          </div>
+        </div>
+      `;
+    }).join('');
+  } catch (err) {
+    console.error("Lỗi load voucher:", err);
+    document.getElementById("voucherList").innerHTML =
+      "<p style='color:red; text-align:center;'>Không thể tải dữ liệu mã giảm giá</p>";
+  }
+}
+
+document.addEventListener("DOMContentLoaded", loadVouchers);

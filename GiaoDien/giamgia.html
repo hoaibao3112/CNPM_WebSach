@@ -54,6 +54,12 @@
       padding: 18px 20px;
       position: relative;
       border-left: 6px solid #4ecb71;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      cursor: pointer;
+    }
+    .voucher-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 6px 16px rgba(0,0,0,0.12);
     }
     .voucher-card.yellow {
       border-left-color: #ffc107;
@@ -101,11 +107,24 @@
       padding: 6px 18px;
       font-size: 1rem;
       cursor: pointer;
-      transition: background 0.2s;
+      transition: background 0.2s ease, transform 0.15s ease;
     }
-    .voucher-btn:hover {
+
+    /* Hover chỉ áp dụng cho nút chưa disable */
+    .voucher-btn:not(:disabled):hover {
       background: #1256a3;
+      transform: scale(1.05);
     }
+
+    /* Style cho nút bị disable */
+    .voucher-btn:disabled {
+      background: #ccc !important;
+      color: #666 !important;
+      cursor: not-allowed;
+      opacity: 0.7;
+      transform: none !important; /* Không cho phóng to */
+    }
+
     .voucher-status {
       font-size: 0.95rem;
       color: #aaa;
@@ -246,6 +265,7 @@
       </div>
     </div>
   </div>
+  <script src="js/giamgia.js"></script>
   <script src="js/index.js"></script>
   <script src="js/book.js"></script>
 </body>
