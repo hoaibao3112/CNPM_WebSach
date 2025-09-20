@@ -10,12 +10,30 @@
 <body>
     <div class="top-bar">
         <div class="top-bar-container">
-            <img src="img/logo1.png" alt="BaoStort" class="logo">
+            <a href="index.html"><img src="img/logo1.png" alt="BaoStort" class="logo"></a>
             <div class="search-container">
-                <form action="/search" method="get">
-                    <input type="text" placeholder="Tìm kiếm sách, tác giả..." name="search">
+                <form id="search-form">
+                    <input id="search-input" type="text" placeholder="Tìm kiếm sách, tác giả..." name="search">
                     <button type="submit"><i class="fas fa-search"></i></button>
                 </form>
+                <div class="suggestion-box active">
+                    <!-- Lịch sử tìm kiếm -->
+                    <div class="search-history-container">
+                        <span class="section-title">Lịch sử tìm kiếm</span>
+                        <span class="clear-history" onclick="clearHistory()">Xóa tất cả</span>
+                        <div class="search-history" id="history">
+                            <!-- JS sẽ render tag ở đây -->
+                        </div>
+                    </div>
+
+                    <!-- Từ khóa hot -->
+                    <div>
+                        <span class="section-title">Một số sản phẩm tìm thấy</span>
+                        <div class="keywords">
+                            <!-- đoạn js ở đây -->
+                        </div>
+                    </div>
+                </div>
             </div>
             <ul class="top-links">
                 <li class="category-top-dropdown">
@@ -62,12 +80,6 @@
             </ul>
         </div>
     </div>
-    <script>
-        function filterProductsByCategory(categoryId) {
-            console.log('Đã chọn danh mục:', categoryId);
-            document.getElementById('categoryDropdown').classList.remove('dropdown-active');
-        }
-    </script>
 </body>
 
 </html>
