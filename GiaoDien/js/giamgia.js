@@ -10,6 +10,9 @@ async function loadRandomVouchers() {
       return;
     }
 
+    // Lấy danh sách voucher đã lưu từ localStorage
+    const saved = JSON.parse(localStorage.getItem("savedVouchers")) || [];
+
     // Trộn ngẫu nhiên
     const shuffled = vouchers.sort(() => 0.5 - Math.random());
     const randomVouchers = shuffled.slice(0, 3);
@@ -37,6 +40,7 @@ async function loadRandomVouchers() {
         const title = voucher.MaCode || "Voucher đặc biệt";
         const desc = voucher.MoTa || "";
         const isExpired = voucher.TrangThai === "expired";
+        const isSaved = saved.includes(title); // check xem đã lưu chưa
 
         return `
           <div class="voucher-card" style="border-left: 6px solid ${borderColor};">
@@ -49,7 +53,9 @@ async function loadRandomVouchers() {
                 ${
                   isExpired
                     ? `<span class="voucher-status expired">HẾT MÃ</span>`
-                    : `<button class="voucher-btn" data-code="${title}">Lưu mã</button>`
+                    : isSaved
+                      ? `<button class="voucher-btn" data-code="${title}" disabled>Đã lưu</button>`
+                      : `<button class="voucher-btn" data-code="${title}">Lưu mã</button>`
                 }
                 <i class="fa-solid fa-circle-info" title="${desc}"></i>
               </div>
@@ -64,7 +70,6 @@ async function loadRandomVouchers() {
       btn.addEventListener("click", () => {
         const code = btn.dataset.code;
 
-        // Lấy danh sách mã đã lưu
         let saved = JSON.parse(localStorage.getItem("savedVouchers")) || [];
 
         if (!saved.includes(code)) {
@@ -72,7 +77,6 @@ async function loadRandomVouchers() {
           localStorage.setItem("savedVouchers", JSON.stringify(saved));
         }
 
-        // Disable nút
         btn.disabled = true;
         btn.innerText = "Đã lưu";
       });
