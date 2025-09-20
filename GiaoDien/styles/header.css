@@ -394,9 +394,9 @@
   overflow-y: auto;
 
 }
-.suggestion-box.active {
+/* .suggestion-box.active {
   display: block;
-}
+} */
 
 .section-title {
   font-weight: bold;
@@ -429,7 +429,7 @@
 
 .keywords {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+  grid-template-columns: repeat(3, minmax(90px, 1fr));
   gap: 10px;
   margin-top: 10px;
 }
@@ -449,6 +449,7 @@
 .item p {
   font-size: 12px;
   margin: 5px 0 0;
+  color: black;
 }
 
 .clear-history {
