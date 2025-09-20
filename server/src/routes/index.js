@@ -23,6 +23,7 @@ import leaveRoutes from './leave.js';
 import faq from './faq.js'; // Thêm route FAQ
 import ChatRoutesOpenAI from './chatRouteOpenAI.js';
 import cart from './cart.js';
+import AttendanceAdmin from './AttendanceAdmin.js';
 export const initRoutes = (app) => {
   app.use('/auth', authRoutes);
   app.use('/api/product', productRoutes); // Đăng ký API sản phẩm
@@ -50,4 +51,5 @@ export const initRoutes = (app) => {
   app.use('/api/ratings', ratingsRoutes);
   app.use('/api/attendance', attendanceRoutes);
   app.use('/api/cart',cart);
+  app.use('/api/attendance_admin',AttendanceAdmin);
 };

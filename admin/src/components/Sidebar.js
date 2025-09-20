@@ -25,9 +25,10 @@ const Sidebar = () => {
     { to: 'statistical', icon: 'analytics', text: 'Thống kê', permission: 'Thống kê' },
     { to: 'receipt', icon: 'receipt', text: 'Quản lý phiếu nhập', permission: 'Phiếu nhập' },
     { to: 'khuyenmai', icon: 'local_offer', text: 'Quản lý khuyến mãi', permission: 'Khuyến mãi' },
-   { to: '/admin/profile', icon: 'person', text: 'Trang cá nhân', permission: null},
-    { to: '/admin/salary', icon: 'payments', text: 'Tính lương', permission: "Tính Lương" },
-  { to: '/admin/leave', icon: 'event_busy', text: 'Xin nghỉ phép', permission: "Nghĩ Phép" },
+    { to: '/admin/profile', icon: 'person', text: 'Trang cá nhân', permission: null },
+    { to: '/admin/salary', icon: 'payments', text: 'Tính lương', permission: 'Tính Lương' },
+    { to: '/admin/leave', icon: 'event_busy', text: 'Xin nghỉ phép', permission: 'Nghĩ Phép' },
+    { to: 'attendance', icon: 'check_circle', text: 'Chấm công', permission: 'Chấm công' }, // Thêm nút Chấm công
   ];
 
   const filteredMenuItems = menuItems.filter(
