@@ -42,25 +42,20 @@ function handleSearch() {
 
   // xử lý tìm kiếm sản phẩm và ẩn hiện box đề xua
   searchInput.addEventListener("input", () => {
+    console.log("cá",searchInput.value)
     if (!searchInput.value) {
-      suggestionBox.classList.remove("active");
+      suggestionBox.style.display = "none";
     } else {
-      suggestionBox.classList.add("active");
+      suggestionBox.style.display = "block";
     }
-    console.log(suggestionBox);
-    if (typeof searchProduct === "function") {
-      searchProduct(searchInput.value);
-    }
-  });
-  // Xử lý khi focus mà có chữ
-  searchInput.addEventListener("focus", () => {
-    if (searchInput.value.trim().length > 0) {
-      suggestionBox.classList.add("active");
+    if (typeof useSearch === "function") {
+      useSearch(searchInput.value);
     }
   });
-  //Xử lý lưu từ khóa đã nhập vào local
-   handleSearchHistory();
+  handleSearchHistory();
 }
+
+
 
 const handleSearchHistory = () => {
   const form = document.getElementById("search-form");
@@ -69,18 +64,16 @@ const handleSearchHistory = () => {
   if (!form || !searchInput) {
     return;
   }
+  
   form.addEventListener("submit", (e) => {
-    e.preventDefault();
     const value = searchInput.value.trim();
     if (value) {
-      saveHistory(value);
-      searchInput.value = ""; 
+      addSearchHistory(value);
+      searchInput.value = "";
     }
   });
 };
 
-
 document.addEventListener('DOMContentLoaded', () => {
   loadHeader();
- 
 });

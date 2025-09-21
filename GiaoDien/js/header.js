@@ -94,25 +94,62 @@ async function updateCartCount() {
 
 
 async function searchProduct(value) {
-  console.log(value)
   try {
-    const response = await fetch(`http://localhost:5000/api/product/search-product?search=${value}`);
+    const response = await fetch(
+      `http://localhost:5000/api/product/search-product?search=${value}`
+    );
     if (response.ok) {
       const result = await response.json();
-      console.log(result);
+      return result;
     }
   } catch (error) {
-    console.error('Error fetching products:', error);
-    showAlert('Lỗi khi tải sản phẩm', 'error');
+    console.error("Error fetching products:", error);
+    showAlert("Lỗi khi tải sản phẩm", "error");
+    return null;
   }
 }
+
+const renderProductSearch = (productsFond, data) => {
+  if (!data || !Array.isArray(data)) return;
+  productsFond.innerHTML = "";
+
+  data.slice(0, 6).forEach((itemData) => {
+    console.log(itemData.TenSP);
+    const item = document.createElement("div");
+    const img = document.createElement("img");
+    const p = document.createElement("p");
+
+    item.classList.add("item");
+    img.src = "img/product/" + itemData.HinhAnh;
+    p.textContent = itemData.TenSP;
+
+    item.appendChild(img);
+    item.appendChild(p);
+    productsFond.appendChild(item);
+  });
+};
+
+
+async function useSearch(value) {
+  const productsFond = document.getElementById("products-fond");
+  const result = await searchProduct(value); 
+  renderProductSearch(productsFond, result); 
+}
+
 // js cho phầm tìm kiếm sản phẩm
 let searchHistory = JSON.parse(localStorage.getItem("historySearch")) || [];
-const saveHistory = (value) => {
 
-  history.push(value);
-  localStorage.setItem("historySearch", JSON.stringify(history));
+const addSearchHistory = (value) => {
+  if (searchHistory.lengt === 0) {
+    searchHistory.push(value);
+  }
+  searchHistory.unshift(value);
 
+  if (searchHistory.length > 5) {
+    searchHistory.pop();
+  }
+
+  localStorage.setItem("historySearch", JSON.stringify(searchHistory));
 }
 
 function renderHistory() {
@@ -127,12 +164,19 @@ function renderHistory() {
 }
 
 function removeHistory(index) {
-  searchHistory.splice(index, 1);
+  if (index >= 0 && index < searchHistory.length) {
+    searchHistory.splice(index, 1);
+    localStorage.setItem("historySearch", JSON.stringify(searchHistory));
+  } else {
+    console.warn("Index không hợp lệ!");
+  }
   renderHistory();
 }
 
 function clearHistory() {
   searchHistory = [];
+  localStorage.setItem("historySearch", JSON.stringify(searchHistory));
   renderHistory();
 }
+
 
