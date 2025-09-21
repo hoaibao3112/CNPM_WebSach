@@ -10,59 +10,10 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 </head>
 <body>
-   <div class="top-bar">
-    <div class="top-bar-container">
-      <img src="img/logo1.png" alt="BaoStort" class="logo">
-      <div class="search-container">
-        <form action="/search" method="get">
-          <input type="text" placeholder="Tìm kiếm sách, tác giả..." name="search">
-          <button type="submit"><i class="fas fa-search"></i></button>
-        </form>
-      </div>
-      <ul class="top-links">
-        <li class="category-top-dropdown">
-          <a href="#"><i class="fas fa-book"></i> Danh mục <i class="fas fa-chevron-down"></i></a>
-          <div class="dropdown-content">
-            <a href="#" onclick="filterProductsByCategory(1)">Truyền Tranh - Comic</a>
-            <a href="#" onclick="filterProductsByCategory(2)">Văn học nước ngoài</a>
-            <a href="#" onclick="filterProductsByCategory(3)">Sale cuối năm 2022</a>
-            <a href="#" onclick="filterProductsByCategory(4)">Sách Văn Học</a>
-            <a href="#" onclick="filterProductsByCategory(5)">Truyền Tranh BL</a>
-            <a href="#" onclick="filterProductsByCategory(6)">Sách Kỹ Năng Sống</a>
-            <a href="#" onclick="filterProductsByCategory(7)">Sách Thiếu Nhi</a>
-            <a href="#" onclick="filterProductsByCategory(8)">Light Novel</a>
-            <a href="#" onclick="filterProductsByCategory(9)">Văn Phòng Phẩm - Quà Tặng</a>
-          </div>
-        </li>
-        <li class="publisher-dropdown">
-          <a href="campany.html">Nhà xuất bản <i class="fas fa-chevron-down"></i></a>
-          <div class="dropdown-content">
-            <a href="#">Kim Đồng</a>
-            <a href="#">Nhã Nam</a>
-            <a href="#">Trẻ</a>
-            <a href="#">Phụ Nữ</a>
-            <a href="#">Giáo Dục</a>
-            <a href="#">Hội Nhà Văn</a>
-          </div>
-        </li>
-        <li class="account-dropdown" id="accountDropdownContainer">
-          <a href="login.html" id="loginLink"><i class="fas fa-user"></i> Tài khoản <i class="fas fa-chevron-down"></i></a>
-          <div class="dropdown-content">
-            <a href="login.html"><i class="fas fa-sign-in-alt"></i> Đăng nhập</a>
-            <a href="register.html"><i class="fas fa-user-plus"></i> Đăng ký</a>
-          </div>
-          <div class="logged-in-account" style="display: none;">
-            <a href="#" id="accountLink"><i class="fas fa-user"></i> Tên người dùng</a>
-            <div class="dropdown-content">
-              <a href="profile.html"><i class="fas fa-user-circle"></i> Hồ sơ</a>
-              <a href="#" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Đăng xuất</a>
-            </div>
-          </div>
-        </li>
-        <li><a href="cart.html"><i class="fas fa-shopping-cart"></i> Giỏ hàng (0)</a></li>
-      </ul>
-    </div>
-  </div>
+  <!-- header -->
+  <div id="load-header"></div>
+
+
   <div class="flashsale-banner">
     <img src="img/anhnen1/anh1.jpg" alt="Flash Sale Banner">
   </div>
@@ -100,5 +51,6 @@
   <div id="multi-category-list" class="product-list"></div>
 
   <script src="js/giamgia1.js"></script>
+  <script src="js/loadHeader.js"></script>
 </body>
 </html>
