@@ -6,6 +6,7 @@
     <title>Hồ Sơ Cá Nhân - Fahasa</title>
     <link rel="stylesheet" href="styles/index.css">
     <link rel="stylesheet" href="styles/profile.css">
+      <link rel="stylesheet" href="styles/header.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 </head>
 <body>
@@ -47,19 +48,13 @@
                 </div>
                 <div class="sidebar">
                     <ul>
-                    
-                     
-                   
-                      
                         <li><i class="fas fa-headset"></i> Hỗ trợ cá nhân</li>
                         <li><i class="fas fa-phone"></i> Số điện thoại</li>
                         <li data-section="change-password"><i class="fas fa-key"></i> Đổi mật khẩu</li>
                         <li data-section="gtgt-info"><i class="fas fa-file-invoice"></i> Thông tin xuất hóa đơn GTGT</li>
                         <li><i class="fas fa-shopping-bag"></i> Đơn hàng của tôi</li>
-                        <li><i class="fas fa-ticket-alt"></i> Voucher 19</li>
-                
+                        <li data-section="promo-codes"><i class="fas fa-ticket-alt"></i> Các mã khuyến mãi</li>
                         <li data-section="wishlist"><i class="fas fa-heart"></i> Sản phẩm yêu thích</li>
-                   
                     </ul>
                 </div>
                 <div class="content">
@@ -127,6 +122,13 @@
                             <button id="changePasswordBtn">Thay đổi mật khẩu</button>
                         </div>
                     </div>
+                    <!-- Phần mã khuyến mãi -->
+                    <div id="promo-codes" class="section">
+                        <h2>Các mã khuyến mãi của bạn</h2>
+                        <div id="promo-codes-list" class="promo-codes-list">
+                            <!-- Danh sách mã sẽ được JS render -->
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -171,5 +173,6 @@
     </footer>
 
     <script src="js/profile.js"></script>
+     <script src="js/loadHeader.js"></script>
 </body>
 </html>
