@@ -14,7 +14,6 @@ function setupDropdownHover(selector) {
 // Kiểm tra trạng thái đăng nhập
 function checkLoginStatus() {
   const user = JSON.parse(localStorage.getItem('user') || localStorage.getItem('loggedInUser') || '{}');
-  console.log("User:", user);
 
   const loginLink = document.getElementById('loginLink');
   const loggedInAccount = document.querySelector('.logged-in-account');
@@ -114,7 +113,6 @@ const renderProductSearch = (productsFond, data) => {
   productsFond.innerHTML = "";
 
   data.slice(0, 6).forEach((itemData) => {
-    console.log(itemData.TenSP);
     const item = document.createElement("div");
     const img = document.createElement("img");
     const p = document.createElement("p");
@@ -122,7 +120,9 @@ const renderProductSearch = (productsFond, data) => {
     item.classList.add("item");
     img.src = "img/product/" + itemData.HinhAnh;
     p.textContent = itemData.TenSP;
-
+    item.addEventListener("click", () => {
+      loadProductDetailOnHeader(itemData.MaSP); 
+    });
     item.appendChild(img);
     item.appendChild(p);
     productsFond.appendChild(item);
@@ -153,12 +153,35 @@ const addSearchHistory = (value) => {
 }
 
 function renderHistory() {
+  const productsFond = document.getElementById("products-fond");
   const historyContainer = document.getElementById("history");
+  const searchInput = document.getElementById("search-input");
+  if (!searchInput) return;
+
   historyContainer.innerHTML = "";
+  // duyệt qua từng tag 
   searchHistory.forEach((word, index) => {
     let tag = document.createElement("div");
     tag.classList.add("tag");
-    tag.innerHTML = `${word} <span onclick="removeHistory(${index})">&times;</span>`;
+
+    let name = document.createElement("p");
+    name.textContent = word;
+    // nơi render ra sản phẩm
+    name.addEventListener("click", async () => {
+      searchInput.value = word;
+      const resulut = await searchProduct(word)
+      renderProductSearch(productsFond,resulut);
+    });
+
+    let removeBtn = document.createElement("span");
+    removeBtn.innerHTML = "&times;";
+    removeBtn.addEventListener("click", () =>{
+      removeHistory(index)
+    });
+
+    tag.appendChild(name);
+    tag.appendChild(removeBtn);
+
     historyContainer.appendChild(tag);
   });
 }
@@ -179,4 +202,7 @@ function clearHistory() {
   renderHistory();
 }
 
-
+loadProductDetailOnHeader = function(productId) {
+  localStorage.setItem('selectedProductId', productId);
+  window.location.href = `/GiaoDien/product_detail.html?MaSP=${productId}`;
+};

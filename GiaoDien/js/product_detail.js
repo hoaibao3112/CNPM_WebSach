@@ -33,24 +33,25 @@ document.addEventListener('DOMContentLoaded', function() {
  * Lấy thông tin sản phẩm từ nhiều nguồn theo thứ tự ưu tiên
  */
 function getProductInfoFromSources() {
-    const storedProduct = localStorage.getItem('currentProduct');
-    if (storedProduct) {
-        try {
-            const product = JSON.parse(storedProduct);
-            if (isValidProduct(product)) {
-                localStorage.removeItem('currentProduct');
-                return { fullData: true, data: product };
-            }
-        } catch (e) {
-            console.error('Lỗi phân tích dữ liệu từ localStorage', e);
-        }
-    }
-  
+    
     const urlParams = new URLSearchParams(window.location.search);
     const productIdFromUrl = urlParams.get('id');
     if (productIdFromUrl) {
         return { fullData: false, data: productIdFromUrl };
     }
+
+    // const storedProduct = localStorage.getItem('currentProduct');
+    // if (storedProduct) {
+    //     try {
+    //         const product = JSON.parse(storedProduct);
+    //         if (isValidProduct(product)) {
+    //             localStorage.removeItem('currentProduct');
+    //             return { fullData: true, data: product };
+    //         }
+    //     } catch (e) {
+    //         console.error('Lỗi phân tích dữ liệu từ localStorage', e);
+    //     }
+    // }
   
     const storedId = localStorage.getItem('selectedProductId');
     if (storedId) {
@@ -702,6 +703,7 @@ function displayRelatedProducts(products) {
  * Lưu sản phẩm trước khi chuyển trang
  */
 window.saveProductBeforeRedirect = (product) => {
+    localStorage.removeItem('currentProduct');
     localStorage.setItem('currentProduct', JSON.stringify(product));
 };
 
