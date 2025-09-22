@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="vi">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,16 +8,17 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="stylesheet" href="styles/cart.css">
 </head>
+
 <body>
-  <div class="top-right-button">
-    <a href="orders.html" class="my-orders-btn">
-      <i class="fas fa-receipt"></i> Đơn hàng của tôi
-    </a>
-  </div>
-  
+  <div id="load-header"></div>
   <div class="container">
+
+    <div class="top-right-button">
+      <a href="orders.html" class="my-orders-btn">
+        <i class="fas fa-receipt"></i> Đơn hàng của tôi
+      </a>
+    </div>
     <h1 class="page-title">GIỎ HÀNG CỦA BẠN</h1>
-    
     <div class="coupon-section">
       <div class="coupon-box">
         <i class="fas fa-tag"></i>
@@ -31,25 +33,25 @@
         </div>
       </div>
     </div>
-    
+
     <div class="cart-section">
       <div class="cart-items">
         <table class="cart-table">
-       <thead>
-  <tr>
-    <th class="select-col">CHỌN</th>
-    <th class="product-col">SẢN PHẨM</th>
-    <th class="price-col">GIÁ</th>
-    <th class="quantity-col">SỐ LƯỢNG</th>
-    <th class="total-col">TỔNG</th>
-    <th></th>
-  </tr>
-</thead>
+          <thead>
+            <tr>
+              <th class="select-col">CHỌN</th>
+              <th class="product-col">SẢN PHẨM</th>
+              <th class="price-col">GIÁ</th>
+              <th class="quantity-col">SỐ LƯỢNG</th>
+              <th class="total-col">TỔNG</th>
+              <th></th>
+            </tr>
+          </thead>
           <tbody id="cart-items-body">
             <!-- Cart items will be loaded by JavaScript -->
           </tbody>
         </table>
-        
+
         <div id="empty-cart" class="empty-cart-message">
           <div class="empty-cart">
             <i class="fas fa-shopping-cart"></i>
@@ -59,7 +61,7 @@
             </a>
           </div>
         </div>
-        
+
         <div class="cart-actions">
           <a href="book.html" class="continue-btn">
             <i class="fas fa-arrow-left"></i> TIẾP TỤC MUA SẮM
@@ -69,11 +71,11 @@
           </button>
         </div>
       </div>
-      
+
       <div class="checkout-section">
         <div class="order-summary">
           <h2>THANH TOÁN</h2>
-          
+
           <div class="order-totals">
             <div class="order-row">
               <span>Tổng phụ</span>
@@ -92,33 +94,33 @@
               <span id="total">0đ</span>
             </div>
           </div>
-          
+
           <button class="checkout-btn" id="checkout-btn">
             <i class="fas fa-credit-card"></i> TIẾN HÀNH THANH TOÁN
           </button>
         </div>
       </div>
     </div>
-    
+
     <div class="customer-info-section">
       <h2>THÔNG TIN KHÁCH HÀNG</h2>
-      
+
       <div class="customer-form" id="customer-form">
         <div class="form-group">
           <label for="name">Họ và tên người nhận *</label>
           <input type="text" id="name" class="form-input" required>
         </div>
-        
+
         <div class="form-group">
           <label for="phone">Số điện thoại *</label>
           <input type="tel" id="phone" class="form-input" required>
         </div>
-        
+
         <div class="form-group">
           <label for="email">Email *</label>
           <input type="email" id="email" class="form-input" required>
         </div>
-        
+
         <!-- Phần địa chỉ chi tiết -->
         <div class="address-section">
           <div class="form-group">
@@ -128,48 +130,48 @@
               <!-- Will be populated by JavaScript -->
             </select>
           </div>
-          
+
           <div class="form-group">
             <label for="quanhuyen">Quận/Huyện *</label>
             <select id="quanhuyen" class="form-input" required disabled>
               <option value="">-- Chọn Quận/Huyện --</option>
             </select>
           </div>
-          
+
           <div class="form-group">
             <label for="phuongxa">Phường/Xã *</label>
             <select id="phuongxa" class="form-input" required disabled>
               <option value="">-- Chọn Phường/Xã --</option>
             </select>
           </div>
-          
+
           <div class="form-group">
             <label for="diachichitiet">Địa chỉ chi tiết (số nhà, tên đường) *</label>
             <input type="text" id="diachichitiet" class="form-input" required placeholder="Ví dụ: 123 Đường Lê Lợi">
           </div>
-          
+
           <div class="form-group checkbox-group">
             <input type="checkbox" id="save-info">
             <label for="save-info">Lưu thông tin cho lần mua sau</label>
           </div>
         </div>
-        
+
         <div class="form-group">
           <label for="payment-method">Phương thức thanh toán *</label>
           <select id="payment-method" class="form-input" required>
             <option value="">-- Chọn phương thức --</option>
             <option value="COD">Thanh toán khi nhận hàng (COD)</option>
-           <option value="VNPAY">Thanh toán qua VNPay</option>
+            <option value="VNPAY">Thanh toán qua VNPay</option>
           </select>
         </div>
-        
+
         <div class="form-group">
           <label for="notes">Ghi chú đơn hàng (tuỳ chọn)</label>
           <textarea id="notes" class="form-textarea" rows="4" placeholder="Ghi chú về đơn hàng của bạn..."></textarea>
         </div>
       </div>
     </div>
-    
+
     <footer class="page-footer">
       <p>© 2023 Trung Phong. All rights reserved.</p>
     </footer>
@@ -217,5 +219,7 @@
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <script src="js/cart.js"></script>
+  <script src="js/loadHeader.js"></script>
 </body>
+
 </html>

@@ -18,9 +18,8 @@ import Profile from './pages/Profile';
 import './styles/sidebar.css';
 import SalaryPage from './pages/SalaryPage';
 import LeavePage from './pages/LeavePage';
+import AttendancePage from './pages/AttendancePage'; // Giả định component này
 import { PermissionContext } from './components/PermissionContext';
-//import SalaryPage from './pages/SalaryPage';
-//import LeavePage from './pages/LeavePage';
 
 const PrivateRoute = ({ component: Component }) => {
   const isAuthenticated = !!localStorage.getItem('authToken');
@@ -184,10 +183,10 @@ const App = () => {
         }
       />
       <Route
-  path="/admin/profile"
-  element={<PrivateRoute component={Profile} />}
-/>
- <Route
+        path="/admin/profile"
+        element={<PrivateRoute component={Profile} />}
+      />
+      <Route
         path="/admin/salary"
         element={
           <PrivateRoute
@@ -208,9 +207,15 @@ const App = () => {
         }
       />
       <Route
-  path="/admin/leave"
-  element={<PrivateRoute component={LeavePage} />}
-/>
+        path="/admin/attendance"
+        element={
+          <PrivateRoute
+            component={() => (
+              <RestrictedRoute component={AttendancePage} permission="Chấm công" />
+            )}
+          />
+        }
+      />
 
       <Route path="*" element={<Navigate to="/admin/login" replace />} />
     </Routes>

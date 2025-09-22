@@ -1,19 +1,22 @@
+// server.js - Full rewrite with integrated WebSocket for real-time chat
 import express from 'express';
 import dotenv from 'dotenv';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import { createServer } from 'http';
 import { WebSocketServer } from 'ws';
-import pool from './src/config/connectDatabase.js';
+import jwt from 'jsonwebtoken';
+import pool from './src/config/connectDatabase.js'; // Assuming db is exported as pool
 import { initRoutes } from './src/routes/index.js';
- import { createProxyMiddleware } from 'http-proxy-middleware';
-// 1. Tải cấu hình môi trường
+import { createProxyMiddleware } from 'http-proxy-middleware';
+
+// 1. Load environment config
 dotenv.config({ path: './.env' });
 
 const app = express();
 const { PORT: HTTP_PORT = 5000, WS_PORT = 5001, DB_PORT = 3306 } = process.env;
 
-// Log các biến môi trường quan trọng
+// Log key env vars
 console.log('Environment loaded:', {
   HTTP_PORT,
   WS_PORT,
@@ -23,19 +26,18 @@ console.log('Environment loaded:', {
   JWT_SECRET: process.env.JWT_SECRET ? 'Loaded' : 'Not set',
 });
 
-// 2. Cấu hình CORS
+// 2. CORS configuration
 const allowedOrigins = [
   process.env.CLIENT_ADMIN_URL || 'http://localhost:3000',
   process.env.CLIENT_CUSTOMER_URL || 'http://localhost:5501',
   'http://localhost:5000',
   'http://127.0.0.1',
   'https://empty-words-pump.loca.lt',
-  `ws://localhost:${WS_PORT}`,
 ];
 
 app.use(cors({
   origin: (origin, callback) => {
-    if (!origin) return callback(null, true); // Cho phép yêu cầu từ file://
+    if (!origin) return callback(null, true);
     if (allowedOrigins.includes(origin) || origin.startsWith('http://localhost') || origin.startsWith('http://127.0.0.1')) {
       return callback(null, true);
     }
@@ -51,152 +53,211 @@ app.use(cors({
 app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-// Thêm sau phần middleware hiện có
+
 app.use('/vnpay', createProxyMiddleware({
-    target: 'https://sandbox.vnpayment.vn',
-    changeOrigin: true,
-    pathRewrite: { '^/vnpay': '' },
-    onProxyReq: function (proxyReq, req, res) {
-        console.log('Proxy request:', req.url); // Log URL yêu cầu
-    },
-    onProxyRes: function (proxyRes, req, res) {
-        console.log('Proxy response for:', req.url);
-        if (req.url.includes('custom.min.js')) {
-            console.log('Modifying custom.min.js');
-            let js = '';
-            proxyRes.on('data', (chunk) => {
-                js += chunk.toString('utf8');
-            });
-            proxyRes.on('end', () => {
-                js = `window.timer = 600; ${js}`; // Khởi tạo timer = 600 giây
-                res.setHeader('Content-Type', 'application/javascript');
-                res.write(js);
-            });
-        } else if (req.url.includes('vpcpay.html')) {
-            console.log('Modifying vpcpay.html');
-            let html = '';
-            proxyRes.on('data', (chunk) => {
-                html += chunk.toString('utf8');
-            });
-            proxyRes.on('end', () => {
-                html = html.replace(
-                    'https://sandbox.vnpayment.vn/paymentv2/Scripts/custom.min.js',
-                    '/vnpay/paymentv2/Scripts/custom.min.js'
-                );
-                res.setHeader('Content-Type', 'text/html');
-                res.write(html);
-            });
-        }
-    }
+  target: 'https://sandbox.vnpayment.vn',
+  changeOrigin: true,
+  pathRewrite: { '^/vnpay': '' },
+  onProxyReq: (proxyReq, req, res) => {
+    console.log('Proxy request:', {
+      url: req.url,
+      method: req.method,
+      headers: req.headers
+    });
+    proxyReq.setHeader('Host', 'sandbox.vnpayment.vn');
+  },
+  onProxyRes: (proxyRes, req, res) => {
+    console.log('Proxy response:', {
+      url: req.url,
+      status: proxyRes.statusCode,
+      headers: proxyRes.headers
+    });
+    // Xóa CSP gốc
+    delete proxyRes.headers['content-security-policy'];
+    delete proxyRes.headers['content-security-policy-report-only'];
+    // Đặt CSP mới
+    proxyRes.headers['content-security-policy'] = `
+      default-src 'self' https://sandbox.vnpayment.vn https://*.vnpay.vn;
+      connect-src 'self' http://localhost:* ws://localhost:* https://sandbox.vnpayment.vn https://*.vnpay.vn wss:;
+      script-src 'self' 'unsafe-inline' 'unsafe-eval' https://sandbox.vnpayment.vn https://*.vnpay.vn;
+      style-src 'self' 'unsafe-inline' https://sandbox.vnpayment.vn https://*.vnpay.vn;
+      img-src 'self' data: https://sandbox.vnpayment.vn https://*.vnpay.vn;
+      frame-src 'self' https://sandbox.vnpayment.vn https://*.vnpay.vn;
+      font-src 'self' https://sandbox.vnpayment.vn https://*.vnpay.vn;
+      object-src 'none';
+      base-uri 'self';
+      form-action 'self' https://sandbox.vnpayment.vn https://*.vnpay.vn;
+    `.trim().replace(/\s+/g, ' ');
+    // Không can thiệp vào custom.min.js
+    proxyRes.pipe(res);
+  },
+  onError: (err, req, res) => {
+    console.error('Lỗi proxy:', err.message);
+    res.status(500).json({ error: 'Lỗi proxy tới VNPay', details: err.message });
+  }
 }));
-// Phục vụ ảnh từ thư mục product
-app.use('/product', express.static('C:/Users/PC/Desktop/CNPM/server/backend/product'));
-
-// 4. Middleware logging
-app.use((req, res, next) => {
-  const timestamp = new Date().toISOString();
-  const origin = req.get('origin') || 'no-origin';
-  console.log(`[${timestamp}] ${req.method} ${req.originalUrl} from ${origin}`);
-  console.log('Headers:', req.headers);
-  console.log('Body:', req.body); // Thêm để xem dữ liệu gửi lên
-  console.log('Cookies:', req.cookies);
-  next();
-});
-
-// 5. Khởi tạo routes
+// 4. Initialize routes
 initRoutes(app);
 
-// 6. Xử lý lỗi
-app.use((req, res) => {
-  res.status(404).json({ error: 'Route not found' });
-});
-
-app.use((err, req, res, next) => {
-  console.error('Server Error:', err.stack);
-  res.status(500).json({ error: 'Internal server error' });
-});
-
-// 7. Tạo server HTTP và WebSocket
+// 5. Create HTTP server
 const httpServer = createServer(app);
-const wss = new WebSocketServer({ port: WS_PORT });
 
-// 8. Xử lý WebSocket
-wss.on('connection', (ws, req) => {
-  const clientIp = req.socket.remoteAddress;
-  console.log(`🛰️ New WebSocket connection from ${clientIp}`);
+// 6. Integrated WebSocket Server for real-time chat
+const wss = new WebSocketServer({ server: httpServer }); // Attach to HTTP server for unified port
+const rooms = new Map(); // roomId -> Set<ws>
 
-  ws.on('message', (message) => {
-    try {
-      const msg = message.toString();
-      console.log(`📩 Received: ${msg}`);
-      ws.send(`Server: ${msg}`);
-    } catch (err) {
-      console.error('Message processing error:', err);
+wss.on('connection', async (ws, req) => {
+  try {
+    const url = new URL(req.url, `http://${req.headers.host}`);
+    const token = url.searchParams.get('token');
+    const roomId = url.searchParams.get('room_id');
+
+    console.log(`WS Connection: room=${roomId}, token=${token ? 'present' : 'missing'}`);
+
+    if (!token || !roomId) {
+      ws.send(JSON.stringify({ action: 'error', message: 'Missing token or roomId' }));
+      return ws.close(1008, 'Unauthorized');
     }
-  });
 
-  ws.on('close', () => {
-    console.log(`❌ Client ${clientIp} disconnected`);
-  });
+    // Verify JWT token
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    ws.user = decoded;
+    ws.roomId = roomId;
 
-  ws.on('error', (err) => {
-    console.error('WebSocket Error:', err);
-  });
+    // Check room exists in DB
+    const [rows] = await pool.query('SELECT * FROM chat_rooms WHERE room_id = ?', [roomId]);
+    if (rows.length === 0) {
+      ws.send(JSON.stringify({ action: 'error', message: 'Room not found' }));
+      return ws.close(1008, 'Invalid Room');
+    }
+
+    // Add to room
+    if (!rooms.has(roomId)) rooms.set(roomId, new Set());
+    rooms.get(roomId).add(ws);
+
+    // Send chat history on join
+    const [messages] = await pool.query(
+      'SELECT * FROM chat_messages WHERE room_id = ? ORDER BY created_at ASC LIMIT 50', [roomId]
+    );
+    ws.send(JSON.stringify({ action: 'chat_history', messages }));
+
+    console.log(`WS Connected: ${decoded.makh || decoded.MaTK || 'unknown'} to room ${roomId}`);
+
+    ws.on('message', async (message) => {
+      try {
+        const data = JSON.parse(message.toString());
+        if (data.action !== 'send_message') return;
+
+        const { room_id, sender_id, sender_type, message: msgContent } = data.message;
+
+        if (room_id !== roomId) return; // Security: only send to own room
+
+        // Insert to DB
+        const [result] = await pool.query(
+          'INSERT INTO chat_messages (room_id, sender_id, sender_type, message, created_at) VALUES (?, ?, ?, ?, NOW())',
+          [room_id, sender_id, sender_type, msgContent]
+        );
+
+        // Update room timestamp
+        await pool.query('UPDATE chat_rooms SET updated_at = CURRENT_TIMESTAMP WHERE room_id = ?', [room_id]);
+
+        // Get full new message
+        const [newMsg] = await pool.query('SELECT * FROM chat_messages WHERE message_id = ?', [result.insertId]);
+
+        // Broadcast to other clients in room (exclude sender)
+        if (rooms.has(room_id)) {
+          rooms.get(room_id).forEach(client => {
+            if (client.readyState === WebSocket.OPEN && client !== ws) {
+              client.send(JSON.stringify({ action: 'new_message', message: newMsg[0] }));
+            }
+          });
+        }
+
+        console.log(`Message broadcasted in room ${room_id}: ${msgContent.substring(0, 50)}...`);
+      } catch (error) {
+        console.error('WS Message Error:', error);
+        if (ws.readyState === WebSocket.OPEN) {
+          ws.send(JSON.stringify({ action: 'error', message: 'Failed to send message' }));
+        }
+      }
+    });
+
+    ws.on('close', () => {
+      if (rooms.has(roomId)) {
+        rooms.get(roomId).delete(ws);
+        if (rooms.get(roomId).size === 0) rooms.delete(roomId);
+      }
+      console.log(`WS Disconnected from room ${roomId}`);
+    });
+
+    ws.on('error', (error) => {
+      console.error('WS Client Error:', error);
+    });
+  } catch (error) {
+    console.error('WS Auth Error:', error.message);
+    if (ws.readyState === WebSocket.OPEN) {
+      ws.send(JSON.stringify({ action: 'error', message: 'Authentication failed' }));
+    }
+    ws.close(1008, 'Unauthorized');
+  }
 });
 
-// 9. Khởi động hệ thống
+// 7. Start servers
 const startServers = async () => {
   try {
-    // Kiểm tra kết nối database
+    // Test DB connection
     const conn = await pool.getConnection();
     console.log(`✅ MySQL connected on port ${DB_PORT}`);
     conn.release();
 
-    // Khởi động HTTP server
+    // Generate test tokens (update to async)
+    console.log('Generating test tokens...');
+    const { generateToken } = await import('./src/utils/generateToken.js');
+    try {
+      const customerToken = await generateToken('19', 'customer');
+      console.log('Customer Token:', customerToken.substring(0, 20) + '...');
+      const staffToken = await generateToken('NV007', 'staff');
+      console.log('Staff Token:', staffToken.substring(0, 20) + '...');
+    } catch (genError) {
+      console.error('Token generation error:', genError);
+    }
+
+    // Start HTTP server (WS attached)
     httpServer.listen(HTTP_PORT, () => {
       console.log(`🚀 HTTP Server running on http://localhost:${HTTP_PORT}`);
-      console.log(`🛰️ WebSocket Server running on ws://localhost:${WS_PORT}`);
+      console.log(`🛰️ WebSocket Server running on ws://localhost:${HTTP_PORT}`); // Unified port
     });
 
-    // Xử lý lỗi port
+    // Handle port errors
     httpServer.on('error', (err) => {
       if (err.code === 'EADDRINUSE') {
         console.error(`❌ Port ${HTTP_PORT} is in use!`);
-        console.log('ℹ️ Solutions:');
-        console.log('1. Change HTTP_PORT in .env');
-        console.log(`2. Run: netstat -ano | findstr :${HTTP_PORT}`);
-        console.log('3. Restart your computer');
+        console.log('Solutions: 1. Change HTTP_PORT in .env 2. Kill process on port 3. Restart');
         process.exit(1);
       }
     });
-
   } catch (err) {
     console.error('❌ Failed to start servers:', err.message);
-    console.log('👉 Check MySQL connection and ports');
     process.exit(1);
   }
 };
 
-// 10. Tắt server an toàn
+// 8. Graceful shutdown
 const shutdown = async () => {
-  console.log('\n🛑 Shutting down servers...');
+  console.log('\n🛑 Shutting down...');
 
-  // Đóng WebSocket
-  wss.clients.forEach((client) => {
-    if (client.readyState === 1) {
-      client.close(1001, 'Server shutdown');
-    }
-  });
-  await new Promise((resolve) => wss.close(resolve));
-  console.log('🛰️ WebSocket server closed');
+  // Close WS clients
+  wss.clients.forEach(client => client.readyState === 1 && client.close(1001, 'Server shutdown'));
+  await new Promise(resolve => wss.close(resolve));
+  console.log('🛰️ WebSocket closed');
 
-  // Đóng HTTP server
-  await new Promise((resolve) => httpServer.close(resolve));
-  console.log('🚀 HTTP server closed');
+  // Close HTTP
+  await new Promise(resolve => httpServer.close(resolve));
+  console.log('🚀 HTTP closed');
 
-  // Đóng kết nối database
+  // Close DB
   await pool.end();
-  console.log('🔌 Database connection closed');
+  console.log('🔌 DB closed');
 
   process.exit(0);
 };
@@ -204,5 +265,5 @@ const shutdown = async () => {
 process.on('SIGINT', shutdown);
 process.on('SIGTERM', shutdown);
 
-// 11. Khởi chạy
+// Start
 startServers();
