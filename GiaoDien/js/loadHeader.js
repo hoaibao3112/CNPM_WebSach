@@ -74,6 +74,8 @@ const handleSearchHistory = () => {
   });
 };
 
+
+
 document.addEventListener('DOMContentLoaded', () => {
   loadHeader();
 });
