@@ -277,14 +277,61 @@ router.put('/:makm', authenticateToken, async (req, res) => {
     });
   }
 });
-// DELETE /:makm - Xóa khuyến mãi
+// DELETE /:makm - Xóa khuyến mãi - ĐÃ SỬA
 router.delete('/:makm', authenticateToken, async (req, res) => {
   try {
     const makm = req.params.makm;
 
-    await pool.query(`DELETE FROM khuyen_mai WHERE MaKM = ?`, [makm]);
+    // Kiểm tra khuyến mãi có tồn tại không
+    const [[promotion]] = await pool.query(
+      `SELECT MaKM FROM khuyen_mai WHERE MaKM = ?`,
+      [makm]
+    );
 
-    res.status(200).json({ message: 'Xóa khuyến mãi thành công' });
+    if (!promotion) {
+      return res.status(404).json({ error: 'Không tìm thấy khuyến mãi' });
+    }
+
+    const connection = await pool.getConnection();
+    await connection.beginTransaction();
+
+    try {
+      // 1. Xóa các bản ghi trong bảng khachhang_khuyenmai (nếu có)
+      await connection.query(
+        `DELETE FROM khachhang_khuyenmai WHERE makm = ?`,
+        [makm]
+      );
+
+      // 2. Xóa các bản ghi trong bảng sp_khuyen_mai (sản phẩm áp dụng)
+      await connection.query(
+        `DELETE FROM sp_khuyen_mai WHERE MaKM = ?`,
+        [makm]
+      );
+
+      // 3. Xóa bản ghi trong bảng ct_khuyen_mai (chi tiết khuyến mãi)
+      await connection.query(
+        `DELETE FROM ct_khuyen_mai WHERE MaKM = ?`,
+        [makm]
+      );
+
+      // 4. Cuối cùng xóa bản ghi chính trong bảng khuyen_mai
+      await connection.query(
+        `DELETE FROM khuyen_mai WHERE MaKM = ?`,
+        [makm]
+      );
+
+      await connection.commit();
+
+      res.status(200).json({ 
+        message: 'Xóa khuyến mãi thành công',
+        makm 
+      });
+    } catch (error) {
+      await connection.rollback();
+      throw error;
+    } finally {
+      connection.release();
+    }
   } catch (error) {
     console.error('Error deleting promotion:', error);
     res.status(500).json({ 

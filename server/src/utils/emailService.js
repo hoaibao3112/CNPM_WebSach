@@ -128,10 +128,10 @@ export async function sendOTPEmail(email, otp) {
         };
 
         const info = await transporter.sendMail(mailOptions);
-        console.log('Email sent to nhân viên:', info.response);
+        console.log('Email sent to người dùng lấy lại mật khẩu:', info.response);
         return true;
     } catch (error) {
-        console.error('Lỗi gửi email cho nhân viên:', {
+        console.error('Lỗi gửi email cho người dùng lấy lại mật khẩu:', {
             message: error.message,
             code: error.code,
             response: error.response,
