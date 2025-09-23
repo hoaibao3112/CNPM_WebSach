@@ -1,88 +1,257 @@
-.container {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 16px;
-}
-.title {
-  font-size: 2rem;
-  font-weight: bold;
-  margin-bottom: 16px;
-}
-.flex {
-  display: flex;
-  gap: 8px;
-  margin-bottom: 16px;
-}
-.input, .select, .textarea {
-  border: 1px solid #ccc;
-  padding: 6px 8px;
-  border-radius: 4px;
-  width: 100%;
-}
-.button {
-  background: #2563eb;
-  color: #fff;
-  padding: 8px 16px;
-  border-radius: 4px;
-  border: none;
-  cursor: pointer;
-}
-.button.yellow { background: #facc15; color: #333; }
-.button.red { background: #f87171; }
-.button.gray { background: #e5e7eb; color: #333; }
-.button.green { background: #bbf7d0; color: #166534; }
-.table {
-  width: 100%;
-  background: #fff;
-  border-collapse: collapse;
-}
-.table th, .table td {
-  border: 1px solid #ccc;
-  padding: 6px 8px;
-}
-.status-active {
-  background: #bbf7d0;
-  color: #166534;
-  padding: 2px 8px;
-  border-radius: 4px;
-}
-.status-inactive {
-  background: #e5e7eb;
-  color: #333;
-  padding: 2px 8px;
-  border-radius: 4px;
-}
-.modal-bg {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.4);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 50;
-}
-.modal-content {
-  background: #fff;
+.discount-management-container {
   padding: 24px;
+  padding-left: 170px; /* Thêm padding-left để thu bảng sang phải */
+  background-color: #f5f5f5;
+  min-height: 100vh;
+}
+
+.header-section {
+  margin-bottom: 24px;
+}
+
+.header-section h2 {
+  margin-bottom: 16px !important;
+}
+
+/* Di chuyển phần controls sang phải */
+.controls-section {
+  display: flex;
+  justify-content: flex-end; /* Đẩy tất cả về phía phải */
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-right: 40px; /* Tăng margin phải để di chuyển xa hơn */
+  margin-left: auto; /* Thêm margin-left auto để đẩy sang phải */
+  width: fit-content; /* Chỉ chiếm không gian cần thiết */
+}
+
+/* Thu phần statistics cards */
+.header-section .ant-row {
+  margin-left: 20px; /* Thêm margin trái cho stats cards */
+  margin-right: 20px; /* Thêm margin phải cho stats cards */
+}
+
+.table-card {
   border-radius: 8px;
-  max-width: 500px;
-  width: 100%;
-  position: relative;
-  box-shadow: 0 2px 16px rgba(0,0,0,0.15);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  margin-left: 20px; /* Thu bảng sang phải */
+  margin-right: 20px; /* Giữ khoảng cách phải */
 }
-.close-btn {
-  position: absolute;
-  top: 8px;
-  right: 12px;
-  font-size: 1.5rem;
-  background: none;
+
+.stat-card {
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+}
+
+.stat-card.success {
+  border-left: 4px solid #52c41a;
+}
+
+.stat-card.warning {
+  border-left: 4px solid #faad14;
+}
+
+.stat-content {
+  text-align: center;
+  padding: 8px;
+}
+
+.stat-number {
+  font-size: 28px;
+  font-weight: bold;
+  color: #1890ff;
+  margin-bottom: 4px;
+}
+
+.stat-card.success .stat-number {
+  color: #52c41a;
+}
+
+.stat-card.warning .stat-number {
+  color: #faad14;
+}
+
+.stat-label {
+  font-size: 14px;
+  color: #666;
+}
+
+.promotion-table {
+  background: white;
+}
+
+.promotion-table .ant-table-thead > tr > th {
+  background-color: #fafafa;
+  border-bottom: 2px solid #f0f0f0;
+  font-weight: 600;
+  color: #262626;
+}
+
+.promotion-table .ant-table-tbody > tr:hover > td {
+  background-color: #f5f5f5;
+}
+
+.promotion-table .ant-table-tbody > tr > td {
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.detail-modal .ant-modal-header {
+  border-bottom: 2px solid #f0f0f0;
+}
+
+.detail-content {
+  padding: 16px 0;
+}
+
+.detail-content .ant-divider {
+  margin: 16px 0;
+}
+
+.form-modal .ant-modal-header {
+  border-bottom: 2px solid #f0f0f0;
+}
+
+.form-modal .ant-form-item-label > label {
+  font-weight: 600;
+  color: #262626;
+}
+
+.error-message {
+  background-color: #fff2f0;
+  border: 1px solid #ffccc7;
+  border-radius: 6px;
+  padding: 12px;
+  margin-bottom: 16px;
+  color: #a8071a;
+  font-size: 14px;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .discount-management-container {
+    padding: 16px;
+    padding-left: 16px; /* Reset padding-left cho mobile */
+  }
+  
+  .controls-section {
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: center; /* Reset về center cho mobile */
+    margin-right: 0; /* Reset margin cho mobile */
+    margin-left: 0; /* Reset margin-left cho mobile */
+    width: 100%; /* Full width cho mobile */
+  }
+  
+  .controls-section .ant-input-search {
+    width: 100% !important;
+    margin-bottom: 16px;
+  }
+  
+  .stat-number {
+    font-size: 24px !important;
+  }
+  
+  .table-card {
+    margin-left: 0; /* Reset margin cho mobile */
+    margin-right: 0;
+  }
+  
+  .header-section .ant-row {
+    margin-left: 0; /* Reset margin cho mobile */
+    margin-right: 0;
+  }
+}
+
+@media (max-width: 576px) {
+  .promotion-table {
+    font-size: 12px;
+  }
+  
+  .promotion-table .ant-table-tbody > tr > td {
+    padding: 8px 4px;
+  }
+  
+  .promotion-table .ant-space {
+    flex-wrap: wrap;
+  }
+}
+
+/* Custom button styles */
+.ant-btn-sm {
+  border-radius: 4px;
+  font-weight: 500;
+}
+
+.ant-btn-primary {
+  background: linear-gradient(135deg, #1890ff 0%, #096dd9 100%);
   border: none;
-  cursor: pointer;
+  box-shadow: 0 2px 4px rgba(24, 144, 255, 0.3);
 }
-.mt-2 { margin-top: 8px; }
-.mb-2 { margin-bottom: 8px; }
-.mb-4 { margin-bottom: 16px; }
-.mt-4 { margin-top: 16px; }
-.text-center { text-align: center; }
-.text-red { color: #dc2626; }
-.text-xl { font-size: 1.25rem; font-weight: bold; }
+
+.ant-btn-primary:hover {
+  background: linear-gradient(135deg, #40a9ff 0%, #1890ff 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(24, 144, 255, 0.4);
+}
+
+.ant-btn-danger {
+  background: linear-gradient(135deg, #ff4d4f 0%, #cf1322 100%);
+  border: none;
+  box-shadow: 0 2px 4px rgba(255, 77, 79, 0.3);
+}
+
+.ant-btn-danger:hover {
+  background: linear-gradient(135deg, #ff7875 0%, #ff4d4f 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(255, 77, 79, 0.4);
+}
+
+/* Custom tag styles */
+.ant-tag {
+  border-radius: 4px;
+  font-weight: 500;
+  border: none;
+}
+
+/* Animation */
+.ant-table-tbody > tr {
+  transition: all 0.3s ease;
+}
+
+.ant-card {
+  transition: all 0.3s ease;
+}
+
+.ant-btn {
+  transition: all 0.3s ease;
+}
+
+/* Loading animation */
+.ant-spin-dot {
+  background-color: #1890ff;
+}
+
+/* Custom scrollbar */
+.ant-table-body::-webkit-scrollbar {
+  height: 8px;
+}
+
+.ant-table-body::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+.ant-table-body::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 4px;
+}
+
+.ant-table-body::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}

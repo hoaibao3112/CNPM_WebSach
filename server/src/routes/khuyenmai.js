@@ -57,7 +57,7 @@ router.get('/', async (req, res) => {
     }
 
     const [promotions] = await pool.query(
-      `SELECT * FROM khuyen_mai
+      `SELECT *, CAST(TrangThai AS UNSIGNED) as TrangThai FROM khuyen_mai
        ${whereClause}
        ORDER BY NgayBatDau DESC
        LIMIT ? OFFSET ?`,
@@ -101,7 +101,8 @@ router.get('/my-promotions', authenticateToken, async (req, res) => {
     }
 
     const [promotions] = await pool.query(
-      `SELECT k.MaKM, k.TenKM, k.LoaiKM, k.Code, kk.ngay_lay, kk.trang_thai
+      `SELECT k.MaKM, k.TenKM, k.LoaiKM, k.Code, CAST(k.TrangThai AS UNSIGNED) as TrangThai,
+       kk.ngay_lay, kk.trang_thai
        FROM khachhang_khuyenmai kk
        JOIN khuyen_mai k ON kk.makm = k.MaKM
        ${whereClause}`,
@@ -124,7 +125,8 @@ router.get('/:makm', async (req, res) => {
     const makm = req.params.makm;
 
     const [[promotion]] = await pool.query(
-      `SELECT k.*, ct.GiaTriGiam, ct.GiaTriDonToiThieu, ct.GiamToiDa, ct.SoLuongToiThieu
+      `SELECT k.*, CAST(k.TrangThai AS UNSIGNED) as TrangThai, 
+       ct.GiaTriGiam, ct.GiaTriDonToiThieu, ct.GiamToiDa, ct.SoLuongToiThieu
        FROM khuyen_mai k
        LEFT JOIN ct_khuyen_mai ct ON k.MaKM = ct.MaKM
        WHERE k.MaKM = ?`,
@@ -189,12 +191,16 @@ router.post('/', authenticateToken, async (req, res) => {
         [makm, promotionData.GiaTriGiam, promotionData.GiaTriDonToiThieu || null, promotionData.GiamToiDa || null, promotionData.SoLuongToiThieu || 1]
       );
 
-      // Thêm sản phẩm áp dụng nếu có
-      if (promotionData.SanPhamApDung && promotionData.LoaiKM === 'giam_tien_mat') {
+      // Logic xử lý sản phẩm áp dụng:
+      // - Nếu có chọn sản phẩm cụ thể -> lưu vào sp_khuyen_mai
+      // - Nếu không chọn sản phẩm nào (mảng rỗng hoặc undefined) -> áp dụng cho tất cả (không lưu vào sp_khuyen_mai)
+      if (promotionData.SanPhamApDung && Array.isArray(promotionData.SanPhamApDung) && promotionData.SanPhamApDung.length > 0) {
+        // Có chọn sản phẩm cụ thể -> lưu vào bảng sp_khuyen_mai
         for (const masp of promotionData.SanPhamApDung) {
           await connection.query(`INSERT INTO sp_khuyen_mai (MaKM, MaSP) VALUES (?, ?)`, [makm, masp]);
         }
       }
+      // Nếu không có sản phẩm nào được chọn -> không lưu gì vào sp_khuyen_mai (áp dụng cho tất cả)
 
       await connection.commit();
 
@@ -240,13 +246,19 @@ router.put('/:makm', authenticateToken, async (req, res) => {
         [promotionData.GiaTriGiam || null, promotionData.GiaTriDonToiThieu || null, promotionData.GiamToiDa || null, promotionData.SoLuongToiThieu || null, makm]
       );
 
-      // Cập nhật sp_khuyen_mai (xóa cũ, thêm mới nếu có)
-      if (promotionData.SanPhamApDung && promotionData.LoaiKM === 'giam_tien_mat') {
-        await connection.query(`DELETE FROM sp_khuyen_mai WHERE MaKM = ?`, [makm]);
+      // Xóa tất cả sản phẩm áp dụng cũ
+      await connection.query(`DELETE FROM sp_khuyen_mai WHERE MaKM = ?`, [makm]);
+
+      // Logic tương tự như POST:
+      // - Nếu có chọn sản phẩm cụ thể -> lưu vào sp_khuyen_mai
+      // - Nếu không chọn sản phẩm nào -> áp dụng cho tất cả (không lưu vào sp_khuyen_mai)
+      if (promotionData.SanPhamApDung && Array.isArray(promotionData.SanPhamApDung) && promotionData.SanPhamApDung.length > 0) {
+        // Có chọn sản phẩm cụ thể -> lưu vào bảng sp_khuyen_mai
         for (const masp of promotionData.SanPhamApDung) {
           await connection.query(`INSERT INTO sp_khuyen_mai (MaKM, MaSP) VALUES (?, ?)`, [makm, masp]);
         }
       }
+      // Nếu không có sản phẩm nào được chọn -> không lưu gì vào sp_khuyen_mai (áp dụng cho tất cả)
 
       await connection.commit();
 
@@ -265,7 +277,6 @@ router.put('/:makm', authenticateToken, async (req, res) => {
     });
   }
 });
-
 // DELETE /:makm - Xóa khuyến mãi
 router.delete('/:makm', authenticateToken, async (req, res) => {
   try {
@@ -283,6 +294,47 @@ router.delete('/:makm', authenticateToken, async (req, res) => {
   }
 });
 
+// PATCH /:makm/trangthai - Cập nhật trạng thái khuyến mãi
+router.patch('/:makm/trangthai', authenticateToken, async (req, res) => {
+  try {
+    const makm = req.params.makm;
+    const { trangThai } = req.body;
+
+    // Kiểm tra trạng thái hợp lệ (0 hoặc 1)
+    if (trangThai !== 0 && trangThai !== 1) {
+      return res.status(400).json({ error: 'Trạng thái chỉ được là 0 hoặc 1' });
+    }
+
+    // Kiểm tra khuyến mãi có tồn tại không
+    const [[promotion]] = await pool.query(
+      `SELECT MaKM FROM khuyen_mai WHERE MaKM = ?`,
+      [makm]
+    );
+
+    if (!promotion) {
+      return res.status(404).json({ error: 'Không tìm thấy khuyến mãi' });
+    }
+
+    // Cập nhật trạng thái
+    await pool.query(
+      `UPDATE khuyen_mai SET TrangThai = ? WHERE MaKM = ?`,
+      [trangThai, makm]
+    );
+
+    res.status(200).json({ 
+      message: 'Cập nhật trạng thái thành công',
+      makm,
+      trangThai
+    });
+  } catch (error) {
+    console.error('Error updating promotion status:', error);
+    res.status(500).json({ 
+      error: 'Lỗi khi cập nhật trạng thái khuyến mãi',
+      details: error.message 
+    });
+  }
+});
+
 // POST /apply-to-cart - Áp dụng khuyến mãi vào giỏ hàng
 router.post('/apply-to-cart', authenticateToken, async (req, res) => {
   try {
@@ -294,7 +346,8 @@ router.post('/apply-to-cart', authenticateToken, async (req, res) => {
     }
 
     const [[promotion]] = await pool.query(
-      `SELECT k.*, ct.GiaTriGiam, ct.GiaTriDonToiThieu, ct.GiamToiDa, ct.SoLuongToiThieu
+      `SELECT k.*, CAST(k.TrangThai AS UNSIGNED) as TrangThai,
+       ct.GiaTriGiam, ct.GiaTriDonToiThieu, ct.GiamToiDa, ct.SoLuongToiThieu
        FROM khuyen_mai k
        JOIN ct_khuyen_mai ct ON k.MaKM = ct.MaKM
        WHERE k.MaKM = ? AND k.TrangThai = 1 
@@ -321,6 +374,9 @@ router.post('/apply-to-cart', authenticateToken, async (req, res) => {
     );
     const validProductIds = validProducts.map(p => p.MaSP);
 
+    // Nếu không có sản phẩm cụ thể nào trong sp_khuyen_mai -> áp dụng cho tất cả
+    const isApplyToAll = validProductIds.length === 0;
+
     let subtotal = 0;
     let totalDiscount = 0;
     const discountDetails = [];
@@ -346,8 +402,8 @@ router.post('/apply-to-cart', authenticateToken, async (req, res) => {
       case 'giam_tien_mat':
         let applicableQuantity = 0;
         cartItems.forEach(item => {
-          if (validProductIds.includes(item.MaSP) && item.SoLuong >= (promotion.SoLuongToiThieu || 1)) {
-            applicableQuantity += Math.floor(item.SoLuong / promotion.SoLuongToiThieu);
+          if ((isApplyToAll || validProductIds.includes(item.MaSP)) && item.SoLuong >= (promotion.SoLuongToiThieu || 1)) {
+            applicableQuantity += Math.floor(item.SoLuong / (promotion.SoLuongToiThieu || 1));
           }
         });
         if (applicableQuantity > 0 && subtotal >= (promotion.GiaTriDonToiThieu || 0)) {
@@ -383,6 +439,7 @@ router.post('/apply-to-cart', authenticateToken, async (req, res) => {
   }
 });
 
+
 // POST /claim/:makm - Lấy mã khuyến mãi
 router.post('/claim/:makm', authenticateToken, async (req, res) => {
   try {
@@ -395,7 +452,7 @@ router.post('/claim/:makm', authenticateToken, async (req, res) => {
     }
 
     const [[promotion]] = await pool.query(
-      `SELECT * FROM khuyen_mai 
+      `SELECT *, CAST(TrangThai AS UNSIGNED) as TrangThai FROM khuyen_mai 
        WHERE MaKM = ? AND TrangThai = 1 
        AND NgayBatDau <= NOW() AND NgayKetThuc >= NOW()`,
       [makm]
