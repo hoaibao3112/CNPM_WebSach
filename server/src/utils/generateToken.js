@@ -12,7 +12,7 @@ export function generateToken(makh, userType = 'customer') {
   };
 
   const token = jwt.sign(payload, process.env.JWT_SECRET || 'your_default_secret_key', {
-    expiresIn: process.env.JWT_EXPIRES_IN || '1h'
+    expiresIn: process.env.JWT_EXPIRES_IN || '2h'
   });
   console.log('Generated Token:', { makh, userType, token }); // Log để debug
   return token;

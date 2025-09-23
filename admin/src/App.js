@@ -13,17 +13,16 @@ import Client from './pages/client.js';
 import Authorities from './pages/authorities';
 import Receipt from './pages/receipt.js';
 import Statistical from './pages/statistical.js';
-import KhuyenMai from './pages/khuyenmai.js';
+//import KhuyenMai from './pages/khuyenmai.js';
 import Profile from './pages/Profile';
-import './styles/sidebar.css';
 import SalaryPage from './pages/SalaryPage';
 import LeavePage from './pages/LeavePage';
-import AttendancePage from './pages/AttendancePage'; // Giả định component này
+import AttendancePage from './pages/AttendancePage';
 import { PermissionContext } from './components/PermissionContext';
+import DiscountManagement from './pages/DiscountManagement.js';
 
 const PrivateRoute = ({ component: Component }) => {
   const isAuthenticated = !!localStorage.getItem('authToken');
-  console.log('PrivateRoute - isAuthenticated:', isAuthenticated, 'Token:', localStorage.getItem('authToken'));
   return isAuthenticated ? (
     <div className="app-admin">
       <Sidebar />
@@ -39,12 +38,12 @@ const PrivateRoute = ({ component: Component }) => {
 const RestrictedRoute = ({ component: Component, permission }) => {
   const { hasPermission, loading } = React.useContext(PermissionContext);
   if (loading) {
-    return <div>Loading permissions...</div>; // Tránh chuyển hướng khi đang tải
+    return <div>Loading permissions...</div>;
   }
   return hasPermission(permission, 'Đọc') ? (
     <Component />
   ) : (
-    <div>Bạn không có quyền truy cập trang này: {permission}</div> // Thay vì chuyển hướng
+    <div>Bạn không có quyền truy cập trang này: {permission}</div>
   );
 };
 
@@ -152,16 +151,18 @@ const App = () => {
           />
         }
       />
-      <Route
-        path="/admin/khuyenmai"
-        element={
-          <PrivateRoute
-            component={() => (
-              <RestrictedRoute component={KhuyenMai} permission="Khuyến mãi" />
-            )}
-          />
-        }
-      />
+     
+      {/* Thêm route cho trang tạo khuyến mãi */}
+     <Route
+  path="/admin/khuyenmai"
+  element={
+    <PrivateRoute
+      component={() => (
+        <RestrictedRoute component={DiscountManagement} permission="Khuyến mãi" />
+      )}
+    />
+  }
+/>
       <Route
         path="/admin/statistical"
         element={

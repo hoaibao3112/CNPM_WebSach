@@ -192,5 +192,29 @@ router.put('/update', async (req, res) => {
     res.status(500).json({ error: 'Internal server error', details: error.message });
   }
 });
+// GET /api/salary/history/:MaNV?nam=2025
+router.get('/history/:MaNV', async (req, res) => {
+  try {
+    const { MaNV } = req.params;
+    const { nam } = req.query;
+    let sql = `
+      SELECT 
+        thang, nam, luong_co_ban, phu_cap, thuong, phat, tong_luong, trang_thai
+      FROM luong
+      WHERE MaNV = ?
+    `;
+    const params = [MaNV];
+    if (nam) {
+      sql += ' AND nam = ?';
+      params.push(nam);
+    }
+    sql += ' ORDER BY nam DESC, thang DESC';
+
+    const [rows] = await pool.query(sql, params);
+    res.json(rows);
+  } catch (error) {
+    res.status(500).json({ error: 'Lỗi khi lấy lịch sử lương cá nhân', details: error.message });
+  }
+});
 
 export default router;
