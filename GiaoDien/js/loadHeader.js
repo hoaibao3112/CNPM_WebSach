@@ -23,13 +23,23 @@ async function loadHeader() {
       if (typeof setupLogout === "function") setupLogout();
       handleSearch();
       if (typeof renderHistory === 'function') renderHistory();
-      
+
       if (typeof loadListProductSearch === "function") {
         const currentPath = window.location.pathname;
         if (currentPath.endsWith("/GiaoDien/book.html")) {
           loadListProductSearch();
         }
+        if (currentPath.endsWith("/GiaoDien/book.html")) {
+          setupCategoryDropdown();
+          loadListProductSearch().then(() => {
+            const searchParams = new URLSearchParams(window.location.search);
+            if (searchParams.has("category")) {
+              filterProductsByCategoryOnHeader();
+            }
+          });
+        }
       }
+
     };
     script.onerror = () => console.error("Không load được header.js!");
     document.body.appendChild(script);

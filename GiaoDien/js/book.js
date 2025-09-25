@@ -608,7 +608,7 @@ async function loadListProductSearch() {
 const removeKeyWordSearch = () => {
   const currentPath = window.location.pathname;
   const searchParams = new URLSearchParams(window.location.search);
-  if (currentPath.endsWith("/GiaoDien/book.html") && searchParams.has("search")) {
+  if (currentPath.endsWith("/GiaoDien/book.html") && (searchParams.has("search") || searchParams.has("category"))) {
     document.getElementById('name-products-list').textContent = "Danh Sách tìm kiếm";
     if (performance.getEntriesByType("navigation")[0].type === "reload") {
       window.location.href = "/GiaoDien/book.html";
@@ -620,6 +620,7 @@ let currentCategory = "";
 let currentPriceRange = "";
 
 function applyFilters() {
+  console.log(productsSearchMain)
   if (!productsSearchMain) return;
 
   let productsFiltered = [...productsSearchMain];
@@ -659,7 +660,14 @@ window.filterProductsByPrice = function (priceRange) {
   applyFilters();
 };
 
-
+function filterProductsByCategoryOnHeader() {
+  const params = new URLSearchParams(window.location.search);
+  const categoryId = params.get("category");
+  if (categoryId) {
+    currentCategory = categoryId;
+    applyFilters();
+  }
+}
 
 // Gọi khi trang tải xong
 document.addEventListener('DOMContentLoaded', () => {
@@ -679,12 +687,11 @@ document.addEventListener('DOMContentLoaded', () => {
   if (currentPath.endsWith("/GiaoDien/book.html")) {
     // loadPromotions();
     setupCategoryDropdown()
+    filterProductsByCategoryOnHeader()
   }
-
 });
 
 // Gán các hàm vào window
 window.addToCart = addToCart;
 window.viewDetail = viewDetail;
 // window.showAllProducts = showAllProducts;
-window.filterProductsByCategory = filterProductsByCategory;
