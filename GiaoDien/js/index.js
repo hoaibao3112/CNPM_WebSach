@@ -1,8 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
   showSlides();
-  loadPromotions();
   setupChat();
-  setupFAQ();
+  // setupFAQ();
 });
 
 
@@ -23,25 +22,6 @@ function showSlides() {
     slides[slideIndex[i] - 1].style.display = 'block';
   });
   setTimeout(showSlides, 3000);
-}
-
-// Thiết lập dropdown danh mục
-function setupCategoryDropdown() {
-  const categoryDropdown = document.getElementById('categoryDropdown');
-  if (!categoryDropdown) return;
-
-  const dropdownHeader = categoryDropdown.querySelector('.dropdown-header');
-  if (dropdownHeader) {
-    dropdownHeader.addEventListener('click', () => {
-      categoryDropdown.classList.toggle('dropdown-active');
-    });
-  }
-
-  document.addEventListener('click', (event) => {
-    if (!categoryDropdown.contains(event.target)) {
-      categoryDropdown.classList.remove('dropdown-active');
-    }
-  });
 }
 
 // Định dạng giá
@@ -66,128 +46,7 @@ function escapeHtml(unsafe) {
     .replace(/'/g, '&#039;');
 }
 
-// Tải danh sách khuyến mãi
-function loadPromotions() {
-  const discountSelect = document.getElementById('discountSelect');
-  const promotionsList = document.getElementById('promotions-list');
-  const dealHotContainer = document.getElementById('deal-hot-list');
 
-  if (!discountSelect || !promotionsList || !dealHotContainer) {
-    console.error('Không tìm thấy discountSelect, promotions-list hoặc deal-hot-list');
-    return;
-  }
-
-  discountSelect.innerHTML = '<option value="">Chọn chương trình khuyến mãi</option>';
-  promotionsList.innerHTML = '<li>Đang tải khuyến mãi...</li>';
-  dealHotContainer.innerHTML = '<div class="loading">Đang tải sản phẩm khuyến mãi...</div>';
-  dealHotContainer.style.display = 'grid';
-
-  fetch('http://localhost:5000/api/khuyenmai?activeOnly=true', {
-    headers: {
-      'Content-Type': 'application/json; charset=utf-8'
-    }
-  })
-    .then(response => {
-      if (!response.ok) throw new Error('Lỗi khi tải khuyến mãi');
-      return response.json();
-    })
-    .then(data => {
-      discountSelect.innerHTML = '<option value="">Chọn chương trình khuyến mãi</option>';
-      promotionsList.innerHTML = '';
-
-      if (!data.data || data.data.length === 0) {
-        promotionsList.innerHTML = '<li>Không có khuyến mãi nào</li>';
-        dealHotContainer.innerHTML = '<div class="no-products"><p>Không có sản phẩm khuyến mãi</p></div>';
-        dealHotContainer.style.display = 'grid';
-        return;
-      }
-
-      data.data.forEach(promotion => {
-        let discountText = '';
-        switch (promotion.LoaiKM) {
-          case 'giam_phan_tram':
-            discountText = `Giảm ${promotion.GiaTri}%`;
-            break;
-          case 'giam_tien':
-            discountText = `Giảm ${formatPrice(promotion.GiaTri)} VNĐ`;
-            break;
-          case 'mua_1_tang_1':
-            discountText = 'Mua 1 tặng 1';
-            break;
-        }
-
-        const option = document.createElement('option');
-        option.value = promotion.MaKM;
-        option.textContent = `${promotion.TenKM} - ${discountText}`;
-        discountSelect.appendChild(option);
-
-        const li = document.createElement('li');
-        li.innerHTML = `<a href="#" onclick="selectPromotion('${promotion.MaKM}')">${promotion.TenKM} - ${discountText}</a>`;
-        promotionsList.appendChild(li);
-      });
-
-      if (data.data.length > 0) {
-        selectPromotion(data.data[0].MaKM);
-      }
-    })
-    .catch(error => {
-      console.error('Lỗi khi tải khuyến mãi:', error);
-      promotionsList.innerHTML = '<li>Đã có lỗi xảy ra</li>';
-      dealHotContainer.innerHTML = '<div class="no-products"><p>Đã có lỗi xảy ra</p></div>';
-    });
-}
-
-// Chọn khuyến mãi
-function selectPromotion(promotionId) {
-  const dealHotContainer = document.getElementById('deal-hot-list');
-  dealHotContainer.innerHTML = '<div class="loading">Đang tải sản phẩm khuyến mãi...</div>';
-
-  fetch(`http://localhost:5000/api/khuyenmai/${promotionId}/products`, {
-    headers: {
-      'Content-Type': 'application/json; charset=utf-8'
-    }
-  })
-    .then(response => {
-      if (!response.ok) throw new Error('Lỗi khi tải sản phẩm khuyến mãi');
-      return response.json();
-    })
-    .then(data => {
-      dealHotContainer.innerHTML = '';
-      if (!data.data || data.data.length === 0) {
-        dealHotContainer.innerHTML = '<div class="no-products"><p>Không có sản phẩm khuyến mãi</p></div>';
-        return;
-      }
-
-      data.data.forEach(product => {
-        const productDiv = document.createElement('div');
-        productDiv.classList.add('product-item');
-        productDiv.innerHTML = `
-          <img src="${product.HinhAnh || 'placeholder.jpg'}" alt="${escapeHtml(product.TenSP)}">
-          <h3>${escapeHtml(product.TenSP)}</h3>
-          <p class="price">${formatPrice(product.GiaBan)} VNĐ</p>
-          <button onclick="loadProductDetail('${product.MaSP}')">Xem chi tiết</button>
-        `;
-        dealHotContainer.appendChild(productDiv);
-      });
-    })
-    .catch(error => {
-      console.error('Lỗi khi tải sản phẩm khuyến mãi:', error);
-      dealHotContainer.innerHTML = '<div class="no-products"><p>Đã có lỗi xảy ra</p></div>';
-    });
-}
-
-// Lọc sản phẩm theo giá
-window.filterProductsByPrice = function (priceRange) {
-  console.log('Đã chọn khoảng giá:', priceRange);
-  filterProductsByPriceRange(priceRange, 'book-list');
-};
-
-// Lọc sản phẩm theo danh mục
-window.filterProductsByCategory = function (categoryId) {
-  console.log('Đã chọn danh mục:', categoryId);
-  localStorage.setItem('currentCategory_book-list', categoryId);
-  window.location.href = '/book.html';
-};
 
 // Tải nội dung trang
 function loadContent(url) {
@@ -503,69 +362,69 @@ window.loadProductDetail = function(productId) {
 };
 
 // Thiết lập FAQ
-function setupFAQ() {
-  const faqForm = document.getElementById('faq-form');
-  const faqInput = document.getElementById('faq-input');
-  const faqResults = document.getElementById('faq-results');
+// function setupFAQ() {
+//   const faqForm = document.getElementById('faq-form');
+//   const faqInput = document.getElementById('faq-input');
+//   const faqResults = document.getElementById('faq-results');
 
-  if (!faqForm) {
-    console.error('Không tìm thấy faq-form');
-    return;
-  }
+//   if (!faqForm) {
+//     console.error('Không tìm thấy faq-form');
+//     return;
+//   }
 
-  faqForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const keyword = faqInput.value.trim();
-    if (!keyword) {
-      alert('Vui lòng nhập câu hỏi hoặc từ khóa!');
-      return;
-    }
+//   faqForm.addEventListener('submit', async (e) => {
+//     e.preventDefault();
+//     const keyword = faqInput.value.trim();
+//     if (!keyword) {
+//       alert('Vui lòng nhập câu hỏi hoặc từ khóa!');
+//       return;
+//     }
 
-    faqResults.innerHTML = '<div class="loading">Đang tìm kiếm...</div>';
-    faqInput.disabled = true;
-    faqForm.querySelector('button').disabled = true;
+//     faqResults.innerHTML = '<div class="loading">Đang tìm kiếm...</div>';
+//     faqInput.disabled = true;
+//     faqForm.querySelector('button').disabled = true;
 
-    try {
-      const response = await fetch(`http://localhost:5000/api/support/faq?keyword=${encodeURIComponent(keyword)}`, {
-        headers: {
-          'Content-Type': 'application/json; charset=utf-8'
-        }
-      });
-      if (!response.ok) {
-        throw new Error('Lỗi khi tải FAQ');
-      }
-      const data = await response.json();
+//     try {
+//       const response = await fetch(`http://localhost:5000/api/support/faq?keyword=${encodeURIComponent(keyword)}`, {
+//         headers: {
+//           'Content-Type': 'application/json; charset=utf-8'
+//         }
+//       });
+//       if (!response.ok) {
+//         throw new Error('Lỗi khi tải FAQ');
+//       }
+//       const data = await response.json();
 
-      faqResults.innerHTML = '';
+//       faqResults.innerHTML = '';
 
-      if (!data.faqs || data.faqs.length === 0) {
-        faqResults.innerHTML = '<p class="no-results">Không tìm thấy câu trả lời phù hợp. Vui lòng thử từ khóa khác hoặc liên hệ hỗ trợ!</p>';
-        return;
-      }
+//       if (!data.faqs || data.faqs.length === 0) {
+//         faqResults.innerHTML = '<p class="no-results">Không tìm thấy câu trả lời phù hợp. Vui lòng thử từ khóa khác hoặc liên hệ hỗ trợ!</p>';
+//         return;
+//       }
 
-      data.faqs.forEach(faq => {
-        const faqItem = document.createElement('div');
-        faqItem.classList.add('faq-item');
-        faqItem.innerHTML = `
-          <h3>${escapeHtml(faq.question)}</h3>
-          <p>${escapeHtml(faq.answer)}</p>
-          <div class="category">Danh mục: ${escapeHtml(faq.category || 'Chưa phân loại')}</div>
-          <div class="keywords">Từ khóa: ${faq.keywords ? faq.keywords.map(k => escapeHtml(k)).join(', ') : 'Không có'}</div>
-        `;
-        faqResults.appendChild(faqItem);
+//       data.faqs.forEach(faq => {
+//         const faqItem = document.createElement('div');
+//         faqItem.classList.add('faq-item');
+//         faqItem.innerHTML = `
+//           <h3>${escapeHtml(faq.question)}</h3>
+//           <p>${escapeHtml(faq.answer)}</p>
+//           <div class="category">Danh mục: ${escapeHtml(faq.category || 'Chưa phân loại')}</div>
+//           <div class="keywords">Từ khóa: ${faq.keywords ? faq.keywords.map(k => escapeHtml(k)).join(', ') : 'Không có'}</div>
+//         `;
+//         faqResults.appendChild(faqItem);
 
-        const questionHeader = faqItem.querySelector('h3');
-        questionHeader.addEventListener('click', () => {
-          faqItem.classList.toggle('active');
-        });
-      });
-    } catch (error) {
-      console.error('Lỗi FAQ:', error);
-      faqResults.innerHTML = '<p class="no-results">Có lỗi xảy ra. Vui lòng thử lại sau!</p>';
-    } finally {
-      faqInput.disabled = false;
-      faqForm.querySelector('button').disabled = false;
-      faqInput.focus();
-    }
-  });
-}
+//         const questionHeader = faqItem.querySelector('h3');
+//         questionHeader.addEventListener('click', () => {
+//           faqItem.classList.toggle('active');
+//         });
+//       });
+//     } catch (error) {
+//       console.error('Lỗi FAQ:', error);
+//       faqResults.innerHTML = '<p class="no-results">Có lỗi xảy ra. Vui lòng thử lại sau!</p>';
+//     } finally {
+//       faqInput.disabled = false;
+//       faqForm.querySelector('button').disabled = false;
+//       faqInput.focus();
+//     }
+//   });
+// }

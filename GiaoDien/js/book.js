@@ -1,6 +1,6 @@
 // Updated book.js (Frontend - Trang sách)
 let allProducts = {};
-
+var productsSearchMain
 // Hàm định dạng giá
 function formatPrice(price) {
   return new Intl.NumberFormat('vi-VN').format(price);
@@ -104,8 +104,16 @@ function displayProducts(products, containerId = 'book-list', limit = null) {
     return;
   }
 
+  // reset nội dung danh sách
   productList.innerHTML = '';
 
+  // xoá nút "xem thêm" cũ nếu có
+  const oldViewMore = productList.parentElement.querySelector('.view-more-container');
+  if (oldViewMore) {
+    oldViewMore.remove();
+  }
+
+  // nếu không có sản phẩm
   if (!products || products.length === 0) {
     productList.innerHTML = `
       <div class="no-products">
@@ -124,14 +132,18 @@ function displayProducts(products, containerId = 'book-list', limit = null) {
     const productElement = document.createElement('div');
     productElement.className = 'product-item';
 
-    // Xử lý TinhTrang từ Buffer hoặc giá trị số
-    const isOutOfStock = product.TinhTrang?.data ? product.TinhTrang.data[0] === 0 : (product.TinhTrang === 0 || product.SoLuong === 0);
+    const isOutOfStock = product.TinhTrang?.data
+      ? product.TinhTrang.data[0] === 0
+      : (product.TinhTrang === 0 || product.SoLuong === 0);
+
     const discountPercent = product.PhanTramGiam || 0;
-    const progressPercent = product.DaBan && product.SoLuong ? Math.min((product.DaBan / (product.SoLuong + product.DaBan)) * 100, 100) : 0;
+    const progressPercent = product.DaBan && product.SoLuong
+      ? Math.min((product.DaBan / (product.SoLuong + product.DaBan)) * 100, 100)
+      : 0;
 
     productElement.innerHTML = `
       <div class="product-image">
-        <img loading="lazy" src="img/product/${product.HinhAnh || 'default-book.jpg'}"
+        <img src="img/product/${product.HinhAnh || 'default-book.jpg'}"
              alt="${escapeHtml(product.TenSP)}"
              onerror="this.src='img/default-book.jpg'">
         ${isOutOfStock ? '<span class="stock-status">HẾT HÀNG</span>' : ''}
@@ -164,6 +176,7 @@ function displayProducts(products, containerId = 'book-list', limit = null) {
     productList.appendChild(productElement);
   });
 
+  // tạo nút xem thêm nếu cần
   if (limit && products.length > displayCount) {
     const viewMoreButton = document.createElement('div');
     viewMoreButton.className = 'view-more-container';
@@ -175,6 +188,7 @@ function displayProducts(products, containerId = 'book-list', limit = null) {
     productList.parentElement.appendChild(viewMoreButton);
   }
 }
+
 
 // Hàm hiển thị tất cả sản phẩm
 function showAllProducts(containerId) {
@@ -193,76 +207,76 @@ function viewDetail(productId) {
 }
 
 // Lọc sản phẩm theo thể loại
-async function filterProductsByCategory(categoryId, containerId = 'book-list') {
-  try {
-    const productList = document.getElementById(containerId);
-    if (!productList) throw new Error(`Không tìm thấy phần tử #${containerId}`);
-    productList.innerHTML = '<div class="loading">Đang tải sản phẩm...</div>';
+// async function filterProductsByCategory(categoryId, containerId = 'book-list') {
+//   try {
+//     const productList = document.getElementById(containerId);
+//     if (!productList) throw new Error(`Không tìm thấy phần tử #${containerId}`);
+//     productList.innerHTML = '<div class="loading">Đang tải sản phẩm...</div>';
 
-    let url = containerId === 'deal-hot-list'
-      ? 'http://localhost:5000/api/product/deal-hot'
-      : 'http://localhost:5000/api/product';
-    const params = new URLSearchParams();
-    if (categoryId) params.append('MaTL', categoryId);
-    if (containerId === 'deal-hot-list') {
-      const MaKM = localStorage.getItem('currentPromotion');
-      if (MaKM) params.append('MaKM', MaKM);
-    }
+//     let url = containerId === 'deal-hot-list'
+//       ? 'http://localhost:5000/api/product/deal-hot'
+//       : 'http://localhost:5000/api/product';
+//     const params = new URLSearchParams();
+//     if (categoryId) params.append('MaTL', categoryId);
+//     if (containerId === 'deal-hot-list') {
+//       const MaKM = localStorage.getItem('currentPromotion');
+//       if (MaKM) params.append('MaKM', MaKM);
+//     }
 
-    if (params.toString()) url += `?${params.toString()}`;
+//     if (params.toString()) url += `?${params.toString()}`;
 
-    const response = await fetch(url);
-    if (!response.ok) throw new Error(`Lỗi HTTP: ${response.status}`);
+//     const response = await fetch(url);
+//     if (!response.ok) throw new Error(`Lỗi HTTP: ${response.status}`);
 
-    const products = await response.json();
-    if (!Array.isArray(products)) throw new Error('Dữ liệu trả về không hợp lệ');
+//     const products = await response.json();
+//     if (!Array.isArray(products)) throw new Error('Dữ liệu trả về không hợp lệ');
 
-    displayProducts(products, containerId, 20);
-    localStorage.setItem(`currentCategory_${containerId}`, categoryId);
-  } catch (error) {
-    console.error(`Lỗi khi lọc sản phẩm (${containerId}):`, error);
-    productList.innerHTML = `
-      <div class="error">
-        <p>${error.message}</p>
-        <button onclick="filterProductsByCategory('${categoryId}', '${containerId}')">Thử lại</button>
-      </div>
-    `;
-  }
-}
+//     displayProducts(products, containerId, 20);
+//     localStorage.setItem(`currentCategory_${containerId}`, categoryId);
+//   } catch (error) {
+//     console.error(`Lỗi khi lọc sản phẩm (${containerId}):`, error);
+//     productList.innerHTML = `
+//       <div class="error">
+//         <p>${error.message}</p>
+//         <button onclick="filterProductsByCategory('${categoryId}', '${containerId}')">Thử lại</button>
+//       </div>
+//     `;
+//   }
+// }
 
-// Lọc sản phẩm theo khoảng giá
-async function filterProductsByPriceRange(priceRange, containerId = 'book-list') {
-  try {
-    const productList = document.getElementById(containerId);
-    if (!productList) throw new Error(`Không tìm thấy phần tử #${containerId}`);
-    productList.innerHTML = '<div class="loading">Đang tải sản phẩm...</div>';
+// // Lọc sản phẩm theo khoảng giá
+// async function filterProductsByPriceRange(priceRange, containerId = 'book-list') {
+//   try {
+//     const productList = document.getElementById(containerId);
+//     if (!productList) throw new Error(`Không tìm thấy phần tử #${containerId}`);
+//     productList.innerHTML = '<div class="loading">Đang tải sản phẩm...</div>';
 
-    let url = 'http://localhost:5000/api/product';
-    const categoryId = localStorage.getItem(`currentCategory_${containerId}`);
-    const params = new URLSearchParams();
-    if (categoryId) params.append('MaTL', categoryId);
-    if (priceRange) params.append('priceRange', priceRange);
+//     let url = 'http://localhost:5000/api/product';
+//     const categoryId = localStorage.getItem(`currentCategory_${containerId}`);
+//     const params = new URLSearchParams();
+//     if (categoryId) params.append('MaTL', categoryId);
+//     if (priceRange) params.append('priceRange', priceRange);
 
-    if (params.toString()) url += `?${params.toString()}`;
+//     if (params.toString()) url += `?${params.toString()}`;
 
-    const response = await fetch(url);
-    if (!response.ok) throw new Error(`Lỗi HTTP: ${response.status}`);
+//     const response = await fetch(url);
+//     if (!response.ok) throw new Error(`Lỗi HTTP: ${response.status}`);
 
-    const products = await response.json();
-    if (!Array.isArray(products)) throw new Error('Dữ liệu trả về không hợp lệ');
+//     const products = await response.json();
+//     if (!Array.isArray(products)) throw new Error('Dữ liệu trả về không hợp lệ');
 
-    displayProducts(products, containerId, 20);
-    localStorage.setItem(`currentPriceRange_${containerId}`, priceRange);
-  } catch (error) {
-    console.error(`Lỗi khi lọc sản phẩm theo giá (${containerId}):`, error);
-    productList.innerHTML = `
-      <div class="error">
-        <p>${error.message}</p>
-        <button onclick="filterProductsByPriceRange('${priceRange}', '${containerId}')">Thử lại</button>
-      </div>
-    `;
-  }
-}
+//     displayProducts(products, containerId, 20);
+//     localStorage.setItem(`currentPriceRange_${containerId}`, priceRange);
+//   } catch (error) {
+//     console.error(`Lỗi khi lọc sản phẩm theo giá (${containerId}):`, error);
+//     productList.innerHTML = `
+//       <div class="error">
+//         <p>${error.message}</p>
+//         <button onclick="filterProductsByPriceRange('${priceRange}', '${containerId}')">Thử lại</button>
+//       </div>
+//     `;
+//   }
+// }
 
 // Tải sản phẩm chính (danh sách chính)
 async function fetchAndDisplayProducts() {
@@ -347,6 +361,63 @@ async function fetchAndDisplayPromotions() {
       </div>
     `;
   }
+}
+// Chọn khuyến mãi
+function selectPromotion(promotionId) {
+  const dealHotContainer = document.getElementById('deal-hot-list');
+  dealHotContainer.innerHTML = '<div class="loading">Đang tải sản phẩm khuyến mãi...</div>';
+
+  fetch(`http://localhost:5000/api/khuyenmai/${promotionId}/products`, {
+    headers: {
+      'Content-Type': 'application/json; charset=utf-8'
+    }
+  })
+    .then(response => {
+      if (!response.ok) throw new Error('Lỗi khi tải sản phẩm khuyến mãi');
+      return response.json();
+    })
+    .then(data => {
+      dealHotContainer.innerHTML = '';
+      if (!data.data || data.data.length === 0) {
+        dealHotContainer.innerHTML = '<div class="no-products"><p>Không có sản phẩm khuyến mãi</p></div>';
+        return;
+      }
+
+      data.data.forEach(product => {
+        const productDiv = document.createElement('div');
+        productDiv.classList.add('product-item');
+        productDiv.innerHTML = `
+          <img src="${product.HinhAnh || 'placeholder.jpg'}" alt="${escapeHtml(product.TenSP)}">
+          <h3>${escapeHtml(product.TenSP)}</h3>
+          <p class="price">${formatPrice(product.GiaBan)} VNĐ</p>
+          <button onclick="loadProductDetail('${product.MaSP}')">Xem chi tiết</button>
+        `;
+        dealHotContainer.appendChild(productDiv);
+      });
+    })
+    .catch(error => {
+      console.error('Lỗi khi tải sản phẩm khuyến mãi:', error);
+      dealHotContainer.innerHTML = '<div class="no-products"><p>Đã có lỗi xảy ra</p></div>';
+    });
+}
+
+// Thiết lập dropdown danh mục
+function setupCategoryDropdown() {
+  const categoryDropdown = document.getElementById('categoryDropdown');
+  if (!categoryDropdown) return;
+
+  const dropdownHeader = categoryDropdown.querySelector('.dropdown-header');
+  if (dropdownHeader) {
+    dropdownHeader.addEventListener('click', () => {
+      categoryDropdown.classList.toggle('dropdown-active');
+    });
+  }
+
+  document.addEventListener('click', (event) => {
+    if (!categoryDropdown.contains(event.target)) {
+      categoryDropdown.classList.remove('dropdown-active');
+    }
+  });
 }
 
 // Tải sách giáo khoa
@@ -454,18 +525,166 @@ async function fetchAndDisplayScienceBooks() {
   }
 }
 
+// Tải danh sách khuyến mãi
+// function loadPromotions() {
+//   const discountSelect = document.getElementById('discountSelect');
+//   const promotionsList = document.getElementById('promotions-list');
+//   const dealHotContainer = document.getElementById('deal-hot-list');
+
+//   if (!discountSelect || !promotionsList || !dealHotContainer) {
+//     console.error('Không tìm thấy discountSelect, promotions-list hoặc deal-hot-list');
+//     return;
+//   }
+
+//   discountSelect.innerHTML = '<option value="">Chọn chương trình khuyến mãi</option>';
+//   promotionsList.innerHTML = '<li>Đang tải khuyến mãi...</li>';
+//   dealHotContainer.innerHTML = '<div class="loading">Đang tải sản phẩm khuyến mãi...</div>';
+//   dealHotContainer.style.display = 'grid';
+
+//   fetch('http://localhost:5000/api/khuyenmai?activeOnly=true', {
+//     headers: {
+//       'Content-Type': 'application/json; charset=utf-8'
+//     }
+//   })
+//     .then(response => {
+//       if (!response.ok) throw new Error('Lỗi khi tải khuyến mãi');
+//       return response.json();
+//     })
+//     .then(data => {
+//       discountSelect.innerHTML = '<option value="">Chọn chương trình khuyến mãi</option>';
+//       promotionsList.innerHTML = '';
+
+//       if (!data.data || data.data.length === 0) {
+//         promotionsList.innerHTML = '<li>Không có khuyến mãi nào</li>';
+//         dealHotContainer.innerHTML = '<div class="no-products"><p>Không có sản phẩm khuyến mãi</p></div>';
+//         dealHotContainer.style.display = 'grid';
+//         return;
+//       }
+
+//       data.data.forEach(promotion => {
+//         let discountText = '';
+//         switch (promotion.LoaiKM) {
+//           case 'giam_phan_tram':
+//             discountText = `Giảm ${promotion.GiaTri}%`;
+//             break;
+//           case 'giam_tien':
+//             discountText = `Giảm ${formatPrice(promotion.GiaTri)} VNĐ`;
+//             break;
+//           case 'mua_1_tang_1':
+//             discountText = 'Mua 1 tặng 1';
+//             break;
+//         }
+
+//         const option = document.createElement('option');
+//         option.value = promotion.MaKM;
+//         option.textContent = `${promotion.TenKM} - ${discountText}`;
+//         discountSelect.appendChild(option);
+
+//         const li = document.createElement('li');
+//         li.innerHTML = `<a href="#" onclick="selectPromotion('${promotion.MaKM}')">${promotion.TenKM} - ${discountText}</a>`;
+//         promotionsList.appendChild(li);
+//       });
+
+//       if (data.data.length > 0) {
+//         selectPromotion(data.data[0].MaKM);
+//       }
+//     })
+//     .catch(error => {
+//       console.error('Lỗi khi tải khuyến mãi:', error);
+//       promotionsList.innerHTML = '<li>Đã có lỗi xảy ra</li>';
+//       dealHotContainer.innerHTML = '<div class="no-products"><p>Đã có lỗi xảy ra</p></div>';
+//     });
+// }
+
+
+async function loadListProductSearch() {
+  const params = new URLSearchParams(window.location.search);
+  const keyword = params.get("search") || "";
+  productsSearchMain = await searchProduct(keyword);
+  // const productsCategory = products.filter(item => item.MaTL === '1');
+  displayProducts(productsSearchMain, 'search-book-list', 10);
+}
+
+const removeKeyWordSearch = () => {
+  const currentPath = window.location.pathname;
+  const searchParams = new URLSearchParams(window.location.search);
+  if (currentPath.endsWith("/GiaoDien/book.html") && searchParams.has("search")) {
+    document.getElementById('name-products-list').textContent = "Danh Sách tìm kiếm";
+    if (performance.getEntriesByType("navigation")[0].type === "reload") {
+      window.location.href = "/GiaoDien/book.html";
+    }
+  }
+}
+
+let currentCategory = "";
+let currentPriceRange = "";
+
+function applyFilters() {
+  if (!productsSearchMain) return;
+
+  let productsFiltered = [...productsSearchMain];
+
+  // lọc theo danh mục
+  if (currentCategory) {
+    productsFiltered = productsFiltered.filter(
+      item => String(item.MaTL) === String(currentCategory)
+    );
+  }
+
+  // lọc theo giá
+  if (currentPriceRange) {
+    if (currentPriceRange.includes("-")) {
+      const [min, max] = currentPriceRange.split("-").map(Number);
+      productsFiltered = productsFiltered.filter(
+        p => p.DonGia >= min && p.DonGia <= max
+      );
+    } else {
+      const min = Number(currentPriceRange);
+      productsFiltered = productsFiltered.filter(p => p.DonGia >= min);
+    }
+  }
+
+  displayProducts(productsFiltered, "search-book-list", 10);
+}
+
+// chọn category
+window.filterProductsByCategory = function (categoryId) {
+  currentCategory = categoryId || "";
+  applyFilters();
+};
+
+// chọn price
+window.filterProductsByPrice = function (priceRange) {
+  currentPriceRange = priceRange || "";
+  applyFilters();
+};
+
+
+
 // Gọi khi trang tải xong
 document.addEventListener('DOMContentLoaded', () => {
-  fetchAndDisplayProducts();
-  fetchAndDisplayPromotions();
-  fetchAndDisplayTextbooks();
-  fetchAndDisplayPoliticsBooks();
-  fetchAndDisplayScienceBooks();
+  const currentPath = window.location.pathname;
+  removeKeyWordSearch();
+
+  // chỉ gọi các hàm này khi ở tràng index
+  if (currentPath.endsWith("/GiaoDien/index.html")) {
+    fetchAndDisplayProducts();
+    fetchAndDisplayPromotions();
+    fetchAndDisplayTextbooks();
+    fetchAndDisplayPoliticsBooks();
+    fetchAndDisplayScienceBooks();
+  }
+
+  // chỉ gọi hàm này khi ở trang book.html
+  if (currentPath.endsWith("/GiaoDien/book.html")) {
+    // loadPromotions();
+    setupCategoryDropdown()
+  }
+
 });
 
 // Gán các hàm vào window
 window.addToCart = addToCart;
 window.viewDetail = viewDetail;
-window.showAllProducts = showAllProducts;
+// window.showAllProducts = showAllProducts;
 window.filterProductsByCategory = filterProductsByCategory;
-window.filterProductsByPriceRange = filterProductsByPriceRange;

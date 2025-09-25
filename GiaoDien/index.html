@@ -115,7 +115,7 @@
       <div class="product-section">
         <h2>Sách Mới</h2>
         <div class="view-all">
-          <a href="book.html">Xem tất cả <i class="fas fa-chevron-right"></i></a>
+          <!-- <a href="book.html">Xem tất cả <i class="fas fa-chevron-right"></i></a> -->
         </div>
         <div id="book-list" class="product-container"></div>
       </div>
@@ -124,7 +124,7 @@
       <div class="product-section promotion-section">
         <h2>Sách Khuyến Mãi</h2>
         <div class="view-all">
-          <a href="book.html?category=2">Xem tất cả <i class="fas fa-chevron-right"></i></a>
+          <!-- <a href="book.html?category=2">Xem tất cả <i class="fas fa-chevron-right"></i></a> -->
         </div>
         <div id="promotion-book-list" class="product-container"></div>
       </div>
@@ -133,7 +133,7 @@
       <div class="product-section textbook-section">
         <h2>Sách Giáo Khoa</h2>
         <div class="view-all">
-          <a href="book.html?category=6">Xem tất cả <i class="fas fa-chevron-right"></i></a>
+          <!-- <a href="book.html?category=6">Xem tất cả <i class="fas fa-chevron-right"></i></a> -->
         </div>
         <div id="textbook-list" class="product-container"></div>
       </div>
@@ -142,7 +142,7 @@
       <div class="product-section politics-section">
         <h2>Sách Chính Trị</h2>
         <div class="view-all">
-          <a href="book.html?category=2">Xem tất cả <i class="fas fa-chevron-right"></i></a>
+          <!-- <a href="book.html?category=2">Xem tất cả <i class="fas fa-chevron-right"></i></a> -->
         </div>
         <div id="politics-book-list" class="product-container"></div>
       </div>
@@ -151,7 +151,7 @@
       <div class="product-section science-section">
         <h2>Sách Khoa Học</h2>
         <div class="view-all">
-          <a href="book.html?category=4">Xem tất cả <i class="fas fa-chevron-right"></i></a>
+          <!-- <a href="book.html?category=4">Xem tất cả <i class="fas fa-chevron-right"></i></a> -->
         </div>
         <div id="science-book-list" class="product-container"></div>
       </div>
@@ -265,25 +265,6 @@
       </p>
     </div>
   </footer>
-
-  <script>
-    // Hàm toggle dropdown cho sidebar
-    function toggleDropdown() {
-      const dropdown = document.getElementById('categoryDropdown');
-      dropdown.classList.toggle('dropdown-active');
-    }
-
-    // Đóng dropdown khi click ra ngoài
-    document.addEventListener('click', function(event) {
-      const dropdown = document.getElementById('categoryDropdown');
-      if (!dropdown.contains(event.target)) {
-        dropdown.classList.remove('dropdown-active');
-      }
-    });
-
-    // Hàm filter sản phẩm
-    
-  </script>
   <script src="js/index.js"></script>
   <script src="js/book.js"></script>
   <script src="js/loadHeader.js"></script>

@@ -23,6 +23,13 @@ async function loadHeader() {
       if (typeof setupLogout === "function") setupLogout();
       handleSearch();
       if (typeof renderHistory === 'function') renderHistory();
+      
+      if (typeof loadListProductSearch === "function") {
+        const currentPath = window.location.pathname;
+        if (currentPath.endsWith("/GiaoDien/book.html")) {
+          loadListProductSearch();
+        }
+      }
     };
     script.onerror = () => console.error("Không load được header.js!");
     document.body.appendChild(script);
@@ -42,7 +49,7 @@ function handleSearch() {
 
   // xử lý tìm kiếm sản phẩm và ẩn hiện box đề xua
   searchInput.addEventListener("input", () => {
-    console.log("cá",searchInput.value)
+    console.log("cá", searchInput.value)
     if (!searchInput.value) {
       suggestionBox.style.display = "none";
     } else {
@@ -64,16 +71,17 @@ const handleSearchHistory = () => {
   if (!form || !searchInput) {
     return;
   }
-  
+
   form.addEventListener("submit", (e) => {
+    e.preventDefault();
     const value = searchInput.value.trim();
     if (value) {
       addSearchHistory(value);
       searchInput.value = "";
+      window.location.href = `/GiaoDien/book.html?search=` + encodeURIComponent(value);
     }
   });
 };
-
 
 
 document.addEventListener('DOMContentLoaded', () => {

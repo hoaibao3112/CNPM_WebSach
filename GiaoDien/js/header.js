@@ -143,6 +143,7 @@ const addSearchHistory = (value) => {
   if (searchHistory.lengt === 0) {
     searchHistory.push(value);
   }
+  searchHistory = searchHistory.filter(item => item !== value);
   searchHistory.unshift(value);
 
   if (searchHistory.length > 5) {

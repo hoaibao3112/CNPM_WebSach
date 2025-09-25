@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="vi">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,55 +9,57 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <link rel="icon" href="favicon.ico" type="image/x-icon" />
 </head>
+
 <body>
     <!-- header -->
     <div id="load-header"></div>
+
     <div class="container">
         <aside class="sidebar">
             <h3>DANH MỤC SẢN PHẨM</h3>
             <div class="category-dropdown" id="categoryDropdown">
                 <div class="dropdown-header">
-                <span>Nổi bật</span>
-                <i class="fas fa-chevron-down"></i>
+                    <span>Nổi bật</span>
+                    <i class="fas fa-chevron-down"></i>
                 </div>
                 <div class="dropdown-content">
-                <a href="#" onclick="filterProductsByCategory(1)">Truyền Tranh - Comic</a>
-                <a href="#" onclick="filterProductsByCategory(2)">Văn học nước ngoài</a>
-                <a href="#" onclick="filterProductsByCategory(3)">Sale cuối năm 2022</a>
-                <a href="#" onclick="filterProductsByCategory(4)">Sách Văn Học</a>
-                <a href="#" onclick="filterProductsByCategory(5)">Truyền Tranh BL</a>
-                <a href="#" onclick="filterProductsByCategory(6)">Sách Kỹ Năng Sống</a>
-                <a href="#" onclick="filterProductsByCategory(7)">Sách Thiếu Nhi</a>
-                <a href="#" onclick="filterProductsByCategory(8)">Light Novel</a>
-                <a href="#" onclick="filterProductsByCategory(9)">Văn Phòng Phẩm - Quà Tặng</a>
+                    <a href="#" onclick="filterProductsByCategory(1)">Truyền Tranh - Comic</a>
+                    <a href="#" onclick="filterProductsByCategory(2)">Văn học nước ngoài</a>
+                    <a href="#" onclick="filterProductsByCategory(3)">Sale cuối năm 2022</a>
+                    <a href="#" onclick="filterProductsByCategory(4)">Sách Văn Học</a>
+                    <a href="#" onclick="filterProductsByCategory(5)">Truyền Tranh BL</a>
+                    <a href="#" onclick="filterProductsByCategory(6)">Sách Kỹ Năng Sống</a>
+                    <a href="#" onclick="filterProductsByCategory(7)">Sách Thiếu Nhi</a>
+                    <a href="#" onclick="filterProductsByCategory(8)">Light Novel</a>
+                    <a href="#" onclick="filterProductsByCategory(9)">Văn Phòng Phẩm - Quà Tặng</a>
                 </div>
             </div>
             <div class="divider"></div>
             <div class="price-filter-section">
                 <h3>LỌC THEO GIÁ</h3>
                 <div class="price-filter">
-                <select id="priceRange" onchange="filterProductsByPrice(this.value)">
-                    <option value="">Tất cả</option>
-                    <option value="0-50000">Dưới 50.000đ</option>
-                    <option value="50000-100000">50.000đ - 100.000đ</option>
-                    <option value="100000-200000">100.000đ - 200.000đ</option>
-                    <option value="200000">Trên 200.000đ</option>
-                </select>
+                    <select id="priceRange" onchange="filterProductsByPrice(this.value)">
+                        <option value="">Tất cả</option>
+                        <option value="0-50000">Dưới 50.000đ</option>
+                        <option value="50000-100000">50.000đ - 100.000đ</option>
+                        <option value="100000-200000">100.000đ - 200.000đ</option>
+                        <option value="200000">Trên 200.000đ</option>
+                    </select>
                 </div>
             </div>
             <div class="divider"></div>
             <div class="text-discount-section">
                 <h4>DEAL HOT - GIẢM SỐC</h4>
                 <div class="discount-filter">
-                <select id="discountSelect" onchange="selectDiscount(this.value)">
-                    <option value="">Chọn chương trình khuyến mãi</option>
-                    <option value="skills-set">Bộ sách kỹ năng sống - 99.000đ (-34%)</option>
-                    <option value="bestseller-novel">Tiểu thuyết bestseller - 79.000đ (-34%)</option>
-                    <option value="children-comics">Truyện tranh thiếu nhi - 59.000đ (-34%)</option>
-                    <option value="cooking-book">Sách dạy nấu ăn - 129.000đ (-28%)</option>
-                    <option value="light-novel">Light Novel - 89.000đ (-31%)</option>
-                    <option value="dictionary">Từ điển Anh-Việt - 199.000đ (-20%)</option>
-                </select>
+                    <select id="discountSelect" onchange="selectDiscount(this.value)">
+                        <option value="">Chọn chương trình khuyến mãi</option>
+                        <option value="skills-set">Bộ sách kỹ năng sống - 99.000đ (-34%)</option>
+                        <option value="bestseller-novel">Tiểu thuyết bestseller - 79.000đ (-34%)</option>
+                        <option value="children-comics">Truyện tranh thiếu nhi - 59.000đ (-34%)</option>
+                        <option value="cooking-book">Sách dạy nấu ăn - 129.000đ (-28%)</option>
+                        <option value="light-novel">Light Novel - 89.000đ (-31%)</option>
+                        <option value="dictionary">Từ điển Anh-Việt - 199.000đ (-20%)</option>
+                    </select>
                 </div>
                 <ul id="promotions-list"></ul>
                 <div id="deal-hot-list"></div>
@@ -67,30 +70,29 @@
         </aside>
         <main class="main-content">
             <div class="product-section">
-                <h2>Danh sách sách</h2>
-                <div id="book-list" class="product-container"></div>
-            </div>
-
-            <div class="promotion-section">
-                <h2>Sách khuyến mãi</h2>
-                <div id="promotion-book-list" class="product-container"></div>
-            </div>
-            <!-- Thêm phần sách chính trị -->
-            <div class="politics-section">
-                <h2>Sách Chính Trị</h2>
-                <div id="politics-book-list" class="product-container"></div>
-            </div>
-            <!-- Thêm section Sách Khoa Học -->
-            <div class="science-section">
-                <h2>Sách Khoa Học</h2>
-                <div class="view-all"><a href="#">Xem tất cả <i class="fas fa-chevron-right"></i></a></div>
-                <div id="science-book-list"></div>
+                <h2 id="name-products-list">Danh sách các sản phẩm</h2>
+                <div id="search-book-list" class="product-container"></div>
             </div>
         </main>
     </div>
-    <script src="js/index.js"></script>
-    <script src="js/book.js"></script>
     <script src="js/loadHeader.js"></script>
-    <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'93dac1b36d01c010',t:'MTc0Njg5Mzk1MC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script>
+    <script src="js/book.js"></script>
+    <script>
+        // Hàm toggle dropdown cho sidebar
+        function toggleDropdown() {
+            const dropdown = document.getElementById('categoryDropdown');
+            dropdown.classList.toggle('dropdown-active');
+        }
+
+        // Đóng dropdown khi click ra ngoài
+        document.addEventListener('click', function (event) {
+            const dropdown = document.getElementById('categoryDropdown');
+            if (!dropdown.contains(event.target)) {
+                dropdown.classList.remove('dropdown-active');
+            }
+        });
+        // Hàm filter sản phẩm
+    </script>
 </body>
+
 </html>

@@ -1,4 +1,4 @@
-* {
+book-list* {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
@@ -8,7 +8,8 @@
 body {
   background-color: #f5f5f5;
   color: #333;
-  /* chỉnh phần body xuống để header không che content */
+  margin: 0;
+  padding: 0;
   padding-top: 60px;
 }
 /* Container chứa toàn bộ sản phẩm */
@@ -413,7 +414,7 @@ body {
 
 #politics-book-list {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  grid-template-columns: repeat(auto-fill, 18%);
   gap: 20px;
   padding: 10px 0;
 }
@@ -457,15 +458,16 @@ body {
   margin-bottom: 15px;
   display: inline-block;
 }
-
+#search-book-list,
 #science-book-list {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  grid-template-columns: repeat(auto-fill, 18%);
   gap: 20px;
   padding: 10px 0;
 }
 
 /* Badge cho sản phẩm trong #science-book-list */
+#search-book-list .product-item .product-image::after,
 #science-book-list .product-item .product-image::after {
   content: 'KHOA HỌC';
   position: absolute;
@@ -482,9 +484,11 @@ body {
 
 /* Responsive cho phần khoa học */
 @media (max-width: 768px) {
+  #search-book-list,
   #science-book-list {
     grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
   }
+  #search-book-list .product-item .product-image::after
   #science-book-list .product-item .product-image::after {
     font-size: 10px;
     padding: 2px 6px;
@@ -493,7 +497,7 @@ body {
 /* Toast Notification */
 .toast-notification {
   position: fixed;
-  top: 20px;
+  top: 60px;
   right: 20px;
   background: #e6f4ea; /* Đổi từ #fff0e0 sang xanh lá cây nhạt */
   color: #15881b; /* Đổi từ #d32f2f sang xanh lá cây đậm */
