@@ -1,6 +1,6 @@
 document.addEventListener('DOMContentLoaded', initializeApp);
 
-// Hàm khởi tạo ứng dụng
+// Hàm khởi tạo ứng dụng - SỬA LẠI
 function initializeApp() {
     const user = getUserInfo();
     if (!user) return;
@@ -8,8 +8,13 @@ function initializeApp() {
     // Hiển thị tên khách hàng
     updateCustomerName(user.tenkh);
 
+    // Inject CSS trước khi khởi tạo chat
+    injectChatStyles();
+    
     // Khởi tạo hệ thống chat
-    initializeChatSystem();
+    setTimeout(() => {
+        initializeChatSystem();
+    }, 500);
 
     // Load danh sách đơn hàng
     renderOrders(user.makh);
@@ -17,8 +22,8 @@ function initializeApp() {
     // Gắn các sự kiện
     attachEventListeners();
 
-    // Không cần tải Google Maps API nữa
-    initMap(); // Khởi tạo bản đồ ngay lập tức với Leaflet
+    // Khởi tạo bản đồ
+    initMap();
 }
 
 // Lấy thông tin người dùng từ localStorage
@@ -449,70 +454,109 @@ function attachEventListeners() {
     }
 }
 
-// ========== Hệ thống Chat ==========
-let currentChatRoom = null; // { room_id, customer_id }
+// ========== HỆ THỐNG CHAT HOÀN CHỈNH ==========
+let currentChatRoom = null;
 let unreadMessages = 0;
+let chatPollingInterval = null;
+let lastMessageId = 0;
 
-// Khởi tạo hệ thống chat
+// 1. Khởi tạo hệ thống chat
 function initializeChatSystem() {
-    if (!checkAuth()) return;
-
-    const customerId = getCustomerId();
-    const chatBtn = document.getElementById('chat-floating-btn');
-    const chatPopup = document.getElementById('chat-popup');
-    const closeBtn = document.getElementById('close-chat-btn');
-    const sendBtn = document.getElementById('send-chat-message-btn');
-    const chatInput = document.getElementById('chat-message-input');
-
-    if (!chatBtn || !chatPopup || !closeBtn || !sendBtn || !chatInput) {
-        console.error('Chat elements not found');
-        showErrorToast('Không thể khởi tạo chat: Thiếu phần tử giao diện');
+    console.log('🚀 Initializing chat system...');
+    
+    if (!checkAuth()) {
+        console.error('❌ User not authenticated');
         return;
     }
 
-    // Tạo hoặc lấy phòng chat
-    fetchChatRooms().then(rooms => {
-        if (rooms.length === 0) {
-            createChatRoom(customerId).then(room => {
-                currentChatRoom = room;
-                updateUnreadCount();
-            }).catch(error => {
-                console.error('Lỗi khởi tạo phòng chat:', error);
-                showErrorToast('Không thể khởi tạo phòng chat');
-            });
-        } else {
-            currentChatRoom = rooms[0]; // Lấy phòng mới nhất
-            updateUnreadCount();
-        }
-    }).catch(error => {
-        console.error('Lỗi lấy danh sách phòng chat:', error);
-        showErrorToast('Không thể tải danh sách phòng chat');
-    });
+    // Inject CSS trước
+    injectChatStyles();
 
-    // Mở/đóng popup chat
-    chatBtn.addEventListener('click', () => {
-        chatPopup.classList.toggle('show');
-        if (chatPopup.classList.contains('show')) {
-            unreadMessages = 0;
-            updateUnreadCount();
-            if (currentChatRoom) loadChatHistory();
-        }
-    });
+    // Tạo chat elements nếu chưa có
+    createChatElements();
 
-    closeBtn.addEventListener('click', () => {
-        chatPopup.classList.remove('show');
-    });
-
-    // Gửi tin nhắn
-    sendBtn.addEventListener('click', sendMessage);
-    chatInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') sendMessage();
-    });
+    // Khởi tạo phòng chat
+    initializeChatRoom()
+        .then(() => {
+            console.log('✅ Chat room initialized successfully');
+            attachChatEventListeners();
+            startUnreadPolling();
+        })
+        .catch(error => {
+            console.error('❌ Failed to initialize chat room:', error);
+            showErrorToast('Không thể khởi tạo chat');
+        });
 }
 
-// Tạo phòng chat mới
-async function createChatRoom(customerId) {
-    if (!checkAuth()) throw new Error('Chưa đăng nhập');
+// 2. Tạo chat elements
+function createChatElements() {
+    console.log('🔧 Creating chat elements...');
+
+    // Tạo floating button
+    if (!document.getElementById('chat-floating-btn')) {
+        const chatBtn = document.createElement('div');
+        chatBtn.id = 'chat-floating-btn';
+        chatBtn.className = 'chat-floating-btn';
+        chatBtn.innerHTML = '<i class="fas fa-comments"></i>';
+        document.body.appendChild(chatBtn);
+    }
+
+    // Tạo chat popup
+    if (!document.getElementById('chat-popup')) {
+        const chatPopup = document.createElement('div');
+        chatPopup.id = 'chat-popup';
+        chatPopup.className = 'chat-popup';
+        chatPopup.innerHTML = `
+            <div class="chat-popup-header">
+                <h3><i class="fas fa-headset"></i> Hỗ trợ khách hàng</h3>
+                <span class="close-chat-btn" id="close-chat-btn">&times;</span>
+            </div>
+            <div class="chat-popup-body">
+                <div class="chat-messages" id="chat-messages"></div>
+                <div class="chat-input-area">
+                    <input type="text" id="chat-message-input" placeholder="Nhập tin nhắn..." />
+                    <button id="send-chat-message-btn">
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(chatPopup);
+    }
+}
+
+// 3. Khởi tạo phòng chat
+async function initializeChatRoom() {
+    try {
+        console.log('🏠 Initializing chat room...');
+        
+        // Lấy danh sách phòng chat hiện có
+        const rooms = await fetchChatRooms();
+        
+        if (rooms.length > 0) {
+            currentChatRoom = rooms[0];
+            console.log('✅ Using existing room:', currentChatRoom.room_id);
+        } else {
+            // Tạo phòng mới
+            currentChatRoom = await createChatRoom();
+            console.log('✅ Created new room:', currentChatRoom.room_id);
+        }
+
+        await updateUnreadCount();
+        
+    } catch (error) {
+        console.error('❌ Error initializing chat room:', error);
+        throw error;
+    }
+}
+
+// 4. Tạo phòng chat mới
+async function createChatRoom() {
+    console.log('🆕 Creating new chat room...');
+    
+    if (!checkAuth()) {
+        throw new Error('User not authenticated');
+    }
 
     try {
         const response = await fetch('http://localhost:5000/api/chat/rooms', {
@@ -521,57 +565,309 @@ async function createChatRoom(customerId) {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${getToken()}`
             },
-            body: JSON.stringify({ customer_id: customerId })
+            body: JSON.stringify({}) // API tự lấy customer_id từ token
         });
 
         if (!response.ok) {
             const errorData = await response.json();
-            throw new Error(errorData.error || `HTTP ${response.status}: Không thể tạo phòng chat`);
+            throw new Error(errorData.error || `HTTP ${response.status}`);
         }
 
         const data = await response.json();
-        console.log('Phòng chat mới:', data.room);
+        
+        if (!data.success || !data.room) {
+            throw new Error('Invalid response format');
+        }
+
+        console.log('✅ Room created:', data.room);
         return data.room;
+        
     } catch (error) {
-        console.error('Lỗi createChatRoom:', error);
+        console.error('❌ Create room error:', error);
         throw error;
     }
 }
 
-// Lấy danh sách phòng chat
+// 5. Lấy danh sách phòng chat
 async function fetchChatRooms() {
+    console.log('📋 Fetching chat rooms...');
+    
     if (!checkAuth()) return [];
 
     try {
         const response = await fetch('http://localhost:5000/api/chat/rooms', {
-            headers: { 'Authorization': `Bearer ${getToken()}` }
+            headers: { 
+                'Authorization': `Bearer ${getToken()}` 
+            }
         });
 
-        if (!response.ok) throw new Error(`HTTP ${response.status}: Không thể lấy danh sách phòng chat`);
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+        }
 
         const data = await response.json();
+        console.log('📋 Rooms response:', data);
+        
         return data.rooms || [];
+        
     } catch (error) {
-        console.error('Lỗi fetchChatRooms:', error);
-        throw error;
+        console.error('❌ Fetch rooms error:', error);
+        return [];
     }
 }
 
-// Gửi tin nhắn
+// 6. Gắn event listeners
+function attachChatEventListeners() {
+    console.log('🔗 Attaching chat event listeners...');
+
+    const chatBtn = document.getElementById('chat-floating-btn');
+    const chatPopup = document.getElementById('chat-popup');
+    const closeBtn = document.getElementById('close-chat-btn');
+    const sendBtn = document.getElementById('send-chat-message-btn');
+    const chatInput = document.getElementById('chat-message-input');
+
+    // Mở/đóng chat
+    if (chatBtn && chatPopup) {
+        chatBtn.addEventListener('click', () => {
+            console.log('💬 Chat button clicked');
+            const isVisible = chatPopup.classList.contains('show');
+            
+            if (isVisible) {
+                closeChatPopup();
+            } else {
+                openChatPopup();
+            }
+        });
+    }
+
+    // Đóng chat
+    if (closeBtn) {
+        closeBtn.addEventListener('click', closeChatPopup);
+    }
+
+    // Gửi tin nhắn
+    if (sendBtn) {
+        sendBtn.addEventListener('click', sendMessage);
+    }
+
+    // Enter để gửi
+    if (chatInput) {
+        chatInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+            }
+        });
+    }
+
+    // Đóng khi click bên ngoài
+    document.addEventListener('click', (e) => {
+        if (chatPopup && chatPopup.classList.contains('show')) {
+            if (!chatPopup.contains(e.target) && !chatBtn.contains(e.target)) {
+                closeChatPopup();
+            }
+        }
+    });
+}
+
+// 7. Mở chat popup
+function openChatPopup() {
+    console.log('📖 Opening chat popup...');
+    
+    const chatPopup = document.getElementById('chat-popup');
+    if (!chatPopup) return;
+
+    chatPopup.classList.add('show');
+    
+    // Reset unread count
+    unreadMessages = 0;
+    updateUnreadBadge();
+    
+    // Load lịch sử và bắt đầu polling
+    if (currentChatRoom) {
+        loadChatHistory();
+        startChatPolling();
+    }
+
+    // Focus input
+    const chatInput = document.getElementById('chat-message-input');
+    if (chatInput) {
+        setTimeout(() => chatInput.focus(), 300);
+    }
+}
+
+// 8. Đóng chat popup
+function closeChatPopup() {
+    console.log('❌ Closing chat popup...');
+    
+    const chatPopup = document.getElementById('chat-popup');
+    if (!chatPopup) return;
+
+    chatPopup.classList.remove('show');
+    stopChatPolling();
+}
+
+// 9. Tải lịch sử chat
+async function loadChatHistory() {
+    if (!currentChatRoom || !checkAuth()) {
+        console.log('⚠️ Cannot load chat history: missing room or auth');
+        return;
+    }
+
+    console.log('📚 Loading chat history for room:', currentChatRoom.room_id);
+
+    try {
+        const response = await fetch(`http://localhost:5000/api/chat/rooms/${currentChatRoom.room_id}/messages`, {
+            headers: { 
+                'Authorization': `Bearer ${getToken()}` 
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+        }
+
+        const data = await response.json();
+        console.log('📨 Raw API response:', data);
+        
+        if (data.success && Array.isArray(data.messages)) {
+            console.log(`📨 Loaded ${data.messages.length} messages`);
+            
+            // Log từng tin nhắn để debug
+            data.messages.forEach(msg => {
+                console.log('📄 Message:', {
+                    id: msg.id,
+                    sender_type: msg.sender_type,
+                    message: msg.message?.substring(0, 30) + '...'
+                });
+            });
+            
+            displayChatHistory(data.messages);
+            
+            // Cập nhật lastMessageId
+            if (data.messages.length > 0) {
+                lastMessageId = Math.max(...data.messages.map(m => m.id));
+                console.log('🔢 Set lastMessageId to:', lastMessageId);
+            }
+        } else {
+            console.error('❌ Invalid response format:', data);
+            showEmptyChat();
+        }
+        
+    } catch (error) {
+        console.error('❌ Load history error:', error);
+        showErrorChat('Không thể tải lịch sử chat');
+    }
+}
+
+// 10. Hiển thị lịch sử chat
+function displayChatHistory(messages) {
+    const chatBody = document.getElementById('chat-messages');
+    if (!chatBody) {
+        console.error('❌ Chat messages container not found');
+        return;
+    }
+
+    console.log(`📺 Displaying ${messages.length} messages`);
+
+    // Xóa nội dung cũ
+    chatBody.innerHTML = '';
+
+    if (messages.length === 0) {
+        showEmptyChat();
+        return;
+    }
+
+    // Sắp xếp tin nhắn theo thời gian
+    const sortedMessages = messages.sort((a, b) => 
+        new Date(a.created_at) - new Date(b.created_at)
+    );
+
+    // Hiển thị từng tin nhắn
+    sortedMessages.forEach(msg => {
+        console.log('📝 Processing message:', msg);
+        appendMessage(msg);
+    });
+
+    // Scroll xuống cuối
+    scrollToBottom();
+}
+
+// 11. Thêm tin nhắn vào UI
+function appendMessage(msg, animate = false) {
+    const chatBody = document.getElementById('chat-messages');
+    if (!chatBody) return;
+
+    // Kiểm tra tin nhắn đã tồn tại
+    if (chatBody.querySelector(`[data-message-id="${msg.id}"]`)) {
+        console.log('⚠️ Message already exists:', msg.id);
+        return;
+    }
+
+    console.log('📝 Appending message:', {
+        id: msg.id,
+        sender_type: msg.sender_type,
+        message: (msg.message || '').substring(0, 50) + '...'
+    });
+
+    const messageDiv = document.createElement('div');
+    const isCustomer = msg.sender_type === 'customer';
+    
+    messageDiv.className = `chat-message ${isCustomer ? 'sent' : 'received'}`;
+    messageDiv.setAttribute('data-message-id', msg.id);
+    
+    if (animate) {
+        messageDiv.style.opacity = '0';
+        messageDiv.style.transform = 'translateY(20px)';
+    }
+    
+    messageDiv.innerHTML = `
+        <div class="message-content">${escapeHtml(msg.message || '')}</div>
+        <div class="message-time">${formatDateTime(msg.created_at)}</div>
+        <div class="message-sender">${isCustomer ? 'Bạn' : 'Hỗ trợ viên'}</div>
+    `;
+
+    chatBody.appendChild(messageDiv);
+
+    // Animation
+    if (animate) {
+        setTimeout(() => {
+            messageDiv.style.transition = 'all 0.3s ease';
+            messageDiv.style.opacity = '1';
+            messageDiv.style.transform = 'translateY(0)';
+        }, 50);
+    }
+
+    scrollToBottom();
+}
+
+// 12. Gửi tin nhắn
 async function sendMessage() {
     const chatInput = document.getElementById('chat-message-input');
-    const message = chatInput.value.trim();
-    if (!message) return;
+    const message = chatInput?.value?.trim();
+    
+    if (!message) {
+        console.log('⚠️ Empty message, skipping send');
+        return;
+    }
 
+    console.log('📤 Sending message:', message.substring(0, 50) + '...');
+
+    // Tạo phòng chat nếu chưa có
     if (!currentChatRoom) {
-        const customerId = getCustomerId();
+        console.log('🏠 No chat room, creating one...');
         try {
-            currentChatRoom = await createChatRoom(customerId);
-            if (!currentChatRoom) return;
+            currentChatRoom = await createChatRoom();
         } catch (error) {
-            showErrorToast('Không thể tạo phòng chat để gửi tin nhắn');
+            console.error('❌ Failed to create room:', error);
+            showErrorToast('Không thể tạo phòng chat');
             return;
         }
+    }
+
+    // Disable input
+    if (chatInput) {
+        chatInput.disabled = true;
     }
 
     try {
@@ -583,103 +879,561 @@ async function sendMessage() {
             },
             body: JSON.stringify({
                 room_id: currentChatRoom.room_id,
-                message
+                message: message
             })
         });
 
         if (!response.ok) {
             const errorData = await response.json();
-            throw new Error(errorData.error || `HTTP ${response.status}: Không thể gửi tin nhắn`);
+            throw new Error(errorData.error || `HTTP ${response.status}`);
         }
 
         const data = await response.json();
+        console.log('✅ Message sent successfully:', data);
+
+        // Hiển thị tin nhắn ngay lập tức
         const newMessage = {
-            ...data.message,
+            id: data.message?.id || Date.now(),
+            message: message,
             sender_type: 'customer',
-            created_at: new Date().toISOString()
+            created_at: new Date().toISOString(),
+            room_id: currentChatRoom.room_id
         };
-        displayMessage(newMessage);
-        chatInput.value = '';
+
+        appendMessage(newMessage, true);
+
+        // Clear input
+        if (chatInput) {
+            chatInput.value = '';
+        }
+
+        // Cập nhật lastMessageId
+        lastMessageId = Math.max(lastMessageId, newMessage.id);
+
     } catch (error) {
-        console.error('Lỗi sendMessage:', error);
-        showErrorToast(`Không thể gửi tin nhắn: ${error.message}`);
+        console.error('❌ Send message error:', error);
+        showErrorToast(`Gửi tin nhắn thất bại: ${error.message}`);
+    } finally {
+        // Re-enable input
+        if (chatInput) {
+            chatInput.disabled = false;
+            chatInput.focus();
+        }
     }
 }
 
-// Hiển thị tin nhắn
-function displayMessage(msg) {
-    const chatBody = document.getElementById('chat-messages');
-    if (!chatBody) return;
+// 13. Bắt đầu polling tin nhắn mới
+function startChatPolling() {
+    if (chatPollingInterval) {
+        clearInterval(chatPollingInterval);
+    }
 
-    const messageDiv = document.createElement('div');
-    messageDiv.className = `chat-message message-${msg.sender_type === 'customer' ? 'sent' : 'received'}`;
-    messageDiv.innerHTML = `
-        <div class="message-content">${msg.message}</div>
-        <div class="message-time">${formatDateTime(msg.created_at)}</div>
-    `;
-    chatBody.appendChild(messageDiv);
-    chatBody.scrollTop = chatBody.scrollHeight;
+    console.log('🔄 Starting chat polling...');
+    
+    chatPollingInterval = setInterval(() => {
+        if (currentChatRoom) {
+            checkForNewMessages();
+        }
+    }, 2000); // Poll mỗi 2 giây
 }
 
-// Tải lịch sử chat
-async function loadChatHistory() {
+// 14. Dừng polling
+function stopChatPolling() {
+    if (chatPollingInterval) {
+        console.log('⏹️ Stopping chat polling...');
+        clearInterval(chatPollingInterval);
+        chatPollingInterval = null;
+    }
+}
+
+// 15. Kiểm tra tin nhắn mới
+async function checkForNewMessages() {
     if (!currentChatRoom || !checkAuth()) return;
 
     try {
         const response = await fetch(`http://localhost:5000/api/chat/rooms/${currentChatRoom.room_id}/messages`, {
-            headers: { 'Authorization': `Bearer ${getToken()}` }
+            headers: { 
+                'Authorization': `Bearer ${getToken()}` 
+            }
         });
 
-        if (!response.ok) throw new Error(`HTTP ${response.status}: Không thể tải lịch sử chat`);
+        if (!response.ok) return;
 
         const data = await response.json();
-        displayChatHistory(data.messages || []);
+        
+        if (data.success && Array.isArray(data.messages)) {
+            console.log('🔍 Checking messages, total:', data.messages.length);
+            console.log('🔍 Current lastMessageId:', lastMessageId);
+            
+            // Tìm tin nhắn mới (id > lastMessageId)
+            const newMessages = data.messages.filter(msg => 
+                msg.id > lastMessageId
+            );
+
+            console.log('🆕 New messages found:', newMessages.length);
+
+            if (newMessages.length > 0) {
+                // Sắp xếp theo thời gian
+                newMessages.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+                
+                // Hiển thị TẤT CẢ tin nhắn mới
+                newMessages.forEach(msg => {
+                    console.log('📤 Displaying new message:', msg);
+                    appendMessage(msg, true);
+                    lastMessageId = Math.max(lastMessageId, msg.id);
+                });
+
+                console.log('🔢 Updated lastMessageId to:', lastMessageId);
+
+                // Đếm tin nhắn từ staff
+                const newStaffMessages = newMessages.filter(msg => 
+                    msg.sender_type === 'staff'
+                );
+
+                if (newStaffMessages.length > 0) {
+                    console.log('🔔 New staff messages:', newStaffMessages.length);
+                    playNotificationSound();
+                }
+            }
+        }
+        
     } catch (error) {
-        console.error('Lỗi loadChatHistory:', error);
-        showErrorToast('Không thể tải lịch sử chat');
+        console.error('❌ Check new messages error:', error);
     }
 }
 
-// Hiển thị lịch sử chat
-function displayChatHistory(messages) {
-    const chatBody = document.getElementById('chat-messages');
-    if (!chatBody) return;
-
-    chatBody.innerHTML = messages.length === 0
-        ? '<div class="welcome-message"><p>Bắt đầu trò chuyện với hỗ trợ viên</p></div>'
-        : messages.map(msg => `
-            <div class="chat-message message-${msg.sender_type === 'customer' ? 'sent' : 'received'}">
-                <div class="message-content">${msg.message}</div>
-                <div class="message-time">${formatDateTime(msg.created_at)}</div>
-            </div>
-        `).join('');
-    chatBody.scrollTop = chatBody.scrollHeight;
+// 16. Polling unread count khi chat đóng
+function startUnreadPolling() {
+    console.log('🔔 Starting unread polling...');
+    
+    setInterval(() => {
+        const chatPopup = document.getElementById('chat-popup');
+        if (!chatPopup?.classList.contains('show') && currentChatRoom) {
+            updateUnreadCount();
+        }
+    }, 5000); // Poll mỗi 5 giây khi chat đóng
 }
 
-// Cập nhật số tin nhắn chưa đọc
+// 17. Cập nhật số tin nhắn chưa đọc
 async function updateUnreadCount() {
     if (!currentChatRoom) return;
 
     try {
         const response = await fetch(`http://localhost:5000/api/chat/rooms/${currentChatRoom.room_id}/messages`, {
-            headers: { 'Authorization': `Bearer ${getToken()}` }
+            headers: { 
+                'Authorization': `Bearer ${getToken()}` 
+            }
         });
 
         if (response.ok) {
             const data = await response.json();
-            unreadMessages = data.messages?.filter(msg => msg.sender_type !== 'customer').length || 0;
-            console.log('Unread messages:', unreadMessages);
+            
+            if (data.success && Array.isArray(data.messages)) {
+                // Đếm tin nhắn từ staff sau lastMessageId
+                const unreadStaffMessages = data.messages.filter(msg => 
+                    msg.sender_type === 'staff' && 
+                    msg.id > lastMessageId
+                );
 
-            const unreadElement = document.getElementById('unread-count');
-            if (unreadElement) {
-                unreadElement.textContent = unreadMessages > 0 ? unreadMessages : '';
-                unreadElement.style.display = unreadMessages > 0 ? 'inline' : 'none';
+                unreadMessages = unreadStaffMessages.length;
+                console.log('🔔 Unread messages:', unreadMessages);
+                
+                updateUnreadBadge();
             }
         }
     } catch (error) {
-        console.error('Lỗi updateUnreadCount:', error);
+        console.error('❌ Update unread count error:', error);
     }
 }
+
+// 18. Cập nhật badge unread
+function updateUnreadBadge() {
+    const chatBtn = document.getElementById('chat-floating-btn');
+    if (!chatBtn) return;
+
+    // Xóa badge cũ
+    const oldBadge = chatBtn.querySelector('.unread-badge');
+    if (oldBadge) {
+        oldBadge.remove();
+    }
+
+    // Thêm badge mới nếu có tin nhắn chưa đọc
+    if (unreadMessages > 0) {
+        const badge = document.createElement('span');
+        badge.className = 'unread-badge';
+        badge.textContent = unreadMessages > 99 ? '99+' : unreadMessages;
+        chatBtn.appendChild(badge);
+    }
+}
+
+// 19. Utility functions
+function showEmptyChat() {
+    const chatBody = document.getElementById('chat-messages');
+    if (!chatBody) return;
+
+    chatBody.innerHTML = `
+        <div class="welcome-message">
+            <div class="welcome-icon">
+                <i class="fas fa-comments"></i>
+            </div>
+            <h3>Chào mừng bạn đến với hỗ trợ khách hàng!</h3>
+            <p>Hãy gửi tin nhắn để bắt đầu cuộc trò chuyện.</p>
+        </div>
+    `;
+}
+
+function showErrorChat(message) {
+    const chatBody = document.getElementById('chat-messages');
+    if (!chatBody) return;
+
+    chatBody.innerHTML = `
+        <div class="error-message">
+            <div class="error-icon">
+                <i class="fas fa-exclamation-triangle"></i>
+            </div>
+            <p>${escapeHtml(message)}</p>
+            <button onclick="loadChatHistory()" class="retry-btn">Thử lại</button>
+        </div>
+    `;
+}
+
+function scrollToBottom() {
+    const chatBody = document.getElementById('chat-messages');
+    if (!chatBody) return;
+    
+    setTimeout(() => {
+        chatBody.scrollTop = chatBody.scrollHeight;
+    }, 100);
+}
+
+function playNotificationSound() {
+    try {
+        const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmgyAyiA0OzZgysELoDM8+SJOAoUYLrv4pxNEAhPpOLuw2slBzGN3/DGZRUPCC+A0Oreg');
+        audio.volume = 0.3;
+        audio.play().catch(() => {}); // Ignore errors
+    } catch (error) {
+        // Ignore notification sound errors
+    }
+}
+
+function escapeHtml(text) {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+// 20. CSS tự động inject
+function injectChatStyles() {
+    if (document.getElementById('chat-styles')) return;
+
+    const styles = `
+        <style id="chat-styles">
+        /* Chat Floating Button */
+        .chat-floating-btn {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #007bff, #0056b3);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0, 123, 255, 0.4);
+            z-index: 1000;
+            transition: all 0.3s ease;
+            font-size: 24px;
+        }
+
+        .chat-floating-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 20px rgba(0, 123, 255, 0.6);
+        }
+
+        .unread-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: #dc3545;
+            color: white;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            font-size: 12px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid white;
+        }
+
+        /* Chat Popup */
+        .chat-popup {
+            position: fixed;
+            bottom: 100px;
+            right: 20px;
+            width: 380px;
+            height: 500px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            z-index: 1001;
+            display: none;
+            flex-direction: column;
+            overflow: hidden;
+            transform: translateY(20px);
+            opacity: 0;
+            transition: all 0.3s ease;
+        }
+
+        .chat-popup.show {
+            display: flex;
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .chat-popup-header {
+            background: linear-gradient(135deg, #007bff, #0056b3);
+            color: white;
+            padding: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .chat-popup-header h3 {
+            margin: 0;
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .close-chat-btn {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: background 0.2s;
+        }
+
+        .close-chat-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .chat-popup-body {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chat-messages {
+            flex: 1;
+            padding: 16px;
+            overflow-y: auto;
+            background: #f8f9fa;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .chat-message {
+            max-width: 80%;
+            padding: 12px 16px;
+            border-radius: 18px;
+            font-size: 14px;
+            line-height: 1.4;
+            position: relative;
+            word-wrap: break-word;
+        }
+
+        .chat-message.sent {
+            align-self: flex-end;
+            background: linear-gradient(135deg, #007bff, #0056b3);
+            color: white;
+            border-bottom-right-radius: 6px;
+        }
+
+        .chat-message.received {
+            align-self: flex-start;
+            background: white;
+            color: #333;
+            border: 1px solid #e9ecef;
+            border-bottom-left-radius: 6px;
+        }
+
+        .message-content {
+            margin-bottom: 6px;
+        }
+
+        .message-time {
+            font-size: 11px;
+            opacity: 0.7;
+            text-align: right;
+        }
+
+        .message-sender {
+            font-size: 10px;
+            font-weight: 600;
+            opacity: 0.8;
+            margin-top: 2px;
+        }
+
+        .chat-input-area {
+            padding: 16px;
+            background: white;
+            border-top: 1px solid #e9ecef;
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .chat-input-area input {
+            flex: 1;
+            padding: 12px 16px;
+            border: 1px solid #e9ecef;
+            border-radius: 24px;
+            outline: none;
+            font-size: 14px;
+            transition: border-color 0.2s;
+        }
+
+        .chat-input-area input:focus {
+            border-color: #007bff;
+        }
+
+        .chat-input-area input:disabled {
+            background: #f8f9fa;
+            opacity: 0.7;
+        }
+
+        .chat-input-area button {
+            width: 44px;
+            height: 44px;
+            background: linear-gradient(135deg, #007bff, #0056b3);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .chat-input-area button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 2px 8px rgba(0, 123, 255, 0.4);
+        }
+
+        .chat-input-area button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Welcome message */
+        .welcome-message {
+            text-align: center;
+            padding: 40px 20px;
+            color: #6c757d;
+        }
+
+        .welcome-icon {
+            font-size: 48px;
+            color: #007bff;
+            margin-bottom: 16px;
+        }
+
+        .welcome-message h3 {
+            margin: 0 0 12px 0;
+            font-size: 18px;
+            color: #495057;
+        }
+
+        .welcome-message p {
+            margin: 0;
+            font-size: 14px;
+        }
+
+        /* Error message */
+        .error-message {
+            text-align: center;
+            padding: 40px 20px;
+            color: #dc3545;
+        }
+
+        .error-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+
+        .retry-btn {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-top: 12px;
+        }
+
+        .retry-btn:hover {
+            background: #0056b3;
+        }
+
+        /* Responsive */
+        @media (max-width: 480px) {
+            .chat-popup {
+                right: 10px;
+                left: 10px;
+                width: auto;
+                bottom: 90px;
+            }
+        }
+
+        /* Scrollbar styling */
+        .chat-messages::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .chat-messages::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        .chat-messages::-webkit-scrollbar-thumb {
+            background: #c1c1c1;
+            border-radius: 3px;
+        }
+
+        .chat-messages::-webkit-scrollbar-thumb:hover {
+            background: #a8a8a8;
+        }
+        </style>
+    `;
+
+    document.head.insertAdjacentHTML('beforeend', styles);
+}
+
+// Export functions for manual use
+window.chatSystem = {
+    init: initializeChatSystem,
+    openChat: openChatPopup,
+    closeChat: closeChatPopup,
+    sendMessage: sendMessage,
+    loadHistory: loadChatHistory
+};
+
 
 // Khởi tạo bản đồ với Leaflet
 let map;

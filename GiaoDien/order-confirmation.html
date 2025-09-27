@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kết quả thanh toán | Bookstore</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .container {
+            max-width: 600px;
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            text-align: center;
+            animation: slideUp 0.5s ease-out;
+        }
+        @keyframes slideUp {
+            from { transform: translateY(30px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        .success-icon {
+            color: #27ae60;
+            font-size: 80px;
+            margin-bottom: 20px;
+            animation: bounce 1s;
+        }
+        .error-icon {
+            color: #e74c3c;
+            font-size: 80px;
+            margin-bottom: 20px;
+            animation: shake 0.5s;
+        }
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-10px); }
+            60% { transform: translateY(-5px); }
+        }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            font-size: 2rem;
+        }
+        .order-details {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            text-align: left;
+        }
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            margin: 10px 0;
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
+        }
+        .detail-row:last-child {
+            border-bottom: none;
+            font-weight: bold;
+            color: #27ae60;
+        }
+        .btn-group {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 30px;
+        }
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .btn-primary {
+            background: #3498db;
+            color: white;
+        }
+        .btn-primary:hover {
+            background: #2980b9;
+            transform: translateY(-2px);
+        }
+        .btn-secondary {
+            background: #95a5a6;
+            color: white;
+        }
+        .btn-secondary:hover {
+            background: #7f8c8d;
+            transform: translateY(-2px);
+        }
+        .loading {
+            color: #7f8c8d;
+        }
+        .spinner {
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div id="result-content">
+            <div class="loading">
+                <i class="fas fa-spinner spinner" style="font-size: 60px; margin-bottom: 20px;"></i>
+                <h2>Đang xử lý kết quả thanh toán...</h2>
+            </div>
+        </div>
+        
+        <div class="btn-group">
+            <a href="index.html" class="btn btn-primary">
+                <i class="fas fa-home"></i> Về trang chủ
+            </a>
+            <a href="book.html" class="btn btn-secondary">
+                <i class="fas fa-shopping-cart"></i> Tiếp tục mua sắm
+            </a>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const orderId = urlParams.get('orderId');
+            const status = urlParams.get('status');
+            const amount = urlParams.get('amount');
+            const error = urlParams.get('error');
+            
+            const resultContent = document.getElementById('result-content');
+            
+            setTimeout(() => {
+                if (status === 'success') {
+                    resultContent.innerHTML = `
+                        <div class="success-icon">
+                            <i class="fas fa-check-circle"></i>
+                        </div>
+                        <h1 style="color: #27ae60;">Thanh toán thành công!</h1>
+                        <div class="order-details">
+                            <div class="detail-row">
+                                <span>Mã đơn hàng:</span>
+                                <strong>#${orderId}</strong>
+                            </div>
+                            <div class="detail-row">
+                                <span>Số tiền:</span>
+                                <strong>${amount ? parseInt(amount).toLocaleString() + ' VND' : 'N/A'}</strong>
+                            </div>
+                            <div class="detail-row">
+                                <span>Thời gian:</span>
+                                <strong>${new Date().toLocaleString('vi-VN')}</strong>
+                            </div>
+                            <div class="detail-row">
+                                <span>Trạng thái:</span>
+                                <strong style="color: #27ae60;">Đã thanh toán</strong>
+                            </div>
+                        </div>
+                        <p>Cảm ơn bạn đã mua hàng! Đơn hàng của bạn đang được xử lý.</p>
+                    `;
+                } else if (status === 'failed') {
+                    resultContent.innerHTML = `
+                        <div class="error-icon">
+                            <i class="fas fa-times-circle"></i>
+                        </div>
+                        <h1 style="color: #e74c3c;">Thanh toán thất bại!</h1>
+                        <div class="order-details">
+                            <div class="detail-row">
+                                <span>Mã đơn hàng:</span>
+                                <strong>#${orderId}</strong>
+                            </div>
+                            <div class="detail-row">
+                                <span>Mã lỗi:</span>
+                                <strong>${error || 'N/A'}</strong>
+                            </div>
+                            <div class="detail-row">
+                                <span>Thời gian:</span>
+                                <strong>${new Date().toLocaleString('vi-VN')}</strong>
+                            </div>
+                            <div class="detail-row">
+                                <span>Trạng thái:</span>
+                                <strong style="color: #e74c3c;">Thanh toán thất bại</strong>
+                            </div>
+                        </div>
+                        <p>Vui lòng thử lại hoặc chọn phương thức thanh toán khác.</p>
+                    `;
+                } else if (status === 'cod') {
+                    resultContent.innerHTML = `
+                        <div class="success-icon">
+                            <i class="fas fa-check-circle"></i>
+                        </div>
+                        <h1 style="color: #27ae60;">Đặt hàng thành công!</h1>
+                        <div class="order-details">
+                            <div class="detail-row">
+                                <span>Mã đơn hàng:</span>
+                                <strong>#${orderId}</strong>
+                            </div>
+                            <div class="detail-row">
+                                <span>Phương thức:</span>
+                                <strong>Thanh toán khi nhận hàng</strong>
+                            </div>
+                            <div class="detail-row">
+                                <span>Thời gian:</span>
+                                <strong>${new Date().toLocaleString('vi-VN')}</strong>
+                            </div>
+                            <div class="detail-row">
+                                <span>Trạng thái:</span>
+                                <strong style="color: #f39c12;">Chờ xác nhận</strong>
+                            </div>
+                        </div>
+                        <p>Cảm ơn bạn đã đặt hàng! Chúng tôi sẽ liên hệ xác nhận trong thời gian sớm nhất.</p>
+                    `;
+                } else {
+                    resultContent.innerHTML = `
+                        <div class="error-icon">
+                            <i class="fas fa-exclamation-triangle"></i>
+                        </div>
+                        <h1 style="color: #e74c3c;">Có lỗi xảy ra!</h1>
+                        <p>Không thể xác định kết quả thanh toán. Vui lòng liên hệ hỗ trợ.</p>
+                    `;
+                }
+            }, 1500);
+        });
+    </script>
+</body>
+</html>
