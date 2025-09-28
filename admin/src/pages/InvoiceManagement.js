@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import axios from 'axios';
-import { Modal, Button, Select, message, Table, Tag, Space, Input, Avatar } from 'antd';
-import { ExclamationCircleFilled, EyeOutlined, DeleteOutlined, MessageOutlined, SendOutlined, UserOutlined, CustomerServiceOutlined, CloseOutlined } from '@ant-design/icons';
+import { Modal, Button, Select, message, Table, Tag, Space, Input, Avatar, Badge, Dropdown, Menu } from 'antd';
+import { ExclamationCircleFilled, EyeOutlined, DeleteOutlined, MessageOutlined, SendOutlined, UserOutlined, CustomerServiceOutlined, CloseOutlined, BellOutlined } from '@ant-design/icons';
 
 const { confirm } = Modal;
 const { Search, TextArea } = Input;
@@ -21,6 +21,12 @@ const InvoiceManagement = () => {
   const [displayedMessageIds, setDisplayedMessageIds] = useState(new Set());
   const [sendingMessage, setSendingMessage] = useState(false);
   
+  // ✨ THÊM CÁC STATE CHO THÔNG BÁO
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [unreadRooms, setUnreadRooms] = useState([]);
+  const [notificationVisible, setNotificationVisible] = useState(false);
+  const [notificationPolling, setNotificationPolling] = useState(null);
+  
   // Ref cho auto scroll
   const messagesEndRef = useRef(null);
   const messagesContainerRef = useRef(null);
@@ -32,6 +38,99 @@ const InvoiceManagement = () => {
     { value: 'Đã giao hàng', color: 'green' },
     { value: 'Đã hủy', color: 'red' }
   ];
+
+  // ✨ THÊM CÁC FUNCTION CHO THÔNG BÁO
+  const loadUnreadNotifications = useCallback(async () => {
+    try {
+      const token = localStorage.getItem('authToken');
+      if (!token) return;
+
+      const [countRes, roomsRes] = await Promise.all([
+        axios.get('http://localhost:5000/api/chat/admin/unread-count', {
+          headers: { Authorization: `Bearer ${token}` }
+        }),
+        axios.get('http://localhost:5000/api/chat/admin/unread-rooms', {
+          headers: { Authorization: `Bearer ${token}` }
+        })
+      ]);
+
+      if (countRes.data.success) {
+        const newCount = countRes.data.unread_count;
+        
+        // Phát âm thanh khi có tin nhắn mới
+        if (newCount > unreadCount && unreadCount > 0) {
+          playNotificationSound();
+        }
+        
+        setUnreadCount(newCount);
+      }
+
+      if (roomsRes.data.success) {
+        setUnreadRooms(roomsRes.data.unread_rooms || []);
+      }
+
+    } catch (error) {
+      console.error('❌ Load notifications error:', error);
+    }
+  }, [unreadCount]);
+
+ const playNotificationSound = () => {
+  try {
+    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    
+    // Tạo 3 tiếng beep liên tục CỰC TO
+    for(let i = 0; i < 3; i++) {
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+      
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+      
+      oscillator.frequency.value = 7000 + (i * 500); // 7000, 7500, 8000Hz
+    oscillator.type = 'sawtooth'; // Âm thanh răng cưa, rất sắc
+      
+      const startTime = audioContext.currentTime + (i * 0.4);
+      
+      gainNode.gain.setValueAtTime(0, startTime);
+      gainNode.gain.linearRampToValueAtTime(0.8, startTime + 0.02);
+      gainNode.gain.exponentialRampToValueAtTime(0.001, startTime + 0.35);
+      
+      oscillator.start(startTime);
+      oscillator.stop(startTime + 0.35);
+    }
+    
+    console.log('🚨🚨🚨 TRIPLE ALARM SIREN ACTIVATED!');
+  } catch (error) {
+    console.log('❌ Could not play alarm:', error);
+  }
+};
+  const startNotificationPolling = useCallback(() => {
+    if (notificationPolling) return;
+
+    const interval = setInterval(loadUnreadNotifications, 5000);
+    setNotificationPolling(interval);
+    loadUnreadNotifications();
+  }, [loadUnreadNotifications, notificationPolling]);
+
+  const stopNotificationPolling = useCallback(() => {
+    if (notificationPolling) {
+      clearInterval(notificationPolling);
+      setNotificationPolling(null);
+    }
+  }, [notificationPolling]);
+
+  const markRoomAsRead = async (roomId) => {
+    try {
+      const token = localStorage.getItem('authToken');
+      await axios.patch(`http://localhost:5000/api/chat/admin/mark-read/${roomId}`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      loadUnreadNotifications();
+    } catch (error) {
+      console.error('❌ Mark read error:', error);
+    }
+  };
 
   // Auto scroll to bottom khi có tin nhắn mới
   const scrollToBottom = useCallback(() => {
@@ -49,6 +148,12 @@ const InvoiceManagement = () => {
       setTimeout(scrollToBottom, 100);
     }
   }, [messages, scrollToBottom]);
+
+  // ✨ START NOTIFICATION POLLING KHI COMPONENT MOUNT
+  useEffect(() => {
+    startNotificationPolling();
+    return () => stopNotificationPolling();
+  }, [startNotificationPolling, stopNotificationPolling]);
 
   // ✅ Load messages function
   const loadMessages = useCallback(async (roomId, token) => {
@@ -192,7 +297,7 @@ const InvoiceManagement = () => {
     }
   };
 
-  // ✅ Start chat with customer
+  // ✅ Start chat with customer - CẬP NHẬT ĐỂ ĐÁNH DẤU ĐÃ ĐỌC
   const handleChatWithCustomer = async (customerId) => {
     console.log('🚀 Starting chat with customer:', customerId);
     
@@ -251,11 +356,14 @@ const InvoiceManagement = () => {
       if (roomRes.data.success && roomRes.data.room) {
         setCurrentRoom(roomRes.data.room);
         
-        // 3. Load messages với delay
+        // 3. Đánh dấu tin nhắn đã đọc
+        await markRoomAsRead(roomRes.data.room.room_id);
+        
+        // 4. Load messages với delay
         await new Promise(resolve => setTimeout(resolve, 300));
         await loadMessages(roomRes.data.room.room_id, token);
         
-        // 4. Open chat
+        // 5. Open chat
         setChatVisible(true);
         console.log('✅ Chat opened successfully');
       } else {
@@ -467,6 +575,65 @@ const InvoiceManagement = () => {
     invoice.customerPhone.includes(searchTerm)
   );
 
+  // ✨ NOTIFICATION MENU
+  const notificationMenu = (
+    <Menu className="notification-menu">
+      <Menu.Item key="header" disabled className="notification-header">
+        <div style={{ padding: '8px 0', fontWeight: 600, color: '#1890ff' }}>
+          Tin nhắn mới ({unreadCount})
+        </div>
+      </Menu.Item>
+      <Menu.Divider />
+      {unreadRooms.length === 0 ? (
+        <Menu.Item key="empty" disabled>
+          <div style={{ padding: '20px 0', textAlign: 'center', color: '#999' }}>
+            Không có tin nhắn mới
+          </div>
+        </Menu.Item>
+      ) : (
+        unreadRooms.map((room) => (
+          <Menu.Item 
+            key={room.room_id}
+            onClick={() => {
+              handleChatWithCustomer(room.customer_id);
+              setNotificationVisible(false);
+            }}
+            className="notification-item"
+          >
+            <div className="notification-content">
+              <div className="notification-customer">
+                <Avatar size={32} icon={<UserOutlined />} />
+                <div className="notification-info">
+                  <div className="customer-name">{room.customer_name}</div>
+                  <div className="last-message">{room.last_message?.substring(0, 50)}...</div>
+                </div>
+              </div>
+              <div className="notification-meta">
+                <Badge count={room.unread_count} size="small" />
+                <div className="notification-time">
+                  {formatTime(room.last_message_time)}
+                </div>
+              </div>
+            </div>
+          </Menu.Item>
+        ))
+      )}
+      {unreadRooms.length > 0 && (
+        <>
+          <Menu.Divider />
+          <Menu.Item key="mark-all" onClick={() => {
+            unreadRooms.forEach(room => markRoomAsRead(room.room_id));
+            setNotificationVisible(false);
+          }}>
+            <div style={{ textAlign: 'center', color: '#1890ff', fontWeight: 500 }}>
+              Đánh dấu tất cả đã đọc
+            </div>
+          </Menu.Item>
+        </>
+      )}
+    </Menu>
+  );
+
   // ✅ Table columns
   const columns = [
     {
@@ -576,15 +743,38 @@ const InvoiceManagement = () => {
     <div className="invoice-management-container">
       <div className="header-section">
         <h1 className="page-title">Quản lý hóa đơn</h1>
-        <Search
-          placeholder="Tìm kiếm theo mã HĐ, tên KH hoặc SĐT"
-          onSearch={handleSearch}
-          className="search-box"
-          allowClear
-        />
-        <Button onClick={fetchInvoices} loading={loading}>
-          Tải lại
-        </Button>
+        
+        <div className="header-actions">
+          {/* ✨ NOTIFICATION BELL - THÊM MỚI */}
+          <Dropdown
+            overlay={notificationMenu}
+            trigger={['click']}
+            visible={notificationVisible}
+            onVisibleChange={setNotificationVisible}
+            placement="bottomRight"
+            overlayClassName="notification-dropdown"
+          >
+            <Button 
+              type="text" 
+              className="notification-bell"
+              icon={
+                <Badge count={unreadCount} size="small" offset={[0, 0]}>
+                  <BellOutlined style={{ fontSize: '18px' }} />
+                </Badge>
+              }
+            />
+          </Dropdown>
+
+          <Search
+            placeholder="Tìm kiếm theo mã HĐ, tên KH hoặc SĐT"
+            onSearch={handleSearch}
+            className="search-box"
+            allowClear
+          />
+          <Button onClick={fetchInvoices} loading={loading}>
+            Tải lại
+          </Button>
+        </div>
       </div>
 
       <Table
@@ -840,6 +1030,149 @@ const InvoiceManagement = () => {
           margin-bottom: 16px;
           flex-wrap: wrap;
           gap: 16px;
+        }
+        
+        /* ✨ THÊM STYLES CHO HEADER ACTIONS VÀ NOTIFICATION */
+        .header-actions {
+          display: flex;
+          align-items: center;
+          gap: 16px;
+        }
+        
+        .notification-bell {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          width: 40px;
+          height: 40px;
+          border-radius: 50%;
+          transition: all 0.3s ease;
+          position: relative;
+        }
+        
+        .notification-bell:hover {
+          background: #f0f2ff !important;
+          transform: scale(1.05);
+        }
+        
+        .notification-bell :global(.ant-badge) {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+        
+        :global(.notification-dropdown) {
+          margin-top: 8px;
+        }
+        
+        :global(.notification-dropdown .ant-dropdown-menu) {
+          padding: 0;
+          border-radius: 8px;
+          box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+          max-width: 400px;
+          min-width: 320px;
+          max-height: 400px;
+          overflow-y: auto;
+        }
+        
+        :global(.notification-header) {
+          background: #f0f2ff;
+          margin: 0;
+          border-radius: 8px 8px 0 0;
+        }
+        
+        :global(.notification-item) {
+          padding: 0;
+          height: auto;
+          line-height: normal;
+        }
+        
+        :global(.notification-item:hover) {
+          background: #f8f9fa;
+        }
+        
+        .notification-content {
+          padding: 12px 16px;
+          display: flex;
+          justify-content: space-between;
+          align-items: flex-start;
+          gap: 12px;
+        }
+        
+        .notification-customer {
+          display: flex;
+          align-items: flex-start;
+          gap: 12px;
+          flex: 1;
+          min-width: 0;
+        }
+        
+        .notification-info {
+          flex: 1;
+          min-width: 0;
+        }
+        
+        .customer-name {
+          font-weight: 600;
+          font-size: 14px;
+          color: #262626;
+          margin-bottom: 4px;
+        }
+        
+        .last-message {
+          font-size: 12px;
+          color: #8c8c8c;
+          line-height: 1.4;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+        
+        .notification-meta {
+          display: flex;
+          flex-direction: column;
+          align-items: flex-end;
+          gap: 4px;
+          flex-shrink: 0;
+        }
+        
+        .notification-time {
+          font-size: 11px;
+          color: #bfbfbf;
+        }
+        
+        /* Animation cho notification bell */
+        @keyframes ring {
+          0% { transform: rotate(0deg); }
+          10% { transform: rotate(15deg); }
+          20% { transform: rotate(-10deg); }
+          30% { transform: rotate(15deg); }
+          40% { transform: rotate(-10deg); }
+          50% { transform: rotate(5deg); }
+          60% { transform: rotate(-5deg); }
+          70% { transform: rotate(0deg); }
+          100% { transform: rotate(0deg); }
+        }
+        
+        .notification-bell.has-unread {
+          animation: ring 2s ease-in-out infinite;
+        }
+        
+        /* Pulse effect cho badge */
+        :global(.ant-badge-count) {
+          animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+          0% {
+            box-shadow: 0 0 0 0 rgba(255, 77, 79, 0.7);
+          }
+          70% {
+            box-shadow: 0 0 0 10px rgba(255, 77, 79, 0);
+          }
+          100% {
+            box-shadow: 0 0 0 0 rgba(255, 77, 79, 0);
+          }
         }
         
         .page-title {

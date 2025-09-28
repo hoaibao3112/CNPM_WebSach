@@ -1,5 +1,121 @@
 document.addEventListener('DOMContentLoaded', initializeApp);
+const addressCache = {
+    provinces: new Map(),
+    districts: new Map(),
+    wards: new Map()
+};
+// Thêm sau dòng khai báo addressCache (sau dòng 6)
 
+// Lấy tên tỉnh/thành phố từ mã
+async function getProvinceName(provinceCode) {
+    if (!provinceCode) return '';
+    
+    // Kiểm tra cache trước
+    if (addressCache.provinces.has(provinceCode)) {
+        return addressCache.provinces.get(provinceCode);
+    }
+
+    try {
+        const response = await fetch('https://provinces.open-api.vn/api/p/');
+        const provinces = await response.json();
+        
+        // Lưu tất cả provinces vào cache
+        provinces.forEach(province => {
+            addressCache.provinces.set(province.code.toString(), province.name);
+        });
+
+        return addressCache.provinces.get(provinceCode.toString()) || provinceCode;
+    } catch (error) {
+        console.error('Error fetching province:', error);
+        return provinceCode;
+    }
+}
+
+// Lấy tên quận/huyện từ mã
+async function getDistrictName(districtCode, provinceCode) {
+    if (!districtCode) return '';
+    
+    // Kiểm tra cache trước
+    if (addressCache.districts.has(districtCode)) {
+        return addressCache.districts.get(districtCode);
+    }
+
+    try {
+        const response = await fetch(`https://provinces.open-api.vn/api/p/${provinceCode}?depth=2`);
+        const data = await response.json();
+        
+        if (data.districts) {
+            data.districts.forEach(district => {
+                addressCache.districts.set(district.code.toString(), district.name);
+            });
+        }
+
+        return addressCache.districts.get(districtCode.toString()) || districtCode;
+    } catch (error) {
+        console.error('Error fetching district:', error);
+        return districtCode;
+    }
+}
+
+// Lấy tên phường/xã từ mã
+async function getWardName(wardCode, districtCode) {
+    if (!wardCode) return '';
+    
+    // Kiểm tra cache trước
+    if (addressCache.wards.has(wardCode)) {
+        return addressCache.wards.get(wardCode);
+    }
+
+    try {
+        const response = await fetch(`https://provinces.open-api.vn/api/d/${districtCode}?depth=2`);
+        const data = await response.json();
+        
+        if (data.wards) {
+            data.wards.forEach(ward => {
+                addressCache.wards.set(ward.code.toString(), ward.name);
+            });
+        }
+
+        return addressCache.wards.get(wardCode.toString()) || wardCode;
+    } catch (error) {
+        console.error('Error fetching ward:', error);
+        return wardCode;
+    }
+}
+
+// Hàm format địa chỉ hoàn chỉnh
+async function formatFullAddress(order) {
+    try {
+        console.log('Original address data:', {
+            shippingAddress: order.shippingAddress,
+            ward: order.ward,
+            district: order.district,
+            province: order.province
+        });
+
+        // Lấy tên thực tế từ các mã
+        const [provinceName, districtName, wardName] = await Promise.all([
+            getProvinceName(order.province),
+            getDistrictName(order.district, order.province),
+            getWardName(order.ward, order.district)
+        ]);
+
+        const addressParts = [
+            order.shippingAddress,
+            wardName,
+            districtName,
+            provinceName
+        ].filter(part => part && part.trim() && part !== 'null' && part !== 'undefined');
+
+        const fullAddress = addressParts.length > 0 ? addressParts.join(', ') : 'Chưa có địa chỉ';
+        
+        console.log('Formatted address:', fullAddress);
+        return fullAddress;
+    } catch (error) {
+        console.error('Error formatting address:', error);
+        return 'Không thể hiển thị địa chỉ';
+    }
+}
 // Hàm khởi tạo ứng dụng - SỬA LẠI
 function initializeApp() {
     const user = getUserInfo();
@@ -261,8 +377,8 @@ async function renderOrders(customerId, statusFilter = 'all') {
     }
 }
 
-// Hiển thị chi tiết đơn hàng
-function showOrderDetail(order) {
+// Thay thế hàm showOrderDetail hiện tại (từ dòng 186) bằng:
+async function showOrderDetail(order) {
     const modal = document.getElementById('order-detail-modal');
     if (!modal) {
         console.error('Order detail modal not found');
@@ -277,9 +393,7 @@ function showOrderDetail(order) {
         'cancelled': { class: 'status-cancelled', text: 'Đã hủy' }
     };
 
-    // Sửa lỗi: Sử dụng order.status thay vì order.tinhtrang
     const status = statusDisplay[order.status] || statusDisplay['pending'];
-    document.getElementById('order-status').textContent = status.text;
 
     // Cập nhật thông tin đơn hàng
     document.getElementById('order-id').textContent = `#${order.id}`;
@@ -293,9 +407,20 @@ function showOrderDetail(order) {
     // Cập nhật thông tin giao hàng
     document.getElementById('receiver-name').textContent = order.recipientName || 'N/A';
     document.getElementById('receiver-phone').textContent = order.recipientPhone || 'N/A';
-    document.getElementById('shipping-address').textContent = 
-        `${order.shippingAddress || ''}, ${order.ward || ''}, ${order.district || ''}, ${order.province || ''}`;
     document.getElementById('order-notes').textContent = order.notes || 'Không có ghi chú';
+
+    // Hiển thị loading cho địa chỉ
+    const shippingAddressElement = document.getElementById('shipping-address');
+    shippingAddressElement.textContent = 'Đang tải địa chỉ...';
+
+    // Format địa chỉ bất đồng bộ
+    try {
+        const fullAddress = await formatFullAddress(order);
+        shippingAddressElement.textContent = fullAddress;
+    } catch (error) {
+        console.error('Error formatting address:', error);
+        shippingAddressElement.textContent = 'Không thể hiển thị địa chỉ';
+    }
 
     // Hiển thị danh sách sản phẩm
     const orderItemsElement = document.getElementById('order-items');
@@ -329,7 +454,6 @@ function showOrderDetail(order) {
 
     modal.style.display = 'block';
 }
-
 // Hàm hiển thị modal hủy đơn hàng (Thêm mới)
 function showCancelModal() {
     const modal = document.getElementById('cancel-order-modal');
@@ -1454,15 +1578,16 @@ function initMap() {
     }).addTo(map);
 }
 
-// Hiển thị bản đồ giao hàng
+// Thay thế hàm displayDeliveryMap hiện tại (từ dòng 958) bằng:
 async function displayDeliveryMap(order) {
     const mapElement = document.getElementById('delivery-map');
     const distanceInfoElement = document.getElementById('distance-info');
     const durationInfoElement = document.getElementById('duration-info');
+    
     if (!mapElement) {
         console.error('Map element not found');
-        distanceInfoElement.textContent = 'Không thể hiển thị thông tin';
-        durationInfoElement.textContent = 'Không thể hiển thị thông tin';
+        if (distanceInfoElement) distanceInfoElement.textContent = 'Không thể hiển thị thông tin';
+        if (durationInfoElement) durationInfoElement.textContent = 'Không thể hiển thị thông tin';
         return;
     }
 
@@ -1471,24 +1596,35 @@ async function displayDeliveryMap(order) {
         initMap();
     }
 
-    // Địa chỉ giao hàng (destination)
-    const destinationAddress = `${order.shippingAddress || ''}, ${order.ward || ''}, ${order.district || ''}, ${order.province || ''}`;
     const warehouseLocation = [10.7769, 106.7009]; // Tọa độ kho (TP.HCM)
 
-    // Geocoding địa chỉ giao hàng với Nominatim
     try {
+        // Sử dụng hàm formatFullAddress để có địa chỉ đầy đủ
+        const destinationAddress = await formatFullAddress(order);
+        
+        console.log('Formatted destination address:', destinationAddress);
+        
+        if (!destinationAddress || destinationAddress === 'Chưa có địa chỉ') {
+            console.error('Không có địa chỉ giao hàng hợp lệ');
+            if (distanceInfoElement) distanceInfoElement.textContent = 'Chưa có địa chỉ';
+            if (durationInfoElement) durationInfoElement.textContent = 'Chưa có địa chỉ';
+            return;
+        }
+
+        // Geocoding địa chỉ giao hàng với Nominatim
         const response = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(destinationAddress)}&format=json&limit=1`);
         const data = await response.json();
+        
         if (data.length === 0) {
             console.error('Không tìm thấy tọa độ cho địa chỉ:', destinationAddress);
-            distanceInfoElement.textContent = 'Không thể tìm địa chỉ';
-            durationInfoElement.textContent = 'Không thể tìm địa chỉ';
+            if (distanceInfoElement) distanceInfoElement.textContent = 'Không thể tìm địa chỉ';
+            if (durationInfoElement) durationInfoElement.textContent = 'Không thể tìm địa chỉ';
             return;
         }
 
         const destinationLocation = [parseFloat(data[0].lat), parseFloat(data[0].lon)];
 
-        // Xóa các layer cũ (polyline, marker) nếu có
+        // Xóa các layer cũ
         if (polyline) {
             polyline.remove();
         }
@@ -1517,6 +1653,7 @@ async function displayDeliveryMap(order) {
         // Tính tuyến đường với OSRM
         const routeResponse = await fetch(`https://router.project-osrm.org/route/v1/driving/${warehouseLocation[1]},${warehouseLocation[0]};${destinationLocation[1]},${destinationLocation[0]}?overview=full&geometries=geojson`);
         const routeData = await routeResponse.json();
+        
         if (routeData.code === 'Ok') {
             const route = routeData.routes[0].geometry.coordinates;
             const routePoints = route.map(coord => [coord[1], coord[0]]);
@@ -1525,21 +1662,22 @@ async function displayDeliveryMap(order) {
             polyline = L.polyline(routePoints, { color: 'blue' }).addTo(map);
 
             // Cập nhật thông tin khoảng cách và thời gian
-            const distance = (routeData.routes[0].distance / 1000).toFixed(2); // Chuyển từ mét sang km
-            const duration = Math.round(routeData.routes[0].duration / 60); // Chuyển từ giây sang phút
-            distanceInfoElement.textContent = `${distance} km`;
-            durationInfoElement.textContent = `${duration} phút`;
+            const distance = (routeData.routes[0].distance / 1000).toFixed(2);
+            const duration = Math.round(routeData.routes[0].duration / 60);
+            if (distanceInfoElement) distanceInfoElement.textContent = `${distance} km`;
+            if (durationInfoElement) durationInfoElement.textContent = `${duration} phút`;
         } else {
             console.error('Lỗi tính tuyến đường:', routeData.message);
-            distanceInfoElement.textContent = 'Không thể tính khoảng cách';
-            durationInfoElement.textContent = 'Không thể tính thời gian';
+            if (distanceInfoElement) distanceInfoElement.textContent = 'Không thể tính khoảng cách';
+            if (durationInfoElement) durationInfoElement.textContent = 'Không thể tính thời gian';
         }
 
         // Điều chỉnh bản đồ để hiển thị cả kho và địa chỉ giao hàng
         map.fitBounds([warehouseLocation, destinationLocation]);
+        
     } catch (error) {
         console.error('Lỗi khi hiển thị bản đồ:', error);
-        distanceInfoElement.textContent = 'Không thể hiển thị thông tin';
-        durationInfoElement.textContent = 'Không thể hiển thị thông tin';
+        if (distanceInfoElement) distanceInfoElement.textContent = 'Không thể hiển thị thông tin';
+        if (durationInfoElement) durationInfoElement.textContent = 'Không thể hiển thị thông tin';
     }
 }

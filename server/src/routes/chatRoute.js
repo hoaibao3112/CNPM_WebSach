@@ -476,5 +476,111 @@ router.patch('/rooms/:room_id/read', authenticate, async (req, res) => {
     });
   }
 });
+// Thêm vào cuối file, trước export default router;
 
+// 8. API lấy số tin nhắn chưa đọc cho admin
+router.get('/admin/unread-count', authenticate, async (req, res) => {
+  try {
+    if (req.user.userType !== 'staff') {
+      return res.status(403).json({ 
+        success: false, 
+        error: 'Access denied' 
+      });
+    }
+
+    const [unreadCount] = await db.query(`
+      SELECT COUNT(*) as count
+      FROM chat_messages cm
+      WHERE cm.sender_type = 'customer' 
+      AND cm.is_read = 0
+    `);
+
+    res.json({
+      success: true,
+      unread_count: unreadCount[0]?.count || 0
+    });
+  } catch (error) {
+    console.error('❌ Get unread count error:', error);
+    res.status(500).json({ 
+      success: false,
+      error: 'Server error' 
+    });
+  }
+});
+
+// 9. API lấy danh sách phòng có tin nhắn chưa đọc
+router.get('/admin/unread-rooms', authenticate, async (req, res) => {
+  try {
+    if (req.user.userType !== 'staff') {
+      return res.status(403).json({ 
+        success: false, 
+        error: 'Access denied' 
+      });
+    }
+
+    const [unreadRooms] = await db.query(`
+      SELECT 
+        cr.room_id,
+        cr.customer_id,
+        kh.tenkh as customer_name,
+        kh.email as customer_email,
+        COUNT(cm.message_id) as unread_count,
+        MAX(cm.created_at) as last_message_time,
+        (SELECT message FROM chat_messages 
+         WHERE room_id = cr.room_id 
+         ORDER BY created_at DESC LIMIT 1) as last_message
+      FROM chat_rooms cr
+      JOIN khachhang kh ON cr.customer_id = kh.makh
+      JOIN chat_messages cm ON cr.room_id = cm.room_id
+      WHERE cm.sender_type = 'customer' 
+      AND cm.is_read = 0
+      GROUP BY cr.room_id, cr.customer_id, kh.tenkh, kh.email
+      ORDER BY last_message_time DESC
+    `);
+
+    res.json({
+      success: true,
+      unread_rooms: unreadRooms || []
+    });
+  } catch (error) {
+    console.error('❌ Get unread rooms error:', error);
+    res.status(500).json({ 
+      success: false,
+      error: 'Server error' 
+    });
+  }
+});
+
+// 10. API đánh dấu tin nhắn đã đọc
+router.patch('/admin/mark-read/:room_id', authenticate, async (req, res) => {
+  try {
+    if (req.user.userType !== 'staff') {
+      return res.status(403).json({ 
+        success: false, 
+        error: 'Access denied' 
+      });
+    }
+
+    const { room_id } = req.params;
+
+    await db.query(`
+      UPDATE chat_messages 
+      SET is_read = 1, read_at = NOW()
+      WHERE room_id = ? AND sender_type = 'customer' AND is_read = 0
+    `, [room_id]);
+
+    console.log('✅ Messages marked as read for room:', room_id);
+
+    res.json({
+      success: true,
+      message: 'Messages marked as read'
+    });
+  } catch (error) {
+    console.error('❌ Mark read error:', error);
+    res.status(500).json({ 
+      success: false,
+      error: 'Server error' 
+    });
+  }
+});
 export default router;
