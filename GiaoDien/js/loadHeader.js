@@ -30,7 +30,6 @@ async function loadHeader() {
           loadListProductSearch();
         }
         if (currentPath.endsWith("/GiaoDien/book.html")) {
-          setupCategoryDropdown();
           loadListProductSearch().then(() => {
             const searchParams = new URLSearchParams(window.location.search);
             if (searchParams.has("category")) {

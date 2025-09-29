@@ -2,6 +2,7 @@ import express from 'express';
 import pool from '../config/connectDatabase.js';
 import crypto from 'crypto';
 import jwt from 'jsonwebtoken';
+import { VNPay, ignoreLogger, ProductCode, VnpLocale, dateFormat } from 'vnpay';
 
 const router = express.Router();
 
@@ -23,6 +24,16 @@ function sortObject(obj) {
   }
   return sorted;
 }
+//cấu hình vnpay
+const vnpay = new VNPay({
+  tmnCode: process.env.VNP_TMNCODE,
+  secureSecret: process.env.VNP_HASHSECRET,
+  vnpayHost: process.env.VNP_URL,
+  testMode: true,
+  hashAlgorithm: 'SHA512',
+  enableLog: true, // Bật/tắt log
+  loggerFn: ignoreLogger, // Custom logger
+});
 
 // Middleware xác thực token
 const authenticateToken = (req, res, next) => {
@@ -51,8 +62,8 @@ router.post('/place-order', authenticateToken, async (req, res) => {
     }
 
     // Kiểm tra các trường bắt buộc trong customer và shippingAddress
-    if (!customer.makh || !customer.name || !customer.phone || !shippingAddress.detail || 
-        !shippingAddress.province || !shippingAddress.district || !shippingAddress.ward) {
+    if (!customer.makh || !customer.name || !customer.phone || !shippingAddress.detail ||
+      !shippingAddress.province || !shippingAddress.district || !shippingAddress.ward) {
       return res.status(400).json({ error: 'Thông tin khách hàng hoặc địa chỉ không đầy đủ' });
     }
 
@@ -122,32 +133,52 @@ router.post('/place-order', authenticateToken, async (req, res) => {
     await pool.query('DELETE FROM giohang WHERE MaKH = ? AND MaSP IN (?)', [customer.makh, cartItems.map(i => i.productId)]);
 
     // Tạo URL thanh toán VNPay
+    // if (paymentMethod === 'VNPAY') {
+    //   const vnp_Params = {
+    //     vnp_Version: '2.1.0',
+    //     vnp_Command: 'pay',
+    //     vnp_TmnCode: process.env.VNP_TMNCODE,
+    //     vnp_Amount: totalAmount * 100,
+    //     vnp_CurrCode: 'VND',
+    //     vnp_TxnRef: orderId.toString(),
+    //     vnp_OrderInfo: `Thanh toan don hang ${orderId}`,
+    //     vnp_OrderType: 'billpayment',
+    //     vnp_Locale: 'vn',
+    //     vnp_ReturnUrl: process.env.VNP_RETURN_URL,
+    //     vnp_IpAddr: req.ip,
+    //     vnp_CreateDate: new Date().toISOString().replace(/[-:T.]/g, '').slice(0, 14)
+    //   };
+    //   const sortedParams = sortObject(vnp_Params);
+    //   const querystring = new URLSearchParams(sortedParams).toString();
+    //   const hmac = crypto.createHmac("sha512", process.env.VNP_HASHSECRET);
+    //   const signed = hmac.update(Buffer.from(querystring, 'utf-8')).digest("hex");
+    //   vnp_Params.vnp_SecureHash = signed;
+    //   const paymentUrl = `${process.env.VNP_URL}?${querystring}&vnp_SecureHash=${signed}`;
+
+    //   res.status(200).json({ success: true, orderId, paymentUrl });
+    // } else {
+    //   res.status(200).json({ success: true, orderId });
+    // }
+
     if (paymentMethod === 'VNPAY') {
-      const vnp_Params = {
-        vnp_Version: '2.1.0',
-        vnp_Command: 'pay',
-        vnp_TmnCode: process.env.VNP_TMNCODE,
-        vnp_Amount: totalAmount * 100,
-        vnp_CurrCode: 'VND',
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1)
+      const vnpayResponse = await vnpay.buildPaymentUrl({
+        vnp_Amount: totalAmount,
+        vnp_IpAddr: '127.0.0.1',
         vnp_TxnRef: orderId.toString(),
         vnp_OrderInfo: `Thanh toan don hang ${orderId}`,
         vnp_OrderType: 'billpayment',
-        vnp_Locale: 'vn',
         vnp_ReturnUrl: process.env.VNP_RETURN_URL,
-        vnp_IpAddr: req.ip,
-        vnp_CreateDate: new Date().toISOString().replace(/[-:T.]/g, '').slice(0, 14)
-      };
-      const sortedParams = sortObject(vnp_Params);
-      const querystring = new URLSearchParams(sortedParams).toString();
-      const hmac = crypto.createHmac("sha512", process.env.VNP_HASHSECRET);
-      const signed = hmac.update(Buffer.from(querystring, 'utf-8')).digest("hex");
-      vnp_Params.vnp_SecureHash = signed;
-      const paymentUrl = `${process.env.VNP_URL}?${querystring}&vnp_SecureHash=${signed}`;
-
-      res.status(200).json({ success: true, orderId, paymentUrl });
+        vnp_Locale: 'vn',
+        vnp_CreateDate: dateFormat(new Date()),
+        vnp_ExpireDate: dateFormat(tomorrow),
+      })
+      return res.status(200).json({ success: true, orderId, paymentUrl: vnpayResponse });
     } else {
       res.status(200).json({ success: true, orderId });
     }
+
   } catch (error) {
     console.error('Lỗi đặt hàng:', error);
     res.status(500).json({ error: 'Lỗi khi đặt hàng', details: error.message });
@@ -646,75 +677,80 @@ router.put('/customer-orders/cancel/:orderId', authenticateToken, async (req, re
 
 // API xử lý return URL từ VNPay
 router.get('/vnpay_return', async (req, res) => {
-  let vnp_Params = req.query;
-
-  const secureHash = vnp_Params['vnp_SecureHash'];
-  delete vnp_Params['vnp_SecureHash'];
-  delete vnp_Params['vnp_SecureHashType'];
-
-  vnp_Params = sortObject(vnp_Params);
-
-  const signData = new URLSearchParams(vnp_Params).toString();
-  const hmac = crypto.createHmac("sha512", process.env.VNP_HASHSECRET);
-  const signed = hmac.update(Buffer.from(signData, 'utf-8')).digest("hex");
-
-  if (secureHash === signed) {
-    const orderId = vnp_Params['vnp_TxnRef'];
-    const rspCode = vnp_Params['vnp_ResponseCode'];
-
-    if (rspCode === '00') {
-      await pool.query(
-        `UPDATE hoadon SET TrangThaiThanhToan = 'Đã thanh toán', tinhtrang = 'Đã xác nhận' WHERE MaHD = ?`,
-        [orderId]
-      );
-      res.redirect(`${process.env.CLIENT_CUSTOMER_URL}/order-confirmation?orderId=${orderId}&status=success`);
+  try {
+    // Xác thực chữ ký VNPay trả về
+    const verify = vnpay.verifyReturnUrl(req.query);
+    const orderId = req.query.vnp_TxnRef;
+    const rspCode = req.query.vnp_ResponseCode;
+    const amount = req.query.vnp_Amount;
+    
+    if (verify.isSuccess) {
+      if (rspCode === "00") {
+        await pool.query(
+          `UPDATE hoadon 
+           SET TrangThaiThanhToan = 'Đã thanh toán', tinhtrang = 'Đã xác nhận' 
+           WHERE MaHD = ?`,
+          [orderId]
+        );
+        console.log(`✅ Thanh toán thành công cho đơn hàng ${orderId}`);
+        return res.redirect(
+          `${process.env.CLIENT_CUSTOMER_URL}/GiaoDien/order-confirmation.html?orderId=${orderId}&amount=${amount}&status=success`
+        );
+      } else {
+        await pool.query(
+          `UPDATE hoadon 
+           SET TrangThaiThanhToan = 'Thất bại' 
+           WHERE MaHD = ?`,
+          [orderId]
+        );
+        console.log(`Thanh toán thất bại cho đơn hàng ${orderId}`);
+        return res.redirect(
+          `${process.env.CLIENT_CUSTOMER_URL}/GiaoDien/order-confirmation.html?orderId=${orderId}&amount=${amount}&status=failed`
+        );
+      }
     } else {
-      await pool.query(
-        `UPDATE hoadon SET TrangThaiThanhToan = 'Thất bại' WHERE MaHD = ?`,
-        [orderId]
-      );
-      res.redirect(`${process.env.CLIENT_CUSTOMER_URL}/order-confirmation?orderId=${orderId}&status=failed`);
+      console.warn(" Sai chữ ký:", verify.message);
+      return res.status(400).json({ error: "Invalid VNPay signature" });
     }
-  } else {
-    res.status(400).json({ error: 'Invalid signature' });
+  } catch (error) {
+    console.error("🔥 Lỗi xử lý /vnpay_return:", error);
+    return res.status(500).json({ error: "Lỗi server khi xử lý VNPay return" });
   }
 });
 
 // API xử lý IPN từ VNPay
 router.post('/vnpay_ipn', async (req, res) => {
-  let vnp_Params = req.body;
-
-  const secureHash = vnp_Params['vnp_SecureHash'];
-  delete vnp_Params['vnp_SecureHash'];
-  delete vnp_Params['vnp_SecureHashType'];
-
-  vnp_Params = sortObject(vnp_Params);
-
-  const signData = new URLSearchParams(vnp_Params).toString();
-  const hmac = crypto.createHmac("sha512", process.env.VNP_HASHSECRET);
-  const signed = hmac.update(Buffer.from(signData, 'utf-8')).digest("hex");
-
-  if (secureHash === signed) {
-    const orderId = vnp_Params['vnp_TxnRef'];
-    const rspCode = vnp_Params['vnp_ResponseCode'];
-
-    if (rspCode === '00') {
-      await pool.query(
-        `UPDATE hoadon SET TrangThaiThanhToan = 'Đã thanh toán', tinhtrang = 'Đã xác nhận' WHERE MaHD = ? AND TrangThaiThanhToan != 'Đã thanh toán'`,
-        [orderId]
-      );
-      res.status(200).json({ RspCode: '00', Message: 'Confirm Success' });
+  try {
+    const verify = vnpay.verifyReturnUrl(req.body);
+    const orderId = req.body.vnp_TxnRef;
+    const rspCode = req.body.vnp_ResponseCode;
+    if (verify.isSuccess) {
+      if (rspCode === "00") {
+        await pool.query(
+          `UPDATE hoadon 
+           SET TrangThaiThanhToan = 'Đã thanh toán', tinhtrang = 'Chờ xác nhận' 
+           WHERE MaHD = ? AND TrangThaiThanhToan != 'Đã thanh toán'`,
+          [orderId]
+        );
+        console.log(`✅ [IPN] Thanh toán thành công cho đơn hàng ${orderId}`);
+        return res.status(200).json({ RspCode: "00", Message: "Confirm Success" });
+      } else {
+        await pool.query(
+          `UPDATE hoadon 
+           SET TrangThaiThanhToan = 'Thất bại' 
+           WHERE MaHD = ?`,
+          [orderId]
+        );
+        console.log(`❌ [IPN] Thanh toán thất bại cho đơn hàng ${orderId}`);
+        return res.status(200).json({ RspCode: "01", Message: "Payment Failed" });
+      }
     } else {
-      await pool.query(
-        `UPDATE hoadon SET TrangThaiThanhToan = 'Thất bại' WHERE MaHD = ?`,
-        [orderId]
-      );
-      res.status(200).json({ RspCode: '99', Message: 'Fail Code' });
+      console.warn("⚠️ [IPN] Sai chữ ký:", verify.message);
+      return res.status(200).json({ RspCode: "97", Message: "Invalid Signature" });
     }
-  } else {
-    res.status(200).json({ RspCode: '97', Message: 'Fail Checksum' });
+  } catch (error) {
+    console.error("🔥 Lỗi xử lý /vnpay_ipn:", error);
+    return res.status(500).json({ RspCode: "99", Message: "Server Error" });
   }
 });
-
-
 export default router;

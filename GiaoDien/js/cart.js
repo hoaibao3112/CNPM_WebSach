@@ -551,7 +551,7 @@ async function checkout() {
     if (!response.ok) {
       throw new Error(result.error || `HTTP error! Status: ${response.status}`);
     }
-
+    
     if (orderData.paymentMethod === 'VNPAY') {
       if (result.paymentUrl) {
         console.log('Redirecting to VNPay:', result.paymentUrl);
