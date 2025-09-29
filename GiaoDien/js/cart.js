@@ -498,9 +498,10 @@ async function checkout() {
     quanhuyen: document.getElementById('quanhuyen')?.value || '',
     phuongxa: document.getElementById('phuongxa')?.value || '',
     diachi: document.getElementById('diachichitiet')?.value || '',
-    paymentMethod: document.getElementById('payment-method')?.value || ''
+    paymentMethod: document.getElementById('payment-method')?.value || '',
+     notes: document.getElementById('notes')?.value || '' 
   };
-
+  
   // Validate form data
   if (!validateForm(formData)) return;
 
@@ -530,7 +531,8 @@ async function checkout() {
       district: formData.quanhuyen,
       ward: formData.phuongxa
     },
-    paymentMethod: formData.paymentMethod
+    paymentMethod: formData.paymentMethod,
+    notes: formData.notes 
   };
 
   console.log('Order Data:', JSON.stringify(orderData, null, 2));
