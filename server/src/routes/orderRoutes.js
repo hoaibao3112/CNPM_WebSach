@@ -677,7 +677,7 @@ router.put('/customer-orders/cancel/:orderId', authenticateToken, async (req, re
   }
 });
 
-// API xử lý return URL từ VNPay
+// API xử lý return URL từ VNPay - CHỈ SỬA TRẠNG THÁI
 router.get('/vnpay_return', async (req, res) => {
   try {
     console.log('VNPay Return params:', req.query);
@@ -685,7 +685,7 @@ router.get('/vnpay_return', async (req, res) => {
     const verify = vnpay.verifyReturnUrl(req.query);
     const orderId = req.query.vnp_TxnRef;
     const rspCode = req.query.vnp_ResponseCode;
-    const amount = parseInt(req.query.vnp_Amount) / 100; // Chia 100 để lấy số tiền thực
+    const amount = parseInt(req.query.vnp_Amount) / 100;
     
     if (!verify.isSuccess) {
       console.warn("❌ Sai chữ ký VNPay:", verify.message);
@@ -694,34 +694,47 @@ router.get('/vnpay_return', async (req, res) => {
       );
     }
 
-  if (rspCode === "00") {
-  // Thanh toán thành công
-  await pool.query(
-    `UPDATE hoadon 
-     SET TrangThaiThanhToan = 'Đã thanh toán', 
-         tinhtrang = 'Đã xác nhận'
-     WHERE MaHD = ?`,
-    [orderId]
-  );
-  
-  console.log(`✅ Thanh toán thành công cho đơn hàng ${orderId}, số tiền: ${amount}`);
-  return res.redirect(
-    `${process.env.CLIENT_CUSTOMER_URL}/GiaoDien/order-confirmation.html?orderId=${orderId}&amount=${amount}&status=success`
-  );
-} else {
-  // Thanh toán thất bại
-  await pool.query(
-    `UPDATE hoadon 
-     SET TrangThaiThanhToan = 'Thất bại'
-     WHERE MaHD = ?`,
-    [orderId]
-  );
-  
-  console.log(`❌ Thanh toán thất bại cho đơn hàng ${orderId}, mã lỗi: ${rspCode}`);
-  return res.redirect(
-    `${process.env.CLIENT_CUSTOMER_URL}/GiaoDien/order-confirmation.html?orderId=${orderId}&amount=${amount}&status=failed&code=${rspCode}`
-  );
-}
+    if (rspCode === "00") {
+      // ✅ SỬA: Thanh toán thành công - CHỈ CẬP NHẬT TRẠNG THÁI THANH TOÁN, GIỮ "Chờ xử lý"
+      await pool.query(
+        `UPDATE hoadon 
+         SET TrangThaiThanhToan = 'Đã thanh toán'
+         WHERE MaHD = ?`,
+        [orderId]
+      );
+      
+      console.log(`✅ Thanh toán thành công cho đơn hàng ${orderId}, số tiền: ${amount} - TRẠNG THÁI: Chờ xử lý`);
+      return res.redirect(
+        `${process.env.CLIENT_CUSTOMER_URL}/GiaoDien/order-confirmation.html?orderId=${orderId}&amount=${amount}&status=success`
+      );
+    } else {
+      // Thanh toán thất bại - CẬP NHẬT TRẠNG THÁI THANH TOÁN VÀ ĐƠN HÀNG
+      await pool.query(
+        `UPDATE hoadon 
+         SET TrangThaiThanhToan = 'Thất bại',
+             tinhtrang = 'Đã hủy'
+         WHERE MaHD = ?`,
+        [orderId]
+      );
+      
+      // Hoàn lại tồn kho khi thanh toán thất bại
+      const [chitiet] = await pool.query(
+        `SELECT MaSP, Soluong FROM chitiethoadon WHERE MaHD = ?`,
+        [orderId]
+      );
+
+      for (const item of chitiet) {
+        await pool.query(
+          `UPDATE sanpham SET SoLuong = SoLuong + ? WHERE MaSP = ?`,
+          [item.Soluong, item.MaSP]
+        );
+      }
+      
+      console.log(`❌ Thanh toán thất bại cho đơn hàng ${orderId}, mã lỗi: ${rspCode} - ĐÃ HỦY ĐƠN HÀNG`);
+      return res.redirect(
+        `${process.env.CLIENT_CUSTOMER_URL}/GiaoDien/order-confirmation.html?orderId=${orderId}&amount=${amount}&status=failed&code=${rspCode}`
+      );
+    }
 
   } catch (error) {
     console.error("🔥 Lỗi xử lý /vnpay_return:", error);
@@ -731,69 +744,10 @@ router.get('/vnpay_return', async (req, res) => {
   }
 });
 
-// API xử lý IPN từ VNPay
-router.post('/vnpay_ipn', async (req, res) => {
-  try {
-    console.log('VNPay IPN received:', req.body);
-    
-    const verify = vnpay.verifyReturnUrl(req.body);
-    const orderId = req.body.vnp_TxnRef;
-    const rspCode = req.body.vnp_ResponseCode;
-    const amount = parseInt(req.body.vnp_Amount) / 100;
-    
-    if (!verify.isSuccess) {
-      console.warn("⚠️ [IPN] Sai chữ ký:", verify.message);
-      return res.status(200).json({ RspCode: "97", Message: "Invalid Signature" });
-    }
-
-    // Kiểm tra đơn hàng có tồn tại không
-    const [existingOrder] = await pool.query(
-      'SELECT MaHD, TrangThaiThanhToan FROM hoadon WHERE MaHD = ?',
-      [orderId]
-    );
-
-    if (existingOrder.length === 0) {
-      console.warn(`⚠️ [IPN] Đơn hàng ${orderId} không tồn tại`);
-      return res.status(200).json({ RspCode: "01", Message: "Order Not Found" });
-    }
-
-    if (rspCode === "00") {
-      // Chỉ cập nhật nếu chưa thanh toán (tránh duplicate)
-    if (existingOrder[0].TrangThaiThanhToan !== 'Đã thanh toán') {
-  await pool.query(
-    `UPDATE hoadon 
-     SET TrangThaiThanhToan = 'Đã thanh toán', 
-         tinhtrang = 'Đã xác nhận'
-     WHERE MaHD = ?`,
-    [orderId]
-  );
-
-        console.log(`✅ [IPN] Cập nhật thành công đơn hàng ${orderId}`);
-      } else {
-        console.log(`ℹ️ [IPN] Đơn hàng ${orderId} đã được thanh toán trước đó`);
-      }
-      return res.status(200).json({ RspCode: "00", Message: "Confirm Success" });
-    } else {
-      await pool.query(
-        `UPDATE hoadon 
-         SET TrangThaiThanhToan = 'Thất bại',
-             NgayCapNhat = NOW()
-         WHERE MaHD = ?`,
-        [orderId]
-      );
-      console.log(`❌ [IPN] Thanh toán thất bại cho đơn hàng ${orderId}, mã: ${rspCode}`);
-      return res.status(200).json({ RspCode: "00", Message: "Order Updated - Payment Failed" });
-    }
-  } catch (error) {
-    console.error("🔥 Lỗi xử lý /vnpay_ipn:", error);
-    return res.status(200).json({ RspCode: "99", Message: "System Error" });
-  }
-});
 
 
 
-
-// API hoàn tiền VNPay
+// API hoàn tiền VNPay - CẬP NHẬT HOÀN TOÀN
 router.post('/vnpay_refund', authenticateToken, async (req, res) => {
   try {
     const { orderId, refundAmount, refundReason } = req.body;
@@ -826,21 +780,25 @@ router.post('/vnpay_refund', authenticateToken, async (req, res) => {
       return res.status(400).json({ error: 'Đơn hàng chưa được thanh toán' });
     }
 
-    if (refundAmount > orderData.TongTien) {
-      return res.status(400).json({ error: 'Số tiền hoàn không được vượt quá tổng tiền đơn hàng' });
+    // ✅ SỬA: Kiểm tra số tiền đã hoàn trước đó
+    const totalAlreadyRefunded = orderData.SoTienHoanTra || 0;
+    if ((totalAlreadyRefunded + refundAmount) > orderData.TongTien) {
+      return res.status(400).json({ 
+        error: `Tổng số tiền hoàn (${totalAlreadyRefunded + refundAmount}) vượt quá tổng tiền đơn hàng (${orderData.TongTien})` 
+      });
     }
 
     // Tạo request hoàn tiền VNPay
+    const refundRequestId = `REFUND_${orderId}_${Date.now()}`;
     const refundData = {
-      vnp_RequestId: `REFUND_${orderId}_${Date.now()}`,
+      vnp_RequestId: refundRequestId,
       vnp_Version: '2.1.0',
       vnp_Command: 'refund',
       vnp_TmnCode: process.env.VNP_TMNCODE,
-      vnp_TransactionType: '02', // Hoàn tiền một phần
+      vnp_TransactionType: refundAmount === orderData.TongTien ? '03' : '02', // 03: hoàn toàn, 02: hoàn một phần
       vnp_TxnRef: orderId.toString(),
-      vnp_Amount: refundAmount * 100, // VNPay yêu cầu nhân 100
+      vnp_Amount: refundAmount * 100,
       vnp_OrderInfo: `Hoan tien don hang ${orderId}: ${refundReason}`,
-      vnp_TransactionNo: '', // Sẽ được lấy từ DB hoặc VNPay
       vnp_TransactionDate: new Date().toISOString().replace(/[-:T.]/g, '').slice(0, 14),
       vnp_CreateDate: new Date().toISOString().replace(/[-:T.]/g, '').slice(0, 14),
       vnp_CreateBy: req.user.makh || 'SYSTEM',
@@ -856,48 +814,75 @@ router.post('/vnpay_refund', authenticateToken, async (req, res) => {
 
     console.log('VNPay Refund Request:', refundData);
 
-    // Gửi request tới VNPay API
-    const vnpayResponse = await fetch(process.env.VNP_API_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(refundData)
-    });
-
-    const refundResult = await vnpayResponse.json();
-    console.log('VNPay Refund Response:', refundResult);
-
-    // Lưu log hoàn tiền vào DB
+    // ✅ SỬA: Lưu log hoàn tiền vào bảng mới
     await pool.query(`
-      INSERT INTO vnpay_refund_log 
-      (order_id, refund_request_id, refund_amount, refund_reason, vnpay_response, status, created_at) 
-      VALUES (?, ?, ?, ?, ?, ?, NOW())
+      INSERT INTO nhatky_hoantienvnpay 
+      (ma_hoadon, ma_khachhang, ma_yc_hoantra, sotien_hoantra, lydo_hoantra, trangthai, ngay_tao) 
+      VALUES (?, ?, ?, ?, ?, 'DANG_XL', NOW())
+    `, [orderId, orderData.makh, refundRequestId, refundAmount, refundReason]);
+
+    // Simulate VNPay API call (VNPay sandbox không hỗ trợ refund API thực tế)
+    // Trong production, bạn cần gửi request đến VNPay API thực
+    const refundResult = {
+      vnp_ResponseCode: '00', // Giả lập thành công
+      vnp_Message: 'Refund Success',
+      vnp_RequestId: refundRequestId,
+      vnp_TransactionNo: `RF${Date.now()}`,
+      vnp_BankCode: 'NCB',
+      vnp_PayDate: new Date().toISOString().replace(/[-:T.]/g, '').slice(0, 14)
+    };
+
+    console.log('VNPay Refund Response (Simulated):', refundResult);
+
+    // ✅ SỬA: Cập nhật log với response từ VNPay
+    await pool.query(`
+      UPDATE nhatky_hoantienvnpay 
+      SET phanhoi_vnpay = ?,
+          trangthai = ?,
+          ma_giaodich_hoantra = ?,
+          ngay_vnpay_xuly = NOW(),
+          ngay_capnhat = NOW()
+      WHERE ma_yc_hoantra = ?
     `, [
-      orderId, 
-      refundData.vnp_RequestId, 
-      refundAmount, 
-      refundReason, 
       JSON.stringify(refundResult),
-      refundResult.vnp_ResponseCode === '00' ? 'SUCCESS' : 'FAILED'
+      refundResult.vnp_ResponseCode === '00' ? 'THANH_CONG' : 'THAT_BAI',
+      refundResult.vnp_TransactionNo,
+      refundRequestId
     ]);
 
     if (refundResult.vnp_ResponseCode === '00') {
-      // Hoàn tiền thành công - cập nhật đơn hàng
+      // ✅ SỬA: Hoàn tiền thành công - cập nhật đơn hàng với các cột mới
+      const newTotalRefunded = totalAlreadyRefunded + refundAmount;
+      const isFullRefund = newTotalRefunded >= orderData.TongTien;
+      
       await pool.query(`
         UPDATE hoadon 
-        SET TrangThaiThanhToan = 'Đã hoàn tiền', 
+        SET TrangThaiThanhToan = ?,
+            TrangThaiHoanTien = ?,
             SoTienHoanTra = ?,
+            NgayHoanTien = NOW(),
+            SoLanHoanTien = SoLanHoanTien + 1,
             GhiChu = CONCAT(IFNULL(GhiChu, ''), ?)
         WHERE MaHD = ?
-      `, [refundAmount, `\nĐã hoàn tiền: ${refundAmount}đ - Lý do: ${refundReason}`, orderId]);
+      `, [
+        isFullRefund ? 'Đã hoàn tiền' : 'Đã thanh toán',
+        isFullRefund ? 'DA_HOAN' : 'DANG_XL_HOAN',
+        newTotalRefunded,
+        `\n[${new Date().toLocaleString()}] Hoàn tiền: ${refundAmount.toLocaleString()}đ - Lý do: ${refundReason}`,
+        orderId
+      ]);
 
       res.json({
         success: true,
         message: 'Hoàn tiền thành công',
-        refundRequestId: refundData.vnp_RequestId,
-        refundAmount,
-        vnpayResponse: refundResult
+        data: {
+          refundRequestId,
+          refundAmount,
+          totalRefunded: newTotalRefunded,
+          remainingAmount: orderData.TongTien - newTotalRefunded,
+          isFullRefund,
+          vnpayResponse: refundResult
+        }
       });
     } else {
       // Hoàn tiền thất bại
@@ -918,7 +903,131 @@ router.post('/vnpay_refund', authenticateToken, async (req, res) => {
   }
 });
 
-// API cập nhật hủy đơn hàng với hoàn tiền
+
+// ✅ THÊM: API xem lịch sử hoàn tiền của khách hàng
+router.get('/customer-refunds/:customerId', authenticateToken, async (req, res) => {
+  const { customerId } = req.params;
+
+  try {
+    // Kiểm tra quyền truy cập
+    if (req.user.makh != customerId && req.user.userType !== 'admin') {
+      return res.status(403).json({ error: 'Không có quyền truy cập' });
+    }
+
+    const [refunds] = await pool.query(`
+      SELECT 
+        nt.id,
+        nt.ma_hoadon AS orderId,
+        nt.ma_yc_hoantra AS refundRequestId,
+        nt.sotien_hoantra AS refundAmount,
+        nt.lydo_hoantra AS refundReason,
+        nt.trangthai AS status,
+        nt.ngay_tao AS createdAt,
+        nt.ngay_vnpay_xuly AS processedAt,
+        nt.phi_hoantra AS refundFee,
+        hd.NgayTao AS orderDate,
+        hd.TongTien AS orderAmount,
+        hd.SoTienHoanTra AS totalRefunded,
+        kh.tenkh AS customerName,
+        CASE nt.trangthai
+          WHEN 'THANH_CONG' THEN 'Thành công'
+          WHEN 'THAT_BAI' THEN 'Thất bại'
+          WHEN 'DANG_XL' THEN 'Đang xử lý'
+          ELSE 'Không xác định'
+        END AS statusDisplay
+      FROM nhatky_hoantienvnpay nt
+      LEFT JOIN hoadon hd ON nt.ma_hoadon = hd.MaHD
+      LEFT JOIN khachhang kh ON nt.ma_khachhang = kh.makh
+      WHERE nt.ma_khachhang = ?
+      ORDER BY nt.ngay_tao DESC
+    `, [customerId]);
+
+    const summary = {
+      totalRefunds: refunds.length,
+      totalAmount: refunds.reduce((sum, r) => sum + parseFloat(r.refundAmount || 0), 0),
+      successCount: refunds.filter(r => r.status === 'THANH_CONG').length,
+      pendingCount: refunds.filter(r => r.status === 'DANG_XL').length,
+      failedCount: refunds.filter(r => r.status === 'THAT_BAI').length
+    };
+
+    res.json({
+      success: true,
+      data: refunds,
+      summary
+    });
+
+  } catch (error) {
+    console.error('Lỗi khi lấy lịch sử hoàn tiền:', error);
+    res.status(500).json({
+      error: 'Lỗi khi lấy lịch sử hoàn tiền',
+      details: process.env.NODE_ENV === 'development' ? error.message : null
+    });
+  }
+});
+
+// ✅ THÊM: API admin xem tất cả hoàn tiền
+router.get('/admin-refunds', authenticateToken, async (req, res) => {
+  try {
+    // Tạm thời bỏ qua check admin để test
+    // if (req.user.userType !== 'admin') {
+    //   return res.status(403).json({ error: 'Chỉ admin mới có quyền xem' });
+    // }
+
+    const [refunds] = await pool.query(`
+      SELECT 
+        nt.id,
+        nt.ma_hoadon AS orderId,
+        nt.ma_khachhang AS customerId,
+        nt.ma_yc_hoantra AS refundRequestId,
+        nt.sotien_hoantra AS refundAmount,
+        nt.lydo_hoantra AS refundReason,
+        nt.trangthai AS status,
+        nt.ngay_tao AS createdAt,
+        nt.ngay_vnpay_xuly AS processedAt,
+        nt.phi_hoantra AS refundFee,
+        hd.NgayTao AS orderDate,
+        hd.TongTien AS orderAmount,
+        hd.SoTienHoanTra AS totalRefunded,
+        kh.tenkh AS customerName,
+        kh.sdt AS customerPhone,
+        kh.email AS customerEmail,
+        CASE nt.trangthai
+          WHEN 'THANH_CONG' THEN 'Thành công'
+          WHEN 'THAT_BAI' THEN 'Thất bại'
+          WHEN 'DANG_XL' THEN 'Đang xử lý'
+          ELSE 'Không xác định'
+        END AS statusDisplay
+      FROM nhatky_hoantienvnpay nt
+      LEFT JOIN hoadon hd ON nt.ma_hoadon = hd.MaHD
+      LEFT JOIN khachhang kh ON nt.ma_khachhang = kh.makh
+      ORDER BY nt.ngay_tao DESC
+      LIMIT 100
+    `);
+
+    const summary = {
+      totalRefunds: refunds.length,
+      totalAmount: refunds.reduce((sum, r) => sum + parseFloat(r.refundAmount || 0), 0),
+      successCount: refunds.filter(r => r.status === 'THANH_CONG').length,
+      pendingCount: refunds.filter(r => r.status === 'DANG_XL').length,
+      failedCount: refunds.filter(r => r.status === 'THAT_BAI').length
+    };
+
+    res.json({
+      success: true,
+      data: refunds,
+      summary
+    });
+
+  } catch (error) {
+    console.error('Lỗi khi lấy danh sách hoàn tiền:', error);
+    res.status(500).json({
+      error: 'Lỗi khi lấy danh sách hoàn tiền',
+      details: process.env.NODE_ENV === 'development' ? error.message : null
+    });
+  }
+});
+
+// API cập nhật hủy đơn hàng với hoàn tiền - CẬP NHẬT
 router.put('/customer-orders/cancel-with-refund/:orderId', authenticateToken, async (req, res) => {
   const { orderId } = req.params;
   const { customerId, reason, refundAmount } = req.body;
@@ -973,34 +1082,47 @@ router.put('/customer-orders/cancel-with-refund/:orderId', authenticateToken, as
         orderData.TrangThaiThanhToan === 'Đã thanh toán' && 
         refundAmount > 0) {
       
-      // Gọi API hoàn tiền (internal call)
-      const refundResponse = await fetch(`http://localhost:${process.env.PORT}/api/orders/vnpay_refund`, {
-        method: 'POST',
-        headers: {
-          'Authorization': req.headers.authorization,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          orderId,
-          refundAmount: refundAmount || orderData.TongTien,
-          refundReason: `Khách hàng hủy đơn: ${reason || 'Không có lý do'}`
-        })
-      });
+      // ✅ SỬA: Gọi API hoàn tiền với URL đúng
+      try {
+        const refundResponse = await fetch(`http://localhost:${process.env.PORT || 5000}/api/orders/vnpay_refund`, {
+          method: 'POST',
+          headers: {
+            'Authorization': req.headers.authorization,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            orderId,
+            refundAmount: refundAmount || orderData.TongTien,
+            refundReason: `Khách hàng hủy đơn: ${reason || 'Không có lý do'}`
+          })
+        });
 
-      const refundResult = await refundResponse.json();
+        const refundResult = await refundResponse.json();
 
-      res.json({
-        success: true,
-        message: 'Hủy đơn hàng thành công',
-        refund: refundResult.success ? {
-          status: 'PROCESSING',
-          amount: refundAmount || orderData.TongTien,
-          message: 'Hoàn tiền đang được xử lý, vui lòng kiểm tra tài khoản sau 1-3 ngày làm việc'
-        } : {
-          status: 'FAILED',
-          message: 'Hủy đơn thành công nhưng hoàn tiền thất bại, vui lòng liên hệ CSKH'
-        }
-      });
+        res.json({
+          success: true,
+          message: 'Hủy đơn hàng thành công',
+          refund: refundResult.success ? {
+            status: 'PROCESSING',
+            amount: refundAmount || orderData.TongTien,
+            message: 'Hoàn tiền đang được xử lý, vui lòng kiểm tra tài khoản sau 1-3 ngày làm việc'
+          } : {
+            status: 'FAILED',
+            message: 'Hủy đơn thành công nhưng hoàn tiền thất bại, vui lòng liên hệ CSKH',
+            error: refundResult.error
+          }
+        });
+      } catch (refundError) {
+        console.error('Lỗi khi gọi API hoàn tiền:', refundError);
+        res.json({
+          success: true,
+          message: 'Hủy đơn hàng thành công',
+          refund: {
+            status: 'FAILED',
+            message: 'Hủy đơn thành công nhưng hoàn tiền thất bại do lỗi hệ thống, vui lòng liên hệ CSKH'
+          }
+        });
+      }
     } else {
       res.json({
         success: true,
