@@ -222,7 +222,7 @@ function checkAuth() {
     return true;
 }
 
-// Lấy danh sách đơn hàng từ API
+// ✅ Sửa lại fetchOrders để giữ nguyên tinhtrang từ database
 async function fetchOrders(customerId, statusFilter = 'all') {
     if (!checkAuth()) return [];
 
@@ -238,24 +238,30 @@ async function fetchOrders(customerId, statusFilter = 'all') {
         }
 
         let orders = await response.json();
+        
+        console.log('📋 Raw orders from API:', orders.map(o => ({
+            id: o.id,
+            tinhtrang: o.tinhtrang,
+            status: o.status
+        })));
 
-        // Ánh xạ trạng thái
-        const statusMapping = {
-            'Chờ xử lý': 'pending',
-            'Đã xác nhận': 'processing',
-            'Đang giao hàng': 'shipping',
-            'Đã giao hàng': 'completed',
-            'Đã hủy': 'cancelled'
-        };
-
-        orders = orders.map(order => ({
-            ...order,
-            status: statusMapping[order.status] || 'pending'
-        }));
-
-        // Lọc theo trạng thái
+        // ✅ KHÔNG MAP LẠI STATUS NỮA - SỬ DỤNG TRỰC TIẾP tinhtrang
+        // Chỉ lọc theo statusFilter nếu cần
         if (statusFilter !== 'all') {
-            orders = orders.filter(order => order.status === statusFilter);
+            const statusMapping = {
+                'pending': ['Chờ xử lý'],
+                'processing': ['Đã xác nhận'],
+                'shipping': ['Đang giao hàng'],
+                'completed': ['Đã giao hàng'],
+                'cancelled': ['Đã hủy', 'Đã hủy - chờ hoàn tiền', 'Đang hủy - chờ hoàn tiền']
+            };
+            
+            const allowedStatuses = statusMapping[statusFilter] || [];
+            if (allowedStatuses.length > 0) {
+                orders = orders.filter(order => 
+                    allowedStatuses.includes(order.tinhtrang)
+                );
+            }
         }
 
         return orders;
@@ -304,7 +310,7 @@ async function fetchOrderDetail(orderId) {
     }
 }
 
-// Hiển thị danh sách đơn hàng
+// ✅ Cập nhật hàm renderOrders với mapping trạng thái mới
 async function renderOrders(customerId, statusFilter = 'all') {
     const orderListElement = document.getElementById('order-list');
     const loadingModal = document.getElementById('loading-modal');
@@ -314,7 +320,7 @@ async function renderOrders(customerId, statusFilter = 'all') {
     if (orderListElement) orderListElement.innerHTML = '';
 
     try {
-        const orders = await fetchOrders(customerId, statusFilter);
+        let orders = await fetchOrders(customerId, statusFilter);
 
         if (!orders.length) {
             orderListElement.innerHTML = `
@@ -327,7 +333,16 @@ async function renderOrders(customerId, statusFilter = 'all') {
             return;
         }
 
+        // ✅ MAPPING TRẠNG THÁI MỚI - BAO GỒM CẢ TRẠNG THÁI HỦY
         const statusDisplay = {
+            'Chờ xử lý': { class: 'status-pending', text: 'Chờ xác nhận' },
+            'Đã xác nhận': { class: 'status-processing', text: 'Đã xác nhận' },
+            'Đang giao hàng': { class: 'status-shipping', text: 'Đang giao hàng' },
+            'Đã giao hàng': { class: 'status-completed', text: 'Đã hoàn thành' },
+            'Đã hủy': { class: 'status-cancelled', text: 'Đã hủy' },
+            'Đã hủy - chờ hoàn tiền': { class: 'status-refunding', text: 'Đã hủy - chờ hoàn tiền' },
+            'Đang hủy - chờ hoàn tiền': { class: 'status-refunding', text: 'Đang hủy - chờ hoàn tiền' },
+            // Fallback cho status cũ
             'pending': { class: 'status-pending', text: 'Chờ xác nhận' },
             'processing': { class: 'status-processing', text: 'Đã xác nhận' },
             'shipping': { class: 'status-shipping', text: 'Đang giao hàng' },
@@ -335,22 +350,39 @@ async function renderOrders(customerId, statusFilter = 'all') {
             'cancelled': { class: 'status-cancelled', text: 'Đã hủy' }
         };
 
-        orderListElement.innerHTML = orders.map(order => `
-            <div class="order-card" data-order-id="${order.id}">
-                <div class="order-card-header">
-                    <div>
-                        <span class="order-id">Đơn hàng #${order.id}</span>
-                        <span class="order-date">${formatDateTime(order.createdAt)}</span>
+        orderListElement.innerHTML = orders.map(order => {
+            // Sử dụng tinhtrang từ database thay vì status đã map
+            const statusKey = order.tinhtrang || order.status || 'pending';
+            const status = statusDisplay[statusKey] || statusDisplay['pending'];
+            
+            console.log('Order status mapping:', {
+                orderId: order.id,
+                tinhtrang: order.tinhtrang,
+                status: order.status,
+                finalStatus: status
+            });
+
+            return `
+                <div class="order-card" data-order-id="${order.id}">
+                    <div class="order-card-header">
+                        <div>
+                            <span class="order-id">Đơn hàng #${order.id}</span>
+                            <span class="order-date">${formatDateTime(order.createdAt)}</span>
+                        </div>
+                        <span class="order-status ${status.class}">
+                            ${status.text}
+                        </span>
                     </div>
-                    <span class="order-status ${statusDisplay[order.status].class}">
-                        ${statusDisplay[order.status].text}
-                    </span>
+                    <div class="order-summary">
+                        <div class="order-info">
+                            <span class="payment-method">${getPaymentMethodName(order.paymentMethod)}</span>
+                            ${order.paymentStatus ? `<span class="payment-status">${order.paymentStatus}</span>` : ''}
+                        </div>
+                        <span class="order-total">${formatPrice(order.totalAmount)}</span>
+                    </div>
                 </div>
-                <div class="order-summary">
-                    <span class="order-total">${formatPrice(order.totalAmount)}</span>
-                </div>
-            </div>
-        `).join('');
+            `;
+        }).join('');
 
         // Gắn sự kiện click cho từng đơn hàng
         document.querySelectorAll('.order-card').forEach(card => {
@@ -377,8 +409,14 @@ async function renderOrders(customerId, statusFilter = 'all') {
     }
 }
 
-// Thay thế hàm showOrderDetail hiện tại (từ dòng 186) bằng:
+
+let currentOrderData = null;
+
+// ✅ Cập nhật hàm showOrderDetail để lưu thông tin đơn hàng
 async function showOrderDetail(order) {
+    // 🔥 LƯU THÔNG TIN ĐƠN HÀNG VÀO BIẾN GLOBAL
+    currentOrderData = order;
+    
     const modal = document.getElementById('order-detail-modal');
     if (!modal) {
         console.error('Order detail modal not found');
@@ -440,13 +478,11 @@ async function showOrderDetail(order) {
         </div>
     `).join('');
 
-    // Hiển thị nút hủy
+    // ✅ Hiển thị nút hủy với logic mới
     const cancelBtn = document.getElementById('cancel-order-btn');
     if (cancelBtn) {
         cancelBtn.style.display = order.status === 'pending' ? 'inline-flex' : 'none';
-        cancelBtn.onclick = () => cancelOrder();
-    } else {
-        console.warn('Cancel button not found');
+        cancelBtn.onclick = () => showCancelModal();
     }
 
     // Hiển thị bản đồ giao hàng
@@ -454,11 +490,160 @@ async function showOrderDetail(order) {
 
     modal.style.display = 'block';
 }
-// Hàm hiển thị modal hủy đơn hàng (Thêm mới)
+// ✅ HÀM HỦY ĐƠN HÀNG THÔNG MINH - SỬA LẠI HOÀN TOÀN
 function showCancelModal() {
+    console.log('🔥 showCancelModal called');
+    console.log('Current order data:', currentOrderData);
+    
+    if (!currentOrderData) {
+        showErrorToast('Không tìm thấy thông tin đơn hàng');
+        return;
+    }
+    
+    // 🔥 PHÂN BIỆT LOẠI THANH TOÁN (sử dụng đúng tên trường)
+    console.log('Payment method:', currentOrderData.paymentMethod);
+    console.log('Payment status:', currentOrderData.paymentStatus);
+    
+    if (currentOrderData.paymentMethod === 'VNPAY' && currentOrderData.paymentStatus === 'Đã thanh toán') {
+        // ✅ VNPay đã thanh toán -> Hiển thị form hoàn tiền
+        console.log('✅ Showing VNPay refund modal');
+        showVNPayRefundModal(currentOrderData);
+    } else {
+        // ✅ COD hoặc chưa thanh toán -> Hiển thị modal hủy bình thường
+        console.log('✅ Showing normal cancel modal');
+        showNormalCancelModal();
+    }
+}
+// ✅ MODAL HỦY ĐƠN BÌNH THƯỜNG (COD/Chưa thanh toán)
+function showNormalCancelModal() {
     const modal = document.getElementById('cancel-order-modal');
     if (modal) {
         modal.style.display = 'block';
+        document.getElementById('cancel-reason').value = '';
+    }
+}
+
+
+// ✅ MODAL THÀNH CÔNG CHO VNPAY
+function showVNPayCancelSuccessModal(data) {
+    const modal = document.createElement('div');
+    modal.className = 'modal';
+    modal.style.display = 'block';
+    modal.innerHTML = `
+        <div class="modal-content" style="max-width: 600px;">
+            <div class="success-header" style="background: linear-gradient(135deg, #28a745, #20c997); color: white; padding: 25px; text-align: center; border-radius: 8px 8px 0 0;">
+                <i class="fas fa-check-circle fa-3x" style="margin-bottom: 15px;"></i>
+                <h2 style="margin: 0;">Hủy đơn hàng thành công!</h2>
+                <p style="margin: 10px 0 0 0; opacity: 0.9;">Đã hoàn tiền VNPay</p>
+            </div>
+            
+            <div style="padding: 30px;">
+                <div style="background: #d4edda; border: 1px solid #c3e6cb; border-radius: 8px; padding: 20px; margin-bottom: 25px;">
+                    <h4 style="color: #155724; margin: 0 0 15px 0;">
+                        <i class="fas fa-undo-alt"></i> Thông tin hoàn tiền
+                    </h4>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                        <div>
+                            <strong>Mã yêu cầu:</strong><br>
+                            <code style="background: #f8f9fa; padding: 4px 8px; border-radius: 4px; font-size: 12px;">${data.refundRequestId || 'N/A'}</code>
+                        </div>
+                        <div>
+                            <strong>Số tiền hoàn:</strong><br>
+                            <span style="color: #28a745; font-weight: bold; font-size: 18px;">${formatPrice(data.refundAmount || 0)}</span>
+                        </div>
+                    </div>
+                    <div style="margin-top: 15px;">
+                        <strong>Trạng thái:</strong> 
+                        <span style="background: #28a745; color: white; padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: bold;">
+                            ${data.refundStatus === 'COMPLETED' ? 'Đã hoàn tiền' : 'Đang xử lý'}
+                        </span>
+                    </div>
+                </div>
+
+                <div style="background: #e3f2fd; border-radius: 8px; padding: 15px; margin-bottom: 25px;">
+                    <p style="margin: 0; color: #1976d2;">
+                        <i class="fas fa-info-circle"></i>
+                        <strong>Lưu ý:</strong> ${data.refundStatus === 'COMPLETED' ? 
+                            'Tiền đã được hoàn về tài khoản của bạn.' : 
+                            `Tiền sẽ được hoàn về tài khoản trong ${data.estimatedRefundDays || '1-3 ngày làm việc'}.`
+                        }
+                    </p>
+                </div>
+
+                <div style="text-align: center;">
+                    <button onclick="this.closest('.modal').remove()" 
+                            style="background: #28a745; color: white; border: none; padding: 12px 30px; border-radius: 6px; cursor: pointer; font-size: 16px; margin-right: 15px;">
+                        <i class="fas fa-check"></i> Đóng
+                    </button>
+                    <a href="refund-history.html" onclick="this.closest('.modal').remove()"
+                       style="background: #17a2b8; color: white; text-decoration: none; padding: 12px 30px; border-radius: 6px; font-size: 16px; display: inline-block;">
+                        <i class="fas fa-history"></i> Xem lịch sử hoàn tiền
+                    </a>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    
+    // Auto remove after 10 seconds
+    setTimeout(() => {
+        if (modal.parentNode) {
+            modal.remove();
+        }
+    }, 10000);
+}
+// ✅ MODAL THÀNH CÔNG CHO COD
+function showNormalCancelSuccessModal(data) {
+    const modal = document.createElement('div');
+    modal.className = 'modal';
+    modal.style.display = 'block';
+    modal.innerHTML = `
+        <div class="modal-content" style="max-width: 500px; text-align: center;">
+            <div class="success-header" style="background: linear-gradient(135deg, #28a745, #20c997); color: white; padding: 25px; border-radius: 8px 8px 0 0;">
+                <i class="fas fa-check-circle fa-3x" style="margin-bottom: 15px;"></i>
+                <h2 style="margin: 0;">Hủy đơn hàng thành công!</h2>
+            </div>
+            
+            <div style="padding: 30px;">
+                <div style="background: #d4edda; border: 1px solid #c3e6cb; border-radius: 8px; padding: 20px; margin-bottom: 25px;">
+                    <p style="margin: 0; color: #155724; font-size: 16px;">
+                        <i class="fas fa-info-circle"></i>
+                        Đơn hàng <strong>#${data.orderId || 'N/A'}</strong> đã được hủy thành công.
+                    </p>
+                </div>
+                
+                <div style="background: #f8f9fa; border-radius: 8px; padding: 15px; margin-bottom: 25px;">
+                    <p style="margin: 0; color: #6c757d;">
+                        <i class="fas fa-box"></i>
+                        Các sản phẩm đã được hoàn lại kho. Bạn có thể đặt hàng lại bất cứ lúc nào.
+                    </p>
+                </div>
+
+                <button onclick="this.closest('.modal').remove()" 
+                        style="background: #28a745; color: white; border: none; padding: 12px 30px; border-radius: 6px; cursor: pointer; font-size: 16px;">
+                    <i class="fas fa-check"></i> Đóng
+                </button>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    
+    // Auto remove after 8 seconds
+    setTimeout(() => {
+        if (modal.parentNode) {
+            modal.remove();
+        }
+    }, 8000);
+}
+// ✅ ĐÓNG MODAL CHI TIẾT ĐƠN HÀNG
+function closeOrderDetailModal() {
+    const modal = document.getElementById('order-detail-modal');
+    if (modal) {
+        modal.style.display = 'none';
+        localStorage.removeItem('currentOrderId');
+        currentOrderData = null; // Reset dữ liệu
     }
 }
 
@@ -471,11 +656,11 @@ function hideCancelModal() {
     }
 }
 
-// Hủy đơn hàng (Cập nhật để sử dụng modal tùy chỉnh)
+// ✅ CẬP NHẬT HÀM cancelOrder (hàm xử lý hủy đơn bình thường)
 async function cancelOrder() {
     if (!checkAuth()) return;
 
-    showCancelModal();
+    showNormalCancelModal();
 
     const confirmCancelBtn = document.getElementById('confirm-cancel-btn');
     const cancelCancelBtn = document.getElementById('cancel-cancel-btn');
@@ -485,7 +670,6 @@ async function cancelOrder() {
         confirmCancelBtn.onclick = async () => {
             const orderId = localStorage.getItem('currentOrderId');
             const customerId = getCustomerId();
-            const token = getToken();
             const reason = document.getElementById('cancel-reason').value.trim() || 'Không có lý do';
 
             if (!orderId || isNaN(orderId)) {
@@ -500,7 +684,7 @@ async function cancelOrder() {
                     method: 'PUT',
                     headers: {
                         'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`
+                        'Authorization': `Bearer ${getToken()}`
                     },
                     body: JSON.stringify({
                         customerId,
@@ -513,11 +697,18 @@ async function cancelOrder() {
                     throw new Error(result.error || 'Không thể hủy đơn hàng.');
                 }
 
-                showErrorToast('Hủy đơn hàng thành công!');
+                // 🔥 PHÂN BIỆT KẾT QUẢ TRẢ VỀ
+                if (result.data && result.data.cancelType === 'VNPAY_REFUND') {
+                    showVNPayCancelSuccessModal(result.data);
+                } else {
+                    showNormalCancelSuccessModal(result.data || { orderId });
+                }
+
                 localStorage.removeItem('currentOrderId');
                 hideCancelModal();
-                document.getElementById('order-detail-modal').style.display = 'none';
+                closeOrderDetailModal();
                 renderOrders(customerId, document.getElementById('status-filter')?.value || 'all');
+                
             } catch (error) {
                 console.error('Lỗi khi hủy đơn hàng:', { orderId, error: error.message });
                 showErrorToast(`Không thể hủy đơn hàng: ${error.message}`);
@@ -533,7 +724,7 @@ async function cancelOrder() {
             const modal = document.getElementById('cancel-order-modal');
             if (event.target === modal) {
                 hideCancelModal();
-                window.removeEventListener('click', handler); // Xóa listener sau khi sử dụng
+                window.removeEventListener('click', handler);
             }
         });
     }
@@ -1680,4 +1871,721 @@ async function displayDeliveryMap(order) {
         if (distanceInfoElement) distanceInfoElement.textContent = 'Không thể hiển thị thông tin';
         if (durationInfoElement) durationInfoElement.textContent = 'Không thể hiển thị thông tin';
     }
+}
+
+
+
+/////--------xử lý hoàn tiền đơn hàng------------///////////////
+// ✅ XỬ LÝ FORM HOÀN TIỀN - VERSION FIX
+let currentOrderForRefund = null;
+
+// Hiển thị modal hoàn tiền VNPay
+function showVNPayRefundModal(order) {
+    console.log('📋 Showing VNPay refund modal for order:', order);
+    
+    currentOrderForRefund = order;
+    const orderId = order.id || order.MaHD;
+    const orderTotal = order.totalAmount || order.TongTien || 0;
+    
+    // Cập nhật thông tin đơn hàng
+    document.getElementById('refund-order-id').textContent = `#${orderId}`;
+    document.getElementById('refund-order-total').textContent = formatPrice(orderTotal);
+    document.getElementById('total-refund-display').textContent = formatPrice(orderTotal);
+    
+    // Cập nhật select options
+    const refundTypeSelect = document.getElementById('refund-type');
+    refundTypeSelect.innerHTML = `
+        <option value="full">Hoàn tiền toàn bộ (${formatPrice(orderTotal)})</option>
+        <option value="partial">Hoàn tiền một phần</option>
+    `;
+    
+    // Cập nhật max value
+    const refundAmountInput = document.getElementById('refund-amount');
+    if (refundAmountInput) {
+        refundAmountInput.max = orderTotal;
+    }
+    
+    // Hiển thị modal
+    document.getElementById('vnpay-refund-modal').style.display = 'block';
+    
+    // Reset form
+    const form = document.getElementById('refund-form');
+    if (form) form.reset();
+    
+    // Hide optional groups
+    document.getElementById('partial-amount-group').style.display = 'none';
+    document.getElementById('other-reason-group').style.display = 'none';
+    
+    // ✅ GẮN EVENT LISTENER TRỰC TIẾP CHO BUTTON
+    const confirmBtn = document.getElementById('confirm-refund-btn');
+    if (confirmBtn) {
+        confirmBtn.disabled = true;
+        
+        // Remove old listeners
+        confirmBtn.replaceWith(confirmBtn.cloneNode(true));
+        const newConfirmBtn = document.getElementById('confirm-refund-btn');
+        
+        // Add new listener
+        newConfirmBtn.addEventListener('click', processRefundCancellation);
+    }
+    
+    // Setup form listeners
+    setupRefundFormListeners();
+}
+
+// ✅ SETUP FORM LISTENERS - COMPLETE VERSION
+function setupRefundFormListeners() {
+    console.log('🔧 Setting up refund form listeners...');
+    
+    // Remove old listeners trước
+    removeRefundListeners();
+    
+    // 1. Refund type change
+    const refundTypeSelect = document.getElementById('refund-type');
+    if (refundTypeSelect) {
+        refundTypeSelect.addEventListener('change', function() {
+            handleRefundTypeChange(this.value);
+        });
+        console.log('✅ Refund type listener added');
+    }
+    
+    // 2. Cancel reason change
+    const cancelReasonSelect = document.getElementById('cancel-reason-select');
+    if (cancelReasonSelect) {
+        cancelReasonSelect.addEventListener('change', function() {
+            handleReasonChange(this.value);
+        });
+        console.log('✅ Cancel reason listener added');
+    }
+    
+    // 3. Refund amount input
+    const refundAmountInput = document.getElementById('refund-amount');
+    if (refundAmountInput) {
+        refundAmountInput.addEventListener('input', function() {
+            const amount = parseFloat(this.value) || 0;
+            const maxAmount = currentOrderForRefund ? (currentOrderForRefund.totalAmount || currentOrderForRefund.TongTien || 0) : 0;
+            
+            // Update display
+            const totalDisplay = document.getElementById('total-refund-display');
+            if (totalDisplay) {
+                totalDisplay.textContent = formatPrice(amount);
+            }
+            
+            // Validation
+            if (amount > maxAmount) {
+                this.setCustomValidity(`Số tiền hoàn không được vượt quá ${formatPrice(maxAmount)}`);
+            } else if (amount < 1000 && amount > 0) {
+                this.setCustomValidity('Số tiền hoàn tối thiểu là 1.000đ');
+            } else {
+                this.setCustomValidity('');
+            }
+            
+            validateRefundForm();
+        });
+        console.log('✅ Refund amount listener added');
+    }
+    
+    // 4. Other reason detail
+    const otherReasonDetail = document.getElementById('other-reason-detail');
+    if (otherReasonDetail) {
+        otherReasonDetail.addEventListener('input', function() {
+            const charCount = this.value.length;
+            const charCountElement = document.querySelector('.char-count');
+            if (charCountElement) {
+                charCountElement.textContent = `${charCount}/500 ký tự`;
+            }
+            
+            if (charCount > 500) {
+                this.setCustomValidity('Không được vượt quá 500 ký tự');
+            } else {
+                this.setCustomValidity('');
+            }
+            
+            validateRefundForm();
+        });
+        console.log('✅ Other reason detail listener added');
+    }
+    
+    // ✅ 5. Bank account input - chỉ cho phép nhập số
+    const bankAccountInput = document.getElementById('bank-account');
+    if (bankAccountInput) {
+        bankAccountInput.addEventListener('input', function() {
+            // Chỉ cho phép nhập số
+            let value = this.value.replace(/[^0-9]/g, '');
+            
+            // Giới hạn 20 ký tự
+            if (value.length > 20) {
+                value = value.substring(0, 20);
+            }
+            
+            this.value = value;
+            
+            // Validation
+            if (value.length > 0 && value.length < 8) {
+                this.setCustomValidity('Số tài khoản tối thiểu 8 chữ số');
+            } else {
+                this.setCustomValidity('');
+            }
+            
+            validateRefundForm();
+        });
+        
+        // Format hiển thị khi blur
+        bankAccountInput.addEventListener('blur', function() {
+            const value = this.value;
+            if (value.length >= 8) {
+                // Format: xxxx xxxx xxxx xxxx
+                const formatted = value.replace(/(\d{4})(?=\d)/g, '$1 ');
+                this.setAttribute('data-formatted', formatted);
+            }
+        });
+        
+        console.log('✅ Bank account listener added');
+    }
+    
+    // ✅ 6. Bank name select - xử lý "other" option
+    const bankNameSelect = document.getElementById('bank-name');
+    if (bankNameSelect) {
+        bankNameSelect.addEventListener('change', function() {
+            const otherBankGroup = document.getElementById('other-bank-group');
+            const otherBankInput = document.getElementById('other-bank-name');
+            
+            if (this.value === 'other') {
+                if (otherBankGroup) otherBankGroup.style.display = 'block';
+                if (otherBankInput) otherBankInput.required = true;
+            } else {
+                if (otherBankGroup) otherBankGroup.style.display = 'none';
+                if (otherBankInput) {
+                    otherBankInput.required = false;
+                    otherBankInput.value = '';
+                }
+            }
+            
+            validateRefundForm();
+        });
+        console.log('✅ Bank name listener added');
+    }
+    
+    // ✅ 7. Other bank name input
+    const otherBankInput = document.getElementById('other-bank-name');
+    if (otherBankInput) {
+        otherBankInput.addEventListener('input', function() {
+            // Giới hạn ký tự đặc biệt
+            this.value = this.value.replace(/[^a-zA-ZÀ-ỹ0-9\s]/g, '');
+            
+            if (this.value.length > 100) {
+                this.value = this.value.substring(0, 100);
+            }
+            
+            validateRefundForm();
+        });
+        console.log('✅ Other bank name listener added');
+    }
+    
+    // ✅ 8. Account holder input - chỉ chữ cái và space
+    const accountHolderInput = document.getElementById('account-holder');
+    if (accountHolderInput) {
+        accountHolderInput.addEventListener('input', function() {
+            // Chỉ cho phép chữ cái, space, và dấu tiếng Việt
+            this.value = this.value.replace(/[^a-zA-ZÀ-ỹ\s]/g, '');
+            
+            // Giới hạn độ dài
+            if (this.value.length > 100) {
+                this.value = this.value.substring(0, 100);
+            }
+            
+            // Validation
+            if (this.value.trim().length < 2) {
+                this.setCustomValidity('Tên chủ tài khoản tối thiểu 2 ký tự');
+            } else {
+                this.setCustomValidity('');
+            }
+            
+            validateRefundForm();
+        });
+        
+        // Auto capitalize
+        accountHolderInput.addEventListener('blur', function() {
+            this.value = this.value.replace(/\b\w/g, l => l.toUpperCase());
+        });
+        
+        console.log('✅ Account holder listener added');
+    }
+    
+    // ✅ 9. Bank branch input (optional)
+    const bankBranchInput = document.getElementById('bank-branch');
+    if (bankBranchInput) {
+        bankBranchInput.addEventListener('input', function() {
+            if (this.value.length > 200) {
+                this.value = this.value.substring(0, 200);
+            }
+            validateRefundForm();
+        });
+        console.log('✅ Bank branch listener added');
+    }
+    
+    // ✅ 10. Confirm bank info checkbox
+    const confirmBankInfo = document.getElementById('confirm-bank-info');
+    if (confirmBankInfo) {
+        confirmBankInfo.addEventListener('change', function() {
+            console.log('Bank info confirmed:', this.checked);
+            validateRefundForm();
+        });
+        console.log('✅ Confirm bank info listener added');
+    }
+    
+    // ✅ 11. Agree terms checkbox
+    const agreeTerms = document.getElementById('agree-terms');
+    if (agreeTerms) {
+        agreeTerms.addEventListener('change', function() {
+            console.log('Terms agreed:', this.checked);
+            validateRefundForm();
+        });
+        console.log('✅ Agree terms listener added');
+    }
+    
+    // ✅ 12. Real-time validation on all inputs
+    const allInputs = [
+        'refund-type', 'cancel-reason-select', 'refund-amount', 'other-reason-detail',
+        'bank-account', 'bank-name', 'other-bank-name', 'account-holder', 'bank-branch',
+        'confirm-bank-info', 'agree-terms'
+    ];
+    
+    allInputs.forEach(inputId => {
+        const input = document.getElementById(inputId);
+        if (input && !input.hasAttribute('data-listener-added')) {
+            // Mark để tránh add listener nhiều lần
+            input.setAttribute('data-listener-added', 'true');
+            
+            // Add focus/blur effects
+            if (input.type !== 'checkbox') {
+                input.addEventListener('focus', function() {
+                    this.classList.add('focused');
+                });
+                
+                input.addEventListener('blur', function() {
+                    this.classList.remove('focused');
+                });
+            }
+        }
+    });
+    
+    console.log('✅ Refund form listeners setup complete');
+    
+    // Initial validation
+    setTimeout(() => {
+        validateRefundForm();
+    }, 100);
+}
+
+// ✅ Remove listeners cũ để tránh duplicate
+function removeRefundListeners() {
+    const elements = [
+        'refund-type', 'cancel-reason-select', 'refund-amount', 'other-reason-detail',
+        'bank-account', 'bank-name', 'other-bank-name', 'account-holder', 'bank-branch',
+        'confirm-bank-info', 'agree-terms'
+    ];
+    
+    elements.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+            // Clone element để remove tất cả listeners
+            const newEl = el.cloneNode(true);
+            el.parentNode.replaceChild(newEl, el);
+            console.log(`🔄 Removed old listeners for ${id}`);
+        }
+    });
+}
+
+// ✅ Helper function - format số tài khoản khi hiển thị
+function formatBankAccount(accountNumber) {
+    if (!accountNumber) return '';
+    
+    // Remove spaces
+    const clean = accountNumber.replace(/\s/g, '');
+    
+    // Format: xxxx xxxx xxxx xxxx
+    return clean.replace(/(\d{4})(?=\d)/g, '$1 ');
+}
+
+// ✅ Helper function - validate số tài khoản
+function isValidBankAccount(accountNumber) {
+    if (!accountNumber) return false;
+    
+    const clean = accountNumber.replace(/\s/g, '');
+    
+    // Kiểm tra độ dài và chỉ chứa số
+    return /^[0-9]{8,20}$/.test(clean);
+}
+
+// ✅ Helper function - validate tên chủ tài khoản
+function isValidAccountHolder(name) {
+    if (!name || name.trim().length < 2) return false;
+    
+    // Chỉ chứa chữ cái, space và dấu tiếng Việt
+    return /^[a-zA-ZÀ-ỹ\s]{2,100}$/.test(name.trim());
+}
+
+// Remove listeners cũ
+function removeRefundListeners() {
+    const elements = [
+        'refund-type',
+        'cancel-reason-select', 
+        'refund-amount',
+        'other-reason-detail',
+        'confirm-bank-info',
+        'agree-terms'
+    ];
+    
+    elements.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+            el.replaceWith(el.cloneNode(true));
+        }
+    });
+}
+
+// ✅ ĐÓNG MODAL HOÀN TIỀN
+function closeRefundModal() {
+    console.log('❌ Closing refund modal');
+    
+    const modal = document.getElementById('vnpay-refund-modal');
+    if (modal) {
+        modal.style.display = 'none';
+    }
+    
+    currentOrderForRefund = null;
+}
+
+
+// ✅ XỬ LÝ THAY ĐỔI LOẠI HOÀN TIỀN
+function handleRefundTypeChange(type) {
+    console.log('💰 Refund type changed:', type);
+    
+    const partialGroup = document.getElementById('partial-amount-group');
+    const totalDisplay = document.getElementById('total-refund-display');
+    const refundAmountInput = document.getElementById('refund-amount');
+    
+    if (type === 'partial') {
+        if (partialGroup) partialGroup.style.display = 'block';
+        if (refundAmountInput) refundAmountInput.required = true;
+    } else {
+        if (partialGroup) partialGroup.style.display = 'none';
+        if (refundAmountInput) refundAmountInput.required = false;
+        
+        // Reset to full amount
+        const orderTotal = currentOrderForRefund ? (currentOrderForRefund.totalAmount || currentOrderForRefund.TongTien || 0) : 0;
+        if (totalDisplay) totalDisplay.textContent = formatPrice(orderTotal);
+    }
+    
+    validateRefundForm();
+}
+// Xử lý nhập số tiền hoàn tiền
+document.getElementById('refund-amount').addEventListener('input', function() {
+  const amount = parseFloat(this.value) || 0;
+  const maxAmount = currentOrderForRefund ? currentOrderForRefund.TongTien : 0;
+  
+  // Update display
+  document.getElementById('total-refund-display').textContent = formatPrice(amount);
+  
+  // Validation
+  if (amount > maxAmount) {
+    this.setCustomValidity(`Số tiền hoàn không được vượt quá ${formatPrice(maxAmount)}`);
+  } else if (amount < 1000 && amount > 0) {
+    this.setCustomValidity('Số tiền hoàn tối thiểu là 1.000đ');
+  } else {
+    this.setCustomValidity('');
+  }
+  
+  validateForm();
+});
+
+// ✅ XỬ LÝ THAY ĐỔI LÝ DO HỦY
+function handleReasonChange(reason) {
+    console.log('📝 Cancel reason changed:', reason);
+    
+    const otherGroup = document.getElementById('other-reason-group');
+    const otherReasonDetail = document.getElementById('other-reason-detail');
+    
+    if (reason === 'other') {
+        if (otherGroup) otherGroup.style.display = 'block';
+        if (otherReasonDetail) otherReasonDetail.required = true;
+    } else {
+        if (otherGroup) otherGroup.style.display = 'none';
+        if (otherReasonDetail) otherReasonDetail.required = false;
+    }
+    
+    validateRefundForm();
+}
+// ✅ Cập nhật validateRefundForm để check thông tin ngân hàng
+function validateRefundForm() {
+    const confirmBtn = document.getElementById('confirm-refund-btn');
+    if (!confirmBtn) {
+        console.error('❌ Confirm button not found');
+        return false;
+    }
+    
+    // Lấy giá trị từ form
+    const formData = {
+        refundType: document.getElementById('refund-type')?.value || '',
+        cancelReason: document.getElementById('cancel-reason-select')?.value || '',
+        bankAccount: document.getElementById('bank-account')?.value?.trim() || '',
+        bankName: document.getElementById('bank-name')?.value || '',
+        accountHolder: document.getElementById('account-holder')?.value?.trim() || '',
+        bankBranch: document.getElementById('bank-branch')?.value?.trim() || '',
+        confirmBankInfo: document.getElementById('confirm-bank-info')?.checked || false,
+        agreeTerms: document.getElementById('agree-terms')?.checked || false
+    };
+    
+    let isValid = true;
+    const errors = [];
+    
+    // Kiểm tra các trường bắt buộc
+    if (!formData.cancelReason) {
+        isValid = false;
+        errors.push('Chưa chọn lý do hủy');
+    }
+    
+    // ✅ Validate thông tin ngân hàng
+    if (!formData.bankAccount) {
+        isValid = false;
+        errors.push('Chưa nhập số tài khoản');
+    } else if (!/^[0-9]{8,20}$/.test(formData.bankAccount)) {
+        isValid = false;
+        errors.push('Số tài khoản không hợp lệ (8-20 chữ số)');
+    }
+    
+    if (!formData.bankName) {
+        isValid = false;
+        errors.push('Chưa chọn ngân hàng');
+    }
+    
+    if (!formData.accountHolder) {
+        isValid = false;
+        errors.push('Chưa nhập tên chủ tài khoản');
+    } else if (formData.accountHolder.length < 2) {
+        isValid = false;
+        errors.push('Tên chủ tài khoản quá ngắn');
+    }
+    
+    if (!formData.confirmBankInfo) {
+        isValid = false;
+        errors.push('Chưa xác nhận thông tin tài khoản');
+    }
+    
+    if (!formData.agreeTerms) {
+        isValid = false;
+        errors.push('Chưa đồng ý với điều khoản');
+    }
+    
+    // Kiểm tra số tiền hoàn một phần
+    if (formData.refundType === 'partial') {
+        const refundAmount = parseFloat(document.getElementById('refund-amount')?.value) || 0;
+        const orderTotal = currentOrderForRefund?.TongTien || 0;
+        
+        if (refundAmount <= 0) {
+            isValid = false;
+            errors.push('Số tiền hoàn phải lớn hơn 0');
+        } else if (refundAmount > orderTotal) {
+            isValid = false;
+            errors.push('Số tiền hoàn vượt quá tổng đơn hàng');
+        } else if (refundAmount < 1000) {
+            isValid = false;
+            errors.push('Số tiền hoàn tối thiểu là 1.000đ');
+        }
+    }
+    
+    // Kiểm tra lý do khác
+    if (formData.cancelReason === 'other') {
+        const otherReason = document.getElementById('other-reason-detail')?.value?.trim() || '';
+        if (!otherReason) {
+            isValid = false;
+            errors.push('Vui lòng nhập chi tiết lý do khác');
+        }
+    }
+    
+    // Cập nhật trạng thái button
+    confirmBtn.disabled = !isValid;
+    
+    console.log(isValid ? '✅ Form valid' : '❌ Form invalid', {
+        formData,
+        errors
+    });
+    
+    return isValid;
+}
+
+// Validate form và enable/disable button
+function validateForm() {
+  const form = document.getElementById('refund-form');
+  const confirmBtn = document.getElementById('confirm-refund-btn');
+  const refundType = document.getElementById('refund-type').value;
+  const cancelReason = document.getElementById('cancel-reason').value;
+  const confirmBankInfo = document.getElementById('confirm-bank-info').checked;
+  const agreeTerms = document.getElementById('agree-terms').checked;
+  
+  let isValid = true;
+  
+  // Check basic required fields
+  if (!cancelReason || !confirmBankInfo || !agreeTerms) {
+    isValid = false;
+  }
+  
+  // Check partial refund amount
+  if (refundType === 'partial') {
+    const refundAmount = parseFloat(document.getElementById('refund-amount').value) || 0;
+    if (refundAmount < 1000 || refundAmount > currentOrderForRefund.TongTien) {
+      isValid = false;
+    }
+  }
+  
+  // Check other reason detail
+  if (cancelReason === 'other') {
+    const otherDetail = document.getElementById('other-reason-detail').value.trim();
+    if (!otherDetail || otherDetail.length > 500) {
+      isValid = false;
+    }
+  }
+  
+  // Enable/disable confirm button
+  confirmBtn.disabled = !isValid;
+}
+
+// Add event listeners for form validation
+document.addEventListener('DOMContentLoaded', function() {
+  const form = document.getElementById('refund-form');
+  if (form) {
+    // Add listeners to all form elements
+    const formElements = form.querySelectorAll('input, select, textarea');
+    formElements.forEach(element => {
+      element.addEventListener('change', validateForm);
+      element.addEventListener('input', validateForm);
+    });
+  }
+});
+
+// ✅ Cập nhật processRefundCancellation để refresh ngay lập tức
+async function processRefundCancellation() {
+    console.log('🚀 Processing refund cancellation...');
+    
+    if (!currentOrderForRefund) {
+        showErrorToast('Không tìm thấy thông tin đơn hàng');
+        return;
+    }
+    
+    // Validate form trước khi xử lý
+    if (!validateRefundForm()) {
+        showErrorToast('Vui lòng điền đầy đủ thông tin bắt buộc');
+        return;
+    }
+    
+    const orderId = currentOrderForRefund.id || currentOrderForRefund.MaHD;
+    const customerId = getCustomerId();
+    const orderTotal = currentOrderForRefund.totalAmount || currentOrderForRefund.TongTien || 0;
+    
+    const refundType = document.getElementById('refund-type')?.value || 'full';
+    const cancelReasonValue = document.getElementById('cancel-reason-select')?.value || '';
+    const otherReasonDetail = document.getElementById('other-reason-detail')?.value?.trim() || '';
+    
+    const bankAccount = document.getElementById('bank-account')?.value?.trim() || '';
+    const bankName = document.getElementById('bank-name')?.value || '';
+    const accountHolder = document.getElementById('account-holder')?.value?.trim() || '';
+    const bankBranch = document.getElementById('bank-branch')?.value?.trim() || '';
+    
+    const finalBankName = bankName === 'other' 
+        ? document.getElementById('other-bank-name')?.value?.trim() || ''
+        : bankName;
+    
+    const refundAmount = refundType === 'full' 
+        ? orderTotal 
+        : parseFloat(document.getElementById('refund-amount')?.value) || orderTotal;
+    
+    let reasonText = getCancelReasonText(cancelReasonValue);
+    if (cancelReasonValue === 'other' && otherReasonDetail) {
+        reasonText += `: ${otherReasonDetail}`;
+    }
+    
+    try {
+        // Show loading state
+        const confirmBtn = document.getElementById('confirm-refund-btn');
+        if (confirmBtn) {
+            confirmBtn.disabled = true;
+            confirmBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang xử lý...';
+        }
+        
+        const response = await fetch(`http://localhost:5000/api/orders/customer-orders/cancel/${orderId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${getToken()}`
+            },
+            body: JSON.stringify({
+                customerId: customerId,
+                reason: reasonText,
+                refundAmount: refundAmount,
+                refundType: refundType,
+                bankAccount: bankAccount,
+                bankName: finalBankName,
+                accountHolder: accountHolder,
+                bankBranch: bankBranch || null
+            })
+        });
+        
+        const result = await response.json();
+        console.log('📡 API Response:', result);
+        
+        if (result.success) {
+            // ✅ REFRESH NGAY LẬP TỨC TRƯỚC KHI HIỂN THI SUCCESS
+            console.log('🔄 Refreshing orders list immediately...');
+            
+            // Close modals
+            closeRefundModal();
+            closeOrderDetailModal();
+            
+            // Refresh orders list TRƯỚC
+            await renderOrders(customerId);
+            
+            // Show success modal SAU (với delay để user thấy được sự thay đổi)
+            setTimeout(() => {
+                showVNPayCancelSuccessModal(result.data);
+            }, 500);
+            
+        } else {
+            throw new Error(result.error || 'Không thể xử lý hoàn tiền');
+        }
+        
+    } catch (error) {
+        console.error('💥 Refund error:', error);
+        showErrorToast(error.message || 'Có lỗi xảy ra khi xử lý hoàn tiền');
+    } finally {
+        // Reset button state
+        const confirmBtn = document.getElementById('confirm-refund-btn');
+        if (confirmBtn) {
+            confirmBtn.disabled = false;
+            confirmBtn.innerHTML = '<i class="fas fa-check"></i> Xác nhận hủy đơn & hoàn tiền';
+        }
+    }
+}
+
+// Helper function (giữ nguyên)
+function getCancelReasonText(reason) {
+    const reasons = {
+        'changed-mind': 'Thay đổi ý định mua hàng',
+        'found-better-price': 'Tìm được giá tốt hơn ở nơi khác',
+        'delivery-too-long': 'Thời gian giao hàng quá lâu',
+        'wrong-product': 'Đặt nhầm sản phẩm',
+        'financial-issue': 'Vấn đề tài chính',
+        'other': 'Lý do khác'
+    };
+    return reasons[reason] || reason;
+}
+
+function showRefundSuccessModal(data) {
+  // Tương tự như code modal success đã viết trước đó
+  showVNPayCancelSuccessModal(data);
+}
+
+function showRefundPolicy() {
+  // Hiển thị modal chính sách hoàn tiền
+  alert('Chính sách hoàn tiền sẽ được hiển thị ở đây');
 }

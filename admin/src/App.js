@@ -20,6 +20,7 @@ import LeavePage from './pages/LeavePage';
 import AttendancePage from './pages/AttendancePage';
 import { PermissionContext } from './components/PermissionContext';
 import DiscountManagement from './pages/DiscountManagement.js';
+import RefundManagement from './pages/RefundManagement.js';
 
 const PrivateRoute = ({ component: Component }) => {
   const isAuthenticated = !!localStorage.getItem('authToken');
@@ -213,6 +214,16 @@ const App = () => {
           <PrivateRoute
             component={() => (
               <RestrictedRoute component={AttendancePage} permission="Chấm công" />
+            )}
+          />
+        }
+      />
+             <Route
+        path="/admin/refunds"
+        element={
+          <PrivateRoute
+            component={() => (
+              <RestrictedRoute component={RefundManagement} permission="Hoàn tiền đơn hàng" />
             )}
           />
         }

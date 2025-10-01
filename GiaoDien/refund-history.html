@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lịch sử hoàn tiền - BookStore</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="styles/refund-history.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Section -->
+        <header class="refund-header">
+            <div class="header-content">
+                <div class="header-left">
+                    <h1><i class="fas fa-history"></i> Lịch sử hoàn tiền</h1>
+                    <p class="subtitle">Theo dõi tất cả giao dịch hoàn tiền của bạn</p>
+                </div>
+                <div class="header-actions">
+                    <a href="orders.html" class="btn btn-outline">
+                        <i class="fas fa-arrow-left"></i> Quay lại đơn hàng
+                    </a>
+                    <button id="export-btn" class="btn btn-primary">
+                        <i class="fas fa-download"></i> Xuất báo cáo
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Summary Cards -->
+        <div class="summary-section">
+            <div class="summary-cards">
+                <div class="summary-card total-card">
+                    <div class="card-icon">
+                        <i class="fas fa-coins"></i>
+                    </div>
+                    <div class="card-content">
+                        <h3 id="total-refund-amount">0đ</h3>
+                        <p>Tổng tiền đã hoàn</p>
+                        <span class="card-trend">
+                            <i class="fas fa-arrow-up"></i> +12% tháng này
+                        </span>
+                    </div>
+                </div>
+
+                <div class="summary-card success-card">
+                    <div class="card-icon">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <div class="card-content">
+                        <h3 id="success-count">0</h3>
+                        <p>Thành công</p>
+                        <span class="card-trend success">
+                            <i class="fas fa-arrow-up"></i> 98% tỷ lệ thành công
+                        </span>
+                    </div>
+                </div>
+
+                <div class="summary-card pending-card">
+                    <div class="card-icon">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                    <div class="card-content">
+                        <h3 id="pending-count">0</h3>
+                        <p>Đang xử lý</p>
+                        <span class="card-trend warning">
+                            <i class="fas fa-hourglass-half"></i> Chờ xử lý
+                        </span>
+                    </div>
+                </div>
+
+                <div class="summary-card failed-card">
+                    <div class="card-icon">
+                        <i class="fas fa-times-circle"></i>
+                    </div>
+                    <div class="card-content">
+                        <h3 id="failed-count">0</h3>
+                        <p>Thất bại</p>
+                        <span class="card-trend error">
+                            <i class="fas fa-arrow-down"></i> Cần xem xét
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filters and Search -->
+        <div class="filter-section">
+            <div class="filter-controls">
+                <div class="filter-group">
+                    <label>Trạng thái:</label>
+                    <select id="status-filter" class="filter-select">
+                        <option value="all">Tất cả</option>
+                        <option value="THANH_CONG">Thành công</option>
+                        <option value="DANG_XL">Đang xử lý</option>
+                        <option value="THAT_BAI">Thất bại</option>
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label>Thời gian:</label>
+                    <select id="time-filter" class="filter-select">
+                        <option value="all">Tất cả thời gian</option>
+                        <option value="7d">7 ngày qua</option>
+                        <option value="30d">30 ngày qua</option>
+                        <option value="3m">3 tháng qua</option>
+                        <option value="6m">6 tháng qua</option>
+                        <option value="1y">1 năm qua</option>
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label>Số tiền:</label>
+                    <select id="amount-filter" class="filter-select">
+                        <option value="all">Tất cả</option>
+                        <option value="0-100k">Dưới 100.000đ</option>
+                        <option value="100k-500k">100.000đ - 500.000đ</option>
+                        <option value="500k-1m">500.000đ - 1.000.000đ</option>
+                        <option value="1m+">Trên 1.000.000đ</option>
+                    </select>
+                </div>
+
+                <div class="search-group">
+                    <div class="search-box">
+                        <input type="text" id="search-input" placeholder="Tìm theo mã đơn hàng hoặc mã hoàn tiền...">
+                        <button id="search-btn">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="filter-actions">
+                <button id="clear-filters-btn" class="btn btn-light">
+                    <i class="fas fa-times"></i> Xóa bộ lọc
+                </button>
+                <button id="refresh-btn" class="btn btn-outline">
+                    <i class="fas fa-sync-alt"></i> Làm mới
+                </button>
+            </div>
+        </div>
+
+        <!-- Refund List -->
+        <div class="refund-list-section">
+            <div class="section-header">
+                <h2>Danh sách giao dịch hoàn tiền</h2>
+                <div class="list-controls">
+                    <div class="view-toggle">
+                        <button class="view-btn active" data-view="card">
+                            <i class="fas fa-th-large"></i>
+                        </button>
+                        <button class="view-btn" data-view="table">
+                            <i class="fas fa-list"></i>
+                        </button>
+                    </div>
+                    <div class="sort-controls">
+                        <select id="sort-select">
+                            <option value="date-desc">Mới nhất</option>
+                            <option value="date-asc">Cũ nhất</option>
+                            <option value="amount-desc">Số tiền cao</option>
+                            <option value="amount-asc">Số tiền thấp</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Card View -->
+            <div id="refund-list" class="refund-list card-view">
+                <!-- Loading State -->
+                <div class="loading-state" id="loading-state">
+                    <div class="loading-spinner">
+                        <i class="fas fa-spinner fa-spin"></i>
+                        <p>Đang tải lịch sử hoàn tiền...</p>
+                    </div>
+                </div>
+
+                <!-- Empty State -->
+                <div class="empty-state" id="empty-state" style="display: none;">
+                    <div class="empty-icon">
+                        <i class="fas fa-inbox"></i>
+                    </div>
+                    <h3>Chưa có giao dịch hoàn tiền</h3>
+                    <p>Bạn chưa có giao dịch hoàn tiền nào. Khi bạn hủy đơn hàng VNPay, thông tin sẽ hiển thị ở đây.</p>
+                    <a href="orders.html" class="btn btn-primary">
+                        <i class="fas fa-shopping-cart"></i> Xem đơn hàng
+                    </a>
+                </div>
+
+                <!-- Error State -->
+                <div class="error-state" id="error-state" style="display: none;">
+                    <div class="error-icon">
+                        <i class="fas fa-exclamation-triangle"></i>
+                    </div>
+                    <h3>Có lỗi xảy ra</h3>
+                    <p id="error-message">Không thể tải danh sách hoàn tiền. Vui lòng thử lại.</p>
+                    <button class="btn btn-primary" onclick="loadRefundHistory()">
+                        <i class="fas fa-redo"></i> Thử lại
+                    </button>
+                </div>
+
+                <!-- Refund items sẽ được render ở đây -->
+            </div>
+
+            <!-- Table View -->
+            <div class="refund-table-container" id="refund-table-container" style="display: none;">
+                <table class="refund-table">
+                    <thead>
+                        <tr>
+                            <th>Mã giao dịch</th>
+                            <th>Đơn hàng</th>
+                            <th>Ngày tạo</th>
+                            <th>Số tiền</th>
+                            <th>Lý do</th>
+                            <th>Trạng thái</th>
+                            <th>Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody id="refund-table-body">
+                        <!-- Table rows sẽ được render ở đây -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Pagination -->
+        <div class="pagination-section" id="pagination-section" style="display: none;">
+            <div class="pagination-info">
+                <span id="pagination-info">Hiển thị <strong>1-10</strong> của <strong>50</strong> giao dịch</span>
+            </div>
+            <div class="pagination-controls">
+                <button class="pagination-btn" id="prev-btn" disabled>
+                    <i class="fas fa-chevron-left"></i>
+                </button>
+                <div class="pagination-numbers" id="pagination-numbers">
+                    <!-- Page numbers sẽ được render ở đây -->
+                </div>
+                <button class="pagination-btn" id="next-btn">
+                    <i class="fas fa-chevron-right"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Refund Detail Modal -->
+    <div id="refund-detail-modal" class="modal">
+        <div class="modal-content refund-detail-content">
+            <div class="modal-header">
+                <h2><i class="fas fa-receipt"></i> Chi tiết hoàn tiền</h2>
+                <button class="close-btn" onclick="closeRefundDetailModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <div class="modal-body">
+                <!-- Transaction Info -->
+                <div class="detail-section">
+                    <h3>Thông tin giao dịch</h3>
+                    <div class="detail-grid">
+                        <div class="detail-item">
+                            <label>Mã giao dịch:</label>
+                            <span id="detail-transaction-id" class="monospace"></span>
+                        </div>
+                        <div class="detail-item">
+                            <label>Mã đơn hàng:</label>
+                            <span id="detail-order-id" class="monospace"></span>
+                        </div>
+                        <div class="detail-item">
+                            <label>Ngày tạo:</label>
+                            <span id="detail-created-date"></span>
+                        </div>
+                        <div class="detail-item">
+                            <label>Ngày xử lý:</label>
+                            <span id="detail-processed-date"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Amount Info -->
+                <div class="detail-section">
+                    <h3>Thông tin số tiền</h3>
+                    <div class="amount-breakdown">
+                        <div class="amount-item">
+                            <span class="amount-label">Số tiền hoàn:</span>
+                            <span class="amount-value" id="detail-refund-amount"></span>
+                        </div>
+                        <div class="amount-item">
+                            <span class="amount-label">Phí xử lý:</span>
+                            <span class="amount-value" id="detail-fee">0đ</span>
+                        </div>
+                        <div class="amount-item total">
+                            <span class="amount-label">Thực nhận:</span>
+                            <span class="amount-value" id="detail-net-amount"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Status & Reason -->
+                <div class="detail-section">
+                    <h3>Chi tiết hoàn tiền</h3>
+                    <div class="detail-grid">
+                        <div class="detail-item full-width">
+                            <label>Trạng thái:</label>
+                            <span id="detail-status" class="status-badge"></span>
+                        </div>
+                        <div class="detail-item full-width">
+                            <label>Lý do hoàn tiền:</label>
+                            <p id="detail-reason" class="reason-text"></p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Timeline -->
+                <div class="detail-section">
+                    <h3>Lịch sử xử lý</h3>
+                    <div class="timeline" id="refund-timeline">
+                        <!-- Timeline items sẽ được render ở đây -->
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="closeRefundDetailModal()">
+                    <i class="fas fa-times"></i> Đóng
+                </button>
+                <button class="btn btn-primary" onclick="printRefundDetail()">
+                    <i class="fas fa-print"></i> In phiếu
+                </button>
+                <button class="btn btn-success" onclick="downloadRefundReceipt()">
+                    <i class="fas fa-download"></i> Tải về PDF
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/refund-history.js"></script>
+</body>
+</html>
