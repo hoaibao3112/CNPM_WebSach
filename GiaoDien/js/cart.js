@@ -144,7 +144,6 @@ async function updateQuantity(index, newQuantity) {
         },
         body: JSON.stringify({ productId: item.id, quantity: newQuantity })
       });
- Nekton
       if (response.ok) {
         await renderCart();
         updateCartCount();
@@ -365,7 +364,7 @@ function updateSummary(subtotal, discount = 0) {
   subtotalElement.textContent = formatPrice(subtotal);
   discountRow.style.display = discount > 0 ? 'flex' : 'none';
   discountElement.textContent = discount > 0 ? `-${formatPrice(discount)}` : '-0đ';
-  totalElement.textContent = formatPrice(total);
+  totalElement.textContent = formatPrice( total);
 }
 
 // Attach event listeners
@@ -421,12 +420,10 @@ function attachEventListeners() {
   const applyCouponBtn = document.getElementById('apply-coupon');
   if (applyCouponBtn) {
     applyCouponBtn.addEventListener('click', async () => {
-      const couponCode = document.getElementById('coupon-code')?.value;
-      if (couponCode) {
-        showToast('Mã giảm giá được áp dụng!');
-        const cart = await getCart();
-        const subtotal = cart.reduce((sum, item) => item.selected ? sum + item.price * item.quantity : sum, 0);
-        updateSummary(subtotal, 10000); // Example discount
+      const discountDetails  = await applyPromo()
+      if(discountDetails) {
+        updateSummary(discountDetails.total, discountDetails.discountAmount)
+        totalAmountDiscouted = discountDetails.totalFinal;
       }
     });
   }
@@ -470,9 +467,10 @@ function getFormData() {
 }
 
 // Checkout function - Fixed version
+var totalAmountDiscouted;
 async function checkout() {
   console.log('Checkout started');
-  
+
   if (!isLoggedIn()) {
     console.log('User not logged in');
     showToast('Vui lòng đăng nhập để tiến hành thanh toán!');
@@ -482,7 +480,7 @@ async function checkout() {
 
   // Lấy form bằng ID chính xác từ cart.html
   const form = document.getElementById('customer-form');
-  
+
   if (!form) {
     console.error('Form not found with ID: customer-form');
     showToast('Không tìm thấy form thông tin!');
@@ -499,22 +497,23 @@ async function checkout() {
     phuongxa: document.getElementById('phuongxa')?.value || '',
     diachi: document.getElementById('diachichitiet')?.value || '',
     paymentMethod: document.getElementById('payment-method')?.value || '',
-     notes: document.getElementById('notes')?.value || '' 
+    notes: document.getElementById('notes')?.value || ''
   };
-  
+
   // Validate form data
   if (!validateForm(formData)) return;
 
   const cart = await getCart();
   const selectedItems = cart.filter(item => item.selected);
-  
+
   if (selectedItems.length === 0) {
     showToast('Vui lòng chọn ít nhất một sản phẩm!');
     return;
-  }
-
+  } 
+  
   // Construct order data to match Postman payload
   const orderData = {
+    totalAmountDiscouted,
     customer: {
       makh: getUserId(),
       name: formData.tenkh,
@@ -532,7 +531,7 @@ async function checkout() {
       ward: formData.phuongxa
     },
     paymentMethod: formData.paymentMethod,
-    notes: formData.notes 
+    notes: formData.notes
   };
 
   console.log('Order Data:', JSON.stringify(orderData, null, 2));
@@ -553,7 +552,7 @@ async function checkout() {
     if (!response.ok) {
       throw new Error(result.error || `HTTP error! Status: ${response.status}`);
     }
-    
+
     if (orderData.paymentMethod === 'VNPAY') {
       if (result.paymentUrl) {
         console.log('Redirecting to VNPay:', result.paymentUrl);
@@ -711,6 +710,54 @@ function handleVNPayReturn() {
     }
   }
 }
+//áp dụng khuyến mãi 
+async function applyPromo() {
+  try {
+    const cart = await getCart();
+    const selectedItems = cart.filter(item => item.selected);
+
+    const codeKM = document.getElementById('coupon-code').value.trim();
+    if (!codeKM) {
+      showToast("Vui lòng nhập mã khuyến mãi");
+      return;
+    }
+
+    const otherData = {
+      makh: getUserId(),
+      code: codeKM,
+      cartItems: selectedItems.map(item => ({
+        MaSP: item.id,
+        SoLuong: item.quantity,
+        DonGia: item.price
+      }))
+    };
+
+    const res = await fetch("http://localhost:5000/api/khuyenmai/apply-to-cart", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${getToken()}`,
+      },
+      body: JSON.stringify(otherData)
+    });
+
+    const data = await res.json();
+
+    if (res.ok) {
+      console.log("Kết quả sau tính toán:", data);
+      showToast("Áp dụng mã khuyến mãi thành công!");
+      return data.discountDetails;
+    } else {
+      showToast(data.error || "Áp dụng mã thất bại");
+      console.error("Lỗi request:", data.error);
+      return null;
+    }
+  } catch (error) {
+    console.error("Lỗi:", error);
+    showToast("Có lỗi xảy ra, vui lòng thử lại sau");
+    return null;
+  }
+}
 
 // Initialize
 document.addEventListener('DOMContentLoaded', async () => {
@@ -735,7 +782,6 @@ window.getCart = getCart;
 document.addEventListener('DOMContentLoaded', () => {
   const couponInput = document.getElementById('coupon-code');
   const datalist = document.getElementById('saved-coupons');
-
   if (couponInput && datalist) {
     couponInput.addEventListener('focus', () => {
       const savedVouchers = JSON.parse(localStorage.getItem('savedVouchers') || '[]');
@@ -752,3 +798,4 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 });
+

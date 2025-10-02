@@ -52,7 +52,7 @@ const authenticateToken = (req, res, next) => {
 // API đặt đơn hàng
 router.post('/place-order', authenticateToken, async (req, res) => {
   try {
-    const { customer, items, shippingAddress, paymentMethod, notes } = req.body;
+    const { customer, items, shippingAddress, paymentMethod, notes, totalAmountDiscouted } = req.body;
     console.log('Request Body:', req.body);
     console.log('req.user:', req.user);
 
@@ -102,7 +102,7 @@ router.post('/place-order', authenticateToken, async (req, res) => {
     }
 
     // Tính tổng tiền
-    const totalAmount = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
+    const totalAmount = totalAmountDiscouted? totalAmountDiscouted :cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
     console.log('Validated cart items:', cartItems, 'Total:', totalAmount);
 
     // Lưu địa chỉ
