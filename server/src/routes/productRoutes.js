@@ -125,6 +125,27 @@ router.get('/search', async (req, res) => {
   }
 });
 
+// Route lấy danh sách tác giả cho dropdown
+router.get('/authors', async (req, res) => {
+  try {
+    const [authors] = await pool.query('SELECT MaTG, TenTG FROM tacgia ORDER BY TenTG');
+    res.status(200).json(authors);
+  } catch (error) {
+    console.error('Lỗi khi lấy danh sách tác giả:', error);
+    res.status(500).json({ error: 'Lỗi khi lấy danh sách tác giả' });
+  }
+});
+
+// Route lấy danh sách thể loại cho dropdown  
+router.get('/categories', async (req, res) => {
+  try {
+    const [categories] = await pool.query('SELECT MaTL, TenTL FROM theloai ORDER BY TenTL');
+    res.status(200).json(categories);
+  } catch (error) {
+    console.error('Lỗi khi lấy danh sách thể loại:', error);
+    res.status(500).json({ error: 'Lỗi khi lấy danh sách thể loại' });
+  }
+});
 // Route lấy danh sách sản phẩm
 router.get('/', async (req, res) => {
   try {

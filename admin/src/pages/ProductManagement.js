@@ -1,14 +1,17 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import { Button, Input, message, Table, Modal, Space } from 'antd';
+import { Button, Input, message, Table, Modal, Space, Select } from 'antd';
 import { EditOutlined, DeleteOutlined, ExclamationCircleFilled } from '@ant-design/icons';
 import '../styles/ProductManagement.css';
 
 const { Search } = Input;
 const { confirm } = Modal;
+const { Option } = Select;
 
 const ProductManagement = () => {
   const [products, setProducts] = useState([]);
+  const [authors, setAuthors] = useState([]);
+  const [categories, setCategories] = useState([]);
   const [newProduct, setNewProduct] = useState({
     MaTL: '',
     TenSP: '',
@@ -25,6 +28,8 @@ const ProductManagement = () => {
   const [loading, setLoading] = useState(false);
 
   const API_URL = 'http://localhost:5000/api/product';
+  const AUTHORS_API_URL = 'http://localhost:5000/api/product/authors';
+  const CATEGORIES_API_URL = 'http://localhost:5000/api/product/categories';
 
   // Hàm để lấy token từ localStorage
   const getAuthToken = () => {
@@ -44,41 +49,58 @@ const ProductManagement = () => {
     };
   };
 
-  // Fetch danh sách sản phẩm
-  const fetchProducts = async () => {
+  // Fetch danh sách tác giả
+  const fetchAuthors = async () => {
     try {
-      setLoading(true);
-      const response = await axios.get(API_URL);
-      if (Array.isArray(response.data)) {
-        const processedProducts = response.data.map((product) => ({
-          ...product,
-          HinhAnh: product.HinhAnh && product.HinhAnh !== 'null'
-            ? `/img/products/${product.HinhAnh}`
-            : 'https://via.placeholder.com/50',
-          TinhTrang: product.TinhTrang ? (product.TinhTrang === 1 ? 'Còn hàng' : 'Hết hàng') : 'Không xác định',
-        }));
-        setProducts(processedProducts);
-      } else {
-        throw new Error('Dữ liệu sản phẩm không hợp lệ');
-      }
+      const response = await axios.get(AUTHORS_API_URL);
+      setAuthors(response.data || []);
     } catch (error) {
-      console.error('Lỗi khi lấy danh sách sản phẩm:', error);
-      message.error('Lỗi khi tải danh sách sản phẩm');
-    } finally {
-      setLoading(false);
+      console.error('Lỗi khi lấy danh sách tác giả:', error);
+      message.error('Lỗi khi tải danh sách tác giả');
     }
   };
 
+  // Fetch danh sách thể loại
+  const fetchCategories = async () => {
+    try {
+      const response = await axios.get(CATEGORIES_API_URL);
+      setCategories(response.data || []);
+    } catch (error) {
+      console.error('Lỗi khi lấy danh sách thể loại:', error);
+      message.error('Lỗi khi tải danh sách thể loại');
+    }
+  };
+
+ const fetchProducts = async () => {
+  try {
+    setLoading(true);
+    const response = await axios.get(API_URL);
+    if (Array.isArray(response.data)) {
+      const processedProducts = response.data.map((product) => ({
+        ...product,
+        HinhAnh: product.HinhAnh && product.HinhAnh !== 'null'
+          ? `/img/products/${product.HinhAnh}`
+          : 'https://via.placeholder.com/50',
+        // ✅ SỬA LOGIC: Nếu SoLuong > 0 thì "Còn hàng", ngược lại "Hết hàng"
+        TinhTrang: (product.SoLuong && product.SoLuong > 0) ? 'Còn hàng' : 'Hết hàng',
+      }));
+      setProducts(processedProducts);
+    } else {
+      throw new Error('Dữ liệu sản phẩm không hợp lệ');
+    }
+  } catch (error) {
+    console.error('Lỗi khi lấy danh sách sản phẩm:', error);
+    message.error('Lỗi khi tải danh sách sản phẩm');
+  } finally {
+    setLoading(false);
+  }
+};
+
   useEffect(() => {
     fetchProducts();
+    fetchAuthors();
+    fetchCategories();
   }, []);
-
-  // Generate MaSP mới
-  const generateNewMaSP = () => {
-    if (products.length === 0) return 1;
-    const maxMaSP = Math.max(...products.map((p) => parseInt(p.MaSP) || 0));
-    return maxMaSP + 1;
-  };
 
   // Xử lý thay đổi file
   const handleFileChange = (e, isEditing = false) => {
@@ -100,189 +122,158 @@ const ProductManagement = () => {
     }
   };
 
-  // Thêm sản phẩm
-  const handleAddProduct = async () => {
-    // Debug token
-    const token = getAuthToken();
-    console.log('🔍 Token hiện tại:', token ? 'Có token' : 'Không có token');
+ // Thêm sản phẩm - SỬA XỬ LÝ NAMXB
+const handleAddProduct = async () => {
+  const maTL = newProduct.MaTL;
+  const tenSP = newProduct.TenSP.trim();
+  const maTG = newProduct.MaTG;
+  const namXB = newProduct.NamXB; // ✅ Bỏ .trim() vì có thể là số
+
+  if (!maTL || !tenSP) {
+    message.error('Vui lòng nhập đầy đủ thông tin bắt buộc (Thể loại, Tên SP)!');
+    return;
+  }
+
+  try {
+    const formData = new FormData();
+    formData.append('MaTL', maTL);
+    formData.append('TenSP', tenSP);
+    if (newProduct.HinhAnh) {
+      formData.append('HinhAnh', newProduct.HinhAnh);
+    }
+    if (maTG) {
+      formData.append('MaTG', maTG);
+    }
+    // ✅ SỬA: Kiểm tra namXB khác null/undefined và là số hợp lệ
+    if (namXB && namXB.toString().trim() && !isNaN(parseInt(namXB))) {
+      formData.append('NamXB', parseInt(namXB));
+    }
+    formData.append('TinhTrang', 0);
+    formData.append('DonGia', 0);
+    formData.append('SoLuong', 0);
+
+    const config = getAuthConfig();
+    const response = await axios.post(API_URL, formData, config);
     
-    if (token) {
-      try {
-        const payload = JSON.parse(atob(token.split('.')[1]));
-        console.log('🔍 Token payload:', payload);
-        console.log('🔍 User:', payload.makh || payload.MaTK);
-        console.log('🔍 UserType:', payload.userType);
-      } catch (e) {
-        console.log('❌ Không decode được token');
-      }
+    await fetchProducts();
+    setNewProduct({
+      MaTL: '',
+      TenSP: '',
+      HinhAnh: null,
+      MaTG: '',
+      NamXB: '',
+      TinhTrang: 'Hết hàng',
+      DonGia: 0,
+      SoLuong: 0,
+    });
+    setIsModalVisible(false);
+    message.success(response.data.message || 'Thêm sản phẩm thành công!');
+  } catch (error) {
+    console.error('❌ Lỗi khi thêm sản phẩm:', error.response || error);
+    
+    if (error.response?.status === 401) {
+      message.error('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại!');
+      localStorage.removeItem('authToken');
+      window.location.href = '/admin/login';
+      return;
     }
     
-    const maTL = newProduct.MaTL.trim();
-    const tenSP = newProduct.TenSP.trim();
-    const maTG = newProduct.MaTG.trim();
-    const namXB = newProduct.NamXB.trim();
-
-    // Kiểm tra các trường bắt buộc
-    if (!maTL || !tenSP) {
-      message.error('Vui lòng nhập đầy đủ thông tin bắt buộc (Mã TL, Tên SP)!');
+    if (error.response?.status === 403) {
+      message.error(`Không có quyền! ${error.response.data?.error || 'Cần tài khoản admin/staff/NV004/NV007'}`);
       return;
     }
-    if (isNaN(parseInt(maTL)) || parseInt(maTL) <= 0) {
-      message.error('Mã thể loại phải là số nguyên dương hợp lệ!');
+    
+    const errorMessage = error.response?.data?.error || error.message || 'Lỗi khi thêm sản phẩm!';
+    message.error(errorMessage);
+  }
+};
+
+
+  // Cập nhật sản phẩm - SỬA XỬ LÝ NAMXB
+const handleUpdateProduct = async () => {
+  const maTL = editingProduct.MaTL;
+  const tenSP = editingProduct.TenSP.trim();
+  const maTG = editingProduct.MaTG;
+  const namXB = editingProduct.NamXB; // ✅ Bỏ .trim() vì có thể là số
+
+  if (!maTL || !tenSP) {
+    message.error('Vui lòng nhập đầy đủ thông tin bắt buộc (Thể loại, Tên SP)!');
+    return;
+  }
+
+  try {
+    const formData = new FormData();
+    formData.append('MaTL', maTL);
+    formData.append('TenSP', tenSP);
+    if (editingProduct.HinhAnh instanceof File) {
+      formData.append('HinhAnh', editingProduct.HinhAnh);
+    } else if (editingProduct.HinhAnh) {
+      formData.append('HinhAnh', editingProduct.HinhAnh.replace('/img/products/', ''));
+    }
+    if (maTG) {
+      formData.append('MaTG', maTG);
+    }
+    // ✅ SỬA: Kiểm tra namXB khác null/undefined và là số hợp lệ
+    if (namXB && namXB.toString().trim() && !isNaN(parseInt(namXB))) {
+      formData.append('NamXB', parseInt(namXB));
+    }
+    formData.append('TinhTrang', 0);
+    formData.append('DonGia', 0);
+    formData.append('SoLuong', 0);
+
+    const config = getAuthConfig();
+    const response = await axios.put(`${API_URL}/${editingProduct.MaSP}`, formData, config);
+    
+    await fetchProducts();
+    setEditingProduct(null);
+    setIsModalVisible(false);
+    message.success(response.data.message || 'Cập nhật sản phẩm thành công!');
+  } catch (error) {
+    console.error('❌ Lỗi khi cập nhật sản phẩm:', error.response || error);
+    
+    if (error.response?.status === 401) {
+      message.error('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại!');
+      localStorage.removeItem('authToken');
+      window.location.href = '/admin/login';
       return;
     }
-
-    try {
-      const formData = new FormData();
-      formData.append('MaTL', parseInt(maTL));
-      formData.append('TenSP', tenSP);
-      if (newProduct.HinhAnh) {
-        formData.append('HinhAnh', newProduct.HinhAnh);
-      }
-      if (maTG && !isNaN(parseInt(maTG))) {
-        formData.append('MaTG', parseInt(maTG));
-      }
-      if (namXB && !isNaN(parseInt(namXB))) {
-        formData.append('NamXB', parseInt(namXB));
-      }
-      formData.append('TinhTrang', 0);
-      formData.append('DonGia', 0);
-      formData.append('SoLuong', 0);
-
-      console.log('🚀 Gửi request thêm sản phẩm...');
-      const config = getAuthConfig();
-      const response = await axios.post(API_URL, formData, config);
-      
-      await fetchProducts();
-      setNewProduct({
-        MaTL: '',
-        TenSP: '',
-        HinhAnh: null,
-        MaTG: '',
-        NamXB: '',
-        TinhTrang: 'Hết hàng',
-        DonGia: 0,
-        SoLuong: 0,
-      });
-      setIsModalVisible(false);
-      message.success(response.data.message || 'Thêm sản phẩm thành công!');
-    } catch (error) {
-      console.error('❌ Lỗi khi thêm sản phẩm:', error.response || error);
-      
-      if (error.response?.status === 401) {
-        message.error('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại!');
-        localStorage.removeItem('authToken');
-        window.location.href = '/admin/login';
-        return;
-      }
-      
-      if (error.response?.status === 403) {
-        console.log('❌ 403 Error details:', error.response.data);
-        message.error(`Không có quyền! ${error.response.data?.error || 'Cần tài khoản admin/staff/NV004/NV007'}`);
-        return;
-      }
-      
-      const errorMessage = error.response?.data?.error || error.message || 'Lỗi khi thêm sản phẩm!';
-      message.error(errorMessage);
-    }
-  };
-
-  // Cập nhật sản phẩm
-  const handleUpdateProduct = async () => {
-    const maTL = editingProduct.MaTL.trim();
-    const tenSP = editingProduct.TenSP.trim();
-    const maTG = editingProduct.MaTG.trim();
-    const namXB = editingProduct.NamXB.trim();
-
-    if (!maTL || !tenSP) {
-      message.error('Vui lòng nhập đầy đủ thông tin bắt buộc (Mã TL, Tên SP)!');
+    
+    if (error.response?.status === 403) {
+      message.error('Bạn không có quyền thực hiện thao tác này!');
       return;
     }
-    if (isNaN(parseInt(maTL)) || parseInt(maTL) <= 0) {
-      message.error('Mã thể loại phải là số nguyên dương hợp lệ!');
-      return;
-    }
-
-    try {
-      const formData = new FormData();
-      formData.append('MaTL', parseInt(maTL));
-      formData.append('TenSP', tenSP);
-      if (editingProduct.HinhAnh instanceof File) {
-        formData.append('HinhAnh', editingProduct.HinhAnh);
-      } else if (editingProduct.HinhAnh) {
-        formData.append('HinhAnh', editingProduct.HinhAnh.replace('/img/products/', ''));
-      }
-      if (maTG && !isNaN(parseInt(maTG))) {
-        formData.append('MaTG', parseInt(maTG));
-      }
-      if (namXB && !isNaN(parseInt(namXB))) {
-        formData.append('NamXB', parseInt(namXB));
-      }
-      formData.append('TinhTrang', 0);
-      formData.append('DonGia', 0);
-      formData.append('SoLuong', 0);
-
-      console.log('🔄 Cập nhật sản phẩm...');
-      const config = getAuthConfig();
-      const response = await axios.put(`${API_URL}/${editingProduct.MaSP}`, formData, config);
-      
-      await fetchProducts();
-      setEditingProduct(null);
-      setIsModalVisible(false);
-      message.success(response.data.message || 'Cập nhật sản phẩm thành công!');
-    } catch (error) {
-      console.error('❌ Lỗi khi cập nhật sản phẩm:', error.response || error);
-      
-      if (error.response?.status === 401) {
-        message.error('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại!');
-        localStorage.removeItem('authToken');
-        window.location.href = '/admin/login';
-        return;
-      }
-      
-      if (error.response?.status === 403) {
-        message.error('Bạn không có quyền thực hiện thao tác này!');
-        return;
-      }
-      
-      const errorMessage = error.response?.data?.error || error.message || 'Lỗi khi cập nhật sản phẩm!';
-      message.error(errorMessage);
-    }
-  };
+    
+    const errorMessage = error.response?.data?.error || error.message || 'Lỗi khi cập nhật sản phẩm!';
+    message.error(errorMessage);
+  }
+};
 
   // Xóa sản phẩm
-  const handleDeleteProduct = (MaSP) => {
+  const handleDeleteProduct = (productId) => {
     confirm({
-      title: 'Bạn có chắc muốn xóa sản phẩm này?',
+      title: 'Xác nhận xóa sản phẩm',
       icon: <ExclamationCircleFilled />,
-      content: 'Hành động này sẽ không thể hoàn tác',
+      content: 'Bạn có chắc chắn muốn xóa sản phẩm này không?',
       okText: 'Xóa',
       okType: 'danger',
       cancelText: 'Hủy',
-      async onOk() {
+      onOk: async () => {
         try {
-          console.log('🗑️ Xóa sản phẩm:', MaSP);
           const config = getAuthConfig();
-          const response = await axios.delete(`${API_URL}/${MaSP}`, config);
-          await fetchProducts();
-          message.success(response.data.message || 'Xóa sản phẩm thành công!');
+          await axios.delete(`${API_URL}/${productId}`, config);
+          message.success('Xóa sản phẩm thành công!');
+          fetchProducts();
         } catch (error) {
-          console.error('❌ Lỗi khi xóa sản phẩm:', error.response || error);
-          
+          console.error('Lỗi khi xóa sản phẩm:', error);
           if (error.response?.status === 401) {
             message.error('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại!');
             localStorage.removeItem('authToken');
             window.location.href = '/admin/login';
-            return;
-          }
-          
-          if (error.response?.status === 403) {
+          } else if (error.response?.status === 403) {
             message.error('Bạn không có quyền thực hiện thao tác này!');
-            return;
+          } else {
+            message.error(error.response?.data?.error || 'Lỗi khi xóa sản phẩm!');
           }
-          
-          const errorMessage = error.response?.data?.error || error.message || 'Xóa sản phẩm thất bại!';
-          message.error(errorMessage);
         }
       },
     });
@@ -303,111 +294,123 @@ const ProductManagement = () => {
       (product.MaSP || '').toString().includes(searchTerm.trim())
   );
 
-  // Cấu hình cột bảng
+  // Cột của bảng
   const columns = [
     {
       title: 'Mã SP',
       dataIndex: 'MaSP',
       key: 'MaSP',
       width: 80,
-      fixed: 'left',
-    },
-    {
-      title: 'Tên sản phẩm',
-      dataIndex: 'TenSP',
-      key: 'TenSP',
-      width: 250,
+      align: 'center',
     },
     {
       title: 'Hình ảnh',
       dataIndex: 'HinhAnh',
       key: 'HinhAnh',
+      width: 80,
+      align: 'center',
       render: (text) => (
         <img
           src={text}
-          alt="product"
-          style={{ 
-            width: 40, 
-            height: 40, 
-            objectFit: 'cover', 
+          alt="Product"
+          style={{
+            width: 40,
+            height: 40,
+            objectFit: 'cover',
             borderRadius: 4,
             border: '1px solid #d9d9d9'
           }}
           onError={(e) => {
-            e.target.src = 'https://via.placeholder.com/40x40?text=No+Image';
+            e.target.src = 'https://via.placeholder.com/40';
           }}
         />
       ),
-      width: 80,
     },
     {
-      title: 'Mã TL',
-      dataIndex: 'MaTL',
-      key: 'MaTL',
-      width: 80,
+      title: 'Tên sản phẩm',
+      dataIndex: 'TenSP',
+      key: 'TenSP',
+      width: 200,
+      ellipsis: true,
     },
     {
       title: 'Tác giả',
       dataIndex: 'TacGia',
       key: 'TacGia',
-      render: (text) => text || 'N/A',
       width: 150,
+      ellipsis: true,
+      render: (text) => text || 'Chưa có',
     },
     {
       title: 'Năm XB',
       dataIndex: 'NamXB',
       key: 'NamXB',
-      render: (text) => text || 'N/A',
-      width: 100,
-    },
-    {
-      title: 'Đơn giá',
-      dataIndex: 'DonGia',
-      key: 'DonGia',
-      render: (price) => <div style={{ textAlign: 'right' }}>{formatCurrency(price)}</div>,
-      width: 120,
-    },
-    {
-      title: 'Số lượng',
-      dataIndex: 'SoLuong',
-      key: 'SoLuong',
+      width: 80,
       align: 'center',
-      width: 100,
+      render: (text) => text || 'N/A',
     },
     {
       title: 'Tình trạng',
       dataIndex: 'TinhTrang',
       key: 'TinhTrang',
+      width: 100,
+      align: 'center',
+      render: (status) => (
+        <span
+          style={{
+            padding: '2px 8px',
+            borderRadius: 4,
+            fontSize: '12px',
+            backgroundColor: status === 'Còn hàng' ? '#f6ffed' : '#fff2f0',
+            color: status === 'Còn hàng' ? '#52c41a' : '#ff4d4f',
+            border: `1px solid ${status === 'Còn hàng' ? '#b7eb8f' : '#ffccc7'}`,
+          }}
+        >
+          {status}
+        </span>
+      ),
+    },
+    {
+      title: 'Đơn giá',
+      dataIndex: 'DonGia',
+      key: 'DonGia',
       width: 120,
+      align: 'right',
+      render: (price) => formatCurrency(price),
+    },
+    {
+      title: 'Số lượng',
+      dataIndex: 'SoLuong',
+      key: 'SoLuong',
+      width: 80,
+      align: 'center',
     },
     {
       title: 'Thao tác',
-      key: 'action',
+      key: 'actions',
+      width: 120,
+      align: 'center',
       render: (_, record) => (
         <Space size="small">
           <Button
+            type="link"
             size="small"
             icon={<EditOutlined />}
             onClick={() => {
-              setEditingProduct({
-                ...record,
-                HinhAnh: record.HinhAnh !== 'https://via.placeholder.com/50' ? record.HinhAnh : null
-              });
+              setEditingProduct(record);
               setIsModalVisible(true);
             }}
-            title="Chỉnh sửa sản phẩm"
+            style={{ padding: 0 }}
           />
           <Button
+            type="link"
             size="small"
-            danger
             icon={<DeleteOutlined />}
             onClick={() => handleDeleteProduct(record.MaSP)}
-            title="Xóa sản phẩm"
+            style={{ padding: 0, color: '#ff4d4f' }}
           />
         </Space>
       ),
-      fixed: 'right',
-      width: 100,
     },
   ];
 
@@ -450,49 +453,49 @@ const ProductManagement = () => {
         </div>
       </div>
 
-      {/* Info section */}
+      {/* Thông tin tóm tắt */}
       <div className="info-section">
         <div className="info-grid">
           <div className="info-item">
             <p className="info-label">Tổng sản phẩm:</p>
-            <strong>{products.length}</strong>
-          </div>
-          <div className="info-item">
-            <p className="info-label">Sản phẩm hiển thị:</p>
-            <strong>{filteredProducts.length}</strong>
+            <p className="info-value">{products.length}</p>
           </div>
           <div className="info-item">
             <p className="info-label">Còn hàng:</p>
-            <strong>{products.filter(p => p.TinhTrang === 'Còn hàng').length}</strong>
+            <p className="info-value" style={{ color: '#52c41a' }}>
+              {products.filter(p => p.TinhTrang === 'Còn hàng').length}
+            </p>
           </div>
           <div className="info-item">
             <p className="info-label">Hết hàng:</p>
-            <strong>{products.filter(p => p.TinhTrang === 'Hết hàng').length}</strong>
+            <p className="info-value" style={{ color: '#ff4d4f' }}>
+              {products.filter(p => p.TinhTrang === 'Hết hàng').length}
+            </p>
+          </div>
+          <div className="info-item">
+            <p className="info-label">Kết quả tìm kiếm:</p>
+            <p className="info-value">{filteredProducts.length}</p>
           </div>
         </div>
       </div>
 
       {/* Bảng sản phẩm */}
-      <Table
-        columns={columns}
-        dataSource={filteredProducts}
-        rowKey="MaSP"
-        loading={loading}
-        scroll={{ x: 1200 }}
-        pagination={{
-          pageSize: 10,
-          showSizeChanger: true,
-          showQuickJumper: true,
-          showTotal: (total, range) => 
-            `${range[0]}-${range[1]} của ${total} sản phẩm`,
-          size: 'small',
-        }}
-        size="small"
-        className="compact-permission-table"
-        locale={{
-          emptyText: 'Không tìm thấy sản phẩm',
-        }}
-      />
+      <div className="table-section">
+        <Table
+          columns={columns}
+          dataSource={filteredProducts}
+          rowKey="MaSP"
+          loading={loading}
+          pagination={{
+            pageSize: 10,
+            showSizeChanger: true,
+            showQuickJumper: true,
+            showTotal: (total, range) => `${range[0]}-${range[1]} của ${total} sản phẩm`,
+          }}
+          size="small"
+          scroll={{ x: 800 }}
+        />
+      </div>
 
       {/* Modal thêm/sửa sản phẩm */}
       <Modal
@@ -521,7 +524,7 @@ const ProductManagement = () => {
           </Button>,
         ]}
         width={700}
-        bodyStyle={{ padding: '16px' }}
+        styles={{ body: { padding: '16px' } }}
       >
         <div className="info-section">
           <div className="info-grid">
@@ -531,21 +534,34 @@ const ProductManagement = () => {
                 <Input size="small" value={editingProduct.MaSP} disabled />
               </div>
             )}
+            
+            {/* Dropdown chọn thể loại */}
             <div className="info-item">
-              <p className="info-label">Mã thể loại <span style={{ color: 'red' }}>*</span></p>
-              <Input
+              <p className="info-label">Thể loại <span style={{ color: 'red' }}>*</span></p>
+              <Select
                 size="small"
-                type="number"
+                placeholder="Chọn thể loại"
                 value={editingProduct ? editingProduct.MaTL : newProduct.MaTL}
-                onChange={(e) =>
+                onChange={(value) =>
                   editingProduct
-                    ? setEditingProduct({ ...editingProduct, MaTL: e.target.value })
-                    : setNewProduct({ ...newProduct, MaTL: e.target.value })
+                    ? setEditingProduct({ ...editingProduct, MaTL: value })
+                    : setNewProduct({ ...newProduct, MaTL: value })
                 }
-                required
-                placeholder="Nhập mã thể loại"
-              />
+                style={{ width: '100%' }}
+                showSearch
+                optionFilterProp="children"
+                filterOption={(input, option) =>
+                  option.children.toLowerCase().indexOf(input.toLowerCase()) >= 0
+                }
+              >
+                {categories.map(category => (
+                  <Option key={category.MaTL} value={category.MaTL}>
+                    {category.TenTL}
+                  </Option>
+                ))}
+              </Select>
             </div>
+            
             <div className="info-item">
               <p className="info-label">Tên sản phẩm <span style={{ color: 'red' }}>*</span></p>
               <Input
@@ -560,6 +576,7 @@ const ProductManagement = () => {
                 placeholder="Nhập tên sản phẩm"
               />
             </div>
+            
             <div className="info-item">
               <p className="info-label">Hình ảnh:</p>
               <input
@@ -584,20 +601,35 @@ const ProductManagement = () => {
                 </div>
               )}
             </div>
+            
+            {/* Dropdown chọn tác giả */}
             <div className="info-item">
-              <p className="info-label">Mã tác giả:</p>
-              <Input
+              <p className="info-label">Tác giả:</p>
+              <Select
                 size="small"
-                type="number"
+                placeholder="Chọn tác giả"
                 value={editingProduct ? editingProduct.MaTG : newProduct.MaTG}
-                onChange={(e) =>
+                onChange={(value) =>
                   editingProduct
-                    ? setEditingProduct({ ...editingProduct, MaTG: e.target.value })
-                    : setNewProduct({ ...newProduct, MaTG: e.target.value })
+                    ? setEditingProduct({ ...editingProduct, MaTG: value })
+                    : setNewProduct({ ...newProduct, MaTG: value })
                 }
-                placeholder="Nhập mã tác giả (tùy chọn)"
-              />
+                style={{ width: '100%' }}
+                allowClear
+                showSearch
+                optionFilterProp="children"
+                filterOption={(input, option) =>
+                  option.children.toLowerCase().indexOf(input.toLowerCase()) >= 0
+                }
+              >
+                {authors.map(author => (
+                  <Option key={author.MaTG} value={author.MaTG}>
+                    {author.TenTG}
+                  </Option>
+                ))}
+              </Select>
             </div>
+            
             <div className="info-item">
               <p className="info-label">Năm xuất bản:</p>
               <Input

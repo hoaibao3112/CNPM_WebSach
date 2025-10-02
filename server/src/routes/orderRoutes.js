@@ -55,7 +55,7 @@ router.post('/place-order', authenticateToken, async (req, res) => {
     const { customer, items, shippingAddress, paymentMethod, notes, totalAmountDiscouted } = req.body;
     console.log('Request Body:', req.body);
     console.log('req.user:', req.user);
-
+    console.log(totalAmountDiscouted);
     // Kiểm tra dữ liệu đầu vào
     if (!customer || !items || !shippingAddress || !paymentMethod) {
       return res.status(400).json({ error: 'Thiếu thông tin bắt buộc' });
@@ -102,7 +102,7 @@ router.post('/place-order', authenticateToken, async (req, res) => {
     }
 
     // Tính tổng tiền
-    const totalAmount = totalAmountDiscouted? totalAmountDiscouted :cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
+    const totalAmount = totalAmountDiscouted ? totalAmountDiscouted :cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
     console.log('Validated cart items:', cartItems, 'Total:', totalAmount);
 
     // Lưu địa chỉ
