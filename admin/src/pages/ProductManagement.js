@@ -3,6 +3,7 @@ import axios from 'axios';
 import { Button, Input, message, Table, Modal, Space } from 'antd';
 import { EditOutlined, DeleteOutlined, ExclamationCircleFilled } from '@ant-design/icons';
 import '../styles/ProductManagement.css';
+
 const { Search } = Input;
 const { confirm } = Modal;
 
@@ -25,6 +26,25 @@ const ProductManagement = () => {
 
   const API_URL = 'http://localhost:5000/api/product';
 
+  // Hàm để lấy token từ localStorage
+  const getAuthToken = () => {
+    return localStorage.getItem('authToken');
+  };
+
+  // Hàm để tạo config axios với token
+  const getAuthConfig = () => {
+    const token = getAuthToken();
+    if (!token) {
+      throw new Error('Không tìm thấy token. Vui lòng đăng nhập lại.');
+    }
+    return {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    };
+  };
+
+  // Fetch danh sách sản phẩm
   const fetchProducts = async () => {
     try {
       setLoading(true);
@@ -53,12 +73,14 @@ const ProductManagement = () => {
     fetchProducts();
   }, []);
 
+  // Generate MaSP mới
   const generateNewMaSP = () => {
     if (products.length === 0) return 1;
     const maxMaSP = Math.max(...products.map((p) => parseInt(p.MaSP) || 0));
     return maxMaSP + 1;
   };
 
+  // Xử lý thay đổi file
   const handleFileChange = (e, isEditing = false) => {
     const file = e.target.files[0];
     if (file) {
@@ -78,7 +100,23 @@ const ProductManagement = () => {
     }
   };
 
+  // Thêm sản phẩm
   const handleAddProduct = async () => {
+    // Debug token
+    const token = getAuthToken();
+    console.log('🔍 Token hiện tại:', token ? 'Có token' : 'Không có token');
+    
+    if (token) {
+      try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        console.log('🔍 Token payload:', payload);
+        console.log('🔍 User:', payload.makh || payload.MaTK);
+        console.log('🔍 UserType:', payload.userType);
+      } catch (e) {
+        console.log('❌ Không decode được token');
+      }
+    }
+    
     const maTL = newProduct.MaTL.trim();
     const tenSP = newProduct.TenSP.trim();
     const maTG = newProduct.MaTG.trim();
@@ -96,7 +134,6 @@ const ProductManagement = () => {
 
     try {
       const formData = new FormData();
-      formData.append('MaSP', generateNewMaSP());
       formData.append('MaTL', parseInt(maTL));
       formData.append('TenSP', tenSP);
       if (newProduct.HinhAnh) {
@@ -112,9 +149,10 @@ const ProductManagement = () => {
       formData.append('DonGia', 0);
       formData.append('SoLuong', 0);
 
-      const response = await axios.post(API_URL, formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      });
+      console.log('🚀 Gửi request thêm sản phẩm...');
+      const config = getAuthConfig();
+      const response = await axios.post(API_URL, formData, config);
+      
       await fetchProducts();
       setNewProduct({
         MaTL: '',
@@ -129,12 +167,27 @@ const ProductManagement = () => {
       setIsModalVisible(false);
       message.success(response.data.message || 'Thêm sản phẩm thành công!');
     } catch (error) {
-      console.error('Lỗi khi thêm sản phẩm:', error.response || error);
-      const errorMessage = error.response?.data?.error || 'Lỗi khi thêm sản phẩm!';
+      console.error('❌ Lỗi khi thêm sản phẩm:', error.response || error);
+      
+      if (error.response?.status === 401) {
+        message.error('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại!');
+        localStorage.removeItem('authToken');
+        window.location.href = '/admin/login';
+        return;
+      }
+      
+      if (error.response?.status === 403) {
+        console.log('❌ 403 Error details:', error.response.data);
+        message.error(`Không có quyền! ${error.response.data?.error || 'Cần tài khoản admin/staff/NV004/NV007'}`);
+        return;
+      }
+      
+      const errorMessage = error.response?.data?.error || error.message || 'Lỗi khi thêm sản phẩm!';
       message.error(errorMessage);
     }
   };
 
+  // Cập nhật sản phẩm
   const handleUpdateProduct = async () => {
     const maTL = editingProduct.MaTL.trim();
     const tenSP = editingProduct.TenSP.trim();
@@ -169,20 +222,35 @@ const ProductManagement = () => {
       formData.append('DonGia', 0);
       formData.append('SoLuong', 0);
 
-      const response = await axios.put(`${API_URL}/${editingProduct.MaSP}`, formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      });
+      console.log('🔄 Cập nhật sản phẩm...');
+      const config = getAuthConfig();
+      const response = await axios.put(`${API_URL}/${editingProduct.MaSP}`, formData, config);
+      
       await fetchProducts();
       setEditingProduct(null);
       setIsModalVisible(false);
-      message.success(response.data.message || 'Sửa sản phẩm thành công!');
+      message.success(response.data.message || 'Cập nhật sản phẩm thành công!');
     } catch (error) {
-      console.error('Lỗi khi sửa sản phẩm:', error.response || error);
-      const errorMessage = error.response?.data?.error || 'Lỗi khi sửa sản phẩm!';
+      console.error('❌ Lỗi khi cập nhật sản phẩm:', error.response || error);
+      
+      if (error.response?.status === 401) {
+        message.error('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại!');
+        localStorage.removeItem('authToken');
+        window.location.href = '/admin/login';
+        return;
+      }
+      
+      if (error.response?.status === 403) {
+        message.error('Bạn không có quyền thực hiện thao tác này!');
+        return;
+      }
+      
+      const errorMessage = error.response?.data?.error || error.message || 'Lỗi khi cập nhật sản phẩm!';
       message.error(errorMessage);
     }
   };
 
+  // Xóa sản phẩm
   const handleDeleteProduct = (MaSP) => {
     confirm({
       title: 'Bạn có chắc muốn xóa sản phẩm này?',
@@ -190,20 +258,37 @@ const ProductManagement = () => {
       content: 'Hành động này sẽ không thể hoàn tác',
       okText: 'Xóa',
       okType: 'danger',
-      cancelText: 'Thoát',
+      cancelText: 'Hủy',
       async onOk() {
         try {
-          const response = await axios.delete(`${API_URL}/${MaSP}`);
+          console.log('🗑️ Xóa sản phẩm:', MaSP);
+          const config = getAuthConfig();
+          const response = await axios.delete(`${API_URL}/${MaSP}`, config);
           await fetchProducts();
           message.success(response.data.message || 'Xóa sản phẩm thành công!');
         } catch (error) {
-          console.error('Lỗi khi xóa sản phẩm:', error.response || error);
-          message.error(error.response?.data?.error || 'Xóa sản phẩm thất bại!');
+          console.error('❌ Lỗi khi xóa sản phẩm:', error.response || error);
+          
+          if (error.response?.status === 401) {
+            message.error('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại!');
+            localStorage.removeItem('authToken');
+            window.location.href = '/admin/login';
+            return;
+          }
+          
+          if (error.response?.status === 403) {
+            message.error('Bạn không có quyền thực hiện thao tác này!');
+            return;
+          }
+          
+          const errorMessage = error.response?.data?.error || error.message || 'Xóa sản phẩm thất bại!';
+          message.error(errorMessage);
         }
       },
     });
   };
 
+  // Format tiền tệ
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat('vi-VN', {
       style: 'currency',
@@ -211,25 +296,27 @@ const ProductManagement = () => {
     }).format(amount || 0);
   };
 
+  // Lọc sản phẩm theo tìm kiếm
   const filteredProducts = products.filter(
     (product) =>
       (product.TenSP || '').toLowerCase().includes(searchTerm.toLowerCase().trim()) ||
       (product.MaSP || '').toString().includes(searchTerm.trim())
   );
 
+  // Cấu hình cột bảng
   const columns = [
     {
       title: 'Mã SP',
       dataIndex: 'MaSP',
       key: 'MaSP',
-      width: 100,
+      width: 80,
       fixed: 'left',
     },
     {
       title: 'Tên sản phẩm',
       dataIndex: 'TenSP',
       key: 'TenSP',
-      width: 200,
+      width: 250,
     },
     {
       title: 'Hình ảnh',
@@ -239,28 +326,25 @@ const ProductManagement = () => {
         <img
           src={text}
           alt="product"
-          style={{ width: 40, height: 40, objectFit: 'cover', borderRadius: 2 }}
+          style={{ 
+            width: 40, 
+            height: 40, 
+            objectFit: 'cover', 
+            borderRadius: 4,
+            border: '1px solid #d9d9d9'
+          }}
           onError={(e) => {
-            console.log(`Lỗi tải ảnh: ${text}`);
-            e.target.src = 'https://via.placeholder.com/50';
+            e.target.src = 'https://via.placeholder.com/40x40?text=No+Image';
           }}
         />
       ),
       width: 80,
     },
     {
-      title: 'Đơn giá',
-      dataIndex: 'DonGia',
-      key: 'DonGia',
-      render: (price) => <div className="text-right">{formatCurrency(price)}</div>,
-      width: 120,
-    },
-    {
-      title: 'Số lượng',
-      dataIndex: 'SoLuong',
-      key: 'SoLuong',
-      align: 'center',
-      width: 100,
+      title: 'Mã TL',
+      dataIndex: 'MaTL',
+      key: 'MaTL',
+      width: 80,
     },
     {
       title: 'Tác giả',
@@ -274,6 +358,20 @@ const ProductManagement = () => {
       dataIndex: 'NamXB',
       key: 'NamXB',
       render: (text) => text || 'N/A',
+      width: 100,
+    },
+    {
+      title: 'Đơn giá',
+      dataIndex: 'DonGia',
+      key: 'DonGia',
+      render: (price) => <div style={{ textAlign: 'right' }}>{formatCurrency(price)}</div>,
+      width: 120,
+    },
+    {
+      title: 'Số lượng',
+      dataIndex: 'SoLuong',
+      key: 'SoLuong',
+      align: 'center',
       width: 100,
     },
     {
@@ -291,15 +389,20 @@ const ProductManagement = () => {
             size="small"
             icon={<EditOutlined />}
             onClick={() => {
-              setEditingProduct(record);
+              setEditingProduct({
+                ...record,
+                HinhAnh: record.HinhAnh !== 'https://via.placeholder.com/50' ? record.HinhAnh : null
+              });
               setIsModalVisible(true);
             }}
+            title="Chỉnh sửa sản phẩm"
           />
           <Button
             size="small"
             danger
             icon={<DeleteOutlined />}
             onClick={() => handleDeleteProduct(record.MaSP)}
+            title="Xóa sản phẩm"
           />
         </Space>
       ),
@@ -310,59 +413,88 @@ const ProductManagement = () => {
 
   return (
     <div className="product-management-container">
+      {/* Header */}
       <div className="header-section">
         <h1 className="page-title">Quản lý Sản phẩm</h1>
-        <div className="search-box">
-          <Search
-            placeholder="Tìm sản phẩm..."
-            allowClear
-            enterButton
+        <div className="header-actions">
+          <div className="search-box">
+            <Search
+              placeholder="Tìm kiếm sản phẩm..."
+              allowClear
+              enterButton
+              size="small"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+          <Button
+            type="primary"
             size="small"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
+            onClick={() => {
+              setEditingProduct(null);
+              setNewProduct({
+                MaTL: '',
+                TenSP: '',
+                HinhAnh: null,
+                MaTG: '',
+                NamXB: '',
+                TinhTrang: 'Hết hàng',
+                DonGia: 0,
+                SoLuong: 0,
+              });
+              setIsModalVisible(true);
+            }}
+          >
+            Thêm sản phẩm
+          </Button>
         </div>
-        <Button
-          type="primary"
-          size="small"
-          onClick={() => {
-            setEditingProduct(null);
-            setNewProduct({
-              MaTL: '',
-              TenSP: '',
-              HinhAnh: null,
-              MaTG: '',
-              NamXB: '',
-              TinhTrang: 'Hết hàng',
-              DonGia: 0,
-              SoLuong: 0,
-            });
-            setIsModalVisible(true);
-          }}
-        >
-          Thêm sản phẩm
-        </Button>
       </div>
 
+      {/* Info section */}
+      <div className="info-section">
+        <div className="info-grid">
+          <div className="info-item">
+            <p className="info-label">Tổng sản phẩm:</p>
+            <strong>{products.length}</strong>
+          </div>
+          <div className="info-item">
+            <p className="info-label">Sản phẩm hiển thị:</p>
+            <strong>{filteredProducts.length}</strong>
+          </div>
+          <div className="info-item">
+            <p className="info-label">Còn hàng:</p>
+            <strong>{products.filter(p => p.TinhTrang === 'Còn hàng').length}</strong>
+          </div>
+          <div className="info-item">
+            <p className="info-label">Hết hàng:</p>
+            <strong>{products.filter(p => p.TinhTrang === 'Hết hàng').length}</strong>
+          </div>
+        </div>
+      </div>
+
+      {/* Bảng sản phẩm */}
       <Table
         columns={columns}
         dataSource={filteredProducts}
         rowKey="MaSP"
         loading={loading}
-        scroll={{ x: 1000 }}
+        scroll={{ x: 1200 }}
         pagination={{
           pageSize: 10,
-          showSizeChanger: false,
+          showSizeChanger: true,
+          showQuickJumper: true,
+          showTotal: (total, range) => 
+            `${range[0]}-${range[1]} của ${total} sản phẩm`,
           size: 'small',
         }}
         size="small"
-        className="compact-product-table"
-        style={{ fontSize: '13px' }}
+        className="compact-permission-table"
         locale={{
           emptyText: 'Không tìm thấy sản phẩm',
         }}
       />
 
+      {/* Modal thêm/sửa sản phẩm */}
       <Modal
         title={editingProduct ? 'Chỉnh sửa sản phẩm' : 'Thêm sản phẩm mới'}
         open={isModalVisible}
@@ -385,10 +517,10 @@ const ProductManagement = () => {
             type="primary"
             onClick={editingProduct ? handleUpdateProduct : handleAddProduct}
           >
-            {editingProduct ? 'Lưu' : 'Thêm'}
+            {editingProduct ? 'Cập nhật' : 'Thêm mới'}
           </Button>,
         ]}
-        width={600}
+        width={700}
         bodyStyle={{ padding: '16px' }}
       >
         <div className="info-section">
@@ -434,13 +566,22 @@ const ProductManagement = () => {
                 type="file"
                 accept="image/*"
                 onChange={(e) => handleFileChange(e, !!editingProduct)}
+                style={{ width: '100%', fontSize: '12px' }}
               />
               {(editingProduct && editingProduct.HinhAnh && !(editingProduct.HinhAnh instanceof File)) && (
-                <img
-                  src={editingProduct.HinhAnh}
-                  alt="preview"
-                  style={{ width: 50, height: 50, marginTop: 8 }}
-                />
+                <div style={{ marginTop: 8 }}>
+                  <img
+                    src={editingProduct.HinhAnh}
+                    alt="preview"
+                    style={{ 
+                      width: 60, 
+                      height: 60, 
+                      objectFit: 'cover',
+                      border: '1px solid #d9d9d9',
+                      borderRadius: 4
+                    }}
+                  />
+                </div>
               )}
             </div>
             <div className="info-item">
@@ -468,75 +609,24 @@ const ProductManagement = () => {
                     ? setEditingProduct({ ...editingProduct, NamXB: e.target.value })
                     : setNewProduct({ ...newProduct, NamXB: e.target.value })
                 }
-                placeholder="Nhập năm xuất bản (tùy chọn)"
+                placeholder="Nhập năm xuất bản (1900-2024)"
               />
             </div>
             <div className="info-item">
               <p className="info-label">Tình trạng:</p>
-              <Input size="small" value="Hết hàng" disabled />
+              <Input size="small" value="Hết hàng (mặc định)" disabled />
             </div>
             <div className="info-item">
               <p className="info-label">Đơn giá:</p>
-              <Input size="small" value="0 VND" disabled />
+              <Input size="small" value="0 VND (mặc định)" disabled />
             </div>
             <div className="info-item">
               <p className="info-label">Số lượng:</p>
-              <Input size="small" value="0" disabled />
+              <Input size="small" value="0 (mặc định)" disabled />
             </div>
           </div>
         </div>
       </Modal>
-
-      <style jsx>{`
-        .product-management-container {
-          padding: 16px 16px 16px 216px;
-          min-height: 100vh;
-        }
-        .header-section {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          margin-bottom: 16px;
-          flex-wrap: wrap;
-          gap: 16px;
-        }
-        .page-title {
-          font-size: 18px;
-          font-weight: 600;
-          margin: 0;
-        }
-        .search-box {
-          width: 250px;
-        }
-        .info-section {
-          background: #f8f8f8;
-          padding: 12px;
-          border-radius: 4px;
-          margin-bottom: 16px;
-        }
-        .info-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-          gap: 12px;
-        }
-        .info-item {
-          margin-bottom: 4px;
-        }
-        .info-label {
-          color: #666;
-          font-size: 12px;
-          margin: 0;
-        }
-        .compact-product-table :global(.ant-table-thead > tr > th) {
-          padding: 8px 12px;
-        }
-        .compact-product-table :global(.ant-table-tbody > tr > td) {
-          padding: 8px 12px;
-        }
-        input[type="file"] {
-          font-size: 12px;
-        }
-      `}</style>
     </div>
   );
 };
