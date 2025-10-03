@@ -2589,3 +2589,211 @@ function showRefundPolicy() {
   // Hiển thị modal chính sách hoàn tiền
   alert('Chính sách hoàn tiền sẽ được hiển thị ở đây');
 }
+
+// ...existing code... (giữ nguyên tất cả code từ đầu đến trước phần "THÊM VÀO CUỐI FILE")
+
+// ✅ XỬ LÝ HỦY ĐƠN HÀNG COD - VERSION FIXED
+// Override các function cũ để tránh conflict
+
+// ✅ FUNCTION CHÍNH: Hiển thị modal hủy COD
+function showCancelOrderModalCOD(orderId, orderStatus, paymentMethod, paymentStatus) {
+  console.log('🔍 COD Cancel modal:', { orderId, orderStatus, paymentMethod, paymentStatus });
+  
+  if (!['Chờ xử lý', 'Đã xác nhận', 'pending', 'processing'].includes(orderStatus)) {
+    showErrorToast('Không thể hủy đơn hàng ở trạng thái hiện tại!');
+    return;
+  }
+
+  const modal = document.getElementById('cancel-order-modal');
+  if (!modal) {
+    console.error('❌ Cancel modal not found');
+    return;
+  }
+
+  // Hiển thị modal
+  modal.style.display = 'block';
+  
+  // Reset form
+  const reasonInput = document.getElementById('cancel-reason');
+  if (reasonInput) reasonInput.value = '';
+  
+  // ✅ GẮN EVENT LISTENER TRỰC TIẾP - KHÔNG DÙNG ONCLICK
+  attachCODCancelEvents(orderId, paymentMethod, paymentStatus);
+}
+
+// ✅ GẮN SỰ KIỆN HỦY ĐƠN COD
+function attachCODCancelEvents(orderId, paymentMethod, paymentStatus) {
+  console.log('🔗 Attaching COD cancel events for order:', orderId);
+  
+  // Lấy các button
+  const confirmBtn = document.getElementById('confirm-cancel-btn');
+  const cancelBtn = document.getElementById('cancel-cancel-btn');
+  const closeBtn = document.querySelector('.close-modal-cancel');
+  
+  if (!confirmBtn) {
+    console.error('❌ Confirm button not found');
+    return;
+  }
+  
+  // ✅ XÓA TẤT CẢ EVENT LISTENER CŨ
+  const newConfirmBtn = confirmBtn.cloneNode(true);
+  confirmBtn.parentNode.replaceChild(newConfirmBtn, confirmBtn);
+  
+  const newCancelBtn = cancelBtn ? cancelBtn.cloneNode(true) : null;
+  if (cancelBtn && newCancelBtn) {
+    cancelBtn.parentNode.replaceChild(newCancelBtn, cancelBtn);
+  }
+  
+  const newCloseBtn = closeBtn ? closeBtn.cloneNode(true) : null;
+  if (closeBtn && newCloseBtn) {
+    closeBtn.parentNode.replaceChild(newCloseBtn, closeBtn);
+  }
+  
+  // ✅ THÊM EVENT LISTENER MỚI CHO XÁC NHẬN
+  document.getElementById('confirm-cancel-btn').addEventListener('click', async function(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    console.log('🚀 COD Cancel confirmed for order:', orderId);
+    await processCODCancellation(orderId, paymentMethod, paymentStatus);
+  });
+  
+  // ✅ THÊM EVENT LISTENER CHO HỦY BỎ
+  if (document.getElementById('cancel-cancel-btn')) {
+    document.getElementById('cancel-cancel-btn').addEventListener('click', function(e) {
+      e.preventDefault();
+      closeCODCancelModal();
+    });
+  }
+  
+  if (document.querySelector('.close-modal-cancel')) {
+    document.querySelector('.close-modal-cancel').addEventListener('click', function(e) {
+      e.preventDefault();
+      closeCODCancelModal();
+    });
+  }
+  
+  console.log('✅ COD cancel events attached successfully');
+}
+
+// ✅ XỬ LÝ HỦY ĐƠN COD
+async function processCODCancellation(orderId, paymentMethod, paymentStatus) {
+  console.log('🚀 Processing COD cancellation:', { orderId, paymentMethod, paymentStatus });
+  
+  const reason = document.getElementById('cancel-reason')?.value?.trim() || 'Khách hàng hủy đơn hàng';
+  
+  const cancelData = {
+    customerId: getCustomerId(),
+    reason: reason,
+    refundType: 'full'
+  };
+
+  console.log('🔍 Cancel data:', cancelData);
+
+  // ✅ DISABLE BUTTON
+  const confirmBtn = document.getElementById('confirm-cancel-btn');
+  if (confirmBtn) {
+    confirmBtn.disabled = true;
+    confirmBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang xử lý...';
+  }
+
+  try {
+    const response = await fetch(`http://localhost:5000/api/orders/customer-orders/cancel/${orderId}`, {
+      method: 'PUT',
+      headers: {
+        'Authorization': `Bearer ${getToken()}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(cancelData)
+    });
+
+    console.log('🔍 API Response status:', response.status);
+    const result = await response.json();
+    console.log('🔍 API Response data:', result);
+
+    if (response.ok && result.success) {
+      // ✅ SUCCESS
+      closeCODCancelModal();
+      showErrorToast('✅ Hủy đơn hàng COD thành công!');
+      
+      // Close order detail modal
+      closeOrderDetailModal();
+      
+      // Reload orders
+      const customerId = getCustomerId();
+      if (customerId) {
+        await renderOrders(customerId, document.getElementById('status-filter')?.value || 'all');
+      }
+    } else {
+      throw new Error(result.error || 'Không thể hủy đơn hàng');
+    }
+
+  } catch (error) {
+    console.error('❌ COD cancel error:', error);
+    showErrorToast(`❌ Lỗi hủy đơn hàng: ${error.message}`);
+  } finally {
+    // ✅ RE-ENABLE BUTTON
+    if (confirmBtn) {
+      confirmBtn.disabled = false;
+      confirmBtn.innerHTML = 'Xác nhận';
+    }
+  }
+}
+
+// ✅ ĐÓNG MODAL HỦY COD
+function closeCODCancelModal() {
+  const modal = document.getElementById('cancel-order-modal');
+  if (modal) {
+    modal.style.display = 'none';
+    
+    // Reset form
+    const reasonInput = document.getElementById('cancel-reason');
+    if (reasonInput) reasonInput.value = '';
+  }
+}
+
+// ✅ CẬP NHẬT HÀM showCancelModal CHÍNH
+function showCancelModal() {
+    console.log('🔥 showCancelModal called');
+    console.log('Current order data:', currentOrderData);
+    
+    if (!currentOrderData) {
+        showErrorToast('Không tìm thấy thông tin đơn hàng');
+        return;
+    }
+    
+    console.log('Payment method:', currentOrderData.paymentMethod);
+    console.log('Payment status:', currentOrderData.paymentStatus);
+    
+    if (currentOrderData.paymentMethod === 'VNPAY' && currentOrderData.paymentStatus === 'Đã thanh toán') {
+        // ✅ VNPay đã thanh toán -> Hiển thị form hoàn tiền
+        console.log('✅ Showing VNPay refund modal');
+        showVNPayRefundModal(currentOrderData);
+    } else {
+        // ✅ COD hoặc chưa thanh toán -> Hiển thị modal hủy COD
+        console.log('✅ Showing COD cancel modal');
+        const orderId = currentOrderData.id || currentOrderData.MaHD;
+        const orderStatus = currentOrderData.status || currentOrderData.tinhtrang || 'pending';
+        showCancelOrderModalCOD(orderId, orderStatus, currentOrderData.paymentMethod, currentOrderData.paymentStatus);
+    }
+}
+
+// ✅ Export functions to global scope
+window.showCancelOrderModalCOD = showCancelOrderModalCOD;
+window.processCODCancellation = processCODCancellation;
+window.closeCODCancelModal = closeCODCancelModal;
+window.attachCODCancelEvents = attachCODCancelEvents;
+
+console.log('✅ COD Cancel system loaded successfully');
+
+// ✅ XÓA CÁC FUNCTION TRÙNG LẶP (nếu có)
+// Đảm bảo không có conflict
+if (window.showCancelOrderModal) {
+    delete window.showCancelOrderModal;
+}
+if (window.confirmCancelOrderCOD) {
+    delete window.confirmCancelOrderCOD;
+}
+if (window.closeCancelModal) {
+    delete window.closeCancelModal;
+}

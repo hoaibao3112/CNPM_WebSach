@@ -48,32 +48,39 @@ const authenticateToken = (req, res, next) => {
     res.status(403).json({ error: 'Token không hợp lệ' });
   }
 };
+// THAY THẾ TOÀN BỘ ĐOẠN API place-order (từ dòng 52 đến hết):
 
 // API đặt đơn hàng
 router.post('/place-order', authenticateToken, async (req, res) => {
+  console.log('🚀 Place order API called');
+  console.log('🔍 Request Body:', JSON.stringify(req.body, null, 2));
+  
+  const connection = await pool.getConnection();
+  
   try {
     const { customer, items, shippingAddress, paymentMethod, notes, totalAmountDiscouted } = req.body;
-    console.log('Request Body:', req.body);
+    
     console.log('req.user:', req.user);
     console.log(totalAmountDiscouted);
+    
     // Kiểm tra dữ liệu đầu vào
     if (!customer || !items || !shippingAddress || !paymentMethod) {
       return res.status(400).json({ error: 'Thiếu thông tin bắt buộc' });
     }
 
-    // Kiểm tra các trường bắt buộc trong customer và shippingAddress
+    // Kiểm tra các trường bắt buộc
     if (!customer.makh || !customer.name || !customer.phone || !shippingAddress.detail ||
       !shippingAddress.province || !shippingAddress.district || !shippingAddress.ward) {
       return res.status(400).json({ error: 'Thông tin khách hàng hoặc địa chỉ không đầy đủ' });
     }
 
     // Kiểm tra khách hàng
-    const [existingCustomer] = await pool.query('SELECT makh, email FROM khachhang WHERE makh = ?', [customer.makh]);
+    const [existingCustomer] = await connection.query('SELECT makh, email FROM khachhang WHERE makh = ?', [customer.makh]);
     if (!existingCustomer.length) {
       return res.status(400).json({ error: 'Khách hàng không tồn tại' });
     }
 
-    // Kiểm tra items từ body
+    // Kiểm tra items
     if (!Array.isArray(items) || items.length === 0) {
       return res.status(400).json({ error: 'Không có sản phẩm được chọn' });
     }
@@ -84,16 +91,20 @@ router.post('/place-order', authenticateToken, async (req, res) => {
       if (!item.MaSP || !item.SoLuong || item.SoLuong < 1) {
         return res.status(400).json({ error: `Sản phẩm ${item.MaSP} không hợp lệ` });
       }
-      const [product] = await pool.query(
+      
+      const [product] = await connection.query(
         'SELECT MaSP, DonGia as price, SoLuong as stock FROM sanpham WHERE MaSP = ?',
         [item.MaSP]
       );
+      
       if (!product.length) {
         return res.status(400).json({ error: `Sản phẩm ${item.MaSP} không tồn tại` });
       }
+      
       if (product[0].stock < item.SoLuong) {
         return res.status(400).json({ error: `Sản phẩm ${item.MaSP} không đủ tồn kho (${product[0].stock} < ${item.SoLuong})` });
       }
+      
       cartItems.push({
         productId: item.MaSP,
         quantity: item.SoLuong,
@@ -102,18 +113,21 @@ router.post('/place-order', authenticateToken, async (req, res) => {
     }
 
     // Tính tổng tiền
-    const totalAmount = totalAmountDiscouted ? totalAmountDiscouted :cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
+    const totalAmount = totalAmountDiscouted ? totalAmountDiscouted : cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
     console.log('Validated cart items:', cartItems, 'Total:', totalAmount);
 
+    // ✅ BẮT ĐẦU TRANSACTION
+    await connection.beginTransaction();
+
     // Lưu địa chỉ
-    const [addressResult] = await pool.query(
+    const [addressResult] = await connection.query(
       'INSERT INTO diachi (MaKH, TenNguoiNhan, SDT, DiaChiChiTiet, TinhThanh, QuanHuyen, PhuongXa) VALUES (?, ?, ?, ?, ?, ?, ?)',
       [customer.makh, customer.name, customer.phone, shippingAddress.detail, shippingAddress.province, shippingAddress.district, shippingAddress.ward]
     );
     const addressId = addressResult.insertId;
 
     // Tạo đơn hàng
-    const [orderResult] = await pool.query(
+    const [orderResult] = await connection.query(
       `INSERT INTO hoadon (makh, MaDiaChi, NgayTao, TongTien, PhuongThucThanhToan, GhiChu, tinhtrang, TrangThaiThanhToan) 
        VALUES (?, ?, NOW(), ?, ?, ?, ?, ?)`,
       [customer.makh, addressId, totalAmount, paymentMethod, notes || '', 'Chờ xử lý', 'Chưa thanh toán']
@@ -122,68 +136,101 @@ router.post('/place-order', authenticateToken, async (req, res) => {
 
     // Lưu chi tiết đơn hàng
     for (const item of cartItems) {
-      await pool.query(
+      await connection.query(
         'INSERT INTO chitiethoadon (MaHD, MaSP, SoLuong, DonGia) VALUES (?, ?, ?, ?)',
         [orderId, item.productId, item.quantity, item.price]
       );
-      await pool.query('UPDATE sanpham SET SoLuong = SoLuong - ? WHERE MaSP = ?', [item.quantity, item.productId]);
+      
+      await connection.query('UPDATE sanpham SET SoLuong = SoLuong - ? WHERE MaSP = ?', [item.quantity, item.productId]);
     }
 
     // Xóa giỏ hàng
-    await pool.query('DELETE FROM giohang WHERE MaKH = ? AND MaSP IN (?)', [customer.makh, cartItems.map(i => i.productId)]);
+    if (cartItems.length > 0) {
+      const productIds = cartItems.map(i => i.productId);
+      const placeholders = productIds.map(() => '?').join(',');
+      await connection.query(
+        `DELETE FROM giohang WHERE MaKH = ? AND MaSP IN (${placeholders})`, 
+        [customer.makh, ...productIds]
+      );
+    }
 
-    // Tạo URL thanh toán VNPay
-    // if (paymentMethod === 'VNPAY') {
-    //   const vnp_Params = {
-    //     vnp_Version: '2.1.0',
-    //     vnp_Command: 'pay',
-    //     vnp_TmnCode: process.env.VNP_TMNCODE,
-    //     vnp_Amount: totalAmount * 100,
-    //     vnp_CurrCode: 'VND',
-    //     vnp_TxnRef: orderId.toString(),
-    //     vnp_OrderInfo: `Thanh toan don hang ${orderId}`,
-    //     vnp_OrderType: 'billpayment',
-    //     vnp_Locale: 'vn',
-    //     vnp_ReturnUrl: process.env.VNP_RETURN_URL,
-    //     vnp_IpAddr: req.ip,
-    //     vnp_CreateDate: new Date().toISOString().replace(/[-:T.]/g, '').slice(0, 14)
-    //   };
-    //   const sortedParams = sortObject(vnp_Params);
-    //   const querystring = new URLSearchParams(sortedParams).toString();
-    //   const hmac = crypto.createHmac("sha512", process.env.VNP_HASHSECRET);
-    //   const signed = hmac.update(Buffer.from(querystring, 'utf-8')).digest("hex");
-    //   vnp_Params.vnp_SecureHash = signed;
-    //   const paymentUrl = `${process.env.VNP_URL}?${querystring}&vnp_SecureHash=${signed}`;
+    // ✅ COMMIT TRANSACTION TRƯỚC KHI XỬ LÝ THANH TOÁN
+    await connection.commit();
+    console.log('✅ Database operations completed successfully');
 
-    //   res.status(200).json({ success: true, orderId, paymentUrl });
-    // } else {
-    //   res.status(200).json({ success: true, orderId });
-    // }
-
+    // XỬ LÝ THANH TOÁN
     if (paymentMethod === 'VNPAY') {
-  const tomorrow = new Date();
-  tomorrow.setDate(tomorrow.getDate() + 1);
-  
-  const vnpayResponse = await vnpay.buildPaymentUrl({
-    vnp_Amount: totalAmount, // Đã đúng - thư viện tự nhân 100
-    vnp_IpAddr: req.ip || req.connection.remoteAddress || '127.0.0.1',
-    vnp_TxnRef: orderId.toString(),
-    vnp_OrderInfo: `Thanh toan don hang ${orderId}`,
-    vnp_OrderType: ProductCode.Other, // Sử dụng enum từ thư viện
-    vnp_ReturnUrl: process.env.VNP_RETURN_URL,
-    vnp_Locale: VnpLocale.VN, // Sử dụng enum từ thư viện
-    vnp_CreateDate: dateFormat(new Date()),
-    vnp_ExpireDate: dateFormat(tomorrow),
-  });
-  
-  return res.status(200).json({ success: true, orderId, paymentUrl: vnpayResponse });
-} else {
-  res.status(200).json({ success: true, orderId });
-}
+      try {
+        const tomorrow = new Date();
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        
+        const vnpayResponse = await vnpay.buildPaymentUrl({
+          vnp_Amount: totalAmount,
+          vnp_IpAddr: req.ip || req.connection.remoteAddress || '127.0.0.1',
+          vnp_TxnRef: orderId.toString(),
+          vnp_OrderInfo: `Thanh toan don hang ${orderId}`,
+          vnp_OrderType: ProductCode.Other,
+          vnp_ReturnUrl: process.env.VNP_RETURN_URL,
+          vnp_Locale: VnpLocale.VN,
+          vnp_CreateDate: dateFormat(new Date()),
+          vnp_ExpireDate: dateFormat(tomorrow),
+        });
+        
+        console.log('✅ VNPay URL generated for order:', orderId);
+        return res.status(200).json({ 
+          success: true, 
+          orderId, 
+          paymentUrl: vnpayResponse,
+          message: 'Đơn hàng đã được tạo, chuyển hướng thanh toán VNPay'
+        });
+      } catch (vnpayError) {
+        console.error('❌ VNPay error:', vnpayError);
+        // Rollback order nếu VNPay lỗi
+        await pool.query('UPDATE hoadon SET tinhtrang = "Đã hủy", GhiChu = "Lỗi VNPay" WHERE MaHD = ?', [orderId]);
+        return res.status(500).json({ 
+          error: 'Lỗi tạo URL thanh toán VNPay', 
+          details: vnpayError.message 
+        });
+      }
+    } else if (paymentMethod === 'COD') {
+      // ✅ COD SUCCESS
+      console.log('✅ COD Order completed successfully with ID:', orderId);
+      return res.status(200).json({ 
+        success: true, 
+        orderId,
+        message: 'Đặt hàng COD thành công',
+        paymentMethod: 'COD'
+      });
+    } else {
+      return res.status(400).json({ error: 'Phương thức thanh toán không hợp lệ' });
+    }
 
   } catch (error) {
-    console.error('Lỗi đặt hàng:', error);
-    res.status(500).json({ error: 'Lỗi khi đặt hàng', details: error.message });
+    // ❌ ROLLBACK TRANSACTION NẾU CÓ LỖI
+    try {
+      await connection.rollback();
+      console.log('🔄 Transaction rollback completed');
+    } catch (rollbackError) {
+      console.error('❌ Rollback error:', rollbackError);
+    }
+    
+    console.error('❌ Place order error:', {
+      message: error.message,
+      stack: error.stack,
+      sql: error.sql,
+      sqlMessage: error.sqlMessage
+    });
+    
+    res.status(500).json({ 
+      error: 'Lỗi khi đặt hàng', 
+      details: error.message,
+      sqlError: error.sqlMessage 
+    });
+  } finally {
+    // ✅ GIẢI PHÓNG CONNECTION
+    if (connection) {
+      connection.release();
+    }
   }
 });
 // API lấy danh sách hóa đơn (BỎ TOKEN AUTHENTICATION - CHỈ CHO DEV/TEST)

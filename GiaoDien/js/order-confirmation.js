@@ -102,6 +102,8 @@ document.addEventListener('DOMContentLoaded', async function() {
     const status = urlParams.get('status');
     const amount = urlParams.get('amount');
     const errorCode = urlParams.get('code');
+    const paymentMethod = urlParams.get('paymentMethod');
+    const message = urlParams.get('message');
     
     const resultContent = document.getElementById('result-content');
     const viewOrdersBtn = document.getElementById('view-orders-btn');
@@ -117,31 +119,48 @@ document.addEventListener('DOMContentLoaded', async function() {
     }
     
     setTimeout(() => {
-        if (status === 'success') {
+        // ✅ XỬ LÝ VNPAY SUCCESS
+        if (status === 'success' && (!paymentMethod || paymentMethod === 'VNPAY')) {
             const displayAmount = amount ? parseInt(amount) / 100 : null;
             
             resultContent.innerHTML = `
                 <div class="success-icon">
                     <i class="fas fa-check-circle"></i>
                 </div>
-                <h1 style="color: #27ae60;">Thanh toán thành công!</h1>
+                <h1 style="color: #27ae60;">Thanh toán VNPay thành công!</h1>
                 <div class="order-details">
                     <div class="detail-section">
                         <div class="section-title">
                             <i class="fas fa-receipt"></i>
-                            Đơn hàng
+                            Thông tin đơn hàng
                         </div>
                         <div class="detail-row">
-                            <span class="label">Mã:</span>
+                            <span class="label">Mã đơn hàng:</span>
                             <span class="value">#${orderId}</span>
                         </div>
                         <div class="detail-row">
-                            <span class="label">Ngày:</span>
+                            <span class="label">Ngày đặt:</span>
                             <span class="value">${orderDetails?.NgayTao ? new Date(orderDetails.NgayTao).toLocaleDateString('vi-VN') : new Date().toLocaleDateString('vi-VN')}</span>
                         </div>
                         <div class="detail-row">
                             <span class="label">Tổng tiền:</span>
                             <span class="value total-amount">${displayAmount ? formatPrice(displayAmount) : (orderDetails?.TongTien ? formatPrice(orderDetails.TongTien) : 'N/A')}</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="label">Phương thức:</span>
+                            <span class="value">VNPay</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="label">Thanh toán:</span>
+                            <span class="value">
+                                <span class="status-badge status-success">Đã thanh toán</span>
+                            </span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="label">Trạng thái:</span>
+                            <span class="value">
+                                <span class="status-badge status-pending">Chờ xử lý</span>
+                            </span>
                         </div>
                     </div>
                     
@@ -156,30 +175,90 @@ document.addEventListener('DOMContentLoaded', async function() {
                         </div>
                     </div>
                     ` : ''}
-                    
+                </div>
+                <div class="info-note">
+                    <i class="fas fa-info-circle"></i>
+                    <strong>Thông báo:</strong> Đơn hàng đã thanh toán thành công qua VNPay và đang chờ xử lý.
+                </div>
+            `;
+        } 
+        // ✅ XỬ LÝ COD SUCCESS
+        else if (status === 'cod' || (status === 'success' && paymentMethod === 'COD')) {
+            const displayAmount = amount ? parseInt(amount) : null;
+            
+            resultContent.innerHTML = `
+                <div class="success-icon">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <h1 style="color: #27ae60;">Đặt hàng COD thành công!</h1>
+                <div class="order-details">
                     <div class="detail-section">
                         <div class="section-title">
-                            <i class="fas fa-credit-card"></i>
-                            Thanh toán
+                            <i class="fas fa-receipt"></i>
+                            Thông tin đơn hàng
+                        </div>
+                        <div class="detail-row">
+                            <span class="label">Mã đơn hàng:</span>
+                            <span class="value">#${orderId}</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="label">Ngày đặt:</span>
+                            <span class="value">${orderDetails?.NgayTao ? new Date(orderDetails.NgayTao).toLocaleDateString('vi-VN') : new Date().toLocaleDateString('vi-VN')}</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="label">Tổng tiền:</span>
+                            <span class="value total-amount">${displayAmount ? formatPrice(displayAmount) : (orderDetails?.TongTien ? formatPrice(orderDetails.TongTien) : 'N/A')}</span>
                         </div>
                         <div class="detail-row">
                             <span class="label">Phương thức:</span>
-                            <span class="value">VNPay</span>
+                            <span class="value">COD (Thanh toán khi nhận hàng)</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="label">Thanh toán:</span>
+                            <span class="value">
+                                <span class="status-badge status-pending">Chưa thanh toán</span>
+                            </span>
                         </div>
                         <div class="detail-row">
                             <span class="label">Trạng thái:</span>
                             <span class="value">
-                                <span class="status-badge status-success">Thành công</span>
+                                <span class="status-badge status-pending">Chờ xử lý</span>
                             </span>
                         </div>
                     </div>
+                    
+                    ${orderDetails?.items ? `
+                    <div class="detail-section">
+                        <div class="section-title">
+                            <i class="fas fa-book"></i>
+                            Sản phẩm (${orderDetails.items.length})
+                        </div>
+                        <div class="products-list">
+                            ${formatProductList(orderDetails.items)}
+                        </div>
+                    </div>
+                    ` : ''}
                 </div>
                 <div class="info-note">
                     <i class="fas fa-info-circle"></i>
-                    <strong>Thông báo:</strong> Đơn hàng đã thanh toán thành công và đang chờ xử lý.
+                    <strong>Lưu ý:</strong> ${message ? decodeURIComponent(message) : 'Đơn hàng đã được đặt thành công! Vui lòng chuẩn bị đủ tiền mặt khi shipper giao hàng.'}
+                </div>
+                <div class="cod-instructions">
+                    <div class="instruction-title">
+                        <i class="fas fa-truck"></i>
+                        Hướng dẫn nhận hàng COD
+                    </div>
+                    <ul>
+                        <li>Chúng tôi sẽ liên hệ xác nhận đơn hàng trong 24h</li>
+                        <li>Thời gian giao hàng: 2-3 ngày làm việc</li>
+                        <li>Vui lòng chuẩn bị đủ tiền mặt khi nhận hàng</li>
+                        <li>Kiểm tra kỹ sản phẩm trước khi thanh toán</li>
+                    </ul>
                 </div>
             `;
-        } else if (status === 'failed') {
+        }
+        // ✅ XỬ LÝ VNPAY FAILED
+        else if (status === 'failed') {
             const displayAmount = amount ? parseInt(amount) / 100 : null;
             const errorMessage = errorCode ? getErrorMessage(errorCode) : 'Lỗi không xác định';
             
@@ -187,7 +266,7 @@ document.addEventListener('DOMContentLoaded', async function() {
                 <div class="error-icon">
                     <i class="fas fa-times-circle"></i>
                 </div>
-                <h1 style="color: #e74c3c;">Thanh toán thất bại!</h1>
+                <h1 style="color: #e74c3c;">Thanh toán VNPay thất bại!</h1>
                 <div class="order-details">
                     <div class="detail-section">
                         <div class="section-title">
@@ -195,12 +274,16 @@ document.addEventListener('DOMContentLoaded', async function() {
                             Thông tin lỗi
                         </div>
                         <div class="detail-row">
-                            <span class="label">Mã đơn:</span>
+                            <span class="label">Mã đơn hàng:</span>
                             <span class="value">#${orderId}</span>
                         </div>
                         <div class="detail-row">
                             <span class="label">Lý do:</span>
                             <span class="value">${errorMessage}</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="label">Mã lỗi:</span>
+                            <span class="value">${errorCode || 'N/A'}</span>
                         </div>
                         <div class="detail-row">
                             <span class="label">Số tiền:</span>
@@ -210,43 +293,20 @@ document.addEventListener('DOMContentLoaded', async function() {
                 </div>
                 <div class="error-note">
                     <i class="fas fa-exclamation-circle"></i>
-                    <strong>Đơn hàng đã bị hủy</strong> do thanh toán thất bại.
+                    <strong>Đơn hàng đã bị hủy</strong> do thanh toán thất bại. Sản phẩm đã được hoàn lại kho.
+                </div>
+                <div class="retry-options">
+                    <a href="cart.html" class="btn btn-primary">
+                        <i class="fas fa-redo"></i> Thử lại
+                    </a>
+                    <a href="book.html" class="btn btn-secondary">
+                        <i class="fas fa-shopping-cart"></i> Tiếp tục mua sắm
+                    </a>
                 </div>
             `;
-        } else if (status === 'cod') {
-            resultContent.innerHTML = `
-                <div class="success-icon">
-                    <i class="fas fa-check-circle"></i>
-                </div>
-                <h1 style="color: #27ae60;">Đặt hàng thành công!</h1>
-                <div class="order-details">
-                    <div class="detail-section">
-                        <div class="section-title">
-                            <i class="fas fa-receipt"></i>
-                            Đơn hàng
-                        </div>
-                        <div class="detail-row">
-                            <span class="label">Mã:</span>
-                            <span class="value">#${orderId}</span>
-                        </div>
-                        <div class="detail-row">
-                            <span class="label">Thanh toán:</span>
-                            <span class="value">Khi nhận hàng</span>
-                        </div>
-                        <div class="detail-row">
-                            <span class="label">Trạng thái:</span>
-                            <span class="value">
-                                <span class="status-badge status-pending">Chờ xử lý</span>
-                            </span>
-                        </div>
-                    </div>
-                </div>
-                <div class="info-note">
-                    <i class="fas fa-info-circle"></i>
-                    <strong>Thông báo:</strong> Đơn hàng đã được đặt thành công!
-                </div>
-            `;
-        } else {
+        }
+        // ✅ XỬ LÝ ERROR
+        else if (status === 'error') {
             resultContent.innerHTML = `
                 <div class="error-icon">
                     <i class="fas fa-exclamation-triangle"></i>
@@ -254,7 +314,41 @@ document.addEventListener('DOMContentLoaded', async function() {
                 <h1 style="color: #e74c3c;">Có lỗi xảy ra!</h1>
                 <div class="error-note">
                     <i class="fas fa-question-circle"></i>
-                    <strong>Không thể xác định kết quả</strong>
+                    <strong>Lỗi:</strong> ${message ? decodeURIComponent(message) : 'Đã xảy ra lỗi trong quá trình xử lý đơn hàng.'}
+                </div>
+                <div class="retry-options">
+                    <a href="cart.html" class="btn btn-primary">
+                        <i class="fas fa-redo"></i> Thử lại
+                    </a>
+                    <a href="book.html" class="btn btn-secondary">
+                        <i class="fas fa-shopping-cart"></i> Tiếp tục mua sắm
+                    </a>
+                </div>
+            `;
+        }
+        // ✅ XỬ LÝ INVALID SIGNATURE
+        else if (status === 'invalid_signature') {
+            resultContent.innerHTML = `
+                <div class="error-icon">
+                    <i class="fas fa-shield-alt"></i>
+                </div>
+                <h1 style="color: #e74c3c;">Lỗi bảo mật!</h1>
+                <div class="error-note">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <strong>Cảnh báo:</strong> Chữ ký VNPay không hợp lệ. Giao dịch có thể đã bị can thiệp.
+                </div>
+            `;
+        }
+        // ✅ XỬ LÝ DEFAULT
+        else {
+            resultContent.innerHTML = `
+                <div class="error-icon">
+                    <i class="fas fa-question-circle"></i>
+                </div>
+                <h1 style="color: #f39c12;">Trạng thái không xác định</h1>
+                <div class="error-note">
+                    <i class="fas fa-question-circle"></i>
+                    <strong>Không thể xác định kết quả</strong> đơn hàng. Vui lòng liên hệ với chúng tôi để được hỗ trợ.
                 </div>
             `;
         }
