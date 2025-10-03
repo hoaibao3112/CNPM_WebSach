@@ -597,27 +597,86 @@ window.viewAuthorDetail = (authorId) => {
 /**
  * Hiển thị chi tiết sản phẩm
  */
+
 function displayProductDetail(product) {
+    // Debug chi tiết hơn
+    console.log('🔍 =====PRODUCT DEBUG=====');
+    console.log('🔍 Raw product object:', product);
+    console.log('🔍 Object keys:', Object.keys(product));
+    console.log('🔍 MaTG value:', product.MaTG, typeof product.MaTG);
+    console.log('🔍 TacGia value:', product.TacGia, typeof product.TacGia);
+    console.log('🔍 TenTG value:', product.TenTG, typeof product.TenTG);
+    console.log('🔍 ========================');
+    
+    // Cập nhật tiêu đề sản phẩm
     document.getElementById('product-title').textContent = product.TenSP || 'Không có tiêu đề';
     document.getElementById('product-title-breadcrumb').textContent = product.TenSP || 'Chi tiết sản phẩm';
-    document.getElementById('product-author').textContent = product.TenTG || 'Không rõ tác giả';
-    document.getElementById('product-publisher').textContent = product.TenNXB || 'Không rõ NXB';
     
+    // XỬ LÝ TÁC GIẢ - SỬA LẠI LOGIC
+    const authorElement = document.getElementById('product-author');
+    if (authorElement) {
+        let authorName = 'Đang cập nhật';
+        
+        // Kiểm tra các field có thể chứa tên tác giả
+        if (product.TacGia && product.TacGia.trim() !== '') {
+            authorName = product.TacGia.trim();
+            console.log('✅ Using TacGia field:', authorName);
+        } else if (product.TenTG && product.TenTG.trim() !== '') {
+            authorName = product.TenTG.trim();
+            console.log('✅ Using TenTG field:', authorName);
+        } else {
+            console.log('⚠️ No valid author name found, using default');
+        }
+        
+        // Kiểm tra xem có phải là số (mã tác giả) không
+        if (!isNaN(authorName) && authorName.toString().trim() !== '') {
+            console.log('⚠️ Author name appears to be a number (ID):', authorName);
+            authorName = 'Đang cập nhật';
+        }
+        
+        authorElement.textContent = authorName;
+        console.log('🔍 Final author displayed:', authorName);
+    }
+
+    const yearElement = document.getElementById('product-year');
+    if (yearElement) {
+        yearElement.textContent = product.NamXB || 'Đang cập nhật';
+    }
+
+    // Cập nhật hình ảnh sản phẩm
     const mainImage = document.getElementById('main-product-image');
-    mainImage.src = `img/product/${product.HinhAnh || 'default-book.jpg'}`;
-    mainImage.alt = escapeHtml(product.TenSP);
-  //  mainImage.onerror = () => mainImage.src = 'https://via.placeholder.com/300x400?text=Book';
-    
+    if (mainImage) {
+        mainImage.src = `img/product/${product.HinhAnh || 'default-book.jpg'}`;
+        mainImage.alt = escapeHtml(product.TenSP);
+        // Uncomment nếu muốn fallback image
+        // mainImage.onerror = () => mainImage.src = 'https://via.placeholder.com/300x400?text=Book';
+    }
+
+    // Cập nhật giá sản phẩm
     updatePriceDisplay(product);
-    document.getElementById('product-description').innerHTML = product.MoTa || 'Không có mô tả';
-    // THÊM: Kiểm tra và hiển thị khuyến mãi
+
+    // Cập nhật mô tả sản phẩm
+    const descriptionElement = document.getElementById('product-description');
+    if (descriptionElement) {
+        descriptionElement.innerHTML = product.MoTa || 'Không có mô tả';
+    }
+
+    // Kiểm tra và hiển thị khuyến mãi
     checkAndDisplayPromotions(product.MaSP);
-    document.getElementById('add-to-cart').dataset.product = JSON.stringify({
-        id: product.MaSP,
-        name: product.TenSP,
-        price: product.DonGia,
-        image: product.HinhAnh || 'default-book.jpg'
-    });
+
+    // Cập nhật dữ liệu cho nút thêm vào giỏ hàng
+    const addToCartButton = document.getElementById('add-to-cart');
+    if (addToCartButton) {
+        addToCartButton.dataset.product = JSON.stringify({
+            id: product.MaSP,
+            name: product.TenSP,
+            price: product.DonGia,
+            image: product.HinhAnh || 'default-book.jpg'
+        });
+    }
+
+    // Log để kiểm tra sau khi cập nhật
+    console.log('✅ Product detail display completed');
 }
 
 /**

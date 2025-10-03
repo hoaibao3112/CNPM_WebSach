@@ -118,7 +118,7 @@ router.get('/search', async (req, res) => {
       return res.status(404).json({ error: 'Không tìm thấy sản phẩm' });
     }
 
-    res.status(200).json({ data: products });
+    res.status(200).json(products[0]);
   } catch (error) {
     console.error('Lỗi search sản phẩm:', error);
     res.status(500).json({ error: 'Lỗi khi tìm sản phẩm', details: error.message });
@@ -175,13 +175,13 @@ router.get('/category/:categoryId', async (req, res) => {
     });
   }
 });
-// Route lấy danh sách sản phẩm
+// Route lấy danh sách sản phẩm - SỬA QUERY TƯƠNG TỰ
 router.get('/', async (req, res) => {
   try {
     let query = `
-      SELECT s.*, m.TenTG AS TacGia 
+      SELECT s.*, tg.TenTG AS TacGia 
       FROM sanpham s 
-      LEFT JOIN tacgia m ON s.MaTG = m.MaTG
+      LEFT JOIN tacgia tg ON s.MaTG = tg.MaTG
     `;
     let params = [];
     let conditions = [];
@@ -207,7 +207,10 @@ router.get('/', async (req, res) => {
     }
 
     const [products] = await pool.query(query, params);
-    console.log('Danh sách sản phẩm trả về:', products);
+    console.log('🔍 Products returned from DB count:', products.length);
+    if (products.length > 0) {
+      console.log('🔍 First product TacGia:', products[0].TacGia);
+    }
     res.status(200).json(products);
   } catch (error) {
     console.error('Lỗi khi lấy danh sách sản phẩm:', error);
@@ -215,27 +218,29 @@ router.get('/', async (req, res) => {
   }
 });
 
-// Route lấy sản phẩm theo ID
+// Route lấy sản phẩm theo ID - SỬA QUERY
 router.get('/:id', async (req, res) => {
   try {
     const query = `
-      SELECT s.*, m.TenTG AS TacGia 
+      SELECT s.*, tg.TenTG AS TacGia 
       FROM sanpham s 
-      LEFT JOIN tacgia m ON s.MaTG = m.MaTG 
+      LEFT JOIN tacgia tg ON s.MaTG = tg.MaTG 
       WHERE s.MaSP = ?
     `;
     const [product] = await pool.query(query, [req.params.id]);
     
     if (product.length === 0) {
-      return res.status(404).json({ error: 'Không tìm thấy sản phẩm' });
+      return res.status(404).json({ error: 'Sản phẩm không tồn tại' });
     }
-
+    
+    console.log('🔍 Product returned from DB:', product[0]);
+    console.log('🔍 TacGia field value:', product[0].TacGia);
     res.status(200).json(product[0]);
   } catch (error) {
+    console.error('Error fetching product:', error);
     res.status(500).json({ error: 'Lỗi khi lấy sản phẩm', details: error.message });
   }
 });
-
 
 // =============================================================================
 // ROUTES CẦN TOKEN VÀ QUYỀN ADMIN/STAFF (PROTECTED)
