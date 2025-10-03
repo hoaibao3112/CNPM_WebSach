@@ -118,7 +118,7 @@ router.get('/search', async (req, res) => {
       return res.status(404).json({ error: 'Không tìm thấy sản phẩm' });
     }
 
-    res.status(200).json(products[0]);
+    res.status(200).json({ data: products });
   } catch (error) {
     console.error('Lỗi search sản phẩm:', error);
     res.status(500).json({ error: 'Lỗi khi tìm sản phẩm', details: error.message });
@@ -144,6 +144,35 @@ router.get('/categories', async (req, res) => {
   } catch (error) {
     console.error('Lỗi khi lấy danh sách thể loại:', error);
     res.status(500).json({ error: 'Lỗi khi lấy danh sách thể loại' });
+  }
+});
+// Route lấy sản phẩm theo thể loại - thêm route này
+router.get('/category/:categoryId', async (req, res) => {
+  try {
+    const { categoryId } = req.params;
+    
+    // Validate categoryId
+    if (!categoryId || isNaN(categoryId)) {
+      return res.status(400).json({ error: 'ID thể loại không hợp lệ' });
+    }
+
+    const query = `
+      SELECT s.*, m.TenTG AS TacGia 
+      FROM sanpham s 
+      LEFT JOIN tacgia m ON s.MaTG = m.MaTG 
+      WHERE s.MaTL = ?
+    `;
+    
+    const [products] = await pool.query(query, [parseInt(categoryId)]);
+    
+    console.log(`Sản phẩm thể loại ${categoryId}:`, products.length);
+    res.status(200).json(products);
+  } catch (error) {
+    console.error('Lỗi khi lấy sản phẩm theo thể loại:', error);
+    res.status(500).json({ 
+      error: 'Lỗi khi lấy sản phẩm theo thể loại', 
+      details: error.message 
+    });
   }
 });
 // Route lấy danh sách sản phẩm
@@ -196,11 +225,17 @@ router.get('/:id', async (req, res) => {
       WHERE s.MaSP = ?
     `;
     const [product] = await pool.query(query, [req.params.id]);
+    
+    if (product.length === 0) {
+      return res.status(404).json({ error: 'Không tìm thấy sản phẩm' });
+    }
+
     res.status(200).json(product[0]);
   } catch (error) {
     res.status(500).json({ error: 'Lỗi khi lấy sản phẩm', details: error.message });
   }
 });
+
 
 // =============================================================================
 // ROUTES CẦN TOKEN VÀ QUYỀN ADMIN/STAFF (PROTECTED)

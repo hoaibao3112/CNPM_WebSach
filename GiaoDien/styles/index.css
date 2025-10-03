@@ -1068,3 +1068,29 @@ footer iframe {
     text-align: center;
   }
 }
+/* ...existing code... */
+
+.chat-message.suggestion .product-author,
+.chat-message.suggestion .product-id,
+.chat-message.suggestion .product-quantity {
+  font-size: 12px;
+  color: #7f8c8d;
+  margin-bottom: 3px;
+}
+
+.chat-message.suggestion .product-quantity {
+  font-weight: 600;
+  color: #3498db;
+}
+
+.chat-message.suggestion .status-available {
+  color: #27ae60;
+  font-weight: 600;
+}
+
+.chat-message.suggestion .status-out {
+  color: #e74c3c;
+  font-weight: 600;
+}
+
+/* ...existing code... */
