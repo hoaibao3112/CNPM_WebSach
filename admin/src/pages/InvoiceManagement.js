@@ -5,7 +5,115 @@ import { ExclamationCircleFilled, EyeOutlined, DeleteOutlined, MessageOutlined, 
 
 const { confirm } = Modal;
 const { Search, TextArea } = Input;
+// THÊM VÀO SAU DÒNG const { confirm } = Modal; (sau dòng 6)
 
+// ✅ THÊM HÀM FORMAT ĐỊA CHỈ GIỐNG BÊN CUSTOMER
+const addressCache = {
+  provinces: new Map(),
+  districts: new Map(),
+  wards: new Map()
+};
+
+// Lấy tên tỉnh/thành phố từ mã
+async function getProvinceName(provinceCode) {
+  if (!provinceCode) return '';
+  
+  if (addressCache.provinces.has(provinceCode)) {
+    return addressCache.provinces.get(provinceCode);
+  }
+
+  try {
+    const response = await fetch('https://provinces.open-api.vn/api/p/');
+    const provinces = await response.json();
+    
+    provinces.forEach(province => {
+      addressCache.provinces.set(province.code.toString(), province.name);
+    });
+
+    return addressCache.provinces.get(provinceCode.toString()) || provinceCode;
+  } catch (error) {
+    console.error('Error fetching province:', error);
+    return provinceCode;
+  }
+}
+
+// Lấy tên quận/huyện từ mã
+async function getDistrictName(districtCode, provinceCode) {
+  if (!districtCode) return '';
+  
+  if (addressCache.districts.has(districtCode)) {
+    return addressCache.districts.get(districtCode);
+  }
+
+  try {
+    const response = await fetch(`https://provinces.open-api.vn/api/p/${provinceCode}?depth=2`);
+    const data = await response.json();
+    
+    if (data.districts) {
+      data.districts.forEach(district => {
+        addressCache.districts.set(district.code.toString(), district.name);
+      });
+    }
+
+    return addressCache.districts.get(districtCode.toString()) || districtCode;
+  } catch (error) {
+    console.error('Error fetching district:', error);
+    return districtCode;
+  }
+}
+
+// Lấy tên phường/xã từ mã
+async function getWardName(wardCode, districtCode) {
+  if (!wardCode) return '';
+  
+  if (addressCache.wards.has(wardCode)) {
+    return addressCache.wards.get(wardCode);
+  }
+
+  try {
+    const response = await fetch(`https://provinces.open-api.vn/api/d/${districtCode}?depth=2`);
+    const data = await response.json();
+    
+    if (data.wards) {
+      data.wards.forEach(ward => {
+        addressCache.wards.set(ward.code.toString(), ward.name);
+      });
+    }
+
+    return addressCache.wards.get(wardCode.toString()) || wardCode;
+  } catch (error) {
+    console.error('Error fetching ward:', error);
+    return wardCode;
+  }
+}
+
+// Hàm format địa chỉ hoàn chỉnh
+async function formatFullAddress(invoice) {
+  try {
+    console.log('🏠 Formatting address for invoice:', invoice);
+    
+    const [provinceName, districtName, wardName] = await Promise.all([
+      getProvinceName(invoice.province),
+      getDistrictName(invoice.district, invoice.province),
+      getWardName(invoice.ward, invoice.district)
+    ]);
+
+    const addressParts = [
+      invoice.shippingAddress,
+      wardName,
+      districtName,
+      provinceName
+    ].filter(part => part && part.trim() && part !== 'null' && part !== 'undefined');
+
+    const fullAddress = addressParts.length > 0 ? addressParts.join(', ') : 'Chưa có địa chỉ';
+    
+    console.log('✅ Formatted address:', fullAddress);
+    return fullAddress;
+  } catch (error) {
+    console.error('Error formatting address:', error);
+    return 'Không thể hiển thị địa chỉ';
+  }
+}
 const InvoiceManagement = () => {
   const [invoices, setInvoices] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -276,26 +384,33 @@ const InvoiceManagement = () => {
     }
   };
 
-  // ✅ View invoice detail
-  const handleViewInvoice = async (id) => {
-    try {
-      const res = await axios.get(`http://localhost:5000/api/orders/hoadon/${id}`);
-      setSelectedInvoice({
-        ...res.data,
-        items: res.data.items.map(item => ({
-          ...item,
-          unitPrice: item.price,
-          productImage: item.productImage || 'https://via.placeholder.com/50'
-        })),
-        note: res.data.GhiChu || '',
-        status: res.data.tinhtrang
-      });
-      setIsModalVisible(true);
-    } catch (error) {
-      console.error('❌ View invoice error:', error);
-      message.error('Lỗi khi tải chi tiết hóa đơn');
-    }
-  };
+  // THAY THẾ HÀM handleViewInvoice (khoảng dòng 350) BẰNG:
+
+const handleViewInvoice = async (id) => {
+  try {
+    const res = await axios.get(`http://localhost:5000/api/orders/hoadon/${id}`);
+    
+    // ✅ FORMAT ĐỊA CHỈ TRƯỚC KHI SET STATE
+    const formattedAddress = await formatFullAddress(res.data);
+    
+    setSelectedInvoice({
+      ...res.data,
+      items: res.data.items.map(item => ({
+        ...item,
+        unitPrice: item.price,
+        productImage: item.productImage || 'https://via.placeholder.com/50'
+      })),
+      note: res.data.GhiChu || '',
+      status: res.data.tinhtrang,
+      // ✅ THÊM TRƯỜNG ĐỊA CHỈ ĐÃ FORMAT
+      formattedAddress: formattedAddress
+    });
+    setIsModalVisible(true);
+  } catch (error) {
+    console.error('❌ View invoice error:', error);
+    message.error('Lỗi khi tải chi tiết hóa đơn');
+  }
+};
 
   // ✅ Start chat with customer - CẬP NHẬT ĐỂ ĐÁNH DẤU ĐÃ ĐỌC
   const handleChatWithCustomer = async (customerId) => {
@@ -821,12 +936,12 @@ const InvoiceManagement = () => {
                   <p className="info-label">Người nhận:</p>
                   <p className="info-value">{selectedInvoice.recipientName} - {selectedInvoice.recipientPhone}</p>
                 </div>
-                <div className="info-item full-width">
-                  <p className="info-label">Địa chỉ giao hàng:</p>
-                  <p className="info-value">
-                    {selectedInvoice.shippingAddress}, {selectedInvoice.ward}, {selectedInvoice.district}, {selectedInvoice.province}
-                  </p>
-                </div>
+               <div className="info-item full-width">
+  <p className="info-label">Địa chỉ giao hàng:</p>
+  <p className="info-value">
+    {selectedInvoice.formattedAddress || 'Đang tải địa chỉ...'}
+  </p>
+</div>
               </div>
             </div>
             
