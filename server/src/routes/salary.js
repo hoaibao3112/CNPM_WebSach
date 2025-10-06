@@ -3,6 +3,151 @@ import pool from '../config/connectDatabase.js';
 
 const router = express.Router();
 
+// New: GET /api/luong/monthly/:year
+// Returns aggregated total salary per month for the given year (reads from `luong` table).
+router.get('/monthly/:year', async (req, res) => {
+  try {
+    const { year } = req.params;
+    const [rows] = await pool.query(
+      `SELECT thang AS Thang, COALESCE(SUM(tong_luong), 0) AS TongLuong
+       FROM luong
+       WHERE nam = ?
+       GROUP BY thang
+       ORDER BY thang ASC`,
+      [year]
+    );
+
+    // Ensure months 1..12 are present (fill missing with 0)
+    const months = Array.from({ length: 12 }, (_, i) => i + 1);
+    const data = months.map((m) => {
+      const found = rows.find(r => Number(r.Thang) === m);
+      return { Thang: m, TongLuong: found ? Number(found.TongLuong) : 0 };
+    });
+
+    res.json({ success: true, year: Number(year), data });
+  } catch (error) {
+    console.error('Error in GET /monthly/:year', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// New: GET /api/luong/per-month/:year/:month
+// Returns per-employee salary records for a specific month/year (reads from `luong`).
+router.get('/per-month/:year/:month', async (req, res) => {
+  try {
+    const { year, month } = req.params;
+    const [rows] = await pool.query(
+      `SELECT l.*, COALESCE(nv.TenNV, tk.TenTK, l.MaNV) AS TenNV
+       FROM luong l
+       LEFT JOIN nhanvien nv ON l.MaNV = nv.MaNV
+       LEFT JOIN taikhoan tk ON l.MaNV = tk.MaTK
+       WHERE l.nam = ? AND l.thang = ?
+       ORDER BY TenNV ASC`,
+      [year, month]
+    );
+    res.json({ success: true, year: Number(year), month: Number(month), data: rows });
+  } catch (error) {
+    console.error('Error in GET /per-month/:year/:month', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// New: POST /api/luong/compute/:year/:month
+// Compute salaries on-the-fly from attendance (`cham_cong` / `chamcong`) without saving to DB.
+// Returns an array of computed salary objects for all active accounts.
+router.post('/compute/:year/:month', async (req, res) => {
+  try {
+    const { year, month } = req.params;
+
+    // Fetch active accounts (map to MaNV used in luong table)
+    const [employees] = await pool.query(
+      'SELECT tk.MaTK AS MaNV, COALESCE(nv.TenNV, tk.TenTK) AS TenNV FROM taikhoan tk LEFT JOIN nhanvien nv ON tk.MaTK = nv.MaNV WHERE tk.TinhTrang = 1'
+    );
+
+    const results = [];
+
+    for (const emp of employees) {
+      // Try two common attendance table names (some projects use cham_cong, others chamcong)
+      const attendanceQueries = [
+        'SELECT trang_thai, ghi_chu, ngay FROM cham_cong WHERE MaTK = ? AND MONTH(ngay) = ? AND YEAR(ngay) = ?',
+        'SELECT trang_thai, ghi_chu, ngay FROM chamcong WHERE MaTK = ? AND MONTH(ngay) = ? AND YEAR(ngay) = ?'
+      ];
+
+      let attendance = [];
+      for (const q of attendanceQueries) {
+        const [att] = await pool.query(q, [emp.MaNV, Number(month), Number(year)]).catch(() => [ [] ]);
+        if (att && att.length > 0) { attendance = att; break; }
+      }
+
+      let soNgayLam = 0;
+      let soGioTangCa = 0;
+      let soNgayNghiKhongPhep = 0;
+      let soNgayDiTre = 0;
+
+      attendance.forEach((record) => {
+        const trangThai = (record.trang_thai || '').toString();
+        switch (trangThai) {
+          case 'Di_lam':
+          case 'Di lam':
+          case 'DiLam':
+            soNgayLam++;
+            break;
+          case 'Lam_them':
+          case 'Lam them':
+          case 'LamThem':
+            soNgayLam++;
+            const otMatch = (record.ghi_chu || '').toString().match(/(\d+)\s*gi(ờ|gio|g)/i);
+            if (otMatch) soGioTangCa += parseInt(otMatch[1]);
+            break;
+          case 'Nghi_khong_phep':
+          case 'Nghi khong phep':
+            soNgayNghiKhongPhep++;
+            break;
+          case 'Di_tre':
+          case 'Di tre':
+            soNgayDiTre++;
+            break;
+          default:
+            break;
+        }
+      });
+
+      const luongCoBan = 10000000; // default base salary
+      const ngayLamChuan = 22;
+      const luongNgay = luongCoBan / ngayLamChuan;
+      const luongGio = luongNgay / 8;
+      const luongTangCa = soGioTangCa * luongGio * 1.5;
+      const phatNghiKhongPhep = soNgayNghiKhongPhep * luongNgay;
+      const phatDiTre = soNgayDiTre * (luongNgay * 0.3);
+      let thuong = 0;
+      if (soNgayLam === ngayLamChuan && soNgayNghiKhongPhep === 0 && soNgayDiTre === 0) thuong = 500000;
+      const phu_cap = 0;
+      const phat = phatNghiKhongPhep + phatDiTre;
+      const tong_luong = Math.round((soNgayLam * luongNgay) + luongTangCa + phu_cap + thuong - phat);
+
+      results.push({
+        MaNV: emp.MaNV,
+        TenNV: emp.TenNV,
+        soNgayLam,
+        soGioTangCa,
+        soNgayNghiKhongPhep,
+        soNgayDiTre,
+        luong_co_ban: luongCoBan,
+        phu_cap,
+        thuong,
+        phat,
+        tong_luong,
+        trang_thai: 'Chưa chi trả'
+      });
+    }
+
+    res.json({ success: true, year: Number(year), month: Number(month), data: results });
+  } catch (error) {
+    console.error('Error in POST /compute/:year/:month', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 // GET /api/salary - Lấy danh sách lương
 router.get('/', async (req, res) => {
   try {

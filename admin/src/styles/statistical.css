@@ -413,7 +413,7 @@
   text-align: center;
   border: none;
   border-bottom: 1px solid #e9ecef;
-  font-size: 14px;
+  font-size: 17px;
   font-weight: 500;
   color: #495057;
   position: relative;
@@ -672,6 +672,49 @@
 .btn-chart.active {
   background: linear-gradient(135deg, #9254de 0%, #722ed1 100%);
   box-shadow: 0 6px 20px rgba(146, 84, 222, 0.5);
+}
+
+/* Refresh button - used for "Tải lại" actions */
+.btn-refresh {
+  padding: 10px 18px;
+  color: #fff;
+  background: linear-gradient(135deg, #00b894 0%, #00a86b 100%);
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  box-shadow: 0 6px 18px rgba(0,168,107,0.18);
+  transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
+}
+.btn-refresh i {
+  font-size: 14px;
+  transform: translateY(0);
+  transition: transform 0.2s ease;
+}
+.btn-refresh:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 28px rgba(0,168,107,0.28);
+}
+.btn-refresh:active {
+  transform: translateY(-1px) scale(0.995);
+}
+.btn-refresh[disabled] {
+  opacity: 0.6;
+  cursor: not-allowed;
+  box-shadow: none;
+  transform: none;
+}
+
+@media (max-width: 768px) {
+  .btn-refresh {
+    width: 100%;
+    justify-content: center;
+    margin-left: 0;
+  }
 }
 
 .btn-excel i, .btn-chart i, .btn-pdf i {

@@ -13,7 +13,7 @@ import Receipt from './receipt.js';
 import KhuyenMai from './khuyenmai.js'
 import reportRoutes from './reportRoutes.js';
 import ChatRoutes from './chatRoute.js';
-import reportRoutes from './routes/reportRoutes.js';
+//import reportRoutes from './routes/reportRoutes.js';
 import permissionRoutes from './authMiddleware.js';
 import Author from './author.js';
 import ratingsRoutes from './ratings.js';

@@ -40,6 +40,7 @@ ChartJS.register(
 const { RangePicker } = DatePicker;
 
 const ThongKe = () => {
+  let unicodeFontName = null;
   // ==================== STATE ====================
   const [activeTab, setActiveTab] = useState('doanhthu');
   const [subTab, setSubTab] = useState('nam');
@@ -49,12 +50,15 @@ const ThongKe = () => {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [showChart, setShowChart] = useState(true);
-  
+const [salaryMonthly, setSalaryMonthly] = useState([]); // tổng theo tháng (api trả)
+const [salaryDetails, setSalaryDetails] = useState([]);
+const [selectedSalaryMonth, setSelectedSalaryMonth] = useState(null);
   const [productTab, setProductTab] = useState('sanpham');
   const [productFilter, setProductFilter] = useState('today');
   const [productDateRange, setProductDateRange] = useState([null, null]);
   const [sortBy, setSortBy] = useState('bestseller');
-
+const [salaryData, setSalaryData] = useState([]);
+const [salaryYear, setSalaryYear] = useState(new Date().getFullYear());
   const [customerFilter, setCustomerFilter] = useState('today');
   const [customerDateRange, setCustomerDateRange] = useState([null, null]);
 
@@ -63,6 +67,7 @@ const ThongKe = () => {
     setLoading(true);
     try {
       let url = '';
+      // ...existing code...
 
       if (subTab === 'nam') {
         url = 'http://localhost:5000/api/reports/doanhthu/nam';
@@ -95,7 +100,74 @@ const ThongKe = () => {
       setLoading(false);
     }
   }, [subTab, selectedYear, selectedMonth, dateRange]);
+// ...existing code continues
 
+// ...existing code...
+
+// Cập nhật fetchSalaryDetails (giữ nguyên, chỉ thêm log nếu cần)
+const fetchSalaryDetails = useCallback(async (month) => {
+  if (!month) return;
+  setLoading(true);
+  try {
+    console.log('🔍 Fetching salary for year:', salaryYear, 'month:', month);
+    const res = await axios.get(`http://localhost:5000/api/salary/per-month/${salaryYear}/${month}`);
+    let payload = res.data && res.data.data ? res.data.data : (res.data || []);
+    console.log('📥 Raw API response:', payload);
+
+    // Fallback compute nếu empty
+    if (!payload || (Array.isArray(payload) && payload.length === 0)) {
+      console.log('⚠️ Per-month empty, trying compute...');
+      const comp = await axios.post(`http://localhost:5000/api/salary/compute/${salaryYear}/${month}`);
+      payload = comp.data && comp.data.data ? comp.data.data : comp.data || [];
+      console.log('📥 Compute fallback response:', payload);
+    }
+
+    // Normalize: Force array và map fields
+    let records = Array.isArray(payload) ? payload : [payload];
+    const normalized = records.map(r => ({
+      id: r.id || r.Id || 0,
+      MaNV: r.MaNV ?? r.MaNhanVien ?? r.ma_nv ?? '',
+      TenNV: r.TenNV ?? r.ten ?? r.name ?? 'N/A',
+      month: Number(r.thang ?? r.month ?? month),
+      year: Number(r.nam ?? r.year ?? salaryYear),
+      luong_co_ban: Number(r.luong_co_ban ?? r.luong_cb ?? 0),
+      phu_cap: Number(r.phu_cap ?? 0),
+      tang_ca: Number(r.tang_ca ?? 0), // Nếu API có field tăng ca
+      thuong: Number(r.thuong ?? 0),
+      phat: Number(r.phat ?? r.khau_tru ?? 0),
+  tong_luong: Number((r.tong_luong ?? r.tong_nhan) ?? 0),
+      trang_thai: r.trang_thai ?? r.trangthai ?? 'Chưa tra'
+    })).filter(item => item.MaNV && item.TenNV); // Filter valid rows
+
+    console.log('🔄 Normalized salaryDetails (length:', normalized.length, '):', normalized);
+    setSalaryDetails(normalized);
+    setSelectedSalaryMonth(month);
+  } catch (error) {
+    console.error('❌ Lỗi fetch chi tiết lương:', error.response?.data || error.message);
+    message.error('Không thể tải chi tiết lương');
+    setSalaryDetails([]);
+  } finally {
+    setLoading(false);
+  }
+}, [salaryYear]);
+
+// Auto-load chi tiết khi user chọn tháng (hoặc khi monthly được load lần đầu)
+useEffect(() => {
+  if (selectedSalaryMonth) {
+    fetchSalaryDetails(selectedSalaryMonth);
+  }
+}, [selectedSalaryMonth, fetchSalaryDetails]);
+
+// Nếu sau fetch tổng theo tháng bạn muốn auto chọn tháng có dữ liệu:
+useEffect(() => {
+  if ((!selectedSalaryMonth || selectedSalaryMonth === null) && Array.isArray(salaryMonthly) && salaryMonthly.length) {
+    // chọn tháng đầu tiên có TongLuong > 0, nếu không thì tháng hiện tại
+    const m = (salaryMonthly.find(x => Number(x.Thang ?? x.month) && Number(x.TongLuong ?? x.total) > 0) || {}).Thang
+      ?? (salaryMonthly[0].Thang ?? salaryMonthly[0].month)
+      ?? (new Date().getMonth() + 1);
+    setSelectedSalaryMonth(Number(m));
+  }
+}, [salaryMonthly]);
   const fetchBanHangData = useCallback(async () => {
     setLoading(true);
     try {
@@ -162,6 +234,136 @@ const ThongKe = () => {
       fetchKhachHangData();
     }
   }, [activeTab, fetchKhachHangData]);
+
+
+
+// ...existing code...
+
+// ==================== API CALLS (LƯƠNG) ====================
+const fetchLuongData = useCallback(async () => {
+  setLoading(true);
+  try {
+    const res = await axios.get(`http://localhost:5000/api/salary/monthly/${salaryYear}`);
+    let payload = res.data;
+    if (payload && payload.success && payload.data) payload = payload.data;
+    if (payload && payload.data && Array.isArray(payload.data)) payload = payload.data;
+
+    let normalized = [];
+    if (Array.isArray(payload)) {
+      normalized = payload;
+    } else if (payload && typeof payload === 'object') {
+      const monthKeys = Object.keys(payload).filter(k => !isNaN(k)).sort((a,b)=>a-b);
+      if (monthKeys.length) {
+        normalized = monthKeys.map(k => {
+          const v = payload[k];
+          if (typeof v === 'number') return { month: Number(k), total: Number(v) };
+          if (v && typeof v === 'object') return { month: Number(k), ...v };
+          return { month: Number(k), total: 0 };
+        });
+      } else {
+        normalized = Object.values(payload).map(v => (typeof v === 'object' ? v : { value: v }));
+      }
+    }
+
+    normalized = normalized.map(item => {
+      if (!item) return null;
+      const obj = { ...(typeof item === 'object' ? item : { value: item }) };
+      if (obj.month === undefined && obj.Thang !== undefined) obj.month = Number(obj.Thang);
+      if (obj.total === undefined && (obj.TongLuong !== undefined)) obj.total = Number(obj.TongLuong);
+      if (obj.total === undefined && (obj.tong_luong !== undefined)) obj.total = Number(obj.tong_luong);
+      return obj;
+    }).filter(Boolean);
+
+    // set both monthly summary and salaryData used by chart/table
+    setSalaryMonthly(normalized);
+    setSalaryData(normalized);
+    console.debug('salary monthly data:', normalized);
+  } catch (error) {
+    console.error('Lỗi fetch lương:', error);
+    message.error('Không thể tải dữ liệu lương');
+    setSalaryMonthly([]);
+    setSalaryData([]);
+  } finally {
+    setLoading(false);
+  }
+}, [salaryYear]);
+
+// gọi fetch khi chuyển sang tab Lương hoặc khi đổi năm
+useEffect(() => {
+  if (activeTab === 'luong') {
+    fetchLuongData();
+  }
+}, [activeTab, salaryYear, fetchLuongData]);
+
+
+
+const getLuongChartData = () => {
+  if (!salaryData) return null;
+
+  // If salaryData is a simple array of 12 numbers
+  if (Array.isArray(salaryData) && salaryData.length === 12 && salaryData.every(v => typeof v === 'number')) {
+    return {
+      labels: Array.from({ length: 12 }, (_, i) => `Tháng ${i + 1}`),
+      datasets: [{ label: 'Tổng lương (VND)', data: salaryData, backgroundColor: 'rgba(54,162,235,0.7)', borderColor: 'rgb(54,162,235)', borderWidth: 1 }]
+    };
+  }
+
+  // Aggregate totals by month (1..12)
+  const months = Array.from({ length: 12 }, (_, i) => i + 1);
+  const totals = Array(12).fill(0);
+
+  if (Array.isArray(salaryData)) {
+    salaryData.forEach(row => {
+      if (row == null) return;
+
+      // If row is number, skip (no month info)
+      if (typeof row === 'number') return;
+
+      // If row contains nested entries (per-employee), sum their tong_nhan
+      if (Array.isArray(row.entries) && (row.month || row.Thang)) {
+        const m = Number(row.month ?? row.Thang);
+        if (isFinite(m) && m >= 1 && m <= 12) {
+          const sumEntries = row.entries.reduce((s, e) => s + Number(e.tong_nhan ?? e.tongLuong ?? e.tong_luong ?? 0), 0);
+          totals[m - 1] += isFinite(sumEntries) ? sumEntries : 0;
+          return;
+        }
+      }
+
+      // Determine month
+      const m = Number(row.month ?? row.Thang ?? row.monthNumber ?? row.m);
+      const monthIndex = (isFinite(m) && m >= 1 && m <= 12) ? (m - 1) : null;
+
+      // Determine value
+      let value = 0;
+      if (row.total !== undefined) value = Number(row.total);
+      else if (row.TongLuong !== undefined) value = Number(row.TongLuong);
+      else if (row.tong_luong !== undefined) value = Number(row.tong_luong);
+      else if (row.tong !== undefined) value = Number(row.tong);
+      else if (row.totalAmount !== undefined) value = Number(row.totalAmount);
+      else if (row.value !== undefined) value = Number(row.value);
+      else if (row.tong_nhan !== undefined) value = Number(row.tong_nhan);
+
+      if (monthIndex !== null) {
+        totals[monthIndex] += isFinite(value) ? value : 0;
+      } else {
+        // if no month, try to infer by position (not reliable) - ignore
+      }
+    });
+  } else if (typeof salaryData === 'object') {
+    // object keyed by month
+    months.forEach((m, i) => {
+      const v = salaryData[m] ?? salaryData[String(m)];
+      if (v == null) { totals[i] += 0; return; }
+      if (typeof v === 'number') totals[i] += v;
+      else if (typeof v === 'object') totals[i] += Number(v.total ?? v.TongLuong ?? v.tong_luong ?? v.tong ?? 0);
+    });
+  }
+
+  return {
+    labels: months.map(m => `Tháng ${m}`),
+    datasets: [{ label: 'Tổng lương (VND)', data: totals, backgroundColor: 'rgba(54,162,235,0.7)', borderColor: 'rgb(54,162,235)', borderWidth: 1 }]
+  };
+};
 
   // ==================== CHART DATA ====================
   const getDoanhThuChartData = () => {
@@ -335,13 +537,68 @@ const ThongKe = () => {
     }).format(value || 0);
   };
 
-const handleExportPDF = () => {
-    if (!data || data.length === 0) {
-      message.warning('Không có dữ liệu để xuất');
-      return;
+  // Robust number parser for currency-like values
+  const parseNumber = (v) => {
+    if (v == null) return 0;
+    if (typeof v === 'number' && isFinite(v)) return v;
+    if (typeof v === 'string') {
+      const cleaned = v.replace(/[^0-9,.-]/g, '');
+      if (!cleaned) return 0;
+      if (cleaned.indexOf(',') !== -1 && cleaned.indexOf('.') !== -1) {
+        // e.g. '1.234,56' => '1234.56'
+        return Number(cleaned.replace(/\./g, '').replace(/,/g, '.')) || 0;
+      }
+      return Number(cleaned.replace(/,/g, '.')) || 0;
+    }
+    return 0;
+  };
+
+  // ...existing code...
+
+const handleExportPDF = async () => {
+    // For non-salary tabs require `data`. For salary tab allow export when salaryDetails or salaryMonthly exist.
+    if (activeTab === 'luong') {
+      if ((!salaryDetails || salaryDetails.length === 0) && (!salaryMonthly || salaryMonthly.length === 0)) {
+        message.warning('Không có dữ liệu lương để xuất');
+        return;
+      }
+    } else {
+      if (!data || data.length === 0) {
+        message.warning('Không có dữ liệu để xuất');
+        return;
+      }
     }
 
     try {
+      // For the 'luong' tab we always capture the DOM as an image (html2canvas) to avoid font issues
+      if (activeTab === 'luong') {
+        try {
+          const hc = await import('html2canvas');
+          const html2canvas = hc.default || hc;
+          const el = document.getElementById('luong-export-area');
+          if (!el) {
+            message.error('Không tìm thấy vùng dữ liệu lương để xuất (luong-export-area)');
+            return;
+          }
+          const canvas = await html2canvas(el, { scale: 2, useCORS: true, logging: false });
+          const imgData = canvas.toDataURL('image/png');
+          const doc = new jsPDF('p', 'mm', 'a4');
+          const pageWidth = doc.internal.pageSize.getWidth();
+          const margin = 10;
+          const usableWidth = pageWidth - margin * 2;
+          const imgProps = doc.getImageProperties(imgData);
+          const imgHeight = (imgProps.height * usableWidth) / imgProps.width;
+          doc.addImage(imgData, 'PNG', margin, 10, usableWidth, imgHeight);
+          const filename = `luong_${selectedSalaryMonth || 'all'}_${salaryYear}_${Date.now()}.pdf`;
+          doc.save(filename);
+          message.success('Xuất PDF Lương (ảnh) thành công!');
+          return;
+        } catch (err) {
+          console.error('Lỗi html2canvas PDF export (luong):', err);
+          message.error('Xuất PDF (ảnh) thất bại. Cài `html2canvas` (npm i html2canvas) để hỗ trợ xuất ảnh.');
+          return;
+        }
+      }
       const doc = new jsPDF('p', 'mm', 'a4');
       const pageWidth = doc.internal.pageSize.getWidth();
       const pageHeight = doc.internal.pageSize.getHeight();
@@ -351,7 +608,7 @@ const handleExportPDF = () => {
       let tableData = [];
 
       // === XÁC ĐỊNH TIÊU ĐỀ VÀ DỮ LIỆU ===
-      if (activeTab === 'doanhthu') {
+  if (activeTab === 'doanhthu') {
         titleText = `THONG KE DOANH THU ${
           subTab === 'nam' ? 'THEO NAM' : 
           subTab === 'thang' ? `TUNG THANG NAM ${selectedYear}` : 
@@ -404,19 +661,69 @@ const handleExportPDF = () => {
         ]);
       }
 
+      // === LUONG EXPORT ===
+      else if (activeTab === 'luong') {
+        titleText = `THONG KE LUONG THANG ${selectedSalaryMonth || ''} NAM ${salaryYear}`;
+        tableHeaders = [[
+          'STT', 'Mã NV', 'Tên NV', 'Lương cơ bản', 'Phụ cấp', 'Tăng ca', 'Thưởng', 'Phạt', 'Tổng nhận', 'Trạng thái'
+        ]];
+
+        // prefer detailed rows; fallback to monthly summary
+        const rows = Array.isArray(salaryDetails) && salaryDetails.length ? salaryDetails : [];
+
+        tableData = rows.map((r, i) => [
+          i + 1,
+          r.MaNV,
+          r.TenNV,
+          new Intl.NumberFormat('vi-VN').format(r.luong_co_ban || 0),
+          new Intl.NumberFormat('vi-VN').format(r.phu_cap || 0),
+          new Intl.NumberFormat('vi-VN').format(r.tang_ca || 0),
+          new Intl.NumberFormat('vi-VN').format(r.thuong || 0),
+          new Intl.NumberFormat('vi-VN').format(r.phat || 0),
+          new Intl.NumberFormat('vi-VN').format(((r.tong_luong ?? r.tong_nhan) || 0)),
+          r.trang_thai || ''
+        ]);
+
+        // compute total paid for the month using robust parser
+        let totalPaid = 0;
+        if (rows.length) {
+          totalPaid = rows.reduce((s, rr) => s + parseNumber(rr.tong_luong ?? rr.tong_nhan), 0);
+        } else if (Array.isArray(salaryMonthly) && salaryMonthly.length && selectedSalaryMonth) {
+          const m = salaryMonthly.find(x => Number(x.Thang ?? x.month) === Number(selectedSalaryMonth));
+          totalPaid = parseNumber(m && (m.TongLuong ?? m.total));
+        } else if (Array.isArray(salaryMonthly) && salaryMonthly.length && !selectedSalaryMonth) {
+          totalPaid = salaryMonthly.reduce((s, x) => s + parseNumber(x.TongLuong ?? x.total), 0);
+        }
+
+        // if no detailed rows, add a placeholder row to show month summary
+        if (!tableData.length && Array.isArray(salaryMonthly) && salaryMonthly.length) {
+          const m = salaryMonthly.find(x => Number(x.Thang ?? x.month) === Number(selectedSalaryMonth));
+          tableData = [[
+            1,
+            '- ',
+            `Tổng lương tháng ${selectedSalaryMonth || 'N/A'}`,
+            '-', '-', '-', '-', '-', new Intl.NumberFormat('vi-VN').format((m && (m.TongLuong ?? m.total)) || 0), '-'
+          ]];
+        }
+
+        // expose totalPaid to use after autoTable
+        var luongTotalPaid = totalPaid;
+      }
+
       // === VẼ BACKGROUND GRADIENT ===
       doc.setFillColor(102, 126, 234);
       doc.rect(0, 0, pageWidth, 40, 'F');
 
       // === TIÊU ĐỀ CHÍNH ===
-      doc.setFontSize(20);
-      doc.setTextColor(255, 255, 255);
-      doc.setFont('helvetica', 'bold');
-      doc.text(titleText, pageWidth / 2, 20, { align: 'center' });
+  doc.setFontSize(20);
+  doc.setTextColor(255, 255, 255);
+  if (unicodeFontName) doc.setFont(unicodeFontName, 'normal'); else doc.setFont('helvetica', 'bold');
+  // note: jsPDF font weight support depends on added font variants; use normal for safety
+  doc.text(titleText, pageWidth / 2, 20, { align: 'center' });
 
       // === THÔNG TIN PHỤ ===
-      doc.setFontSize(10);
-      doc.setFont('helvetica', 'italic');
+  doc.setFontSize(10);
+  if (unicodeFontName) doc.setFont(unicodeFontName, 'normal'); else doc.setFont('helvetica', 'italic');
       const dateText = `Ngay xuat: ${dayjs().format('DD/MM/YYYY HH:mm:ss')}`;
       doc.text(dateText, pageWidth / 2, 30, { align: 'center' });
 
@@ -425,14 +732,14 @@ const handleExportPDF = () => {
       doc.setLineWidth(1);
       doc.line(10, 42, pageWidth - 10, 42);
 
-      // === VẼ BẢNG DỮ LIỆU - SỬA LẠI CÁCH GỌI ===
+      // === VẼ BẢNG DỮ LIỆU ===
       autoTable(doc, {
         head: tableHeaders,
         body: tableData,
         startY: 48,
         theme: 'grid',
         styles: {
-          font: 'helvetica',
+          font: unicodeFontName || 'helvetica',
           fontSize: 10,
           cellPadding: 5,
           overflow: 'linebreak',
@@ -507,8 +814,8 @@ const handleExportPDF = () => {
         doc.setFillColor(230, 247, 255);
         doc.roundedRect(10, finalY + 5, pageWidth - 20, 30, 3, 3, 'F');
         
-        doc.setFontSize(11);
-        doc.setFont('helvetica', 'bold');
+  doc.setFontSize(11);
+  if (unicodeFontName) doc.setFont(unicodeFontName, 'normal'); else doc.setFont('helvetica', 'bold');
         doc.setTextColor(0, 0, 0);
         
         const summaryX = 15;
@@ -522,6 +829,23 @@ const handleExportPDF = () => {
         doc.text(`Loi nhuan: ${new Intl.NumberFormat('vi-VN').format(loiNhuan)} VND`, summaryX, summaryY);
       }
 
+      // === THÊM TỔNG KẾT (NẾU LÀ LUONG) ===
+      if (activeTab === 'luong') {
+        const finalY = doc.lastAutoTable ? (doc.lastAutoTable.finalY || 50) : 50;
+        const total = typeof luongTotalPaid !== 'undefined' ? luongTotalPaid : 0;
+
+        doc.setFillColor(230, 247, 255);
+        doc.roundedRect(10, finalY + 5, pageWidth - 20, 20, 3, 3, 'F');
+
+  doc.setFontSize(11);
+  if (unicodeFontName) doc.setFont(unicodeFontName, 'normal'); else doc.setFont('helvetica', 'bold');
+        doc.setTextColor(0, 0, 0);
+
+        const summaryX = 15;
+        let summaryY = finalY + 15;
+        doc.text(`Tong tien luong da chi tra: ${new Intl.NumberFormat('vi-VN').format(total)} VND`, summaryX, summaryY);
+      }
+
       const filename = `${activeTab}_${Date.now()}.pdf`;
       doc.save(filename);
       
@@ -531,7 +855,6 @@ const handleExportPDF = () => {
       message.error('Không thể xuất PDF');
     }
   };
-
   const handleExportExcel = () => {
     if (!data || data.length === 0) {
       message.warning('Không có dữ liệu để xuất');
@@ -595,6 +918,34 @@ const handleExportPDF = () => {
           'Số lượng đơn': item.SoLuongDon,
           'Số loại SP': item.SoLoaiSanPham
         }));
+      } else if (activeTab === 'luong') {
+        filename = `Luong_${selectedSalaryMonth || 'all'}_${salaryYear}_${Date.now()}.xlsx`;
+        sheetName = 'Lương';
+        titleText = `THỐNG KÊ LƯƠNG THÁNG ${selectedSalaryMonth || 'TẤT CẢ'} NĂM ${salaryYear}`;
+
+        // prefer details if available
+        if (Array.isArray(salaryDetails) && salaryDetails.length) {
+          exportData = salaryDetails.map((r, i) => ({
+            'STT': i + 1,
+            'Mã NV': r.MaNV,
+            'Tên NV': r.TenNV,
+            'Lương cơ bản': r.luong_co_ban || 0,
+            'Phụ cấp': r.phu_cap || 0,
+            'Tăng ca': r.tang_ca || 0,
+            'Thưởng': r.thuong || 0,
+            'Phạt': r.phat || 0,
+            'Tổng nhận': (r.tong_luong ?? r.tong_nhan) || 0,
+            'Trạng thái': r.trang_thai || ''
+          }));
+        } else if (Array.isArray(salaryMonthly) && salaryMonthly.length) {
+          // export monthly summary rows
+          exportData = salaryMonthly.map((m, i) => ({
+            'STT': i + 1,
+            'Tháng': m.Thang ?? m.month,
+            'Tổng lương': m.TongLuong ?? m.total ?? 0
+          }));
+        }
+        // append total row later after sheet creation
       }
 
       const ws = XLSX.utils.aoa_to_sheet([]);
@@ -607,6 +958,21 @@ const handleExportPDF = () => {
       XLSX.utils.sheet_add_aoa(ws, [['']], { origin: 'A3' });
       
       XLSX.utils.sheet_add_json(ws, exportData, { origin: 'A4', skipHeader: false });
+
+      // If salary export, append total summary row after data
+      if (activeTab === 'luong') {
+        // compute total
+        let totalPaid = 0;
+        if (Array.isArray(salaryDetails) && salaryDetails.length) {
+          totalPaid = salaryDetails.reduce((s, r) => s + (Number((r.tong_luong ?? r.tong_nhan) || 0) || 0), 0);
+        } else if (Array.isArray(salaryMonthly) && salaryMonthly.length) {
+          totalPaid = salaryMonthly.reduce((s, m) => s + (Number(m.TongLuong ?? m.total) || 0), 0);
+        }
+
+        const afterRow = XLSX.utils.decode_range(ws['!ref']).e.r + 2; // +1 for 1-index, +1 for blank row
+        XLSX.utils.sheet_add_aoa(ws, [['']], { origin: `A${afterRow}` });
+        XLSX.utils.sheet_add_aoa(ws, [[`Tong tien luong da chi tra:`, new Intl.NumberFormat('vi-VN').format(totalPaid)]], { origin: `A${afterRow + 1}` });
+      }
       
       const range = XLSX.utils.decode_range(ws['!ref']);
       const numCols = range.e.c + 1;
@@ -751,34 +1117,52 @@ const handleExportPDF = () => {
   };
 
   // ==================== RENDER CHART ====================
-  const renderChart = () => {
-    if (!showChart || loading || !data || data.length === 0) return null;
+ // ...existing code...
+const renderChart = () => {
+  if (!showChart || loading) return null;
 
-    let chartData = null;
-    let ChartComponent = null;
+  let chartData = null;
+  let ChartComponent = null;
 
-    if (activeTab === 'doanhthu') {
-      chartData = getDoanhThuChartData();
-      ChartComponent = Line;
-    } else if (activeTab === 'banhang') {
-      chartData = getBanHangChartData();
-      ChartComponent = productTab === 'sanpham' ? Bar : Pie;
-    } else if (activeTab === 'khachhang') {
-      chartData = getKhachHangChartData();
-      ChartComponent = Bar;
+  if (activeTab === 'doanhthu') {
+    if (!data || data.length === 0) return null;
+    chartData = getDoanhThuChartData();
+    ChartComponent = Line;
+  } else if (activeTab === 'banhang') {
+    if (!data || data.length === 0) return null;
+    chartData = getBanHangChartData();
+    ChartComponent = productTab === 'sanpham' ? Bar : Pie;
+  } else if (activeTab === 'khachhang') {
+    if (!data || data.length === 0) return null;
+    chartData = getKhachHangChartData();
+    ChartComponent = Bar;
+  } else if (activeTab === 'luong') {
+    // đảm bảo salaryData đã load
+    if (!salaryData || (Array.isArray(salaryData) && salaryData.length === 0)) {
+      console.debug('Luong: salaryData empty', salaryData);
+      return null;
     }
+    chartData = getLuongChartData();
+    ChartComponent = Bar;
+  }
 
-    if (!chartData) return null;
+  if (!chartData || !ChartComponent) {
+    console.debug('No chartData or ChartComponent', { activeTab, chartData, salaryData });
+    return null;
+  }
 
-    return (
-      <div className="chart-container">
-        <div className="chart-wrapper">
-          <ChartComponent data={chartData} options={chartOptions} />
-        </div>
+  // debug: in ra dữ liệu chart để kiểm tra
+  console.debug('Render chart', { activeTab, chartData });
+
+  return (
+    <div className="chart-container" style={{ width: '100%', marginTop: 12 }}>
+      <div className="chart-wrapper" style={{ height: 360 }}>
+        <ChartComponent data={chartData} options={chartOptions} />
       </div>
-    );
-  };
-
+    </div>
+  );
+};
+// ...existing code...
   // ==================== RENDER TABS ====================
   const renderDoanhThuTab = () => (
     <div className="thongke-content">
@@ -891,7 +1275,92 @@ const handleExportPDF = () => {
       </div>
     </div>
   );
+  // ...existing code inside renderLuongTab ...
+const renderLuongTab = () => {
+  console.log('🎨 Rendering Luong Tab - salaryDetails length:', salaryDetails.length); // Debug render
+  return (
+    <div id="luong-export-area" className="thongke-content">
+      <div className="thongke-filters">
+        <div className="filter-group">
+          <label>Năm:</label>
+          <select value={salaryYear} onChange={(e) => setSalaryYear(Number(e.target.value))}>
+            {[2023, 2024, 2025].map(y => <option key={y} value={y}>{y}</option>)}
+          </select>
+        </div>
+        <div className="filter-group">
+          <label>Tháng:</label>
+          <select value={selectedSalaryMonth || ''} onChange={(e) => setSelectedSalaryMonth(Number(e.target.value))}>
+            <option value="">Chọn tháng</option>
+            {Array.from({length: 12}, (_, i) => i+1).map(m => <option key={m} value={m}>Tháng {m}</option>)}
+          </select>
+        </div>
+        <button className="btn-refresh" onClick={() => selectedSalaryMonth && fetchSalaryDetails(selectedSalaryMonth)}>
+          <i className="fas fa-sync-alt"></i> Tải lại
+        </button>
+        <button className="btn-pdf" onClick={handleExportPDF} style={{ marginLeft: 8 }}>
+          <i className="fas fa-file-pdf"></i> Xuất PDF
+        </button>
 
+        <button className="btn-excel" onClick={handleExportExcel} style={{ marginLeft: 8 }}>
+          <i className="fas fa-file-excel"></i> Xuất Excel
+        </button>
+      </div>
+
+      <div className="thongke-table">
+        <table>
+          <thead>
+            <tr>
+              <th>STT</th>
+              <th>MÃ NV</th>
+              <th>TÊN NV</th>
+              <th>LƯƠNG CƠ BẢN</th>
+              <th>PHỤ CẤP</th>
+              <th>TĂNG CA</th>
+              <th>THƯỞNG</th>
+              <th>PHẠT</th>
+              <th>TỔNG NHẬN</th>
+              <th>TRẠNG THÁI</th>
+            </tr>
+          </thead>
+          <tbody>
+            {loading ? (
+              <tr>
+                <td colSpan="10" style={{ textAlign: 'center', padding: '30px' }}>
+                  <i className="fas fa-spinner fa-spin"></i> Đang tải dữ liệu lương...
+                </td>
+              </tr>
+            ) : salaryDetails.length > 0 ? (
+              salaryDetails.map((item, index) => {
+                console.log('📊 Mapping row:', index + 1, item); // Debug từng row
+                return (
+                  <tr key={item.id || index}>
+                    <td>{index + 1}</td>
+                    <td>{item.MaNV}</td>
+                    <td>{item.TenNV}</td>
+                    <td>{formatCurrency(item.luong_co_ban)}</td>
+                    <td>{formatCurrency(item.phu_cap)}</td>
+                    <td>{formatCurrency(item.tang_ca)}</td>
+                    <td style={{ color: 'green' }}>{formatCurrency(item.thuong)}</td>
+                    <td style={{ color: 'red' }}>{formatCurrency(item.phat)}</td>
+                    <td style={{ color: '#1890ff', fontWeight: 'bold' }}>{formatCurrency(item.tong_luong)}</td>
+                    <td>{item.trang_thai}</td>
+                  </tr>
+                );
+              })
+            ) : (
+              <tr>
+                <td colSpan="10" style={{ textAlign: 'center', padding: '30px' }}>
+                  Không có dữ liệu lương cho tháng {selectedSalaryMonth}/{salaryYear}.<br />
+                  <button onClick={() => fetchSalaryDetails(selectedSalaryMonth)}>Thử tải lại</button>
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+};
   const renderBanHangTab = () => (
     <div className="thongke-content">
       <div className="thongke-subtabs">
@@ -1101,20 +1570,15 @@ const handleExportPDF = () => {
       </div>
 
       <div className="thongke-tabs">
-        <button className={activeTab === 'doanhthu' ? 'active' : ''} onClick={() => setActiveTab('doanhthu')}>
-          Doanh thu
-        </button>
-        <button className={activeTab === 'banhang' ? 'active' : ''} onClick={() => setActiveTab('banhang')}>
-          Bán hàng
-        </button>
-        <button className={activeTab === 'khachhang' ? 'active' : ''} onClick={() => setActiveTab('khachhang')}>
-          Khách mua hàng theo thời gian
-        </button>
-      </div>
-
-      {activeTab === 'doanhthu' && renderDoanhThuTab()}
-      {activeTab === 'banhang' && renderBanHangTab()}
-      {activeTab === 'khachhang' && renderKhachHangTab()}
+  <button className={activeTab === 'doanhthu' ? 'active' : ''} onClick={() => setActiveTab('doanhthu')}>Doanh thu</button>
+  <button className={activeTab === 'banhang' ? 'active' : ''} onClick={() => setActiveTab('banhang')}>Bán hàng</button>
+  <button className={activeTab === 'khachhang' ? 'active' : ''} onClick={() => setActiveTab('khachhang')}>Khách mua hàng theo thời gian</button>
+  <button className={activeTab === 'luong' ? 'active' : ''} onClick={() => setActiveTab('luong')}>Lương nhân viên</button>
+</div>
+{activeTab === 'doanhthu' && renderDoanhThuTab()}
+{activeTab === 'banhang' && renderBanHangTab()}
+{activeTab === 'khachhang' && renderKhachHangTab()}
+{activeTab === 'luong' && renderLuongTab()}
     </div>
   );
 };
