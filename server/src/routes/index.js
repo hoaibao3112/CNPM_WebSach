@@ -13,6 +13,7 @@ import Receipt from './receipt.js';
 import KhuyenMai from './khuyenmai.js'
 import reportRoutes from './reportRoutes.js';
 import ChatRoutes from './chatRoute.js';
+import reportRoutes from './routes/reportRoutes.js';
 import permissionRoutes from './authMiddleware.js';
 import Author from './author.js';
 import ratingsRoutes from './ratings.js';
@@ -44,6 +45,7 @@ export const initRoutes = (app) => {
   app.use('/api/khuyenmai',KhuyenMai);
   app.use('/api/reports',reportRoutes);
   app.use('/api/chat',ChatRoutes);
+  app.use('/api/reports', reportRoutes);
   app.use('/api/permissions', permissionRoutes);
   app.use('/api/author',Author);
   app.use('/api/comments',Comment);
