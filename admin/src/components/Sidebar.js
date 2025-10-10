@@ -31,6 +31,7 @@ const Sidebar = () => {
     { to: '/admin/salary', icon: 'payments', text: 'Tính lương', permission: 'Tính Lương' },
     { to: '/admin/leave', icon: 'event_busy', text: 'Xin nghỉ phép', permission: 'Nghĩ Phép' },
     { to: '/admin/attendance', icon: 'check_circle', text: 'Chấm công', permission: 'Chấm công' },
+    { to: '/admin/returns', icon: 'assignment_return', text: 'Quản lý trả hàng', permission: 'Trả Hàng' }
   ];
 
   const filteredMenuItems = menuItems.filter(

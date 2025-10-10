@@ -249,7 +249,8 @@ async function fetchOrders(customerId, statusFilter = 'all') {
         // Chỉ lọc theo statusFilter nếu cần
         if (statusFilter !== 'all') {
             const statusMapping = {
-                'pending': ['Chờ xử lý'],
+                // treat both legacy 'Chờ xử lý' and new 'Chờ xác nhận' as pending
+                'pending': ['Chờ xử lý', 'Chờ xác nhận'],
                 'processing': ['Đã xác nhận'],
                 'shipping': ['Đang giao hàng'],
                 'completed': ['Đã giao hàng'],
@@ -422,7 +423,17 @@ async function showOrderDetail(order) {
         console.error('Order detail modal not found');
         return;
     }
-
+const requestReturnBtn = document.getElementById('request-return-btn');
+    if (requestReturnBtn) {
+        // Normalize possible status fields and values (backend may use different names/values)
+        const rawStatus = String(order.status || order.tinhtrang || order.TrangThai || order.trangThai || order.trang_thai || '').toLowerCase();
+        const completedKeywords = [
+            'completed', 'delivered', 'đã giao', 'giao hàng', 'đã giao hàng', 'đã hoàn thành', 'hoàn thành', 'hoan thanh'
+        ];
+        const isCompleted = completedKeywords.some(k => rawStatus.includes(k));
+        requestReturnBtn.style.display = isCompleted ? 'inline-flex' : 'none';
+        requestReturnBtn.onclick = () => openReturnModal(order);
+    }
     const statusDisplay = {
         'pending': { class: 'status-pending', text: 'Chờ xác nhận' },
         'processing': { class: 'status-processing', text: 'Đã xác nhận' },
@@ -430,6 +441,122 @@ async function showOrderDetail(order) {
         'completed': { class: 'status-completed', text: 'Đã hoàn thành' },
         'cancelled': { class: 'status-cancelled', text: 'Đã hủy' }
     };
+    // --- NEW: Open return modal and populate items ---
+function openReturnModal(order) {
+  const modal = document.getElementById('return-request-modal');
+  const itemsList = document.getElementById('return-items-list');
+  const reason = document.getElementById('return-reason');
+  const files = document.getElementById('return-files');
+
+  if (!modal || !itemsList) return;
+  // fill items
+  itemsList.innerHTML = '';
+  (order.items || []).forEach(it => {
+    const id = it.productId || it.MaSP || it.productId;
+    const qty = it.quantity || it.Soluong || it.quantity || 1;
+    const label = document.createElement('label');
+    label.style.display = 'flex';
+    label.style.justifyContent = 'space-between';
+    label.style.alignItems = 'center';
+    label.innerHTML = `
+      <span style="flex:1;"><input type="checkbox" class="return-item-checkbox" data-product="${id}" data-max="${qty}" checked style="margin-right:8px;"> ${escapeHtml(it.productName || it.productName || id)}</span>
+      <span style="width:120px;text-align:right;">Số lượng: <input type="number" class="return-item-qty" value="${qty}" min="1" max="${qty}" style="width:64px; margin-left:8px;"></span>
+    `;
+    itemsList.appendChild(label);
+  });
+
+  // show modal
+  modal.style.display = 'block';
+
+  // attach buttons
+  document.getElementById('cancel-return-btn').onclick = () => hideReturnModal();
+  document.getElementById('close-return-modal').onclick = () => hideReturnModal();
+  document.getElementById('submit-return-btn').onclick = () => submitReturnRequest(order);
+}
+
+// --- NEW: hide modal ---
+function hideReturnModal() {
+  const modal = document.getElementById('return-request-modal');
+  if (modal) modal.style.display = 'none';
+  // clear inputs
+  const reason = document.getElementById('return-reason');
+  const files = document.getElementById('return-files');
+  if (reason) reason.value = '';
+  if (files) files.value = '';
+}
+
+// --- NEW: submit return request ---
+async function submitReturnRequest(order) {
+  if (!checkAuth()) return;
+  const orderId = order.id || order.MaHD;
+  const user = JSON.parse(localStorage.getItem('user')) || {};
+  const nguoi_tao = user.makh || user.id || null;
+
+  // collect selected items
+  const checkboxes = Array.from(document.querySelectorAll('.return-item-checkbox'));
+  const qtyInputs = Array.from(document.querySelectorAll('.return-item-qty'));
+  const items = [];
+  checkboxes.forEach((cb, idx) => {
+    if (!cb.checked) return;
+    const productId = cb.dataset.product;
+    const max = Number(cb.dataset.max || 1);
+    const qtyEl = qtyInputs[idx];
+    let qty = qtyEl ? Number(qtyEl.value) : max;
+    if (!qty || qty < 1) qty = 1;
+    if (qty > max) qty = max;
+    items.push({ ma_san_pham: String(productId), so_luong: qty });
+  });
+
+  if (!items.length) {
+    alert('Vui lòng chọn ít nhất 1 sản phẩm để trả.');
+    return;
+  }
+
+  const ly_do = document.getElementById('return-reason')?.value?.trim() || 'Khách báo lỗi khi nhận hàng';
+  // First create tra_hang record (without files)
+  try {
+    const resp = await fetch('http://localhost:5000/api/tra-hang', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${getToken()}`
+      },
+      body: JSON.stringify({
+        ma_don_hang: orderId,
+        mat_hang: items,
+        ly_do,
+        tep_dinh_kem: [],
+        nguoi_tao,
+        loai_nguoi_tao: 'khachhang'
+      })
+    });
+    const data = await resp.json();
+    if (!resp.ok) throw new Error(data.error || data.message || 'Lỗi tạo yêu cầu trả hàng');
+
+    const returnId = data.id;
+    // If files selected, upload them
+    const fileInput = document.getElementById('return-files');
+    if (fileInput && fileInput.files.length) {
+      const form = new FormData();
+      for (const f of fileInput.files) form.append('files', f);
+      const upResp = await fetch(`http://localhost:5000/api/tra-hang/${returnId}/files`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${getToken()}` },
+        body: form
+      });
+      if (!upResp.ok) {
+        console.warn('Upload files failed', await upResp.text());
+      }
+    }
+
+    alert('Gửi yêu cầu trả hàng thành công. Mã yêu cầu: ' + returnId);
+    hideReturnModal();
+    // optional: refresh orders / details
+  } catch (err) {
+    console.error('Submit return error:', err);
+    alert('Lỗi khi gửi yêu cầu trả hàng: ' + (err.message || err));
+  }
+}
 
     const status = statusDisplay[order.status] || statusDisplay['pending'];
 
@@ -481,36 +608,327 @@ async function showOrderDetail(order) {
     // ✅ Hiển thị nút hủy với logic mới
     const cancelBtn = document.getElementById('cancel-order-btn');
     if (cancelBtn) {
-        cancelBtn.style.display = order.status === 'pending' ? 'inline-flex' : 'none';
+        // Determine if the order is cancellable or requires refund information
+        const paymentStatus = (order.paymentStatus || '').toString();
+        const paidIndicators = ['Đã thanh toán', 'Đã nhận tiền', 'Đã nhận'];
+        const isPaid = paidIndicators.some(ind => paymentStatus.includes(ind));
+
+        // Accept both legacy 'pending' flag or Vietnamese tinhtrang values
+        const statusValue = (order.status || order.tinhtrang || '').toString();
+        const cancellableStatuses = ['pending', 'Chờ xử lý', 'Chờ xác nhận', 'Đã xác nhận'];
+        const isCancellableStatus = cancellableStatuses.some(s => statusValue.includes(s));
+
+        // Show cancel button if status allows cancellation OR payment was already received (so user can provide refund info)
+        cancelBtn.style.display = (isCancellableStatus || isPaid) ? 'inline-flex' : 'none';
         cancelBtn.onclick = () => showCancelModal();
     }
 
     // Hiển thị bản đồ giao hàng
     displayDeliveryMap(order);
 
+    // Hiển thị thông tin trả hàng (nếu có)
+    try { await renderReturnInfo(order); } catch (e) { console.warn('renderReturnInfo failed', e); }
+
     modal.style.display = 'block';
 }
+
+// Fetch return request(s) for a given order id
+async function fetchReturnForOrder(orderId) {
+    if (!orderId) return null;
+    try {
+        const token = getToken();
+            const res = await fetch(`http://localhost:5000/api/tra-hang?ma_don_hang=${encodeURIComponent(orderId)}`, {
+            headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+        });
+        if (!res.ok) {
+            // If API doesn't support query by ma_don_hang, try listing and filter client-side
+            const list = await res.json().catch(() => []);
+            return Array.isArray(list) ? list.filter(r => r.ma_don_hang == orderId) : [];
+        }
+        const data = await res.json();
+        // If API returns array
+        if (Array.isArray(data)) return data.filter(r => r.ma_don_hang == orderId);
+        return [];
+    } catch (e) {
+        console.warn('Không thể lấy thông tin trả hàng:', e.message || e);
+        return [];
+    }
+}
+
+// Render return info in order detail modal
+async function renderReturnInfo(order) {
+    try {
+        const section = document.getElementById('return-info-section');
+        const statusEl = document.getElementById('return-status');
+        const viewBtn = document.getElementById('view-return-btn');
+        if (!section || !statusEl || !viewBtn) return;
+
+            const returns = await fetchReturnForOrder(order.id);
+        if (!returns || returns.length === 0) {
+            section.style.display = 'none';
+            return;
+        }
+
+        // pick latest
+        const latest = returns.sort((a,b)=> new Date(b.created_at || b.createdAt || 0) - new Date(a.created_at || a.createdAt || 0))[0];
+        const mapping = {
+            'da_bao_cao': {text: 'Đã báo cáo', color: '#ffc107'},
+            'dang_van_chuyen': {text: 'Đang vận chuyển', color: '#17a2b8'},
+            'da_nhan': {text: 'Đã nhận', color: '#007bff'},
+            'chap_thuan': {text: 'Đã chấp thuận', color: '#28a745'},
+            'da_hoan_tien': {text: 'Đã hoàn tiền', color: '#218838'},
+            'tu_choi': {text: 'Đã từ chối', color: '#dc3545'},
+            'huy': {text: 'Đã hủy', color: '#6c757d'}
+        };
+
+        const info = mapping[latest.trang_thai] || {text: latest.trang_thai || 'Đang xử lý', color: '#6c757d'};
+        statusEl.textContent = info.text;
+        statusEl.style.background = info.color;
+        statusEl.style.color = '#fff';
+        section.style.display = 'block';
+        viewBtn.style.display = 'inline-block';
+
+        // attach click to open details modal
+        viewBtn.onclick = () => openReturnDetailModal(latest);
+    } catch (e) {
+        console.warn('renderReturnInfo error', e);
+    }
+}
+
+// Simple return detail modal (appends to body when needed)
+async function openReturnDetailModal(returnReqOrId) {
+    // If an id was passed, fetch full detail from server
+    let detail = null;
+    try {
+        // Determine id if passed as number or as object with id
+        let id = null;
+        if (typeof returnReqOrId === 'number' || String(returnReqOrId).match(/^\d+$/)) {
+            id = String(returnReqOrId);
+        } else if (returnReqOrId && (returnReqOrId.id || returnReqOrId.tra_hang_id)) {
+            id = String(returnReqOrId.id || returnReqOrId.tra_hang_id);
+        }
+
+        if (id) {
+            const resp = await fetch(`http://localhost:5000/api/tra-hang/${id}`, {
+                headers: getToken() ? { 'Authorization': `Bearer ${getToken()}` } : {}
+            });
+            if (resp.ok) {
+                detail = await resp.json();
+            } else {
+                console.warn('GET /api/tra-hang/:id returned', resp.status);
+            }
+        }
+    } catch (e) {
+        console.warn('Failed to fetch return detail from server', e);
+    }
+
+        // fallback to whatever was passed
+        const returnReq = detail || returnReqOrId || {};
+
+        // If the server returned a related invoice id and its updated status, update UI immediately
+        try {
+            if (detail && detail.ma_don_hang && detail.orderStatus) {
+                // update order status badge in list/modal
+                updateOrderStatusInUI(detail.ma_don_hang, detail.orderStatus);
+                // Also fetch the latest order detail to keep modal in sync (best-effort)
+                try {
+                    const latestOrder = await fetchOrderDetail(detail.ma_don_hang);
+                    if (latestOrder) {
+                        // update global currentOrderData so other parts of the modal use up-to-date data
+                        currentOrderData = latestOrder;
+                        // update modal fields if modal is open for this order
+                        const modalOrderIdEl = document.getElementById('order-id');
+                        if (modalOrderIdEl && modalOrderIdEl.textContent.includes(`#${detail.ma_don_hang}`)) {
+                            document.getElementById('order-status').textContent = latestOrder.status || latestOrder.tinhtrang || (detail.orderStatus);
+                            // use same class heuristics as updateOrderStatusInUI
+                            updateOrderStatusInUI(detail.ma_don_hang, latestOrder.status || latestOrder.tinhtrang || detail.orderStatus);
+                        }
+                    }
+                } catch (e) {
+                    console.warn('Không thể lấy chi tiết đơn hàng sau khi cập nhật trả hàng:', e.message);
+                }
+            }
+        } catch (e) { console.warn('Error syncing order status from return detail', e); }
+
+    // create modal if not exists
+    let modal = document.getElementById('return-detail-modal');
+    if (!modal) {
+                modal = document.createElement('div');
+                modal.id = 'return-detail-modal';
+                modal.className = 'modal';
+                // inject a minimal inline stylesheet to guarantee visible changes even if external CSS is cached
+                modal.innerHTML = `
+                <div class="modal-content" style="max-width:800px;">
+                    <style>
+                        /* Inline fallback styles for return modal (applied immediately) */
+                        #return-detail-modal .modal-content{padding:16px;background:#fff;border-radius:12px}
+                        #return-detail-modal h2{font-size:1.5rem;margin:0 0 8px}
+                        #return-files-list a{display:inline-block;width:96px;height:96px;border-radius:8px;overflow:hidden;margin:8px;border:1px solid rgba(0,0,0,0.06)}
+                        #return-files-list a img{width:100%;height:100%;object-fit:cover}
+                        #return-history-list .history-item{padding-left:28px;margin-bottom:12px}
+                    </style>
+                    <span class="close-modal" id="close-return-detail">&times;</span>
+                    <div style="padding:8px 6px;">
+                        <h2>Chi tiết yêu cầu trả hàng <span id="return-id-label"></span></h2>
+                        <p><strong>Lý do:</strong> <span id="return-reason-text"></span></p>
+                        <p><strong>Trạng thái:</strong> <span id="return-state-text"></span></p>
+                        <div id="return-items-area"><h3>Sản phẩm:</h3><div id="return-items-list"></div></div>
+                        <div id="return-files-area" style="margin-top:12px;"><h3>Hình ảnh đính kèm:</h3><div id="return-files-list"></div></div>
+                        <div id="return-history-area" style="margin-top:12px;"><h3>Lịch sử:</h3><div id="return-history-list"></div></div>
+                    </div>
+                </div>`;
+        document.body.appendChild(modal);
+        document.getElementById('close-return-detail').onclick = () => { modal.style.display = 'none'; };
+    }
+
+    // populate
+    document.getElementById('return-id-label').textContent = `#${returnReq.id || returnReq.tra_hang_id || ''}`;
+    document.getElementById('return-reason-text').textContent = returnReq.ly_do || returnReq.reason || returnReq.note || 'Không có';
+    document.getElementById('return-state-text').textContent = returnReq.trang_thai || returnReq.status || 'N/A';
+
+    const base = 'http://localhost:5000';
+
+    const itemsListEl = document.getElementById('return-items-list');
+    itemsListEl.innerHTML = '';
+    try {
+        const items = Array.isArray(returnReq.mat_hang) ? returnReq.mat_hang : (JSON.parse(returnReq.mat_hang || '[]') || []);
+        if (items.length === 0) itemsListEl.innerHTML = '<p>Không có sản phẩm</p>';
+        items.forEach(it => {
+            const name = it.ten_san_pham || it.ten || it.name || it.TenSP || it.productName || 'Sản phẩm';
+            const qty = it.so_luong || it.qty || it.quantity || 1;
+            const pid = it.ma_san_pham || it.MaSP || it.productId || '';
+            const imgPath = it.hinh_anh || it.HinhAnh || (`/uploads/product/${pid}.jpg`);
+            const imgUrl = (imgPath && (imgPath.startsWith('http') || imgPath.startsWith('https'))) ? imgPath : (imgPath.startsWith('/') ? base + imgPath : base + '/' + imgPath);
+            const row = document.createElement('div');
+            row.style.display = 'flex';
+            row.style.gap = '8px';
+            row.style.alignItems = 'center';
+            row.innerHTML = `<img src="${imgUrl}" alt="" style="width:56px;height:56px;object-fit:cover;border:1px solid #ddd;border-radius:6px;"> <div><div><strong>${name}</strong></div><div>Số lượng: ${qty}</div></div>`;
+            itemsListEl.appendChild(row);
+        });
+    } catch (e) { itemsListEl.innerHTML = '<p>Không có sản phẩm</p>'; }
+
+    const filesListEl = document.getElementById('return-files-list');
+    filesListEl.innerHTML = '';
+    try {
+        const files = Array.isArray(returnReq.tep_dinh_kem) ? returnReq.tep_dinh_kem : (JSON.parse(returnReq.tep_dinh_kem || '[]') || []);
+        if (files.length === 0) filesListEl.innerHTML = '<p>Không có ảnh đính kèm</p>';
+        files.forEach(f => {
+            const path = String(f || '');
+            const url = path.startsWith('http') ? path : (path.startsWith('/') ? base + path : base + '/uploads/tra_hang/' + path);
+            const a = document.createElement('a');
+            a.href = url;
+            a.target = '_blank';
+            a.style.display = 'inline-block';
+            a.style.margin = '6px';
+            a.innerHTML = `<img src="${url}" style="width:96px;height:96px;object-fit:cover;border:1px solid #ddd;border-radius:6px;">`;
+            filesListEl.appendChild(a);
+        });
+    } catch (e) { filesListEl.innerHTML = '<p>Không có ảnh đính kèm</p>'; }
+
+    const histEl = document.getElementById('return-history-list');
+    histEl.innerHTML = '';
+    try {
+        const history = Array.isArray(returnReq.history) ? returnReq.history : [];
+        if (history.length === 0) histEl.innerHTML = '<p>Không có lịch sử</p>';
+        history.forEach(h => {
+            const row = document.createElement('div');
+            row.style.padding = '6px 0';
+            row.style.borderBottom = '1px solid #eee';
+            const when = new Date(h.created_at || h.createdAt || h.createdAt || '');
+            row.innerHTML = `<div><small>${isNaN(when) ? '' : when.toLocaleString()}</small></div><div>${h.trang_thai_cu || h.trang_thai || ''} → ${h.trang_thai_moi || ''} <div style="color:#666">${h.ghi_chu || h.note || ''}</div></div>`;
+            histEl.appendChild(row);
+        });
+    } catch (e) { histEl.innerHTML = '<p>Không có lịch sử</p>'; }
+
+    modal.style.display = 'block';
+}
+
 // ✅ HÀM HỦY ĐƠN HÀNG THÔNG MINH - SỬA LẠI HOÀN TOÀN
-function showCancelModal() {
+async function showCancelModalAsync() {
     console.log('🔥 showCancelModal called');
-    console.log('Current order data:', currentOrderData);
+    console.log('Current order data (before refresh):', currentOrderData);
     
     if (!currentOrderData) {
         showErrorToast('Không tìm thấy thông tin đơn hàng');
         return;
     }
-    
-    // 🔥 PHÂN BIỆT LOẠI THANH TOÁN (sử dụng đúng tên trường)
-    console.log('Payment method:', currentOrderData.paymentMethod);
-    console.log('Payment status:', currentOrderData.paymentStatus);
-    
-    if (currentOrderData.paymentMethod === 'VNPAY' && currentOrderData.paymentStatus === 'Đã thanh toán') {
-        // ✅ VNPay đã thanh toán -> Hiển thị form hoàn tiền
-        console.log('✅ Showing VNPay refund modal');
-        showVNPayRefundModal(currentOrderData);
-    } else {
-        // ✅ COD hoặc chưa thanh toán -> Hiển thị modal hủy bình thường
-        console.log('✅ Showing normal cancel modal');
+
+    // Best-effort: refresh order from server so UI sees recent admin changes (e.g. PhuongThucThanhToan updated)
+    try {
+        // currentOrderData.id may be stored as id or MaHD/ma_don_hang depending on flow
+        const orderId = currentOrderData.id || currentOrderData.MaHD || currentOrderData.ma_don_hang;
+        if (orderId) {
+            const fresh = await fetchOrderDetail(orderId);
+            if (fresh) {
+                // merge fresh data into currentOrderData so downstream checks use up-to-date paymentMethod/status
+                currentOrderData = Object.assign({}, currentOrderData, fresh);
+                console.log('Refreshed order data from server:', currentOrderData);
+
+                // Update visible order detail fields so refund modal shows correct payment method/status
+                try {
+                    const pm = currentOrderData.orderPaymentMethod || currentOrderData.paymentMethod || currentOrderData.PhuongThucThanhToan || null;
+                    const ps = currentOrderData.paymentStatus || currentOrderData.TrangThaiThanhToan || '';
+                    const pmEl = document.getElementById('payment-method');
+                    const psEl = document.getElementById('payment-status');
+                    if (pmEl && pm) pmEl.textContent = getPaymentMethodName(pm);
+                    if (psEl) psEl.textContent = ps || psEl.textContent;
+                } catch (e) {
+                    console.warn('Could not update order detail DOM after refresh:', e);
+                }
+            }
+        }
+    } catch (e) {
+        console.warn('Could not refresh order before showing cancel modal:', e);
+    }
+
+    // After refresh (or best-effort), decide whether to show refund form or normal cancel
+    try {
+        // 🔥 PHÂN BIỆT TRƯỜNG HỢP ĐÃ NHẬN TIỀN (mở rộng): kiểm tra paymentStatus, paymentMethod và tinhtrang/status
+        console.log('Payment method (post-refresh):', currentOrderData.paymentMethod);
+        console.log('Payment status (post-refresh):', currentOrderData.paymentStatus);
+        console.log('Order status/tinhtrang (post-refresh):', currentOrderData.status || currentOrderData.tinhtrang);
+
+    // Consider both payment-status and order status (use original vietnamesse `tinhtrang` when available)
+    const paidIndicators = ['Đã thanh toán', 'Đang hoàn tiền', 'Đã nhận tiền', 'Đã nhận', 'Paid', 'PAID'];
+    const paymentStatus = String(currentOrderData.TrangThaiThanhToan || currentOrderData.paymentStatus || '').toLowerCase();
+    const isPaid = paidIndicators.some(ind => paymentStatus.includes(String(ind).toLowerCase()));
+
+    // also consider order.tinhtrang/status values that imply paid — prefer original `tinhtrang` (VN) before mapped `status` (english tokens)
+    const orderStatusValue = String(currentOrderData.tinhtrang || currentOrderData.status || '').toLowerCase();
+    const paidStatusHints = ['đã giao hàng', 'đã hoàn thành', 'đã thanh toán', 'đã nhận tiền', 'đang hoàn tiền'];
+    const statusIndicatesPaid = paidStatusHints.some(s => orderStatusValue.includes(s));
+
+        const shouldShowRefundForm = isPaid || statusIndicatesPaid || (currentOrderData.orderPaymentMethod && String(currentOrderData.orderPaymentMethod).toUpperCase() === 'VNPAY') || (currentOrderData.paymentMethod && String(currentOrderData.paymentMethod).toUpperCase() === 'VNPAY');
+
+        // Ensure cancel modal closed before showing refund modal
+        const cancelModal = document.getElementById('cancel-order-modal');
+        if (cancelModal) cancelModal.style.display = 'none';
+
+        if (shouldShowRefundForm) {
+            // If refund modal elements might be missing, log and try to initialize
+            const refundModal = document.getElementById('vnpay-refund-modal');
+            const refundForm = document.getElementById('refund-form');
+            console.log('Showing refund modal; elements found:', { refundModal: !!refundModal, refundForm: !!refundForm });
+
+            if (!refundModal || !refundForm) {
+                console.warn('Refund modal elements not found in DOM. Make sure orders.html contains #vnpay-refund-modal and #refund-form');
+            }
+
+            try {
+                showVNPayRefundModal(currentOrderData);
+            } catch (e) {
+                console.error('Error showing refund modal:', e);
+                // fallback: if refund modal exists, at least display it
+                if (refundModal) refundModal.style.display = 'block';
+            }
+        } else {
+            // Chưa nhận tiền -> Hiển thị modal hủy bình thường
+            console.log('✅ Order not paid — showing normal cancel modal');
+            showNormalCancelModal();
+        }
+    } catch (e) {
+        console.warn('Error determining cancel/refund UI after refresh:', e);
         showNormalCancelModal();
     }
 }
@@ -692,22 +1110,38 @@ async function cancelOrder() {
                     })
                 });
 
-                const result = await response.json();
+                const result = await response.json().catch(() => ({}));
+                console.log('cancelOrder -> API response', response.status, result);
                 if (!response.ok) {
-                    throw new Error(result.error || 'Không thể hủy đơn hàng.');
+                    const errMsg = result.error || 'Không thể hủy đơn hàng.';
+                    throw new Error(errMsg);
                 }
 
                 // 🔥 PHÂN BIỆT KẾT QUẢ TRẢ VỀ
-                if (result.data && result.data.cancelType === 'VNPAY_REFUND') {
-                    showVNPayCancelSuccessModal(result.data);
+                const payload = result.data || result;
+                try {
+                    if (result.data && result.data.updatedOrder) {
+                        currentOrderData = result.data.updatedOrder;
+                        console.log('Applied updatedOrder from cancel response to currentOrderData');
+                    }
+                } catch (e) { console.warn('Could not apply updatedOrder from cancel response', e); }
+                if (payload.cancelType === 'VNPAY_REFUND') {
+                    showVNPayCancelSuccessModal(payload);
                 } else {
-                    showNormalCancelSuccessModal(result.data || { orderId });
+                    showNormalCancelSuccessModal(payload || { orderId });
                 }
+
+                // Update UI immediately using server-provided label when available
+                const friendly = payload.orderStatus || payload.status || payload.orderStatusLabel || (payload.statusText) || (payload.status && typeof payload.status === 'string' ? payload.status : null) || 'Đã hủy';
+                try {
+                    updateOrderStatusInUI(orderId, friendly);
+                } catch (e) { console.warn('Failed to update UI badge after cancel', e); }
 
                 localStorage.removeItem('currentOrderId');
                 hideCancelModal();
                 closeOrderDetailModal();
-                renderOrders(customerId, document.getElementById('status-filter')?.value || 'all');
+                // await refresh so UI shows latest data
+                await renderOrders(customerId, document.getElementById('status-filter')?.value || 'all');
                 
             } catch (error) {
                 console.error('Lỗi khi hủy đơn hàng:', { orderId, error: error.message });
@@ -1881,9 +2315,11 @@ let currentOrderForRefund = null;
 
 // Hiển thị modal hoàn tiền VNPay
 function showVNPayRefundModal(order) {
-    console.log('📋 Showing VNPay refund modal for order:', order);
+    // Prefer order.orderPaymentMethod (from return API) but fall back to paymentMethod
+    const effectivePaymentMethod = (order && (order.orderPaymentMethod || order.paymentMethod || order.PhuongThucThanhToan)) || null;
+    console.log('📋 Showing VNPay refund modal for order:', order, 'effectivePaymentMethod=', effectivePaymentMethod);
     
-    currentOrderForRefund = order;
+    currentOrderForRefund = Object.assign({}, order, { paymentMethod: effectivePaymentMethod });
     const orderId = order.id || order.MaHD;
     const orderTotal = order.totalAmount || order.TongTien || 0;
     
@@ -2226,24 +2662,6 @@ function isValidAccountHolder(name) {
     return /^[a-zA-ZÀ-ỹ\s]{2,100}$/.test(name.trim());
 }
 
-// Remove listeners cũ
-function removeRefundListeners() {
-    const elements = [
-        'refund-type',
-        'cancel-reason-select', 
-        'refund-amount',
-        'other-reason-detail',
-        'confirm-bank-info',
-        'agree-terms'
-    ];
-    
-    elements.forEach(id => {
-        const el = document.getElementById(id);
-        if (el) {
-            el.replaceWith(el.cloneNode(true));
-        }
-    });
-}
 
 // ✅ ĐÓNG MODAL HOÀN TIỀN
 function closeRefundModal() {
@@ -2417,12 +2835,15 @@ function validateRefundForm() {
 
 // Validate form và enable/disable button
 function validateForm() {
-  const form = document.getElementById('refund-form');
-  const confirmBtn = document.getElementById('confirm-refund-btn');
-  const refundType = document.getElementById('refund-type').value;
-  const cancelReason = document.getElementById('cancel-reason').value;
-  const confirmBankInfo = document.getElementById('confirm-bank-info').checked;
-  const agreeTerms = document.getElementById('agree-terms').checked;
+    const form = document.getElementById('refund-form');
+    const confirmBtn = document.getElementById('confirm-refund-btn');
+    const refundTypeEl = document.getElementById('refund-type');
+    const refundType = refundTypeEl ? refundTypeEl.value : 'full';
+    // Note: the cancel reason select ID in the modal is 'cancel-reason-select'
+    const cancelReasonEl = document.getElementById('cancel-reason-select') || document.getElementById('cancel-reason');
+    const cancelReason = cancelReasonEl ? (cancelReasonEl.value || '') : '';
+    const confirmBankInfo = document.getElementById('confirm-bank-info') ? document.getElementById('confirm-bank-info').checked : false;
+    const agreeTerms = document.getElementById('agree-terms') ? document.getElementById('agree-terms').checked : false;
   
   let isValid = true;
   
@@ -2432,23 +2853,26 @@ function validateForm() {
   }
   
   // Check partial refund amount
-  if (refundType === 'partial') {
-    const refundAmount = parseFloat(document.getElementById('refund-amount').value) || 0;
-    if (refundAmount < 1000 || refundAmount > currentOrderForRefund.TongTien) {
-      isValid = false;
+    if (refundType === 'partial') {
+        const refundAmountEl = document.getElementById('refund-amount');
+        const refundAmount = refundAmountEl ? (parseFloat(refundAmountEl.value) || 0) : 0;
+        const orderTotal = currentOrderForRefund ? (currentOrderForRefund.totalAmount || currentOrderForRefund.TongTien || 0) : 0;
+        if (refundAmount < 1000 || refundAmount > orderTotal) {
+            isValid = false;
+        }
     }
-  }
   
   // Check other reason detail
-  if (cancelReason === 'other') {
-    const otherDetail = document.getElementById('other-reason-detail').value.trim();
-    if (!otherDetail || otherDetail.length > 500) {
-      isValid = false;
+    if (cancelReason === 'other') {
+        const otherDetailEl = document.getElementById('other-reason-detail');
+        const otherDetail = otherDetailEl ? (otherDetailEl.value || '').trim() : '';
+        if (!otherDetail || otherDetail.length > 500) {
+            isValid = false;
+        }
     }
-  }
   
   // Enable/disable confirm button
-  confirmBtn.disabled = !isValid;
+    if (confirmBtn) confirmBtn.disabled = !isValid;
 }
 
 // Add event listeners for form validation
@@ -2513,28 +2937,40 @@ async function processRefundCancellation() {
             confirmBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang xử lý...';
         }
         
+        // Prepare payload and log it for debugging
+        const payload = {
+            customerId: customerId,
+            reason: reasonText,
+            refundAmount: refundAmount,
+            refundType: refundType,
+            // ensure account number is digits only (server expects 8-20 digits)
+            bankAccount: bankAccount.replace(/\s/g, ''),
+            bankName: finalBankName,
+            accountHolder: accountHolder,
+            bankBranch: bankBranch || null
+        };
+        console.log('🔔 Refund cancel payload:', payload);
+
         const response = await fetch(`http://localhost:5000/api/orders/customer-orders/cancel/${orderId}`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${getToken()}`
             },
-            body: JSON.stringify({
-                customerId: customerId,
-                reason: reasonText,
-                refundAmount: refundAmount,
-                refundType: refundType,
-                bankAccount: bankAccount,
-                bankName: finalBankName,
-                accountHolder: accountHolder,
-                bankBranch: bankBranch || null
-            })
+                body: JSON.stringify(payload)
         });
         
         const result = await response.json();
         console.log('📡 API Response:', result);
-        
+
         if (result.success) {
+            // If server returned the updated order row, apply it locally so UI is in sync
+            try {
+                if (result.data && result.data.updatedOrder) {
+                    currentOrderData = result.data.updatedOrder;
+                    console.log('Applied updatedOrder from refund response to currentOrderData');
+                }
+            } catch (e) { console.warn('Could not apply updatedOrder from refund response', e); }
             // ✅ REFRESH NGAY LẬP TỨC TRƯỚC KHI HIỂN THI SUCCESS
             console.log('🔄 Refreshing orders list immediately...');
             
@@ -2708,10 +3144,16 @@ async function processCODCancellation(orderId, paymentMethod, paymentStatus) {
     });
 
     console.log('🔍 API Response status:', response.status);
-    const result = await response.json();
-    console.log('🔍 API Response data:', result);
+        const result = await response.json();
+        console.log('🔍 API Response data:', result);
 
-    if (response.ok && result.success) {
+        if (response.ok && result.success) {
+            try {
+                if (result.data && result.data.updatedOrder) {
+                    currentOrderData = result.data.updatedOrder;
+                    console.log('Applied updatedOrder from COD cancel response to currentOrderData');
+                }
+            } catch (e) { console.warn('Could not apply updatedOrder from COD cancel response', e); }
       // ✅ SUCCESS
       closeCODCancelModal();
       showErrorToast('✅ Hủy đơn hàng COD thành công!');
@@ -2754,28 +3196,8 @@ function closeCODCancelModal() {
 
 // ✅ CẬP NHẬT HÀM showCancelModal CHÍNH
 function showCancelModal() {
-    console.log('🔥 showCancelModal called');
-    console.log('Current order data:', currentOrderData);
-    
-    if (!currentOrderData) {
-        showErrorToast('Không tìm thấy thông tin đơn hàng');
-        return;
-    }
-    
-    console.log('Payment method:', currentOrderData.paymentMethod);
-    console.log('Payment status:', currentOrderData.paymentStatus);
-    
-    if (currentOrderData.paymentMethod === 'VNPAY' && currentOrderData.paymentStatus === 'Đã thanh toán') {
-        // ✅ VNPay đã thanh toán -> Hiển thị form hoàn tiền
-        console.log('✅ Showing VNPay refund modal');
-        showVNPayRefundModal(currentOrderData);
-    } else {
-        // ✅ COD hoặc chưa thanh toán -> Hiển thị modal hủy COD
-        console.log('✅ Showing COD cancel modal');
-        const orderId = currentOrderData.id || currentOrderData.MaHD;
-        const orderStatus = currentOrderData.status || currentOrderData.tinhtrang || 'pending';
-        showCancelOrderModalCOD(orderId, orderStatus, currentOrderData.paymentMethod, currentOrderData.paymentStatus);
-    }
+    // Delegate to async implementation (keeps compatibility with existing callers)
+    showCancelModalAsync().catch(e => console.error('Error in showCancelModalAsync:', e));
 }
 
 // ✅ Export functions to global scope
@@ -2783,7 +3205,9 @@ window.showCancelOrderModalCOD = showCancelOrderModalCOD;
 window.processCODCancellation = processCODCancellation;
 window.closeCODCancelModal = closeCODCancelModal;
 window.attachCODCancelEvents = attachCODCancelEvents;
-
+window.openReturnModal = openReturnModal;
+window.submitReturnRequest = submitReturnRequest;
+window.hideReturnModal = hideReturnModal;
 console.log('✅ COD Cancel system loaded successfully');
 
 // ✅ XÓA CÁC FUNCTION TRÙNG LẶP (nếu có)
@@ -2797,3 +3221,136 @@ if (window.confirmCancelOrderCOD) {
 if (window.closeCancelModal) {
     delete window.closeCancelModal;
 }
+
+// Utility: update order status badge in list and modal
+// NOTE: Do NOT default to 'Đã hủy' here — require callers to pass the exact status text.
+function updateOrderStatusInUI(orderId, statusText) {
+    try {
+        if (!orderId) return console.warn('updateOrderStatusInUI called without orderId');
+        if (!statusText) {
+            // Defensive: avoid accidentally showing 'Đã hủy' when callers omit the status.
+            console.warn('updateOrderStatusInUI called without statusText for order', orderId);
+            return;
+        }
+
+        // update list card
+        const card = document.querySelector(`.order-card[data-order-id="${orderId}"]`);
+        if (card) {
+            const badge = card.querySelector('.order-status');
+            if (badge) {
+                badge.textContent = statusText;
+                // update class based on keywords (simple heuristic)
+                if (/hủy|cancel/i.test(statusText)) {
+                    badge.className = `order-status status-cancelled`;
+                } else if (/hoàn tiền|refund|chờ hoàn tiền/i.test(statusText)) {
+                    badge.className = `order-status status-refunding`;
+                } else if (/hoàn thành|đã giao|completed|done/i.test(statusText)) {
+                    badge.className = `order-status status-complete`;
+                } else {
+                    // fallback
+                    badge.className = 'order-status';
+                }
+            }
+        }
+
+        // update modal if open and matches
+        const modalOrderIdEl = document.getElementById('order-id');
+        if (modalOrderIdEl && modalOrderIdEl.textContent.includes(`#${orderId}`)) {
+            const modalBadge = document.getElementById('order-status');
+            if (modalBadge) {
+                modalBadge.textContent = statusText;
+                if (/hủy|cancel/i.test(statusText)) {
+                    modalBadge.className = `order-status-badge status-cancelled`;
+                } else if (/hoàn tiền|refund|chờ hoàn tiền/i.test(statusText)) {
+                    modalBadge.className = `order-status-badge status-refunding`;
+                } else if (/hoàn thành|đã giao|completed|done/i.test(statusText)) {
+                    modalBadge.className = `order-status-badge status-complete`;
+                } else {
+                    modalBadge.className = 'order-status-badge';
+                }
+            }
+        }
+    } catch (e) { console.warn('updateOrderStatusInUI error', e); }
+}
+
+// Call cancel API and update UI (use server response when possible)
+async function markOrderCancelled(orderId, reason = 'Hủy bởi khách') {
+    if (!orderId) return { success: false, error: 'No orderId' };
+    if (!checkAuth()) return { success: false, error: 'Not authenticated' };
+    try {
+        console.log('markOrderCancelled -> request:', { orderId, reason });
+        const resp = await fetch(`http://localhost:5000/api/orders/customer-orders/cancel/${orderId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${getToken()}`
+            },
+            body: JSON.stringify({ customerId: getCustomerId(), reason })
+        });
+        const data = await resp.json().catch(() => ({}));
+        console.log('markOrderCancelled -> response', resp.status, data);
+        if (!resp.ok) {
+            console.error('Cancel API error', data);
+            showErrorToast(`❌ Lỗi hủy: ${data.error || 'Không xác định'}`);
+            return { success: false, error: data.error || 'API error', details: data };
+        }
+
+        // Prefer server-provided friendly status label if available
+        const friendly = data.orderStatus || data.status || 'Đã hủy';
+        updateOrderStatusInUI(orderId, friendly);
+
+        // close modal and refresh list
+        closeOrderDetailModal();
+        showErrorToast('✅ Hủy đơn hàng thành công');
+        const customerId = getCustomerId();
+        if (customerId) await renderOrders(customerId, document.getElementById('status-filter')?.value || 'all');
+
+        return { success: true, data };
+    } catch (e) {
+        console.error('markOrderCancelled error', e);
+        showErrorToast(`❌ Lỗi hủy: ${e.message}`);
+        return { success: false, error: e.message };
+    }
+}
+
+// export for manual use
+window.markOrderCancelled = markOrderCancelled;
+
+// Generic: change order status via API and update UI
+async function changeOrderStatus(orderId, newStatus, note = '') {
+    if (!orderId) return { success: false, error: 'No orderId' };
+    if (!newStatus) return { success: false, error: 'No status provided' };
+    try {
+        const url = `http://localhost:5000/api/orders/hoadon/${orderId}/trangthai`;
+        const resp = await fetch(url, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                // This endpoint in server is currently open (no auth) per orderRoutes.js; include token if needed
+                'Authorization': getToken() ? `Bearer ${getToken()}` : undefined
+            },
+            body: JSON.stringify({ trangthai: newStatus, ghichu: note })
+        });
+        const data = await resp.json().catch(() => ({}));
+        if (!resp.ok) {
+            console.error('changeOrderStatus API error', data);
+            return { success: false, error: data.error || 'API error', details: data };
+        }
+
+    // Update UI immediately with explicit status returned by API (or provided)
+    // If server returns a friendly label, prefer that; otherwise use newStatus.
+    const friendly = (data && data.orderStatus) ? data.orderStatus : newStatus;
+    updateOrderStatusInUI(orderId, friendly);
+
+        // Refresh list lightly
+        const customerId = getCustomerId();
+        if (customerId) renderOrders(customerId, document.getElementById('status-filter')?.value || 'all');
+
+        return { success: true, data };
+    } catch (e) {
+        console.error('changeOrderStatus error', e);
+        return { success: false, error: e.message };
+    }
+}
+
+window.changeOrderStatus = changeOrderStatus;

@@ -272,12 +272,13 @@ const AttendancePage = () => {
         </table>
       </div>
 
-      {/* Lịch chấm công chi tiết + Form tính lương */}
-      <div style={{ flex: '0 0 520px', maxWidth: 520 }}>
+  {/* Lịch chấm công chi tiết + Form tính lương */}
+  {/* Use a flexible right column so the calendar can expand to available space */}
+  <div style={{ flex: '1 1 auto', minWidth: 600 }}>
         <div style={{ fontWeight: 'bold', marginBottom: 8 }}>
           {selectedEmployee ? `${selectedEmployee.MaNV} - ${selectedEmployee.TenNV}` : ''}
         </div>
-        <table style={{ width: '100%', marginBottom: 16 }}>
+  <table style={{ width: '100%', marginBottom: 16 }}>
           <tbody>
             {getDayRows().map((row, rowIdx) => (
               <React.Fragment key={rowIdx}>
@@ -343,7 +344,7 @@ const AttendancePage = () => {
           </tbody>
         </table>
         {/* Các nút trạng thái và nút Lưu */}
-        <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
+  <div className="status-buttons" style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
           <button
             onClick={() => setSelectedStatus('Đi làm')}
             style={{ background: selectedStatus === 'Đi làm' ? '#4CAF50' : '#fff' }}
@@ -375,6 +376,7 @@ const AttendancePage = () => {
             Tăng ca
           </button>
           <button
+            className="save-btn"
             onClick={handleSaveChanges}
             style={{ background: '#28a745', color: '#fff', fontWeight: 'bold' }}
             disabled={Object.keys(pendingChanges).length === 0}
@@ -403,6 +405,7 @@ const AttendancePage = () => {
         {/* Form tính lương */}
         <div style={{ marginTop: 24 }}>
           <button
+            className="salary-btn"
             onClick={fetchSalary}
             style={{ background: '#1976d2', color: '#fff', fontWeight: 'bold', marginBottom: 8 }}
             disabled={!selectedEmployee}

@@ -1,7 +1,12 @@
 .thongke-page {
+  /* Move the whole stats page to the right so it doesn't get hidden under the app sidebar.
+     Assumption: sidebar width is ~220px. Adjust margin-left if your sidebar is wider/narrower. */
   padding: 25px;
   background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
   min-height: 100vh;
+  margin-left: 220px; /* shift page right to clear navigation */
+  transition: margin-left 220ms ease; /* smooth when sidebar toggles */
+  box-sizing: border-box;
 }
 
 .thongke-header {
@@ -503,6 +508,7 @@
 @media (max-width: 768px) {
   .thongke-page {
     padding: 15px;
+    margin-left: 0; /* remove shift on small screens */
   }
 
   .thongke-header {

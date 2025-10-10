@@ -13,6 +13,7 @@ import Receipt from './receipt.js';
 import KhuyenMai from './khuyenmai.js'
 import reportRoutes from './reportRoutes.js';
 import ChatRoutes from './chatRoute.js';
+import returnRoutes from './returnRoutes.js';
 //import reportRoutes from './routes/reportRoutes.js';
 import permissionRoutes from './authMiddleware.js';
 import Author from './author.js';
@@ -46,6 +47,8 @@ export const initRoutes = (app) => {
   app.use('/api/reports',reportRoutes);
   app.use('/api/chat',ChatRoutes);
   app.use('/api/reports', reportRoutes);
+  // Use Vietnamese route path so frontend requests to /api/tra-hang match
+  app.use('/api/tra-hang', returnRoutes);
   app.use('/api/permissions', permissionRoutes);
   app.use('/api/author',Author);
   app.use('/api/comments',Comment);

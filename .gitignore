@@ -1,3 +1,6 @@
 node_modules/
 .cache/
 .env
+# Ignore uploaded files but keep the uploads directory and a .gitkeep file
+/server/uploads/*
+!/server/uploads/.gitkeep

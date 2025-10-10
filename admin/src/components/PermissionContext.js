@@ -40,10 +40,37 @@ export const PermissionProvider = ({ children }) => {
   // eslint-disable-next-line
 }, []);
 
+  // Normalize strings: remove diacritics, lowercase, trim
+  const normalize = (s) => {
+    if (!s && s !== '') return '';
+    try {
+      return String(s)
+        .normalize('NFD')
+        .replace(/\p{Diacritic}/gu, '')
+        .toLowerCase()
+        .trim();
+    } catch (e) {
+      // fallback for older environments without Unicode property escapes
+      return String(s)
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .toLowerCase()
+        .trim();
+    }
+  };
+
   const hasPermission = (functionName, action) => {
-    const result = permissions.some(
-      (perm) => perm.TenCN === functionName && perm.HanhDong === action
-    );
+    const fnNorm = normalize(functionName);
+    const actNorm = normalize(action);
+
+    const result = permissions.some((perm) => {
+      const ten = normalize(perm.TenCN);
+      const hanh = normalize(perm.HanhDong);
+      // allow exact match or containing match for action (covers variants)
+      const actionMatches = hanh === actNorm || hanh.includes(actNorm) || actNorm.includes(hanh);
+      return ten === fnNorm && actionMatches;
+    });
+
     console.log(`Checking permission: ${functionName} - ${action} => ${result}`, 'Permissions:', permissions);
     return result;
   };

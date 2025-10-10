@@ -97,19 +97,53 @@
                 </div>
 
                 <!-- Modal Actions -->
-                <div class="modal-actions">
-                    <div class="confirmation-actions">
-                        <button class="btn print-btn" onclick="window.print()">
-                            <i class="fas fa-print"></i> In hóa đơn
-                        </button>
-                        <button id="cancel-order-btn" class="btn cancel-btn" data-order-id="">
-                            Hủy đơn hàng
-                        </button>
-                        <a href="orders.html" class="btn home-btn">
-                            <i class="fas fa-home"></i> Về trang chủ
-                        </a>
-                    </div>
-                </div>
+        <div class="modal-actions">
+          <div class="confirmation-actions">
+            <button class="btn print-btn" onclick="window.print()">
+              <i class="fas fa-print"></i> In hóa đơn
+            </button>
+            <button id="cancel-order-btn" class="btn cancel-btn" data-order-id="">
+              Hủy đơn hàng
+            </button>
+            <!-- Request return button (hidden by default, shown by orders.js when order completed) -->
+            <button id="request-return-btn" class="btn request-return-btn" style="display:none;">
+              <i class="fas fa-undo-alt"></i> Yêu cầu trả hàng
+            </button>
+            <a href="orders.html" class="btn home-btn">
+              <i class="fas fa-home"></i> Về trang chủ
+            </a>
+          </div>
+        </div>
+                <!-- NEW: Modal tạo yêu cầu trả hàng -->
+<div id="return-request-modal" class="modal" style="display:none;">
+  <div class="modal-content" style="max-width:700px;">
+    <span class="close-modal" id="close-return-modal">&times;</span>
+    <div class="modal-header" style="background: linear-gradient(135deg, #6c757d, #495057); color:#fff;">
+      <h2><i class="fas fa-undo-alt"></i> Yêu cầu trả hàng</h2>
+    </div>
+    <div class="order-detail-body" style="padding:20px;">
+      <div class="form-section">
+        <h3>Chọn sản phẩm muốn trả</h3>
+        <div id="return-items-list" style="display:grid;gap:8px;"></div>
+      </div>
+
+      <div class="form-section">
+        <label for="return-reason"><strong>Lý do trả hàng</strong></label>
+        <textarea id="return-reason" rows="3" style="width:100%; padding:8px;" placeholder="Mô tả ngắn lý do..."></textarea>
+      </div>
+
+      <div class="form-section">
+        <label><strong>Ảnh chứng từ (tùy chọn)</strong></label>
+        <input type="file" id="return-files" multiple accept="image/*" />
+      </div>
+
+      <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:12px;">
+        <button class="btn btn-secondary" id="cancel-return-btn">Hủy</button>
+        <button class="btn btn-danger" id="submit-return-btn">Gửi yêu cầu</button>
+      </div>
+    </div>
+  </div>
+</div>
             </div>
         </div>
 
