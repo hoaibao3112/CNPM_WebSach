@@ -1,4 +1,8 @@
 /* styles/login.css */
+:root {
+  /* Adjust this if your header height changes */
+  --top-bar-height: 72px; /* estimated header height (logo 40px + paddings). Tweak if needed */
+}
 * {
   margin: 0;
   padding: 0;
@@ -8,10 +12,11 @@
 
 body {
   background: #ffebee; /* Màu đỏ pastel nhạt */
-  height: 100vh;
+  min-height: 100vh;
   display: flex;
   justify-content: center;
-  align-items: center;
+  /* allow vertical positioning from the top so we can push the login card below the fixed header */
+  align-items: flex-start;
   padding: 20px;
 }
 
@@ -22,8 +27,16 @@ body {
   border-radius: 15px;
   box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
   overflow: hidden;
+  /* push login below the fixed header without affecting header layout */
+  margin-top: calc(var(--top-bar-height) + 20px);
 }
 
+/* When header is injected into #load-header on this page, make its container span the full viewport width */
+#load-header .top-bar-container {
+  max-width: 100% !important;
+  margin: 0 !important;
+  padding: 0 20px !important;
+}
 .login-form {
   padding: 40px;
 }
