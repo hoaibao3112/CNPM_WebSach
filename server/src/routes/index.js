@@ -12,8 +12,7 @@ import orderRoutes from './orderRoutes.js';
 import Receipt from './receipt.js';
 import KhuyenMai from './khuyenmai.js'
 import reportRoutes from './reportRoutes.js';
-import ChatRoutes from './chatRoute.js';
-import returnRoutes from './returnRoutes.js';
+import ChatRoutes from './chatRoute.js';import returnRoutes from './returnRoutes.js';
 //import reportRoutes from './routes/reportRoutes.js';
 import permissionRoutes from './authMiddleware.js';
 import Author from './author.js';
