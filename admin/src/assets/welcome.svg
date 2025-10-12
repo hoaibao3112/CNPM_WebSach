@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Simple decorative welcome SVG used as hero image -->
+<svg width="1200" height="280" viewBox="0 0 1200 280" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <linearGradient id="g1" x1="0%" x2="100%" y1="0%" y2="0%">
+      <stop offset="0%" stop-color="#7c3aed"/>
+      <stop offset="50%" stop-color="#06b6d4"/>
+      <stop offset="100%" stop-color="#f59e0b"/>
+    </linearGradient>
+    <filter id="f1" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="8" result="b" />
+      <feBlend in="SourceGraphic" in2="b" mode="normal"/>
+    </filter>
+  </defs>
+
+  <rect width="1200" height="280" fill="#fff"/>
+
+  <g transform="translate(40,16)">
+    <path d="M0 120 C120 20, 280 20, 400 120 C520 220, 680 220, 800 120 C920 20, 1080 20, 1200 120 L1200 280 L0 280 Z"
+      fill="url(#g1)" opacity="0.95" filter="url(#f1)"/>
+
+    <text x="60" y="130" font-family="Segoe UI, Roboto, 'Helvetica Neue', Arial" font-size="88" fill="#ffffff" font-weight="700">Welcome</text>
+    <text x="62" y="200" font-family="Segoe UI, Roboto, 'Helvetica Neue', Arial" font-size="28" fill="#ffffff" opacity="0.95">Chào mừng đến trang quản trị</text>
+  </g>
+</svg>

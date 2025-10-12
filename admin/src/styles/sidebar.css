@@ -9,14 +9,62 @@
   display: flex;
   flex-direction: column;
   transition: width 0.3s ease;
+  z-index: 1200; /* keep sidebar above normal content */
 }
 
 .sidebar.open {
-  width: 200px;
+  width: 220px;
 }
 
 .sidebar.closed {
-  width: 20px;
+  width: 64px;
+}
+
+/* Prefer controlling content offset via body classes (set by Sidebar component) */
+body.sidebar-open .admin-home { margin-left: 220px !important; }
+body.sidebar-closed .admin-home { margin-left: 64px !important; }
+
+/* Make popovers/modals safe from transforms and render above sidebar */
+.portal-safe, .ant-modal, .modal, .popover, .rc-dropdown, .dropdown {
+  z-index: 3000 !important;
+  transform: none !important;
+}
+
+/* Ensure Ant Design modals and common custom modals are centered and their footers align actions to the right */
+.ant-modal {
+  z-index: 4000 !important;
+}
+.ant-modal .ant-modal-content {
+  /* make sure modal content is not affected by parent containers */
+  position: relative;
+  transform: none !important;
+}
+.ant-modal-footer {
+  display: flex !important;
+  justify-content: flex-end !important;
+  gap: 10px;
+}
+
+/* Custom modal patterns used in repo: make them fixed & centered so padding on page doesn't shift them */
+.modal-overlay { position: fixed; left: 0; top: 0; right: 0; bottom: 0; }
+.modal {
+  position: fixed !important;
+  left: 50% !important;
+  top: 50% !important;
+  transform: translate(-50%, -50%) !important;
+  z-index: 4000 !important;
+  max-width: 960px;
+  width: calc(100% - 48px);
+}
+.modal .modal-actions-floating {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+/* Buttons inside modals should not be translated by parent transforms */
+.modal .btn, .ant-modal .btn, .ant-modal-footer .ant-btn {
+  transform: none !important;
 }
 
 /* Header */
@@ -41,6 +89,7 @@
   border: none;
   cursor: pointer;
   font-size: 18px;
+  padding: 6px;
 }
 
 /* Navigation List */
@@ -65,31 +114,31 @@
   font-size: 16px;
   display: flex;
   align-items: center;
-  padding: 10px;
-  border-radius: 5px;
-  transition: all 0.3s ease;
+  padding: 10px 12px;
+  border-radius: 8px;
+  transition: background-color 0.2s ease, transform 0.15s ease;
   position: relative;
 }
 
 .sidebar ul li a span.material-icons {
-  margin-right: 10px;
+  margin-right: 12px;
   font-size: 20px;
 }
 
 /* Hover effect */
 .sidebar ul li a:hover {
-  background-color: #34495e;
-  transform: translateX(5px);
+  background-color: rgba(255,255,255,0.04);
+  transform: translateX(4px);
 }
 
 /* Active state - trang hiện tại */
 .sidebar ul li a.active,
 .sidebar ul li .active {
-  background: linear-gradient(135deg, #e74c3c, #c0392b) !important;
+  background: linear-gradient(135deg, #ff6b6b, #ff4757) !important;
   color: #ffffff !important;
-  font-weight: bold;
-  box-shadow: 0 4px 15px rgba(231, 76, 60, 0.3);
-  border-left: 4px solid #ffffff;
+  font-weight: 600;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.35);
+  border-left: 4px solid rgba(255,255,255,0.9);
 }
 
 /* Active state với hiệu ứng đặc biệt */
@@ -132,6 +181,7 @@
 /* Đóng sidebar */
 .sidebar.closed ul li a {
   justify-content: center;
+  padding: 12px 0;
 }
 
 .sidebar.closed ul li a span.material-icons {
@@ -214,8 +264,51 @@
   margin-top: auto;
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  padding: 10px;
+  gap: 8px;
+  padding: 12px;
+  border-top: 1px solid rgba(255,255,255,0.04);
+  background: linear-gradient(180deg, rgba(255,255,255,0.01), transparent);
+}
+
+.sidebar-footer .footer-link {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 6px;
+  color: #ecf0f1;
+  text-decoration: none;
+  transition: background-color 0.15s ease, transform 0.12s ease;
+}
+
+.sidebar-footer .footer-link:hover {
+  background-color: rgba(255,255,255,0.03);
+  transform: translateX(3px);
+}
+
+.sidebar-footer .footer-link.active {
+  background: linear-gradient(135deg, #ff6b6b, #ff4757);
+  box-shadow: 0 6px 18px rgba(0,0,0,0.35);
+}
+
+/* Ensure visited footer links keep sidebar color and remove default underline */
+.sidebar-footer .footer-link:visited {
+  color: #ecf0f1;
+  text-decoration: none;
+}
+
+/* Footer icon styling */
+.sidebar-footer .footer-link .material-icons {
+  font-size: 20px;
+  line-height: 1;
+  color: #cfe8ff;
+}
+
+/* Remove link focus outline but keep accessibility via box-shadow on keyboard focus */
+.sidebar-footer .footer-link:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(99,102,241,0.12);
+  border-radius: 6px;
 }
 
 /* Logout button */
@@ -233,14 +326,25 @@
 }
 
 .logout-btn:hover {
-  background-color: #e74c3c;
-  transform: translateX(5px);
+  background-color: rgba(231,76,60,0.9);
+  transform: translateX(3px);
 }
 
 .logout-btn.logged-in {
-  background-color: #27ae60;
+  background-color: #2ecc71;
 }
 
 .logout-btn.logged-in:hover {
-  background-color: #219a52;
+  background-color: #28b463;
+}
+
+/* Closed sidebar footer adjustments */
+.sidebar.closed .sidebar-footer {
+  align-items: center;
+}
+
+.sidebar.closed .sidebar-footer .footer-link,
+.sidebar.closed .sidebar-footer .logout-btn {
+  justify-content: center;
+  width: 100%;
 }

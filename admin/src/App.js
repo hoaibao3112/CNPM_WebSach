@@ -22,6 +22,7 @@ import AttendancePage from './pages/AttendancePage';
 import { PermissionContext } from './components/PermissionContext';
 import DiscountManagement from './pages/DiscountManagement.js';
 import RefundManagement from './pages/RefundManagement.js';
+import AdminHome from './pages/AdminHome';
 
 const PrivateRoute = ({ component: Component }) => {
   const isAuthenticated = !!localStorage.getItem('authToken');
@@ -61,7 +62,7 @@ const App = () => {
 
       <Route
         path="/admin"
-        element={<PrivateRoute component={() => <div>Trang quản trị</div>} />}
+        element={<PrivateRoute component={AdminHome} />}
       />
       <Route
         path="/admin/products"

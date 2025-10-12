@@ -1,0 +1,288 @@
+
+
+:root{
+  --bg-start: #f6f9ff;
+  --bg-end: #eef7fb;
+  --panel-bg: #ffffff;
+  --muted: #64748b;
+  --text: #0f172a;
+  --accent-1: #6366f1; /* indigo */
+  --accent-2: #06b6d4; /* cyan */
+  --accent-3: #ff7a59; /* warm */
+  --glass: rgba(255,255,255,0.65);
+  --shadow-1: 0 12px 36px rgba(2,6,23,0.06);
+  --shadow-2: 0 8px 22px rgba(2,6,23,0.06);
+}
+
+/* ---------- Container: main area (clears sidebar) ---------- */
+/* Increase margin-left if your sidebar is wider; this keeps content out of sidebar */
+.admin-home {
+  padding: 30px;
+  display: flex;
+  justify-content: flex-start;
+  gap: 24px;
+  font-size: 14px;
+  font-family: "Segoe UI", Roboto, Arial, sans-serif;
+  margin-left: 0; /* controlled by body.sidebar-open / body.sidebar-closed */
+  transition: padding 160ms ease, margin-left 220ms ease;
+  box-sizing: border-box;
+  min-height: 100vh;
+
+  /* Keep a soft gradient background here. If you want to use the ChaoMung image
+     as a background, set it inline in the React component to avoid css-loader
+     attempting to resolve '/img/...' during build. */
+  background-image: linear-gradient(180deg, rgba(246,249,255,0.95), rgba(238,247,251,0.9));
+  color: var(--text);
+}
+
+/* fallback when sidebar hasn't toggled body class for some reason */
+body.sidebar-open .admin-home { margin-left: 220px; }
+body.sidebar-closed .admin-home { margin-left: 64px; }
+
+/* ensure popovers mounted into body appear above sidebar */
+.portal-safe, .ant-modal, .modal, .popover, .rc-dropdown, .dropdown {
+  z-index: 3000 !important;
+  transform: none !important;
+}
+
+/* ---------- Left column: small info panel ---------- */
+.admin-home > .admin-left {
+  min-width: 240px;
+  max-width: 320px;
+  align-self: flex-start;
+}
+
+.admin-left > div {
+  background: linear-gradient(180deg, rgba(255,255,255,0.96), var(--panel-bg));
+  border-radius: 14px;
+  padding: 18px;
+  box-shadow: var(--shadow-2);
+  border: 1px solid rgba(15,23,42,0.04);
+}
+
+/* avatar placeholder */
+.admin-left .avatar {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent-1), var(--accent-2));
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: 700;
+  font-size: 18px;
+  box-shadow: 0 6px 18px rgba(99,102,241,0.12);
+  margin-bottom: 10px;
+}
+
+.admin-left h3 { margin: 0 0 6px 0; font-size: 16px; }
+.admin-left p { margin: 0; color: var(--muted); font-size: 13px; }
+
+/* ---------- Right column (main content) ---------- */
+.admin-home > .admin-right {
+  flex: 1 1 auto;
+  min-width: 520px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* ---------- Hero card (centered inside right column) ---------- */
+.admin-right .hero {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+  width: 100%;
+  max-width: none;         /* allow full use of right column */
+  margin: 0 auto;
+  background: linear-gradient(180deg, rgba(255,255,255,0.98), rgba(250,251,255,0.96));
+  border-radius: 18px;
+  box-shadow: var(--shadow-1);
+  padding: 36px 48px;      /* taller / longer feel */
+  position: relative;
+  overflow: visible;
+  border: 1px solid rgba(15,23,42,0.03);
+}
+
+/* decorative soft wave on top-right */
+.admin-right .hero::before {
+  content: "";
+  position: absolute;
+  right: -48px;
+  top: -48px;
+  width: 420px;
+  height: 160px;
+  background: linear-gradient(90deg, rgba(99,102,241,0.10), rgba(6,182,212,0.09));
+  border-radius: 60% 40% 50% 50%;
+  filter: blur(20px);
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* ---------- Hero image (bigger) ---------- */
+.hero-image {
+  width: 560px;            /* larger default width */
+  max-width: 55%;
+  height: auto;
+  border-radius: 12px;
+  flex-shrink: 0;
+  box-shadow: 0 18px 44px rgba(2,132,199,0.08);
+  transition: transform 300ms ease, box-shadow 300ms ease;
+  z-index: 1;
+}
+
+.hero-image:hover {
+  transform: translateY(-6px) scale(1.02);
+  box-shadow: 0 24px 64px rgba(2,132,199,0.11);
+}
+
+/* ---------- Text area ---------- */
+.hero-text { flex: 1; z-index: 2; display: flex; flex-direction: column; gap: 12px; }
+
+/* gradient headline, larger */
+.hero-text h1 {
+  margin: 0 0 6px 0;
+  font-size: 44px;
+  font-weight: 800;
+  line-height: 1.03;
+  background: linear-gradient(90deg, var(--accent-1), var(--accent-2));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  letter-spacing: 0.2px;
+}
+
+/* ---------- Date/time badge (larger, clear) ---------- */
+.datetime {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  background: linear-gradient(90deg, rgba(6,182,212,0.14), rgba(99,102,241,0.10));
+  color: #06203a;
+  font-weight: 700;
+  margin-bottom: 6px;
+  font-size: 18px;
+  padding: 10px 16px;
+  border-radius: 999px;
+  border: 1px solid rgba(15,23,42,0.04);
+  box-shadow: 0 8px 20px rgba(99,102,241,0.06);
+}
+
+/* allow splitting date/time into two lines if desired */
+.datetime .time { font-weight: 800; }
+.datetime .date { font-weight: 600; opacity: 0.9; font-size: 14px; }
+
+/* ...existing code... */
+.subtitle {
+  color: var(--text);        /* dùng màu chữ chính để rõ ràng */
+  font-size: 20px;          /* tăng kích thước */
+  font-weight: 700;         /* in đậm */
+  line-height: 1.45;
+  margin-bottom: 18px;
+  text-shadow: 0 1px 0 rgba(255,255,255,0.6); /* nhẹ để nổi bật trên nền sáng */
+}
+/* ...existing code... */
+
+/* quick actions */
+.quick-actions { display: flex; gap: 12px; flex-wrap: wrap; }
+
+.btn {
+  padding: 10px 16px;
+  border-radius: 12px;
+  border: 1px solid rgba(15,23,42,0.06);
+  background: rgba(255,255,255,0.95);
+  cursor: pointer;
+  font-weight: 700;
+  transition: box-shadow 160ms ease, background 160ms ease;
+  color: var(--text);
+  box-shadow: 0 6px 18px rgba(15,23,42,0.05);
+  font-size: 14px;
+  transform: none !important; /* prevent inherited transforms from sidebar hover */
+}
+
+.btn.primary {
+  background: linear-gradient(90deg, var(--accent-1), var(--accent-2));
+  color: #fff;
+  border: none;
+  box-shadow: 0 12px 36px rgba(99,102,241,0.16);
+}
+
+.btn.ghost {
+  background: transparent;
+  border: 1px dashed rgba(15,23,42,0.06);
+  color: var(--muted);
+}
+
+/* subtle cards */
+.card {
+  background: var(--panel-bg);
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: var(--shadow-2);
+  border: 1px solid rgba(15,23,42,0.03);
+}
+
+/* fade in */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 1200px) {
+  .admin-home { margin-left: 240px; padding: 24px; }
+  .hero-image { width: 480px; max-width: 50%; }
+  .hero-text h1 { font-size: 40px; }
+}
+
+@media (max-width: 980px) {
+  .admin-home { margin-left: 200px; padding: 20px; }
+  .hero-text h1 { font-size: 36px; }
+  .hero-image { width: 420px; max-width: 48%; }
+}
+
+@media (max-width: 768px) {
+  .admin-home {
+    margin-left: 0;            /* sidebar overlays on mobile */
+    flex-direction: column;
+    align-items: stretch;
+    padding: 16px;
+  }
+
+  .admin-home > .admin-left,
+  .admin-home > .admin-right {
+    max-width: 100%;
+    min-width: 0;
+    flex: 1 1 auto;
+  }
+
+  .admin-right .hero {
+    flex-direction: column-reverse;
+    text-align: center;
+    padding: 18px;
+  }
+
+  .hero-image {
+    width: 100%;
+    max-height: 320px;
+    object-fit: cover;
+    border-radius: 10px;
+  }
+
+  .hero-text h1 { font-size: 26px; }
+  .datetime { font-size: 16px; padding: 8px 12px; }
+  .quick-actions { justify-content: center; }
+}
+
+/* ---------- Sidebar-collapsed variants (common patterns) ---------- */
+/* Adjust margin-left when sidebar is collapsed; update selectors if your project uses different class names */
+.sidebar.closed ~ .main-content .admin-home,
+.sidebar.closed + .main-content .admin-home,
+body.sidebar-closed .admin-home,
+.app-admin.sidebar-closed .admin-home {
+  margin-left: 96px !important;
+}
+
+/* If you still see overlap, increase the default margin-left above or uncomment the strong override below */
+/* .admin-home { margin-left: 320px !important; } */

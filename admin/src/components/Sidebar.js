@@ -8,6 +8,20 @@ import { PermissionContext } from './PermissionContext';
 
 const Sidebar = () => {
   const [isOpen, setIsOpen] = useState(true);
+  // sync a body-level class so portal/popover/modal elements can react when sidebar toggles
+  React.useEffect(() => {
+    try {
+      document.body.classList.toggle('sidebar-open', isOpen);
+      document.body.classList.toggle('sidebar-closed', !isOpen);
+    } catch (e) {
+      // ignore non-browser env
+    }
+    return () => {
+      try {
+        document.body.classList.remove('sidebar-open', 'sidebar-closed');
+      } catch {}
+    };
+  }, [isOpen]);
   const navigate = useNavigate();
   const location = useLocation();
   const { hasPermission } = useContext(PermissionContext);
@@ -27,7 +41,7 @@ const Sidebar = () => {
     { to: '/admin/receipt', icon: 'receipt', text: 'Quản lý phiếu nhập', permission: 'Phiếu nhập' },
     { to: '/admin/khuyenmai', icon: 'local_offer', text: 'Quản lý khuyến mãi', permission: 'Khuyến mãi' },
     { to: '/admin/refunds', icon: 'undo', text: 'Hoàn tiền đơn hàng', permission: 'Hoàn tiền đơn hàng' },
-    { to: '/admin/profile', icon: 'person', text: 'Trang cá nhân', permission: null },
+  // Profile moved to footer so it stays pinned to the bottom
     { to: '/admin/salary', icon: 'payments', text: 'Tính lương', permission: 'Tính Lương' },
     { to: '/admin/leave', icon: 'event_busy', text: 'Xin nghỉ phép', permission: 'Nghĩ Phép' },
     { to: '/admin/attendance', icon: 'check_circle', text: 'Chấm công', permission: 'Chấm công' },
@@ -95,6 +109,14 @@ const Sidebar = () => {
 
       <div className="sidebar-footer">
         <UserInfo isSidebarOpen={isOpen} />
+        {/* Profile link pinned to footer */}
+        <NavLink
+          to="/admin/profile"
+          className={location.pathname === '/admin/profile' ? 'footer-link active' : 'footer-link'}
+        >
+          <span className="material-icons">person</span>
+          {isOpen && <span className="menu-text">Trang cá nhân</span>}
+        </NavLink>
         <button
           className="logout-btn logged-in"
           onClick={handleLogout}
