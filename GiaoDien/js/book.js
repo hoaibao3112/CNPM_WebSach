@@ -695,3 +695,128 @@ document.addEventListener('DOMContentLoaded', () => {
 window.addToCart = addToCart;
 window.viewDetail = viewDetail;
 // window.showAllProducts = showAllProducts;
+
+
+// ============================
+// Load danh sách khuyến mãi và xử lý chọn "Tất cả" hoặc 1 khuyến mãi
+// ============================
+async function loadPromotionsFromAPI() {
+  const discountSelect = document.getElementById('discountSelect');
+  const dealHotContainer = document.getElementById('deal-hot-list');
+  const mainContainer = document.getElementById('search-book-list');
+
+  if (!discountSelect || !dealHotContainer || !mainContainer) {
+    console.error('Missing element(s): discountSelect / deal-hot-list / search-book-list');
+    return;
+  }
+
+  // Reset dropdown và container
+  discountSelect.innerHTML = '<option value="">Tất cả</option>';
+  dealHotContainer.innerHTML = '';
+
+  try {
+    console.log('[promotions] fetching /api/books/promotions');
+    const response = await fetch('http://localhost:5000/api/books/promotions', {
+      headers: { 'Accept': 'application/json' }
+    });
+
+    if (!response.ok) throw new Error(`Lỗi HTTP khi lấy promotions: ${response.status}`);
+    const data = await response.json();
+    console.log('[promotions] data:', data);
+
+    if (!Array.isArray(data)) throw new Error('Dữ liệu promotions trả về không phải mảng');
+
+    // append promotions vào select
+    data.forEach(promo => {
+      const option = document.createElement('option');
+      option.value = String(promo.MaKM);
+      option.textContent = promo.endpoint;
+      discountSelect.appendChild(option);
+    });
+
+    // Mặc định hiển thị tất cả sản phẩm (dùng /api/product)
+    discountSelect.value = "";
+    await loadAllProductsToMain();
+
+    // Bắt sự kiện onchange
+    discountSelect.addEventListener('change', async () => {
+      const selectedId = discountSelect.value;
+      console.log('[promotions] changed to', selectedId);
+
+      if (selectedId === "") {
+        // nếu chọn "Tất cả" -> gọi endpoint chung /api/product
+        await loadAllProductsToMain();
+      } else {
+        await loadProductsByPromotion(selectedId);
+      }
+    });
+
+  } catch (error) {
+    console.error('Lỗi khi tải khuyến mãi:', error);
+    discountSelect.innerHTML = '<option value="">Không tải được khuyến mãi</option>';
+  }
+}
+
+async function loadAllProductsToMain() {
+  const mainContainer = document.getElementById('search-book-list');
+  if (!mainContainer) return;
+  mainContainer.innerHTML = '<p>Đang tải tất cả sản phẩm...</p>';
+
+  try {
+    console.log('[products] fetching /api/product');
+    const res = await fetch('http://localhost:5000/api/product', {
+      headers: { 'Accept': 'application/json' }
+    });
+
+    if (!res.ok) {
+      const text = await res.text().catch(() => '');
+      throw new Error(`HTTP ${res.status} ${text}`);
+    }
+
+    const allProducts = await res.json();
+    console.log('[products] allProducts:', allProducts);
+    displayProducts(allProducts, 'search-book-list');
+  } catch (err) {
+    console.error('Không tải được tất cả sản phẩm:', err);
+    mainContainer.innerHTML = `<p>Không tải được tất cả sản phẩm: ${escapeHtml(err.message || String(err))}</p>`;
+  }
+}
+
+// ============================
+// Lấy sản phẩm theo khuyến mãi
+// ============================
+async function loadProductsByPromotion(promoId) {
+  const mainContainer = document.getElementById('search-book-list');
+  if (!mainContainer) return;
+  mainContainer.innerHTML = '<p>Đang tải sản phẩm khuyến mãi...</p>';
+
+  try {
+    console.log(`[promotions] fetching /api/books/promotions/${promoId}/products`);
+    const res = await fetch(`http://localhost:5000/api/books/promotions/${promoId}/products`, {
+      headers: { 'Accept': 'application/json' }
+    });
+
+    if (!res.ok) {
+      const text = await res.text().catch(() => '');
+      throw new Error(`HTTP ${res.status} ${text}`);
+    }
+
+    const products = await res.json();
+    console.log('[promotions] products:', products);
+
+    if (!Array.isArray(products)) {
+      mainContainer.innerHTML = '<p>Dữ liệu sản phẩm khuyến mãi không hợp lệ</p>';
+      return;
+    }
+
+    displayProducts(products, 'search-book-list');
+  } catch (err) {
+    console.error('Lỗi khi tải sản phẩm khuyến mãi:', err);
+    mainContainer.innerHTML = `<p>Không tải được sản phẩm khuyến mãi: ${escapeHtml(err.message || String(err))}</p>`;
+  }
+}
+
+// Khi DOM load xong
+document.addEventListener('DOMContentLoaded', () => {
+  loadPromotionsFromAPI();
+});

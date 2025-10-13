@@ -27,6 +27,9 @@ import cart from './cart.js';
 
 import VoucherRoutes from './voucher.js';
 import AttendanceAdmin from './AttendanceAdmin.js';
+import bookRoutes from './book.js';
+
+
 export const initRoutes = (app) => {
   app.use('/auth', authRoutes);
   app.use('/api/product', productRoutes); // Đăng ký API sản phẩm
@@ -56,4 +59,5 @@ export const initRoutes = (app) => {
   app.use('/api/cart',cart);
   app.use('/api/voucher', VoucherRoutes);
   app.use('/api/attendance_admin',AttendanceAdmin);
+  app.use('/api/books', bookRoutes);
 };

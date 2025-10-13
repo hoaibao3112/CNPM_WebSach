@@ -654,29 +654,70 @@ body {
   font-weight: 600;
 }
 
+/* custom select đẹp hơn */
 .discount-filter {
-  margin-bottom: 10px;
-}
-
-.discount-filter select {
+  position: relative;
+  display: block;
   width: 100%;
-  padding: 8px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  font-size: 14px;
-  cursor: pointer;
-  background-color: #fff;
-  transition: border-color 0.3s;
+  margin-bottom: 8px;
 }
 
+/* chọn style cho select: */
+.discount-filter select {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  width: 100%;
+  padding: 10px 40px 10px 14px; /* chừa chỗ cho mũi tên */
+  border-radius: 8px;
+  border: 1px solid #e6e6e6;
+  background: linear-gradient(180deg, #ffffff 0%, #fafafa 100%);
+  box-shadow: 0 2px 6px rgba(15,15,15,0.04);
+  font-size: 14px;
+  color: #333;
+  cursor: pointer;
+  transition: border-color .18s ease, box-shadow .18s ease, transform .08s ease;
+  line-height: 1.3;
+}
+
+/* custom arrow (SVG data URI) */
+.discount-filter select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23333' stroke-width='1.6' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 12px 8px;
+  padding-right: 44px;
+}
+
+/* focus state */
 .discount-filter select:focus {
   outline: none;
   border-color: #d32f2f;
+  box-shadow: 0 6px 18px rgba(211,47,47,0.12);
+  transform: translateY(-1px);
 }
 
+/* option: (browser-dependent; limited control) */
 .discount-filter select option {
   padding: 8px;
+  font-size: 14px;
 }
+
+/* phần mô tả hiển thị text đầy đủ */
+.promo-description {
+  margin-top: 8px;
+  font-size: 13px;
+  color: #444;
+  background: #fff;
+  border: 1px solid #f0f0f0;
+  padding: 10px;
+  border-radius: 8px;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.03);
+  min-height: 44px;
+  display: none; /* hiển thị khi có nội dung */
+  white-space: pre-wrap;
+}
+
 
 #deal-hot-list {
   display: none; /* Ẩn mặc định */
@@ -714,3 +755,151 @@ body {
   box-shadow: 0 1px 3px rgba(0,0,0,0.1);
 }
 /* End Sidebar */
+
+
+/* ========== Responsive ========== */
+
+/* Tablet */
+@media (max-width: 768px) {
+  /* Chỉnh sidebar xuống dưới, giảm padding main-content */
+  .container {
+    flex-direction: column;
+    padding: 0 10px;
+  }
+
+  .sidebar {
+    width: 100%;
+    min-width: unset;
+    margin-bottom: 20px;
+  }
+
+  .main-content {
+    padding: 10px;
+  }
+
+  /* Header cho tablet */
+  .top-bar-container {
+    display: flex;
+    flex-direction: column; /* xếp logo + search + menu xuống */
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .logo {
+    max-width: 150px; /* thu nhỏ logo */
+  }
+
+  .search-container {
+    width: 100%;
+  }
+
+  .top-links {
+    flex-wrap: wrap;
+    width: 100%;
+    font-size: 14px;
+    gap: 6px;
+  }
+
+  /* Luôn 4 cột trên tablet */
+  #book-list,
+  #promotion-book-list,
+  #textbook-list,
+  #politics-book-list,
+  #science-book-list,
+  #search-book-list {
+    display: grid !important;
+    grid-template-columns: repeat(4, 1fr) !important;
+    gap: 10px !important;
+  }
+
+  .sidebar {
+    width: 100%;
+    min-width: 0;
+    margin: 0 0 10px 0; /* chỉ margin-bottom */
+    box-sizing: border-box;
+  }
+/* 
+  .main-content {
+    width: 100%;
+    padding: 0 5px; 
+    box-sizing: border-box;
+  } */
+}
+
+/* Mobile lớn - danh sách sách */
+@media (max-width: 430.98px) {
+  /* Grid 2 cột */
+  #book-list,
+  #promotion-book-list,
+  #textbook-list,
+  #politics-book-list,
+  #science-book-list,
+  #search-book-list {
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 6px !important;
+  }
+
+  /* Item nhỏ hơn */
+  .product-item {
+    font-size: 12px;
+  }
+
+  /* Logo thu nhỏ */
+  .logo {
+    max-width: 120px;
+    margin: 0 auto;
+  }
+
+  /* Input tìm kiếm */
+  .search-container input {
+    font-size: 14px;
+    padding: 6px;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  /* Top-bar nếu có trên trang này */
+  .top-bar {
+    position: static;
+  }
+
+}
+
+
+/* Mobile nhỏ */
+@media (max-width: 375px) {
+  /* 3 cột */
+  #book-list,
+  #promotion-book-list,
+  #textbook-list,
+  #politics-book-list,
+  #science-book-list,
+  #search-book-list {
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 4px !important;
+  }
+
+  /* Giảm font, padding */
+  .btn-detail,
+  .btn-add-cart {
+    font-size: 10px;
+    padding: 5px 0;
+  }
+
+  .logo {
+    max-width: 100px;
+  }
+
+  .search-container input {
+    font-size: 12px;
+    padding: 4px;
+  }
+
+  .top-links {
+    display: block; /* xếp dọc */
+    font-size: 11px;
+    text-align: center;
+  }
+}

@@ -7,6 +7,8 @@
   <title>Giỏ hàng - Trung Phong</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="stylesheet" href="styles/cart.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+  <link rel="stylesheet" href="styles/map.css">
 </head>
 
 <body>
@@ -154,6 +156,26 @@
             <input type="checkbox" id="save-info">
             <label for="save-info">Lưu thông tin cho lần mua sau</label>
           </div>
+
+          <!-- Thêm map html ở đây -->
+          <div class="map_container">
+              <div class="input">
+                  <input type="text" placeholder="Vui lòng chọn địa chỉ" value="" id="input_field" readonly>
+                  <button type="submit" id="input_button">Tìm</button>
+                  <button type="submit" id="delete_button">Xóa</button>
+              </div>
+              <div id="map"></div>
+              <div class="calculation">
+                  <div class="item">
+                      <span class="label">Khoảng cách:</span>
+                      <span class="value" id="distance">0 km</span>
+                  </div>
+                  <div class="item">
+                      <span class="label">Thời gian:</span>
+                      <span class="value" id="duration">0 phút</span>
+                  </div>
+              </div>
+          </div>
         </div>
 
         <div class="form-group">
@@ -220,6 +242,8 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <script src="js/cart.js"></script>
   <script src="js/loadHeader.js"></script>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="js/map.js"></script>
 </body>
 
 </html>

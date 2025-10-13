@@ -609,7 +609,7 @@ h2 {
 .container {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 20px;
+  /* padding: 20px; */
 }
 
 .form-group {
@@ -904,4 +904,225 @@ h2 {
   resize: none;
   font-size: 14px;
   height: 50px;
+}
+
+/* ================================
+   📱 RESPONSIVE — CART PAGE
+================================ */
+
+/* Tablet nhỏ & màn dưới 768px */
+@media (max-width: 768px) {
+  .cart-table th,
+  .cart-table td {
+    padding: 12px 8px;
+    font-size: 1rem;
+  }
+
+  .cart-summary {
+    width: 100%;
+    padding: 20px;
+  }
+
+  .cart-buttons {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .continue-btn,
+  .update-btn,
+  .checkout-btn {
+    width: 100%;
+    font-size: 1rem;
+  }
+
+  .product-info {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 5px;
+  }
+
+  .product-info img {
+    max-width: 80px;
+    margin-bottom: 5px;
+  }
+
+  .product-info h3 {
+    font-size: 1.05rem;
+    line-height: 1.4;
+  }
+
+  /* Ẩn bớt cột không cần thiết */
+  .cart-table .total-col,
+  .cart-table .price-col {
+    display: none;
+  }
+}
+
+/* ============================
+   📱 Responsive Coupon Input
+============================ */
+/* 430px ↓ */
+
+@media (max-width: 431px) {
+  .coupon-box {
+    display: flex;
+    flex-direction: column; 
+    align-items: stretch;   
+    gap: 10px;
+  }
+
+  .top-right-button {
+    position: static;  
+  }
+  
+  .page-header {
+    flex-direction: column;
+    align-items: flex-start; 
+    gap: 0;                 
+  }
+
+  .my-orders-btn {
+    margin-bottom: 10px;     
+    min-height: 44px;  
+    padding: 8px 14px;
+  }
+
+  .coupon-input {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .coupon-input input,
+  .apply-btn {
+    width: 100%;
+    min-height: 44px;
+    box-sizing: border-box;
+  }
+
+  .coupon-section p {
+    font-size: 0.95rem;
+    text-align: left;
+    margin-bottom: 5px;
+  }
+
+  .coupon-input {
+    width: 100%;
+    font-size: 1rem;
+  }
+
+  .coupon-input input {
+    width: 100%;
+    padding: 10px;
+    box-sizing: border-box;
+  }
+
+  .apply-btn {
+    width: 100%;
+    font-size: 1rem;
+    padding: 12px;
+  }
+
+
+
+
+  html, body {
+    -webkit-text-size-adjust: 100%;
+    -ms-text-size-adjust: 100%;
+  }
+  
+  .top-right-button {
+    width: 100%;
+    display: flex;
+    justify-content: flex-end; 
+    margin: 0 12px 10px 10px;      
+  }
+  
+  .top-right-button .my-orders-btn {
+    font-size: 0.95rem;       
+    padding: 8px 12px;
+    min-height: 40px;     
+    line-height: 1;
+    align-content: center;
+  }
+
+  .page-title {
+    font-size: 1.75rem;        
+    line-height: 1.15;
+    margin: 0 0 20px 0;
+    text-align: center;
+    letter-spacing: 0.2px;
+  }
+
+  .coupon-section p {
+    font-size: 0.9rem;
+    margin: 0 0 6px 0;
+  }
+
+  .coupon-input input {
+    font-size: 0.95rem;
+    padding: 8px;
+  }
+
+  .apply-btn {
+    font-size: 0.95rem;
+    padding: 10px;
+  }
+
+  .cart-table th,
+  .cart-table td {
+    font-size: 0.82rem;
+    padding: 8px 6px;
+  }
+
+  .order-summary h2,
+  .customer-info-section h2 {
+    font-size: 1rem;
+    margin-bottom: 8px;
+  }
+
+  .form-input,
+  .form-textarea {
+    font-size: 0.95rem;
+  }
+}
+
+/* 375px ↓ */
+@media (max-width: 376px) {
+  .coupon-box {
+    gap: 8px;
+  }
+
+  .coupon-input input {
+    font-size: 0.95rem;
+    padding: 8px;
+  }
+
+  .apply-btn {
+    font-size: 0.95rem;
+    padding: 10px;
+  }
+
+    .product-info img {
+    max-width: 40px;
+    margin-right: 10px;
+  }
+
+  .product-info h3 {
+    font-size: 1rem;
+    line-height: 1.2;
+  }
+
+  .qty-input {
+    width: 30px
+  }
+
+  .product-item{
+    gap:5px
+  }
+
+  .cart-table th, .cart-table td {
+    font-size: 0.75rem;
+    padding: 8px 4px;
+  }
 }
