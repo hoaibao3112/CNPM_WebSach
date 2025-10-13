@@ -783,16 +783,22 @@ async function applyPromo() {
 
 // Initialize
 document.addEventListener('DOMContentLoaded', async () => {
-  if (isLoggedIn()) await syncLocalCartToServer();
-  await renderCart();
-
+  // Always load provinces first so selects are ready
   const tinhthanh = document.getElementById('tinhthanh');
   if (tinhthanh) {
-    loadProvinces();
+    await loadProvinces();
     tinhthanh.addEventListener('change', loadDistricts);
     const quanhuyen = document.getElementById('quanhuyen');
     if (quanhuyen) quanhuyen.addEventListener('change', loadWards);
   }
+
+  if (isLoggedIn()) {
+    await syncLocalCartToServer();
+    // Load saved addresses from backend for logged-in users (provinces already loaded)
+    try { await loadSavedAddresses(); } catch (e) { console.warn('loadSavedAddresses failed', e); }
+  }
+
+  await renderCart();
 });
 
 // Export functions
@@ -820,6 +826,83 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 });
+
+// Load saved addresses from backend for logged-in customers
+async function loadSavedAddresses() {
+  if (!isLoggedIn()) return;
+  const customerId = getUserId();
+  if (!customerId) return;
+
+  try {
+    const res = await fetch(`http://localhost:5000/api/orders/customer-addresses/${customerId}`, {
+      headers: { 'Authorization': `Bearer ${getToken()}` }
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      console.warn('Failed to load saved addresses', data);
+      return;
+    }
+
+    // data may be { success: true, data: [...] } or an array directly
+    const list = Array.isArray(data) ? data : (data.data || []);
+    if (!list || list.length === 0) return;
+
+    const select = document.getElementById('saved-addresses');
+    if (!select) return;
+
+    // Clear existing options except placeholder
+    select.innerHTML = '<option value="">-- Chọn địa chỉ đã lưu --</option>';
+
+    list.forEach(addr => {
+      // Normalize fields: prefer explicit keys if present
+      const option = document.createElement('option');
+      // store minimal JSON as value so we can repopulate fields easily
+      const payload = {
+        id: addr.MaDiaChi || addr.id || addr.addressId || null,
+        name: addr.TenNguoiNhan || addr.recipientName || addr.name || '',
+        phone: addr.SDT || addr.recipientPhone || addr.phone || '',
+        detail: addr.DiaChiChiTiet || addr.detail || addr.address || '',
+        province: addr.TinhThanh || addr.province || addr.provinceCode || addr.provinceName || '',
+        district: addr.QuanHuyen || addr.district || addr.districtCode || addr.districtName || '',
+        ward: addr.PhuongXa || addr.ward || addr.wardCode || addr.wardName || ''
+      };
+      option.value = JSON.stringify(payload);
+      option.textContent = `${payload.detail || ''}${payload.ward ? ', ' + payload.ward : ''}${payload.district ? ', ' + payload.district : ''}${payload.province ? ', ' + payload.province : ''}`;
+      select.appendChild(option);
+    });
+
+    // helper: wait until a select has at least minOptions (used to wait for districts/wards to populate)
+    function waitForOptions(selectEl, minOptions = 2, timeout = 3000) {
+      return new Promise((resolve) => {
+        const start = Date.now();
+        (function poll() {
+          if (!selectEl) return resolve(false);
+          if (selectEl.options.length >= minOptions) return resolve(true);
+          if (Date.now() - start > timeout) return resolve(false);
+          setTimeout(poll, 100);
+        })();
+      });
+    }
+
+    // Dispatch custom events instead of filling the form here.
+    // The map/address handler (inside setupCartMap) will listen and perform the fill + auto-find.
+    select.addEventListener('change', () => {
+      if (!select.value) {
+        document.dispatchEvent(new CustomEvent('savedAddressCleared'));
+        return;
+      }
+      try {
+        const addr = JSON.parse(select.value);
+        document.dispatchEvent(new CustomEvent('savedAddressSelected', { detail: addr }));
+      } catch (e) {
+        console.warn('Invalid saved address payload', e);
+      }
+    });
+
+  } catch (err) {
+    console.error('Lỗi tải địa chỉ cũ:', err);
+  }
+}
 
 /* ================= Map (Leaflet + Nominatim + OSRM) for cart page ================= */
 (function setupCartMap() {
@@ -1047,10 +1130,84 @@ document.addEventListener('DOMContentLoaded', () => {
       }, 100);
     }
 
+    // Remove manual Find/Delete buttons from UI - we'll auto-run find when a saved address is selected
     const findBtn = document.getElementById('input_button');
     const delBtn = document.getElementById('delete_button');
-    if (findBtn) findBtn.addEventListener('click', onFindClick);
-    if (delBtn) delBtn.addEventListener('click', onDeleteClick);
+    try { if (findBtn) findBtn.remove(); } catch (e) {}
+    try { if (delBtn) delBtn.remove(); } catch (e) {}
+
+    // helper for waiting for options population
+    function waitForOptions(selectEl, minOptions = 2, timeout = 3000) {
+      return new Promise((resolve) => {
+        const start = Date.now();
+        (function poll() {
+          if (!selectEl) return resolve(false);
+          if (selectEl.options.length >= minOptions) return resolve(true);
+          if (Date.now() - start > timeout) return resolve(false);
+          setTimeout(poll, 100);
+        })();
+      });
+    }
+
+    // When a saved address is selected elsewhere, auto-fill fields and run find
+    document.addEventListener('savedAddressSelected', async (ev) => {
+      const addr = (ev && ev.detail) ? ev.detail : null;
+      if (!addr) return;
+      // Fill basic fields
+      document.getElementById('name').value = addr.name || '';
+      document.getElementById('phone').value = addr.phone || '';
+      document.getElementById('diachichitiet').value = addr.detail || '';
+
+      const tinh = document.getElementById('tinhthanh');
+      const quan = document.getElementById('quanhuyen');
+      const phuong = document.getElementById('phuongxa');
+
+      // Try to select province by value or text
+      if (tinh) {
+        let found = false;
+        for (let i = 0; i < tinh.options.length; i++) {
+          const opt = tinh.options[i];
+          if (String(opt.value).trim() === String(addr.province).trim() || opt.text.trim() === String(addr.province).trim()) {
+            tinh.selectedIndex = i;
+            tinh.dispatchEvent(new Event('change'));
+            found = true;
+            break;
+          }
+        }
+
+        if (found && quan) {
+          await waitForOptions(quan, 2, 3000);
+          for (let i = 0; i < quan.options.length; i++) {
+            const opt = quan.options[i];
+            if (String(opt.value).trim() === String(addr.district).trim() || opt.text.trim() === String(addr.district).trim()) {
+              quan.selectedIndex = i;
+              quan.dispatchEvent(new Event('change'));
+              break;
+            }
+          }
+        } else {
+          // fallback: set by text
+          setSelectByText('tinhthanh', addr.province);
+        }
+      }
+
+      if (phuong) {
+        await waitForOptions(phuong, 2, 3000);
+        for (let i = 0; i < phuong.options.length; i++) {
+          const opt = phuong.options[i];
+          if (String(opt.value).trim() === String(addr.ward).trim() || opt.text.trim() === String(addr.ward).trim()) {
+            phuong.selectedIndex = i;
+            phuong.dispatchEvent(new Event('change'));
+            break;
+          }
+        }
+      }
+
+      // Auto-run find to show route on map
+      try { await onFindClick(); } catch (e) { console.warn('auto find failed', e); }
+    });
+
+    // If cleared, clear map/route
+    document.addEventListener('savedAddressCleared', () => { onDeleteClick(); });
   });
 })();
-
