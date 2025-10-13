@@ -348,3 +348,145 @@ body.sidebar-closed .admin-home { margin-left: 64px !important; }
   justify-content: center;
   width: 100%;
 }
+
+
+/* --- Safety fixes for modals/popovers (fix refund modal being clipped / shifted) --- */
+
+/* Prevent ancestors from creating new containing block for fixed children */
+.admin-home, .main-content, #root, .app-admin {
+  transform: none !important;
+  will-change: auto !important;
+}
+
+/* Avoid horizontal scroll that clips fixed modal */
+html, body {
+  min-width: 100%;
+  overflow-x: hidden;
+}
+
+/* Force AntD modal wrappers and common modal wrappers to be viewport-fixed and centered */
+.ant-modal-root,
+.ant-modal-wrap,
+.ant-modal-wrap-centered,
+.ant-modal {
+  position: fixed !important;
+  left: 0 !important;
+  top: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  z-index: 4000 !important;
+  pointer-events: auto !important;
+}
+
+/* Modal content sized relative to viewport, not parent */
+.ant-modal .ant-modal-content,
+.modal {
+  position: relative !important;
+  transform: none !important;
+  max-width: min(960px, calc(100vw - 48px)) !important;
+  width: 100% !important;
+  box-sizing: border-box;
+}
+
+/* Custom overlays */
+.modal-overlay { position: fixed; left:0; top:0; right:0; bottom:0; z-index: 3999; }
+.modal {
+  left: 50% !important;
+  top: 50% !important;
+  transform: translate(-50%, -50%) !important;
+  z-index: 4000 !important;
+}
+
+/* Ensure popovers/dropdowns render above sidebar and don't inherit transforms */
+.portal-safe, .ant-popover, .popover, .rc-dropdown, .dropdown, .ant-picker-dropdown {
+  z-index: 4500 !important;
+  transform: none !important;
+}
+
+/* Buttons inside modal should not be affected by parent transforms */
+.modal .btn, .ant-modal .btn, .ant-modal-footer .ant-btn, .portal-safe .btn {
+  transform: none !important;
+}
+
+/* Remove large translate on sidebar hover to avoid creating layout side-effects */
+.sidebar ul li a:hover {
+  transform: none;
+  background-color: rgba(255,255,255,0.04);
+}
+
+/* Keep existing margin-left rules but avoid forcing scroll */
+body.sidebar-open .admin-home { margin-left: 220px; }
+body.sidebar-closed .admin-home { margin-left: 64px; }
+
+/* --- end safety fixes --- */
+/* debug / safety overrides */
+.ant-modal-wrap, .ant-modal-root, .modal-overlay {
+  position: fixed !important;
+  left: 0 !important;
+  top: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  transform: none !important;
+}
+.ant-modal {
+  position: fixed !important;
+  z-index: 5000 !important;
+}
+/* FORCE: center common modal/drawer wrappers (refund form will be centered) */
+.ant-modal-root,
+.ant-modal-wrap,
+.ant-modal-wrap-centered,
+.modal-overlay,
+.modal,
+.ant-drawer-wrap,
+.ant-drawer-mask {
+  position: fixed !important;
+  inset: 0 !important;                /* top:0; right:0; bottom:0; left:0 */
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  margin: 0 !important;
+  padding: 0 18px !important;
+  box-sizing: border-box !important;
+  z-index: 5000 !important;
+  pointer-events: auto !important;
+}
+
+/* Make modal/drawer content sized relative to viewport and centered */
+.ant-modal,
+.modal,
+.ant-drawer-content,
+.ant-drawer-content-wrapper {
+  position: relative !important;
+  transform: none !important;
+  left: auto !important;
+  top: auto !important;
+  max-width: min(980px, calc(100vw - 48px)) !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+/* If a drawer component is used, prevent it from sliding-in from right */
+.ant-drawer-content-wrapper,
+.ant-drawer {
+  transform: none !important;
+  right: auto !important;
+  left: auto !important;
+}
+
+/* Safety: prevent ancestor transforms from creating new containing blocks */
+.admin-home, .main-content, #root, .app-admin {
+  transform: none !important;
+  will-change: auto !important;
+}
+
+/* keep portal/popover above sidebar */
+.portal-safe, .ant-popover, .popover, .rc-dropdown, .dropdown, .ant-picker-dropdown {
+  z-index: 5500 !important;
+  transform: none !important;
+}
