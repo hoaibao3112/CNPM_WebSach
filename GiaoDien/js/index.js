@@ -4,9 +4,6 @@ document.addEventListener('DOMContentLoaded', () => {
   // setupFAQ();
 });
 
-
-
-
 // Hiển thị slideshow
 let slideIndex = [0, 0];
 const slideColumns = document.querySelectorAll('.slideshow-column');
@@ -45,8 +42,6 @@ function escapeHtml(unsafe) {
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#039;');
 }
-
-
 
 // Tải nội dung trang
 function loadContent(url) {
@@ -141,7 +136,7 @@ async function handleFAQInChat(message, chatMessages) {
   }
 }
 
-// Thiết lập chat box
+// **PHẦN CHAT AI - ĐÃ VIẾT LẠI HOÀN TOÀN**
 function setupChat() {
   const chatIcon = document.getElementById('chat-icon');
   const chatModal = document.getElementById('chat-modal');
@@ -156,111 +151,384 @@ function setupChat() {
     return;
   }
 
+  // Thêm tin nhắn chào mừng khi mở chat
+  function addWelcomeMessage() {
+    if (chatMessages.children.length === 0) {
+      addMessage('ai', '👋 Xin chào! Tôi là trợ lý AI của cửa hàng sách.\n\n💡 Tôi có thể giúp bạn:\n• Tìm kiếm sách theo tên, tác giả\n• Tư vấn sản phẩm phù hợp\n• Thông tin giá cả, khuyến mãi\n• Giải đáp câu hỏi về sách\n\nHãy hỏi tôi bất cứ điều gì bạn muốn biết! 📚');
+    }
+  }
+
   // Mở modal khi nhấn icon chat
   chatIcon.addEventListener('click', () => {
     chatModal.style.display = 'block';
+    addWelcomeMessage();
+    chatInput.focus();
     scrollToBottom(chatMessages);
   });
 
   // Đóng modal
-  chatClose.addEventListener('click', () => {
-    chatModal.style.display = 'none';
-    clearChat();
-  });
+  if (chatClose) {
+    chatClose.addEventListener('click', () => {
+      closeChat();
+    });
+  }
 
   // Đóng modal khi nhấn bên ngoài
   window.addEventListener('click', (event) => {
     if (event.target === chatModal) {
-      chatModal.style.display = 'none';
-      clearChat();
+      closeChat();
+    }
+  });
+
+  // Xử lý phím tắt
+  chatInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      closeChat();
     }
   });
 
   // Xử lý gửi tin nhắn
   chatForm.addEventListener('submit', async (e) => {
     e.preventDefault();
+    await handleSendMessage();
+  });
+
+  // Hàm xử lý gửi tin nhắn
+  async function handleSendMessage() {
     const message = chatInput.value.trim();
     if (!message) {
-      alert('Vui lòng nhập câu hỏi!');
+      showInputError('Vui lòng nhập câu hỏi!');
       return;
     }
 
+    // Ẩn gợi ý sản phẩm cũ
+    hideProductSuggestion();
+
     // Thêm tin nhắn người dùng
     addMessage('user', message);
+    
+    // Reset form và disable để tránh spam
     chatInput.value = '';
-    chatInput.disabled = true;
-    chatForm.querySelector('button').disabled = true;
+    setFormState(false);
+
+    // Hiển thị typing indicator
+    const typingId = showTypingIndicator();
 
     try {
-      // Kiểm tra FAQ trước
-      if (isFAQQuestion(message)) {
-        await handleFAQInChat(message, chatMessages);
-      } else {
-        // Gửi yêu cầu đến API Gemini
-        const response = await fetch('http://localhost:5000/api/openai/chat', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json; charset=utf-8'
-          },
-          body: JSON.stringify({ message })
-        });
+      // Gửi yêu cầu đến API
+      const response = await fetch('http://localhost:5000/api/openai/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json; charset=utf-8'
+        },
+        body: JSON.stringify({ message })
+      });
 
-        if (!response.ok) {
-          throw new Error(`Lỗi khi gọi API: ${response.status}`);
-        }
-
-        const data = await response.json();
-        console.log('Phản hồi OpenAI API:', data);
-        const reply = data.reply || 'Không có phản hồi từ AI.';
-
-        // Thêm phản hồi AI
-        addMessage('ai', reply);
-
-        // Trích xuất và hiển thị gợi ý sản phẩm
-        const productInfo = extractProductFromReply(reply);
-        if (productInfo) {
-          await searchAndShowProductSuggestion(productInfo);
-        } else {
-          productSuggestion.innerHTML = `
-            <div class="product-suggestion-content">
-              <h4>Sản phẩm gợi ý:</h4>
-              <p>Không tìm thấy sản phẩm phù hợp từ câu hỏi của bạn. Hãy thử hỏi chi tiết hơn!</p>
-            </div>
-          `;
-          productSuggestion.style.display = 'block';
-          scrollToBottom(productSuggestion);
-        }
+      if (!response.ok) {
+        throw new Error(`Lỗi API: ${response.status} - ${response.statusText}`);
       }
+
+      const data = await response.json();
+      console.log('📥 Phản hồi từ AI:', data);
+
+      // Xóa typing indicator
+      removeTypingIndicator(typingId);
+
+      const reply = data.reply || 'Xin lỗi, tôi không thể phản hồi lúc này. Vui lòng thử lại!';
+      
+      // Thêm phản hồi AI với hiệu ứng typing
+      await addMessageWithTyping('ai', reply);
+
+      // Xử lý gợi ý sản phẩm nếu có
+      const productInfo = extractProductFromReply(reply);
+      if (productInfo) {
+        await showProductSuggestionWithDelay(productInfo);
+      }
+
     } catch (error) {
-      console.error('Lỗi chat:', error);
-      addMessage('ai', 'Xin lỗi, có lỗi xảy ra khi xử lý câu hỏi. Vui lòng thử lại sau.');
+      console.error('❌ Lỗi chat:', error);
+      removeTypingIndicator(typingId);
+      
+      // Phản hồi lỗi thân thiện
+      const errorMessage = getErrorMessage(error);
+      addMessage('ai', errorMessage);
     } finally {
-      chatInput.disabled = false;
-      chatForm.querySelector('button').disabled = false;
+      setFormState(true);
       chatInput.focus();
     }
-  });
+  }
+
+  // Hiển thị typing indicator
+  function showTypingIndicator() {
+    const chatMessages = document.getElementById('chat-messages');
+    const typingId = 'typing-' + Date.now();
+    const typingDiv = document.createElement('div');
+    typingDiv.classList.add('chat-message', 'ai', 'typing-indicator');
+    typingDiv.id = typingId;
+    typingDiv.innerHTML = `
+      <div class="typing-animation">
+        <span></span>
+        <span></span>
+        <span></span>
+      </div>
+      <small>AI đang suy nghĩ...</small>
+    `;
+    chatMessages.appendChild(typingDiv);
+    scrollToBottom(chatMessages);
+    return typingId;
+  }
+
+  // Xóa typing indicator
+  function removeTypingIndicator(typingId) {
+    const typingElement = document.getElementById(typingId);
+    if (typingElement) {
+      typingElement.remove();
+    }
+  }
+
+  // Thêm tin nhắn với hiệu ứng typing
+  async function addMessageWithTyping(type, text) {
+    const chatMessages = document.getElementById('chat-messages');
+    const messageDiv = document.createElement('div');
+    messageDiv.classList.add('chat-message', type);
+    chatMessages.appendChild(messageDiv);
+
+    // Hiệu ứng typing
+    const words = text.split(' ');
+    let currentText = '';
+    
+    for (let i = 0; i < words.length; i++) {
+      currentText += (i > 0 ? ' ' : '') + words[i];
+      messageDiv.innerHTML = formatMessageText(currentText);
+      scrollToBottom(chatMessages);
+      
+      // Delay giữa các từ (tốc độ typing)
+      if (i < words.length - 1) {
+        await new Promise(resolve => setTimeout(resolve, 50));
+      }
+    }
+  }
+
+  // Format text message
+  function formatMessageText(text) {
+    return text
+      .replace(/\n/g, '<br>')
+      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') // Bold
+      .replace(/\*(.*?)\*/g, '<em>$1</em>') // Italic
+      .replace(/`(.*?)`/g, '<code>$1</code>') // Code
+      .replace(/(\d{1,3}(?:\.\d{3})*)\s*VNĐ/g, '<span class="price">$1 VNĐ</span>'); // Price highlight
+  }
+
+  // Hiển thị lỗi input
+  function showInputError(message) {
+    const chatInput = document.getElementById('chat-input');
+    if (chatInput) {
+      chatInput.style.borderColor = '#e74c3c';
+      chatInput.placeholder = message;
+      setTimeout(() => {
+        chatInput.style.borderColor = '';
+        chatInput.placeholder = 'Nhập câu hỏi về sản phẩm...';
+      }, 2000);
+      chatInput.focus();
+    }
+  }
+
+  // Set trạng thái form
+  function setFormState(enabled) {
+    const chatInput = document.getElementById('chat-input');
+    const chatForm = document.getElementById('chat-form');
+    
+    if (chatInput) chatInput.disabled = !enabled;
+    
+    const submitBtn = chatForm?.querySelector('button[type="submit"]');
+    if (submitBtn) {
+      submitBtn.disabled = !enabled;
+      submitBtn.textContent = enabled ? 'Gửi' : 'Đang gửi...';
+    }
+  }
+
+  // Lấy thông báo lỗi thân thiện
+  function getErrorMessage(error) {
+    if (error.name === 'TypeError' && error.message.includes('fetch')) {
+      return '🔌 Mất kết nối với server. Vui lòng kiểm tra kết nối mạng và thử lại!';
+    }
+    if (error.message.includes('500')) {
+      return '⚠️ Server đang bảo trì. Tôi sẽ hoạt động trở lại sớm nhất có thể!';
+    }
+    if (error.message.includes('404')) {
+      return '🔍 Không tìm thấy dịch vụ chat. Vui lòng liên hệ hỗ trợ: 0938 424 289';
+    }
+    return `😔 Đã xảy ra lỗi: ${error.message}\n\nVui lòng thử lại hoặc liên hệ hỗ trợ: 0938 424 289`;
+  }
+
+  // Đóng chat
+  function closeChat() {
+    chatModal.style.display = 'none';
+    hideProductSuggestion();
+    chatInput.value = '';
+    setFormState(true);
+  }
+
+  // Hiển thị gợi ý sản phẩm với delay
+async function showProductSuggestionWithDelay(productInfo) {
+  const chatMessages = document.getElementById('chat-messages');
+  await new Promise(resolve => setTimeout(resolve, 500));
+  
+  const suggestionMessage = document.createElement('div');
+  suggestionMessage.classList.add('chat-message', 'ai', 'suggestion');
+  suggestionMessage.innerHTML = `
+    <h4>🎯 Gợi ý sản phẩm</h4>
+    <p>Tôi đang tìm kiếm sản phẩm phù hợp...</p>
+  `;
+  chatMessages.appendChild(suggestionMessage);
+  scrollToBottom(chatMessages);
+
+  try {
+    const product = await searchProduct(productInfo);
+    if (product) {
+      // SỬA: Đường dẫn ảnh đúng
+      const imageUrl = product.HinhAnh ? 
+        `img/product/${product.HinhAnh}` : 
+        'img/default-book.jpg'; // Ảnh mặc định nếu không có
+
+      // SỬA: Logic tình trạng kho
+      let stockStatus;
+      let stockClass;
+      
+      // Kiểm tra tình trạng dựa trên SoLuong và TinhTrang
+      if (product.TinhTrang === 0 || product.SoLuong === 0) {
+        stockStatus = 'Hết hàng';
+        stockClass = 'status-out';
+      } else if (product.SoLuong > 0) {
+        stockStatus = `Còn hàng (${product.SoLuong} sản phẩm)`;
+        stockClass = 'status-available';
+      } else {
+        // Fallback case
+        stockStatus = product.TinhTrang === 1 ? 'Còn hàng' : 'Hết hàng';
+        stockClass = product.TinhTrang === 1 ? 'status-available' : 'status-out';
+      }
+
+      suggestionMessage.innerHTML = `
+        <h4>📚 Sản phẩm gợi ý</h4>
+        <div class="product-card">
+          <div class="product-image">
+            <img src="${imageUrl}" alt="${escapeHtml(product.TenSP || 'Sản phẩm')}" 
+                 onerror="this.src='img/default-book.jpg'" />
+          </div>
+          <div class="product-info">
+            <p class="product-name"><strong>${escapeHtml(product.TenSP || 'Không có tên')}</strong></p>
+            <p class="product-author">👤 Tác giả: ${escapeHtml(product.TacGia || 'Không rõ')}</p>
+            <p class="product-price">💰 Giá: <span class="price">${formatPrice(product.DonGia || 0)} VNĐ</span></p>
+            <p class="product-id">🏷️ Mã SP: ${escapeHtml(String(product.MaSP || 'N/A'))}</p>
+            <p class="product-quantity">📦 Số lượng: ${product.SoLuong || 0}</p>
+            <p class="product-status">📋 Tình trạng: <span class="${stockClass}">${stockStatus}</span></p>
+            <button class="view-detail-btn" onclick="loadProductDetail('${product.MaSP || product.id}')">
+              👀 Xem chi tiết
+            </button>
+          </div>
+        </div>
+      `;
+      
+      // Log để debug
+      console.log('Product info:', {
+        TinhTrang: product.TinhTrang,
+        SoLuong: product.SoLuong,
+        DisplayStatus: stockStatus
+      });
+      
+    } else {
+      suggestionMessage.innerHTML = `
+        <h4>🔍 Không tìm thấy</h4>
+        <p>Rất tiếc, tôi không tìm thấy sản phẩm "${escapeHtml(productInfo.name || 'này')}" trong kho.</p>
+        <p>💡 Bạn có thể thử:</p>
+        <p>• Tìm với từ khóa khác<br>• Liên hệ: 0938 424 289<br>• Duyệt danh mục sản phẩm</p>
+      `;
+    }
+  } catch (error) {
+    console.error('Lỗi tìm sản phẩm:', error);
+    suggestionMessage.innerHTML = `
+      <h4>⚠️ Lỗi tìm kiếm</h4>
+      <p>Không thể tìm kiếm sản phẩm lúc này. Vui lòng thử lại sau!</p>
+    `;
+  }
+  
+  scrollToBottom(chatMessages);
 }
+
+
+  // Tìm sản phẩm
+  async function searchProduct(productInfo) {
+    let response;
+    if (productInfo.type === 'id') {
+      response = await fetch(`http://localhost:5000/api/product/${productInfo.value}`, {
+        headers: { 'Content-Type': 'application/json; charset=utf-8' }
+      });
+    } else {
+      response = await fetch(`http://localhost:5000/api/product/search?name=${encodeURIComponent(productInfo.name)}`, {
+        headers: { 'Content-Type': 'application/json; charset=utf-8' }
+      });
+    }
+
+    if (!response.ok) {
+      throw new Error('Lỗi tìm kiếm sản phẩm');
+    }
+
+    const data = await response.json();
+    return productInfo.type === 'id' ? data : (data.data && data.data.length > 0 ? data.data[0] : null);
+  }
+
+  // Ẩn gợi ý sản phẩm
+  function hideProductSuggestion() {
+    if (productSuggestion) {
+      productSuggestion.style.display = 'none';
+      productSuggestion.innerHTML = '';
+    }
+  }
+}
+
+// **CÁC HÀM GLOBAL - CHỈ THAY ĐỔI PHẦN CHAT**
 
 // Thêm tin nhắn vào chat
 function addMessage(type, text) {
   const chatMessages = document.getElementById('chat-messages');
+  if (!chatMessages) return;
+
   const messageDiv = document.createElement('div');
   messageDiv.classList.add('chat-message', type);
-  messageDiv.innerHTML = text.replace(/\n/g, '<br>');
+  
+  // Format tin nhắn
+  const formattedText = text
+    .replace(/\n/g, '<br>')
+    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.*?)\*/g, '<em>$1</em>')
+    .replace(/`(.*?)`/g, '<code>$1</code>')
+    .replace(/(\d{1,3}(?:\.\d{3})*)\s*VNĐ/g, '<span class="price">$1 VNĐ</span>');
+  
+  messageDiv.innerHTML = formattedText;
   chatMessages.appendChild(messageDiv);
-  chatMessages.style.maxHeight = '300px';
-  chatMessages.style.overflowY = 'auto';
+  
+  // Auto scroll
   scrollToBottom(chatMessages);
+  
+  // Animate new message
+  messageDiv.style.opacity = '0';
+  messageDiv.style.transform = 'translateY(10px)';
+  requestAnimationFrame(() => {
+    messageDiv.style.transition = 'all 0.3s ease';
+    messageDiv.style.opacity = '1';
+    messageDiv.style.transform = 'translateY(0)';
+  });
 }
 
 // Xóa nội dung chat
 function clearChat() {
   const chatMessages = document.getElementById('chat-messages');
   const productSuggestion = document.getElementById('product-suggestion');
-  chatMessages.innerHTML = '';
-  productSuggestion.style.display = 'none';
-  productSuggestion.innerHTML = '';
+  if (chatMessages) chatMessages.innerHTML = '';
+  if (productSuggestion) {
+    productSuggestion.style.display = 'none';
+    productSuggestion.innerHTML = '';
+  }
 }
 
 // Cuộn xuống cuối
@@ -273,9 +541,7 @@ function scrollToBottom(element) {
 // Trích xuất thông tin sản phẩm từ phản hồi
 function extractProductFromReply(reply) {
   const idMatch = reply.match(/\[PRODUCT_ID:\s*(\d+)\]/i);
-  const nameMatch = reply.match(/"([^"]+)"\s*(?:có|trong kho|khuyến mãi|có sẵn)\s*\d+/i) ||
-                   reply.match(/'([^']+)'\s*(?:có|trong kho|khuyến mãi|có sẵn)/i) ||
-                   reply.match(/(?:sách|quyển|cuốn)\s+"([^"]+)"/i);
+  const nameMatch = reply.match(/"([^"]+)"/i) || reply.match(/'([^']+)'/i);
 
   if (idMatch) {
     return { type: 'id', value: idMatch[1] };
@@ -285,9 +551,11 @@ function extractProductFromReply(reply) {
   return null;
 }
 
-// Tìm và hiển thị gợi ý sản phẩm
+// Tìm và hiển thị gợi ý sản phẩm (legacy function - giữ để tương thích)
 async function searchAndShowProductSuggestion(productInfo) {
   const suggestionDiv = document.getElementById('product-suggestion');
+  if (!suggestionDiv) return;
+
   try {
     let response;
     if (productInfo.type === 'id') {
@@ -315,27 +583,27 @@ async function searchAndShowProductSuggestion(productInfo) {
     } else {
       product = data.data && data.data.length > 0 ? data.data[0] : null;
     }
-if (product && product.MaSP && product.TenSP) {
-  const productId = String(product.MaSP || product.id || '');
-  const productName = String(product.TenSP || product.name || '');
-  suggestionDiv.innerHTML = `
-    <div class="product-suggestion-content">
-      <div class="product-info">
-        <h4>Sản phẩm: ${escapeHtml(productName)}</h4>
-        <p>Mã sản phẩm: ${escapeHtml(productId)}</p>
-      </div>
-      <button class="view-detail-btn" onclick="loadProductDetail('${productId}')">Xem chi tiết</button>
-    </div>
-  `;
-} else {
-  // Phần không tìm thấy giữ nguyên
-  suggestionDiv.innerHTML = `
-    <div class="product-suggestion-content">
-      <h4>Sản phẩm gợi ý:</h4>
-      <p>Không tìm thấy sản phẩm "${escapeHtml(productInfo.name || 'không xác định')}" lúc này. Hãy thử tìm kiếm thêm!</p>
-    </div>
-  `;
-}
+
+    if (product && product.MaSP && product.TenSP) {
+      const productId = String(product.MaSP || product.id || '');
+      const productName = String(product.TenSP || product.name || '');
+      suggestionDiv.innerHTML = `
+        <div class="product-suggestion-content">
+          <div class="product-info">
+            <h4>Sản phẩm: ${escapeHtml(productName)}</h4>
+            <p>Mã sản phẩm: ${escapeHtml(productId)}</p>
+          </div>
+          <button class="view-detail-btn" onclick="loadProductDetail('${productId}')">Xem chi tiết</button>
+        </div>
+      `;
+    } else {
+      suggestionDiv.innerHTML = `
+        <div class="product-suggestion-content">
+          <h4>Sản phẩm gợi ý:</h4>
+          <p>Không tìm thấy sản phẩm "${escapeHtml(productInfo.name || 'không xác định')}" lúc này. Hãy thử tìm kiếm thêm!</p>
+        </div>
+      `;
+    }
     suggestionDiv.style.display = 'block';
     suggestionDiv.style.maxHeight = '150px';
     suggestionDiv.style.overflowY = 'auto';
@@ -360,71 +628,3 @@ window.loadProductDetail = function(productId) {
   localStorage.setItem('selectedProductId', productId);
   window.location.href = 'product_detail.html';
 };
-
-// Thiết lập FAQ
-// function setupFAQ() {
-//   const faqForm = document.getElementById('faq-form');
-//   const faqInput = document.getElementById('faq-input');
-//   const faqResults = document.getElementById('faq-results');
-
-//   if (!faqForm) {
-//     console.error('Không tìm thấy faq-form');
-//     return;
-//   }
-
-//   faqForm.addEventListener('submit', async (e) => {
-//     e.preventDefault();
-//     const keyword = faqInput.value.trim();
-//     if (!keyword) {
-//       alert('Vui lòng nhập câu hỏi hoặc từ khóa!');
-//       return;
-//     }
-
-//     faqResults.innerHTML = '<div class="loading">Đang tìm kiếm...</div>';
-//     faqInput.disabled = true;
-//     faqForm.querySelector('button').disabled = true;
-
-//     try {
-//       const response = await fetch(`http://localhost:5000/api/support/faq?keyword=${encodeURIComponent(keyword)}`, {
-//         headers: {
-//           'Content-Type': 'application/json; charset=utf-8'
-//         }
-//       });
-//       if (!response.ok) {
-//         throw new Error('Lỗi khi tải FAQ');
-//       }
-//       const data = await response.json();
-
-//       faqResults.innerHTML = '';
-
-//       if (!data.faqs || data.faqs.length === 0) {
-//         faqResults.innerHTML = '<p class="no-results">Không tìm thấy câu trả lời phù hợp. Vui lòng thử từ khóa khác hoặc liên hệ hỗ trợ!</p>';
-//         return;
-//       }
-
-//       data.faqs.forEach(faq => {
-//         const faqItem = document.createElement('div');
-//         faqItem.classList.add('faq-item');
-//         faqItem.innerHTML = `
-//           <h3>${escapeHtml(faq.question)}</h3>
-//           <p>${escapeHtml(faq.answer)}</p>
-//           <div class="category">Danh mục: ${escapeHtml(faq.category || 'Chưa phân loại')}</div>
-//           <div class="keywords">Từ khóa: ${faq.keywords ? faq.keywords.map(k => escapeHtml(k)).join(', ') : 'Không có'}</div>
-//         `;
-//         faqResults.appendChild(faqItem);
-
-//         const questionHeader = faqItem.querySelector('h3');
-//         questionHeader.addEventListener('click', () => {
-//           faqItem.classList.toggle('active');
-//         });
-//       });
-//     } catch (error) {
-//       console.error('Lỗi FAQ:', error);
-//       faqResults.innerHTML = '<p class="no-results">Có lỗi xảy ra. Vui lòng thử lại sau!</p>';
-//     } finally {
-//       faqInput.disabled = false;
-//       faqForm.querySelector('button').disabled = false;
-//       faqInput.focus();
-//     }
-//   });
-// }

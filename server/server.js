@@ -6,6 +6,7 @@ import cookieParser from 'cookie-parser';
 import { createServer } from 'http';
 import { WebSocketServer } from 'ws';
 import jwt from 'jsonwebtoken';
+import path from 'path';
 import pool from './src/config/connectDatabase.js'; // Assuming db is exported as pool
 import { initRoutes } from './src/routes/index.js';
 import { createProxyMiddleware } from 'http-proxy-middleware';
@@ -53,6 +54,9 @@ app.use(cors({
 app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Serve uploaded files (customer uploads) so URLs like /uploads/tra_hang/<file> are reachable
+app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
 
 app.use('/vnpay', createProxyMiddleware({
   target: 'https://sandbox.vnpayment.vn',

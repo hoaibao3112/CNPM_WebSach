@@ -1,8 +1,9 @@
-/* src/styles/ProductManagement.css */
 .product-management-container {
   padding: 16px 16px 16px 216px;
   min-height: 100vh;
+  background-color: #f5f5f5;
 }
+
 .header-section {
   display: flex;
   justify-content: space-between;
@@ -10,37 +11,118 @@
   margin-bottom: 16px;
   flex-wrap: wrap;
   gap: 16px;
+  background: white;
+  padding: 16px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
+
 .page-title {
-  font-size: 18px;
+  font-size: 20px;
   font-weight: 600;
   margin: 0;
+  color: #1890ff;
 }
+
+.header-actions {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
 .search-box {
-  width: 250px;
+  width: 280px;
 }
+
 .info-section {
-  background: #f8f8f8;
-  padding: 12px;
-  border-radius: 4px;
+  background: white;
+  padding: 16px;
+  border-radius: 8px;
   margin-bottom: 16px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
+
 .info-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 12px;
+  gap: 16px;
 }
+
 .info-item {
-  margin-bottom: 4px;
+  display: flex;
+  flex-direction: column;
 }
+
 .info-label {
   color: #666;
-  font-size: 12px;
-  margin: 0;
+  font-size: 13px;
+  margin: 0 0 4px 0;
+  font-weight: 500;
 }
-.compact-product-table .ant-table-thead > tr > th {
-  padding: 8px 12px;
+
+.compact-permission-table {
+  background: white;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
-.compact-product-table .ant-table-tbody > tr > td {
-  padding: 8px 12px;
+
+.compact-permission-table .ant-table-thead > tr > th {
+  padding: 12px 8px;
+  font-weight: 600;
+  background-color: #fafafa;
+  border-bottom: 2px solid #f0f0f0;
+}
+
+.compact-permission-table .ant-table-tbody > tr > td {
+  padding: 12px 8px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.compact-permission-table .ant-table-tbody > tr:hover > td {
+  background-color: #f5f5f5;
+}
+
+.compact-permission-table .ant-pagination {
+  margin: 16px;
+  text-align: right;
+}
+
+/* Modal styles */
+.ant-modal-header {
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.ant-modal-footer {
+  border-top: 1px solid #f0f0f0;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .product-management-container {
+    padding: 16px;
+  }
+  
+  .header-section {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .header-actions {
+    justify-content: space-between;
+  }
+  
+  .search-box {
+    width: 100%;
+  }
+  
+  .info-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 480px) {
+  .info-grid {
+    grid-template-columns: 1fr;
+  }
 }

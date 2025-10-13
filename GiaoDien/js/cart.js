@@ -144,7 +144,6 @@ async function updateQuantity(index, newQuantity) {
         },
         body: JSON.stringify({ productId: item.id, quantity: newQuantity })
       });
- Nekton
       if (response.ok) {
         await renderCart();
         updateCartCount();
@@ -365,7 +364,7 @@ function updateSummary(subtotal, discount = 0) {
   subtotalElement.textContent = formatPrice(subtotal);
   discountRow.style.display = discount > 0 ? 'flex' : 'none';
   discountElement.textContent = discount > 0 ? `-${formatPrice(discount)}` : '-0đ';
-  totalElement.textContent = formatPrice(total);
+  totalElement.textContent = formatPrice( total);
 }
 
 // Attach event listeners
@@ -421,12 +420,10 @@ function attachEventListeners() {
   const applyCouponBtn = document.getElementById('apply-coupon');
   if (applyCouponBtn) {
     applyCouponBtn.addEventListener('click', async () => {
-      const couponCode = document.getElementById('coupon-code')?.value;
-      if (couponCode) {
-        showToast('Mã giảm giá được áp dụng!');
-        const cart = await getCart();
-        const subtotal = cart.reduce((sum, item) => item.selected ? sum + item.price * item.quantity : sum, 0);
-        updateSummary(subtotal, 10000); // Example discount
+      const discountDetails  = await applyPromo()
+      if(discountDetails) {
+        updateSummary(discountDetails.total, discountDetails.discountAmount)
+        totalAmountDiscouted = discountDetails.totalFinal;
       }
     });
   }
@@ -470,50 +467,58 @@ function getFormData() {
 }
 
 // Checkout function - Fixed version
+var totalAmountDiscouted;
 async function checkout() {
-  console.log('Checkout started');
-  
+  console.log('🚀 Checkout started');
+
   if (!isLoggedIn()) {
-    console.log('User not logged in');
+    console.log('❌ User not logged in');
     showToast('Vui lòng đăng nhập để tiến hành thanh toán!');
     window.location.href = 'login.html';
     return;
   }
 
-  // Lấy form bằng ID chính xác từ cart.html
   const form = document.getElementById('customer-form');
-  
   if (!form) {
-    console.error('Form not found with ID: customer-form');
+    console.error('❌ Form not found');
     showToast('Không tìm thấy form thông tin!');
     return;
   }
 
-  // Lấy dữ liệu từ các trường input
+  // Lấy form data
   const formData = {
-    tenkh: document.getElementById('name')?.value || '',
-    sdt: document.getElementById('phone')?.value || '',
-    email: document.getElementById('email')?.value || '',
-    tinhthanh: document.getElementById('tinhthanh')?.value || '',
-    quanhuyen: document.getElementById('quanhuyen')?.value || '',
-    phuongxa: document.getElementById('phuongxa')?.value || '',
-    diachi: document.getElementById('diachichitiet')?.value || '',
-    paymentMethod: document.getElementById('payment-method')?.value || ''
+    tenkh: document.getElementById('name').value.trim(),
+    sdt: document.getElementById('phone').value.trim(),
+    email: document.getElementById('email').value.trim(),
+    tinhthanh: document.getElementById('tinhthanh').value,
+    quanhuyen: document.getElementById('quanhuyen').value,
+    phuongxa: document.getElementById('phuongxa').value,
+    diachi: document.getElementById('diachichitiet').value.trim(),
+    paymentMethod: document.getElementById('payment-method').value,
+    notes: document.getElementById('notes').value.trim()
   };
 
-  // Validate form data
-  if (!validateForm(formData)) return;
+  console.log('🔍 Form Data:', formData);
+
+  // Validate form
+  if (!validateForm(formData)) {
+    console.log('❌ Form validation failed');
+    return;
+  }
 
   const cart = await getCart();
   const selectedItems = cart.filter(item => item.selected);
-  
+
+  console.log('🔍 Selected Items:', selectedItems);
+
   if (selectedItems.length === 0) {
     showToast('Vui lòng chọn ít nhất một sản phẩm!');
     return;
   }
 
-  // Construct order data to match Postman payload
+  // Construct order data
   const orderData = {
+    totalAmountDiscouted: totalAmountDiscouted || null,
     customer: {
       makh: getUserId(),
       name: formData.tenkh,
@@ -530,12 +535,15 @@ async function checkout() {
       district: formData.quanhuyen,
       ward: formData.phuongxa
     },
-    paymentMethod: formData.paymentMethod
+    paymentMethod: formData.paymentMethod,
+    notes: formData.notes
   };
 
-  console.log('Order Data:', JSON.stringify(orderData, null, 2));
+  console.log('🔍 Order Data:', JSON.stringify(orderData, null, 2));
 
   try {
+    console.log('🔄 Sending request to API...');
+    
     const response = await fetch('http://localhost:5000/api/orders/place-order', {
       method: 'POST',
       headers: {
@@ -545,28 +553,43 @@ async function checkout() {
       body: JSON.stringify(orderData)
     });
 
+    console.log('🔍 Response Status:', response.status);
+    console.log('🔍 Response OK:', response.ok);
+
     const result = await response.json();
-    console.log('API Response:', JSON.stringify(result, null, 2));
+    console.log('🔍 API Response:', JSON.stringify(result, null, 2));
 
     if (!response.ok) {
+      console.error('❌ API Error:', result);
       throw new Error(result.error || `HTTP error! Status: ${response.status}`);
     }
-    
-    if (orderData.paymentMethod === 'VNPAY') {
-      if (result.paymentUrl) {
-        console.log('Redirecting to VNPay:', result.paymentUrl);
+
+    // ✅ XỬ LÝ RESPONSE ĐÚNG CHO COD VÀ VNPAY
+    if (result.success) {
+      if (formData.paymentMethod === 'VNPAY' && result.paymentUrl) {
+        console.log('🔄 Redirecting to VNPay:', result.paymentUrl);
         window.location.href = result.paymentUrl;
+      } else if (formData.paymentMethod === 'COD') {
+        // ✅ COD SUCCESS - REDIRECT ĐÚNG
+        console.log('✅ COD Order successful:', result.orderId);
+        showToast('Đặt hàng COD thành công!');
+        await clearCart();
+        
+        // ✅ REDIRECT VỚI ĐÚNG THAM SỐ
+        window.location.href = `order-confirmation.html?orderId=${result.orderId}&status=cod&paymentMethod=COD&amount=${orderData.totalAmountDiscouted || selectedItems.reduce((sum, item) => sum + item.price * item.quantity, 0)}&message=${encodeURIComponent(result.message || 'Đặt hàng COD thành công')}`;
       } else {
-        throw new Error('Không nhận được URL thanh toán VNPay');
+        throw new Error('Phương thức thanh toán không được hỗ trợ');
       }
     } else {
-      showToast('Đặt hàng thành công!');
-      await clearCart();
-      window.location.href = `order-confirmation.html?orderId=${result.orderId}`;
+      throw new Error(result.error || 'Đặt hàng thất bại');
     }
+
   } catch (error) {
-    console.error('Checkout error:', error.message);
+    console.error('❌ Checkout error:', error);
     showToast(`Lỗi khi đặt hàng: ${error.message}`);
+    
+    // ✅ REDIRECT SANG TRANG LỖI VỚI THÔNG TIN CHI TIẾT
+    window.location.href = `order-confirmation.html?status=error&message=${encodeURIComponent(error.message)}`;
   }
 }
 
@@ -709,6 +732,54 @@ function handleVNPayReturn() {
     }
   }
 }
+//áp dụng khuyến mãi 
+async function applyPromo() {
+  try {
+    const cart = await getCart();
+    const selectedItems = cart.filter(item => item.selected);
+
+    const codeKM = document.getElementById('coupon-code').value.trim();
+    if (!codeKM) {
+      showToast("Vui lòng nhập mã khuyến mãi");
+      return;
+    }
+
+    const otherData = {
+      makh: getUserId(),
+      code: codeKM,
+      cartItems: selectedItems.map(item => ({
+        MaSP: item.id,
+        SoLuong: item.quantity,
+        DonGia: item.price
+      }))
+    };
+
+    const res = await fetch("http://localhost:5000/api/khuyenmai/apply-to-cart", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${getToken()}`,
+      },
+      body: JSON.stringify(otherData)
+    });
+
+    const data = await res.json();
+
+    if (res.ok) {
+      console.log("Kết quả sau tính toán:", data);
+      showToast("Áp dụng mã khuyến mãi thành công!");
+      return data.discountDetails;
+    } else {
+      showToast(data.error || "Áp dụng mã thất bại");
+      console.error("Lỗi request:", data.error);
+      return null;
+    }
+  } catch (error) {
+    console.error("Lỗi:", error);
+    showToast("Có lỗi xảy ra, vui lòng thử lại sau");
+    return null;
+  }
+}
 
 // Initialize
 document.addEventListener('DOMContentLoaded', async () => {
@@ -733,7 +804,6 @@ window.getCart = getCart;
 document.addEventListener('DOMContentLoaded', () => {
   const couponInput = document.getElementById('coupon-code');
   const datalist = document.getElementById('saved-coupons');
-
   if (couponInput && datalist) {
     couponInput.addEventListener('focus', () => {
       const savedVouchers = JSON.parse(localStorage.getItem('savedVouchers') || '[]');
@@ -750,3 +820,4 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 });
+

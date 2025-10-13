@@ -1,0 +1,761 @@
+.thongke-page {
+  /* Move the whole stats page to the right so it doesn't get hidden under the app sidebar.
+     Assumption: sidebar width is ~220px. Adjust margin-left if your sidebar is wider/narrower. */
+  padding: 25px;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  min-height: 100vh;
+  margin-left: 220px; /* shift page right to clear navigation */
+  transition: margin-left 220ms ease; /* smooth when sidebar toggles */
+  box-sizing: border-box;
+}
+
+.thongke-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 25px 35px;
+  border-radius: 12px;
+  margin-bottom: 25px;
+  box-shadow: 0 8px 24px rgba(102, 126, 234, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.thongke-header h1 {
+  margin: 0;
+  color: white;
+  font-size: 28px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-weight: 700;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.thongke-header h1 i {
+  font-size: 32px;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+}
+
+/* Main Tabs */
+.thongke-tabs {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 25px;
+  flex-wrap: wrap;
+}
+
+.thongke-tabs button {
+  padding: 14px 28px;
+  background: white;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 15px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  color: #595959;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  position: relative;
+  overflow: hidden;
+}
+
+.thongke-tabs button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(102, 126, 234, 0.2), transparent);
+  transition: left 0.5s;
+}
+
+.thongke-tabs button:hover::before {
+  left: 100%;
+}
+
+.thongke-tabs button:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.3);
+  color: #667eea;
+}
+
+.thongke-tabs button.active {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+  transform: translateY(-2px);
+}
+
+/* Content Area */
+.thongke-content {
+  background: white;
+  border-radius: 12px;
+  padding: 25px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+  border: 1px solid rgba(0,0,0,0.05);
+}
+
+/* Sub Tabs */
+.thongke-subtabs {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 25px;
+  flex-wrap: wrap;
+  padding: 15px;
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  border-radius: 10px;
+}
+
+.thongke-subtabs button {
+  padding: 12px 24px;
+  background: white;
+  border: 2px solid transparent;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  color: #495057;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+}
+
+.thongke-subtabs button:hover {
+  background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+  border-color: #42a5f5;
+  color: #1976d2;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(66, 165, 245, 0.3);
+}
+
+.thongke-subtabs button.active {
+  background: linear-gradient(135deg, #1976d2 0%, #1565c0 100%);
+  border-color: #0d47a1;
+  color: white;
+  font-weight: 600;
+  box-shadow: 0 4px 12px rgba(25, 118, 210, 0.4);
+}
+
+/* Filters */
+.thongke-filters {
+  display: flex;
+  gap: 15px;
+  align-items: flex-end;
+  margin-bottom: 25px;
+  flex-wrap: wrap;
+  padding: 20px;
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  border-radius: 10px;
+  border: 1px solid #dee2e6;
+}
+
+.filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.filter-group label {
+  font-size: 13px;
+  color: #495057;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.filter-group select {
+  padding: 10px 16px;
+  border: 2px solid #ced4da;
+  border-radius: 8px;
+  font-size: 14px;
+  min-width: 160px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  background: white;
+  font-weight: 500;
+  color: #495057;
+}
+
+.filter-group select:hover {
+  border-color: #667eea;
+  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.2);
+}
+
+.filter-group select:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.btn-excel, .btn-chart {
+  padding: 10px 24px;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-excel::before,
+.btn-chart::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+  transform: translate(-50%, -50%);
+  transition: width 0.6s, height 0.6s;
+}
+
+.btn-excel:hover::before,
+.btn-chart:hover::before {
+  width: 300px;
+  height: 300px;
+}
+
+.btn-excel {
+  background: linear-gradient(135deg, #52c41a 0%, #389e0d 100%);
+  margin-left: auto;
+}
+
+.btn-excel:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 20px rgba(82, 196, 26, 0.4);
+}
+
+.btn-chart {
+  background: linear-gradient(135deg, #722ed1 0%, #531dab 100%);
+}
+
+.btn-chart:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 20px rgba(114, 46, 209, 0.4);
+}
+
+.btn-chart.active {
+  background: linear-gradient(135deg, #9254de 0%, #722ed1 100%);
+  box-shadow: 0 6px 20px rgba(146, 84, 222, 0.5);
+}
+
+.btn-excel i, .btn-chart i {
+  font-size: 18px;
+  position: relative;
+  z-index: 1;
+}
+
+.btn-excel span, .btn-chart span {
+  position: relative;
+  z-index: 1;
+}
+
+/* Chart Container */
+.chart-container {
+  background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+  padding: 25px;
+  border-radius: 12px;
+  margin-bottom: 25px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+  border: 2px solid #e9ecef;
+  position: relative;
+  overflow: hidden;
+}
+
+.chart-container::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  right: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle, rgba(102, 126, 234, 0.05) 0%, transparent 70%);
+  animation: rotate 20s linear infinite;
+}
+
+@keyframes rotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.chart-wrapper {
+  height: 450px;
+  position: relative;
+  z-index: 1;
+}
+
+/* Table Styles - PHẦN QUAN TRỌNG NHẤT */
+.thongke-table {
+  overflow-x: auto;
+  margin-top: 20px;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+  border: 1px solid #e9ecef;
+}
+
+.thongke-table::-webkit-scrollbar {
+  height: 8px;
+}
+
+.thongke-table::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 10px;
+}
+
+.thongke-table::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 10px;
+}
+
+.thongke-table::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+}
+
+.thongke-table table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  background: white;
+}
+
+.thongke-table thead {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  position: relative;
+}
+
+.thongke-table thead::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #ffd700, #ff6b6b, #4ecdc4, #ffd700);
+  background-size: 200% 100%;
+  animation: shimmer 3s linear infinite;
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.thongke-table th {
+  padding: 18px 16px;
+  text-align: center;
+  font-weight: 700;
+  font-size: 15px;
+  color: rgb(211, 8, 8);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  border: none;
+  position: relative;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.thongke-table th::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  top: 25%;
+  height: 50%;
+  width: 1px;
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.thongke-table th:last-child::after {
+  display: none;
+}
+
+.thongke-table tbody tr {
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.thongke-table tbody tr::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  width: 0;
+  background: linear-gradient(90deg, transparent, rgba(102, 126, 234, 0.1));
+  transition: width 0.3s ease;
+}
+
+.thongke-table tbody tr:hover::after {
+  width: 100%;
+}
+
+.thongke-table tbody tr:hover {
+  transform: scale(1.01);
+  box-shadow: 0 4px 16px rgba(102, 126, 234, 0.2);
+  z-index: 10;
+}
+
+.thongke-table tbody tr:nth-child(odd) {
+  background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+}
+
+.thongke-table tbody tr:nth-child(even) {
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+}
+
+.thongke-table td {
+  padding: 16px;
+  text-align: center;
+  border: none;
+  border-bottom: 1px solid #e9ecef;
+  font-size: 17px;
+  font-weight: 500;
+  color: #495057;
+  position: relative;
+  z-index: 1;
+  transition: all 0.3s ease;
+}
+
+.thongke-table tbody tr:hover td {
+  color: #212529;
+  font-weight: 600;
+}
+
+.thongke-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* Hiệu ứng cho số liệu quan trọng */
+.thongke-table td[style*="color: #52c41a"],
+.thongke-table td[style*="color: #1890ff"] {
+  position: relative;
+  font-weight: 700 !important;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.1);
+}
+
+.thongke-table td[style*="color: #52c41a"]::before {
+  content: '📈';
+  margin-right: 5px;
+  animation: bounce 2s ease-in-out infinite;
+}
+
+.thongke-table td[style*="color: #1890ff"]::before {
+  content: '🔥';
+  margin-right: 5px;
+  animation: bounce 2s ease-in-out infinite;
+}
+
+@keyframes bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
+}
+
+/* Loading & Empty States */
+.thongke-table td[colspan] {
+  color: #6c757d;
+  font-size: 16px;
+  font-weight: 600;
+  padding: 50px;
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+}
+
+.fa-spinner {
+  color: #667eea;
+  font-size: 32px;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* DatePicker custom styles */
+.ant-picker {
+  border-radius: 8px !important;
+  border: 2px solid #ced4da !important;
+  padding: 8px 12px !important;
+  transition: all 0.3s ease !important;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.06) !important;
+}
+
+.ant-picker:hover {
+  border-color: #667eea !important;
+  box-shadow: 0 2px 12px rgba(102, 126, 234, 0.2) !important;
+}
+
+.ant-picker-focused {
+  border-color: #667eea !important;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1) !important;
+}
+
+.ant-picker-input input {
+  font-weight: 500 !important;
+  color: #495057 !important;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .thongke-page {
+    padding: 15px;
+    margin-left: 0; /* remove shift on small screens */
+  }
+
+  .thongke-header {
+    padding: 20px;
+  }
+
+  .thongke-header h1 {
+    font-size: 22px;
+  }
+  
+  .thongke-tabs {
+    flex-direction: column;
+  }
+  
+  .thongke-tabs button {
+    width: 100%;
+  }
+  
+  .thongke-filters {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 15px;
+  }
+  
+  .filter-group select {
+    width: 100%;
+  }
+  
+  .btn-excel, .btn-chart {
+    margin-left: 0;
+    justify-content: center;
+    width: 100%;
+  }
+  
+  .thongke-table {
+    font-size: 12px;
+  }
+
+  .thongke-table th,
+  .thongke-table td {
+    padding: 12px 8px;
+  }
+
+  .chart-wrapper {
+    height: 300px;
+  }
+
+  .thongke-content {
+    padding: 15px;
+  }
+}
+
+/* Animation khi load trang */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.thongke-page > * {
+  animation: fadeInUp 0.6s ease-out;
+}
+
+.thongke-tabs {
+  animation-delay: 0.1s;
+}
+
+.thongke-content {
+  animation-delay: 0.2s;
+}
+
+/* Hiệu ứng cho các con số */
+@keyframes countUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.thongke-table tbody tr td {
+  animation: countUp 0.5s ease-out;
+}
+
+.thongke-table tbody tr:nth-child(1) td { animation-delay: 0.05s; }
+.thongke-table tbody tr:nth-child(2) td { animation-delay: 0.1s; }
+.thongke-table tbody tr:nth-child(3) td { animation-delay: 0.15s; }
+.thongke-table tbody tr:nth-child(4) td { animation-delay: 0.2s; }
+.thongke-table tbody tr:nth-child(5) td { animation-delay: 0.25s; }
+
+/* ...existing code... */
+
+.btn-excel, .btn-chart, .btn-pdf {
+  padding: 10px 24px;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-excel::before,
+.btn-chart::before,
+.btn-pdf::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+  transform: translate(-50%, -50%);
+  transition: width 0.6s, height 0.6s;
+}
+
+.btn-excel:hover::before,
+.btn-chart:hover::before,
+.btn-pdf:hover::before {
+  width: 300px;
+  height: 300px;
+}
+
+.btn-excel {
+  background: linear-gradient(135deg, #52c41a 0%, #389e0d 100%);
+}
+
+.btn-excel:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 20px rgba(82, 196, 26, 0.4);
+}
+
+.btn-pdf {
+  background: linear-gradient(135deg, #ff4d4f 0%, #cf1322 100%);
+}
+
+.btn-pdf:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 20px rgba(255, 77, 79, 0.4);
+}
+
+.btn-chart {
+  background: linear-gradient(135deg, #722ed1 0%, #531dab 100%);
+}
+
+.btn-chart:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 20px rgba(114, 46, 209, 0.4);
+}
+
+.btn-chart.active {
+  background: linear-gradient(135deg, #9254de 0%, #722ed1 100%);
+  box-shadow: 0 6px 20px rgba(146, 84, 222, 0.5);
+}
+
+/* Refresh button - used for "Tải lại" actions */
+.btn-refresh {
+  padding: 10px 18px;
+  color: #fff;
+  background: linear-gradient(135deg, #00b894 0%, #00a86b 100%);
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  box-shadow: 0 6px 18px rgba(0,168,107,0.18);
+  transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
+}
+.btn-refresh i {
+  font-size: 14px;
+  transform: translateY(0);
+  transition: transform 0.2s ease;
+}
+.btn-refresh:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 28px rgba(0,168,107,0.28);
+}
+.btn-refresh:active {
+  transform: translateY(-1px) scale(0.995);
+}
+.btn-refresh[disabled] {
+  opacity: 0.6;
+  cursor: not-allowed;
+  box-shadow: none;
+  transform: none;
+}
+
+@media (max-width: 768px) {
+  .btn-refresh {
+    width: 100%;
+    justify-content: center;
+    margin-left: 0;
+  }
+}
+
+.btn-excel i, .btn-chart i, .btn-pdf i {
+  font-size: 18px;
+  position: relative;
+  z-index: 1;
+}
+/* ...existing code... */
+
+.btn-excel, .btn-chart, .btn-pdf {
+  padding: 10px 24px;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-pdf {
+  background: linear-gradient(135deg, #ff4d4f 0%, #cf1322 100%);
+}
+
+.btn-pdf:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 20px rgba(255, 77, 79, 0.4);
+}
+
+/* ...existing code... */
+
+/* ...existing code... */

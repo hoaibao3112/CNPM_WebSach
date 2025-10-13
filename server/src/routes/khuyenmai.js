@@ -7,7 +7,7 @@ const router = express.Router();
 // Validation rules cho cấu trúc mới
 const validatePromotion = (promotionData, isUpdate = false) => {
   const errors = [];
-  
+
   if (!isUpdate || promotionData.TenKM !== undefined) {
     if (!promotionData.TenKM?.trim()) {
       errors.push('Tên khuyến mãi là bắt buộc');
@@ -48,10 +48,10 @@ router.get('/', async (req, res) => {
     const { page = 1, limit = 10, search = '', activeOnly = false } = req.query;
     const offset = (page - 1) * limit;
     const searchTerm = `%${search}%`;
-    
+
     let whereClause = `WHERE TenKM LIKE ?`;
     const params = [searchTerm];
-    
+
     if (activeOnly === 'true') {
       whereClause += ` AND NgayBatDau <= NOW() AND NgayKetThuc >= NOW() AND TrangThai = 1`;
     }
@@ -80,9 +80,9 @@ router.get('/', async (req, res) => {
     });
   } catch (error) {
     console.error('Error fetching promotions:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       error: 'Lỗi khi lấy danh sách khuyến mãi',
-      details: error.message 
+      details: error.message
     });
   }
 });
@@ -112,9 +112,9 @@ router.get('/my-promotions', authenticateToken, async (req, res) => {
     res.status(200).json({ data: promotions });
   } catch (error) {
     console.error('Error fetching my promotions:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       error: 'Lỗi khi lấy khuyến mãi của bạn',
-      details: error.message 
+      details: error.message
     });
   }
 });
@@ -157,9 +157,9 @@ router.get('/:makm', async (req, res) => {
     });
   } catch (error) {
     console.error('Error fetching promotion detail:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       error: 'Lỗi khi lấy chi tiết khuyến mãi',
-      details: error.message 
+      details: error.message
     });
   }
 });
@@ -213,9 +213,9 @@ router.post('/', authenticateToken, async (req, res) => {
     }
   } catch (error) {
     console.error('Error adding promotion:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       error: 'Lỗi khi thêm khuyến mãi',
-      details: error.message 
+      details: error.message
     });
   }
 });
@@ -271,9 +271,9 @@ router.put('/:makm', authenticateToken, async (req, res) => {
     }
   } catch (error) {
     console.error('Error updating promotion:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       error: 'Lỗi khi cập nhật khuyến mãi',
-      details: error.message 
+      details: error.message
     });
   }
 });
@@ -322,9 +322,9 @@ router.delete('/:makm', authenticateToken, async (req, res) => {
 
       await connection.commit();
 
-      res.status(200).json({ 
+      res.status(200).json({
         message: 'Xóa khuyến mãi thành công',
-        makm 
+        makm
       });
     } catch (error) {
       await connection.rollback();
@@ -334,9 +334,9 @@ router.delete('/:makm', authenticateToken, async (req, res) => {
     }
   } catch (error) {
     console.error('Error deleting promotion:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       error: 'Lỗi khi xóa khuyến mãi',
-      details: error.message 
+      details: error.message
     });
   }
 });
@@ -368,16 +368,16 @@ router.patch('/:makm/trangthai', authenticateToken, async (req, res) => {
       [trangThai, makm]
     );
 
-    res.status(200).json({ 
+    res.status(200).json({
       message: 'Cập nhật trạng thái thành công',
       makm,
       trangThai
     });
   } catch (error) {
     console.error('Error updating promotion status:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       error: 'Lỗi khi cập nhật trạng thái khuyến mãi',
-      details: error.message 
+      details: error.message
     });
   }
 });
@@ -385,106 +385,161 @@ router.patch('/:makm/trangthai', authenticateToken, async (req, res) => {
 // POST /apply-to-cart - Áp dụng khuyến mãi vào giỏ hàng
 router.post('/apply-to-cart', authenticateToken, async (req, res) => {
   try {
-    const { MaKM, cartItems } = req.body;
-    const makh = req.user.makh;
+    const { code, cartItems, makh } = req.body;
 
-    if (!MaKM || !cartItems || !Array.isArray(cartItems) || cartItems.length === 0) {
-      return res.status(400).json({ error: 'Thiếu thông tin: MaKM hoặc giỏ hàng' });
+    // 1. Kiểm tra input
+    if (!code || !cartItems || !Array.isArray(cartItems) || cartItems.length === 0) {
+      return res.status(400).json({ error: 'Thiếu thông tin: Mã khuyến mãi hoặc giỏ hàng' });
     }
 
+    // 2. Lấy thông tin khuyến mãi
     const [[promotion]] = await pool.query(
-      `SELECT k.*, CAST(k.TrangThai AS UNSIGNED) as TrangThai,
-       ct.GiaTriGiam, ct.GiaTriDonToiThieu, ct.GiamToiDa, ct.SoLuongToiThieu
+      `SELECT k.*, CAST(k.TrangThai AS UNSIGNED) AS TrangThai,
+              ct.GiaTriGiam, ct.GiaTriDonToiThieu, ct.GiamToiDa, ct.SoLuongToiThieu
        FROM khuyen_mai k
        JOIN ct_khuyen_mai ct ON k.MaKM = ct.MaKM
-       WHERE k.MaKM = ? AND k.TrangThai = 1 
-       AND k.NgayBatDau <= NOW() AND k.NgayKetThuc >= NOW()`,
-      [MaKM]
+       WHERE k.code = ? 
+         AND k.TrangThai = 1 
+         AND k.NgayBatDau <= NOW() 
+         AND k.NgayKetThuc >= NOW()`,
+      [code]
     );
 
     if (!promotion) {
-      return res.status(400).json({ error: 'Khuyến mãi không hợp lệ hoặc hết hạn' });
+      return res.status(400).json({ error: 'Khuyến mãi không hợp lệ hoặc đã hết hạn' });
     }
 
+    const MaKM = promotion.MaKM;
+
+    // 3. Kiểm tra khách hàng đã claim mã chưa
     const [[claim]] = await pool.query(
-      `SELECT * FROM khachhang_khuyenmai WHERE makh = ? AND makm = ? AND trang_thai = 'Chua_su_dung' AND ngay_het_han >= NOW()`,
+      `SELECT * 
+       FROM khachhang_khuyenmai 
+       WHERE makh = ? 
+         AND makm = ? 
+         AND trang_thai = 'Chua_su_dung' 
+         AND ngay_het_han >= NOW()`,
       [makh, MaKM]
     );
 
     if (!claim) {
-      return res.status(400).json({ error: 'Bạn chưa lấy mã khuyến mãi này hoặc mã đã hết hạn/sử dụng' });
+      return res.status(401).json({ error: 'Bạn chưa nhận mã này hoặc đã hết hạn/sử dụng' });
     }
 
-    const [validProducts] = await pool.query(
-      `SELECT MaSP FROM sp_khuyen_mai WHERE MaKM = ?`,
-      [MaKM]
+    // 4. Kiểm tra sản phẩm nào trong giỏ được áp dụng khuyến mãi
+    const results = await Promise.all(
+      cartItems.map(async (item) => {
+        const [rows] = await pool.query(
+          `SELECT sp.MaSP, sp.DonGia
+           FROM sp_khuyen_mai km
+           JOIN sanpham sp ON km.MaSP = sp.MaSP
+           WHERE km.MaKM = ? AND km.MaSP = ?`,
+          [MaKM, item.MaSP]
+        );
+
+        if (rows.length > 0) {
+          return {
+            ...item,
+            DonGia: rows[0].DonGia
+          };
+        }
+        return null;
+      })
     );
-    const validProductIds = validProducts.map(p => p.MaSP);
 
-    // Nếu không có sản phẩm cụ thể nào trong sp_khuyen_mai -> áp dụng cho tất cả
-    const isApplyToAll = validProductIds.length === 0;
+    const kmProducts = results.filter(Boolean);
 
-    let subtotal = 0;
+    if (kmProducts.length === 0) {
+      return res.status(402).json({ error: 'Mã này không áp dụng cho sản phẩm nào trong giỏ hàng' });
+    }
+
+    // 5. Phân loại sản phẩm
+    const kmProductIds = kmProducts.map(p => p.MaSP);
+    const nonKmProducts = cartItems.filter(item => !kmProductIds.includes(item.MaSP));
+
+    // 6. Tính tổng tiền
+    const subtotal = kmProducts.reduce((sum, item) => sum + item.DonGia * item.SoLuong, 0);
+    const tongSoLuong = kmProducts.reduce((sum, item) => sum + item.SoLuong, 0);
+    const tongTienKhongGiam = nonKmProducts.reduce((sum, item) => sum + item.DonGia * item.SoLuong, 0);
+
+    // 7. Tính giảm giá
     let totalDiscount = 0;
-    const discountDetails = [];
-    const giftProducts = [];
-
-    cartItems.forEach(item => {
-      subtotal += item.DonGia * item.SoLuong;
-    });
-
+    let total = subtotal + tongTienKhongGiam
+    let totalFinal = 0;
+    let discountDetails = null;
+    console.log(promotion)
     switch (promotion.LoaiKM) {
-      case 'giam_phan_tram':
-        if (subtotal >= (promotion.GiaTriDonToiThieu || 0)) {
+      case 'giam_phan_tram': {
+        console.log("ntádasdassadas")
+        if (subtotal >= (promotion.GiaTriDonToiThieu || 0) && tongSoLuong >= (promotion.SoLuongToiThieu || 0)) {
           totalDiscount = subtotal * (promotion.GiaTriGiam / 100);
           totalDiscount = Math.min(totalDiscount, promotion.GiamToiDa || Infinity, subtotal);
-          discountDetails.push({
+          totalFinal = (subtotal - totalDiscount) + tongTienKhongGiam;
+
+          discountDetails = {
             discountType: 'percentage',
             value: promotion.GiaTriGiam,
-            discountAmount: totalDiscount
+            discountAmount: totalDiscount,
+            total,
+            totalFinal,
+            products: kmProducts
+          };
+        } else {
+          return res.status(403).json({
+            error: `Không đủ điều kiện áp dụng: 
+                yêu cầu tối thiểu ${promotion.GiaTriDonToiThieu || 0}đ 
+                và số lượng tối thiểu ${promotion.SoLuongToiThieu || 0}`
           });
         }
         break;
+      }
 
-      case 'giam_tien_mat':
-        let applicableQuantity = 0;
-        cartItems.forEach(item => {
-          if ((isApplyToAll || validProductIds.includes(item.MaSP)) && item.SoLuong >= (promotion.SoLuongToiThieu || 1)) {
-            applicableQuantity += Math.floor(item.SoLuong / (promotion.SoLuongToiThieu || 1));
-          }
-        });
-        if (applicableQuantity > 0 && subtotal >= (promotion.GiaTriDonToiThieu || 0)) {
-          totalDiscount = promotion.GiaTriGiam * applicableQuantity;
-          totalDiscount = Math.min(totalDiscount, promotion.GiamToiDa || Infinity, subtotal);
-          discountDetails.push({
+      case 'giam_tien_mat': {
+        if (subtotal >= (promotion.GiaTriDonToiThieu || 0) && tongSoLuong >= (promotion.SoLuongToiThieu || 0)) {
+          totalDiscount = promotion.GiaTriGiam
+          totalFinal = (subtotal - totalDiscount) + tongTienKhongGiam;
+
+          discountDetails = {
             discountType: 'fixed_amount',
             value: promotion.GiaTriGiam,
-            discountAmount: totalDiscount
+            discountAmount: totalDiscount,
+            total,
+            totalFinal,
+            products: kmProducts
+          };
+        } else {
+          return res.status(403).json({
+            error: `Không đủ điều kiện áp dụng: 
+                yêu cầu tối thiểu ${promotion.GiaTriDonToiThieu || 0}đ 
+                và số lượng tối thiểu ${promotion.SoLuongToiThieu || 0}`
           });
         }
         break;
+      }
 
       default:
-        return res.status(400).json({ error: 'Loại khuyến mãi không hỗ trợ' });
+        return res.status(400).json({ error: 'Loại khuyến mãi không được hỗ trợ' });
     }
 
-    const finalTotal = Math.max(0, subtotal - totalDiscount);
+    if (!discountDetails) {
+      return res.status(403).json({ error: 'Điều kiện áp dụng khuyến mãi không đạt yêu cầu' });
+    }
 
+    // 8. Trả về kết quả
     res.status(200).json({
       success: true,
-      totalDiscount,
-      discountDetails,
-      giftProducts,
-      finalTotal
+      discountDetails
     });
+
   } catch (error) {
     console.error('Error applying promotion to cart:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       error: 'Lỗi khi áp dụng khuyến mãi',
-      details: error.message 
+      details: error.message
     });
   }
 });
+
 
 
 // POST /claim/:makm - Lấy mã khuyến mãi
@@ -543,9 +598,9 @@ router.post('/claim/:makm', authenticateToken, async (req, res) => {
     }
   } catch (error) {
     console.error('Error claiming promotion:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       error: 'Lỗi khi lấy mã khuyến mãi',
-      details: error.message 
+      details: error.message
     });
   }
 });

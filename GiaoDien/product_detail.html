@@ -4,42 +4,61 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chi tiết sản phẩm</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="styles/product_detail.css">
 </head>
 <body>
-    <!-- header-->
+    <!-- Header -->
     <div id="load-header"></div>
-    <!-- content -->
+    
+    <!-- Main Content -->
     <div class="container">
+        <!-- Breadcrumb Navigation -->
         <nav class="breadcrumb">
             <a href="index.html">Trang chủ</a>
-            <span>/</span>
+            <span>›</span>
             <a href="book.html">Danh sách sản phẩm</a>
-            <span>/</span>
+            <span>›</span>
             <span id="product-title-breadcrumb">Chi tiết sản phẩm</span>
         </nav>
 
+        <!-- Product Detail Section -->
         <section class="product-detail-section">
-            <div class="product-images">
-                <div class="main-image">
-                    <img id="main-product-image" src="" alt="Product Image">
+            <!-- CỘT TRÁI - Product Images + Promotions -->
+            <div class="product-left-column">
+                <!-- Product Images -->
+                <div class="product-images">
+                    <div class="main-image">
+                        <img id="main-product-image" src="" alt="Product Image">
+                    </div>
+                </div>
+
+                <!-- PROMOTION SECTION - DI CHUYỂN VÀO ĐÂY -->
+                <div class="product-promotions" id="product-promotions" style="display: none;">
+                    <h3><i class="fas fa-gift"></i> Khuyến mãi áp dụng</h3>
+                    <div class="promotions-container" id="promotions-container">
+                        <!-- Sẽ được điền bằng JavaScript -->
+                    </div>
                 </div>
             </div>
 
+            <!-- CỘT PHẢI - Product Information -->
             <div class="product-info">
                 <h1 id="product-title">Đang tải...</h1>
+                
                 <div class="product-meta">
-                    <span id="product-author">Tác giả: Đang cập nhật</span>
-                    <span id="product-publisher">Nhà xuất bản: Đang cập nhật</span>
-                </div>
+                   <span><i class="fas fa-user"></i> Tác giả: <span id="product-author">Đang cập nhật</span></span>
+    <span><i class="fas fa-calendar-alt"></i> Năm XB: <span id="product-year">Đang cập nhật</span></span>
+</div>
 
+                <!-- Price Section -->
                 <div class="price-section">
                     <div class="current-price" id="product-price">0 đ</div>
                     <div class="original-price" id="product-original-price" style="display: none;"></div>
                     <div class="discount" id="product-discount" style="display: none;"></div>
                 </div>
 
+                <!-- Delivery Information -->
                 <div class="delivery-info">
                     <div class="delivery-item">
                         <i class="fas fa-check-circle"></i>
@@ -55,16 +74,18 @@
                     </div>
                 </div>
 
+                <!-- Action Buttons -->
                 <div class="action-buttons">
-                    <button class="add-to-cart-btn" id="add-to-cart">
+                    <button class="btn add-to-cart-btn" id="add-to-cart">
                         <i class="fas fa-cart-plus"></i> Thêm vào giỏ hàng
                     </button>
-                    <button class="buy-now-btn" id="buy-now">
+                    <button class="btn buy-now-btn" id="buy-now">
                         <i class="fas fa-bolt"></i> Mua ngay
                     </button>
                 </div>
 
-                <div class="wishlist-button">
+                <!-- Wishlist Button -->
+                <div class="wishlist">
                     <button id="add-to-wishlist">
                         <i class="far fa-heart"></i> Thêm vào yêu thích
                     </button>
@@ -72,24 +93,32 @@
             </div>
         </section>
 
+        <!-- Product Description -->
         <section class="product-description">
-            <h2>Giới thiệu sách</h2>
-            <div id="product-description">Đang tải mô tả sản phẩm...</div>
+            <h2><i class="fas fa-book-open"></i> Giới thiệu sách</h2>
+            <div class="description-content" id="product-description">
+                Đang tải mô tả sản phẩm...
+            </div>
         </section>
 
+        <!-- Product Ratings -->
         <section class="product-ratings">
-            <h2>Đánh giá sản phẩm</h2>
+            <h2><i class="fas fa-star"></i> Đánh giá sản phẩm</h2>
+            
+            <!-- Rating Summary -->
             <div class="rating-summary">
-                <span class="average-rating" id="average-rating">0.0</span>
-                <span class="star-display" id="star-display">
+                <div class="average-rating" id="average-rating">0.0</div>
+                <div class="star-display" id="star-display">
                     <i class="far fa-star"></i>
                     <i class="far fa-star"></i>
                     <i class="far fa-star"></i>
                     <i class="far fa-star"></i>
                     <i class="far fa-star"></i>
-                </span>
-                <span class="total-ratings" id="total-ratings">(0 đánh giá)</span>
+                </div>
+                <div class="total-ratings" id="total-ratings">(0 đánh giá)</div>
             </div>
+
+            <!-- Rating Form -->
             <form id="rating-form">
                 <div class="rating-input">
                     <div id="star-input">
@@ -99,47 +128,59 @@
                         <i class="far fa-star" data-value="4"></i>
                         <i class="far fa-star" data-value="5"></i>
                     </div>
-                    <textarea id="rating-comment" placeholder="Viết nhận xét của bạn..." maxlength="500"></textarea>
-                    <div class="char-count" id="rating-char-count">0/500</div>
-                    <p id="rating-message"></p>
-                    <button type="submit" id="submit-rating" disabled>Gửi đánh giá</button>
+                    <textarea id="rating-comment" placeholder="Viết nhận xét của bạn về sản phẩm..." maxlength="500"></textarea>
+                    <div class="comment-form-footer">
+                        <span class="comment-char-count" id="rating-char-count">0/500</span>
+                        <button type="submit" id="submit-rating" disabled>Gửi đánh giá</button>
+                    </div>
+                    <div id="rating-message"></div>
                 </div>
             </form>
+
+            <!-- Ratings List -->
             <div class="ratings-list" id="ratings-list">
                 <p>Chưa có đánh giá nào.</p>
             </div>
         </section>
 
+        <!-- Product Comments -->
         <section class="product-comments">
-            <h2>Bình luận về sản phẩm</h2>
-            <form id="comment-form">
-                <div class="comment-input">
-                    <textarea id="comment-input" placeholder="Viết bình luận..." maxlength="500"></textarea>
-                    <div class="char-count" id="comment-char-count">0/500</div>
-                    <p id="comment-message"></p>
-                    <button type="submit" id="submit-comment" disabled>Gửi bình luận</button>
+            <h2><i class="fas fa-comments"></i> Bình luận về sản phẩm</h2>
+            
+            <!-- Comment Form -->
+            <form id="comment-form" class="comment-form">
+                <textarea id="comment-input" placeholder="Viết bình luận của bạn..." maxlength="500"></textarea>
+                <div class="comment-form-footer">
+                    <span class="comment-char-count" id="comment-char-count">0/500</span>
+                    <button type="submit" id="submit-comment" class="btn" disabled>Gửi bình luận</button>
                 </div>
+                <div id="comment-message" class="comment-message"></div>
             </form>
+
+            <!-- Comments List -->
             <div class="comments-list" id="comments-list">
                 <p class="no-comments">Chưa có bình luận nào.</p>
             </div>
         </section>
 
+        <!-- Related Authors -->
         <section class="related-authors">
-            <h2>Tác giả liên quan</h2>
+            <h2><i class="fas fa-user-tie"></i> Tác giả liên quan</h2>
             <div id="related-authors">
                 <div class="loading-authors">Đang tải thông tin tác giả...</div>
             </div>
         </section>
 
+        <!-- Related Products -->
         <section class="related-products">
-            <h2>Sản phẩm liên quan</h2>
+            <h2><i class="fas fa-books"></i> Sản phẩm liên quan</h2>
             <div id="related-products" class="products-grid">
-                <div class="loading-related">Đang tải sản phẩm...</div>
+                <div class="loading-related">Đang tải sản phẩm liên quan...</div>
             </div>
         </section>
     </div>
 
+    <!-- Scripts -->
     <script src="js/product_detail.js"></script>
     <script src="js/loadHeader.js"></script>
 </body>

@@ -34,6 +34,12 @@
   transition: all 0.3s;
 }
 
+.buttons{
+  display: flex;
+  flex-direction: row;
+  gap: 8px;
+}
+
 .input button {
   background-color: #e0e0e0;       /* nền xám nhạt giống read-only */
   padding: 14px 20px;
@@ -47,6 +53,8 @@
 #input_button {
   background-color: #1e88e5;
   color: white;
+  max-width: 68.47px;
+  align-items: center;
 }
 
 #input_button:hover {
@@ -56,6 +64,7 @@
 
 #delete_button {
   background-color: #de3f3c;
+  max-width: 68.47px;
   color: white;
 }
 
@@ -91,6 +100,7 @@
   padding: 12px 18px;
   border-radius: 8px;
   box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  min-width: 200px;
 }
 
 .calculation .label {
@@ -104,10 +114,9 @@
   color: #222;
 }
 
-/* Responsive */
+/* --- Responsive 768px --- */
 @media (max-width: 768px) {
   .map_container {
-    width: 100%;
     padding: 16px;
   }
 
@@ -115,23 +124,92 @@
     flex-direction: column;
   }
 
-  .input input[type="text"],
-  .input button {
+  .buttons{
+    justify-content: center;
+  }
+
+  .input input[type="text"] {
     width: 100%;
     font-size: 15px;
   }
 
+  .input button {
+    width: 100%;
+    font-size: 14px; /* giảm chữ của tất cả button */
+  }
+
   #map {
-    height: 300px;
+    height: 350px;
   }
 
   .calculation {
-    flex-direction: column;
     align-items: stretch;
     width: 100%;
+    justify-content: center;
   }
 
   .calculation .item {
     width: 100%;
+    max-width: 200px;
+    min-width: auto;
+  }
+}
+
+/* --- Responsive 430px --- */
+@media (max-width: 431px) {
+  .map_container {
+    padding: 12px;
+    gap: 16px;
+  }
+
+  .input_field {
+    padding: 11px;
+    font-size: 14px;
+  }
+
+  .input button {
+    font-size: 13px;
+    padding: 12px;
+  }
+
+  #map {
+    height: 280px;
+  }
+
+  .calculation .item {
+    padding: 10px;
+    font-size: 10px;
+    max-width: 100px;
+  }
+}
+
+/* --- Responsive 375px --- */
+@media (max-width: 376px) {
+  .map_container {
+    padding: 8px;
+    gap: 12px;
+  }
+
+  #input_field {
+    padding: 10px;
+    font-size: 12px;
+  }
+
+  .input button {
+    font-size: 12px; /* chữ nhỏ hơn nữa */
+    padding: 10px;
+  }
+
+  #map {
+    height: 240px;
+  }
+
+  .calculation {
+    gap: 12px;
+  }
+
+  .calculation .item {
+    padding: 8px;
+    min-width: auto;
   }
 }

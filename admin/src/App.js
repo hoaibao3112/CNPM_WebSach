@@ -14,12 +14,15 @@ import Authorities from './pages/authorities';
 import Receipt from './pages/receipt.js';
 import Statistical from './pages/statistical.js';
 //import KhuyenMai from './pages/khuyenmai.js';
+import ReturnManagement from './pages/ReturnManagement.js';
 import Profile from './pages/Profile';
 import SalaryPage from './pages/SalaryPage';
 import LeavePage from './pages/LeavePage';
 import AttendancePage from './pages/AttendancePage';
 import { PermissionContext } from './components/PermissionContext';
 import DiscountManagement from './pages/DiscountManagement.js';
+import RefundManagement from './pages/RefundManagement.js';
+import AdminHome from './pages/AdminHome';
 
 const PrivateRoute = ({ component: Component }) => {
   const isAuthenticated = !!localStorage.getItem('authToken');
@@ -59,7 +62,7 @@ const App = () => {
 
       <Route
         path="/admin"
-        element={<PrivateRoute component={() => <div>Trang quản trị</div>} />}
+        element={<PrivateRoute component={AdminHome} />}
       />
       <Route
         path="/admin/products"
@@ -213,6 +216,26 @@ const App = () => {
           <PrivateRoute
             component={() => (
               <RestrictedRoute component={AttendancePage} permission="Chấm công" />
+            )}
+          />
+        }
+      />
+             <Route
+        path="/admin/refunds"
+        element={
+          <PrivateRoute
+            component={() => (
+              <RestrictedRoute component={RefundManagement} permission="Hoàn tiền đơn hàng" />
+            )}
+          />
+        }
+      />
+              <Route
+        path="/admin/Returns"
+        element={
+          <PrivateRoute
+            component={() => (
+              <RestrictedRoute component={ReturnManagement} permission="Hoàn tiền đơn hàng" />
             )}
           />
         }

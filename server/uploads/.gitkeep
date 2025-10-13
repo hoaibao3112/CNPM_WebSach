@@ -1,0 +1,3 @@
+# Keep this empty file so Git tracks the `server/uploads` directory.
+# Actual uploaded files are ignored by .gitignore to avoid committing user uploads or binaries.
+

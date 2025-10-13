@@ -1,32 +1,31 @@
+// Trong hàm DOMContentLoaded, thêm:
+
 document.addEventListener('DOMContentLoaded', function() {
-    // 1. Lấy thông tin sản phẩm từ các nguồn
     const productInfo = getProductInfoFromSources();
     
-    // 2. Xử lý hiển thị theo dữ liệu nhận được
     if (!productInfo) {
         showError('Không tìm thấy sản phẩm');
         return;
     }
-  
+
     if (productInfo.fullData) {
         console.log('Product data from localStorage:', productInfo.data);
         displayProductDetail(productInfo.data);
         fetchRelatedProducts(productInfo.data.MaSP);
-        fetchRatings(productInfo.data.MaSP); // Thêm gọi API đánh giá
+        fetchRatings(productInfo.data.MaSP);
+        // THÊM: Check promotions
+        checkAndDisplayPromotions(productInfo.data.MaSP);
+        
         if (productInfo.data.MaTG && productInfo.data.MaTG !== 'null' && productInfo.data.MaTG !== '') {
             fetchRelatedAuthor(productInfo.data.MaTG);
-        } else {
-            console.warn('No valid MaTG found for product:', productInfo.data.MaSP);
-            document.getElementById('related-authors').innerHTML = '<p>Không có thông tin tác giả</p>';
         }
     } else {
         fetchProductDetail(productInfo.data);
     }
-  
-    // 3. Thiết lập các sự kiện
+
     setupEventListeners();
     setupCommentSection(productInfo.data.MaSP || productInfo.data);
-    setupRatingSection(productInfo.data.MaSP || productInfo.data); // Thêm thiết lập phần đánh giá
+    setupRatingSection(productInfo.data.MaSP || productInfo.data);
 });
 
 /**
@@ -528,6 +527,7 @@ async function fetchProductDetail(productId) {
         displayProductDetail(product);
         fetchRelatedProducts(product.MaSP);
         fetchRatings(product.MaSP); // Thêm gọi API đánh giá
+        checkAndDisplayPromotions(product.MaSP); // THÊM: Check promotions khi fetch API
         if (product.MaTG && product.MaTG !== 'null' && product.MaTG !== '') {
             fetchRelatedAuthor(product.MaTG);
         } else {
@@ -597,26 +597,86 @@ window.viewAuthorDetail = (authorId) => {
 /**
  * Hiển thị chi tiết sản phẩm
  */
+
 function displayProductDetail(product) {
+    // Debug chi tiết hơn
+    console.log('🔍 =====PRODUCT DEBUG=====');
+    console.log('🔍 Raw product object:', product);
+    console.log('🔍 Object keys:', Object.keys(product));
+    console.log('🔍 MaTG value:', product.MaTG, typeof product.MaTG);
+    console.log('🔍 TacGia value:', product.TacGia, typeof product.TacGia);
+    console.log('🔍 TenTG value:', product.TenTG, typeof product.TenTG);
+    console.log('🔍 ========================');
+    
+    // Cập nhật tiêu đề sản phẩm
     document.getElementById('product-title').textContent = product.TenSP || 'Không có tiêu đề';
     document.getElementById('product-title-breadcrumb').textContent = product.TenSP || 'Chi tiết sản phẩm';
-    document.getElementById('product-author').textContent = product.TenTG || 'Không rõ tác giả';
-    document.getElementById('product-publisher').textContent = product.TenNXB || 'Không rõ NXB';
     
+    // XỬ LÝ TÁC GIẢ - SỬA LẠI LOGIC
+    const authorElement = document.getElementById('product-author');
+    if (authorElement) {
+        let authorName = 'Đang cập nhật';
+        
+        // Kiểm tra các field có thể chứa tên tác giả
+        if (product.TacGia && product.TacGia.trim() !== '') {
+            authorName = product.TacGia.trim();
+            console.log('✅ Using TacGia field:', authorName);
+        } else if (product.TenTG && product.TenTG.trim() !== '') {
+            authorName = product.TenTG.trim();
+            console.log('✅ Using TenTG field:', authorName);
+        } else {
+            console.log('⚠️ No valid author name found, using default');
+        }
+        
+        // Kiểm tra xem có phải là số (mã tác giả) không
+        if (!isNaN(authorName) && authorName.toString().trim() !== '') {
+            console.log('⚠️ Author name appears to be a number (ID):', authorName);
+            authorName = 'Đang cập nhật';
+        }
+        
+        authorElement.textContent = authorName;
+        console.log('🔍 Final author displayed:', authorName);
+    }
+
+    const yearElement = document.getElementById('product-year');
+    if (yearElement) {
+        yearElement.textContent = product.NamXB || 'Đang cập nhật';
+    }
+
+    // Cập nhật hình ảnh sản phẩm
     const mainImage = document.getElementById('main-product-image');
-    mainImage.src = `img/product/${product.HinhAnh || 'default-book.jpg'}`;
-    mainImage.alt = escapeHtml(product.TenSP);
-    mainImage.onerror = () => mainImage.src = 'https://via.placeholder.com/300x400?text=Book';
-    
+    if (mainImage) {
+        mainImage.src = `img/product/${product.HinhAnh || 'default-book.jpg'}`;
+        mainImage.alt = escapeHtml(product.TenSP);
+        // Uncomment nếu muốn fallback image
+        // mainImage.onerror = () => mainImage.src = 'https://via.placeholder.com/300x400?text=Book';
+    }
+
+    // Cập nhật giá sản phẩm
     updatePriceDisplay(product);
-    document.getElementById('product-description').innerHTML = product.MoTa || 'Không có mô tả';
-    
-    document.getElementById('add-to-cart').dataset.product = JSON.stringify({
-        id: product.MaSP,
-        name: product.TenSP,
-        price: product.DonGia,
-        image: product.HinhAnh || 'default-book.jpg'
-    });
+
+    // Cập nhật mô tả sản phẩm
+    const descriptionElement = document.getElementById('product-description');
+    if (descriptionElement) {
+        descriptionElement.innerHTML = product.MoTa || 'Không có mô tả';
+    }
+
+    // Kiểm tra và hiển thị khuyến mãi
+    checkAndDisplayPromotions(product.MaSP);
+
+    // Cập nhật dữ liệu cho nút thêm vào giỏ hàng
+    const addToCartButton = document.getElementById('add-to-cart');
+    if (addToCartButton) {
+        addToCartButton.dataset.product = JSON.stringify({
+            id: product.MaSP,
+            name: product.TenSP,
+            price: product.DonGia,
+            image: product.HinhAnh || 'default-book.jpg'
+        });
+    }
+
+    // Log để kiểm tra sau khi cập nhật
+    console.log('✅ Product detail display completed');
 }
 
 /**
@@ -641,6 +701,387 @@ function updatePriceDisplay(product) {
         discountElement.style.display = 'none';
     }
 }
+
+// ========================================
+// PHẦN MỚI: KHUYẾN MÃI
+// ========================================
+
+/**
+ * Kiểm tra và hiển thị khuyến mãi cho sản phẩm
+ */
+async function checkAndDisplayPromotions(productId) {
+    console.log('🔍 Checking promotions for product:', productId);
+    
+    try {
+        const response = await fetch('http://localhost:5000/api/khuyenmai?activeOnly=true');
+        console.log('📡 Promotions API response status:', response.status);
+        
+        if (!response.ok) {
+            console.error('❌ Failed to fetch promotions:', response.status);
+            return;
+        }
+
+        const result = await response.json();
+        console.log('📦 Promotions data:', result);
+        
+        const promotions = result.data || result;
+        console.log('🎯 Found promotions:', promotions.length);
+        
+        if (!promotions || promotions.length === 0) {
+            console.log('⚠️ No active promotions found');
+            displayPromotions([]);
+            return;
+        }
+
+        const applicablePromotions = [];
+
+        for (const promotion of promotions) {
+            console.log('🔎 Checking promotion:', promotion.TenKM, 'ID:', promotion.MaKM);
+            
+            try {
+                const detailResponse = await fetch(`http://localhost:5000/api/khuyenmai/${promotion.MaKM}`);
+                
+                if (!detailResponse.ok) {
+                    console.warn('⚠️ Failed to fetch promotion detail:', promotion.MaKM);
+                    continue;
+                }
+
+                const promotionDetail = await detailResponse.json();
+                console.log('📋 Promotion detail:', promotionDetail);
+                
+                let isApplicable = false;
+                
+                if (!promotionDetail.SanPhamApDung || promotionDetail.SanPhamApDung.length === 0) {
+                    console.log('✅ Promotion applies to all products');
+                    isApplicable = true;
+                } else {
+                    const productInList = promotionDetail.SanPhamApDung.some(p => {
+                        console.log('🔍 Comparing:', p.MaSP, 'with', productId);
+                        return p.MaSP == productId;
+                    });
+                    
+                    if (productInList) {
+                        console.log('✅ Product found in promotion list');
+                        isApplicable = true;
+                    } else {
+                        console.log('❌ Product not in promotion list');
+                    }
+                }
+
+                if (isApplicable) {
+                    console.log('🎉 Adding applicable promotion:', promotion.TenKM);
+                    applicablePromotions.push(promotionDetail);
+                }
+                
+            } catch (error) {
+                console.error('❌ Error checking promotion:', promotion.MaKM, error);
+            }
+        }
+
+        console.log('🎊 Total applicable promotions:', applicablePromotions.length);
+        displayPromotions(applicablePromotions);
+
+    } catch (error) {
+        console.error('❌ Error in checkAndDisplayPromotions:', error);
+    }
+}
+
+/**
+ * Hiển thị danh sách khuyến mãi với UI đẹp
+ */
+function displayPromotions(promotions) {
+    const promotionSection = document.getElementById('product-promotions');
+    const promotionContainer = document.getElementById('promotions-container');
+
+    if (!promotionSection || !promotionContainer) {
+        console.warn('⚠️ Promotion elements not found in DOM');
+        return;
+    }
+
+    if (!promotions || promotions.length === 0) {
+        promotionSection.style.display = 'none';
+        return;
+    }
+
+    promotionSection.style.display = 'block';
+
+    promotionContainer.innerHTML = promotions.map(promotion => {
+        const now = new Date();
+        const endDate = new Date(promotion.NgayKetThuc);
+        const isExpired = endDate < now;
+
+        // Xác định loại và icon khuyến mãi
+        const typeConfig = {
+            'giam_phan_tram': { 
+                icon: '<i class="fas fa-percent"></i>', 
+                label: 'Giảm %',
+                color: '#FF6B6B'
+            },
+            'giam_tien_mat': { 
+                icon: '<i class="fas fa-money-bill-wave"></i>', 
+                label: 'Giảm tiền',
+                color: '#4ECDC4'
+            }
+        };
+
+        const config = typeConfig[promotion.LoaiKM] || typeConfig['giam_phan_tram'];
+
+        // Tạo text giá trị giảm
+        let discountText = '';
+        let maxDiscountText = '';
+        
+        if (promotion.LoaiKM === 'giam_phan_tram') {
+            discountText = `-${promotion.GiaTriGiam}%`;
+            if (promotion.GiamToiDa) {
+                maxDiscountText = `Tối đa ${formatPrice(promotion.GiamToiDa)}`;
+            }
+        } else if (promotion.LoaiKM === 'giam_tien_mat') {
+            discountText = `-${formatPrice(promotion.GiaTriGiam)}`;
+        }
+
+        // Tạo text điều kiện
+        let conditionsHtml = '';
+        const conditions = [];
+        
+        if (promotion.GiaTriDonToiThieu > 0) {
+            conditions.push(`Đơn tối thiểu: <strong>${formatPrice(promotion.GiaTriDonToiThieu)}</strong>`);
+        }
+        if (promotion.SoLuongToiThieu > 1) {
+            conditions.push(`Số lượng tối thiểu: <strong>${promotion.SoLuongToiThieu}</strong>`);
+        }
+        
+        if (conditions.length > 0) {
+            conditionsHtml = `
+                <div class="promotion-conditions">
+                    ${conditions.join(' • ')}
+                </div>
+            `;
+        }
+
+        return `
+            <div class="promotion-card ${isExpired ? 'promotion-expired' : ''}" data-promotion-id="${promotion.MaKM}">
+                <div class="promotion-header">
+                    <div class="promotion-icon">
+                        ${config.icon}
+                        <span>${config.label}</span>
+                    </div>
+                    <div class="promotion-type">${isExpired ? 'Hết hạn' : 'Đang áp dụng'}</div>
+                </div>
+                
+                <div class="promotion-content">
+                    <div class="promotion-info">
+                        <div class="promotion-title">${escapeHtml(promotion.TenKM)}</div>
+                        <div class="promotion-desc">${promotion.MoTa ? escapeHtml(promotion.MoTa) : 'Khuyến mãi đặc biệt'}</div>
+                        ${conditionsHtml}
+                    </div>
+                    
+                    <div class="promotion-value">
+                        <div class="promotion-discount">${discountText}</div>
+                        ${maxDiscountText ? `<div class="promotion-max-discount">${maxDiscountText}</div>` : ''}
+                        ${promotion.Code ? `<div class="promotion-code" onclick="copyPromotionCode('${promotion.Code}')" title="Click để copy mã">${promotion.Code}</div>` : ''}
+                    </div>
+                </div>
+                
+                <div class="promotion-actions">
+                    <button class="promotion-detail-btn" onclick="showPromotionDetail(${promotion.MaKM})">
+                        <i class="fas fa-info-circle"></i>
+                        Chi tiết
+                    </button>
+                    ${!isExpired ? `
+                        <button class="promotion-apply-btn" onclick="applyPromotion('${promotion.Code || ''}', ${promotion.MaKM})">
+                            <i class="fas fa-check"></i>
+                            Áp dụng
+                        </button>
+                    ` : ''}
+                </div>
+            </div>
+        `;
+    }).join('');
+
+    // Thêm animation cho các card
+    const cards = promotionContainer.querySelectorAll('.promotion-card');
+    cards.forEach((card, index) => {
+        card.style.opacity = '0';
+        card.style.transform = 'translateY(20px)';
+        setTimeout(() => {
+            card.style.transition = 'all 0.5s ease';
+            card.style.opacity = '1';
+            card.style.transform = 'translateY(0)';
+        }, index * 150);
+    });
+}
+
+/**
+ * Copy mã khuyến mãi
+ */
+function copyPromotionCode(code) {
+    if (!code) return;
+    
+    navigator.clipboard.writeText(code).then(() => {
+        showAlert(`Đã copy mã khuyến mãi: ${code}`, 'success');
+    }).catch(err => {
+        console.error('Failed to copy code:', err);
+        showAlert('Không thể copy mã khuyến mãi', 'error');
+    });
+}
+
+/**
+ * Hiển thị chi tiết khuyến mãi trong modal
+ */
+async function showPromotionDetail(promotionId) {
+    try {
+        const response = await fetch(`http://localhost:5000/api/khuyenmai/${promotionId}`);
+        if (!response.ok) throw new Error('Không thể tải chi tiết khuyến mãi');
+        
+        const promotion = await response.json();
+        
+        const modalHtml = `
+            <div class="promotion-detail-modal" id="promotionDetailModal">
+                <div class="promotion-detail-content">
+                    <div class="promotion-detail-header">
+                        <h2><i class="fas fa-gift"></i> ${escapeHtml(promotion.TenKM)}</h2>
+                        <button class="promotion-detail-close" onclick="closePromotionDetail()">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    
+                    <div class="promotion-detail-body">
+                        <div class="promotion-detail-section">
+                            <h4><i class="fas fa-info-circle"></i> Thông tin cơ bản</h4>
+                            <div class="promotion-detail-item">
+                                <span class="promotion-detail-label">Mã khuyến mãi:</span>
+                                <span class="promotion-detail-value">${promotion.Code || 'Không có'}</span>
+                            </div>
+                            <div class="promotion-detail-item">
+                                <span class="promotion-detail-label">Mô tả:</span>
+                                <span class="promotion-detail-value">${promotion.MoTa || 'Không có'}</span>
+                            </div>
+                            <div class="promotion-detail-item">
+                                <span class="promotion-detail-label">Loại khuyến mãi:</span>
+                                <span class="promotion-detail-value">${promotion.LoaiKM === 'giam_phan_tram' ? 'Giảm theo %' : 'Giảm tiền mặt'}</span>
+                            </div>
+                        </div>
+                        
+                        <div class="promotion-detail-section">
+                            <h4><i class="fas fa-calendar-alt"></i> Thời gian áp dụng</h4>
+                            <div class="promotion-detail-item">
+                                <span class="promotion-detail-label">Từ ngày:</span>
+                                <span class="promotion-detail-value">${new Date(promotion.NgayBatDau).toLocaleDateString('vi-VN')}</span>
+                            </div>
+                            <div class="promotion-detail-item">
+                                <span class="promotion-detail-label">Đến ngày:</span>
+                                <span class="promotion-detail-value">${new Date(promotion.NgayKetThuc).toLocaleDateString('vi-VN')}</span>
+                            </div>
+                        </div>
+                        
+                        <div class="promotion-detail-section">
+                            <h4><i class="fas fa-cogs"></i> Điều kiện và quy định</h4>
+                            <div class="promotion-detail-item">
+                                <span class="promotion-detail-label">Giá trị giảm:</span>
+                                <span class="promotion-detail-value">${promotion.GiaTriGiam}${promotion.LoaiKM === 'giam_phan_tram' ? '%' : ' VND'}</span>
+                            </div>
+                            <div class="promotion-detail-item">
+                                <span class="promotion-detail-label">Đơn hàng tối thiểu:</span>
+                                <span class="promotion-detail-value">${promotion.GiaTriDonToiThieu ? formatPrice(promotion.GiaTriDonToiThieu) : 'Không yêu cầu'}</span>
+                            </div>
+                            <div class="promotion-detail-item">
+                                <span class="promotion-detail-label">Số lượng tối thiểu:</span>
+                                <span class="promotion-detail-value">${promotion.SoLuongToiThieu || 1} sản phẩm</span>
+                            </div>
+                            <div class="promotion-detail-item">
+                                <span class="promotion-detail-label">Giảm tối đa:</span>
+                                <span class="promotion-detail-value">${promotion.GiamToiDa ? formatPrice(promotion.GiamToiDa) : 'Không giới hạn'}</span>
+                            </div>
+                        </div>
+                        
+                        <div class="promotion-detail-section">
+                            <h4><i class="fas fa-box"></i> Sản phẩm áp dụng</h4>
+                            ${(promotion.SanPhamApDung && promotion.SanPhamApDung.length > 0) 
+                                ? `<div style="max-height: 200px; overflow-y: auto;">
+                                    ${promotion.SanPhamApDung.map(sp => `
+                                        <div class="promotion-detail-item">
+                                            <span class="promotion-detail-label">${escapeHtml(sp.TenSP)}</span>
+                                            <span class="promotion-detail-value">ID: ${sp.MaSP}</span>
+                                        </div>
+                                    `).join('')}
+                                   </div>`
+                                : '<p style="text-align: center; color: #28a745; font-style: italic;">Áp dụng cho tất cả sản phẩm</p>'}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        // Xóa modal cũ nếu có
+        const existingModal = document.getElementById('promotionDetailModal');
+        if (existingModal) {
+            existingModal.remove();
+        }
+        
+        // Thêm modal mới
+        document.body.insertAdjacentHTML('beforeend', modalHtml);
+        const modal = document.getElementById('promotionDetailModal');
+        modal.style.display = 'flex';
+        
+        // Đóng modal khi click outside
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                closePromotionDetail();
+            }
+        });
+        
+    } catch (error) {
+        console.error('Error loading promotion detail:', error);
+        showAlert('Không thể tải chi tiết khuyến mãi', 'error');
+    }
+}
+
+/**
+ * Đóng modal chi tiết khuyến mãi
+ */
+function closePromotionDetail() {
+    const modal = document.getElementById('promotionDetailModal');
+    if (modal) {
+        modal.style.display = 'none';
+        modal.remove();
+    }
+}
+
+/**
+ * Áp dụng khuyến mãi
+ */
+function applyPromotion(code, promotionId) {
+    if (!code) {
+        showAlert('Mã khuyến mãi không hợp lệ', 'error');
+        return;
+    }
+    
+    // Lưu mã khuyến mãi vào localStorage để sử dụng khi thanh toán
+    let appliedPromotions = JSON.parse(localStorage.getItem('appliedPromotions') || '[]');
+    
+    // Kiểm tra xem mã đã được áp dụng chưa
+    if (!appliedPromotions.some(p => p.code === code)) {
+        appliedPromotions.push({
+            id: promotionId,
+            code: code,
+            appliedAt: new Date().toISOString()
+        });
+        localStorage.setItem('appliedPromotions', JSON.stringify(appliedPromotions));
+        showAlert(`Đã áp dụng mã khuyến mãi: ${code}`, 'success');
+    } else {
+        showAlert('Mã khuyến mãi đã được áp dụng', 'info');
+    }
+}
+
+// Export các function để có thể sử dụng từ HTML
+window.copyPromotionCode = copyPromotionCode;
+window.showPromotionDetail = showPromotionDetail;
+window.closePromotionDetail = closePromotionDetail;
+window.applyPromotion = applyPromotion;
+
+// ========================================
+// HẾT PHẦN MỚI: KHUYẾN MÃI
+// ========================================
 
 /**
  * Lấy sản phẩm liên quan

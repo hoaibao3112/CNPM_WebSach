@@ -480,6 +480,117 @@ router.put('/cart/update', authenticateToken, async (req, res) => {
   }
 });
 
+// GET / - Lấy danh sách khách hàng (dành cho admin)
+// Optional query: ?q=searchTerm will search by tenkh, sdt, email, makh
+router.get('/', async (req, res) => {
+  try {
+    const q = (req.query.q || '').trim();
+    let sql = 'SELECT makh, tenkh, sdt, email, diachi, tinhtrang FROM khachhang';
+    let params = [];
+    if (q) {
+      sql += ' WHERE tenkh LIKE ? OR sdt LIKE ? OR email LIKE ? OR makh LIKE ?';
+      const like = `%${q}%`;
+      params = [like, like, like, like];
+    }
+    const [rows] = await pool.query(sql, params);
+    return res.status(200).json({ data: rows });
+  } catch (error) {
+    console.error('Lỗi lấy danh sách khách hàng:', error);
+    return res.status(500).json({ error: 'Lỗi khi lấy danh sách khách hàng' });
+  }
+});
+
+// PATCH /:makh/toggle-status - Cập nhật trạng thái khách hàng (Hoạt động / Ngừng hoạt động)
+router.patch('/:makh/toggle-status', async (req, res) => {
+  try {
+    const { makh } = req.params;
+    const { tinhtrang } = req.body;
+    if (!makh) return res.status(400).json({ error: 'Thiếu mã khách hàng' });
+    if (!tinhtrang || (tinhtrang !== 'Hoạt động' && tinhtrang !== 'Ngừng hoạt động')) {
+      return res.status(400).json({ error: 'Giá trị tinhtrang không hợp lệ' });
+    }
+
+    const [result] = await pool.query('UPDATE khachhang SET tinhtrang = ? WHERE makh = ?', [tinhtrang, makh]);
+    if (result.affectedRows === 0) return res.status(404).json({ error: 'Không tìm thấy khách hàng' });
+    return res.status(200).json({ message: 'Cập nhật trạng thái thành công' });
+  } catch (error) {
+    console.error('Lỗi cập nhật trạng thái khách hàng:', error);
+    return res.status(500).json({ error: 'Lỗi khi cập nhật trạng thái khách hàng' });
+  }
+});
+
+// GET /:makh/promo-usage - Lấy số lượng mã khuyến mãi mà khách hàng đã sử dụng
+router.get('/:makh/promo-usage', async (req, res) => {
+  try {
+    const { makh } = req.params;
+    if (!makh) return res.status(400).json({ error: 'Thiếu mã khách hàng' });
+
+    // Số mã đã sử dụng (trang_thai = 'Da_su_dung')
+    const [usedRows] = await pool.query(
+      'SELECT COUNT(*) AS usedCount FROM khachhang_khuyenmai WHERE makh = ? AND trang_thai = ?',
+      [makh, 'Da_su_dung']
+    );
+
+    // Tổng số mã đã lấy/khách hàng có (bất kỳ trạng thái)
+    const [totalRows] = await pool.query(
+      'SELECT COUNT(*) AS totalClaimed FROM khachhang_khuyenmai WHERE makh = ?',
+      [makh]
+    );
+
+    const usedCount = (usedRows && usedRows[0] && usedRows[0].usedCount) ? usedRows[0].usedCount : 0;
+    const totalClaimed = (totalRows && totalRows[0] && totalRows[0].totalClaimed) ? totalRows[0].totalClaimed : 0;
+
+    return res.status(200).json({ makh, usedCount, totalClaimed });
+  } catch (error) {
+    console.error('Lỗi lấy số lượng mã khuyến mãi đã sử dụng:', error);
+    return res.status(500).json({ error: 'Lỗi khi lấy thông tin mã khuyến mãi' });
+  }
+});
+
+// GET /:makh/promo-list - Lấy chi tiết các mã khuyến mãi khách hàng đã lưu/claim
+router.get('/:makh/promo-list', async (req, res) => {
+  try {
+    const { makh } = req.params;
+    if (!makh) return res.status(400).json({ error: 'Thiếu mã khách hàng' });
+
+    const [rows] = await pool.query(
+      `SELECT kk.makm, k.TenKM, k.Code, k.MoTa, k.LoaiKM, k.NgayBatDau, k.NgayKetThuc,
+              kk.ngay_lay, kk.trang_thai AS claim_trang_thai,
+              GROUP_CONCAT(DISTINCT CONCAT(s.MaSP, '::', s.TenSP) SEPARATOR '||') AS products
+       FROM khachhang_khuyenmai kk
+       JOIN khuyen_mai k ON kk.makm = k.MaKM
+       LEFT JOIN sp_khuyen_mai sp ON sp.MaKM = k.MaKM
+       LEFT JOIN sanpham s ON sp.MaSP = s.MaSP
+       WHERE kk.makh = ?
+       GROUP BY kk.makm, kk.ngay_lay, kk.trang_thai, k.TenKM, k.Code, k.MoTa, k.LoaiKM, k.NgayBatDau, k.NgayKetThuc`,
+      [makh]
+    );
+
+    const data = (rows || []).map((r) => ({
+      makm: r.makm,
+      TenKM: r.TenKM,
+      Code: r.Code,
+      MoTa: r.MoTa,
+      LoaiKM: r.LoaiKM,
+      NgayBatDau: r.NgayBatDau,
+      NgayKetThuc: r.NgayKetThuc,
+      ngay_lay: r.ngay_lay,
+      claim_trang_thai: r.claim_trang_thai,
+      products: r.products
+        ? r.products.split('||').map((p) => {
+            const [MaSP, TenSP] = p.split('::');
+            return { MaSP, TenSP };
+          })
+        : [],
+    }));
+
+    return res.status(200).json({ data });
+  } catch (error) {
+    console.error('Lỗi lấy danh sách chi tiết mã khuyến mãi của khách hàng:', error);
+    return res.status(500).json({ error: 'Lỗi khi lấy thông tin mã khuyến mãi chi tiết' });
+  }
+});
+
 // PUT /cart/select - Cập nhật trạng thái selected
 router.put('/cart/select', authenticateToken, async (req, res) => {
   const { productId, selected } = req.body;

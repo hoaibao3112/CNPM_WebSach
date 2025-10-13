@@ -11,6 +11,29 @@ async function loadHeader() {
     }
     container.innerHTML = data;
 
+    // Force header to span full viewport width when injected (fix pages where CSS conflicts center it)
+    try {
+      const topBar = container.querySelector('.top-bar');
+      if (topBar) {
+        // Ensure fixed positioning is relative to viewport
+        topBar.style.position = 'fixed';
+        topBar.style.left = '0';
+        topBar.style.top = '0';
+        topBar.style.width = '100%';
+        topBar.style.zIndex = '9999';
+        topBar.style.boxSizing = 'border-box';
+
+        const inner = topBar.querySelector('.top-bar-container');
+        if (inner) {
+          inner.style.maxWidth = '100%';
+          inner.style.margin = '0';
+          inner.style.padding = '0 20px';
+        }
+      }
+    } catch (e) {
+      console.warn('Could not force header full-width:', e);
+    }
+
     const script = document.createElement("script");
     script.src = "js/header.js";
     script.onload = () => {

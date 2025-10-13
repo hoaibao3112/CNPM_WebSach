@@ -11,34 +11,50 @@
   <link rel="icon" href="favicon.ico" type="image/x-icon" />
 </head>
 <body>
-  <!-- Top bar -->
-  <div id="load-header"></div>
-  
-  <!-- Slideshow -->
-  <header class="slideshow-container">
-    <div class="slideshow-column">
-      <div class="mySlides fade">
-        <img src="img/anhnen/3d.jpg" alt="Slide 1">
-      </div>
-      <div class="mySlides fade">
-        <img src="img/anhnen/5d.jpg" alt="Slide 3">
-      </div>
-      <div class="mySlides fade">
-        <img src="img/anhnen/7d.jpg" alt="Slide 5">
-      </div>
+<!-- Top bar -->
+<div id="load-header"></div>
+
+<!-- Slideshow -->
+<header class="slideshow-container">
+  <div class="slideshow-column">
+    <div class="mySlides fade">
+      <img src="img/anhnen/17d.jpg" alt="Slide 1">
     </div>
-    <div class="slideshow-column">
-      <div class="mySlides fade">
-        <img src="img/anhnen/4d.jpg" alt="Slide 2">
-      </div>
-      <div class="mySlides fade">
-        <img src="img/anhnen/6d.jpg" alt="Slide 4">
-      </div>
-      <div class="mySlides fade">
-        <img src="img/anhnen/8Sd.jpg" alt="Slide 6">
-      </div>
+    <div class="mySlides fade">
+      <img src="img/anhnen/14d.jpg" alt="Slide 3">
     </div>
-  </header>
+    <div class="mySlides fade">
+      <img src="img/anhnen/15d.jpg" alt="Slide 5">
+    </div>
+    <!-- THÊM ẢNH 9D.JPG VÀO CỘT 1 -->
+    <div class="mySlides fade">
+      <img src="img/anhnen/9d.jpg" alt="Slide 7">
+    </div>
+    <!-- THÊM ẢNH 11D.JPG VÀO CỘT 1 -->
+    <div class="mySlides fade">
+      <img src="img/anhnen/11d.jpg" alt="Slide 9">
+    </div>
+  </div>
+  <div class="slideshow-column">
+    <div class="mySlides fade">
+      <img src="img/anhnen/18d.jpg" alt="Slide 2">
+    </div>
+    <div class="mySlides fade">
+      <img src="img/anhnen/13d.jpg" alt="Slide 4">
+    </div>
+    <div class="mySlides fade">
+      <img src="img/anhnen/16d.jpg" alt="Slide 6">
+    </div>
+    <!-- THÊM ẢNH 10D.JPG VÀO CỘT 2 -->
+    <div class="mySlides fade">
+      <img src="img/anhnen/10d.jpg" alt="Slide 8">
+    </div>
+    <!-- THÊM ẢNH 12D.JPG VÀO CỘT 2 -->
+    <div class="mySlides fade">
+      <img src="img/anhnen/12d.jpg" alt="Slide 10">
+    </div>
+  </div>
+</header>
   <div class="promotion-buttons">
     <img src="img/giamgia/anh1.jpg" alt="Khuyến mãi 1" class="promo-button" onclick="window.location.href='./giamgia.html'">
     <img src="img/giamgia/anh2.jpg" alt="Khuyến mãi 2" class="promo-button" onclick="window.location.href='./giamgia1.html'">
@@ -52,64 +68,7 @@
   </div>
   <!-- Main content -->
   <div class="container">
-    <!-- Sidebar -->
-    <!--
-    <aside class="sidebar">
-      <h3>DANH MỤC SẢN PHẨM</h3>
-      <div class="category-dropdown" id="categoryDropdown">
-        <div class="dropdown-header">
-          <span>Nổi bật</span>
-          <i class="fas fa-chevron-down"></i>
-        </div>
-        <div class="dropdown-content">
-          <a href="#" onclick="filterProductsByCategory(1)">Truyền Tranh - Comic</a>
-          <a href="#" onclick="filterProductsByCategory(2)">Văn học nước ngoài</a>
-          <a href="#" onclick="filterProductsByCategory(3)">Sale cuối năm 2022</a>
-          <a href="#" onclick="filterProductsByCategory(4)">Sách Văn Học</a>
-          <a href="#" onclick="filterProductsByCategory(5)">Truyền Tranh BL</a>
-          <a href="#" onclick="filterProductsByCategory(6)">Sách Kỹ Năng Sống</a>
-          <a href="#" onclick="filterProductsByCategory(7)">Sách Thiếu Nhi</a>
-          <a href="#" onclick="filterProductsByCategory(8)">Light Novel</a>
-          <a href="#" onclick="filterProductsByCategory(9)">Văn Phòng Phẩm - Quà Tặng</a>
-        </div>
-      </div>
-      <div class="divider"></div>
-      <div class="price-filter-section">
-        <h3>LỌC THEO GIÁ</h3>
-        <div class="price-filter">
-          <select id="priceRange" onchange="filterProductsByPrice(this.value)">
-            <option value="">Tất cả</option>
-            <option value="0-50000">Dưới 50.000đ</option>
-            <option value="50000-100000">50.000đ - 100.000đ</option>
-            <option value="100000-200000">100.000đ - 200.000đ</option>
-            <option value="200000">Trên 200.000đ</option>
-          </select>
-        </div>
-      </div>
-      <div class="divider"></div>
-      [NOTE: Thêm phần text-discount-section]
-      <div class="text-discount-section">
-        <h4>DEAL HOT - GIẢM SỐC</h4>
-        <div class="discount-filter">
-          <select id="discountSelect" onchange="selectDiscount(this.value)">
-            <option value="">Chọn chương trình khuyến mãi</option>
-            <option value="skills-set">Bộ sách kỹ năng sống - 99.000đ (-34%)</option>
-            <option value="bestseller-novel">Tiểu thuyết bestseller - 79.000đ (-34%)</option>
-            <option value="children-comics">Truyện tranh thiếu nhi - 59.000đ (-34%)</option>
-            <option value="cooking-book">Sách dạy nấu ăn - 129.000đ (-28%)</option>
-            <option value="light-novel">Light Novel - 89.000đ (-31%)</option>
-            <option value="dictionary">Từ điển Anh-Việt - 199.000đ (-20%)</option>
-          </select>
-        </div>
-        <ul id="promotions-list"></ul>
-        <div id="deal-hot-list"></div>
-        <a href="#" class="text-view-more">Xem thêm deal hot <i class="fas fa-chevron-right"></i></a>
-      </div>
-      <div class="divider"></div>
-      <div class="hotline">Hotline: 0938 424 289</div>
-    </aside>
-    -->
-    <!-- Main content area -->
+    
     <main class="main-content">
       <!-- Phần Sách Mới -->
       <div class="product-section">

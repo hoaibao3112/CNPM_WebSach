@@ -9,11 +9,46 @@ const router = express.Router();
 async function fetchProductContext() {
   try {
     const response = await axios.get('http://localhost:5000/api/product');
-    return `Danh sách sản phẩm: ${JSON.stringify(response.data.slice(0, 10))}. Trả lời bằng tiếng Việt.`;
+    return response.data.slice(0, 10);
   } catch (error) {
     console.error('Lỗi khi lấy thông tin sản phẩm:', error);
-    return 'Không có thông tin sản phẩm hiện tại. Trả lời bằng tiếng Việt.';
+    return [];
   }
+}
+
+// Simple rule-based chat cho đến khi Gemini hoạt động
+function generateSimpleResponse(message, products) {
+  const lowerMessage = message.toLowerCase();
+  
+  // Tìm kiếm sách
+  if (lowerMessage.includes('tìm') || lowerMessage.includes('sách') || lowerMessage.includes('có')) {
+    const foundProduct = products.find(p => 
+      p.TenSP?.toLowerCase().includes(lowerMessage.split(' ').find(word => word.length > 3))
+    );
+    
+    if (foundProduct) {
+      return `Tôi tìm thấy sách "${foundProduct.TenSP}" với giá ${foundProduct.Gia?.toLocaleString('vi-VN')} VNĐ. [PRODUCT_ID: ${foundProduct.MaSP}]`;
+    } else {
+      return 'Tôi không tìm thấy sách phù hợp. Bạn có thể xem thêm sản phẩm khác trên website.';
+    }
+  }
+  
+  // Câu hỏi về giá
+  if (lowerMessage.includes('giá') || lowerMessage.includes('bao nhiêu')) {
+    return 'Giá sách dao động từ 50,000 - 500,000 VNĐ tùy loại. Bạn có thể xem chi tiết từng sản phẩm.';
+  }
+  
+  // Câu hỏi chào hỏi
+  if (lowerMessage.includes('xin chào') || lowerMessage.includes('chào') || lowerMessage.includes('hello')) {
+    return 'Xin chào! Tôi là trợ lý ảo của cửa hàng sách. Tôi có thể giúp bạn tìm sách, tư vấn sản phẩm. Bạn cần hỗ trợ gì?';
+  }
+  
+  // Mặc định
+  return `Cảm ơn bạn đã liên hệ! Tôi đã ghi nhận câu hỏi: "${message}". 
+  Bạn có thể:
+  - Tìm kiếm sách theo tên
+  - Hỏi về giá cả
+  - Liên hệ: 0938 424 289`;
 }
 
 router.post('/chat', async (req, res) => {
@@ -23,42 +58,15 @@ router.post('/chat', async (req, res) => {
     return res.status(400).json({ error: 'Vui lòng nhập tin nhắn.' });
   }
 
-  const apiKey = process.env.GENNIAMA_API_KEY;
-  if (!apiKey) {
-    return res.status(500).json({ error: 'API Key Gemini chưa được cấu hình.' });
-  }
-
   try {
-    const context = await fetchProductContext();
-
-    const apiResponse = await axios.post(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
-      {
-        contents: [
-          {
-            role: 'user',
-            parts: [
-              {
-              text: `${context}\n\nCâu hỏi: ${message}\n\nHướng dẫn trả lời: Luôn trả lời bằng tiếng Việt. Nếu đề cập đến sản phẩm cụ thể từ danh sách, thêm [PRODUCT_ID: MaSP] ở cuối câu trả lời, trong đó MaSP là ID từ JSON (ví dụ: [PRODUCT_ID: 123]). Nếu không có sản phẩm khớp, nói 'Không tìm thấy' và không thêm tag.`,
-              },
-            ],
-          },
-        ],
-      },
-      {
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      }
-    );
-
-    const reply = apiResponse.data.candidates?.[0]?.content?.parts?.[0]?.text ||
-                  'Xin lỗi, không có phản hồi từ Gemini.';
+    const products = await fetchProductContext();
+    const reply = generateSimpleResponse(message, products);
+    
     res.set('Content-Type', 'application/json; charset=utf-8');
     res.json({ reply });
   } catch (error) {
-    console.error('Lỗi khi gọi Gemini API:', error.response?.data || error.message);
-    res.status(500).json({ error: 'Lỗi khi xử lý yêu cầu chat với Gemini. Vui lòng thử lại sau.' });
+    console.error('Chat error:', error.message);
+    res.status(500).json({ error: 'Lỗi hệ thống. Vui lòng thử lại sau.' });
   }
 });
 
