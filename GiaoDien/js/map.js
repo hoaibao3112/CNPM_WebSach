@@ -3,9 +3,18 @@ var marker_start = null;
 var marker_end = null;
 var route = null;
 
-function delete_input(input_field, lat, long) {
-    input_field.value = '';
-    load_map(lat, long)
+function delete_input(lat, long) {
+    // Reset các select/ input chi tiết
+    const diachichitiet = document.getElementById('diachichitiet');
+    const phuongxa = document.getElementById('phuongxa');
+    const tinhthanh = document.getElementById('tinhthanh');
+
+    diachichitiet.value = '';
+    phuongxa.selectedIndex = 0;
+    tinhthanh.selectedIndex = 0;
+
+    // Reset map và khoảng cách
+    load_map(lat, long);
     document.getElementById('distance').textContent = `0 km`;
     document.getElementById('duration').textContent = `0 phút`;
 }
@@ -70,12 +79,8 @@ function calculate_distance_duration(fromLat, fromLon, toLat, toLon) {
         const distanceInMeters = map.distance(pointA, pointB);
         const distanceInKm = (distanceInMeters / 1000).toFixed(2);
 
-        // Giả dụ 500 mét 1 cây đèn đỏ đi trong phố
         const estimated_red_lights = Math.floor(distanceInMeters / 500);
-
-        // Giả dụ: đi 30 km/h
         const minute = Math.ceil((distanceInKm / 30) * 60 + estimated_red_lights);
-
 
         document.getElementById('distance').textContent = `${distanceInKm} km`;
         document.getElementById('duration').textContent = `${minute} phút`;
@@ -100,19 +105,10 @@ function draw_route(fromLat, fromLon, toLat, toLon) {
             if (data.routes && data.routes.length > 0) {
                 const routeData = data.routes[0].geometry;
                 route = L.geoJSON(routeData, {
-                    style: {
-                        color: 'green',
-                        weight: 4
-                    }
+                    style: { color: 'green', weight: 4 }
                 }).addTo(map);
 
-                // Hiển thị cả hai điểm trên bản đồ
-                map.fitBounds(route.getBounds(), {
-                    padding: [10, 10],
-                });
-
-
-
+                map.fitBounds(route.getBounds(), { padding: [10, 10] });
                 calculate_distance_duration(fromLat, fromLon, toLat, toLon);
             } else {
                 alert("Không tìm được tuyến đường.");
@@ -124,53 +120,47 @@ function draw_route(fromLat, fromLon, toLat, toLon) {
         });
 }
 
-function fillFullAddress() {
-    const input_field = document.getElementById('input_field');
+// Lấy địa chỉ đầy đủ từ các select/ input
+function getFullAddress() {
     const diachichitiet = document.getElementById('diachichitiet');
     const phuongxa = document.getElementById('phuongxa');
     const tinhthanh = document.getElementById('tinhthanh');
 
-    diachichitiet.addEventListener('input', function() {
-        // Hàm lấy text nếu không phải placeholder
-        function getSelectedText(select) {
-            const opt = select.options[select.selectedIndex];
-            if (!opt || !opt.value || opt.text.includes('-- Chọn')) return '';
-            return opt.text;
-        }
+    function getSelectedText(select) {
+        const opt = select.options[select.selectedIndex];
+        if (!opt || !opt.value || opt.text.includes('-- Chọn')) return '';
+        return opt.text;
+    }
 
-        const parts = [
-            diachichitiet.value.trim() || '',
-            getSelectedText(phuongxa),
-            getSelectedText(tinhthanh)
-        ].filter(part => part !== ''); // bỏ phần rỗng
+    const parts = [
+        diachichitiet.value.trim() || '',
+        getSelectedText(phuongxa),
+        getSelectedText(tinhthanh)
+    ].filter(part => part !== '');
 
-        input_field.value = parts.length > 0 ? parts.join(', ') : '';
-    });
+    return parts.length > 0 ? parts.join(', ') : '';
 }
-
 
 function main() {
     var lat = 10.7599599;
     var long = 106.6818616;
     load_map(lat, long);
 
-    const input_field = document.getElementById('input_field');
     const input_button = document.getElementById('input_button');
     const delete_button = document.getElementById('delete_button');
 
     input_button.addEventListener('click', function () {
-        const input_text = input_field.value.trim();
-        if (input_text !== '') {
-            search_address(input_text, lat, long);
+        const fullAddress = getFullAddress();
+        if (fullAddress !== '') {
+            search_address(fullAddress, lat, long);
+        } else {
+            alert("Vui lòng chọn địa chỉ đầy đủ.");
         }
     });
 
     delete_button.addEventListener('click', function () {
-        delete_input(input_field, lat, long);
+        delete_input(lat, long);
     });
-
-    // Hàm format và đổ địa chỉ đẹp
-    fillFullAddress();
 }
 
 window.onload = main;

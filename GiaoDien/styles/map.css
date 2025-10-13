@@ -14,30 +14,9 @@
 .input {
   width: 90%;
   display: flex;
-  gap: 12px;
-  background-color: #fff;
-  padding: 12px;
-  border-radius: 12px;
-  /* box-shadow: 0 4px 10px rgba(0, 177, 79, 0.2); */
-}
-
-#input_field {
-  width: 100%;
-  padding: 14px;
-  border-radius: 10px;
-  font-size: 16px;
-  color: #555;                     /* chữ nhạt, rõ ràng là chỉ đọc */
-  background-color: #e0e0e0;       /* nền xám nhạt giống read-only */
-  cursor: not-allowed;             /* con trỏ báo không edit */
-  pointer-events: none;            /* không thể click/viết */
-  box-shadow: inset 0 2px 4px rgba(0,0,0,0.1); /* cảm giác nổi */
-  transition: all 0.3s;
-}
-
-.buttons{
-  display: flex;
   flex-direction: row;
-  gap: 8px;
+  justify-content: left;
+  gap: 12px;
 }
 
 .input button {
@@ -120,14 +99,6 @@
     padding: 16px;
   }
 
-  .input {
-    flex-direction: column;
-  }
-
-  .buttons{
-    justify-content: center;
-  }
-
   .input input[type="text"] {
     width: 100%;
     font-size: 15px;
@@ -157,14 +128,18 @@
 
 /* --- Responsive 430px --- */
 @media (max-width: 431px) {
+  .leaflet-popup-content {
+        font-size: 10px;
+        max-width: 140px;
+  }
+
   .map_container {
     padding: 12px;
     gap: 16px;
   }
 
-  .input_field {
-    padding: 11px;
-    font-size: 14px;
+  .input{
+    justify-content: center;
   }
 
   .input button {
@@ -188,11 +163,6 @@
   .map_container {
     padding: 8px;
     gap: 12px;
-  }
-
-  #input_field {
-    padding: 10px;
-    font-size: 12px;
   }
 
   .input button {
