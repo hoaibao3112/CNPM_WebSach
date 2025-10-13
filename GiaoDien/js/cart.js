@@ -821,3 +821,236 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 });
 
+/* ================= Map (Leaflet + Nominatim + OSRM) for cart page ================= */
+(function setupCartMap() {
+  // Default shop coordinates (change if needed)
+  const SHOP = { lat: 10.7769, lon: 106.7009 };
+
+  let map = null;
+  let markersLayer = null;
+  let routeLayer = null;
+
+  function initLeaflet() {
+    if (!document.getElementById('map')) return;
+    if (map) return;
+    if (!window.L) {
+      console.warn('Leaflet not loaded yet');
+      return;
+    }
+
+    map = L.map('map').setView([SHOP.lat, SHOP.lon], 12);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19,
+      attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(map);
+
+    markersLayer = L.layerGroup().addTo(map);
+    routeLayer = L.layerGroup().addTo(map);
+
+    // show shop marker
+    L.marker([SHOP.lat, SHOP.lon]).addTo(markersLayer).bindPopup('Kho hàng');
+
+    // Fix rendering when map container size is determined after scripts run
+    // Call invalidateSize a few times to handle async layout changes (header injection, flex layout, etc.)
+    try {
+      setTimeout(() => map.invalidateSize(), 0);
+      setTimeout(() => map.invalidateSize(), 200);
+      setTimeout(() => map.invalidateSize(), 600);
+    } catch (e) {
+      console.warn('Error invalidating Leaflet size', e);
+    }
+
+    // Keep map consistent on window resize
+    window.addEventListener('resize', () => { if (map) map.invalidateSize(); });
+  }
+
+  async function geocode(address) {
+    const q = encodeURIComponent(address);
+    const url = `https://nominatim.openstreetmap.org/search?q=${q}&format=json&limit=1`;
+    try {
+      const res = await fetch(url, { headers: { 'Accept': 'application/json' } });
+      if (!res.ok) throw new Error('Geocode fetch failed');
+      const arr = await res.json();
+      if (!arr || arr.length === 0) return null;
+      return { lat: parseFloat(arr[0].lat), lon: parseFloat(arr[0].lon), display_name: arr[0].display_name };
+    } catch (err) {
+      console.error('Geocode error', err);
+      return null;
+    }
+  }
+
+  async function drawRoute(from, to) {
+    if (!map) initLeaflet();
+    if (!map) return;
+
+    // clear previous
+    routeLayer.clearLayers();
+    markersLayer.clearLayers();
+
+    // markers
+    L.marker([from.lat, from.lon]).addTo(markersLayer).bindPopup('Kho hàng');
+    L.marker([to.lat, to.lon]).addTo(markersLayer).bindPopup('Địa chỉ giao hàng');
+
+    const coords = `${from.lon},${from.lat};${to.lon},${to.lat}`;
+    const url = `https://router.project-osrm.org/route/v1/driving/${coords}?overview=full&geometries=geojson`;
+    try {
+      const res = await fetch(url);
+      if (!res.ok) throw new Error('Routing fetch failed');
+      const data = await res.json();
+      if (!data.routes || data.routes.length === 0) {
+        console.warn('No route found');
+        return;
+      }
+      const routeGeo = data.routes[0].geometry;
+      const line = L.geoJSON(routeGeo, { style: { color: '#007bff', weight: 4 } });
+  routeLayer.addLayer(line);
+  map.fitBounds(line.getBounds(), { padding: [20, 20] });
+
+  // Ensure tiles redraw after fitting bounds
+  try { setTimeout(() => map.invalidateSize(), 100); } catch (e) {}
+
+      // update distance/duration
+      const distKm = (data.routes[0].distance / 1000).toFixed(2);
+      const durMin = Math.round(data.routes[0].duration / 60);
+      const distEl = document.getElementById('distance');
+      const durEl = document.getElementById('duration');
+      if (distEl) distEl.textContent = `${distKm} km`;
+      if (durEl) durEl.textContent = `${durMin} phút`;
+      // Start vehicle animation along the route (loop)
+      try {
+        const latlngs = geoToLatLngs(routeGeo);
+        startVehicleAnimation(latlngs);
+      } catch (e) { console.warn('vehicle animation error', e); }
+    } catch (err) {
+      console.error('drawRoute error', err);
+    }
+  }
+
+  function geoToLatLngs(geo) {
+    if (!geo) return [];
+    if (geo.type === 'LineString') return geo.coordinates.map(c => ({ lat: c[1], lon: c[0] }));
+    if (geo.type === 'MultiLineString') return geo.coordinates[0].map(c => ({ lat: c[1], lon: c[0] }));
+    return [];
+  }
+
+  let vehicleMarker = null;
+  let vehicleAnim = null;
+
+  // animate a marker along latlngs (array of {lat, lon}), loops
+  function startVehicleAnimation(latlngs, speedKmH = 25) {
+    stopVehicleAnimation();
+    if (!latlngs || latlngs.length < 2 || !map) return;
+
+    const iconHtml = `
+      <div class="car-icon vehicle-marker">
+        <svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+          <path d="M12 44 L52 44 L58 36 L54 26 L10 26 L6 36 Z" fill="#007bff" stroke="#004a99" stroke-width="1"/>
+          <circle cx="20" cy="48" r="4" fill="#222"/>
+          <circle cx="44" cy="48" r="4" fill="#222"/>
+        </svg>
+      </div>`;
+    const carIcon = L.divIcon({ html: iconHtml, className: '', iconSize: [36, 36], iconAnchor: [18, 18] });
+    vehicleMarker = L.marker([latlngs[0].lat, latlngs[0].lon], { icon: carIcon, interactive: false }).addTo(map);
+
+    const speedMps = (speedKmH * 1000) / 3600; // meters per second
+
+    let i = 0;
+    let t = 0; // progress 0..1 between latlngs[i] and latlngs[i+1]
+
+    function step() {
+      if (!vehicleMarker) return;
+      const a = latlngs[i];
+      const b = latlngs[(i + 1) % latlngs.length];
+      const dist = haversineDistance(a, b) * 1000; // in meters
+      const duration = Math.max(dist / speedMps, 0.001); // seconds
+      // increment t proportional to frame time; approximate using fixed step
+      t += 0.016 / duration; // assuming ~60fps
+      if (t >= 1) { t = 0; i = (i + 1) % latlngs.length; }
+      const lat = a.lat + (b.lat - a.lat) * t;
+      const lon = a.lon + (b.lon - a.lon) * t;
+      vehicleMarker.setLatLng([lat, lon]);
+      vehicleAnim = requestAnimationFrame(step);
+    }
+
+    vehicleAnim = requestAnimationFrame(step);
+  }
+
+  function stopVehicleAnimation() {
+    try { if (vehicleAnim) cancelAnimationFrame(vehicleAnim); } catch (e) {}
+    vehicleAnim = null;
+    if (vehicleMarker) { try { map.removeLayer(vehicleMarker); } catch (e) {} vehicleMarker = null; }
+  }
+
+  // Haversine distance (km)
+  function haversineDistance(a, b) {
+    const R = 6371; // km
+    const dLat = (b.lat - a.lat) * Math.PI / 180;
+    const dLon = (b.lon - a.lon) * Math.PI / 180;
+    const lat1 = a.lat * Math.PI / 180;
+    const lat2 = b.lat * Math.PI / 180;
+    const sinDLat = Math.sin(dLat / 2);
+    const sinDLon = Math.sin(dLon / 2);
+    const aa = sinDLat * sinDLat + sinDLon * sinDLon * Math.cos(lat1) * Math.cos(lat2);
+    const c = 2 * Math.atan2(Math.sqrt(aa), Math.sqrt(1 - aa));
+    return R * c;
+  }
+
+  function buildAddressFromForm() {
+    const detail = document.getElementById('diachichitiet')?.value?.trim() || '';
+    const ward = document.getElementById('phuongxa');
+    const district = document.getElementById('quanhuyen');
+    const province = document.getElementById('tinhthanh');
+
+    function selText(sel) {
+      if (!sel || !sel.options) return '';
+      const opt = sel.options[sel.selectedIndex];
+      if (!opt || !opt.value) return '';
+      return opt.text;
+    }
+
+    const parts = [];
+    if (detail) parts.push(detail);
+    const wardText = selText(ward); if (wardText) parts.push(wardText);
+    const districtText = selText(district); if (districtText) parts.push(districtText);
+    const provinceText = selText(province); if (provinceText) parts.push(provinceText);
+    return parts.join(', ');
+  }
+
+  async function onFindClick(e) {
+    e && e.preventDefault();
+    const address = buildAddressFromForm();
+    if (!address) { showToast('Vui lòng nhập địa chỉ đầy đủ'); return; }
+    const geo = await geocode(address);
+    if (!geo) { showToast('Không tìm thấy địa chỉ'); return; }
+    await drawRoute(SHOP, { lat: geo.lat, lon: geo.lon });
+  }
+
+  function onDeleteClick(e) {
+    e && e.preventDefault();
+    if (routeLayer) routeLayer.clearLayers();
+    if (markersLayer) markersLayer.clearLayers();
+    const distEl = document.getElementById('distance'); if (distEl) distEl.textContent = '0 km';
+    const durEl = document.getElementById('duration'); if (durEl) durEl.textContent = '0 phút';
+    if (map) map.setView([SHOP.lat, SHOP.lon], 12);
+  }
+
+  // Wait for DOMContentLoaded then ensure Leaflet is present and init
+  document.addEventListener('DOMContentLoaded', () => {
+    // if Leaflet already present, init immediately; otherwise wait a short time
+    if (window.L) initLeaflet();
+    else {
+      let waited = 0;
+      const intv = setInterval(() => {
+        if (window.L) { clearInterval(intv); initLeaflet(); }
+        waited += 100;
+        if (waited > 3000) { clearInterval(intv); console.warn('Leaflet did not load in time'); }
+      }, 100);
+    }
+
+    const findBtn = document.getElementById('input_button');
+    const delBtn = document.getElementById('delete_button');
+    if (findBtn) findBtn.addEventListener('click', onFindClick);
+    if (delBtn) delBtn.addEventListener('click', onDeleteClick);
+  });
+})();
+
