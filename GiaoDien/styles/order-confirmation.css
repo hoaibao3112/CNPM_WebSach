@@ -307,7 +307,7 @@ h1 {
     text-align: left;
 }
 
-@media (max-width: 768px) {
+@media (min-width: 432px) and (max-width: 769px) {
     .container {
         padding: 15px;
         margin: 5px;

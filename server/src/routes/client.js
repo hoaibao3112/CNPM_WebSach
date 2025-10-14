@@ -332,18 +332,20 @@ router.get('/profile', authenticateToken, async (req, res) => {
 // PUT /profile - Cập nhật profile
 router.put('/profile', authenticateToken, async (req, res) => {
   try {
-    const { tenkh, sdt, diachi } = req.body;
-    console.log('Cập nhật profile:', { makh: req.user.makh, tenkh, sdt, diachi });
+    const { tenkh, sdt, email } = req.body;
+    console.log(req.body);
+    console.log('Cập nhật profile:', { makh: req.user.makh, tenkh, sdt, email });
 
-    const validationErrors = validateCustomer({ tenkh, sdt, diachi }, true, false);
+    const validationErrors = validateCustomer({ tenkh, sdt, email }, true, false);
     if (validationErrors.length > 0) {
       return res.status(400).json({ errors: validationErrors });
     }
 
     const [result] = await pool.query(
-      'UPDATE khachhang SET tenkh = ?, sdt = ?, diachi = ? WHERE makh = ?',
-      [tenkh, sdt || null, diachi || null, req.user.makh]
+      'UPDATE khachhang SET tenkh = ?, sdt = ?, email = ? WHERE makh = ?',
+      [tenkh, sdt || null, email || null, req.user.makh]
     );
+    console.log('Kết quả truy vấn:', result);
 
     if (result.affectedRows === 0) {
       return res.status(404).json({ error: 'Không tìm thấy người dùng' });
