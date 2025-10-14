@@ -2182,6 +2182,8 @@ window.chatSystem = {
     sendMessage: sendMessage,
     loadHistory: loadChatHistory
 };
+
+
 // ============ MAP ============
 var map_cart;
 var marker_start = null;
@@ -2196,8 +2198,8 @@ function delete_input(lat, long) {
 
     diachichitiet.value = '';
     phuongxa.selectedIndex = 0;
+    quanhuyen.selectedIndex = 0;
     tinhthanh.selectedIndex = 0;
-
     // Reset map và khoảng cách
     load_map(lat, long);
     document.getElementById('distance').textContent = `0 km`;
