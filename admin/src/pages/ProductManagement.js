@@ -23,6 +23,8 @@ const ProductManagement = () => {
     SoLuong: 0,
   });
   const [editingProduct, setEditingProduct] = useState(null);
+  const [minModalVisible, setMinModalVisible] = useState(false);
+  const [minValue, setMinValue] = useState(0);
   const [searchTerm, setSearchTerm] = useState('');
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -83,6 +85,7 @@ const ProductManagement = () => {
           : 'https://via.placeholder.com/50',
         // ✅ SỬA LOGIC: Nếu SoLuong > 0 thì "Còn hàng", ngược lại "Hết hàng"
         TinhTrang: (product.SoLuong && product.SoLuong > 0) ? 'Còn hàng' : 'Hết hàng',
+        MinSoLuong: product.MinSoLuong || 0,
       }));
       setProducts(processedProducts);
     } else {
@@ -279,6 +282,28 @@ const handleUpdateProduct = async () => {
     });
   };
 
+  // Open modal to edit MinSoLuong
+  const openEditMinModal = (product) => {
+    setEditingProduct(product);
+    setMinValue(product.MinSoLuong || 0);
+    setMinModalVisible(true);
+  };
+
+  const handleSaveMinStock = async () => {
+    if (!editingProduct) return;
+    try {
+      const config = getAuthConfig();
+      const res = await axios.patch(`${API_URL}/${editingProduct.MaSP}/min-stock`, { MinSoLuong: minValue }, config);
+      message.success(res.data.message || 'Cập nhật ngưỡng tồn thành công');
+      setMinModalVisible(false);
+      setEditingProduct(null);
+      fetchProducts();
+    } catch (error) {
+      console.error('Lỗi khi cập nhật MinSoLuong:', error.response || error);
+      message.error(error.response?.data?.error || 'Lỗi khi cập nhật ngưỡng tồn');
+    }
+  };
+
   // Format tiền tệ
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat('vi-VN', {
@@ -386,6 +411,14 @@ const handleUpdateProduct = async () => {
       align: 'center',
     },
     {
+      title: 'Ngưỡng tối thiểu',
+      dataIndex: 'MinSoLuong',
+      key: 'MinSoLuong',
+      width: 120,
+      align: 'center',
+      render: (v) => v || 0,
+    },
+    {
       title: 'Thao tác',
       key: 'actions',
       width: 120,
@@ -402,6 +435,14 @@ const handleUpdateProduct = async () => {
             }}
             style={{ padding: 0 }}
           />
+          <Button
+            type="link"
+            size="small"
+            onClick={() => openEditMinModal(record)}
+            style={{ padding: 0, color: '#1890ff' }}
+          >
+            Sửa ngưỡng
+          </Button>
           <Button
             type="link"
             size="small"
@@ -657,6 +698,27 @@ const handleUpdateProduct = async () => {
               <Input size="small" value="0 (mặc định)" disabled />
             </div>
           </div>
+        </div>
+      </Modal>
+    
+      {/* Modal chỉnh ngưỡng tối thiểu (MinSoLuong) */}
+      <Modal
+        title={`Cập nhật ngưỡng tồn cho sản phẩm ${editingProduct ? editingProduct.MaSP : ''}`}
+        open={minModalVisible}
+        onCancel={() => { setMinModalVisible(false); setEditingProduct(null); }}
+        onOk={handleSaveMinStock}
+        okText="Lưu"
+        cancelText="Hủy"
+        width={420}
+      >
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+          <Input
+            type="number"
+            min={0}
+            value={minValue}
+            onChange={(e) => setMinValue(Number(e.target.value))}
+          />
+          <span>cái</span>
         </div>
       </Modal>
     </div>

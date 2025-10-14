@@ -6,6 +6,7 @@
     <title>Hồ Sơ Cá Nhân - Fahasa</title>
     <link rel="stylesheet" href="styles/index.css">
     <link rel="stylesheet" href="styles/profile.css">
+    <link rel="stylesheet" href="styles/index.css">
       <link rel="stylesheet" href="styles/header.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 </head>
@@ -162,8 +163,11 @@
                         <h2>Sổ địa chỉ</h2>
 
                         <!-- Địa chỉ giao hàng mặc định -->
-                        <div class="address-block">
-                            <h3>Địa chỉ mặc định</h3>
+                        <div class="address-block default-address-block">
+                            <div class="address-block-header">
+                              <h3>Địa chỉ mặc định</h3>
+                              <a href="#" class="add-link">+ Thêm địa chỉ mới</a>
+                            </div>
                             <div class="name-phone-row">
                                 <div class="address-info-item1">
                                     <p><strong id="receive-name">Chưa có tên</strong></p>
@@ -182,7 +186,6 @@
                             <div id="other-receive-address">
                                 <p>Bạn không có địa chỉ khác trong Sổ địa chỉ.</p>
                             </div>
-                            <a href="#" class="add-link">+ Thêm địa chỉ mới</a>
                         </div>
                     </div>
 
@@ -274,6 +277,45 @@
         <span id="notificationText_khan"></span>
         <button class="close-btn_khan" onclick="closeNotification_khan()"><i class="fas fa-times"></i></button>
     </div>
+
+        <!-- Modal form for add/edit address -->
+        <div id="addressModal" class="modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);align-items:center;justify-content:center;z-index:1001">
+            <div class="modal-content" style="background:#fff;padding:20px;border-radius:8px;max-width:520px;width:100%;box-shadow:0 8px 24px rgba(0,0,0,0.2);position:relative">
+                <button id="addressModalClose" style="position:absolute;right:12px;top:10px;border:none;background:none;font-size:20px;cursor:pointer">&times;</button>
+                <h3 id="addressModalTitle">Thêm địa chỉ</h3>
+                <div style="margin-top:8px">
+                    <div class="form-group">
+                        <label for="addr_name">Họ và tên</label>
+                        <input id="addr_name" type="text" placeholder="Họ tên người nhận" />
+                    </div>
+                    <div class="form-group">
+                        <label for="addr_phone">Số điện thoại</label>
+                        <input id="addr_phone" type="text" placeholder="Số điện thoại" />
+                    </div>
+                    <div class="form-group">
+                        <label for="addr_detail">Địa chỉ chi tiết</label>
+                        <input type="text" id="addr_detail" placeholder="Số nhà, đường, phường">
+                    </div>
+                    <div class="form-group">
+                        <label for="addr_province">Tỉnh/Thành</label>
+                        <select id="addr_province"><option value="">Tỉnh/Thành</option></select>
+                    </div>
+                    <div class="form-group">
+                        <label for="addr_district">Quận/Huyện</label>
+                        <select id="addr_district"><option value="">Quận/Huyện</option></select>
+                    </div>
+                    <div class="form-group">
+                        <label for="addr_ward">Phường/Xã</label>
+                        <select id="addr_ward"><option value="">Phường/Xã</option></select>
+                    </div>
+                    <div id="addr_form_error" style="color:#c00;margin-top:6px;display:none"></div>
+                    <div style="margin-top:12px;text-align:right">
+                        <button id="addr_cancel" style="margin-right:8px">Hủy</button>
+                        <button id="addr_save" style="background:#28a745;color:#fff">Lưu</button>
+                    </div>
+                </div>
+            </div>
+        </div>
 
 
     <footer>

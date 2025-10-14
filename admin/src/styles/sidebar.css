@@ -1,492 +1,329 @@
-/* Sidebar styles */
+/* =========================================
+   Sidebar.css – Enhanced for visual appeal
+   ========================================= */
+
+/* ---------- Theme & layout variables ---------- */
+:root {
+  --sidebar-open: 240px; /* Slightly wider for better spacing */
+  --sidebar-closed: 68px;
+
+  --sb-bg: #0f172a;          /* slate-900 */
+  --sb-bg-hover: #1e293b;    /* brighter hover for contrast */
+  --sb-border: #1f2937;      /* slate-800 */
+  --sb-text: #ffffff;        /* primary text: white */
+  --sb-text-dim: rgba(255,255,255,0.85);    /* slightly dimmed white for secondary text */
+  --accent: #6366f1;         /* indigo-500 */
+  --accent-red: #ff4757;     /* red for active state */
+  --ring: rgba(99,102,241,.5); /* Stronger ring for focus */
+  --shadow-1: 0 12px 40px rgba(2,6,23,.12); /* Deeper shadow */
+  --glow: 0 0 8px rgba(99,102,241,.2); /* Subtle glow effect */
+}
+
+/* ---------- Content offset controlled centrally ---------- */
+body.sidebar-open .admin-home { margin-left: var(--sidebar-open); }
+body.sidebar-closed .admin-home { margin-left: var(--sidebar-closed); }
+
+/* Avoid “double offsets”:
+   -> Remove all fixed margin-left/padding-left in CSS of individual pages
+   (Product/Receipt/Refund/Return/Attendance/Account...) and let .admin-home handle offset. */
+
+/* ---------- Sidebar container ---------- */
 .sidebar {
   position: fixed;
-  top: 0;
-  left: 0;
+  inset: 0 auto 0 0;
+  width: var(--sidebar-open);
   height: 100vh;
-  background-color: #2c3e50;
-  color: #ecf0f1;
+  background: linear-gradient(180deg, var(--sb-bg), #0b1220 80%);
+  color: var(--sb-text);
+  border-right: 1px solid var(--sb-border);
+  box-shadow: var(--shadow-1), var(--glow);
   display: flex;
   flex-direction: column;
-  transition: width 0.3s ease;
-  z-index: 1200; /* keep sidebar above normal content */
+  z-index: 1200; /* Above content, below modal */
+  transition: width .3s ease, box-shadow .3s ease;
+  overflow: hidden;
 }
 
-.sidebar.open {
-  width: 220px;
+body.sidebar-closed .sidebar {
+  width: var(--sidebar-closed);
+  box-shadow: 0 8px 20px rgba(2,6,23,.15);
 }
 
-.sidebar.closed {
-  width: 64px;
-}
-
-/* Prefer controlling content offset via body classes (set by Sidebar component) */
-body.sidebar-open .admin-home { margin-left: 220px !important; }
-body.sidebar-closed .admin-home { margin-left: 64px !important; }
-
-/* Make popovers/modals safe from transforms and render above sidebar */
-.portal-safe, .ant-modal, .modal, .popover, .rc-dropdown, .dropdown {
-  z-index: 3000 !important;
-  transform: none !important;
-}
-
-/* Ensure Ant Design modals and common custom modals are centered and their footers align actions to the right */
-.ant-modal {
-  z-index: 4000 !important;
-}
-.ant-modal .ant-modal-content {
-  /* make sure modal content is not affected by parent containers */
-  position: relative;
-  transform: none !important;
-}
-.ant-modal-footer {
-  display: flex !important;
-  justify-content: flex-end !important;
-  gap: 10px;
-}
-
-/* Custom modal patterns used in repo: make them fixed & centered so padding on page doesn't shift them */
-.modal-overlay { position: fixed; left: 0; top: 0; right: 0; bottom: 0; }
-.modal {
-  position: fixed !important;
-  left: 50% !important;
-  top: 50% !important;
-  transform: translate(-50%, -50%) !important;
-  z-index: 4000 !important;
-  max-width: 960px;
-  width: calc(100% - 48px);
-}
-.modal .modal-actions-floating {
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px;
-}
-
-/* Buttons inside modals should not be translated by parent transforms */
-.modal .btn, .ant-modal .btn, .ant-modal-footer .ant-btn {
-  transform: none !important;
-}
-
-/* Header */
+/* ---------- Header / Brand / Toggle ---------- */
 .sidebar-header {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  padding: 10px;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 14px 14px 12px 14px;
+  border-bottom: 1px solid var(--sb-border);
+  min-height: 60px;
+  background: linear-gradient(90deg, rgba(255,255,255,.02), transparent);
 }
 
-.sidebar-header h2 {
-  font-size: 18px;
+.sidebar .brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  margin: 0;
+  font-weight: 700; /* Bolder for prominence */
+  letter-spacing: .3px;
+  text-shadow: 0 1px 2px rgba(0,0,0,.3);
 }
 
-.btn-toggle {
-  background-color: transparent;
-  color: #ecf0f1;
-  border: none;
-  cursor: pointer;
-  font-size: 18px;
-  padding: 6px;
-}
-
-/* Navigation List */
-.sidebar ul {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-  flex-grow: 1;
-  display: flex;
-  flex-direction: column;
-}
-
-.sidebar ul li {
-  margin-bottom: 10px;
-}
-
-/* Styling cho NavLink */
-.sidebar ul li a,
-.sidebar ul li a:visited {
-  text-decoration: none;
-  color: #ecf0f1;
-  font-size: 16px;
+.sidebar .brand .logo {
+  min-width: 32px;
   display: flex;
   align-items: center;
-  padding: 10px 12px;
-  border-radius: 8px;
-  transition: background-color 0.2s ease, transform 0.15s ease;
-  position: relative;
+  justify-content: flex-start;
+  padding: 4px 8px 4px 0;
+  background: transparent;
+  transition: transform .2s ease;
 }
 
-.sidebar ul li a span.material-icons {
-  margin-right: 12px;
-  font-size: 20px;
-}
-
-/* Hover effect */
-.sidebar ul li a:hover {
-  background-color: rgba(255,255,255,0.04);
-  transform: translateX(4px);
-}
-
-/* Active state - trang hiện tại */
-.sidebar ul li a.active,
-.sidebar ul li .active {
-  background: linear-gradient(135deg, #ff6b6b, #ff4757) !important;
-  color: #ffffff !important;
-  font-weight: 600;
-  box-shadow: 0 6px 20px rgba(0,0,0,0.35);
-  border-left: 4px solid rgba(255,255,255,0.9);
-}
-
-/* Active state với hiệu ứng đặc biệt */
-.sidebar ul li a.active::after,
-.sidebar ul li .active::after {
-  content: '';
-  position: absolute;
-  right: 10px;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 8px;
-  height: 8px;
-  background: #ffffff;
-  border-radius: 50%;
-  animation: pulse 2s infinite;
-}
-
-@keyframes pulse {
-  0% {
-    opacity: 1;
-    transform: translateY(-50%) scale(1);
-  }
-  50% {
-    opacity: 0.7;
-    transform: translateY(-50%) scale(1.2);
-  }
-  100% {
-    opacity: 1;
-    transform: translateY(-50%) scale(1);
-  }
-}
-
-/* Active state cho icon */
-.sidebar ul li a.active span.material-icons,
-.sidebar ul li .active span.material-icons {
-  color: #ffffff !important;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-}
-
-/* Đóng sidebar */
-.sidebar.closed ul li a {
-  justify-content: center;
-  padding: 12px 0;
-}
-
-.sidebar.closed ul li a span.material-icons {
-  margin-right: 0;
-}
-
-/* Login Section */
-.sidebar-login {
-  padding: 10px;
-}
-
-.sidebar-login a {
-  display: flex;
-  align-items: center;
-  text-decoration: none;
-  color: #ecf0f1;
-  font-size: 16px;
-  border-radius: 5px;
-  padding: 10px;
-  transition: background-color 0.3s ease;
-}
-
-.sidebar-login a span.material-icons {
-  margin-right: 10px;
-  font-size: 20px;
-}
-
-.sidebar-login a:hover {
-  background-color: #34495e;
-}
-
-.sidebar-login a.active {
-  background-color: #1abc9c;
-  font-weight: bold;
-}
-
-.sidebar.closed .sidebar-login a {
-  justify-content: center;
-}
-
-.sidebar.closed .sidebar-login a span.material-icons {
-  margin-right: 0;
-}
-
-.sidebar-logo {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  overflow: hidden;
-}
-
+/* Logo image helper: supports /static/media/logo.* files */
+.sidebar .brand .logo img,
 .logo-image {
-  width: 100px;
+  width: 120px; /* Larger logo for open state */
   height: auto;
+  display: block;
+  object-fit: contain;
+  border-radius: 8px;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,.2));
 }
 
-.sidebar.closed .sidebar-logo h2 {
+/* Shrink logo when sidebar is collapsed */
+body.sidebar-closed .sidebar .brand .logo img,
+body.sidebar-closed .logo-image {
+  width: 32px !important;
+  height: 32px !important;
+  object-fit: cover;
+}
+
+.sidebar .brand .name {
+  font-size: 18px; /* Larger for emphasis */
+  color: var(--sb-text);
+  opacity: 1;
+  text-shadow: 0 1px 2px rgba(0,0,0,.2);
+}
+
+.sidebar-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px; height: 40px;
+  border-radius: 12px;
+  border: 1px solid var(--sb-border);
+  background: #0b1220;
+  cursor: pointer;
+  transition: transform .25s ease, background .25s ease, border-color .25s ease, box-shadow .25s ease;
+}
+
+.sidebar-toggle:hover {
+  background: var(--sb-bg-hover);
+  border-color: #2d3b55;
+  transform: scale(1.05);
+  box-shadow: var(--glow);
+}
+
+body.sidebar-closed .sidebar .brand .name {
   display: none;
 }
 
-.sidebar.closed .logo-image {
-  margin: 0 auto;
+/* ---------- Nav ---------- */
+.sidebar-nav {
+  padding: 10px 8px 12px 8px;
+  overflow: hidden auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--sb-border) transparent;
 }
 
-.user-info {
+.sidebar ul {
+  list-style: none;
+  margin: 0;
+  padding: 0 8px;
   display: flex;
-  align-items: center;
-  padding: 10px;
-  color: white;
-  gap: 10px;
+  flex-direction: column;
+  gap: 6px;
 }
 
-.user-info .user-name {
+.sidebar li { position: relative; }
+
+.sidebar a {
+  display: grid;
+  grid-template-columns: 32px 1fr auto;
+  align-items: center;
+  gap: 12px;
+  padding: 14px;
+  border-radius: 14px;
+  text-decoration: none;
+  color: var(--sb-text-dim);
+  font-size: 16px; /* Larger for readability */
+  font-weight: 500; /* Bolder text */
+  line-height: 1.2;
+  text-shadow: 0 1px 1px rgba(0,0,0,.2);
+  transition: background .2s ease, transform .2s ease, color .2s ease, box-shadow .2s ease;
+}
+
+.sidebar a .icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px; height: 32px;
+  opacity: 1;
+  transition: transform .2s ease;
+}
+
+.sidebar a .label {
+  min-width: 0;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  opacity: 1;
 }
 
+.sidebar a .badge {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: linear-gradient(45deg, rgba(99,102,241,.2), rgba(99,102,241,.3));
+  color: #e0e7ff;
+  box-shadow: 0 2px 4px rgba(0,0,0,.2);
+}
+
+/* Hover/active */
+.sidebar a:hover {
+  background: rgba(255,255,255,.05);
+  transform: translateX(6px) scale(1.02);
+  color: var(--sb-text);
+  box-shadow: var(--glow);
+}
+
+.sidebar a:hover .icon {
+  transform: scale(1.1);
+}
+
+.sidebar a.active {
+  background: linear-gradient(45deg, rgba(255,71,87,0.15), rgba(255,71,87,0.1));
+  outline: 2px solid rgba(255,71,87,0.2);
+  color: var(--accent-red);
+  box-shadow: 0 12px 30px rgba(241,0,20,0.08), var(--glow);
+  font-weight: 600;
+}
+
+/* Collapsed: only icon + tooltip (if JS is used) */
+body.sidebar-closed .sidebar a {
+  grid-template-columns: 32px;
+  justify-content: center;
+  padding: 12px 8px;
+}
+
+body.sidebar-closed .sidebar a .label,
+body.sidebar-closed .sidebar a .badge {
+  display: none;
+}
+
+/* ---------- Footer (optional) ---------- */
 .sidebar-footer {
   margin-top: auto;
+  padding: 12px 14px 14px 14px;
+  border-top: 1px solid var(--sb-border);
+  background: linear-gradient(180deg, transparent, rgba(0,0,0,.1));
   display: flex;
-  flex-direction: column;
-  gap: 8px;
-  padding: 12px;
-  border-top: 1px solid rgba(255,255,255,0.04);
-  background: linear-gradient(180deg, rgba(255,255,255,0.01), transparent);
-}
-
-.sidebar-footer .footer-link {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 10px;
-  border-radius: 6px;
-  color: #ecf0f1;
-  text-decoration: none;
-  transition: background-color 0.15s ease, transform 0.12s ease;
-}
-
-.sidebar-footer .footer-link:hover {
-  background-color: rgba(255,255,255,0.03);
-  transform: translateX(3px);
-}
-
-.sidebar-footer .footer-link.active {
-  background: linear-gradient(135deg, #ff6b6b, #ff4757);
-  box-shadow: 0 6px 18px rgba(0,0,0,0.35);
-}
-
-/* Ensure visited footer links keep sidebar color and remove default underline */
-.sidebar-footer .footer-link:visited {
-  color: #ecf0f1;
-  text-decoration: none;
-}
-
-/* Footer icon styling */
-.sidebar-footer .footer-link .material-icons {
-  font-size: 20px;
-  line-height: 1;
-  color: #cfe8ff;
-}
-
-/* Remove link focus outline but keep accessibility via box-shadow on keyboard focus */
-.sidebar-footer .footer-link:focus {
-  outline: none;
-  box-shadow: 0 0 0 3px rgba(99,102,241,0.12);
-  border-radius: 6px;
-}
-
-/* Logout button */
-.logout-btn {
-  cursor: pointer;
-  padding: 10px;
-  display: flex;
-  align-items: center;
   gap: 10px;
-  color: #fff;
-  transition: all 0.3s ease;
-  background-color: transparent;
-  border: none;
-  border-radius: 5px;
 }
 
-.logout-btn:hover {
-  background-color: rgba(231,76,60,0.9);
-  transform: translateX(3px);
-}
-
-.logout-btn.logged-in {
-  background-color: #2ecc71;
-}
-
-.logout-btn.logged-in:hover {
-  background-color: #28b463;
-}
-
-/* Closed sidebar footer adjustments */
-.sidebar.closed .sidebar-footer {
+.sidebar-footer .btn {
+  flex: 1 1 auto;
+  display: inline-flex;
   align-items: center;
-}
-
-.sidebar.closed .sidebar-footer .footer-link,
-.sidebar.closed .sidebar-footer .logout-btn {
   justify-content: center;
-  width: 100%;
+  gap: 10px;
+  height: 40px;
+  border-radius: 12px;
+  border: 1px solid var(--sb-border);
+  background: #0b1220;
+  color: var(--sb-text);
+  font-weight: 500;
+  cursor: pointer;
+  transition: background .25s ease, border-color .25s ease, transform .25s ease, box-shadow .25s ease;
 }
 
+.sidebar-footer .btn:hover {
+  background: var(--sb-bg-hover);
+  border-color: #2d3b55;
+  transform: scale(1.05);
+  box-shadow: var(--glow);
+}
 
-/* --- Safety fixes for modals/popovers (fix refund modal being clipped / shifted) --- */
+/* ---------- Utility: section heading in nav ---------- */
+.sidebar .section {
+  padding: 12px 12px 8px 16px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: .5px;
+  text-transform: uppercase;
+  color: var(--sb-text-dim);
+  text-shadow: 0 1px 1px rgba(0,0,0,.2);
+}
 
-/* Prevent ancestors from creating new containing block for fixed children */
+/* ---------- Safe modal/popover layering (minimal) ---------- */
+.app-admin .ant-modal,
+.app-admin .ant-modal-mask,
+.app-admin .ant-drawer,
+.app-admin .ant-drawer-mask {
+  z-index: 4000;
+}
+
+/* Remove transform on main containers to prevent clipping */
 .admin-home, .main-content, #root, .app-admin {
-  transform: none !important;
-  will-change: auto !important;
-}
-
-/* Avoid horizontal scroll that clips fixed modal */
-html, body {
-  min-width: 100%;
-  overflow-x: hidden;
-}
-
-/* Force AntD modal wrappers and common modal wrappers to be viewport-fixed and centered */
-.ant-modal-root,
-.ant-modal-wrap,
-.ant-modal-wrap-centered,
-.ant-modal {
-  position: fixed !important;
-  left: 0 !important;
-  top: 0 !important;
-  width: 100vw !important;
-  height: 100vh !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  z-index: 4000 !important;
-  pointer-events: auto !important;
-}
-
-/* Modal content sized relative to viewport, not parent */
-.ant-modal .ant-modal-content,
-.modal {
-  position: relative !important;
-  transform: none !important;
-  max-width: min(960px, calc(100vw - 48px)) !important;
-  width: 100% !important;
-  box-sizing: border-box;
-}
-
-/* Custom overlays */
-.modal-overlay { position: fixed; left:0; top:0; right:0; bottom:0; z-index: 3999; }
-.modal {
-  left: 50% !important;
-  top: 50% !important;
-  transform: translate(-50%, -50%) !important;
-  z-index: 4000 !important;
-}
-
-/* Ensure popovers/dropdowns render above sidebar and don't inherit transforms */
-.portal-safe, .ant-popover, .popover, .rc-dropdown, .dropdown, .ant-picker-dropdown {
-  z-index: 4500 !important;
-  transform: none !important;
-}
-
-/* Buttons inside modal should not be affected by parent transforms */
-.modal .btn, .ant-modal .btn, .ant-modal-footer .ant-btn, .portal-safe .btn {
-  transform: none !important;
-}
-
-/* Remove large translate on sidebar hover to avoid creating layout side-effects */
-.sidebar ul li a:hover {
   transform: none;
-  background-color: rgba(255,255,255,0.04);
+  will-change: auto;
 }
 
-/* Keep existing margin-left rules but avoid forcing scroll */
-body.sidebar-open .admin-home { margin-left: 220px; }
-body.sidebar-closed .admin-home { margin-left: 64px; }
+/* Ensure popovers/dropdowns are above sidebar */
+.portal-safe, .ant-popover, .rc-dropdown, .ant-picker-dropdown {
+  z-index: 5500;
+}
 
-/* --- end safety fixes --- */
-/* debug / safety overrides */
-.ant-modal-wrap, .ant-modal-root, .modal-overlay {
-  position: fixed !important;
-  left: 0 !important;
-  top: 0 !important;
-  width: 100vw !important;
-  height: 100vh !important;
-  transform: none !important;
+/* ---------- Responsive ---------- */
+@media (max-width: 1024px) {
+  .sidebar { z-index: 1600; }
+
+  body.sidebar-open .admin-home,
+  body.sidebar-closed .admin-home {
+    margin-left: 0; /* No offset for content when sidebar overlays */
+  }
 }
-.ant-modal {
-  position: fixed !important;
-  z-index: 5000 !important;
+
+/* ---------- Focus states (a11y) ---------- */
+.sidebar a:focus-visible,
+.sidebar-toggle:focus-visible,
+.sidebar-footer .btn:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 3px rgba(2,6,23,.7), var(--glow);
 }
-/* FORCE: center common modal/drawer wrappers (refund form will be centered) */
-.ant-modal-root,
-.ant-modal-wrap,
-.ant-modal-wrap-centered,
-.modal-overlay,
-.modal,
-.ant-drawer-wrap,
-.ant-drawer-mask {
-  position: fixed !important;
-  inset: 0 !important;                /* top:0; right:0; bottom:0; left:0 */
+/* --- FIX footer Modal AntD bị xếp dọc / lệch --- */
+.ant-modal .ant-modal-footer {
   display: flex !important;
+  justify-content: flex-end !important;
   align-items: center !important;
-  justify-content: center !important;
-  width: 100vw !important;
-  height: 100vh !important;
-  margin: 0 !important;
-  padding: 0 18px !important;
-  box-sizing: border-box !important;
-  z-index: 5000 !important;
-  pointer-events: auto !important;
+  gap: 8px !important;
+  flex-wrap: nowrap !important;
+  padding-top: 8px;
 }
 
-/* Make modal/drawer content sized relative to viewport and centered */
-.ant-modal,
-.modal,
-.ant-drawer-content,
-.ant-drawer-content-wrapper {
-  position: relative !important;
-  transform: none !important;
-  left: auto !important;
-  top: auto !important;
-  max-width: min(980px, calc(100vw - 48px)) !important;
-  width: 100% !important;
-  box-sizing: border-box !important;
+.ant-modal .ant-modal-footer .ant-btn {
+  display: inline-flex !important;
+  width: auto !important;
+  margin: 0 !important;          /* AntD tự thêm margin-left cho nút sau, không cần margin tổng */
 }
 
-/* If a drawer component is used, prevent it from sliding-in from right */
-.ant-drawer-content-wrapper,
-.ant-drawer {
-  transform: none !important;
-  right: auto !important;
-  left: auto !important;
-}
-
-/* Safety: prevent ancestor transforms from creating new containing blocks */
-.admin-home, .main-content, #root, .app-admin {
-  transform: none !important;
-  will-change: auto !important;
-}
-
-/* keep portal/popover above sidebar */
-.portal-safe, .ant-popover, .popover, .rc-dropdown, .dropdown, .ant-picker-dropdown {
-  z-index: 5500 !important;
-  transform: none !important;
+.ant-modal .ant-modal-footer .ant-btn + .ant-btn {
+  margin-left: 8px !important;   /* đảm bảo khoảng cách giữa 2 nút */
 }

@@ -275,7 +275,7 @@ const CategoryManagement = () => {
 
       <Modal
         title={editingCategory ? 'Chỉnh sửa thể loại' : 'Thêm thể loại mới'}
-        visible={isModalVisible}
+  open={isModalVisible}
         onCancel={() => {
           setState(prev => ({
             ...prev,
@@ -305,7 +305,7 @@ const CategoryManagement = () => {
           </Button>,
         ]}
         width={600}
-        bodyStyle={{ padding: '16px' }}
+  styles={{ body: { padding: '16px' } }}
       >
         <div className="info-section">
           <div className="info-grid">
@@ -343,7 +343,7 @@ const CategoryManagement = () => {
         </div>
       </Modal>
 
-      <style jsx>{`
+  <style>{`
         .category-management-container {
           padding: 16px 16px 16px 216px;
           min-height: 100vh;
@@ -383,10 +383,10 @@ const CategoryManagement = () => {
           font-size: 12px;
           margin: 0;
         }
-        .compact-category-table :global(.ant-table-thead > tr > th) {
+  .compact-category-table .ant-table-thead > tr > th {
           padding: 8px 12px;
         }
-        .compact-category-table :global(.ant-table-tbody > tr > td) {
+  .compact-category-table .ant-table-tbody > tr > td {
           padding: 8px 12px;
         }
       `}</style>

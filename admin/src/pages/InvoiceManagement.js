@@ -864,7 +864,7 @@ const handleViewInvoice = async (id) => {
           <Dropdown
             overlay={notificationMenu}
             trigger={['click']}
-            visible={notificationVisible}
+            open={notificationVisible}
             onVisibleChange={setNotificationVisible}
             placement="bottomRight"
             overlayClassName="notification-dropdown"
@@ -905,7 +905,7 @@ const handleViewInvoice = async (id) => {
       {/* Modal chi tiết hóa đơn */}
       <Modal
         title={`Chi tiết hóa đơn #${selectedInvoice?.id || ''}`}
-        visible={isModalVisible}
+  open={isModalVisible}
         onCancel={() => setIsModalVisible(false)}
         footer={[
           <Button key="close" onClick={() => setIsModalVisible(false)}>
@@ -913,7 +913,7 @@ const handleViewInvoice = async (id) => {
           </Button>,
         ]}
         width={700}
-        bodyStyle={{ padding: '16px' }}
+  styles={{ body: { padding: '16px' } }}
       >
         {selectedInvoice && (
           <div className="invoice-detail-content">
@@ -1045,14 +1045,14 @@ const handleViewInvoice = async (id) => {
       {/* ✨ CHAT MODAL HOÀN TOÀN MỚI */}
       <Modal
         title={null}
-        visible={chatVisible}
+  open={chatVisible}
         onCancel={handleCloseChat}
         footer={null}
         width={650}
-        bodyStyle={{ padding: 0, height: '650px' }}
+  styles={{ body: { padding: 0, height: '650px' } }}
         className="modern-chat-modal"
         maskClosable={false}
-        destroyOnClose={true}
+  destroyOnHidden={true}
       >
         <div className="chat-container">
           {/* Chat Header */}
@@ -1132,9 +1132,9 @@ const handleViewInvoice = async (id) => {
         </div>
       </Modal>
 
-      <style jsx>{`
+  <style>{`
         .invoice-management-container {
-          padding: 16px 16px 16px 216px;
+     
           min-height: 100vh;
         }
         
@@ -1170,17 +1170,17 @@ const handleViewInvoice = async (id) => {
           transform: scale(1.05);
         }
         
-        .notification-bell :global(.ant-badge) {
+  .notification-bell .ant-badge {
           display: flex;
           align-items: center;
           justify-content: center;
         }
         
-        :global(.notification-dropdown) {
+  .notification-dropdown {
           margin-top: 8px;
         }
         
-        :global(.notification-dropdown .ant-dropdown-menu) {
+  .notification-dropdown .ant-dropdown-menu {
           padding: 0;
           border-radius: 8px;
           box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
@@ -1190,19 +1190,19 @@ const handleViewInvoice = async (id) => {
           overflow-y: auto;
         }
         
-        :global(.notification-header) {
+  .notification-header {
           background: #f0f2ff;
           margin: 0;
           border-radius: 8px 8px 0 0;
         }
         
-        :global(.notification-item) {
+  .notification-item {
           padding: 0;
           height: auto;
           line-height: normal;
         }
         
-        :global(.notification-item:hover) {
+  .notification-item:hover {
           background: #f8f9fa;
         }
         
@@ -1274,7 +1274,7 @@ const handleViewInvoice = async (id) => {
         }
         
         /* Pulse effect cho badge */
-        :global(.ant-badge-count) {
+  .ant-badge-count {
           animation: pulse 2s infinite;
         }
         

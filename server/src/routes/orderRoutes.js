@@ -1233,6 +1233,47 @@ router.get('/customer-refunds/:customerId', authenticateToken, async (req, res) 
   }
 });
 
+// Proxy endpoints for provinces.open-api.vn to provide lists for frontend selects
+router.get('/locations/provinces', async (req, res) => {
+  try {
+    const r = await fetch('https://provinces.open-api.vn/api/p/');
+    const data = await r.json();
+    // map to useful shape
+    const mapped = data.map(p => ({ code: p.code, name: p.name }));
+    res.json({ success: true, data: mapped });
+  } catch (err) {
+    console.error('Error fetching provinces', err);
+    res.status(500).json({ error: 'Không thể tải danh sách tỉnh/thành' });
+  }
+});
+
+router.get('/locations/districts/:provinceCode', async (req, res) => {
+  try {
+    const { provinceCode } = req.params;
+    const r = await fetch(`https://provinces.open-api.vn/api/p/${provinceCode}?depth=2`);
+    const data = await r.json();
+    const districts = (data.districts || []).map(d => ({ code: d.code, name: d.name }));
+    res.json({ success: true, data: districts });
+  } catch (err) {
+    console.error('Error fetching districts', err);
+    res.status(500).json({ error: 'Không thể tải danh sách quận/huyện' });
+  }
+});
+
+router.get('/locations/wards/:districtCode', async (req, res) => {
+  try {
+    const { districtCode } = req.params;
+    const r = await fetch(`https://provinces.open-api.vn/api/d/${districtCode}?depth=2`);
+    const data = await r.json();
+    const wards = (data.wards || []).map(w => ({ code: w.code, name: w.name }));
+    res.json({ success: true, data: wards });
+  } catch (err) {
+    console.error('Error fetching wards', err);
+    res.status(500).json({ error: 'Không thể tải danh sách phường/xã' });
+  }
+});
+
+
 // ✅ Tương tự, cập nhật API admin-refunds nếu có:
 router.get('/admin-refunds', authenticateToken, async (req, res) => {
   try {
@@ -1946,9 +1987,15 @@ router.put('/refund-requests/:refundId/cancel', authenticateToken, async (req, r
     }
 });
 
-// ✅ API lấy danh sách địa chỉ cũ của khách hàng
+// API lấy danh sách địa chỉ (chỉ owner hoặc admin) — trả chỉ các địa chỉ active
 router.get('/customer-addresses/:customerId', authenticateToken, async (req, res) => {
   const { customerId } = req.params;
+
+  // Authorization: chỉ owner hoặc admin
+  if (!req.user || (String(req.user.makh) !== String(customerId) && req.user.userType !== 'admin')) {
+    return res.status(403).json({ success: false, error: 'Không có quyền truy cập danh sách địa chỉ này' });
+  }
+
   try {
     const [addresses] = await pool.query(`
       SELECT 
@@ -1960,72 +2007,15 @@ router.get('/customer-addresses/:customerId', authenticateToken, async (req, res
         QuanHuyen AS district,
         PhuongXa AS ward
       FROM diachi
-      WHERE MaKH = ?
+      WHERE MaKH = ? AND (is_active IS NULL OR is_active = 1)
       ORDER BY MaDiaChi DESC
     `, [customerId]);
-    // If the stored province/district/ward values are numeric codes, resolve them to human-readable names
-    // Use a small in-memory cache to avoid repeated external calls during server runtime
-    const provinceCache = new Map();
-    const districtCache = new Map();
-    const wardCache = new Map();
 
-    async function resolveProvince(code) {
-      if (!code) return '';
-      if (!/^[0-9]+$/.test(String(code))) return String(code);
-      if (provinceCache.has(code)) return provinceCache.get(code);
-      try {
-        const r = await fetch(`https://provinces.open-api.vn/api/p/${code}`);
-        if (!r.ok) return String(code);
-        const data = await r.json();
-        const name = data.name || data['name'] || String(code);
-        provinceCache.set(code, name);
-        return name;
-      } catch (e) {
-        console.warn('resolveProvince error', e);
-        return String(code);
-      }
-    }
-
-    async function resolveDistrict(code) {
-      if (!code) return '';
-      if (!/^[0-9]+$/.test(String(code))) return String(code);
-      if (districtCache.has(code)) return districtCache.get(code);
-      try {
-        const r = await fetch(`https://provinces.open-api.vn/api/d/${code}`);
-        if (!r.ok) return String(code);
-        const data = await r.json();
-        const name = data.name || data['name'] || String(code);
-        districtCache.set(code, name);
-        return name;
-      } catch (e) {
-        console.warn('resolveDistrict error', e);
-        return String(code);
-      }
-    }
-
-    async function resolveWard(code) {
-      if (!code) return '';
-      if (!/^[0-9]+$/.test(String(code))) return String(code);
-      if (wardCache.has(code)) return wardCache.get(code);
-      try {
-        // The API exposes wards via /w/{code}
-        const r = await fetch(`https://provinces.open-api.vn/api/w/${code}`);
-        if (!r.ok) return String(code);
-        const data = await r.json();
-        const name = data.name || data['name'] || String(code);
-        wardCache.set(code, name);
-        return name;
-      } catch (e) {
-        console.warn('resolveWard error', e);
-        return String(code);
-      }
-    }
-
-    // Resolve all addresses in parallel (with per-request caching)
+    // Resolve names (parallel)
     const resolved = await Promise.all(addresses.map(async addr => {
       const prov = await resolveProvince(addr.province);
       const dist = await resolveDistrict(addr.district);
-      const ward = await resolveWard(addr.ward);
+      const w = await resolveWard(addr.ward);
       return {
         id: addr.id,
         name: addr.name,
@@ -2033,7 +2023,7 @@ router.get('/customer-addresses/:customerId', authenticateToken, async (req, res
         detail: addr.detail,
         province: prov,
         district: dist,
-        ward: ward
+        ward: w
       };
     }));
 
@@ -2043,6 +2033,239 @@ router.get('/customer-addresses/:customerId', authenticateToken, async (req, res
     res.status(500).json({ success: false, error: 'Lỗi khi lấy danh sách địa chỉ' });
   }
 });
+ // ---- Address name resolver (province/district/ward) -------------------------
 
+// In-memory caches
+const provinceCache = new Map();
+const districtCache = new Map();
+const wardCache     = new Map();
+
+// Safe fetch (Node or browser)
+const fetchFn =
+  typeof fetch !== "undefined"
+    ? fetch
+    : (...args) => import("node-fetch").then(m => m.default(...args));
+
+const API_BASE = "https://provinces.open-api.vn/api";
+
+// Small helper: normalize numeric code to string, keep text if already a name
+function normalizeCode(code) {
+  if (code === null || code === undefined) return "";
+  const str = String(code).trim();
+  return /^[0-9]+$/.test(str) ? String(parseInt(str, 10)) : str; // "001" -> "1"
+}
+
+// Core fetch with timeout + safe JSON
+async function tryFetchName(url, timeoutMs = 5000) {
+  const ctrl = typeof AbortController !== "undefined" ? new AbortController() : null;
+  const id = ctrl ? setTimeout(() => ctrl.abort(), timeoutMs) : null;
+
+  try {
+    const r = await fetchFn(url, ctrl ? { signal: ctrl.signal } : undefined);
+    if (!r || !r.ok) return null;
+    const data = await r.json().catch(() => null);
+    if (!data) return null;
+    // API returns { name: "..." }
+    return data.name ?? null;
+  } catch (err) {
+    console.warn("tryFetchName error:", url, err?.message);
+    return null;
+  } finally {
+    if (id) clearTimeout(id);
+  }
+}
+
+// Generic resolver using a cache and endpoint path ("p", "d", "w")
+async function resolveWithCache(code, cache, path) {
+  if (!code) return "";
+  const norm = normalizeCode(code);
+
+  // If it's already text (not numeric), return as-is
+  if (!/^[0-9]+$/.test(norm)) return norm;
+
+  if (cache.has(norm)) return cache.get(norm);
+
+  const name = await tryFetchName(`${API_BASE}/${path}/${norm}`);
+  if (name) {
+    cache.set(norm, name);
+    return name;
+  }
+
+  console.warn(`resolve(${path}) fallback to code:`, norm);
+  return norm; // fallback: return original code string
+}
+
+// Public resolvers
+const resolveProvince = (code) => resolveWithCache(code, provinceCache, "p");
+const resolveDistrict = (code) => resolveWithCache(code, districtCache, "d");
+const resolveWard     = (code) => resolveWithCache(code, wardCache, "w");
+
+// ---- Example Express route --------------------------------------------------
+// app.get("/api/addresses/old", async (req, res) => {
+async function handleGetOldAddresses(req, res, addresses) {
+  try {
+    // addresses: [{ id, name, phone, detail, province, district, ward }, ...]
+    if (!Array.isArray(addresses)) {
+      return res.status(400).json({ success: false, error: "Danh sách địa chỉ không hợp lệ" });
+    }
+
+    const resolved = await Promise.all(
+      addresses.map(async (addr) => {
+        const [prov, dist, wrd] = await Promise.all([
+          resolveProvince(addr.province),
+          resolveDistrict(addr.district),
+          resolveWard(addr.ward),
+        ]);
+
+        return {
+          id: addr.id,
+          name: addr.name ?? "",
+          phone: addr.phone ?? "",
+          detail: addr.detail ?? "",
+          province: prov,
+          district: dist,
+          ward: wrd,
+        };
+      })
+    );
+
+    res.json({ success: true, data: resolved });
+  } catch (error) {
+    console.error("Lỗi lấy địa chỉ cũ:", error);
+    res.status(500).json({ success: false, error: "Lỗi khi lấy danh sách địa chỉ" });
+  }
+}
+// });
+
+
+///////--- api địa chỉ khách hàng --------------
+// ...existing code...
+
+// API tạo địa chỉ mới cho khách hàng
+router.post('/customer-addresses', authenticateToken, async (req, res) => {
+  const customerId = req.user && req.user.makh;
+  const { name, phone, detail, province, district, ward } = req.body;
+
+  if (!customerId) return res.status(401).json({ success: false, error: 'Không xác thực được người dùng' });
+  if (!name || !phone || !detail) {
+    return res.status(400).json({ success: false, error: 'Thiếu thông tin bắt buộc (name, phone, detail)' });
+  }
+
+  try {
+    const [result] = await pool.query(
+      `INSERT INTO diachi (MaKH, TenNguoiNhan, SDT, DiaChiChiTiet, TinhThanh, QuanHuyen, PhuongXa)
+       VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      [customerId, name, phone, detail, province || null, district || null, ward || null]
+    );
+
+    res.json({ success: true, message: 'Tạo địa chỉ thành công', data: { id: result.insertId } });
+  } catch (err) {
+    console.error('Create address error:', err);
+    res.status(500).json({ success: false, error: 'Lỗi hệ thống khi tạo địa chỉ' });
+  }
+});
+
+// API cập nhật địa chỉ (chỉ chủ sở hữu hoặc admin)
+router.put('/customer-addresses/:addressId', authenticateToken, async (req, res) => {
+  const customerId = req.user && req.user.makh;
+  const { addressId } = req.params;
+  const { name, phone, detail, province, district, ward } = req.body;
+
+  if (!customerId) return res.status(401).json({ success: false, error: 'Không xác thực được người dùng' });
+  if (!name && !phone && !detail && !province && !district && !ward) {
+    return res.status(400).json({ success: false, error: 'Không có trường cập nhật' });
+  }
+
+  const conn = await pool.getConnection();
+  try {
+    await conn.beginTransaction();
+
+    // Kiểm tra quyền sở hữu
+    const [rows] = await conn.query(`SELECT MaDiaChi, MaKH FROM diachi WHERE MaDiaChi = ? FOR UPDATE`, [addressId]);
+    if (!rows.length) {
+      await conn.rollback();
+      return res.status(404).json({ success: false, error: 'Không tìm thấy địa chỉ' });
+    }
+    if (rows[0].MaKH != customerId && req.user.userType !== 'admin') {
+      await conn.rollback();
+      return res.status(403).json({ success: false, error: 'Không có quyền sửa địa chỉ này' });
+    }
+
+    const fields = [];
+    const params = [];
+    if (name !== undefined) { fields.push('TenNguoiNhan = ?'); params.push(name); }
+    if (phone !== undefined) { fields.push('SDT = ?'); params.push(phone); }
+    if (detail !== undefined) { fields.push('DiaChiChiTiet = ?'); params.push(detail); }
+    if (province !== undefined) { fields.push('TinhThanh = ?'); params.push(province); }
+    if (district !== undefined) { fields.push('QuanHuyen = ?'); params.push(district); }
+    if (ward !== undefined) { fields.push('PhuongXa = ?'); params.push(ward); }
+
+    params.push(addressId);
+
+    await conn.query(`UPDATE diachi SET ${fields.join(', ')} WHERE MaDiaChi = ?`, params);
+
+    await conn.commit();
+    res.json({ success: true, message: 'Cập nhật địa chỉ thành công' });
+  } catch (err) {
+    await conn.rollback();
+    console.error('Update address error:', err);
+    res.status(500).json({ success: false, error: 'Lỗi hệ thống khi cập nhật địa chỉ' });
+  } finally {
+    conn.release();
+  }
+});
+
+// ...existing code...
+
+router.delete('/customer-addresses/:addressId', authenticateToken, async (req, res) => {
+  const customerId = req.user && req.user.makh;
+  const { addressId } = req.params;
+
+  if (!customerId) return res.status(401).json({ success: false, error: 'Không xác thực được người dùng' });
+
+  const conn = await pool.getConnection();
+  try {
+    await conn.beginTransaction();
+
+    // Kiểm tra tồn tại và quyền sở hữu
+    const [rows] = await conn.query(`SELECT MaDiaChi, MaKH FROM diachi WHERE MaDiaChi = ? FOR UPDATE`, [addressId]);
+    if (!rows.length) {
+      await conn.rollback();
+      return res.status(404).json({ success: false, error: 'Không tìm thấy địa chỉ' });
+    }
+    if (rows[0].MaKH != customerId && req.user.userType !== 'admin') {
+      await conn.rollback();
+      return res.status(403).json({ success: false, error: 'Không có quyền xóa địa chỉ này' });
+    }
+
+    // Kiểm tra tham chiếu từ hoadon
+    const [ref] = await conn.query(`SELECT COUNT(*) AS cnt FROM hoadon WHERE MaDiaChi = ?`, [addressId]);
+    const usage = (ref && ref[0] && (ref[0].cnt ?? ref[0].CNT)) ? (ref[0].cnt ?? ref[0].CNT) : 0;
+
+    if (usage > 0) {
+      // Thực hiện soft-delete (đánh dấu vô hiệu hoá) — an toàn cho dữ liệu hoá đơn
+      await conn.query(`UPDATE diachi SET is_active = 0 WHERE MaDiaChi = ?`, [addressId]);
+      await conn.commit();
+      return res.status(200).json({
+        success: true,
+        message: 'Địa chỉ đang được sử dụng trong đơn hàng — đã đánh dấu vô hiệu hoá (soft-delete).',
+        softDeleted: true,
+        usageCount: usage
+      });
+    }
+
+    // Nếu không có tham chiếu, xóa cứng (không còn ràng buộc)
+    await conn.query(`DELETE FROM diachi WHERE MaDiaChi = ?`, [addressId]);
+
+    await conn.commit();
+    res.json({ success: true, message: 'Xóa địa chỉ thành công', softDeleted: false });
+  } catch (err) {
+    await conn.rollback();
+    console.error('Delete address error:', err);
+    res.status(500).json({ success: false, error: 'Lỗi hệ thống khi xóa địa chỉ', details: err.message });
+  } finally {
+    conn.release();
+  }
+});
 
 export default router;

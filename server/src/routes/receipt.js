@@ -187,5 +187,26 @@ router.get('/:id', async (req, res) => {
         res.status(500).json({ error: 'Lỗi khi lấy chi tiết phiếu nhập' });
     }
 });
-
+// ...existing code...
+// Route: lấy sản phẩm dưới mức tồn kho (public)
+router.get('/low-stock', async (req, res) => {
+  try {
+    const limit = parseInt(req.query.limit, 10) || 100;
+    const [rows] = await pool.query(
+      `SELECT MaSP, TenSP, SoLuong, DonGia, COALESCE(MinSoLuong,0) AS MinSoLuong,
+              (COALESCE(MinSoLuong,0) - COALESCE(SoLuong,0)) AS Needed
+       FROM sanpham
+       WHERE COALESCE(MinSoLuong,0) > 0
+         AND COALESCE(SoLuong,0) < COALESCE(MinSoLuong,0)
+       ORDER BY Needed DESC
+       LIMIT ?`,
+      [limit]
+    );
+    res.status(200).json(rows);
+  } catch (error) {
+    console.error('Lỗi khi lấy low-stock:', error);
+    res.status(500).json({ error: 'Lỗi server' });
+  }
+});
+// ...existing code...
 export default router;

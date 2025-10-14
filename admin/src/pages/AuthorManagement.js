@@ -408,7 +408,7 @@ const AuthorManagement = () => {
           </Button>,
         ]}
         width={600}
-        bodyStyle={{ padding: '16px' }}
+  styles={{ body: { padding: '16px' } }}
       >
         <div className="info-section">
           <div className="info-grid">
@@ -497,7 +497,7 @@ const AuthorManagement = () => {
         </div>
       </Modal>
 
-      <style jsx>{`
+  <style>{`
         .author-management-container {
           padding: 16px 16px 16px 216px;
           min-height: 100vh;
@@ -537,10 +537,10 @@ const AuthorManagement = () => {
           font-size: 12px;
           margin: 0;
         }
-        .compact-author-table :global(.ant-table-thead > tr > th) {
+  .compact-author-table .ant-table-thead > tr > th {
           padding: 8px 12px;
         }
-        .compact-author-table :global(.ant-table-tbody > tr > td) {
+  .compact-author-table .ant-table-tbody > tr > td {
           padding: 8px 12px;
         }
         input[type="file"] {

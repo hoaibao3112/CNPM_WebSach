@@ -219,6 +219,32 @@ router.get('/', async (req, res) => {
 });
 
 // Route lấy sản phẩm theo ID - SỬA QUERY
+// Route: lấy sản phẩm dưới mức tồn kho (public)
+// NOTE: must be declared BEFORE '/:id' so the literal path 'low-stock' isn't interpreted as an id
+router.get('/low-stock', async (req, res) => {
+  try {
+    const limit = parseInt(req.query.limit, 10) || 100;
+    const fallbackThreshold = parseInt(req.query.defaultThreshold, 10) || parseInt(process.env.DEFAULT_MIN_STOCK, 10) || 5;
+
+    const sql = `
+      SELECT MaSP, TenSP, SoLuong, DonGia,
+             COALESCE(MinSoLuong, 0) AS MinSoLuong,
+             (COALESCE(NULLIF(MinSoLuong,0), ?) - COALESCE(SoLuong,0)) AS Needed
+      FROM sanpham
+      WHERE COALESCE(NULLIF(MinSoLuong,0), ?) >= COALESCE(SoLuong,0)
+      ORDER BY Needed DESC
+      LIMIT ?
+    `;
+
+    const [rows] = await pool.query(sql, [fallbackThreshold, fallbackThreshold, limit]);
+    res.status(200).json(rows);
+  } catch (error) {
+    console.error('Lỗi khi lấy low-stock:', error);
+    res.status(500).json({ error: 'Lỗi server' });
+  }
+});
+
+// Route lấy sản phẩm theo ID - SỬA QUERY
 router.get('/:id', async (req, res) => {
   try {
     const query = `
@@ -241,6 +267,8 @@ router.get('/:id', async (req, res) => {
     res.status(500).json({ error: 'Lỗi khi lấy sản phẩm', details: error.message });
   }
 });
+
+
 
 // =============================================================================
 // ROUTES CẦN TOKEN VÀ QUYỀN ADMIN/STAFF (PROTECTED)
@@ -374,6 +402,26 @@ router.put('/:id', authenticateToken, checkAdminPermission, upload.single('HinhA
   }
 });
 
+// Route cập nhật MinSoLuong (ngưỡng tồn tối thiểu) - YÊU CẦU TOKEN VÀ QUYỀN ADMIN/STAFF
+router.patch('/:id/min-stock', authenticateToken, checkAdminPermission, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { MinSoLuong } = req.body;
+    const minValue = Number.isNaN(parseInt(MinSoLuong)) ? 0 : parseInt(MinSoLuong);
+
+    const [result] = await pool.query('UPDATE sanpham SET MinSoLuong = ? WHERE MaSP = ?', [minValue, id]);
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: 'Sản phẩm không tồn tại' });
+    }
+
+    res.status(200).json({ message: 'Cập nhật ngưỡng tồn tối thiểu thành công', MinSoLuong: minValue });
+  } catch (error) {
+    console.error('Lỗi khi cập nhật MinSoLuong:', error);
+    res.status(500).json({ error: 'Lỗi server' });
+  }
+});
+
 // Route xóa sản phẩm - YÊU CẦU TOKEN VÀ QUYỀN ADMIN/STAFF/NV004/NV007
 router.delete('/:id', authenticateToken, checkAdminPermission, async (req, res) => {
   try {
@@ -497,6 +545,5 @@ router.get('/status-stats', async (req, res) => {
     });
   }
 });
-
 
 export default router;

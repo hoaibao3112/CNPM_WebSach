@@ -523,6 +523,29 @@ body {
   color: #d32f2f;
 }
 
+/* Header layout for address block with inline add button */
+.address-block.default-address-block .address-block-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.address-block .add-link {
+  color: #1976d2;
+  text-decoration: none;
+  font-weight: 600;
+  padding: 6px 10px;
+  border-radius: 8px;
+  background: rgba(25,118,210,0.06);
+  border: 1px solid rgba(25,118,210,0.12);
+}
+
+.address-block .add-link:hover {
+  background: rgba(25,118,210,0.12);
+  transform: translateY(-2px);
+}
+
 .address-block p {
   margin: 1% 0;
   font-size: 0.9rem;
@@ -776,3 +799,259 @@ body {
  
 }
 
+/* điều chỉnh địa chỉ */
+
+/* ------------------ Address modal & form (thêm/sửa địa chỉ) ------------------ */
+#addressModal.modal {
+  display: none; /* JS sẽ bật class/show khi cần */
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.45);
+  align-items: center;
+  justify-content: center;
+  z-index: 1100;
+  padding: 20px;
+}
+
+#addressModal.modal.show {
+  display: flex;
+}
+
+/* ------------------ Address modal & form (thêm/sửa địa chỉ) ------------------ */
+/* Container */
+#addressModal {
+  display: none; /* toggled via inline style or JS */
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.45);
+  align-items: center;
+  justify-content: center;
+  z-index: 1100;
+  padding: 20px;
+}
+
+#addressModal .modal-content {
+  width: 100%;
+  max-width: 620px;
+  background: linear-gradient(180deg, #fff 0%, #fff 60%);
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.18);
+  padding: 18px 20px;
+  position: relative;
+  border: 1px solid rgba(211,47,47,0.12);
+}
+
+#addressModal #addressModalTitle {
+  margin: 0 0 8px 0;
+  font-size: 20px;
+  color: #b71c1c; /* deep red */
+  font-weight: 700;
+}
+
+/* Close button */
+#addressModal #addressModalClose {
+  position: absolute;
+  right: 12px;
+  top: 10px;
+  border: none;
+  background: transparent;
+  font-size: 20px;
+  cursor: pointer;
+  color: #777;
+}
+
+/* Form layout */
+#addressModal .form-group {
+  margin-bottom: 12px;
+}
+
+#addressModal label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 13px;
+  color: #333;
+  font-weight: 600;
+}
+
+#addressModal input[type="text"],
+#addressModal input[type="tel"],
+#addressModal textarea,
+#addressModal select {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #eee;
+  border-radius: 8px;
+  font-size: 14px;
+  background: #fff;
+  transition: border-color .15s ease, box-shadow .15s ease;
+}
+
+#addressModal input[type="text"]::placeholder { color: #bdbdbd }
+
+#addressModal input:focus,
+#addressModal textarea:focus,
+#addressModal select:focus {
+  outline: none;
+  border-color: rgba(211,47,47,0.9);
+  box-shadow: 0 4px 12px rgba(211,47,47,0.08);
+}
+
+#addressModal .form-row { display:flex; gap:10px; }
+#addressModal .form-row .form-group { flex:1 }
+
+/* Action buttons */
+#addressModal .modal-actions { text-align: right; margin-top:10px }
+#addressModal button#addr_cancel {
+  background: transparent;
+  border: 1px solid #ddd;
+  color: #444;
+  padding: 8px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+#addressModal button#addr_save {
+  background: linear-gradient(180deg,#d32f2f,#b71c1c);
+  color: #fff;
+  border: none;
+  padding: 9px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 700;
+  box-shadow: 0 6px 18px rgba(183,28,28,0.18);
+}
+
+#addr_form_error { color:#b00020; font-size:13px; margin-top:6px; display:none }
+
+/* small screens */
+@media (max-width: 520px) {
+  #addressModal .modal-content { padding: 14px; }
+  #addressModal #addressModalTitle { font-size: 18px }
+  #addressModal .form-row { flex-direction: column }
+}
+
+/* ------------------ Address list / items tweaks ------------------ */
+.address-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.address-item {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 14px 16px;
+  border-radius: 12px;
+  background: linear-gradient(180deg, #ffffff 0%, #fffaf9 100%);
+  border: 1px solid rgba(0,0,0,0.06);
+  box-shadow: 0 6px 18px rgba(0,0,0,0.04);
+}
+
+.address-item .address-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.address-item .address-info .addr-top {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+
+/* Name (primary) + phone (secondary) */
+.address-item .address-info .addr-top .name {
+  font-size: 1.06rem;
+  font-weight: 700;
+  color: #2b2b2b;
+  line-height: 1.1;
+}
+.address-item .address-info .addr-top .phone {
+  color: #757575;
+  font-weight: 600;
+  margin-left: 6px;
+  font-size: 0.92rem;
+  background: rgba(0,0,0,0.03);
+  padding: 4px 8px;
+  border-radius: 12px;
+}
+
+.address-item .addr-detail {
+  color: #616161;
+  font-size: 0.95rem;
+  margin-top: 4px;
+  max-width: 72ch; /* avoid overly long lines */
+  word-break: break-word;
+}
+
+.address-item .address-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  white-space: nowrap;
+}
+
+/* Pill-style action buttons */
+.address-item .address-actions a,
+.address-item .address-actions button {
+  font-size: 0.92rem;
+  color: #d32f2f;
+  background: rgba(211,47,47,0.06);
+  border: 1px solid rgba(211,47,47,0.12);
+  cursor: pointer;
+  padding: 8px 12px;
+  border-radius: 999px;
+  transition: transform 0.12s ease, box-shadow 0.12s ease, background 0.12s ease;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.address-item .address-actions a.edit {
+  color: #1976d2;
+  background: rgba(25,118,210,0.06);
+  border-color: rgba(25,118,210,0.12);
+}
+
+.address-item .address-actions a.delete,
+.address-item .address-actions button.delete {
+  color: #b71c1c;
+  background: rgba(183,28,28,0.06);
+  border-color: rgba(183,28,28,0.12);
+}
+
+.address-item .address-actions a:hover,
+.address-item .address-actions button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 14px rgba(0,0,0,0.06);
+}
+
+.address-item .address-actions a:focus,
+.address-item .address-actions button:focus {
+  outline: 2px solid rgba(211,47,47,0.14);
+  outline-offset: 2px;
+}
+
+/* Default badge */
+.address-item .default-badge {
+  display: inline-block;
+  background: #e8f5e9;
+  color: #388e3c;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  margin-left: 8px;
+}
+
+/* Small screens */
+@media (max-width: 560px) {
+  #addressModal .form-row { flex-direction: column; gap: 8px; }
+  .sidebar { width: 100%; }
+  .content { margin-left: 0; }
+  .address-item { flex-direction: column; align-items: stretch; }
+  .address-item .address-actions { justify-content: flex-end; margin-top: 8px; }
+}

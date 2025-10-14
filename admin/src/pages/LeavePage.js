@@ -145,7 +145,7 @@ const LeavePage = () => {
         scroll={{ x: 950 }}
         className="compact-leave-table"
       />
-      <Modal open={open} onCancel={() => setOpen(false)} footer={null} title="Xin nghỉ phép" destroyOnClose>
+  <Modal open={open} onCancel={() => setOpen(false)} footer={null} title="Xin nghỉ phép" destroyOnHidden>
         <Form layout="vertical" onFinish={onFinish}>
           {/* Không cho nhập MaTK, tự động lấy từ localStorage */}
           <Form.Item name="ngay_bat_dau" label="Từ ngày" rules={[{ required: true }]}>
@@ -162,9 +162,9 @@ const LeavePage = () => {
           </Button>
         </Form>
       </Modal>
-      <style jsx>{`
+  <style>{`
         .leave-management-container {
-          padding: 16px 16px 16px 216px;
+    
           min-height: 100vh;
         }
         .header-section {

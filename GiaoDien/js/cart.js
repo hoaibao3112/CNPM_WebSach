@@ -1209,5 +1209,6 @@ async function loadSavedAddresses() {
 
     // If cleared, clear map/route
     document.addEventListener('savedAddressCleared', () => { onDeleteClick(); });
+    
   });
 })();

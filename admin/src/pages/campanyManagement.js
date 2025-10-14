@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
 import axios from 'axios';
 import { Button, Input, message, Table, Modal, Space, Select } from 'antd';
 import { EditOutlined, DeleteOutlined, ExclamationCircleFilled, LockOutlined, UnlockOutlined } from '@ant-design/icons';
@@ -29,15 +29,15 @@ const CompanyManagement = () => {
   const debounceRef = useRef(null); // Để debounce search
 
   // Helper để convert Buffer to string nếu cần (fallback)
-  const convertStatusIfBuffer = (company) => {
+  const convertStatusIfBuffer = useCallback((company) => {
     let statusValue = company.TinhTrang;
     if (statusValue && typeof statusValue === 'object' && statusValue.type === 'Buffer' && statusValue.data && statusValue.data.length > 0) {
       statusValue = statusValue.data[0].toString();
     }
     return statusValue;
-  };
+  }, []);
 
-  const fetchCompanies = async (keyword = '') => {
+  const fetchCompanies = useCallback(async (keyword = '') => {
     try {
       setState(prev => ({ ...prev, loading: true, error: null }));
       let url = API_URL;
@@ -65,11 +65,11 @@ const CompanyManagement = () => {
     } finally {
       setState(prev => ({ ...prev, loading: false }));
     }
-  };
+  }, [convertStatusIfBuffer]);
 
   useEffect(() => {
     fetchCompanies();
-  }, []);
+  }, [fetchCompanies]);
 
   // Debounce search khi type
   useEffect(() => {
@@ -81,7 +81,7 @@ const CompanyManagement = () => {
     }, 500); // Delay 500ms sau khi ngừng type
 
     return () => clearTimeout(debounceRef.current);
-  }, [searchTerm]);
+  }, [searchTerm, fetchCompanies]);
 
   // Gợi ý MaNCC tự động khi thêm mới (max +1, giả sử MaNCC là số)
   const suggestMaNCC = () => {
@@ -416,7 +416,7 @@ const CompanyManagement = () => {
           </Button>,
         ]}
         width={600}
-        bodyStyle={{ padding: '16px' }}
+  styles={{ body: { padding: '16px' } }}
       >
         <div className="info-section">
           <div className="info-grid">
@@ -470,7 +470,7 @@ const CompanyManagement = () => {
         </div>
       </Modal>
 
-      <style jsx>{`
+  <style>{`
         .company-management-container {
           padding: 16px 16px 16px 216px;
           min-height: 100vh;
@@ -491,7 +491,7 @@ const CompanyManagement = () => {
         .search-box {
           width: 300px; /* Tăng width để dễ nhập hơn */
         }
-        .search-box :global(.ant-input) {
+  .search-box .ant-input {
           pointer-events: auto !important; /* Đảm bảo có thể click/type */
           user-select: text !important;
         }
@@ -514,10 +514,10 @@ const CompanyManagement = () => {
           font-size: 12px;
           margin: 0 0 4px 0;
         }
-        .compact-company-table :global(.ant-table-thead > tr > th) {
+  .compact-company-table .ant-table-thead > tr > th {
           padding: 8px 12px;
         }
-        .compact-company-table :global(.ant-table-tbody > tr > td) {
+  .compact-company-table .ant-table-tbody > tr > td {
           padding: 8px 12px;
         }
       `}</style>

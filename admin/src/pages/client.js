@@ -1,10 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { Button, Input, message, Table, Modal, Space, Tag } from 'antd';
-import { ExclamationCircleFilled } from '@ant-design/icons';
 
 const { Search } = Input;
-const { confirm } = Modal;
 
 const CustomerManagement = () => {
   const [customers, setCustomers] = useState([]);
@@ -14,7 +12,6 @@ const CustomerManagement = () => {
   // Promo modal
   const [isPromoModalVisible, setIsPromoModalVisible] = useState(false);
   const [promoUsage, setPromoUsage] = useState({ makh: null, usedCount: 0, totalClaimed: 0 });
-  const [promoLoading, setPromoLoading] = useState(false);
   // Detailed promo list
   const [promoList, setPromoList] = useState([]);
   const [promoListLoading, setPromoListLoading] = useState(false);
@@ -53,23 +50,7 @@ const CustomerManagement = () => {
     }
   };
 
-  const fetchPromoUsage = async (makh) => {
-    try {
-      setPromoLoading(true);
-      const res = await axios.get(`${API_URL}/${makh}/promo-usage`);
-      if (res.data) {
-        setPromoUsage({ makh: res.data.makh, usedCount: res.data.usedCount || 0, totalClaimed: res.data.totalClaimed || 0 });
-        setIsPromoModalVisible(true);
-      } else {
-        message.error('Không lấy được thông tin mã khuyến mãi');
-      }
-    } catch (err) {
-      console.error(err);
-      message.error(err.response?.data?.error || 'Lỗi khi lấy thông tin mã khuyến mãi');
-    } finally {
-      setPromoLoading(false);
-    }
-  };
+  // fetchPromoUsage removed because not referenced; use fetchPromoList which also sets promoUsage and opens modal
 
   // Fetch detailed promo list for customer
   const fetchPromoList = async (makh) => {
@@ -142,12 +123,12 @@ const CustomerManagement = () => {
 
       <Modal
         title={promoUsage.makh ? `Mã khuyến mãi - KH ${promoUsage.makh}` : 'Mã khuyến mãi'}
-        visible={isPromoModalVisible}
+  open={isPromoModalVisible}
         onCancel={() => setIsPromoModalVisible(false)}
         footer={null}
         width={800}
         centered
-        confirmLoading={promoLoading || promoListLoading}
+    confirmLoading={promoListLoading}
       >
         <div style={{ padding: 12 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
@@ -177,16 +158,16 @@ const CustomerManagement = () => {
         </div>
       </Modal>
 
-      <style jsx>{`
+  <style>{`
         .customer-management-container { padding: 16px 16px 16px 216px; min-height: 100vh; }
         .header-section { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 16px; }
         .page-title { font-size: 18px; font-weight: 600; margin: 0; }
         .search-box { width: 250px; }
-        .compact-customer-table :global(.ant-table-thead > tr > th) { padding: 8px 12px; }
-        .compact-customer-table :global(.ant-table-tbody > tr > td) { padding: 8px 12px; }
-
-        /* Prevent images from overflowing and hiding text */
-        .compact-customer-table :global(img) {
+  .compact-customer-table .ant-table-thead > tr > th { padding: 8px 12px; }
+  .compact-customer-table .ant-table-tbody > tr > td { padding: 8px 12px; }
+        
+  /* Prevent images from overflowing and hiding text */
+  .compact-customer-table img {
           max-width: 80px;
           max-height: 60px;
           width: auto;
@@ -197,7 +178,7 @@ const CustomerManagement = () => {
         }
 
         /* Ensure cell text remains readable and truncated when necessary */
-        .compact-customer-table :global(.ant-table-cell) {
+  .compact-customer-table .ant-table-cell {
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
@@ -205,12 +186,12 @@ const CustomerManagement = () => {
         }
 
         /* Make fixed action column sit above other cells to avoid overlap */
-        .compact-customer-table :global(.ant-table-fixed-right) {
+  .compact-customer-table .ant-table-fixed-right {
           z-index: 5;
         }
 
         /* If you prefer images to sit in their own narrow column, set a small cell width */
-        .compact-customer-table :global(.img-cell) {
+  .compact-customer-table .img-cell {
           width: 90px;
         }
       `}</style>

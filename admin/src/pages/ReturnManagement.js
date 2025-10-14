@@ -343,7 +343,7 @@ const ReturnManagement = () => {
 
       {showModal && selectedReturn && (
         <div className="modal-overlay" onClick={closeModal}>
-          <div className="modal" onClick={(e) => e.stopPropagation()}>
+          <div className="modal portal-modal" onClick={(e) => e.stopPropagation()}>
             <div className="panel">
               <div className="title-pill">Chi tiết yêu cầu trả hàng #{selectedReturn.id} <button className="close" onClick={closeModal}>×</button></div>
               <div className="modal-header"><h3 /></div>

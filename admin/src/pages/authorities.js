@@ -351,7 +351,7 @@ const PermissionManagement = () => {
       {/* Add/Edit Permission Modal */}
       <Modal
         title={editingPermission ? 'Chỉnh sửa quyền' : 'Thêm quyền mới'}
-        visible={isModalVisible}
+  open={isModalVisible}
         onCancel={() => {
           setState(prev => ({
             ...prev,
@@ -381,7 +381,7 @@ const PermissionManagement = () => {
           </Button>,
         ]}
         width={600}
-        bodyStyle={{ padding: '16px' }}
+  styles={{ body: { padding: '16px' } }}
       >
         <div className="info-section">
           <div className="info-grid">
@@ -451,7 +451,7 @@ const PermissionManagement = () => {
         </div>
       </Modal>
 
-      <style jsx>{`
+  <style>{`
         .permission-management-container {
           padding: 16px 16px 16px 216px;
           min-height: 100vh;
@@ -491,10 +491,10 @@ const PermissionManagement = () => {
           font-size: 12px;
           margin: 0;
         }
-        .compact-permission-table :global(.ant-table-thead > tr > th) {
+  .compact-permission-table .ant-table-thead > tr > th {
           padding: 8px 12px;
         }
-        .compact-permission-table :global(.ant-table-tbody > tr > td) {
+  .compact-permission-table .ant-table-tbody > tr > td {
           padding: 8px 12px;
         }
       `}</style>

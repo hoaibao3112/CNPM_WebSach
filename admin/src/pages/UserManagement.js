@@ -315,7 +315,7 @@ const UserManagement = () => {
 
       <Modal
         title={editingUser ? 'Chỉnh sửa người dùng' : 'Thêm người dùng mới'}
-        visible={isModalVisible}
+  open={isModalVisible}
         onCancel={() => {
           setState(prev => ({
             ...prev,
@@ -345,7 +345,7 @@ const UserManagement = () => {
           </Button>,
         ]}
         width={600}
-        bodyStyle={{ padding: '16px' }}
+  styles={{ body: { padding: '16px' } }}
       >
         <div className="info-section">
           <div className="info-grid">
@@ -421,9 +421,8 @@ const UserManagement = () => {
         </div>
       </Modal>
 
-      <style jsx>{`
+  <style>{`
         .user-management-container {
-          padding: 16px 16px 16px 216px;
           min-height: 100vh;
         }
         .header-section {
@@ -461,10 +460,10 @@ const UserManagement = () => {
           font-size: 12px;
           margin: 0;
         }
-        .compact-user-table :global(.ant-table-thead > tr > th) {
+  .compact-user-table .ant-table-thead > tr > th {
           padding: 8px 12px;
         }
-        .compact-user-table :global(.ant-table-tbody > tr > td) {
+  .compact-user-table .ant-table-tbody > tr > td {
           padding: 8px 12px;
         }
       `}</style>

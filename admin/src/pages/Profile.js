@@ -324,7 +324,7 @@ const Profile = () => {
         onCancel={() => setShowSalaryModal(false)}
         footer={null}
         width={800}
-        bodyStyle={{ borderRadius: 16, padding: 0, overflow: 'hidden' }}
+  styles={{ body: { borderRadius: 16, padding: 0, overflow: 'hidden' } }}
       >
         <Table
           columns={salaryColumns}
@@ -343,7 +343,7 @@ const Profile = () => {
         onCancel={() => setDetailModal(false)}
         footer={null}
         width={500}
-        bodyStyle={{ borderRadius: 16, padding: 0, overflow: 'hidden' }}
+  styles={{ body: { borderRadius: 16, padding: 0, overflow: 'hidden' } }}
       >
         <Spin spinning={detailLoading}>
           <Table
@@ -377,8 +377,8 @@ const Profile = () => {
         open={showPwdModal}
         onCancel={() => setShowPwdModal(false)}
         footer={null}
-        destroyOnClose
-        bodyStyle={{ padding: 24, borderRadius: 12 }}
+  destroyOnHidden
+  styles={{ body: { padding: 24, borderRadius: 12 } }}
       >
         <Form
           layout="vertical"
@@ -432,8 +432,8 @@ const Profile = () => {
         open={showResignModal}
         onCancel={() => setShowResignModal(false)}
         footer={null}
-        destroyOnClose
-        bodyStyle={{ padding: 24, borderRadius: 12 }}
+  destroyOnHidden
+  styles={{ body: { padding: 24, borderRadius: 12 } }}
       >
         <Form
           layout="vertical"

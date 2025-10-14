@@ -18,7 +18,6 @@ const Login = () => {
   const [forgotVisible, setForgotVisible] = useState(false);
   const [forgotStep, setForgotStep] = useState(1);
   const [forgotEmail, setForgotEmail] = useState('');
-  const [forgotOtp, setForgotOtp] = useState('');
   const [resetToken, setResetToken] = useState(''); // Lưu resetToken từ verify OTP
   const [forgotLoading, setForgotLoading] = useState(false);
 
@@ -117,7 +116,6 @@ const Login = () => {
 
       if (res.status === 200) {
         setForgotStep(3);
-        setForgotOtp(values.otp);
         setResetToken(res.data.resetToken); // Lưu resetToken từ response
         message.success(res.data.message || 'Xác thực OTP thành công!');
       } else {
@@ -161,7 +159,6 @@ const Login = () => {
           form.resetFields();
           setResetToken(''); // Reset token
           setForgotEmail('');
-          setForgotOtp('');
         }, 1500);
       } else {
         const errorMessage = res.data.error || res.data.message || 'Đặt lại mật khẩu thất bại!';
@@ -185,7 +182,6 @@ const Login = () => {
     form.resetFields();
     setResetToken('');
     setForgotEmail('');
-    setForgotOtp('');
   };
 
   // Render form đăng nhập
@@ -268,7 +264,7 @@ const Login = () => {
           onCancel={handleCancelForgot}
           footer={null}
           title="Quên mật khẩu"
-          destroyOnClose
+          destroyOnHidden
           width={400}
         >
           <Card bordered={false} style={{ boxShadow: 'none', padding: 0 }}>

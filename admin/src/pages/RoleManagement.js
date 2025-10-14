@@ -339,7 +339,7 @@ const RoleManagement = () => {
       {/* Add/Edit Role Modal */}
       <Modal
         title={editingRole ? 'Chỉnh sửa nhóm quyền' : 'Thêm nhóm quyền mới'}
-        visible={isModalVisible}
+  open={isModalVisible}
         onCancel={() => {
           setIsModalVisible(false);
           setEditingRole(null);
@@ -363,7 +363,7 @@ const RoleManagement = () => {
           </Button>,
         ]}
         width={800}
-        bodyStyle={{ padding: '16px' }}
+  styles={{ body: { padding: '16px' } }}
       >
         <Form layout="vertical">
           <div className="info-section">
@@ -474,7 +474,7 @@ const RoleManagement = () => {
         </Form>
       </Modal>
 
-      <style jsx>{`
+  <style>{`
         .role-management-container {
           padding: 16px 16px 16px 216px;
           min-height: 100vh;
@@ -515,10 +515,10 @@ const RoleManagement = () => {
           align-items: center;
           margin-bottom: 12px;
         }
-        .compact-role-table :global(.ant-table-thead > tr > th) {
+  .compact-role-table .ant-table-thead > tr > th {
           padding: 8px 12px;
         }
-        .compact-role-table :global(.ant-table-tbody > tr > td) {
+  .compact-role-table .ant-table-tbody > tr > td {
           padding: 8px 12px;
         }
       `}</style>
