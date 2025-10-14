@@ -105,6 +105,13 @@
     </div>
 
     <div class="customer-info-section">
+      <div class="form-group">
+  <label for="saved-addresses">Chọn địa chỉ đã dùng trước đó</label>
+  <select id="saved-addresses" class="form-input">
+    <option value="">-- Chọn địa chỉ đã lưu --</option>
+  </select>
+</div>
+
       <h2>THÔNG TIN KHÁCH HÀNG</h2>
 
       <div class="customer-form" id="customer-form">
@@ -159,10 +166,10 @@
 
           <!-- Thêm map html ở đây -->
           <div class="map_container">
-              <div class="input">
-                  <button type="submit" id="input_button">Tìm</button>
-                  <button type="submit" id="delete_button">Xóa</button>
-              </div>
+        <div class="input">
+          <button type="button" id="input_button">Tìm</button>
+          <button type="button" id="delete_button">Xóa</button>
+        </div>
               <div id="map"></div>
               <div class="calculation">
                   <div class="item">
@@ -237,12 +244,10 @@
       </div>
     </div>
   </div>
-
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-  <script src="js/cart.js"></script>
-  <script src="js/loadHeader.js"></script>
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  <script src="js/orders.js"></script>
+ <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="js/cart.js"></script>
+ <script src="js/loadHeader.js"></script>
 </body>
 
 </html>

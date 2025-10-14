@@ -1945,6 +1945,104 @@ router.put('/refund-requests/:refundId/cancel', authenticateToken, async (req, r
       });
     }
 });
- // ...existing code...
+
+// ✅ API lấy danh sách địa chỉ cũ của khách hàng
+router.get('/customer-addresses/:customerId', authenticateToken, async (req, res) => {
+  const { customerId } = req.params;
+  try {
+    const [addresses] = await pool.query(`
+      SELECT 
+        MaDiaChi AS id,
+        TenNguoiNhan AS name,
+        SDT AS phone,
+        DiaChiChiTiet AS detail,
+        TinhThanh AS province,
+        QuanHuyen AS district,
+        PhuongXa AS ward
+      FROM diachi
+      WHERE MaKH = ?
+      ORDER BY MaDiaChi DESC
+    `, [customerId]);
+    // If the stored province/district/ward values are numeric codes, resolve them to human-readable names
+    // Use a small in-memory cache to avoid repeated external calls during server runtime
+    const provinceCache = new Map();
+    const districtCache = new Map();
+    const wardCache = new Map();
+
+    async function resolveProvince(code) {
+      if (!code) return '';
+      if (!/^[0-9]+$/.test(String(code))) return String(code);
+      if (provinceCache.has(code)) return provinceCache.get(code);
+      try {
+        const r = await fetch(`https://provinces.open-api.vn/api/p/${code}`);
+        if (!r.ok) return String(code);
+        const data = await r.json();
+        const name = data.name || data['name'] || String(code);
+        provinceCache.set(code, name);
+        return name;
+      } catch (e) {
+        console.warn('resolveProvince error', e);
+        return String(code);
+      }
+    }
+
+    async function resolveDistrict(code) {
+      if (!code) return '';
+      if (!/^[0-9]+$/.test(String(code))) return String(code);
+      if (districtCache.has(code)) return districtCache.get(code);
+      try {
+        const r = await fetch(`https://provinces.open-api.vn/api/d/${code}`);
+        if (!r.ok) return String(code);
+        const data = await r.json();
+        const name = data.name || data['name'] || String(code);
+        districtCache.set(code, name);
+        return name;
+      } catch (e) {
+        console.warn('resolveDistrict error', e);
+        return String(code);
+      }
+    }
+
+    async function resolveWard(code) {
+      if (!code) return '';
+      if (!/^[0-9]+$/.test(String(code))) return String(code);
+      if (wardCache.has(code)) return wardCache.get(code);
+      try {
+        // The API exposes wards via /w/{code}
+        const r = await fetch(`https://provinces.open-api.vn/api/w/${code}`);
+        if (!r.ok) return String(code);
+        const data = await r.json();
+        const name = data.name || data['name'] || String(code);
+        wardCache.set(code, name);
+        return name;
+      } catch (e) {
+        console.warn('resolveWard error', e);
+        return String(code);
+      }
+    }
+
+    // Resolve all addresses in parallel (with per-request caching)
+    const resolved = await Promise.all(addresses.map(async addr => {
+      const prov = await resolveProvince(addr.province);
+      const dist = await resolveDistrict(addr.district);
+      const ward = await resolveWard(addr.ward);
+      return {
+        id: addr.id,
+        name: addr.name,
+        phone: addr.phone,
+        detail: addr.detail,
+        province: prov,
+        district: dist,
+        ward: ward
+      };
+    }));
+
+    res.json({ success: true, data: resolved });
+  } catch (error) {
+    console.error('Lỗi lấy địa chỉ cũ:', error);
+    res.status(500).json({ success: false, error: 'Lỗi khi lấy danh sách địa chỉ' });
+  }
+});
+
 
 export default router;

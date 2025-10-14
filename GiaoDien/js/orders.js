@@ -31,6 +31,66 @@ async function getProvinceName(provinceCode) {
     }
 }
 
+// Delivery vehicle animation helpers
+let deliveryVehicleMarker = null;
+let deliveryVehicleAnim = null;
+
+function startDeliveryVehicle(latlngs, speedKmH = 25) {
+        stopDeliveryVehicle();
+        if (!latlngs || latlngs.length < 2 || !map) return;
+
+        const iconHtml = `
+            <div class="car-icon vehicle-marker">
+                <svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 44 L52 44 L58 36 L54 26 L10 26 L6 36 Z" fill="#007bff" stroke="#004a99" stroke-width="1"/>
+                    <circle cx="20" cy="48" r="4" fill="#222"/>
+                    <circle cx="44" cy="48" r="4" fill="#222"/>
+                </svg>
+            </div>`;
+
+        const carIcon = L.divIcon({ html: iconHtml, className: '', iconSize: [36, 36], iconAnchor: [18, 18] });
+        deliveryVehicleMarker = L.marker([latlngs[0].lat, latlngs[0].lon], { icon: carIcon, interactive: false }).addTo(map);
+
+        const speedMps = (speedKmH * 1000) / 3600; // meters per second
+        let i = 0;
+        let t = 0;
+
+        function step() {
+                if (!deliveryVehicleMarker) return;
+                const a = latlngs[i];
+                const b = latlngs[(i + 1) % latlngs.length];
+                const dist = haversineDistance(a, b) * 1000; // meters
+                const duration = Math.max(dist / speedMps, 0.001);
+                t += 0.016 / duration;
+                if (t >= 1) { t = 0; i = (i + 1) % latlngs.length; }
+                const lat = a.lat + (b.lat - a.lat) * t;
+                const lon = a.lon + (b.lon - a.lon) * t;
+                deliveryVehicleMarker.setLatLng([lat, lon]);
+                deliveryVehicleAnim = requestAnimationFrame(step);
+        }
+
+        deliveryVehicleAnim = requestAnimationFrame(step);
+}
+
+function stopDeliveryVehicle() {
+        try { if (deliveryVehicleAnim) cancelAnimationFrame(deliveryVehicleAnim); } catch (e) {}
+        deliveryVehicleAnim = null;
+        if (deliveryVehicleMarker) { try { map.removeLayer(deliveryVehicleMarker); } catch (e) {} deliveryVehicleMarker = null; }
+}
+
+function haversineDistance(a, b) {
+        const R = 6371; // km
+        const dLat = (b.lat - a.lat) * Math.PI / 180;
+        const dLon = (b.lon - a.lon) * Math.PI / 180;
+        const lat1 = a.lat * Math.PI / 180;
+        const lat2 = b.lat * Math.PI / 180;
+        const sinDLat = Math.sin(dLat / 2);
+        const sinDLon = Math.sin(dLon / 2);
+        const aa = sinDLat * sinDLat + sinDLon * sinDLon * Math.cos(lat1) * Math.cos(lat2);
+        const c = 2 * Math.atan2(Math.sqrt(aa), Math.sqrt(1 - aa));
+        return R * c;
+}
+
 // Lấy tên quận/huyện từ mã
 async function getDistrictName(districtCode, provinceCode) {
     if (!districtCode) return '';
@@ -629,7 +689,12 @@ async function submitReturnRequest(order) {
     // Hiển thị thông tin trả hàng (nếu có)
     try { await renderReturnInfo(order); } catch (e) { console.warn('renderReturnInfo failed', e); }
 
-    modal.style.display = 'block';
+        modal.style.display = 'block';
+        // Force Leaflet to recalculate size after modal is visible (fixes gray/cropped tiles)
+        try {
+            setTimeout(() => { if (typeof map !== 'undefined' && map) map.invalidateSize(); }, 150);
+            setTimeout(() => { if (typeof map !== 'undefined' && map) map.invalidateSize(); }, 450);
+        } catch (e) { /* ignore */ }
 }
 
 // Fetch return request(s) for a given order id
@@ -2353,7 +2418,6 @@ function main() {
 window.onload = main;
 
 
-/*
 // Khởi tạo bản đồ với Leaflet
 let map;
 let polyline;
@@ -2371,9 +2435,14 @@ function initMap() {
         attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
         maxZoom: 19,
     }).addTo(map);
+        // Ensure Leaflet redraws tiles if container was hidden or resized
+        try {
+            setTimeout(() => map.invalidateSize(), 0);
+            setTimeout(() => map.invalidateSize(), 200);
+        } catch (e) { console.warn('invalidateSize error', e); }
 }
 
-// Thay thế hàm displayDeliveryMap hiện tại (từ dòng 958) bằng:
+// Hiển thị bản đồ giao hàng (sử dụng Nominatim + OSRM)
 async function displayDeliveryMap(order) {
     const mapElement = document.getElementById('delivery-map');
     const distanceInfoElement = document.getElementById('distance-info');
@@ -2456,11 +2525,20 @@ async function displayDeliveryMap(order) {
             // Vẽ tuyến đường
             polyline = L.polyline(routePoints, { color: 'blue' }).addTo(map);
 
+            // Start vehicle animation along routePoints
+            try {
+                // Convert to objects
+                const latlngs = routePoints.map(p => ({ lat: p[0], lon: p[1] }));
+                startDeliveryVehicle(latlngs);
+            } catch (e) { console.warn('startDeliveryVehicle error', e); }
+
             // Cập nhật thông tin khoảng cách và thời gian
             const distance = (routeData.routes[0].distance / 1000).toFixed(2);
             const duration = Math.round(routeData.routes[0].duration / 60);
             if (distanceInfoElement) distanceInfoElement.textContent = `${distance} km`;
             if (durationInfoElement) durationInfoElement.textContent = `${duration} phút`;
+            // Force redraw of tiles after drawing route (useful if map was in a modal)
+            try { setTimeout(() => map.invalidateSize(), 100); } catch (e) {}
         } else {
             console.error('Lỗi tính tuyến đường:', routeData.message);
             if (distanceInfoElement) distanceInfoElement.textContent = 'Không thể tính khoảng cách';
@@ -2476,7 +2554,6 @@ async function displayDeliveryMap(order) {
         if (durationInfoElement) durationInfoElement.textContent = 'Không thể hiển thị thông tin';
     }
 }
-*/
 
 
 /////--------xử lý hoàn tiền đơn hàng------------///////////////

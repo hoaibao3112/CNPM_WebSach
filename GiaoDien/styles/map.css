@@ -60,6 +60,11 @@
   box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.1);
 }
 
+/* Vehicle (car) marker */
+.vehicle-marker { pointer-events: none; }
+.car-icon svg { width: 36px; height: 36px; display: block; transform-origin: 50% 50%; }
+.car-icon { filter: drop-shadow(0 2px 2px rgba(0,0,0,0.3)); }
+
 /* Calculation Section */
 .calculation {
   display: flex;
