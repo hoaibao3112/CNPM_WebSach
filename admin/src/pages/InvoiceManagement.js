@@ -755,7 +755,7 @@ const handleViewInvoice = async (id) => {
       title: 'Mã HĐ',
       dataIndex: 'id',
       key: 'id',
-      width: 70,
+      width: 100,
       fixed: 'left',
     },
     {
@@ -767,14 +767,14 @@ const handleViewInvoice = async (id) => {
           <div className="text-gray-500 text-xs">{record.customerPhone}</div>
         </div>
       ),
-      width: 150,
+      width: 180,
     },
     {
       title: 'Ngày lập',
       dataIndex: 'createdAt',
       key: 'createdAt',
       render: (date) => formatDate(date),
-      width: 100,
+      width: 150,
     },
     {
       title: 'Tổng tiền',
@@ -785,7 +785,7 @@ const handleViewInvoice = async (id) => {
           {formatCurrency(amount)}
         </div>
       ),
-      width: 120,
+      width: 150,
     },
     {
       title: 'Trạng thái',
@@ -841,7 +841,7 @@ const handleViewInvoice = async (id) => {
           )}
         </Space>
       ),
-      width: 120,
+      width: 200,
     },
   ];
 
@@ -855,57 +855,69 @@ const handleViewInvoice = async (id) => {
   };
 
   return (
-    <div className="invoice-management-container">
-      <div className="header-section">
-        <h1 className="page-title">Quản lý hóa đơn</h1>
-        
-        <div className="header-actions">
-          {/* ✨ NOTIFICATION BELL - THÊM MỚI */}
-          <Dropdown
-            overlay={notificationMenu}
-            trigger={['click']}
-            open={notificationVisible}
-            onVisibleChange={setNotificationVisible}
-            placement="bottomRight"
-            overlayClassName="notification-dropdown"
-          >
-            <Button 
-              type="text" 
-              className="notification-bell"
-              icon={
-                <Badge count={unreadCount} size="small" offset={[0, 0]}>
-                  <BellOutlined style={{ fontSize: '18px' }} />
-                </Badge>
-              }
-            />
-          </Dropdown>
-
-          <Search
-            placeholder="Tìm kiếm theo mã HĐ, tên KH hoặc SĐT"
-            onSearch={handleSearch}
-            className="search-box"
-            allowClear
-          />
-          <Button onClick={fetchInvoices} loading={loading}>
-            Tải lại
-          </Button>
-        </div>
+    <div className="thongke-page">
+      <div className="thongke-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <h1>
+          <i className="fas fa-file-invoice-dollar"></i> Quản lý Hóa đơn
+        </h1>
       </div>
 
-      <Table
-        columns={columns}
-        dataSource={filteredInvoices}
-        rowKey="id"
-        loading={loading}
-        scroll={{ x: 1000 }}
-        pagination={{ pageSize: 10 }}
-        className="compact-invoice-table"
-      />
+      <div className="thongke-content">
+        <div className="thongke-filters">
+          <div className="filter-group" style={{ display: 'flex', alignItems: 'baseline', gap: '16px', flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px', flex: 1, maxWidth: '400px' }}>
+              <label style={{ margin: 0, whiteSpace: 'nowrap', fontWeight: 500, color: '#666' }}>Tìm kiếm:</label>
+              <Search
+                placeholder="Tìm kiếm theo mã HĐ, tên KH hoặc SĐT"
+                onSearch={handleSearch}
+                style={{ flex: 1 }}
+                allowClear
+              />
+            </div>
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: '12px', marginLeft: 'auto' }}>
+              <Button onClick={fetchInvoices} loading={loading}>
+                Tải lại
+              </Button>
+              {/* ✨ NOTIFICATION BELL */}
+              <Dropdown
+                overlay={notificationMenu}
+                trigger={['click']}
+                open={notificationVisible}
+                onVisibleChange={setNotificationVisible}
+                placement="bottomRight"
+                overlayClassName="notification-dropdown"
+              >
+                <Button 
+                  type="text" 
+                  className="notification-bell"
+                  icon={
+                    <Badge count={unreadCount} size="small" offset={[0, 0]}>
+                      <BellOutlined style={{ fontSize: '18px' }} />
+                    </Badge>
+                  }
+                />
+              </Dropdown>
+            </div>
+          </div>
+        </div>
+
+        <div className="thongke-table">
+          <Table
+            columns={columns}
+            dataSource={filteredInvoices}
+            rowKey="id"
+            loading={loading}
+            scroll={{ x: 1000 }}
+            pagination={{ pageSize: 10 }}
+            className="compact-invoice-table"
+          />
+        </div>
+      </div>
 
       {/* Modal chi tiết hóa đơn */}
       <Modal
         title={`Chi tiết hóa đơn #${selectedInvoice?.id || ''}`}
-  open={isModalVisible}
+        open={isModalVisible}
         onCancel={() => setIsModalVisible(false)}
         footer={[
           <Button key="close" onClick={() => setIsModalVisible(false)}>
@@ -913,7 +925,7 @@ const handleViewInvoice = async (id) => {
           </Button>,
         ]}
         width={700}
-  styles={{ body: { padding: '16px' } }}
+        styles={{ body: { padding: '16px' } }}
       >
         {selectedInvoice && (
           <div className="invoice-detail-content">
@@ -936,12 +948,12 @@ const handleViewInvoice = async (id) => {
                   <p className="info-label">Người nhận:</p>
                   <p className="info-value">{selectedInvoice.recipientName} - {selectedInvoice.recipientPhone}</p>
                 </div>
-               <div className="info-item full-width">
-  <p className="info-label">Địa chỉ giao hàng:</p>
-  <p className="info-value">
-    {selectedInvoice.formattedAddress || 'Đang tải địa chỉ...'}
-  </p>
-</div>
+                <div className="info-item full-width">
+                  <p className="info-label">Địa chỉ giao hàng:</p>
+                  <p className="info-value">
+                    {selectedInvoice.formattedAddress || 'Đang tải địa chỉ...'}
+                  </p>
+                </div>
               </div>
             </div>
             
@@ -1045,14 +1057,14 @@ const handleViewInvoice = async (id) => {
       {/* ✨ CHAT MODAL HOÀN TOÀN MỚI */}
       <Modal
         title={null}
-  open={chatVisible}
+        open={chatVisible}
         onCancel={handleCloseChat}
         footer={null}
         width={650}
-  styles={{ body: { padding: 0, height: '650px' } }}
+        styles={{ body: { padding: 0, height: '650px' } }}
         className="modern-chat-modal"
         maskClosable={false}
-  destroyOnHidden={true}
+        destroyOnHidden={true}
       >
         <div className="chat-container">
           {/* Chat Header */}
@@ -1132,7 +1144,7 @@ const handleViewInvoice = async (id) => {
         </div>
       </Modal>
 
-  <style>{`
+      <style>{`
         .invoice-management-container {
      
           min-height: 100vh;
@@ -1170,17 +1182,17 @@ const handleViewInvoice = async (id) => {
           transform: scale(1.05);
         }
         
-  .notification-bell .ant-badge {
+        .notification-bell .ant-badge {
           display: flex;
           align-items: center;
           justify-content: center;
         }
         
-  .notification-dropdown {
+        .notification-dropdown {
           margin-top: 8px;
         }
         
-  .notification-dropdown .ant-dropdown-menu {
+        .notification-dropdown .ant-dropdown-menu {
           padding: 0;
           border-radius: 8px;
           box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
@@ -1190,19 +1202,19 @@ const handleViewInvoice = async (id) => {
           overflow-y: auto;
         }
         
-  .notification-header {
+        .notification-header {
           background: #f0f2ff;
           margin: 0;
           border-radius: 8px 8px 0 0;
         }
         
-  .notification-item {
+        .notification-item {
           padding: 0;
           height: auto;
           line-height: normal;
         }
         
-  .notification-item:hover {
+        .notification-item:hover {
           background: #f8f9fa;
         }
         
@@ -1274,7 +1286,7 @@ const handleViewInvoice = async (id) => {
         }
         
         /* Pulse effect cho badge */
-  .ant-badge-count {
+        .ant-badge-count {
           animation: pulse 2s infinite;
         }
         

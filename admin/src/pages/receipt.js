@@ -322,15 +322,15 @@ const NhapHang = () => {
           <Column
             title="Đơn giá"
             dataIndex="DonGiaDisplay"
-            width={100}
+            width={80}
             align="right"
             render={(value) => ((value ? Number(value) : 0).toLocaleString() + ' đ')}
           />
           <Column title="Nhà cung cấp" dataIndex="TenNCC" width={120} align="center" />
-          <Column title="Ghi chú" dataIndex="GhiChu" width={100} align="center" />
+          <Column title="Ghi chú" dataIndex="GhiChu" width={50} align="center" />
           <Column
             title="Chi tiết"
-            width={100}
+            width={150}
             align="center"
             render={(_, record) => (
               <Button icon={<EyeOutlined />} onClick={() => xemChiTiet(record.MaPN)} type="link">
@@ -430,7 +430,7 @@ const NhapHang = () => {
                     </Form.Item>
 
                     <Form.Item {...restField} name={[name, 'TenSP']} label="Tên sản phẩm">
-                      <Input disabled style={{ width: 220 }} />
+                      <Input disabled style={{ width: 180 }} />
                     </Form.Item>
 
                     <Form.Item

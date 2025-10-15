@@ -6,7 +6,7 @@ const router = express.Router();
 // ✅ API lấy danh sách thể loại
 router.get('/', async (req, res) => {
   try {
-    const [categories] = await pool.query('SELECT * FROM theloai');
+    const [categories] = await pool.query('SELECT MaTL, TenTL, CAST(TinhTrang AS UNSIGNED) as TinhTrang FROM theloai');
     res.status(200).json(categories); // ← Trả mảng trực tiếp
   } catch (error) {
     res.status(500).json({ error: 'Lỗi khi lấy danh sách thể loại', details: error.message });
@@ -17,7 +17,7 @@ router.get('/', async (req, res) => {
 router.get('/:id', async (req, res) => {
   const { id } = req.params;
   try {
-    const [rows] = await pool.query('SELECT * FROM theloai WHERE MaTL = ?', [id]);
+    const [rows] = await pool.query('SELECT MaTL, TenTL, CAST(TinhTrang AS UNSIGNED) as TinhTrang FROM theloai WHERE MaTL = ?', [id]);
     if (rows.length === 0) {
       return res.status(404).json({ error: 'Thể loại không tồn tại' });
     }

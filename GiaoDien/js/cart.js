@@ -1102,9 +1102,12 @@ async function loadSavedAddresses() {
   async function onFindClick(e) {
     e && e.preventDefault();
     const address = buildAddressFromForm();
-    if (!address) { showToast('Vui lòng nhập địa chỉ đầy đủ'); return; }
+    if (!address) return;
     const geo = await geocode(address);
-    if (!geo) { showToast('Không tìm thấy địa chỉ'); return; }
+    if (!geo) {
+      console.warn('Không tìm thấy địa chỉ hoặc địa chỉ chưa đầy đủ:', address);
+      return;
+    }
     await drawRoute(SHOP, { lat: geo.lat, lon: geo.lon });
   }
 
@@ -1209,6 +1212,53 @@ async function loadSavedAddresses() {
 
     // If cleared, clear map/route
     document.addEventListener('savedAddressCleared', () => { onDeleteClick(); });
-    
+
+    // 🔽 AUTO ROUTE…
+
+    // Debounce helper
+    function debounce(fn, wait = 700) {
+      let t;
+      return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), wait); };
+    }
+
+    // Lấy các field địa chỉ
+    const detailInput = document.getElementById('diachichitiet');
+    const tinhSel = document.getElementById('tinhthanh');
+    const quanSel = document.getElementById('quanhuyen');
+    const phuongSel = document.getElementById('phuongxa');
+
+    // Chỉ auto vẽ khi form có ít nhất địa chỉ chi tiết (để geocode được, dù không đầy đủ)
+    async function autoRouteIfComplete() {
+      const address = buildAddressFromForm();
+      if (!address || !detailInput || !detailInput.value.trim()) return;
+
+      try {
+        await onFindClick(); // dùng sẵn hàm đã có: buildAddressFromForm -> geocode -> drawRoute
+      } catch (e) {
+        console.warn('autoRouteIfComplete error', e);
+      }
+    }
+
+    const autoRouteDebounced = debounce(autoRouteIfComplete, 800);
+
+    // 🔽 AUTO ROUTE khi người dùng nhập/chọn địa chỉ
+    if (detailInput) {
+      // Khi người dùng dừng gõ hoặc rời ô
+      detailInput.addEventListener('input', autoRouteDebounced);
+      detailInput.addEventListener('blur', autoRouteDebounced);
+    }
+    if (tinhSel) {
+      tinhSel.addEventListener('change', autoRouteDebounced);
+    }
+    if (quanSel) {
+      quanSel.addEventListener('change', autoRouteDebounced);
+    }
+    if (phuongSel) {
+      phuongSel.addEventListener('change', autoRouteDebounced);
+    }
+
+    // 🔽 AUTO ROUTE khi "pull dữ liệu lên" (load trang xong mà form đã đủ)
+    setTimeout(autoRouteIfComplete, 500);
+
   });
 })();

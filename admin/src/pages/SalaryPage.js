@@ -1,195 +1,129 @@
 import React, { useEffect, useState } from 'react';
-import { Table, Button, Modal, Form, Input, InputNumber, message, Drawer } from 'antd';
+import { Table, Button, Modal, Select, message } from 'antd';
 import axios from 'axios';
 
 const SalaryPage = () => {
-  const [data, setData] = useState([]);
-  const [open, setOpen] = useState(false);
-  const [drawerOpen, setDrawerOpen] = useState(false);
-  const [selectedNV, setSelectedNV] = useState(null);
-  const [attendanceSummary, setAttendanceSummary] = useState([]);
-  const [attendanceYear, setAttendanceYear] = useState(new Date().getFullYear());
+  const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+  const [salaryData, setSalaryData] = useState([]);
   const [detailModal, setDetailModal] = useState(false);
   const [detailData, setDetailData] = useState([]);
-  const [detailMonth, setDetailMonth] = useState(null);
+  const [selectedEmployee, setSelectedEmployee] = useState(null);
+
+  const formatPrice = (price) => new Intl.NumberFormat('vi-VN').format(price) + 'đ';
 
   const fetchSalary = async () => {
-    const res = await axios.get('http://localhost:5000/api/salary');
-    setData(res.data);
-  };
-
-  useEffect(() => { fetchSalary(); }, []);
-
-  // Khi click vào một nhân viên, mở Drawer và load số ngày công
-  const showAttendance = async (record) => {
-    setSelectedNV(record);
-    setAttendanceYear(record.nam || new Date().getFullYear());
-    setDrawerOpen(true);
     try {
-      const res = await axios.get(`http://localhost:5000/api/attendance/summary/${record.MaNV}/${record.nam || new Date().getFullYear()}`);
-      setAttendanceSummary(res.data);
-    } catch {
-      message.error('Lỗi khi lấy số ngày công');
-      setAttendanceSummary([]);
+      const res = await axios.post(`http://localhost:5000/api/salary/compute/${selectedYear}/${selectedMonth}`);
+      setSalaryData(res.data.data);
+    } catch (error) {
+      message.error('Lỗi khi tính lương');
     }
   };
 
-  // Khi click vào số ngày làm của 1 tháng
-  const showDetail = async (thang) => {
-    if (!selectedNV) return;
+  useEffect(() => { fetchSalary(); }, [selectedMonth, selectedYear]);
+
+  const showDetail = async (record) => {
+    setSelectedEmployee(record);
     try {
-      const res = await axios.get(`http://localhost:5000/api/attendance/detail/${selectedNV.MaNV}/${thang}/${attendanceYear}`);
+      const res = await axios.get(`http://localhost:5000/api/attendance/detail/${record.MaNV}/${selectedMonth}/${selectedYear}`);
       setDetailData(res.data);
-      setDetailMonth(thang);
       setDetailModal(true);
     } catch {
       message.error('Lỗi khi lấy chi tiết ngày công');
     }
   };
 
+  const months = Array.from({ length: 12 }, (_, i) => ({ value: i + 1, label: `Tháng ${i + 1}` }));
+  const years = Array.from({ length: 10 }, (_, i) => ({ value: new Date().getFullYear() - 5 + i, label: `${new Date().getFullYear() - 5 + i}` }));
+
   const columns = [
-    { title: 'Mã NV', dataIndex: 'MaNV' },
-    { title: 'Tên NV', dataIndex: 'TenNV' },
-    { title: 'Tháng', dataIndex: 'thang' },
-    { title: 'Năm', dataIndex: 'nam' },
-    { title: 'Lương cơ bản', dataIndex: 'luong_co_ban' },
-    { title: 'Phụ cấp', dataIndex: 'phu_cap' },
-    { title: 'Thưởng', dataIndex: 'thuong' },
-    { title: 'Phạt', dataIndex: 'phat' },
-    { title: 'Tổng lương', dataIndex: 'tong_luong' },
-    { title: 'Trạng thái', dataIndex: 'trang_thai' },
+    { title: 'Mã NV', dataIndex: 'MaNV', width: 80 },
+    { title: 'Tên NV', dataIndex: 'TenNV', width: 150 },
+    { title: 'Số ngày làm', dataIndex: 'soNgayLam', width: 100 },
+    { title: 'Giờ tăng ca', dataIndex: 'soGioTangCa', width: 100 },
+    { title: 'Lương cơ bản', dataIndex: 'luong_co_ban', render: v => formatPrice(v), width: 120 },
+    { title: 'Phụ cấp', dataIndex: 'phu_cap', render: v => formatPrice(v), width: 100 },
+    { title: 'Thưởng', dataIndex: 'thuong', render: v => formatPrice(v), width: 100 },
+    { title: 'Phạt', dataIndex: 'phat', render: v => formatPrice(v), width: 100 },
+    { title: 'Tổng lương', dataIndex: 'tong_luong', render: v => formatPrice(v), width: 120 },
     {
-      title: 'Chi tiết công',
+      title: 'Chi tiết',
       render: (_, record) => (
-        <Button size="small" onClick={() => showAttendance(record)}>
-          Xem ngày công
+        <Button size="small" onClick={() => showDetail(record)}>
+          Xem chi tiết
         </Button>
-      )
+      ),
+      width: 100
     }
   ];
 
-  const onFinish = async (values) => {
-    try {
-      await axios.post('http://localhost:5000/api/salary', values);
-      message.success('Thêm lương thành công');
-      setOpen(false);
-      fetchSalary();
-    } catch {
-      message.error('Lỗi khi thêm lương');
-    }
-  };
-
-  // Tạo bảng 12 tháng, nếu tháng nào không có thì hiển thị 0
-  const renderAttendanceTable = () => {
-    const summaryMap = {};
-    attendanceSummary.forEach(item => {
-      summaryMap[item.thang] = item.so_ngay_lam;
-    });
-    const rows = [];
-    for (let i = 1; i <= 12; i++) {
-      rows.push({
-        thang: i,
-        so_ngay_lam: summaryMap[i] || 0
-      });
-    }
-    return (
-      <Table
-        columns={[
-          { title: 'Tháng', dataIndex: 'thang', width: 80 },
-          { 
-            title: 'Số ngày làm', 
-            dataIndex: 'so_ngay_lam', 
-            width: 120,
-            render: (val, record) => (
-              <Button type="link" onClick={() => showDetail(record.thang)}>
-                {val}
-              </Button>
-            )
-          }
-        ]}
-        dataSource={rows}
-        rowKey="thang"
-        pagination={false}
-        size="small"
-      />
-    );
-  };
-
-  // Bảng chi tiết từng ngày trong tháng
-  const renderDetailTable = () => (
-    <Table
-      columns={[
-        { title: 'Ngày', dataIndex: 'ngay', render: d => new Date(d).toLocaleDateString('vi-VN') },
-        { 
-          title: 'Trạng thái', 
-          dataIndex: 'trang_thai',
-          render: v => v === 'Di_lam'
-            ? <span style={{color: 'green'}}>Đi làm</span>
-            : v === 'Nghi_phep'
-            ? <span style={{color: 'orange'}}>Nghỉ phép</span>
-            : v === 'Nghi_khong_phep'
-            ? <span style={{color: 'red'}}>Nghỉ không phép</span>
-            : <span>Làm thêm</span>
-        }
-      ]}
-      dataSource={detailData}
-      rowKey="ngay"
-      pagination={false}
-      size="small"
-    />
-  );
-
   return (
-    <div>
-      <Button type="primary" onClick={() => setOpen(true)}>Thêm lương</Button>
-      <Table columns={columns} dataSource={data} rowKey="id" style={{ marginTop: 16 }} />
-      <Modal open={open} onCancel={() => setOpen(false)} footer={null} title="Thêm lương">
-        <Form layout="vertical" onFinish={onFinish}>
-          <Form.Item name="MaNV" label="Mã nhân viên" rules={[{ required: true }]}>
-            <Input />
-          </Form.Item>
-          <Form.Item name="thang" label="Tháng" rules={[{ required: true }]}>
-            <InputNumber min={1} max={12} style={{ width: '100%' }} />
-          </Form.Item>
-          <Form.Item name="nam" label="Năm" rules={[{ required: true }]}>
-            <InputNumber min={2000} max={2100} style={{ width: '100%' }} />
-          </Form.Item>
-          <Form.Item name="luong_co_ban" label="Lương cơ bản" rules={[{ required: true }]}>
-            <InputNumber min={0} style={{ width: '100%' }} />
-          </Form.Item>
-          <Form.Item name="phu_cap" label="Phụ cấp">
-            <InputNumber min={0} style={{ width: '100%' }} />
-          </Form.Item>
-          <Form.Item name="thuong" label="Thưởng">
-            <InputNumber min={0} style={{ width: '100%' }} />
-          </Form.Item>
-          <Form.Item name="phat" label="Phạt">
-            <InputNumber min={0} style={{ width: '100%' }} />
-          </Form.Item>
-          <Form.Item name="tong_luong" label="Tổng lương" rules={[{ required: true }]}>
-            <InputNumber min={0} style={{ width: '100%' }} />
-          </Form.Item>
-          <Form.Item name="trang_thai" label="Trạng thái" initialValue="Chua_tra">
-            <Input />
-          </Form.Item>
-          <Button type="primary" htmlType="submit" block>Thêm</Button>
-        </Form>
-      </Modal>
-      <Drawer
-        title={selectedNV ? `Số ngày làm của ${selectedNV.TenNV} (${attendanceYear})` : ''}
-        open={drawerOpen}
-        onClose={() => setDrawerOpen(false)}
-        width={350}
-      >
-        {renderAttendanceTable()}
-      </Drawer>
+    <div className="thongke-page">
+      <div className="thongke-header">
+        <h1>
+          <i className="fas fa-money-bill-wave"></i> Tính lương nhân viên
+        </h1>
+      </div>
+
+      <div className="thongke-content">
+        <div className="thongke-filters">
+          <div className="filter-group">
+            <label>Tháng:</label>
+            <Select value={selectedMonth} onChange={setSelectedMonth} style={{ width: 120, marginRight: 8 }}>
+              {months.map(m => <Select.Option key={m.value} value={m.value}>{m.label}</Select.Option>)}
+            </Select>
+          </div>
+          <div className="filter-group">
+            <label>Năm:</label>
+            <Select value={selectedYear} onChange={setSelectedYear} style={{ width: 120 }}>
+              {years.map(y => <Select.Option key={y.value} value={y.value}>{y.label}</Select.Option>)}
+            </Select>
+          </div>
+        </div>
+
+        <div className="thongke-table">
+          <Table
+            columns={columns}
+            dataSource={salaryData}
+            rowKey="MaNV"
+            scroll={{ x: 1000 }}
+            pagination={false}
+          />
+        </div>
+      </div>
+
       <Modal
         open={detailModal}
         onCancel={() => setDetailModal(false)}
         footer={null}
-        title={`Chi tiết ngày công tháng ${detailMonth}`}
+        title={`Chi tiết ngày công của ${selectedEmployee?.TenNV} tháng ${selectedMonth}/${selectedYear}`}
+        width={600}
       >
-        {renderDetailTable()}
+        <Table
+          columns={[
+            { title: 'Ngày', dataIndex: 'ngay', render: d => new Date(d).toLocaleDateString('vi-VN'), width: 120 },
+            { 
+              title: 'Trạng thái', 
+              dataIndex: 'trang_thai',
+              render: v => {
+                switch(v) {
+                  case 'Di_lam': return <span style={{ color: 'green' }}>Đi làm</span>;
+                  case 'Lam_them': return <span style={{ color: 'blue' }}>Làm thêm</span>;
+                  case 'Nghi_phep': return <span style={{ color: 'orange' }}>Nghỉ phép</span>;
+                  case 'Nghi_khong_phep': return <span style={{ color: 'red' }}>Nghỉ không phép</span>;
+                  case 'Di_tre': return <span style={{ color: 'purple' }}>Đi trễ</span>;
+                  default: return v;
+                }
+              },
+              width: 150
+            }
+          ]}
+          dataSource={detailData}
+          rowKey="ngay"
+          pagination={false}
+          size="small"
+        />
       </Modal>
     </div>
   );

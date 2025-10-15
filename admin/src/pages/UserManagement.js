@@ -21,12 +21,14 @@ const UserManagement = () => {
     },
     editingUser: null,
     searchTerm: '',
+    statusFilter: '',
+    genderFilter: '',
     isModalVisible: false,
     loading: false,
     error: null,
   });
 
-  const { users, newUser, editingUser, searchTerm, isModalVisible, loading } = state;
+  const { users, newUser, editingUser, searchTerm, statusFilter, genderFilter, isModalVisible, loading } = state;
   const API_URL = 'http://localhost:5000/api/users';
 
   const fetchUsers = async () => {
@@ -172,10 +174,12 @@ const UserManagement = () => {
 
   const filteredUsers = users.filter(
     user =>
-      (user.MaNV || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (statusFilter === '' || user.TinhTrang === statusFilter) &&
+      (genderFilter === '' || user.GioiTinh === genderFilter) &&
+      ((user.MaNV || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
       (user.TenNV || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
       (user.SDT || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (user.Email || '').toLowerCase().includes(searchTerm.toLowerCase())
+      (user.Email || '').toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
   const columns = [
@@ -260,19 +264,11 @@ const UserManagement = () => {
   ];
 
   return (
-    <div className="user-management-container">
-      <div className="header-section">
-        <h1 className="page-title">Quản lý Người dùng</h1>
-        <div className="search-box">
-          <Search
-            placeholder="Tìm người dùng..."
-            allowClear
-            enterButton
-            size="small"
-            value={searchTerm}
-            onChange={(e) => setState(prev => ({ ...prev, searchTerm: e.target.value }))}
-          />
-        </div>
+    <div className="thongke-page">
+      <div className="thongke-header">
+        <h1>
+          <i className="fas fa-user-friends"></i> Quản lý Người dùng
+        </h1>
         <Button
           type="primary"
           size="small"
@@ -297,25 +293,56 @@ const UserManagement = () => {
         </Button>
       </div>
 
-      <Table
-        columns={columns}
-        dataSource={filteredUsers}
-        rowKey="MaNV"
-        loading={loading}
-        scroll={{ x: 1000 }}
-        pagination={{
-          pageSize: 10,
-          showSizeChanger: false,
-          size: 'small',
-        }}
-        size="small"
-        className="compact-user-table"
-        style={{ fontSize: '13px' }}
-      />
+      <div className="thongke-content">
+        <div className="thongke-filters">
+          <div className="filter-group">
+            <label>Tìm kiếm:</label>
+            <Input
+              placeholder="Tìm người dùng..."
+              value={searchTerm}
+              onChange={(e) => setState(prev => ({ ...prev, searchTerm: e.target.value }))}
+              style={{ width: 200, marginRight: 16 }}
+            />
+          </div>
+          <div className="filter-group">
+            <label>Trạng thái:</label>
+            <Select value={statusFilter} onChange={(value) => setState(prev => ({ ...prev, statusFilter: value }))} style={{ width: 120, marginRight: 8 }}>
+              <Select.Option value="">Tất cả</Select.Option>
+              <Select.Option value="Active">Hoạt động</Select.Option>
+              <Select.Option value="Inactive">Không hoạt động</Select.Option>
+            </Select>
+          </div>
+          <div className="filter-group">
+            <label>Giới tính:</label>
+            <Select value={genderFilter} onChange={(value) => setState(prev => ({ ...prev, genderFilter: value }))} style={{ width: 120 }}>
+              <Select.Option value="">Tất cả</Select.Option>
+              <Select.Option value="Nam">Nam</Select.Option>
+              <Select.Option value="Nữ">Nữ</Select.Option>
+              <Select.Option value="Khác">Khác</Select.Option>
+            </Select>
+          </div>
+        </div>
+
+        <div className="thongke-table">
+          <Table
+            columns={columns}
+            dataSource={filteredUsers}
+            rowKey="MaNV"
+            loading={loading}
+            scroll={{ x: 1000 }}
+            pagination={{
+              pageSize: 10,
+              showSizeChanger: false,
+              size: 'small',
+            }}
+            size="small"
+          />
+        </div>
+      </div>
 
       <Modal
         title={editingUser ? 'Chỉnh sửa người dùng' : 'Thêm người dùng mới'}
-  open={isModalVisible}
+        open={isModalVisible}
         onCancel={() => {
           setState(prev => ({
             ...prev,
@@ -345,7 +372,7 @@ const UserManagement = () => {
           </Button>,
         ]}
         width={600}
-  styles={{ body: { padding: '16px' } }}
+        styles={{ body: { padding: '16px' } }}
       >
         <div className="info-section">
           <div className="info-grid">
@@ -421,11 +448,11 @@ const UserManagement = () => {
         </div>
       </Modal>
 
-  <style>{`
-        .user-management-container {
+      <style>{`
+        .thongke-page {
           min-height: 100vh;
         }
-        .header-section {
+        .thongke-header {
           display: flex;
           justify-content: space-between;
           align-items: center;
@@ -433,13 +460,25 @@ const UserManagement = () => {
           flex-wrap: wrap;
           gap: 16px;
         }
-        .page-title {
-          font-size: 18px;
-          font-weight: 600;
-          margin: 0;
+        .thongke-content {
+          background: #fff;
+          padding: 16px;
+          border-radius: 8px;
+          box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         }
-        .search-box {
-          width: 250px;
+        .thongke-filters {
+          display: flex;
+          gap: 16px;
+          margin-bottom: 16px;
+          flex-wrap: wrap;
+        }
+        .filter-group {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        }
+        .thongke-table {
+          margin-top: 16px;
         }
         .info-section {
           background: #f8f8f8;
@@ -459,12 +498,6 @@ const UserManagement = () => {
           color: #666;
           font-size: 12px;
           margin: 0;
-        }
-  .compact-user-table .ant-table-thead > tr > th {
-          padding: 8px 12px;
-        }
-  .compact-user-table .ant-table-tbody > tr > td {
-          padding: 8px 12px;
         }
       `}</style>
     </div>

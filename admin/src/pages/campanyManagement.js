@@ -272,13 +272,13 @@ const CompanyManagement = () => {
       title: 'Địa chỉ',
       dataIndex: 'DiaChi',
       key: 'DiaChi',
-      width: 200,
+      width: 250,
     },
     {
       title: 'Trạng thái',
       dataIndex: 'TinhTrang',
       key: 'TinhTrang',
-      width: 120,
+      width: 150,
       render: (status) => (
         <span
           className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
@@ -331,20 +331,11 @@ const CompanyManagement = () => {
   const isEditing = !!editingCompany;
 
   return (
-    <div className="company-management-container">
-      <div className="header-section">
-        <h1 className="page-title">Quản lý Nhà Cung Cấp</h1>
-        <div className="search-box">
-          <SearchInput
-            placeholder="Tìm nhà cung cấp theo tên, mã, SĐT hoặc địa chỉ..."
-            allowClear
-            enterButton
-            size="small"
-            value={searchTerm}
-            onChange={handleSearchChange} // Thêm onChange để input responsive
-            onSearch={onSearch} // Giữ onSearch cho Enter/button
-          />
-        </div>
+    <div className="thongke-page">
+      <div className="thongke-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <h1>
+          <i className="fas fa-building"></i> Quản lý Nhà Cung Cấp
+        </h1>
         <Button
           type="primary"
           size="small"
@@ -368,21 +359,41 @@ const CompanyManagement = () => {
         </Button>
       </div>
 
-      <Table
-        columns={columns}
-        dataSource={companies}
-        rowKey="MaNCC"
-        loading={loading}
-        scroll={{ x: 1000 }}
-        pagination={{
-          pageSize: 10,
-          showSizeChanger: false,
-          size: 'small',
-        }}
-        size="small"
-        className="compact-company-table"
-        style={{ fontSize: '13px' }}
-      />
+      <div className="thongke-content">
+        <div className="thongke-filters">
+          <div className="filter-group" style={{ display: 'flex', alignItems: 'baseline', gap: '8px' }}>
+            <label style={{ margin: 0, whiteSpace: 'nowrap', fontWeight: 500, color: '#666' }}>Tìm kiếm:</label>
+            <SearchInput
+              placeholder="Tìm nhà cung cấp theo tên, mã, SĐT hoặc địa chỉ..."
+              allowClear
+              enterButton
+              size="small"
+              value={searchTerm}
+              onChange={handleSearchChange} // Thêm onChange để input responsive
+              onSearch={onSearch} // Giữ onSearch cho Enter/button
+              style={{ width: 400 }}
+            />
+          </div>
+        </div>
+
+        <div className="thongke-table">
+          <Table
+            columns={columns}
+            dataSource={companies}
+            rowKey="MaNCC"
+            loading={loading}
+            scroll={{ x: 1000 }}
+            pagination={{
+              pageSize: 10,
+              showSizeChanger: false,
+              size: 'small',
+            }}
+            size="small"
+            className="compact-company-table"
+            style={{ fontSize: '13px' }}
+          />
+        </div>
+      </div>
 
       <Modal
         title={isEditing ? 'Chỉnh sửa nhà cung cấp' : 'Thêm nhà cung cấp mới'}
@@ -398,8 +409,7 @@ const CompanyManagement = () => {
           <Button
             key="cancel"
             onClick={() => {
-              setState(prev => ({
-                ...prev,
+              setState(prev => (prev, {
                 isModalVisible: false,
                 editingCompany: null,
               }));
@@ -416,7 +426,7 @@ const CompanyManagement = () => {
           </Button>,
         ]}
         width={600}
-  styles={{ body: { padding: '16px' } }}
+        styles={{ body: { padding: '16px' } }}
       >
         <div className="info-section">
           <div className="info-grid">
@@ -470,31 +480,7 @@ const CompanyManagement = () => {
         </div>
       </Modal>
 
-  <style>{`
-        .company-management-container {
-          padding: 16px 16px 16px 216px;
-          min-height: 100vh;
-        }
-        .header-section {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          margin-bottom: 16px;
-          flex-wrap: wrap;
-          gap: 16px;
-        }
-        .page-title {
-          font-size: 18px;
-          font-weight: 600;
-          margin: 0;
-        }
-        .search-box {
-          width: 300px; /* Tăng width để dễ nhập hơn */
-        }
-  .search-box .ant-input {
-          pointer-events: auto !important; /* Đảm bảo có thể click/type */
-          user-select: text !important;
-        }
+      <style>{`
         .info-section {
           background: #f8f8f8;
           padding: 12px;
@@ -514,10 +500,10 @@ const CompanyManagement = () => {
           font-size: 12px;
           margin: 0 0 4px 0;
         }
-  .compact-company-table .ant-table-thead > tr > th {
+        .compact-company-table .ant-table-thead > tr > th {
           padding: 8px 12px;
         }
-  .compact-company-table .ant-table-tbody > tr > td {
+        .compact-company-table .ant-table-tbody > tr > td {
           padding: 8px 12px;
         }
       `}</style>

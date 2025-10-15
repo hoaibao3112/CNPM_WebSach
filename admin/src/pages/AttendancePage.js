@@ -216,283 +216,307 @@ const AttendancePage = () => {
   };
 
   return (
-    <div className="attendance-page" style={{ display: 'flex', gap: 24 }}>
-      {/* Danh sách nhân viên */}
-      <div style={{ minWidth: 260 }}>
-        <div style={{ marginBottom: 16 }}>
-          <Select
-            options={months}
-            value={months.find((m) => m.value === month)}
-            onChange={(v) => setMonth(v.value)}
-            placeholder="Chọn tháng"
-          />
-          <Select
-            options={years}
-            value={years.find((y) => y.value === year)}
-            onChange={(v) => setYear(v.value)}
-            placeholder="Chọn năm"
-          />
-        </div>
-        <table style={{ width: '100%' }}>
-          <thead>
-            <tr>
-              <th>STT</th>
-              <th>Nhân viên</th>
-              <th>Trạng thái</th>
-            </tr>
-          </thead>
-          <tbody>
-            {employees.map((nv, idx) => {
-              const days = nv.days || {};
-              const chamCongCount = Object.values(days).filter(
-                (d) => d.trang_thai && d.trang_thai !== 'Chua_cham_cong'
-              ).length;
-              return (
-                <tr
-                  key={nv.MaNV}
-                  style={{
-                    background: selectedEmployee && selectedEmployee.MaNV === nv.MaNV ? '#e3f2fd' : undefined,
-                    cursor: 'pointer',
-                  }}
-                  onClick={() => {
-                    setSelectedEmployee(nv);
-                    setPendingChanges({});
-                    setSalaryInfo(null); // Reset form tính lương khi chọn nhân viên khác
-                  }}
-                >
-                  <td>{idx + 1}</td>
-                  <td>{nv.TenNV}</td>
-                  <td style={{ color: chamCongCount > 0 ? '#4CAF50' : '#F44336' }}>
-                    {chamCongCount > 0 ? 'Đã chấm công' : 'Chưa chấm công'}
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
+    <div className="thongke-page">
+      <div className="thongke-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <h1>
+          <i className="fas fa-calendar-check"></i> Chấm công
+        </h1>
       </div>
 
-  {/* Lịch chấm công chi tiết + Form tính lương */}
-  {/* Use a flexible right column so the calendar can expand to available space */}
-  <div style={{ flex: '1 1 auto', minWidth: 600 }}>
-        <div style={{ fontWeight: 'bold', marginBottom: 8 }}>
-          {selectedEmployee ? `${selectedEmployee.MaNV} - ${selectedEmployee.TenNV}` : ''}
+      <div className="thongke-content">
+        <div className="thongke-filters">
+          <div className="filter-group">
+            <label>Tháng:</label>
+            <Select
+              options={months}
+              value={months.find((m) => m.value === month)}
+              onChange={(v) => setMonth(v.value)}
+              placeholder="Chọn tháng"
+              styles={{ 
+                control: (base) => ({ ...base, minHeight: 32 }),
+                menu: (base) => ({ ...base, zIndex: 9999 })
+              }}
+            />
+            <label>Năm:</label>
+            <Select
+              options={years}
+              value={years.find((y) => y.value === year)}
+              onChange={(v) => setYear(v.value)}
+              placeholder="Chọn năm"
+              styles={{ 
+                control: (base) => ({ ...base, minHeight: 32 }),
+                menu: (base) => ({ ...base, zIndex: 9999 })
+              }}
+            />
+          </div>
         </div>
-  <table style={{ width: '100%', marginBottom: 16 }}>
-          <tbody>
-            {getDayRows().map((row, rowIdx) => (
-              <React.Fragment key={rowIdx}>
-                {/* Dòng tiêu đề thứ */}
+
+        <div className="thongke-table" style={{ display: 'flex', gap: 24 }}>
+          {/* Danh sách nhân viên */}
+          <div style={{ minWidth: 260 }}>
+            <table style={{ width: '100%' }}>
+              <thead>
                 <tr>
-                  {row.map((day) => (
-                    <td
-                      key={`weekday-${day}`}
+                  <th>STT</th>
+                  <th>Nhân viên</th>
+                  <th>Trạng thái</th>
+                </tr>
+              </thead>
+              <tbody>
+                {employees.map((nv, idx) => {
+                  const days = nv.days || {};
+                  const chamCongCount = Object.values(days).filter(
+                    (d) => d.trang_thai && d.trang_thai !== 'Chua_cham_cong'
+                  ).length;
+                  return (
+                    <tr
+                      key={nv.MaNV}
                       style={{
-                        background: '#e3e3e3',
-                        color: '#1976d2',
-                        fontWeight: 'bold',
-                        fontSize: 13,
-                        padding: 4,
-                        borderBottom: 'none'
+                        background: selectedEmployee && selectedEmployee.MaNV === nv.MaNV ? '#e3f2fd' : undefined,
+                        cursor: 'pointer',
+                      }}
+                      onClick={() => {
+                        setSelectedEmployee(nv);
+                        setPendingChanges({});
+                        setSalaryInfo(null); // Reset form tính lương khi chọn nhân viên khác
                       }}
                     >
-                      {getWeekday(year, month, day)}
-                    </td>
-                  ))}
-                  {row.length < 10 &&
-                    Array.from({ length: 10 - row.length }).map((_, i) => (
-                      <td key={`weekday-empty-${i}`} style={{ background: '#f5f5f5', borderBottom: 'none' }} />
-                    ))}
-                </tr>
-                {/* Dòng ngày và trạng thái */}
-                <tr>
-                  {row.map((day) => {
-                    const ngay = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-                    const dayData = pendingChanges[ngay] || (selectedEmployee?.days ? selectedEmployee.days[day] : {});
-                    const apiStatus = dayData?.trang_thai || 'Chua_cham_cong';
-                    let cellText = statusLabels[apiStatus] || '';
-                    if (apiStatus === 'Lam_them' && dayData?.ghi_chu) {
-                      cellText = `Tăng ca\n${dayData.ghi_chu.replace('Tăng ca ', '')}`;
-                    }
-                    return (
-                      <td
-                        key={day}
-                        style={{
-                          background: statusColors[apiStatus],
-                          color: '#fff',
-                          whiteSpace: 'pre-line',
-                          cursor: 'pointer',
-                          minWidth: 55,
-                          maxWidth: 80,
-                          fontSize: 16,
-                          padding: 10,
-                        }}
-                        onClick={() => handleDayClick(day)}
-                      >
-                        <div style={{ fontWeight: 'bold' }}>{day}</div>
-                        <div>{cellText}</div>
+                      <td>{idx + 1}</td>
+                      <td>{nv.TenNV}</td>
+                      <td style={{ color: chamCongCount > 0 ? '#4CAF50' : '#F44336' }}>
+                        {chamCongCount > 0 ? 'Đã chấm công' : 'Chưa chấm công'}
                       </td>
-                    );
-                  })}
-                  {row.length < 10 &&
-                    Array.from({ length: 10 - row.length }).map((_, i) => (
-                      <td key={`empty-${i}`} style={{ background: '#f5f5f5' }} />
-                    ))}
-                </tr>
-              </React.Fragment>
-            ))}
-          </tbody>
-        </table>
-        {/* Các nút trạng thái và nút Lưu */}
-  <div className="status-buttons" style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
-          <button
-            onClick={() => setSelectedStatus('Đi làm')}
-            style={{ background: selectedStatus === 'Đi làm' ? '#4CAF50' : '#fff' }}
-          >
-            Đi làm
-          </button>
-          <button
-            onClick={() => setSelectedStatus('Nghỉ phép')}
-            style={{ background: selectedStatus === 'Nghỉ phép' ? '#2196F3' : '#fff' }}
-          >
-            Nghỉ phép
-          </button>
-          <button
-            onClick={() => setSelectedStatus('Nghỉ KP')}
-            style={{ background: selectedStatus === 'Nghỉ KP' ? '#F44336' : '#fff' }}
-          >
-            Nghỉ KP
-          </button>
-          <button
-            onClick={() => setSelectedStatus('Đi trễ')}
-            style={{ background: selectedStatus === 'Đi trễ' ? '#FF9800' : '#fff' }}
-          >
-            Đi trễ
-          </button>
-          <button
-            onClick={() => setSelectedStatus('Tăng ca')}
-            style={{ background: selectedStatus === 'Tăng ca' ? '#673AB7' : '#fff' }}
-          >
-            Tăng ca
-          </button>
-          <button
-            className="save-btn"
-            onClick={handleSaveChanges}
-            style={{ background: '#28a745', color: '#fff', fontWeight: 'bold' }}
-            disabled={Object.keys(pendingChanges).length === 0}
-          >
-            Lưu
-          </button>
-        </div>
-        {/* Chọn giờ tăng ca nếu chọn Tăng ca */}
-        {selectedStatus === 'Tăng ca' && (
-          <div style={{ marginBottom: 8 }}>
-            Giờ tăng ca:
-            {[1, 2, 3, 4].map((h) => (
-              <label key={h} style={{ marginLeft: 8 }}>
-                <input
-                  type="radio"
-                  name="otHours"
-                  checked={otHours === h}
-                  onChange={() => setOtHours(h)}
-                />
-                {h} Giờ
-              </label>
-            ))}
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
           </div>
-        )}
 
-        {/* Form tính lương */}
-        <div style={{ marginTop: 24 }}>
-          <button
-            className="salary-btn"
-            onClick={fetchSalary}
-            style={{ background: '#1976d2', color: '#fff', fontWeight: 'bold', marginBottom: 8 }}
-            disabled={!selectedEmployee}
-          >
-            Tính lương tháng này
-          </button>
-          {loadingSalary && <div>Đang tính lương...</div>}
-          {salaryInfo && (
-            <div>
-              <table className="salary-info-table">
-                <tbody>
-                  <tr>
-                    <th colSpan={2}>Lương tháng {month}/{year} của {salaryInfo.TenNV}</th>
-                  </tr>
-                  <tr>
-                    <td>Số ngày làm</td>
-                    <td>{salaryInfo.soNgayLam}</td>
-                  </tr>
-                  <tr>
-                    <td>Số giờ tăng ca</td>
-                    <td>{salaryInfo.soGioTangCa}</td>
-                  </tr>
-                  <tr>
-                    <td>Số ngày nghỉ không phép</td>
-                    <td>{salaryInfo.soNgayNghiKhongPhep}</td>
-                  </tr>
-                  <tr>
-                    <td>Số ngày đi trễ</td>
-                    <td>{salaryInfo.soNgayDiTre}</td>
-                  </tr>
-                  <tr>
-                    <td>Lương cơ bản</td>
-                    <td>{salaryInfo.luong_co_ban?.toLocaleString()} đ</td>
-                  </tr>
-                  <tr>
-                    <td>
-                      Phụ cấp
-                      {salaryInfo.trang_thai !== 'Da_tra' && (
-                        <input
-                          type="number"
-                          value={salaryInfo.phu_cap}
-                          min={0}
-                          style={{ width: 100, marginLeft: 8 }}
-                          onChange={handlePhuCapChange}
-                        />
-                      )}
-                    </td>
-                    <td>{salaryInfo.phu_cap?.toLocaleString()} đ</td>
-                  </tr>
-                  <tr>
-                    <td>Thưởng</td>
-                    <td>{salaryInfo.thuong?.toLocaleString()} đ</td>
-                  </tr>
-                  <tr>
-                    <td>Phạt</td>
-                    <td>{salaryInfo.phat?.toLocaleString()} đ</td>
-                  </tr>
-                  <tr>
-                    <td className="salary-total">Tổng lương</td>
-                    <td className="salary-total">{getTongLuong().toLocaleString()} đ</td>
-                  </tr>
-                  <tr>
-                    <td>Trạng thái</td>
-                    <td className="salary-status">{salaryInfo.trang_thai === 'Da_tra' ? 'Đã chi trả' : 'Chưa chi trả'}</td>
-                  </tr>
-                </tbody>
-              </table>
-              {/* Nút cập nhật trạng thái đã chi trả */}
-              {salaryInfo.trang_thai !== 'Da_tra' && (
+          {/* Lịch chấm công chi tiết + Form tính lương */}
+          <div style={{ flex: '1 1 auto', minWidth: 600 }}>
+            <div style={{ fontWeight: 'bold', marginBottom: 8 }}>
+              {selectedEmployee ? `${selectedEmployee.MaNV} - ${selectedEmployee.TenNV}` : ''}
+            </div>
+            <table style={{ width: '100%', marginBottom: 16 }}>
+              <tbody>
+                {getDayRows().map((row, rowIdx) => (
+                  <React.Fragment key={rowIdx}>
+                    {/* Dòng tiêu đề thứ */}
+                    <tr>
+                      {row.map((day) => (
+                        <td
+                          key={`weekday-${day}`}
+                          style={{
+                            background: '#e3e3e3',
+                            color: '#1976d2',
+                            fontWeight: 'bold',
+                            fontSize: 13,
+                            padding: 4,
+                            borderBottom: 'none'
+                          }}
+                        >
+                          {getWeekday(year, month, day)}
+                        </td>
+                      ))}
+                      {row.length < 10 &&
+                        Array.from({ length: 10 - row.length }).map((_, i) => (
+                          <td key={`weekday-empty-${i}`} style={{ background: '#f5f5f5', borderBottom: 'none' }} />
+                        ))}
+                    </tr>
+                    {/* Dòng ngày và trạng thái */}
+                    <tr>
+                      {row.map((day) => {
+                        const ngay = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                        const dayData = pendingChanges[ngay] || (selectedEmployee?.days ? selectedEmployee.days[day] : {});
+                        const apiStatus = dayData?.trang_thai || 'Chua_cham_cong';
+                        let cellText = statusLabels[apiStatus] || '';
+                        if (apiStatus === 'Lam_them' && dayData?.ghi_chu) {
+                          cellText = `Tăng ca\n${dayData.ghi_chu.replace('Tăng ca ', '')}`;
+                        }
+                        return (
+                          <td
+                            key={day}
+                            style={{
+                              background: statusColors[apiStatus],
+                              color: '#fff',
+                              whiteSpace: 'pre-line',
+                              cursor: 'pointer',
+                              minWidth: 55,
+                              maxWidth: 80,
+                              fontSize: 16,
+                              padding: 10,
+                            }}
+                            onClick={() => handleDayClick(day)}
+                          >
+                            <div style={{ fontWeight: 'bold' }}>{day}</div>
+                            <div>{cellText}</div>
+                          </td>
+                        );
+                      })}
+                      {row.length < 10 &&
+                        Array.from({ length: 10 - row.length }).map((_, i) => (
+                          <td key={`empty-${i}`} style={{ background: '#f5f5f5' }} />
+                        ))}
+                    </tr>
+                  </React.Fragment>
+                ))}
+              </tbody>
+            </table>
+            {/* Các nút trạng thái và nút Lưu */}
+            <div className="status-buttons" style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
+              <div style={{ display: 'flex', gap: 8 }}>
                 <button
-                  style={{
-                    marginTop: 12,
-                    background: '#388e3c',
-                    color: '#fff',
-                    fontWeight: 'bold',
-                    padding: '8px 18px',
-                    border: 'none',
-                    borderRadius: 4,
-                    cursor: 'pointer'
-                  }}
-                  onClick={handlePaySalary}
+                  onClick={() => setSelectedStatus('Đi làm')}
+                  style={{ background: selectedStatus === 'Đi làm' ? '#4CAF50' : '#fff' }}
                 >
-                  Xác nhận chi trả lương
+                  Đi làm
                 </button>
+                <button
+                  onClick={() => setSelectedStatus('Nghỉ phép')}
+                  style={{ background: selectedStatus === 'Nghỉ phép' ? '#2196F3' : '#fff' }}
+                >
+                  Nghỉ phép
+                </button>
+                <button
+                  onClick={() => setSelectedStatus('Nghỉ KP')}
+                  style={{ background: selectedStatus === 'Nghỉ KP' ? '#F44336' : '#fff' }}
+                >
+                  Nghỉ KP
+                </button>
+                <button
+                  onClick={() => setSelectedStatus('Đi trễ')}
+                  style={{ background: selectedStatus === 'Đi trễ' ? '#FF9800' : '#fff' }}
+                >
+                  Đi trễ
+                </button>
+                <button
+                  onClick={() => setSelectedStatus('Tăng ca')}
+                  style={{ background: selectedStatus === 'Tăng ca' ? '#673AB7' : '#fff' }}
+                >
+                  Tăng ca
+                </button>
+              </div>
+              <button
+                className="save-btn"
+                onClick={handleSaveChanges}
+                style={{ background: '#28a745', color: '#fff', fontWeight: 'bold' }}
+                disabled={Object.keys(pendingChanges).length === 0}
+              >
+                Lưu
+              </button>
+            </div>
+            {/* Chọn giờ tăng ca nếu chọn Tăng ca */}
+            {selectedStatus === 'Tăng ca' && (
+              <div style={{ marginBottom: 8 }}>
+                Giờ tăng ca:
+                {[1, 2, 3, 4].map((h) => (
+                  <label key={h} style={{ marginLeft: 8 }}>
+                    <input
+                      type="radio"
+                      name="otHours"
+                      checked={otHours === h}
+                      onChange={() => setOtHours(h)}
+                    />
+                    {h} Giờ
+                  </label>
+                ))}
+              </div>
+            )}
+
+            {/* Form tính lương */}
+            <div style={{ marginTop: 24 }}>
+              <button
+                className="salary-btn"
+                onClick={fetchSalary}
+                style={{ background: '#1976d2', color: '#fff', fontWeight: 'bold', marginBottom: 8 }}
+                disabled={!selectedEmployee}
+              >
+                Tính lương tháng này
+              </button>
+              {loadingSalary && <div>Đang tính lương...</div>}
+              {salaryInfo && (
+                <div>
+                  <table className="salary-info-table">
+                    <tbody>
+                      <tr>
+                        <th colSpan={2}>Lương tháng {month}/{year} của {salaryInfo.TenNV}</th>
+                      </tr>
+                      <tr>
+                        <td>Số ngày làm</td>
+                        <td>{salaryInfo.soNgayLam}</td>
+                      </tr>
+                      <tr>
+                        <td>Số giờ tăng ca</td>
+                        <td>{salaryInfo.soGioTangCa}</td>
+                      </tr>
+                      <tr>
+                        <td>Số ngày nghỉ không phép</td>
+                        <td>{salaryInfo.soNgayNghiKhongPhep}</td>
+                      </tr>
+                      <tr>
+                        <td>Số ngày đi trễ</td>
+                        <td>{salaryInfo.soNgayDiTre}</td>
+                      </tr>
+                      <tr>
+                        <td>Lương cơ bản</td>
+                        <td>{salaryInfo.luong_co_ban?.toLocaleString()} đ</td>
+                      </tr>
+                      <tr>
+                        <td>
+                          Phụ cấp
+                          {salaryInfo.trang_thai !== 'Da_tra' && (
+                            <input
+                              type="number"
+                              value={salaryInfo.phu_cap}
+                              min={0}
+                              style={{ width: 100, marginLeft: 8 }}
+                              onChange={handlePhuCapChange}
+                            />
+                          )}
+                        </td>
+                        <td>{salaryInfo.phu_cap?.toLocaleString()} đ</td>
+                      </tr>
+                      <tr>
+                        <td>Thưởng</td>
+                        <td>{salaryInfo.thuong?.toLocaleString()} đ</td>
+                      </tr>
+                      <tr>
+                        <td>Phạt</td>
+                        <td>{salaryInfo.phat?.toLocaleString()} đ</td>
+                      </tr>
+                      <tr>
+                        <td className="salary-total">Tổng lương</td>
+                        <td className="salary-total">{getTongLuong().toLocaleString()} đ</td>
+                      </tr>
+                      <tr>
+                        <td>Trạng thái</td>
+                        <td className="salary-status">{salaryInfo.trang_thai === 'Da_tra' ? 'Đã chi trả' : 'Chưa chi trả'}</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                  {/* Nút cập nhật trạng thái đã chi trả */}
+                  {salaryInfo.trang_thai !== 'Da_tra' && (
+                    <button
+                      style={{
+                        marginTop: 12,
+                        background: '#388e3c',
+                        color: '#fff',
+                        fontWeight: 'bold',
+                        padding: '8px 18px',
+                        border: 'none',
+                        borderRadius: 4,
+                        cursor: 'pointer'
+                      }}
+                      onClick={handlePaySalary}
+                    >
+                      Xác nhận chi trả lương
+                    </button>
+                  )}
+                </div>
               )}
             </div>
-          )}
+          </div>
         </div>
       </div>
     </div>

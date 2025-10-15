@@ -351,8 +351,7 @@ const AccountManagement = () => {
 
   const filteredAccounts = accounts.filter(
     account =>
-      account.TenTK.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      account.MaTK.toString().includes(searchTerm)
+      searchTerm === '' || account.TinhTrang === searchTerm
   );
 
   const columns = [
@@ -365,7 +364,7 @@ const AccountManagement = () => {
       width: 120,
       render: (value) => quyenList.find(q => q.MaNQ === value)?.TenNQ || 'Chưa xác định',
     },
-    { title: 'Ngày tạo', dataIndex: 'NgayTao', key: 'NgayTao', width: 120 },
+    { title: 'Ngày tạo', dataIndex: 'NgayTao', key: 'NgayTao', width: 200 },
     {
       title: 'Trạng thái',
       dataIndex: 'TinhTrang',
@@ -418,7 +417,7 @@ const AccountManagement = () => {
         </Space>
       ),
       fixed: 'right',
-      width: 120,
+      width: 200,
     },
   ];
 
@@ -453,19 +452,11 @@ const AccountManagement = () => {
   }
 
   return (
-    <div className="account-management-container">
-      <div className="header-section">
-        <h1 className="page-title">Quản lý Tài khoản</h1>
-        <div className="search-box">
-          <Search
-            placeholder="Tìm tài khoản..."
-            allowClear
-            enterButton
-            size="small"
-            value={searchTerm}
-            onChange={(e) => setState(prev => ({ ...prev, searchTerm: e.target.value }))}
-          />
-        </div>
+    <div className="thongke-page">
+      <div className="thongke-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <h1>
+          <i className="fas fa-users"></i> Quản lý Tài khoản
+        </h1>
         {hasPermission('Tài khoản', 'Thêm') && (
           <Button
             type="primary"
@@ -490,20 +481,34 @@ const AccountManagement = () => {
         )}
       </div>
 
-      <Table
-        columns={columns}
-        dataSource={filteredAccounts}
-        rowKey="MaTK"
-        loading={loading}
-        scroll={{ x: 1000 }}
-        pagination={{ pageSize: 10, showSizeChanger: false, size: 'small' }}
-        size="small"
-        className="compact-account-table"
-        style={{ fontSize: '13px' }}
-        locale={{
-          emptyText: 'Không tìm thấy tài khoản',
-        }}
-      />
+      <div className="thongke-content">
+        <div className="thongke-filters">
+          <div className="filter-group">
+            <label>Trạng thái:</label>
+            <Select
+              value={searchTerm}
+              onChange={(value) => setState(prev => ({ ...prev, searchTerm: value }))}
+              style={{ width: 250 }}
+              placeholder="Tìm tài khoản..."
+            >
+              <Select.Option value="">Tất cả</Select.Option>
+              <Select.Option value="Hoạt động">Hoạt động</Select.Option>
+              <Select.Option value="Bị khóa">Bị khóa</Select.Option>
+            </Select>
+          </div>
+        </div>
+
+        <div className="thongke-table">
+          <Table
+            columns={columns}
+            dataSource={filteredAccounts}
+            rowKey="MaTK"
+            loading={loading}
+            scroll={{ x: 1000 }}
+            pagination={false}
+          />
+        </div>
+      </div>
 
       <Modal
         title={editingAccount ? 'Chỉnh sửa tài khoản' : 'Thêm tài khoản mới'}
@@ -601,7 +606,7 @@ const AccountManagement = () => {
                       <Select
                         value={newPermission.MaCN}
                         onChange={(v) => setState(prev => ({ ...prev, newPermission: { ...prev.newPermission, MaCN: v } }))}
-                        style={{ width: 150 }}
+                        style={{ width: 200 }}
                       >
                         {features.map(f => <Option key={f.MaCN} value={f.MaCN}>{f.TenCN}</Option>)}
                       </Select>

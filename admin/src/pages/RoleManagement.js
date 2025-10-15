@@ -283,25 +283,16 @@ const RoleManagement = () => {
         </Space>
       ),
       fixed: 'right',
-      width: 100,
+      width: 150,
     },
   ];
 
   return (
-    <div className="role-management-container">
-      <div className="header-section">
-        <h1 className="page-title">Quản lý Nhóm Quyền</h1>
-        <div className="search-box">
-          <Search
-            placeholder="Tìm nhóm quyền..."
-            allowClear
-            enterButton
-            size="small"
-            value={searchTerm}
-            onSearch={handleSearch}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-        </div>
+    <div className="thongke-page">
+      <div className="thongke-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <h1>
+          <i className="fas fa-users"></i> Quản lý Nhóm Quyền
+        </h1>
         <Button
           type="primary"
           size="small"
@@ -320,21 +311,38 @@ const RoleManagement = () => {
         </Button>
       </div>
 
-      <Table
-        columns={columns}
-        dataSource={roles}
-        rowKey="MaNQ"
-        loading={loading}
-        pagination={pagination}
-        onChange={handleTableChange}
-        scroll={{ x: 1000 }}
-        size="small"
-        className="compact-role-table"
-        style={{ fontSize: '13px' }}
-        locale={{
-          emptyText: 'Không tìm thấy nhóm quyền',
-        }}
-      />
+      <div className="thongke-content">
+        <div className="thongke-filters">
+          <div className="filter-group">
+            <label>Tìm kiếm:</label>
+            <Input
+              placeholder="Tìm nhóm quyền..."
+              allowClear
+              size="small"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              onPressEnter={() => handleSearch(searchTerm)}
+              style={{ width: 250 }}
+            />
+          </div>
+        </div>
+
+        <div className="thongke-table">
+          <Table
+            columns={columns}
+            dataSource={roles}
+            rowKey="MaNQ"
+            loading={loading}
+            pagination={pagination}
+            onChange={handleTableChange}
+            scroll={{ x: 1000 }}
+            size="small"
+            locale={{
+              emptyText: 'Không tìm thấy nhóm quyền',
+            }}
+          />
+        </div>
+      </div>
 
       {/* Add/Edit Role Modal */}
       <Modal
@@ -473,55 +481,6 @@ const RoleManagement = () => {
           </div>
         </Form>
       </Modal>
-
-  <style>{`
-        .role-management-container {
-          padding: 16px 16px 16px 216px;
-          min-height: 100vh;
-        }
-        .header-section {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          margin-bottom: 16px;
-          flex-wrap: wrap;
-          gap: 16px;
-        }
-        .page-title {
-          font-size: 18px;
-          font-weight: 600;
-          margin: 0;
-        }
-        .search-box {
-          width: 250px;
-        }
-        .info-section {
-          background: #f8f8f8;
-          padding: 12px;
-          border-radius: 4px;
-          margin-bottom: 16px;
-        }
-        .info-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-          gap: 12px;
-        }
-        .permission-section {
-          margin-top: 16px;
-        }
-        .permission-row {
-          display: flex;
-          gap: 12px;
-          align-items: center;
-          margin-bottom: 12px;
-        }
-  .compact-role-table .ant-table-thead > tr > th {
-          padding: 8px 12px;
-        }
-  .compact-role-table .ant-table-tbody > tr > td {
-          padding: 8px 12px;
-        }
-      `}</style>
     </div>
   );
 };

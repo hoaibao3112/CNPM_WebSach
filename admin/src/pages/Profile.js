@@ -218,242 +218,254 @@ const Profile = () => {
   if (!userInfo) return <div>Không tìm thấy thông tin nhân viên!</div>;
 
   return (
-    <Row
-      justify="center"
-      align="middle"
-      style={{
-        minHeight: '100vh',
-        background: '#f4f6fb',
-        paddingBottom: 40,
-        paddingLeft: 24,
-        paddingRight: 24,
-      }}
-    >
-      <Col xs={24} md={20} lg={16} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-        <Card
-          bordered={false}
-          style={{
-            width: '100%',
-            maxWidth: 700, // Tăng chiều rộng form thông tin nhân viên
-            boxShadow: '0 4px 24px #d1d9e6',
-            borderRadius: 20,
-            background: 'linear-gradient(135deg, #e0e7ff 0%, #fff 100%)',
-            marginTop: 40,
-          }}
-          actions={[
-            <Button
-              icon={<LockOutlined />}
-              type="primary"
-              onClick={() => setShowPwdModal(true)}
-              key="changepwd"
-              style={{ borderRadius: 8 }}
+    <div className="thongke-page">
+      <div className="thongke-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <h1>
+          <i className="fas fa-user"></i> Thông tin cá nhân
+        </h1>
+      </div>
+
+      <div className="thongke-content">
+        <div className="thongke-table">
+          <Row
+            justify="center"
+            align="middle"
+            style={{
+              minHeight: '70vh',
+              background: '#f4f6fb',
+              paddingBottom: 40,
+              paddingLeft: 24,
+              paddingRight: 24,
+            }}
+          >
+            <Col xs={24} md={20} lg={16} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+              <Card
+                bordered={false}
+                style={{
+                  width: '100%',
+                  maxWidth: 700, // Tăng chiều rộng form thông tin nhân viên
+                  boxShadow: '0 4px 24px #d1d9e6',
+                  borderRadius: 20,
+                  background: 'linear-gradient(135deg, #e0e7ff 0%, #fff 100%)',
+                  marginTop: 40,
+                }}
+                actions={[
+                  <Button
+                    icon={<LockOutlined />}
+                    type="primary"
+                    onClick={() => setShowPwdModal(true)}
+                    key="changepwd"
+                    style={{ borderRadius: 8 }}
+                  >
+                    Đổi mật khẩu
+                  </Button>,
+                  <Button
+                    icon={<CheckCircleOutlined />}
+                    type="default"
+                    loading={attendanceLoading}
+                    onClick={handleCheckIn}
+                    key="checkin"
+                    style={{ borderRadius: 8, color: '#52c41a', borderColor: '#52c41a' }}
+                  >
+                    Chấm công hôm nay
+                  </Button>,
+                  <Button
+                    icon={<LogoutOutlined />}
+                    danger
+                    type="primary"
+                    onClick={() => setShowResignModal(true)}
+                    key="resign"
+                    style={{ borderRadius: 8 }}
+                  >
+                    Xin nghỉ việc
+                  </Button>,
+                  <Button
+                    icon={<DollarCircleOutlined />}
+                    type="dashed"
+                    onClick={fetchSalary}
+                    key="salary"
+                    style={{ borderRadius: 8, color: '#2563eb', borderColor: '#2563eb' }}
+                    loading={salaryLoading}
+                  >
+                    Xem lương cá nhân
+                  </Button>
+                ]}
+              >
+                <div style={{ textAlign: 'center', marginBottom: 24 }}>
+                  <Avatar
+                    size={96}
+                    icon={<UserOutlined />}
+                    style={{
+                      background: 'linear-gradient(135deg, #6366f1 0%, #60a5fa 100%)',
+                      marginBottom: 12,
+                      boxShadow: '0 2px 8px #b3bcdf',
+                    }}
+                  />
+                  <Title level={3} style={{ marginBottom: 0, color: '#1e293b' }}>{userInfo.TenNV || userInfo.TenTK}</Title>
+                  <Text type="secondary" style={{ fontSize: 16 }}>{userInfo.TenNQ}</Text>
+                </div>
+                <Row gutter={[16, 8]}>
+                  <Col span={12}><Text strong>Mã tài khoản:</Text></Col>
+                  <Col span={12}><Text>{userInfo.MaTK}</Text></Col>
+                  <Col span={12}><Text strong>Tên tài khoản:</Text></Col>
+                  <Col span={12}><Text>{userInfo.TenTK}</Text></Col>
+                  <Col span={12}><Text strong>Mã nhân viên:</Text></Col>
+                  <Col span={12}><Text>{userInfo.MaNV}</Text></Col>
+                  <Col span={12}><Text strong>Số điện thoại:</Text></Col>
+                  <Col span={12}><Text>{userInfo.SDT}</Text></Col>
+                  <Col span={12}><Text strong>Giới tính:</Text></Col>
+                  <Col span={12}><Text>{userInfo.GioiTinh}</Text></Col>
+                  <Col span={12}><Text strong>Địa chỉ:</Text></Col>
+                  <Col span={12}><Text>{userInfo.DiaChi}</Text></Col>
+                  <Col span={12}><Text strong>Email:</Text></Col>
+                  <Col span={12}><Text>{userInfo.Email}</Text></Col>
+                  <Col span={12}><Text strong>Ngày tạo:</Text></Col>
+                  <Col span={12}><Text>{userInfo.NgayTao ? new Date(userInfo.NgayTao).toLocaleDateString('vi-VN') : ''}</Text></Col>
+                  <Col span={12}><Text strong>Tình trạng:</Text></Col>
+                  <Col span={12}><Text>{userInfo.TinhTrang ? 'Hoạt động' : 'Không hoạt động'}</Text></Col>
+                </Row>
+              </Card>
+            </Col>
+            {/* Modal lương cá nhân */}
+            <Modal
+              title="Lịch sử lương cá nhân"
+              open={showSalaryModal}
+              onCancel={() => setShowSalaryModal(false)}
+              footer={null}
+              width={800}
+    styles={{ body: { borderRadius: 16, padding: 0, overflow: 'hidden' } }}
             >
-              Đổi mật khẩu
-            </Button>,
-            <Button
-              icon={<CheckCircleOutlined />}
-              type="default"
-              loading={attendanceLoading}
-              onClick={handleCheckIn}
-              key="checkin"
-              style={{ borderRadius: 8, color: '#52c41a', borderColor: '#52c41a' }}
+              <Table
+                columns={salaryColumns}
+                dataSource={salaryList}
+                rowKey={(record, idx) => `${record.nam}-${record.thang}-${idx}`}
+                pagination={{ pageSize: 5 }}
+                locale={{ emptyText: 'Chưa có dữ liệu lương' }}
+                style={{ borderRadius: 16, overflow: 'hidden', fontSize: 13, margin: 0 }}
+                bordered
+              />
+            </Modal>
+            {/* Modal chi tiết ngày công */}
+            <Modal
+              title={`Chi tiết ngày công tháng ${detailMonth}/${detailYear}`}
+              open={detailModal}
+              onCancel={() => setDetailModal(false)}
+              footer={null}
+              width={500}
+    styles={{ body: { borderRadius: 16, padding: 0, overflow: 'hidden' } }}
             >
-              Chấm công hôm nay
-            </Button>,
-            <Button
-              icon={<LogoutOutlined />}
-              danger
-              type="primary"
-              onClick={() => setShowResignModal(true)}
-              key="resign"
-              style={{ borderRadius: 8 }}
+              <Spin spinning={detailLoading}>
+                <Table
+                  columns={[
+                    { title: 'Ngày', dataIndex: 'ngay', render: v => dayjs(v).format('DD/MM/YYYY') },
+                    {
+                      title: 'Trạng thái', dataIndex: 'trang_thai',
+                      render: v => {
+                        if (v === 'Di_lam') return <span style={{ color: '#52c41a' }}>Đi làm</span>;
+                        if (v === 'Nghi_phep') return <span style={{ color: '#1890ff' }}>Nghỉ phép</span>;
+                        if (v === 'Nghi_khong_phep') return <span style={{ color: '#f5222d' }}>Nghỉ KP</span>;
+                        if (v === 'Lam_them') return <span style={{ color: '#faad14' }}>Tăng ca</span>;
+                        if (v === 'Di_tre') return <span style={{ color: '#faad14' }}>Đi trễ</span>;
+                        return v;
+                      }
+                    }
+                  ]}
+                  dataSource={attendanceDetail}
+                  rowKey={(r, idx) => r.ngay + idx}
+                  pagination={false}
+                  size="small"
+                  bordered
+                  style={{ margin: 16 }}
+                  locale={{ emptyText: 'Không có dữ liệu ngày công' }}
+                />
+              </Spin>
+            </Modal>
+            {/* Modal đổi mật khẩu */}
+            <Modal
+              title="Đổi mật khẩu"
+              open={showPwdModal}
+              onCancel={() => setShowPwdModal(false)}
+              footer={null}
+    destroyOnHidden
+    styles={{ body: { padding: 24, borderRadius: 12 } }}
             >
-              Xin nghỉ việc
-            </Button>,
-            <Button
-              icon={<DollarCircleOutlined />}
-              type="dashed"
-              onClick={fetchSalary}
-              key="salary"
-              style={{ borderRadius: 8, color: '#2563eb', borderColor: '#2563eb' }}
-              loading={salaryLoading}
+              <Form
+                layout="vertical"
+                onFinish={handlePwdChange}
+              >
+                <Form.Item
+                  name="oldPassword"
+                  label="Mật khẩu cũ"
+                  rules={[{ required: true, message: 'Vui lòng nhập mật khẩu cũ!' }]}
+                >
+                  <Input.Password placeholder="Nhập mật khẩu cũ" />
+                </Form.Item>
+                <Form.Item
+                  name="newPassword"
+                  label="Mật khẩu mới"
+                  rules={[
+                    { required: true, message: 'Vui lòng nhập mật khẩu mới!' },
+                    { min: 6, message: 'Mật khẩu phải có ít nhất 6 ký tự!' },
+                  ]}
+                >
+                  <Input.Password placeholder="Nhập mật khẩu mới" />
+                </Form.Item>
+                <Form.Item
+                  name="confirmPassword"
+                  label="Xác nhận mật khẩu mới"
+                  dependencies={['newPassword']}
+                  rules={[
+                    { required: true, message: 'Vui lòng xác nhận mật khẩu mới!' },
+                    ({ getFieldValue }) => ({
+                      validator(_, value) {
+                        if (!value || getFieldValue('newPassword') === value) {
+                          return Promise.resolve();
+                        }
+                        return Promise.reject(new Error('Mật khẩu xác nhận không khớp!'));
+                      },
+                    }),
+                  ]}
+                >
+                  <Input.Password placeholder="Nhập lại mật khẩu mới" />
+                </Form.Item>
+                <Form.Item>
+                  <Button type="primary" htmlType="submit" loading={pwdLoading} block style={{ borderRadius: 8 }}>
+                    Đổi mật khẩu
+                  </Button>
+                </Form.Item>
+              </Form>
+            </Modal>
+            {/* Modal xin nghỉ việc */}
+            <Modal
+              title="Xin nghỉ việc"
+              open={showResignModal}
+              onCancel={() => setShowResignModal(false)}
+              footer={null}
+    destroyOnHidden
+    styles={{ body: { padding: 24, borderRadius: 12 } }}
             >
-              Xem lương cá nhân
-            </Button>
-          ]}
-        >
-          <div style={{ textAlign: 'center', marginBottom: 24 }}>
-            <Avatar
-              size={96}
-              icon={<UserOutlined />}
-              style={{
-                background: 'linear-gradient(135deg, #6366f1 0%, #60a5fa 100%)',
-                marginBottom: 12,
-                boxShadow: '0 2px 8px #b3bcdf',
-              }}
-            />
-            <Title level={3} style={{ marginBottom: 0, color: '#1e293b' }}>{userInfo.TenNV || userInfo.TenTK}</Title>
-            <Text type="secondary" style={{ fontSize: 16 }}>{userInfo.TenNQ}</Text>
-          </div>
-          <Row gutter={[16, 8]}>
-            <Col span={12}><Text strong>Mã tài khoản:</Text></Col>
-            <Col span={12}><Text>{userInfo.MaTK}</Text></Col>
-            <Col span={12}><Text strong>Tên tài khoản:</Text></Col>
-            <Col span={12}><Text>{userInfo.TenTK}</Text></Col>
-            <Col span={12}><Text strong>Mã nhân viên:</Text></Col>
-            <Col span={12}><Text>{userInfo.MaNV}</Text></Col>
-            <Col span={12}><Text strong>Số điện thoại:</Text></Col>
-            <Col span={12}><Text>{userInfo.SDT}</Text></Col>
-            <Col span={12}><Text strong>Giới tính:</Text></Col>
-            <Col span={12}><Text>{userInfo.GioiTinh}</Text></Col>
-            <Col span={12}><Text strong>Địa chỉ:</Text></Col>
-            <Col span={12}><Text>{userInfo.DiaChi}</Text></Col>
-            <Col span={12}><Text strong>Email:</Text></Col>
-            <Col span={12}><Text>{userInfo.Email}</Text></Col>
-            <Col span={12}><Text strong>Ngày tạo:</Text></Col>
-            <Col span={12}><Text>{userInfo.NgayTao ? new Date(userInfo.NgayTao).toLocaleDateString('vi-VN') : ''}</Text></Col>
-            <Col span={12}><Text strong>Tình trạng:</Text></Col>
-            <Col span={12}><Text>{userInfo.TinhTrang ? 'Hoạt động' : 'Không hoạt động'}</Text></Col>
+              <Form
+                layout="vertical"
+                onFinish={handleResign}
+              >
+                <Form.Item
+                  name="ly_do"
+                  label="Lý do nghỉ việc"
+                  rules={[{ required: true, message: 'Vui lòng nhập lý do nghỉ việc!' }]}
+                >
+                  <Input.TextArea placeholder="Nhập lý do nghỉ việc..." />
+                </Form.Item>
+                <Form.Item>
+                  <Button type="primary" htmlType="submit" loading={resignLoading} block style={{ borderRadius: 8 }}>
+                    Gửi đơn xin nghỉ việc
+                  </Button>
+                </Form.Item>
+              </Form>
+            </Modal>
           </Row>
-        </Card>
-      </Col>
-      {/* Modal lương cá nhân */}
-      <Modal
-        title="Lịch sử lương cá nhân"
-        open={showSalaryModal}
-        onCancel={() => setShowSalaryModal(false)}
-        footer={null}
-        width={800}
-  styles={{ body: { borderRadius: 16, padding: 0, overflow: 'hidden' } }}
-      >
-        <Table
-          columns={salaryColumns}
-          dataSource={salaryList}
-          rowKey={(record, idx) => `${record.nam}-${record.thang}-${idx}`}
-          pagination={{ pageSize: 5 }}
-          locale={{ emptyText: 'Chưa có dữ liệu lương' }}
-          style={{ borderRadius: 16, overflow: 'hidden', fontSize: 13, margin: 0 }}
-          bordered
-        />
-      </Modal>
-      {/* Modal chi tiết ngày công */}
-      <Modal
-        title={`Chi tiết ngày công tháng ${detailMonth}/${detailYear}`}
-        open={detailModal}
-        onCancel={() => setDetailModal(false)}
-        footer={null}
-        width={500}
-  styles={{ body: { borderRadius: 16, padding: 0, overflow: 'hidden' } }}
-      >
-        <Spin spinning={detailLoading}>
-          <Table
-            columns={[
-              { title: 'Ngày', dataIndex: 'ngay', render: v => dayjs(v).format('DD/MM/YYYY') },
-              {
-                title: 'Trạng thái', dataIndex: 'trang_thai',
-                render: v => {
-                  if (v === 'Di_lam') return <span style={{ color: '#52c41a' }}>Đi làm</span>;
-                  if (v === 'Nghi_phep') return <span style={{ color: '#1890ff' }}>Nghỉ phép</span>;
-                  if (v === 'Nghi_khong_phep') return <span style={{ color: '#f5222d' }}>Nghỉ KP</span>;
-                  if (v === 'Lam_them') return <span style={{ color: '#faad14' }}>Tăng ca</span>;
-                  if (v === 'Di_tre') return <span style={{ color: '#faad14' }}>Đi trễ</span>;
-                  return v;
-                }
-              }
-            ]}
-            dataSource={attendanceDetail}
-            rowKey={(r, idx) => r.ngay + idx}
-            pagination={false}
-            size="small"
-            bordered
-            style={{ margin: 16 }}
-            locale={{ emptyText: 'Không có dữ liệu ngày công' }}
-          />
-        </Spin>
-      </Modal>
-      {/* Modal đổi mật khẩu */}
-      <Modal
-        title="Đổi mật khẩu"
-        open={showPwdModal}
-        onCancel={() => setShowPwdModal(false)}
-        footer={null}
-  destroyOnHidden
-  styles={{ body: { padding: 24, borderRadius: 12 } }}
-      >
-        <Form
-          layout="vertical"
-          onFinish={handlePwdChange}
-        >
-          <Form.Item
-            name="oldPassword"
-            label="Mật khẩu cũ"
-            rules={[{ required: true, message: 'Vui lòng nhập mật khẩu cũ!' }]}
-          >
-            <Input.Password placeholder="Nhập mật khẩu cũ" />
-          </Form.Item>
-          <Form.Item
-            name="newPassword"
-            label="Mật khẩu mới"
-            rules={[
-              { required: true, message: 'Vui lòng nhập mật khẩu mới!' },
-              { min: 6, message: 'Mật khẩu phải có ít nhất 6 ký tự!' },
-            ]}
-          >
-            <Input.Password placeholder="Nhập mật khẩu mới" />
-          </Form.Item>
-          <Form.Item
-            name="confirmPassword"
-            label="Xác nhận mật khẩu mới"
-            dependencies={['newPassword']}
-            rules={[
-              { required: true, message: 'Vui lòng xác nhận mật khẩu mới!' },
-              ({ getFieldValue }) => ({
-                validator(_, value) {
-                  if (!value || getFieldValue('newPassword') === value) {
-                    return Promise.resolve();
-                  }
-                  return Promise.reject(new Error('Mật khẩu xác nhận không khớp!'));
-                },
-              }),
-            ]}
-          >
-            <Input.Password placeholder="Nhập lại mật khẩu mới" />
-          </Form.Item>
-          <Form.Item>
-            <Button type="primary" htmlType="submit" loading={pwdLoading} block style={{ borderRadius: 8 }}>
-              Đổi mật khẩu
-            </Button>
-          </Form.Item>
-        </Form>
-      </Modal>
-      {/* Modal xin nghỉ việc */}
-      <Modal
-        title="Xin nghỉ việc"
-        open={showResignModal}
-        onCancel={() => setShowResignModal(false)}
-        footer={null}
-  destroyOnHidden
-  styles={{ body: { padding: 24, borderRadius: 12 } }}
-      >
-        <Form
-          layout="vertical"
-          onFinish={handleResign}
-        >
-          <Form.Item
-            name="ly_do"
-            label="Lý do nghỉ việc"
-            rules={[{ required: true, message: 'Vui lòng nhập lý do nghỉ việc!' }]}
-          >
-            <Input.TextArea placeholder="Nhập lý do nghỉ việc..." />
-          </Form.Item>
-          <Form.Item>
-            <Button type="primary" htmlType="submit" loading={resignLoading} block style={{ borderRadius: 8 }}>
-              Gửi đơn xin nghỉ việc
-            </Button>
-          </Form.Item>
-        </Form>
-      </Modal>
-    </Row>
+        </div>
+      </div>
+    </div>
   );
 };
 

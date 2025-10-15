@@ -2,8 +2,6 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { Button, Input, message, Table, Modal, Space, Select } from 'antd';
 import { EditOutlined, DeleteOutlined, ExclamationCircleFilled, LockOutlined, UnlockOutlined } from '@ant-design/icons';
-
-const { Search } = Input;
 const { confirm } = Modal;
 const { Option } = Select;
 
@@ -13,12 +11,13 @@ const CategoryManagement = () => {
     newCategory: { TenTL: '', TinhTrang: 1 },
     editingCategory: null,
     searchTerm: '',
+    statusFilter: '',
     isModalVisible: false,
     loading: false,
     error: null,
   });
 
-  const { categories, newCategory, editingCategory, searchTerm, isModalVisible, loading } = state;
+  const { categories, newCategory, editingCategory, searchTerm, statusFilter, isModalVisible, loading } = state;
   const API_URL = 'http://localhost:5000/api/category';
 
   const fetchCategories = async () => {
@@ -157,8 +156,9 @@ const CategoryManagement = () => {
 
   const filteredCategories = categories.filter(
     cat =>
-      cat.TenTL.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      cat.MaTL?.toString().toLowerCase().includes(searchTerm.toLowerCase())
+      (statusFilter === '' || cat.TinhTrangValue === parseInt(statusFilter)) &&
+      (cat.TenTL.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      cat.MaTL?.toString().toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
   const columns = [
@@ -173,13 +173,13 @@ const CategoryManagement = () => {
       title: 'Tên TL',
       dataIndex: 'TenTL',
       key: 'TenTL',
-      width: 200,
+      width: 400,
     },
     {
       title: 'Trạng thái',
       dataIndex: 'TinhTrang',
       key: 'TinhTrang',
-      width: 120,
+      width: 280,
       render: (status) => (
         <span
           className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
@@ -223,24 +223,16 @@ const CategoryManagement = () => {
         </Space>
       ),
       fixed: 'right',
-      width: 120,
+      width: 200,
     },
   ];
 
   return (
-    <div className="category-management-container">
-      <div className="header-section">
-        <h1 className="page-title">Quản lý Thể loại</h1>
-        <div className="search-box">
-          <Search
-            placeholder="Tìm thể loại..."
-            allowClear
-            enterButton
-            size="small"
-            value={searchTerm}
-            onChange={(e) => setState(prev => ({ ...prev, searchTerm: e.target.value }))}
-          />
-        </div>
+    <div className="thongke-page">
+      <div className="thongke-header">
+        <h1>
+          <i className="fas fa-tags"></i> Quản lý Thể loại
+        </h1>
         <Button
           type="primary"
           size="small"
@@ -257,21 +249,43 @@ const CategoryManagement = () => {
         </Button>
       </div>
 
-      <Table
-        columns={columns}
-        dataSource={filteredCategories}
-        rowKey="MaTL"
-        loading={loading}
-        scroll={{ x: 1000 }}
-        pagination={{
-          pageSize: 10,
-          showSizeChanger: false,
-          size: 'small',
-        }}
-        size="small"
-        className="compact-category-table"
-        style={{ fontSize: '13px' }}
-      />
+      <div className="thongke-content">
+        <div className="thongke-filters">
+          <div className="filter-group">
+            <label>Tìm kiếm:</label>
+            <Input
+              placeholder="Tìm thể loại..."
+              value={searchTerm}
+              onChange={(e) => setState(prev => ({ ...prev, searchTerm: e.target.value }))}
+              style={{ width: 200 }}
+            />
+          </div>
+          <div className="filter-group">
+            <label>Trạng thái:</label>
+            <Select value={statusFilter} onChange={(value) => setState(prev => ({ ...prev, statusFilter: value }))} style={{ width: 120 }}>
+              <Select.Option value="">Tất cả</Select.Option>
+              <Select.Option value="1">Hoạt động</Select.Option>
+              <Select.Option value="0">Không hoạt động</Select.Option>
+            </Select>
+          </div>
+        </div>
+
+        <div className="thongke-table">
+          <Table
+            columns={columns}
+            dataSource={filteredCategories}
+            rowKey="MaTL"
+            loading={loading}
+            scroll={{ x: 1000 }}
+            pagination={{
+              pageSize: 10,
+              showSizeChanger: false,
+              size: 'small',
+            }}
+            size="small"
+          />
+        </div>
+      </div>
 
       <Modal
         title={editingCategory ? 'Chỉnh sửa thể loại' : 'Thêm thể loại mới'}
@@ -343,12 +357,11 @@ const CategoryManagement = () => {
         </div>
       </Modal>
 
-  <style>{`
-        .category-management-container {
-          padding: 16px 16px 16px 216px;
+      <style>{`
+        .thongke-page {
           min-height: 100vh;
         }
-        .header-section {
+        .thongke-header {
           display: flex;
           justify-content: space-between;
           align-items: center;
@@ -356,13 +369,25 @@ const CategoryManagement = () => {
           flex-wrap: wrap;
           gap: 16px;
         }
-        .page-title {
-          font-size: 18px;
-          font-weight: 600;
-          margin: 0;
+        .thongke-content {
+          background: #fff;
+          padding: 16px;
+          border-radius: 8px;
+          box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         }
-        .search-box {
-          width: 250px;
+        .thongke-filters {
+          display: flex;
+          gap: 16px;
+          margin-bottom: 16px;
+          flex-wrap: wrap;
+        }
+        .filter-group {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        }
+        .thongke-table {
+          margin-top: 16px;
         }
         .info-section {
           background: #f8f8f8;
@@ -382,12 +407,6 @@ const CategoryManagement = () => {
           color: #666;
           font-size: 12px;
           margin: 0;
-        }
-  .compact-category-table .ant-table-thead > tr > th {
-          padding: 8px 12px;
-        }
-  .compact-category-table .ant-table-tbody > tr > td {
-          padding: 8px 12px;
         }
       `}</style>
     </div>

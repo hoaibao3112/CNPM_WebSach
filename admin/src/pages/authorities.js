@@ -297,19 +297,9 @@ const PermissionManagement = () => {
   ];
 
   return (
-    <div className="permission-management-container">
-      <div className="header-section">
+    <div className="thongke-page">
+      <div className="thongke-header">
         <h1 className="page-title">Quản lý Phân quyền</h1>
-        <div className="search-box">
-          <Search
-            placeholder="Tìm quyền..."
-            allowClear
-            enterButton
-            size="small"
-            value={searchTerm}
-            onChange={(e) => setState(prev => ({ ...prev, searchTerm: e.target.value }))}
-          />
-        </div>
         <Button
           type="primary"
           size="small"
@@ -332,26 +322,43 @@ const PermissionManagement = () => {
         </Button>
       </div>
 
-      <Table
-        columns={columns}
-        dataSource={filteredPermissions}
-        rowKey="MaCTQ"
-        loading={loading}
-        scroll={{ x: 1000 }}
-        pagination={{
-          pageSize: 10,
-          showSizeChanger: false,
-          size: 'small',
-        }}
-        size="small"
-        className="compact-permission-table"
-        style={{ fontSize: '13px' }}
-      />
+      <div className="thongke-content">
+        <div className="thongke-filters">
+          <div className="search-box">
+            <Search
+              placeholder="Tìm quyền..."
+              allowClear
+              enterButton
+              size="small"
+              value={searchTerm}
+              onChange={(e) => setState(prev => ({ ...prev, searchTerm: e.target.value }))}
+            />
+          </div>
+        </div>
+
+        <div className="thongke-table">
+          <Table
+            columns={columns}
+            dataSource={filteredPermissions}
+            rowKey="MaCTQ"
+            loading={loading}
+            scroll={{ x: 1000 }}
+            pagination={{
+              pageSize: 10,
+              showSizeChanger: false,
+              size: 'small',
+            }}
+            size="small"
+            className="compact-permission-table"
+            style={{ fontSize: '13px' }}
+          />
+        </div>
+      </div>
 
       {/* Add/Edit Permission Modal */}
       <Modal
         title={editingPermission ? 'Chỉnh sửa quyền' : 'Thêm quyền mới'}
-  open={isModalVisible}
+        open={isModalVisible}
         onCancel={() => {
           setState(prev => ({
             ...prev,
@@ -381,7 +388,7 @@ const PermissionManagement = () => {
           </Button>,
         ]}
         width={600}
-  styles={{ body: { padding: '16px' } }}
+        styles={{ body: { padding: '16px' } }}
       >
         <div className="info-section">
           <div className="info-grid">
@@ -451,7 +458,7 @@ const PermissionManagement = () => {
         </div>
       </Modal>
 
-  <style>{`
+      <style>{`
         .permission-management-container {
           padding: 16px 16px 16px 216px;
           min-height: 100vh;
@@ -491,10 +498,10 @@ const PermissionManagement = () => {
           font-size: 12px;
           margin: 0;
         }
-  .compact-permission-table .ant-table-thead > tr > th {
+        .compact-permission-table .ant-table-thead > tr > th {
           padding: 8px 12px;
         }
-  .compact-permission-table .ant-table-tbody > tr > td {
+        .compact-permission-table .ant-table-tbody > tr > td {
           padding: 8px 12px;
         }
       `}</style>

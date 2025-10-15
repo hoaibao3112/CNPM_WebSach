@@ -1,12 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import { Button, Input, message, Table, Modal, Space, Tag } from 'antd';
-
-const { Search } = Input;
+import { Button, Input, message, Table, Modal, Space, Tag, Select } from 'antd';
 
 const CustomerManagement = () => {
   const [customers, setCustomers] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState('');
   const [loading, setLoading] = useState(false);
 
   // Promo modal
@@ -74,17 +73,18 @@ const CustomerManagement = () => {
   };
 
   const filteredCustomers = customers.filter((c) => (
-    c.tenkh?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (statusFilter === '' || c.tinhtrang === statusFilter) &&
+    (c.tenkh?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     c.makh?.toString().includes(searchTerm) ||
     c.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    c.sdt?.toString().includes(searchTerm)
+    c.sdt?.toString().includes(searchTerm))
   ));
 
   const columns = [
-    { title: 'Mã KH', dataIndex: 'makh', key: 'makh', width: 80, fixed: 'left' },
-    { title: 'Tên khách hàng', dataIndex: 'tenkh', key: 'tenkh', width: 150 },
-    { title: 'SĐT', dataIndex: 'sdt', key: 'sdt', width: 120 },
-    { title: 'Email', dataIndex: 'email', key: 'email', render: (t) => t || 'N/A', width: 200 },
+    { title: 'Mã KH', dataIndex: 'makh', key: 'makh', width: 50, fixed: 'left' },
+    { title: 'Tên khách hàng', dataIndex: 'tenkh', key: 'tenkh', width: 100 },
+    { title: 'SĐT', dataIndex: 'sdt', key: 'sdt', width: 100 },
+    { title: 'Email', dataIndex: 'email', key: 'email', render: (t) => t || 'N/A', width: 150 },
     { title: 'Địa chỉ', dataIndex: 'diachi', key: 'diachi', render: (t) => t || 'N/A', width: 250 },
     { title: 'Trạng thái', dataIndex: 'tinhtrang', key: 'tinhtrang', render: (s) => <Tag color={s === 'Hoạt động' ? 'green' : 'red'}>{s}</Tag>, width: 120 },
     {
@@ -99,27 +99,48 @@ const CustomerManagement = () => {
   ];
 
   return (
-    <div className="customer-management-container">
-      <div className="header-section">
-        <h1 className="page-title">Quản lý Khách hàng</h1>
-        <div className="search-box">
-          <Search placeholder="Tìm khách hàng..." allowClear enterButton size="small" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
-        </div>
+    <div className="thongke-page">
+      <div className="thongke-header">
+        <h1>
+          <i className="fas fa-users"></i> Quản lý Khách hàng
+        </h1>
         <Button type="default" size="small" onClick={() => fetchCustomers()}>Làm mới</Button>
       </div>
 
-      <Table
-        columns={columns}
-        dataSource={filteredCustomers}
-        rowKey="makh"
-        loading={loading}
-        scroll={{ x: 1000 }}
-        pagination={{ pageSize: 10, showSizeChanger: false, size: 'small' }}
-        size="small"
-        className="compact-customer-table"
-        style={{ fontSize: '13px' }}
-        locale={{ emptyText: 'Không tìm thấy khách hàng' }}
-      />
+      <div className="thongke-content">
+        <div className="thongke-filters">
+          <div className="filter-group">
+            <label>Tìm kiếm:</label>
+            <Input
+              placeholder="Tìm khách hàng..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              style={{ width: 200, marginRight: 16 }}
+            />
+          </div>
+          <div className="filter-group">
+            <label>Trạng thái:</label>
+            <Select value={statusFilter} onChange={(value) => setStatusFilter(value)} style={{ width: 120 }}>
+              <Select.Option value="">Tất cả</Select.Option>
+              <Select.Option value="Hoạt động">Hoạt động</Select.Option>
+              <Select.Option value="Ngừng hoạt động">Ngừng hoạt động</Select.Option>
+            </Select>
+          </div>
+        </div>
+
+        <div className="thongke-table">
+          <Table
+            columns={columns}
+            dataSource={filteredCustomers}
+            rowKey="makh"
+            loading={loading}
+            scroll={{ x: 1000 }}
+            pagination={{ pageSize: 10, showSizeChanger: false, size: 'small' }}
+            size="small"
+            locale={{ emptyText: 'Không tìm thấy khách hàng' }}
+          />
+        </div>
+      </div>
 
       <Modal
         title={promoUsage.makh ? `Mã khuyến mãi - KH ${promoUsage.makh}` : 'Mã khuyến mãi'}
@@ -158,41 +179,37 @@ const CustomerManagement = () => {
         </div>
       </Modal>
 
-  <style>{`
-        .customer-management-container { padding: 16px 16px 16px 216px; min-height: 100vh; }
-        .header-section { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 16px; }
-        .page-title { font-size: 18px; font-weight: 600; margin: 0; }
-        .search-box { width: 250px; }
-  .compact-customer-table .ant-table-thead > tr > th { padding: 8px 12px; }
-  .compact-customer-table .ant-table-tbody > tr > td { padding: 8px 12px; }
-        
-  /* Prevent images from overflowing and hiding text */
-  .compact-customer-table img {
-          max-width: 80px;
-          max-height: 60px;
-          width: auto;
-          height: auto;
-          object-fit: cover;
-          display: block;
-          border-radius: 4px;
+      <style>{`
+        .thongke-page {
+          min-height: 100vh;
         }
-
-        /* Ensure cell text remains readable and truncated when necessary */
-  .compact-customer-table .ant-table-cell {
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          vertical-align: middle;
+        .thongke-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 16px;
+          flex-wrap: wrap;
+          gap: 16px;
         }
-
-        /* Make fixed action column sit above other cells to avoid overlap */
-  .compact-customer-table .ant-table-fixed-right {
-          z-index: 5;
+        .thongke-content {
+          background: #fff;
+          padding: 16px;
+          border-radius: 8px;
+          box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         }
-
-        /* If you prefer images to sit in their own narrow column, set a small cell width */
-  .compact-customer-table .img-cell {
-          width: 90px;
+        .thongke-filters {
+          display: flex;
+          gap: 16px;
+          margin-bottom: 16px;
+          flex-wrap: wrap;
+        }
+        .filter-group {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        }
+        .thongke-table {
+          margin-top: 16px;
         }
       `}</style>
     </div>

@@ -329,19 +329,9 @@ const AuthorManagement = () => {
   }
 
   return (
-    <div className="author-management-container">
-      <div className="header-section">
+    <div className="thongke-page">
+      <div className="thongke-header">
         <h1 className="page-title">Quản lý Tác giả</h1>
-        <div className="search-box">
-          <Search
-            placeholder="Tìm tác giả..."
-            allowClear
-            enterButton
-            size="small"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-        </div>
         {hasPermission('Tác Giả', 'Thêm') && (
           <Button
             type="primary"
@@ -363,24 +353,41 @@ const AuthorManagement = () => {
         )}
       </div>
 
-      <Table
-        columns={columns}
-        dataSource={filteredAuthors}
-        rowKey="MaTG"
-        loading={loading}
-        scroll={{ x: 1000 }}
-        pagination={{
-          pageSize: 10,
-          showSizeChanger: false,
-          size: 'small',
-        }}
-        size="small"
-        className="compact-author-table"
-        style={{ fontSize: '13px' }}
-        locale={{
-          emptyText: 'Không tìm thấy tác giả',
-        }}
-      />
+      <div className="thongke-content">
+        <div className="thongke-filters">
+          <div className="search-box">
+            <Search
+              placeholder="Tìm tác giả..."
+              allowClear
+              enterButton
+              size="small"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+        </div>
+
+        <div className="thongke-table">
+          <Table
+            columns={columns}
+            dataSource={filteredAuthors}
+            rowKey="MaTG"
+            loading={loading}
+            scroll={{ x: 1000 }}
+            pagination={{
+              pageSize: 10,
+              showSizeChanger: false,
+              size: 'small',
+            }}
+            size="small"
+            className="compact-author-table"
+            style={{ fontSize: '13px' }}
+            locale={{
+              emptyText: 'Không tìm thấy tác giả',
+            }}
+          />
+        </div>
+      </div>
 
       <Modal
         title={editingAuthor ? 'Chỉnh sửa tác giả' : 'Thêm tác giả mới'}
@@ -408,7 +415,7 @@ const AuthorManagement = () => {
           </Button>,
         ]}
         width={600}
-  styles={{ body: { padding: '16px' } }}
+        styles={{ body: { padding: '16px' } }}
       >
         <div className="info-section">
           <div className="info-grid">
@@ -497,10 +504,16 @@ const AuthorManagement = () => {
         </div>
       </Modal>
 
-  <style>{`
+      <style>{`
         .author-management-container {
           padding: 16px 16px 16px 216px;
           min-height: 100vh;
+        }
+        .thongke-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 16px;
         }
         .header-section {
           display: flex;
@@ -537,10 +550,10 @@ const AuthorManagement = () => {
           font-size: 12px;
           margin: 0;
         }
-  .compact-author-table .ant-table-thead > tr > th {
+        .compact-author-table .ant-table-thead > tr > th {
           padding: 8px 12px;
         }
-  .compact-author-table .ant-table-tbody > tr > td {
+        .compact-author-table .ant-table-tbody > tr > td {
           padding: 8px 12px;
         }
         input[type="file"] {
