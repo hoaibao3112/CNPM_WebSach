@@ -424,8 +424,59 @@ async function renderMembershipCard() {
 
   const btn = document.getElementById('viewBenefitsBtn');
   if (btn) btn.addEventListener('click', () => {
-    showPromoDetailModal(`<h3>Quyền lợi ${tier}</h3><ul><li>Ưu đãi khi mua sách</li><li>Giảm phí vận chuyển</li></ul>`);
+    const modalContent = `
+      <div style="padding:6px 12px">
+        <h3>Quyền lợi ${tier}</h3>
+        <p><strong>Giảm giá theo phần trăm trên tổng đơn:</strong> <strong>Đồng: 0% / Bạc: 3% / Vàng: 7%</strong></p>
+        <ul style="margin-top:8px">
+          <li><strong>Áp dụng tự động:</strong> Mức giảm được áp dụng trực tiếp trên tổng tiền khi tạo đơn (server tính toán).</li>
+          <li><strong>Freeship:</strong> Bạc: freeship cho đơn ≥ 200.000₫. Vàng: freeship mọi đơn.</li>
+          <li><strong>Tích điểm:</strong> Điểm được tính trên số tiền sau khi đã giảm; Bạc nhận nhân x1.2, Vàng nhận nhân x1.5.</li>
+        </ul>
+        <p style="margin-top:8px;color:#444">Ví dụ: Đơn hàng 1.000.000₫ — nếu bạn là <strong>Bạc</strong> thì sẽ được giảm 3% = 30.000₫ → Số tiền cần thanh toán là 970.000₫. Mọi quyền lợi và số tiền cuối cùng sẽ hiển thị trên hóa đơn sau khi đặt hàng.</p>
+        <p style="margin-top:8px;color:#777;font-size:13px">Lưu ý: để quyền lợi được áp dụng, hãy đăng nhập trước khi đặt hàng. Nếu có thắc mắc liên hệ bộ phận CSKH.</p>
+      </div>
+    `;
+    showPromoDetailModal(modalContent);
   });
+
+  // Render human-friendly benefits summary inside #membershipBenefits
+  const benefitsEl = document.getElementById('membershipBenefits');
+  if (benefitsEl) {
+    // set tier class on container for color theme
+    const root = container; // membershipCardContainer
+    root.classList.remove('tier-dong', 'tier-bac', 'tier-vang');
+    root.classList.add(tier === 'Vàng' ? 'tier-vang' : (tier === 'Bạc' ? 'tier-bac' : 'tier-dong'));
+
+    benefitsEl.innerHTML = `
+      <h3>Quyền lợi hội viên</h3>
+      <p style="margin:6px 0 8px 0;color:#444">Giảm giá theo phần trăm trên tổng đơn: <strong>Đồng: 0% / Bạc: 3% / Vàng: 7%</strong></p>
+      <div class="benefit-list">
+        <div class="benefit-item">
+          <div class="benefit-icon"><i class="fas fa-percent"></i></div>
+          <div>
+            <div class="benefit-title">Giảm giá trên tổng đơn</div>
+            <div class="benefit-desc">Áp dụng tự động khi thanh toán: Đồng 0% · Bạc 3% · Vàng 7%.</div>
+          </div>
+        </div>
+        <div class="benefit-item">
+          <div class="benefit-icon"><i class="fas fa-shipping-fast"></i></div>
+          <div>
+            <div class="benefit-title">Ưu đãi vận chuyển</div>
+            <div class="benefit-desc">Bạc: freeship cho đơn ≥200.000₫ · Vàng: freeship mọi đơn.</div>
+          </div>
+        </div>
+        <div class="benefit-item">
+          <div class="benefit-icon"><i class="fas fa-star"></i></div>
+          <div>
+            <div class="benefit-title">Tích điểm</div>
+            <div class="benefit-desc">Điểm tích theo số tiền thanh toán (sau khi giảm). Bạc x1.2 · Vàng x1.5.</div>
+          </div>
+        </div>
+      </div>
+      <div style="margin-top:10px;font-size:13px;color:#555">Lưu ý: các quyền lợi được áp dụng tự động trên server khi tạo đơn. Mức giảm giá thể hiện ở trang thanh toán và hóa đơn.</div>
+    `;
+  }
 }
 
 function computeTier(points) {

@@ -52,6 +52,197 @@ const authenticateToken = (req, res, next) => {
 // THAY THẾ TOÀN BỘ ĐOẠN API place-order (từ dòng 52 đến hết):
 
 // API đặt đơn hàng
+// router.post('/place-order', authenticateToken, async (req, res) => {
+//   console.log('🚀 Place order API called');
+//   console.log('🔍 Request Body:', JSON.stringify(req.body, null, 2));
+  
+//   const connection = await pool.getConnection();
+  
+//   try {
+//     const { customer, items, shippingAddress, paymentMethod, notes, totalAmountDiscouted } = req.body;
+    
+//     console.log('req.user:', req.user);
+//     console.log(totalAmountDiscouted);
+    
+//     // Kiểm tra dữ liệu đầu vào
+//     if (!customer || !items || !shippingAddress || !paymentMethod) {
+//       return res.status(400).json({ error: 'Thiếu thông tin bắt buộc' });
+//     }
+
+//     // Kiểm tra các trường bắt buộc
+//     if (!customer.makh || !customer.name || !customer.phone || !shippingAddress.detail ||
+//       !shippingAddress.province || !shippingAddress.district || !shippingAddress.ward) {
+//       return res.status(400).json({ error: 'Thông tin khách hàng hoặc địa chỉ không đầy đủ' });
+//     }
+
+//     // Kiểm tra khách hàng
+//     const [existingCustomer] = await connection.query('SELECT makh, email FROM khachhang WHERE makh = ?', [customer.makh]);
+//     if (!existingCustomer.length) {
+//       return res.status(400).json({ error: 'Khách hàng không tồn tại' });
+//     }
+
+//     // Kiểm tra items
+//     if (!Array.isArray(items) || items.length === 0) {
+//       return res.status(400).json({ error: 'Không có sản phẩm được chọn' });
+//     }
+
+//     // Validate sản phẩm và tồn kho
+//     const cartItems = [];
+//     for (const item of items) {
+//       if (!item.MaSP || !item.SoLuong || item.SoLuong < 1) {
+//         return res.status(400).json({ error: `Sản phẩm ${item.MaSP} không hợp lệ` });
+//       }
+      
+//       const [product] = await connection.query(
+//         'SELECT MaSP, DonGia as price, SoLuong as stock FROM sanpham WHERE MaSP = ?',
+//         [item.MaSP]
+//       );
+      
+//       if (!product.length) {
+//         return res.status(400).json({ error: `Sản phẩm ${item.MaSP} không tồn tại` });
+//       }
+      
+//       if (product[0].stock < item.SoLuong) {
+//         return res.status(400).json({ error: `Sản phẩm ${item.MaSP} không đủ tồn kho (${product[0].stock} < ${item.SoLuong})` });
+//       }
+      
+//       cartItems.push({
+//         productId: item.MaSP,
+//         quantity: item.SoLuong,
+//         price: product[0].price
+//       });
+//     }
+
+//     // Tính tổng tiền
+//     const totalAmount = totalAmountDiscouted ? totalAmountDiscouted : cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
+//     console.log('Validated cart items:', cartItems, 'Total:', totalAmount);
+
+//     // ✅ BẮT ĐẦU TRANSACTION
+//     await connection.beginTransaction();
+
+//     // Lưu địa chỉ
+//     const [addressResult] = await connection.query(
+//       'INSERT INTO diachi (MaKH, TenNguoiNhan, SDT, DiaChiChiTiet, TinhThanh, QuanHuyen, PhuongXa) VALUES (?, ?, ?, ?, ?, ?, ?)',
+//       [customer.makh, customer.name, customer.phone, shippingAddress.detail, shippingAddress.province, shippingAddress.district, shippingAddress.ward]
+//     );
+//     const addressId = addressResult.insertId;
+
+//     // Tạo đơn hàng
+//     const [orderResult] = await connection.query(
+//       `INSERT INTO hoadon (makh, MaDiaChi, NgayTao, TongTien, PhuongThucThanhToan, GhiChu, tinhtrang, TrangThaiThanhToan) 
+//        VALUES (?, ?, NOW(), ?, ?, ?, ?, ?)`,
+//       [customer.makh, addressId, totalAmount, paymentMethod, notes || '', 'Chờ xử lý', 'Chưa thanh toán']
+//     );
+//     const orderId = orderResult.insertId;
+
+//     // Lưu chi tiết đơn hàng
+//     for (const item of cartItems) {
+//       await connection.query(
+//         'INSERT INTO chitiethoadon (MaHD, MaSP, SoLuong, DonGia) VALUES (?, ?, ?, ?)',
+//         [orderId, item.productId, item.quantity, item.price]
+//       );
+      
+//       await connection.query('UPDATE sanpham SET SoLuong = SoLuong - ? WHERE MaSP = ?', [item.quantity, item.productId]);
+//     }
+
+//     // Xóa giỏ hàng
+//     if (cartItems.length > 0) {
+//       const productIds = cartItems.map(i => i.productId);
+//       const placeholders = productIds.map(() => '?').join(',');
+//       await connection.query(
+//         `DELETE FROM giohang WHERE MaKH = ? AND MaSP IN (${placeholders})`, 
+//         [customer.makh, ...productIds]
+//       );
+//     }
+
+//     // ✅ COMMIT TRANSACTION TRƯỚC KHI XỬ LÝ THANH TOÁN
+//     await connection.commit();
+//     console.log('✅ Database operations completed successfully');
+
+//     // XỬ LÝ THANH TOÁN
+//     if (paymentMethod === 'VNPAY') {
+//       try {
+//         const tomorrow = new Date();
+//         tomorrow.setDate(tomorrow.getDate() + 1);
+        
+//         const vnpayResponse = await vnpay.buildPaymentUrl({
+//           vnp_Amount: totalAmount,
+//           vnp_IpAddr: req.ip || req.connection.remoteAddress || '127.0.0.1',
+//           vnp_TxnRef: orderId.toString(),
+//           vnp_OrderInfo: `Thanh toan don hang ${orderId}`,
+//           vnp_OrderType: ProductCode.Other,
+//           vnp_ReturnUrl: process.env.VNP_RETURN_URL,
+//           vnp_Locale: VnpLocale.VN,
+//           vnp_CreateDate: dateFormat(new Date()),
+//           vnp_ExpireDate: dateFormat(tomorrow),
+//         });
+        
+//         console.log('✅ VNPay URL generated for order:', orderId);
+//         return res.status(200).json({ 
+//           success: true, 
+//           orderId, 
+//           paymentUrl: vnpayResponse,
+//           message: 'Đơn hàng đã được tạo, chuyển hướng thanh toán VNPay'
+//         });
+//       } catch (vnpayError) {
+//         console.error('❌ VNPay error:', vnpayError);
+//         // Rollback order nếu VNPay lỗi
+//         await pool.query('UPDATE hoadon SET tinhtrang = "Đã hủy", GhiChu = "Lỗi VNPay" WHERE MaHD = ?', [orderId]);
+//         return res.status(500).json({ 
+//           error: 'Lỗi tạo URL thanh toán VNPay', 
+//           details: vnpayError.message 
+//         });
+//       }
+//     } else if (paymentMethod === 'COD') {
+//       // ✅ COD SUCCESS
+//       console.log('✅ COD Order completed successfully with ID:', orderId);
+//       // Add loyalty points for COD orders (non-blocking)
+//       try {
+//         const loyRes = await addLoyaltyPoints(connection, customer.makh, totalAmount);
+//         console.log(`Loyalty: added points for customer ${customer.makh} (COD order ${orderId})`, { loyRes });
+//         if (loyRes && loyRes.error) console.warn('Loyalty add returned error (non-blocking):', loyRes.error);
+//       } catch (e) {
+//         console.warn('Loyalty add failed (non-blocking):', e && e.message);
+//       }
+//       return res.status(200).json({ 
+//         success: true, 
+//         orderId,
+//         message: 'Đặt hàng COD thành công',
+//         paymentMethod: 'COD'
+//       });
+//     } else {
+//       return res.status(400).json({ error: 'Phương thức thanh toán không hợp lệ' });
+//     }
+
+//   } catch (error) {
+//     // ❌ ROLLBACK TRANSACTION NẾU CÓ LỖI
+//     try {
+//       await connection.rollback();
+//       console.log('🔄 Transaction rollback completed');
+//     } catch (rollbackError) {
+//       console.error('❌ Rollback error:', rollbackError);
+//     }
+    
+//     console.error('❌ Place order error:', {
+//       message: error.message,
+//       stack: error.stack,
+//       sql: error.sql,
+//       sqlMessage: error.sqlMessage
+//     });
+    
+//     res.status(500).json({ 
+//       error: 'Lỗi khi đặt hàng', 
+//       details: error.message,
+//       sqlError: error.sqlMessage 
+//     });
+//   } finally {
+//     // ✅ GIẢI PHÓNG CONNECTION
+//     if (connection) {
+//       connection.release();
+//     }
+//   }
+// });
+// ...existing code...
 router.post('/place-order', authenticateToken, async (req, res) => {
   console.log('🚀 Place order API called');
   console.log('🔍 Request Body:', JSON.stringify(req.body, null, 2));
@@ -59,10 +250,15 @@ router.post('/place-order', authenticateToken, async (req, res) => {
   const connection = await pool.getConnection();
   
   try {
-    const { customer, items, shippingAddress, paymentMethod, notes, totalAmountDiscouted } = req.body;
-    
-    console.log('req.user:', req.user);
-    console.log(totalAmountDiscouted);
+  // Lấy dữ liệu đơn; thông tin khách ưu tiên lấy từ token để tránh mismatch hoặc gian lận
+  const { items, shippingAddress, paymentMethod, notes, totalAmountDiscouted } = req.body;
+  const customerId = (req.user && req.user.makh) || (req.body.customer && req.body.customer.makh);
+  const customerName = (req.user && (req.user.tenkh || req.user.name)) || (req.body.customer && req.body.customer.name) || '';
+  const customerPhone = (req.user && (req.user.sdt || req.user.phone)) || (req.body.customer && req.body.customer.phone) || '';
+  if (!customerId) return res.status(401).json({ error: 'Không xác thực được khách hàng' });
+  const customer = { makh: customerId, name: customerName, phone: customerPhone };
+  console.log('req.user:', req.user);
+  console.log('received totalAmountDiscouted:', totalAmountDiscouted);
     
     // Kiểm tra dữ liệu đầu vào
     if (!customer || !items || !shippingAddress || !paymentMethod) {
@@ -75,8 +271,8 @@ router.post('/place-order', authenticateToken, async (req, res) => {
       return res.status(400).json({ error: 'Thông tin khách hàng hoặc địa chỉ không đầy đủ' });
     }
 
-    // Kiểm tra khách hàng
-    const [existingCustomer] = await connection.query('SELECT makh, email FROM khachhang WHERE makh = ?', [customer.makh]);
+    // Kiểm tra khách hàng (lấy thêm loyalty fields)
+    const [existingCustomer] = await connection.query('SELECT makh, email, loyalty_points, loyalty_tier FROM khachhang WHERE makh = ?', [customer.makh]);
     if (!existingCustomer.length) {
       return res.status(400).json({ error: 'Khách hàng không tồn tại' });
     }
@@ -113,11 +309,28 @@ router.post('/place-order', authenticateToken, async (req, res) => {
       });
     }
 
-    // Tính tổng tiền
-    const totalAmount = totalAmountDiscouted ? totalAmountDiscouted : cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
-    console.log('Validated cart items:', cartItems, 'Total:', totalAmount);
+    // Tính tổng tiền (subtotal)
+    const subtotal = totalAmountDiscouted ? Number(totalAmountDiscouted) : cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  console.log('Validated cart items:', cartItems, 'Subtotal:', subtotal);
 
-    // ✅ BẮT ĐẦU TRANSACTION
+    // Áp dụng quyền lợi theo hạng hội viên
+    const customerRow = existingCustomer[0];
+    const userTier = customerRow.loyalty_tier || computeTier(customerRow.loyalty_points || 0);
+
+    const tierConfig = {
+      'Đồng': { discountPercent: 0, freeShipThreshold: 0, pointsMult: 1 },
+      'Bạc':  { discountPercent: 3, freeShipThreshold: 200000, pointsMult: 1.2 },
+      'Vàng': { discountPercent: 7, freeShipThreshold: 0, pointsMult: 1.5 },
+    };
+    const cfg = tierConfig[userTier] || tierConfig['Đồng'];
+
+    const discountAmount = Math.round(subtotal * (cfg.discountPercent / 100));
+    const amountAfterDiscount = Math.max(0, subtotal - discountAmount);
+
+  // Debug output to help verify tier & discount behavior
+  console.log('[LOYALTY DEBUG] customerId=', customer.makh, 'tier=', userTier, 'discountPercent=', cfg.discountPercent, 'discountAmount=', discountAmount, 'amountAfterDiscount=', amountAfterDiscount);
+
+    // BẮT ĐẦU TRANSACTION
     await connection.beginTransaction();
 
     // Lưu địa chỉ
@@ -127,11 +340,12 @@ router.post('/place-order', authenticateToken, async (req, res) => {
     );
     const addressId = addressResult.insertId;
 
-    // Tạo đơn hàng
+    // Tạo đơn hàng - lưu TongTien = amountAfterDiscount; ghi note quyền lợi/giảm giá
+    const noteWithLoyalty = `${notes || ''}\n[LOYALTY] Hạng: ${userTier}; Giảm: ${cfg.discountPercent}% (${discountAmount.toLocaleString()}đ)`;
     const [orderResult] = await connection.query(
       `INSERT INTO hoadon (makh, MaDiaChi, NgayTao, TongTien, PhuongThucThanhToan, GhiChu, tinhtrang, TrangThaiThanhToan) 
        VALUES (?, ?, NOW(), ?, ?, ?, ?, ?)`,
-      [customer.makh, addressId, totalAmount, paymentMethod, notes || '', 'Chờ xử lý', 'Chưa thanh toán']
+      [customer.makh, addressId, amountAfterDiscount, paymentMethod, noteWithLoyalty, 'Chờ xử lý', 'Chưa thanh toán']
     );
     const orderId = orderResult.insertId;
 
@@ -155,18 +369,18 @@ router.post('/place-order', authenticateToken, async (req, res) => {
       );
     }
 
-    // ✅ COMMIT TRANSACTION TRƯỚC KHI XỬ LÝ THANH TOÁN
+    // COMMIT trước xử lý thanh toán
     await connection.commit();
     console.log('✅ Database operations completed successfully');
 
-    // XỬ LÝ THANH TOÁN
+    // XỬ LÝ THANH TOÁN: dùng amountAfterDiscount thay vì subtotal
     if (paymentMethod === 'VNPAY') {
       try {
         const tomorrow = new Date();
         tomorrow.setDate(tomorrow.getDate() + 1);
         
         const vnpayResponse = await vnpay.buildPaymentUrl({
-          vnp_Amount: totalAmount,
+          vnp_Amount: amountAfterDiscount,
           vnp_IpAddr: req.ip || req.connection.remoteAddress || '127.0.0.1',
           vnp_TxnRef: orderId.toString(),
           vnp_OrderInfo: `Thanh toan don hang ${orderId}`,
@@ -182,7 +396,10 @@ router.post('/place-order', authenticateToken, async (req, res) => {
           success: true, 
           orderId, 
           paymentUrl: vnpayResponse,
-          message: 'Đơn hàng đã được tạo, chuyển hướng thanh toán VNPay'
+          message: 'Đơn hàng đã được tạo, chuyển hướng thanh toán VNPay',
+          appliedTier: userTier,
+          discountAmount,
+          amountAfterDiscount
         });
       } catch (vnpayError) {
         console.error('❌ VNPay error:', vnpayError);
@@ -194,11 +411,10 @@ router.post('/place-order', authenticateToken, async (req, res) => {
         });
       }
     } else if (paymentMethod === 'COD') {
-      // ✅ COD SUCCESS
+      // COD success: thêm điểm trên amountAfterDiscount (non-blocking)
       console.log('✅ COD Order completed successfully with ID:', orderId);
-      // Add loyalty points for COD orders (non-blocking)
       try {
-        const loyRes = await addLoyaltyPoints(connection, customer.makh, totalAmount);
+        const loyRes = await addLoyaltyPoints(connection, customer.makh, amountAfterDiscount);
         console.log(`Loyalty: added points for customer ${customer.makh} (COD order ${orderId})`, { loyRes });
         if (loyRes && loyRes.error) console.warn('Loyalty add returned error (non-blocking):', loyRes.error);
       } catch (e) {
@@ -208,7 +424,10 @@ router.post('/place-order', authenticateToken, async (req, res) => {
         success: true, 
         orderId,
         message: 'Đặt hàng COD thành công',
-        paymentMethod: 'COD'
+        paymentMethod: 'COD',
+        appliedTier: userTier,
+        discountAmount,
+        amountAfterDiscount
       });
     } else {
       return res.status(400).json({ error: 'Phương thức thanh toán không hợp lệ' });
@@ -242,6 +461,7 @@ router.post('/place-order', authenticateToken, async (req, res) => {
     }
   }
 });
+// ...existing code...
 // API lấy danh sách hóa đơn (BỎ TOKEN AUTHENTICATION - CHỈ CHO DEV/TEST)
 router.get('/hoadon', async (req, res) => {
   try {

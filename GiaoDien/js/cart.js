@@ -570,13 +570,14 @@ async function checkout() {
         console.log('🔄 Redirecting to VNPay:', result.paymentUrl);
         window.location.href = result.paymentUrl;
       } else if (formData.paymentMethod === 'COD') {
-        // ✅ COD SUCCESS - REDIRECT ĐÚNG
+        // ✅ COD SUCCESS - REDIRECT ĐÚNG (dùng giá trị server trả về)
         console.log('✅ COD Order successful:', result.orderId);
         showToast('Đặt hàng COD thành công!');
         await clearCart();
-        
-        // ✅ REDIRECT VỚI ĐÚNG THAM SỐ
-        window.location.href = `order-confirmation.html?orderId=${result.orderId}&status=cod&paymentMethod=COD&amount=${orderData.totalAmountDiscouted || selectedItems.reduce((sum, item) => sum + item.price * item.quantity, 0)}&message=${encodeURIComponent(result.message || 'Đặt hàng COD thành công')}`;
+
+        // Prefer server-authoritative amountAfterDiscount if provided
+        const serverAmount = typeof result.amountAfterDiscount !== 'undefined' ? Number(result.amountAfterDiscount) : (orderData.totalAmountDiscouted || selectedItems.reduce((sum, item) => sum + item.price * item.quantity, 0));
+        window.location.href = `order-confirmation.html?orderId=${result.orderId}&status=cod&paymentMethod=COD&amount=${serverAmount}&discount=${result.discountAmount || 0}&appliedTier=${encodeURIComponent(result.appliedTier || '')}&message=${encodeURIComponent(result.message || 'Đặt hàng COD thành công')}`;
       } else {
         throw new Error('Phương thức thanh toán không được hỗ trợ');
       }
