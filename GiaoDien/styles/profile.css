@@ -1055,3 +1055,100 @@ body {
   .address-item { flex-direction: column; align-items: stretch; }
   .address-item .address-actions { justify-content: flex-end; margin-top: 8px; }
 }
+
+/* Styles for membership card in profile page */
+
+#membershipCardContainer {
+  background: linear-gradient(180deg, #fffaf0 0%, #fff 100%);
+  padding: 18px;
+  border-radius: 8px;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.06);
+  max-width: 760px;
+  margin: 12px auto;
+  color: #222;
+}
+
+.membership-card {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+}
+
+.membership-card .card-left {
+  width: 140px;
+  height: 90px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #ffd54f, #ffb300);
+  color: #222;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  font-weight: 700;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.08);
+}
+
+.membership-card .card-left span.tier {
+  font-size: 20px;
+}
+
+.membership-card .card-left span.label {
+  font-size: 12px;
+  opacity: 0.9;
+}
+
+.membership-card .card-right {
+  flex: 1;
+}
+
+.membership-stats {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.membership-stats .points {
+  font-size: 18px;
+  font-weight: 700;
+  color: #d32f2f;
+}
+
+.progress-bar {
+  height: 12px;
+  background: #f1f1f1;
+  border-radius: 12px;
+  overflow: hidden;
+  width: 100%;
+}
+
+.progress-bar > .fill {
+  height: 100%;
+  background: linear-gradient(90deg,#ffd54f,#ffb300);
+  width: 0%;
+  transition: width 600ms ease;
+}
+
+.membership-actions {
+  margin-top: 12px;
+}
+
+.membership-actions button {
+  background: #d32f2f;
+  color: #fff;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.membership-notes {
+  margin-top: 10px;
+  font-size: 13px;
+  color: #444;
+}
+
+@media (max-width: 720px) {
+  .membership-card { flex-direction: column; align-items: stretch; }
+  .membership-card .card-left { width: 100%; height: 84px; }
+}

@@ -6,6 +6,7 @@
     <title>Hồ Sơ Cá Nhân - Fahasa</title>
     <link rel="stylesheet" href="styles/index.css">
     <link rel="stylesheet" href="styles/profile.css">
+ 
     <link rel="stylesheet" href="styles/index.css">
       <link rel="stylesheet" href="styles/header.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
@@ -63,6 +64,7 @@
                         <li ><a href="index.html"><i class="fas fa-home"></i> Trang chủ</a></li>
                         <li data-section="user-profile"><i class="fas fa-user"></i> Thông tin tài khoản </li>
                         <li data-section="address-book"><i class="fas fa-map-marker-alt"></i> Sổ địa chỉ</li>
+                        <li data-section="membership-card"><i class="fas fa-id-card"></i> Thẻ thành viên</li>
                         <!-- <li><i class="fas fa-headset"></i> Hỗ trợ cá nhân</li> -->
                         <!-- <li><i class="fas fa-phone"></i> Số điện thoại</li> -->
                         <li data-section="change-password"><i class="fas fa-key"></i> Đổi mật khẩu</li>
@@ -71,7 +73,7 @@
                          <li><i class="fas fa-shopping-bag"></i> <a href="orders.html"> Đơn hàng của tôi </a></li>
                         <li data-section="promo-codes"><i class="fas fa-ticket-alt"></i> Các mã khuyến mãi</li>
                         <li data-section="wishlist"><i class="fas fa-heart"></i> Sản phẩm yêu thích</li>
-                        <li><i class="fas fa-sign-out-alt" ></i> Đăng xuất </li>
+                        <li id="logout-list-item"><i class="fas fa-sign-out-alt" ></i> Đăng xuất </li>
                     </ul>
                 </div>
                 <div class="content">
@@ -186,6 +188,14 @@
                             <div id="other-receive-address">
                                 <p>Bạn không có địa chỉ khác trong Sổ địa chỉ.</p>
                             </div>
+                        </div>
+                    </div>
+
+                    <!-- Phần thẻ thành viên -->
+                    <div id="membership-card" class="section hide-section">
+                        <h2>Thẻ thành viên</h2>
+                        <div id="membershipCardContainer">
+                            <!-- Nội dung sẽ được render bằng JS -->
                         </div>
                     </div>
 

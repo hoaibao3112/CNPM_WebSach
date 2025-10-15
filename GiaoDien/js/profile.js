@@ -5,6 +5,7 @@ document.addEventListener('DOMContentLoaded', function() {
   setupUpdateButton();
   setupSidebarNavigation();
   setupChangePasswordButton();
+  setupLogoutHandler();
 });
 
 
@@ -185,6 +186,11 @@ function setupSidebarNavigation() {
         case 'address-book':
           displayAddressBook?.();
           break;
+        case 'membership-card':
+          // render membership before showing
+          renderMembershipCard?.();
+          showSection('membership-card');
+          break;
         case 'order-history':
           displayOrderHistory?.();
           break;
@@ -354,6 +360,81 @@ function displayInvoiceInfo() {
 }
 /*-------------------------------------------------------------------------------*/
 
+// Membership rendering (fetch latest profile first, fallback to localStorage)
+async function renderMembershipCard() {
+  const container = document.getElementById('membershipCardContainer');
+  if (!container) return;
+
+  // Try to fetch fresh profile (so we get loyalty_points) if token present
+  let user = JSON.parse(localStorage.getItem('user') || '{}');
+  const token = localStorage.getItem('token');
+  if (token) {
+    try {
+      const res = await fetch('http://localhost:5000/api/client/profile', {
+        method: 'GET',
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const js = await res.json();
+      if (res.ok && js.user) {
+        user = js.user;
+        localStorage.setItem('user', JSON.stringify(user));
+      }
+    } catch (err) {
+      // ignore fetch error and fall back to localStorage
+      console.warn('Could not refresh profile for membership card', err);
+    }
+  }
+
+  const points = Number(user.loyalty_points || user.points || 0);
+  const tier = user.loyalty_tier || computeTier(points);
+  const customerId = user.makh || user.id || '';
+
+  // next thresholds: Đồng -> 5000, Bạc -> 20000, Vàng -> already max
+  const nextThreshold = tier === 'Đồng' ? 5000 : (tier === 'Bạc' ? 20000 : points);
+  const progress = nextThreshold > 0 ? Math.min(100, Math.round((points / nextThreshold) * 100)) : 100;
+
+  container.innerHTML = `
+    <div class="membership-card">
+      <div class="card-left">
+        <span class="tier">${tier}</span>
+        <span class="label">Thành viên</span>
+      </div>
+      <div class="card-right">
+        <div class="membership-stats">
+          <div class="points">${new Intl.NumberFormat('vi-VN').format(points)} điểm</div>
+          <div style="flex:1">
+            <div class="progress-bar" aria-hidden>
+              <div class="fill" style="width:${progress}%"></div>
+            </div>
+            <div style="font-size:12px;color:#666;margin-top:6px">${progress}% tới mốc tiếp theo (${new Intl.NumberFormat('vi-VN').format(nextThreshold)} điểm)</div>
+          </div>
+        </div>
+        <div class="membership-actions">
+          <button id="viewBenefitsBtn">Xem quyền lợi</button>
+        </div>
+        <div class="membership-notes">Mã khách hàng: <strong>${customerId}</strong></div>
+      </div>
+    </div>
+  `;
+
+  requestAnimationFrame(() => {
+    const fill = container.querySelector('.fill');
+    if (fill) fill.style.width = progress + '%';
+  });
+
+  const btn = document.getElementById('viewBenefitsBtn');
+  if (btn) btn.addEventListener('click', () => {
+    showPromoDetailModal(`<h3>Quyền lợi ${tier}</h3><ul><li>Ưu đãi khi mua sách</li><li>Giảm phí vận chuyển</li></ul>`);
+  });
+}
+
+function computeTier(points) {
+  const p = Number(points || 0);
+  if (p >= 20000) return 'Vàng';
+  if (p >= 5000) return 'Bạc';
+  return 'Đồng';
+}
+
 function setupUpdateButton() {
   const updateBtn = document.getElementById('updateBtn');
 
@@ -513,6 +594,34 @@ function setupChangePasswordButton() {
       changePasswordBtn.disabled = false;
       changePasswordBtn.innerHTML = 'Thay đổi mật khẩu';
     }
+  });
+}
+
+// Logout handler: clear auth and redirect to homepage
+function setupLogoutHandler() {
+  const logoutItem = document.getElementById('logout-list-item');
+  if (!logoutItem) return;
+
+  logoutItem.addEventListener('click', function (e) {
+    e.preventDefault();
+    // Clear authentication-related localStorage
+    try {
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      localStorage.removeItem('customerId');
+      // optional: clear cart/wishlist session data if desired
+      // localStorage.removeItem('cart');
+    } catch (err) {
+      console.warn('Error clearing localStorage during logout', err);
+    }
+
+    // Show a small notification if function exists
+    if (typeof showNotification_khan === 'function') {
+      showNotification_khan('success', 'Bạn đã đăng xuất');
+    }
+
+    // Redirect to homepage
+    setTimeout(() => { window.location.href = 'index.html'; }, 250);
   });
 }
 

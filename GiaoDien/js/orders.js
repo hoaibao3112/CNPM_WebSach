@@ -647,6 +647,94 @@ async function submitReturnRequest(order) {
         shippingAddressElement.textContent = 'Không thể hiển thị địa chỉ';
     }
 
+    // --- NEW: Hiển thị nút "Sửa địa chỉ" nếu đơn đang 'Chờ xử lý' — chọn từ địa chỉ đã lưu
+    (function renderEditAddressControl() {
+        const shippingSection = document.querySelector('.shipping-info-section');
+        if (!shippingSection) return;
+
+        // Remove previous control nếu có
+        const prev = document.getElementById('edit-address-control');
+        if (prev) prev.remove();
+
+        const isPending = (order.tinhtrang || '').toString() === 'Chờ xử lý' || (order.status === 'pending');
+        if (!isPending) return;
+
+        const control = document.createElement('div');
+        control.id = 'edit-address-control';
+        control.style.marginTop = '8px';
+        control.innerHTML = `
+            <button id="edit-address-btn" class="btn" style="background:#ffc107;color:#222;">
+                <i class="fas fa-edit"></i> Chọn địa chỉ giao hàng đã lưu
+            </button>
+            <div id="edit-address-form" style="display:none; margin-top:12px; border-top:1px dashed #eee; padding-top:12px;">
+                <div style="display:flex; gap:8px; align-items:center;">
+                    <select id="saved-address-select" style="flex:1; padding:8px;">
+                        <option value="">Đang tải địa chỉ...</option>
+                    </select>
+                    <div style="display:flex; gap:8px;">
+                        <button id="cancel-edit-address" class="btn btn-secondary">Hủy</button>
+                        <button id="save-edit-address" class="btn btn-danger">Lưu thay đổi</button>
+                    </div>
+                </div>
+                <div id="saved-address-preview" style="margin-top:8px;color:#333"></div>
+            </div>
+        `;
+        shippingSection.appendChild(control);
+
+        const selectEl = control.querySelector('#saved-address-select');
+        const previewEl = control.querySelector('#saved-address-preview');
+        const btn = control.querySelector('#edit-address-btn');
+
+        btn.addEventListener('click', async () => {
+            document.getElementById('edit-address-form').style.display = 'block';
+            btn.style.display = 'none';
+
+            // Fetch saved addresses for this customer
+            try {
+                const customerId = getCustomerId();
+                const resp = await fetch(`http://localhost:5000/api/orders/customer-addresses/${customerId}`, {
+                    headers: { 'Authorization': `Bearer ${getToken()}` }
+                });
+                const payload = await resp.json();
+                if (!resp.ok) throw new Error((payload && (payload.error || payload.message)) || 'Không thể tải địa chỉ');
+
+                // server returns { success: true, data: [...] }
+                const addresses = Array.isArray(payload) ? payload : (payload && payload.data) || [];
+
+                if (!addresses.length) {
+                    selectEl.innerHTML = '<option value="">Không có địa chỉ</option>';
+                    previewEl.textContent = '';
+                    return;
+                }
+
+                selectEl.innerHTML = '<option value="">-- Chọn địa chỉ --</option>' + addresses.map(a => {
+                    const id = a.id || a.MaDiaChi || '';
+                    const label = `${a.name || a.TenNguoiNhan || ''} — ${a.detail || a.DiaChiChiTiet || ''}`;
+                    return `<option value="${id}">${escapeHtml(label)}</option>`;
+                }).join('');
+
+                selectEl.onchange = () => {
+                    const sel = selectEl.options[selectEl.selectedIndex];
+                    if (!sel || !sel.value) return previewEl.textContent = '';
+                    const addr = addresses.find(d => String(d.id || d.MaDiaChi) === String(sel.value)) || {};
+                    previewEl.textContent = `${addr.name || addr.TenNguoiNhan || ''} | ${addr.phone || addr.SDT || ''} — ${addr.detail || addr.DiaChiChiTiet || ''} ${addr.province || addr.TinhThanh || ''}`;
+                };
+            } catch (err) {
+                console.error('Load saved addresses failed', err);
+                selectEl.innerHTML = '<option value="">Không có địa chỉ</option>';
+            }
+        });
+
+        control.querySelector('#cancel-edit-address').addEventListener('click', () => {
+            document.getElementById('edit-address-form').style.display = 'none';
+            btn.style.display = 'inline-flex';
+        });
+
+        control.querySelector('#save-edit-address').addEventListener('click', async () => {
+            await submitAddressUpdate(order);
+        });
+    })();
+
     // Hiển thị danh sách sản phẩm
     const orderItemsElement = document.getElementById('order-items');
     orderItemsElement.innerHTML = order.items.map(item => `
@@ -717,6 +805,103 @@ async function fetchReturnForOrder(orderId) {
     } catch (e) {
         console.warn('Không thể lấy thông tin trả hàng:', e.message || e);
         return [];
+    }
+}
+
+// NEW: submitAddressUpdate - gọi API PUT để cập nhật địa chỉ đơn hàng khi còn 'Chờ xử lý'
+async function submitAddressUpdate(order) {
+    if (!checkAuth()) return;
+    const orderId = order.id || order.MaHD;
+    if (!orderId) {
+        showErrorToast('Không tìm thấy mã đơn hàng');
+        return;
+    }
+
+    // Nếu người dùng chọn địa chỉ đã lưu, gửi MaDiaChi; nếu không, fallback sang gửi thông tin mới
+    const selectedSaved = document.getElementById('saved-address-select')?.value;
+    let payload = {};
+    if (selectedSaved) {
+        payload.MaDiaChi = selectedSaved;
+    } else {
+        payload = {
+            TenNguoiNhan: document.getElementById('edit-recipient')?.value?.trim(),
+            SDT: document.getElementById('edit-phone')?.value?.trim(),
+            DiaChiChiTiet: document.getElementById('edit-detail')?.value?.trim(),
+            TinhThanh: document.getElementById('edit-province')?.value?.trim() || null,
+            QuanHuyen: document.getElementById('edit-district')?.value?.trim() || null,
+            PhuongXa: document.getElementById('edit-ward')?.value?.trim() || null
+        };
+
+        if (!payload.TenNguoiNhan || !payload.SDT || !payload.DiaChiChiTiet) {
+            showErrorToast('Vui lòng chọn địa chỉ đã lưu hoặc điền Người nhận, SĐT và Địa chỉ chi tiết');
+            return;
+        }
+    }
+
+    try {
+        const resp = await fetch(`http://localhost:5000/api/orders/hoadon/${orderId}/address`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${getToken()}`
+            },
+            body: JSON.stringify(payload)
+        });
+
+        const data = await resp.json();
+        if (!resp.ok) {
+            throw new Error(data.error || data.message || 'Cập nhật địa chỉ thất bại');
+        }
+
+        // Cập nhật UI: refresh chi tiết đơn hàng và danh sách
+        const fresh = await fetchOrderDetail(orderId);
+        if (fresh) {
+            currentOrderData = fresh;
+            // server returns recipient fields from joined diachi
+            document.getElementById('receiver-name').textContent = fresh.recipientName || fresh.TenNguoiNhan || payload.TenNguoiNhan || '';
+            document.getElementById('receiver-phone').textContent = fresh.recipientPhone || fresh.SDT || payload.SDT || '';
+
+            // Format from fresh if available
+            try {
+                const shippingParts = {
+                    shippingAddress: fresh.shippingAddress || fresh.DiaChiChiTiet || payload.DiaChiChiTiet,
+                    ward: fresh.ward || fresh.PhuongXa || payload.PhuongXa,
+                    district: fresh.district || fresh.QuanHuyen || payload.QuanHuyen,
+                    province: fresh.province || fresh.TinhThanh || payload.TinhThanh
+                };
+                document.getElementById('shipping-address').textContent = await formatFullAddress(shippingParts);
+            } catch (e) {
+                document.getElementById('shipping-address').textContent = fresh.shippingAddress || payload.DiaChiChiTiet || '';
+            }
+
+            // Ẩn form
+            const formEl = document.getElementById('edit-address-form');
+            if (formEl) formEl.style.display = 'none';
+            const btn = document.getElementById('edit-address-btn');
+            if (btn) btn.style.display = 'inline-flex';
+
+            // Làm mới danh sách đơn
+            await renderOrders(getCustomerId(), document.getElementById('status-filter')?.value || 'all');
+
+            // Refresh delivery map so route/markers are recalculated for new address
+            try {
+                // allow a small delay so modal and DOM settle
+                setTimeout(() => {
+                    try {
+                        if (typeof displayDeliveryMap === 'function') displayDeliveryMap(fresh);
+                        if (typeof map !== 'undefined' && map) map.invalidateSize();
+                    } catch (e) { console.warn('Không thể cập nhật bản đồ sau khi đổi địa chỉ', e); }
+                }, 300);
+            } catch (e) { /* ignore */ }
+
+            alert('Cập nhật địa chỉ thành công');
+        } else {
+            alert('Cập nhật địa chỉ thành công (đã lưu trên server)');
+            document.getElementById('edit-address-form').style.display = 'none';
+        }
+    } catch (err) {
+        console.error('Update address failed:', err);
+        showErrorToast(err.message || 'Lỗi khi cập nhật địa chỉ');
     }
 }
 

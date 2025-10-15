@@ -24,6 +24,9 @@
                   <option value="cancelled">Đã hủy</option>
               </select>
                 <button id="search-btn" class="search-btn"><i class="fas fa-search"></i></button>
+                <button id="header-back-btn" class="btn back-btn" title="Quay lại danh sách">
+                  <i class="fas fa-arrow-left"></i>
+                </button>
             </div>
         </header>
 
@@ -109,7 +112,7 @@
             <button id="request-return-btn" class="btn request-return-btn" style="display:none;">
               <i class="fas fa-undo-alt"></i> Yêu cầu trả hàng
             </button>
-            <a href="orders.html" class="btn home-btn">
+            <a href="index.html" class="btn home-btn">
               <i class="fas fa-home"></i> Về trang chủ
             </a>
           </div>
@@ -420,6 +423,33 @@ setTimeout(() => {
 
 // Manual debug function
 window.debugRefund = debugRefundModal;
+
+// Back button handlers (header and modal)
+document.addEventListener('DOMContentLoaded', function () {
+  const headerBack = document.getElementById('header-back-btn');
+  const modalBack = document.getElementById('back-to-orders-btn');
+
+  function scrollToOrders() {
+    const ordersList = document.getElementById('order-list');
+    if (ordersList) ordersList.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  if (headerBack) {
+    headerBack.addEventListener('click', function (e) {
+      e.preventDefault();
+      // Navigate to index.html
+      window.location.href = 'index.html';
+    });
+  }
+
+  if (modalBack) {
+    modalBack.addEventListener('click', function (e) {
+      e.preventDefault();
+      // Navigate to index.html
+      window.location.href = 'index.html';
+    });
+  }
+});
 </script>
 </body>
 </html>

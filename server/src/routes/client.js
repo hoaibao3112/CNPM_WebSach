@@ -314,7 +314,7 @@ router.get('/profile', authenticateToken, async (req, res) => {
   try {
     console.log('Lấy profile cho makh:', req.user.makh);
     const [[user]] = await pool.query(
-      'SELECT makh, tenkh, email, sdt, diachi FROM khachhang WHERE makh = ?',
+      'SELECT makh, tenkh, email, sdt, diachi, loyalty_points, loyalty_tier FROM khachhang WHERE makh = ?',
       [req.user.makh]
     );
 

@@ -3,6 +3,7 @@ import pool from '../config/connectDatabase.js';
 import crypto from 'crypto';
 import jwt from 'jsonwebtoken';
 import { VNPay, ignoreLogger, ProductCode, VnpLocale, dateFormat } from 'vnpay';
+import { pointsFromOrderAmount, addLoyaltyPoints, subtractLoyaltyPoints, computeTier } from '../utils/loyalty.js';
 
 const router = express.Router();
 
@@ -195,6 +196,14 @@ router.post('/place-order', authenticateToken, async (req, res) => {
     } else if (paymentMethod === 'COD') {
       // ✅ COD SUCCESS
       console.log('✅ COD Order completed successfully with ID:', orderId);
+      // Add loyalty points for COD orders (non-blocking)
+      try {
+        const loyRes = await addLoyaltyPoints(connection, customer.makh, totalAmount);
+        console.log(`Loyalty: added points for customer ${customer.makh} (COD order ${orderId})`, { loyRes });
+        if (loyRes && loyRes.error) console.warn('Loyalty add returned error (non-blocking):', loyRes.error);
+      } catch (e) {
+        console.warn('Loyalty add failed (non-blocking):', e && e.message);
+      }
       return res.status(200).json({ 
         success: true, 
         orderId,
@@ -933,6 +942,18 @@ router.get('/vnpay_return', async (req, res) => {
       );
       
       console.log(`✅ Thanh toán thành công cho đơn hàng ${orderId}, số tiền: ${amount} - TRẠNG THÁI: Chờ xử lý`);
+      // Add loyalty points after VNPay success (non-blocking)
+      try {
+        const [ordRows] = await pool.query('SELECT makh, TongTien FROM hoadon WHERE MaHD = ?', [orderId]);
+        const ord = ordRows && ordRows[0];
+        if (ord && ord.makh) {
+          const loyRes = await addLoyaltyPoints(pool, ord.makh, ord.TongTien || 0);
+          console.log('Loyalty: points added after VNPay for order', orderId, { loyRes });
+          if (loyRes && loyRes.error) console.warn('Loyalty add after VNPay returned error (non-blocking):', loyRes.error);
+        }
+      } catch (e) {
+        console.warn('Loyalty after VNPay failed:', e && e.message);
+      }
       return res.redirect(
         `${process.env.CLIENT_CUSTOMER_URL}/GiaoDien/order-confirmation.html?orderId=${orderId}&amount=${amount}&status=success`
       );
@@ -1391,6 +1412,19 @@ router.put('/customer-orders/cancel-with-refund/:orderId', authenticateToken, as
         `UPDATE sanpham SET SoLuong = SoLuong + ? WHERE MaSP = ?`,
         [item.Soluong, item.MaSP]
       );
+    }
+
+    // Remove loyalty points for this canceled order (non-blocking)
+    try {
+      const [ordRows] = await connection.query('SELECT makh, TongTien FROM hoadon WHERE MaHD = ?', [orderId]);
+      const ord = ordRows && ordRows[0];
+      if (ord && ord.makh) {
+        const loyRes = await subtractLoyaltyPoints(connection, ord.makh, ord.TongTien || 0);
+        console.log(`Loyalty: subtracted points for customer ${ord.makh} due to cancel ${orderId}`, { loyRes });
+        if (loyRes && loyRes.error) console.warn('Loyalty subtract returned error (non-blocking):', loyRes.error);
+      }
+    } catch (e) {
+      console.warn('Loyalty subtraction failed (non-blocking):', e && e.message);
     }
 
     await connection.commit();
@@ -2267,5 +2301,96 @@ router.delete('/customer-addresses/:addressId', authenticateToken, async (req, r
     conn.release();
   }
 });
+
+// API cập nhật địa chỉ của hóa đơn (chỉ khi trạng thái = 'Chờ xử lý')
+router.put('/hoadon/:id/address', authenticateToken, async (req, res) => {
+  const { id } = req.params;
+  const userId = req.user && req.user.makh;
+  const {
+    MaDiaChi, TenNguoiNhan, SDT, DiaChiChiTiet, TinhThanh, QuanHuyen, PhuongXa
+  } = req.body;
+
+  // Nếu không truyền MaDiaChi thì phải cung cấp thông tin địa chỉ mới
+  if (!MaDiaChi && (!TenNguoiNhan || !SDT || !DiaChiChiTiet)) {
+    return res.status(400).json({ success: false, error: 'Thiếu thông tin địa chỉ hoặc MaDiaChi' });
+  }
+
+  const conn = await pool.getConnection();
+  try {
+    await conn.beginTransaction();
+
+    // Khóa đơn để tránh race condition
+    const [rows] = await conn.query(`SELECT MaHD, makh, tinhtrang, MaDiaChi FROM hoadon WHERE MaHD = ? FOR UPDATE`, [id]);
+    if (!rows.length) {
+      await conn.rollback();
+      return res.status(404).json({ success: false, error: 'Không tìm thấy đơn hàng' });
+    }
+
+    const order = rows[0];
+
+    // Chỉ cho phép khi đang "Chờ xử lý"
+    if (String(order.tinhtrang) !== 'Chờ xử lý') {
+      await conn.rollback();
+      return res.status(400).json({ success: false, error: 'Chỉ có thể sửa địa chỉ khi đơn đang ở trạng thái "Chờ xử lý"' });
+    }
+
+    // Quyền: chỉ chủ đơn hoặc admin
+    if (String(order.makh) !== String(userId) && req.user.userType !== 'admin') {
+      await conn.rollback();
+      return res.status(403).json({ success: false, error: 'Không có quyền thay đổi địa chỉ đơn hàng này' });
+    }
+
+    let newAddressId = null;
+    // Nếu client truyền MaDiaChi -> validate quyền sở hữu và dùng luôn
+    if (MaDiaChi) {
+      const [addrRows] = await conn.query(`SELECT MaDiaChi, MaKH FROM diachi WHERE MaDiaChi = ? FOR UPDATE`, [MaDiaChi]);
+      if (!addrRows.length) {
+        await conn.rollback();
+        return res.status(404).json({ success: false, error: 'Địa chỉ không tồn tại' });
+      }
+      const addr = addrRows[0];
+      // Chỉ chủ sở hữu địa chỉ hoặc admin được dùng địa chỉ này
+      if (String(addr.MaKH) !== String(order.makh) && req.user.userType !== 'admin') {
+        await conn.rollback();
+        return res.status(403).json({ success: false, error: 'Không có quyền sử dụng địa chỉ này' });
+      }
+      newAddressId = addr.MaDiaChi;
+
+      const note = `\n[${new Date().toLocaleString()}] Đổi địa chỉ giao hàng bởi ${req.user.tenkh || req.user.makh || 'khách'} (id:${userId})`;
+      await conn.query(`UPDATE hoadon SET MaDiaChi = ?, GhiChu = CONCAT(IFNULL(GhiChu,''), ?) WHERE MaHD = ?`, [newAddressId, note, id]);
+    } else {
+      // Chèn địa chỉ mới (không xóa/ghi đè địa chỉ cũ để giữ lịch sử)
+      const [insertRes] = await conn.query(
+        `INSERT INTO diachi (MaKH, TenNguoiNhan, SDT, DiaChiChiTiet, TinhThanh, QuanHuyen, PhuongXa)
+         VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        [order.makh, TenNguoiNhan, SDT, DiaChiChiTiet, TinhThanh || null, QuanHuyen || null, PhuongXa || null]
+      );
+      newAddressId = insertRes.insertId;
+
+      // Cập nhật hóa đơn trỏ sang địa chỉ mới và lưu note
+      const note = `\n[${new Date().toLocaleString()}] Đổi địa chỉ giao hàng bởi ${req.user.tenkh || req.user.makh || 'khách'} (id:${userId})`;
+      await conn.query(`UPDATE hoadon SET MaDiaChi = ?, GhiChu = CONCAT(IFNULL(GhiChu,''), ?) WHERE MaHD = ?`, [newAddressId, note, id]);
+    }
+
+    await conn.commit();
+
+    res.json({
+      success: true,
+      message: 'Cập nhật địa chỉ thành công',
+      data: {
+        orderId: id,
+        MaDiaChi: newAddressId,
+        address: { TenNguoiNhan, SDT, DiaChiChiTiet, TinhThanh, QuanHuyen, PhuongXa }
+      }
+    });
+  } catch (err) {
+    try { await conn.rollback(); } catch (e) {}
+    console.error('Update order address error:', err);
+    res.status(500).json({ success: false, error: 'Lỗi khi cập nhật địa chỉ', details: process.env.NODE_ENV === 'development' ? err.message : null });
+  } finally {
+    conn.release();
+  }
+});
+
 
 export default router;
