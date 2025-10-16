@@ -4,6 +4,7 @@ import crypto from 'crypto';
 import jwt from 'jsonwebtoken';
 import { VNPay, ignoreLogger, ProductCode, VnpLocale, dateFormat } from 'vnpay';
 import { pointsFromOrderAmount, addLoyaltyPoints, subtractLoyaltyPoints, computeTier } from '../utils/loyalty.js';
+import { sendOrderConfirmationEmail } from '../utils/emailService.js';
 
 const router = express.Router();
 
@@ -290,7 +291,7 @@ router.post('/place-order', authenticateToken, async (req, res) => {
       }
       
       const [product] = await connection.query(
-        'SELECT MaSP, DonGia as price, SoLuong as stock FROM sanpham WHERE MaSP = ?',
+        'SELECT MaSP, DonGia as price, SoLuong as stock, TenSP, HinhAnh FROM sanpham WHERE MaSP = ?',
         [item.MaSP]
       );
       
@@ -305,7 +306,9 @@ router.post('/place-order', authenticateToken, async (req, res) => {
       cartItems.push({
         productId: item.MaSP,
         quantity: item.SoLuong,
-        price: product[0].price
+        price: product[0].price,
+        productName: product[0].TenSP,
+        productImage: product[0].HinhAnh
       });
     }
 
@@ -392,6 +395,39 @@ router.post('/place-order', authenticateToken, async (req, res) => {
         });
         
         console.log('✅ VNPay URL generated for order:', orderId);
+        // Attempt to send order confirmation email (non-blocking)
+        (async () => {
+          try {
+            const email = existingCustomer[0].email;
+            // Resolve address names for readability
+            const resolvedProvince = await resolveProvince(shippingAddress.province).catch(() => shippingAddress.province);
+            const resolvedDistrict = await resolveDistrict(shippingAddress.district).catch(() => shippingAddress.district);
+            const resolvedWard = await resolveWard(shippingAddress.ward).catch(() => shippingAddress.ward);
+            const emailShippingAddress = {
+              detail: shippingAddress.detail,
+              province: resolvedProvince,
+              district: resolvedDistrict,
+              ward: resolvedWard
+            };
+
+            const orderPayload = {
+              id: orderId,
+              total: amountAfterDiscount,
+              paymentMethod: paymentMethod,
+              paymentUrl: vnpayResponse,
+              customerName: customer.name,
+              shippingAddress: emailShippingAddress,
+              items: cartItems
+            };
+            if (email) {
+              const sent = await sendOrderConfirmationEmail(email, orderPayload);
+              if (!sent) console.warn(`Email confirmation not sent for order ${orderId}`);
+            }
+          } catch (e) {
+            console.error('Non-blocking email send failed (VNPAY):', e && e.message ? e.message : e);
+          }
+        })();
+
         return res.status(200).json({ 
           success: true, 
           orderId, 
@@ -420,6 +456,39 @@ router.post('/place-order', authenticateToken, async (req, res) => {
       } catch (e) {
         console.warn('Loyalty add failed (non-blocking):', e && e.message);
       }
+
+      // Send confirmation email for COD orders (non-blocking)
+      (async () => {
+        try {
+          const email = existingCustomer[0].email;
+          // Resolve address names for readability
+          const resolvedProvince = await resolveProvince(shippingAddress.province).catch(() => shippingAddress.province);
+          const resolvedDistrict = await resolveDistrict(shippingAddress.district).catch(() => shippingAddress.district);
+          const resolvedWard = await resolveWard(shippingAddress.ward).catch(() => shippingAddress.ward);
+          const emailShippingAddress = {
+            detail: shippingAddress.detail,
+            province: resolvedProvince,
+            district: resolvedDistrict,
+            ward: resolvedWard
+          };
+
+          const orderPayload = {
+            id: orderId,
+            total: amountAfterDiscount,
+            paymentMethod: paymentMethod,
+            customerName: customer.name,
+            shippingAddress: emailShippingAddress,
+            items: cartItems
+          };
+          if (email) {
+            const sent = await sendOrderConfirmationEmail(email, orderPayload);
+            if (!sent) console.warn(`Email confirmation not sent for order ${orderId}`);
+          }
+        } catch (e) {
+          console.error('Non-blocking email send failed (COD):', e && e.message ? e.message : e);
+        }
+      })();
+
       return res.status(200).json({ 
         success: true, 
         orderId,

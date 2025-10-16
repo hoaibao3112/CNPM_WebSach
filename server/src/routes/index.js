@@ -26,6 +26,7 @@ import faq from './faq.js'; // Thêm route FAQ
 import ChatRoutesOpenAI from './chatRouteOpenAI.js';
 import cart from './cart.js';
 import maproutes from './MapRoute.js';
+import order_review from './orderreview.js';
 import VoucherRoutes from './voucher.js';
 import AttendanceAdmin from './AttendanceAdmin.js';
 import bookRoutes from './book.js';
@@ -64,4 +65,5 @@ export const initRoutes = (app) => {
   app.use('/api/voucher', VoucherRoutes);
   app.use('/api/attendance_admin', AttendanceAdmin);
   app.use('/api/books', bookRoutes);
+  app.use('/api/orderreview',order_review);
 };

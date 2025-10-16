@@ -58,6 +58,9 @@ app.use(express.urlencoded({ extended: true }));
 // Serve uploaded files (customer uploads) so URLs like /uploads/tra_hang/<file> are reachable
 app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
 
+// Serve product images from backend/product so they are reachable at /product-images/<file>
+app.use('/product-images', express.static(path.join(process.cwd(), 'backend', 'product')));
+
 app.use('/vnpay', createProxyMiddleware({
   target: 'https://sandbox.vnpayment.vn',
   changeOrigin: true,

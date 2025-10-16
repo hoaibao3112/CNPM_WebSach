@@ -156,6 +156,37 @@
             <span>Hỗ trợ</span>
         </div>
 
+        <!-- Review Modal (outside order detail) -->
+        <div id="review-modal" class="modal" style="display:none;">
+          <div class="modal-content" style="max-width:600px;">
+            <span class="close-modal" id="close-review-modal">&times;</span>
+            <div class="modal-header">
+              <h2><i class="fas fa-star"></i> Đánh giá đơn hàng <span id="review-order-id"></span></h2>
+            </div>
+            <div class="modal-body" style="padding:16px;">
+              <p>Vui lòng cho chúng tôi biết cảm nhận của bạn về đơn hàng này.</p>
+              <div style="margin:12px 0;">
+                <label for="review-rating">Số sao:</label>
+                <select id="review-rating" style="margin-left:8px; padding:6px;">
+                  <option value="5">5 - Rất tốt</option>
+                  <option value="4">4 - Tốt</option>
+                  <option value="3">3 - Trung bình</option>
+                  <option value="2">2 - Kém</option>
+                  <option value="1">1 - Rất kém</option>
+                </select>
+              </div>
+              <div>
+                <label for="review-comment">Nhận xét (tuỳ chọn):</label>
+                <textarea id="review-comment" rows="4" style="width:100%; padding:8px; margin-top:8px;" maxlength="500" placeholder="Viết nhận xét của bạn..."></textarea>
+              </div>
+            </div>
+            <div class="modal-footer" style="display:flex; gap:8px; justify-content:flex-end; padding:12px;">
+              <button class="btn btn-secondary" id="cancel-review-btn">Hủy</button>
+              <button class="btn btn-danger" id="submit-review-btn">Gửi đánh giá</button>
+            </div>
+          </div>
+        </div>
+
         <!-- Chat Popup -->
         <div id="chat-popup" class="chat-popup">
             <div class="chat-popup-header">

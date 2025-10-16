@@ -324,9 +324,34 @@ body {
 
 .order-summary {
     display: flex;
-    justify-content: space-between;
     align-items: center;
     margin-top: var(--space-md);
+    position: relative; /* allow absolutely-positioned centered actions */
+}
+
+/* Ensure left block grows and the total stays on the far right */
+.order-info {
+    flex: 1 1 auto;
+}
+
+.order-total {
+    margin-left: auto; /* push total to the right */
+}
+
+/* Center the review button horizontally inside the order-summary */
+.order-actions {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    pointer-events: none; /* allow child buttons to opt-in */
+}
+
+.order-actions button {
+    pointer-events: auto; /* enable clicks on the button */
 }
 
 .order-info {
@@ -1936,4 +1961,3 @@ body {
         gap: var(--space-md);
     }
 }
-

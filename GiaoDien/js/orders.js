@@ -411,7 +411,7 @@ async function renderOrders(customerId, statusFilter = 'all') {
             'cancelled': { class: 'status-cancelled', text: 'Đã hủy' }
         };
 
-        orderListElement.innerHTML = orders.map(order => {
+    orderListElement.innerHTML = orders.map(order => {
             // Sử dụng tinhtrang từ database thay vì status đã map
             const statusKey = order.tinhtrang || order.status || 'pending';
             const status = statusDisplay[statusKey] || statusDisplay['pending'];
@@ -439,7 +439,11 @@ async function renderOrders(customerId, statusFilter = 'all') {
                             <span class="payment-method">${getPaymentMethodName(order.paymentMethod)}</span>
                             ${order.paymentStatus ? `<span class="payment-status">${order.paymentStatus}</span>` : ''}
                         </div>
-                        <span class="order-total">${formatPrice(order.totalAmount)}</span>
+                                                <span class="order-total">${formatPrice(order.totalAmount)}</span>
+                                                <!-- Review button placeholder (injected by JS after render) -->
+                                                <div class="order-actions" style="margin-top:8px; display:flex; gap:8px; justify-content:flex-end;">
+                                                    ${ (order.tinhtrang || order.status || '').toString().toLowerCase().includes('đã giao hằng') ? '' : '' }
+                                                </div>
                     </div>
                 </div>
             `;
@@ -456,6 +460,36 @@ async function renderOrders(customerId, statusFilter = 'all') {
                 }
             });
         });
+
+        // After rendering, add Review buttons for completed orders
+        document.querySelectorAll('.order-card').forEach(async card => {
+            const orderId = card.dataset.orderId;
+            // Determine status text from rendered DOM
+            const statusEl = card.querySelector('.order-status');
+            const statusText = statusEl ? statusEl.textContent.trim().toLowerCase() : '';
+            const isCompleted = statusText.includes('hoàn thành') || statusText.includes('đã giao');
+            if (!isCompleted) return;
+
+            // Create review button if not exists
+            let actions = card.querySelector('.order-actions');
+            if (!actions) {
+                actions = document.createElement('div');
+                actions.className = 'order-actions';
+                card.querySelector('.order-summary').appendChild(actions);
+            }
+
+            const btn = document.createElement('button');
+            btn.className = 'btn';
+            btn.style.padding = '6px 10px';
+            btn.style.fontSize = '13px';
+            btn.innerHTML = '<i class="fas fa-star"></i> Đánh giá';
+            btn.onclick = (e) => {
+                e.stopPropagation(); // prevent opening detail
+                openReviewModal(orderId);
+            };
+
+            actions.appendChild(btn);
+        });
     } catch (error) {
         console.error('Lỗi khi hiển thị đơn hàng:', error);
         orderListElement.innerHTML = `
@@ -469,6 +503,92 @@ async function renderOrders(customerId, statusFilter = 'all') {
         if (loadingModal) loadingModal.style.display = 'none';
     }
 }
+
+// ---------------- Review modal helpers ----------------
+async function fetchReview(orderId) {
+    if (!checkAuth()) return null;
+    try {
+        const resp = await fetch(`http://localhost:5000/api/orderreview/${orderId}`, {
+            headers: { 'Authorization': `Bearer ${getToken()}` }
+        });
+        if (!resp.ok) {
+            console.warn('Fetch review failed', resp.status);
+            return null;
+        }
+        const data = await resp.json();
+        return data || null;
+    } catch (err) {
+        console.error('Error fetching review:', err);
+        return null;
+    }
+}
+
+function openReviewModal(orderId) {
+    if (!checkAuth()) return;
+    const modal = document.getElementById('review-modal');
+    if (!modal) return;
+    document.getElementById('review-order-id').textContent = `#${orderId}`;
+    document.getElementById('review-rating').value = '5';
+    document.getElementById('review-comment').value = '';
+    modal.style.display = 'block';
+
+    // Load existing review if any
+    fetchReview(orderId).then(review => {
+        if (review) {
+            document.getElementById('review-rating').value = String(review.rating || review.so_diem || 5);
+            document.getElementById('review-comment').value = review.comment || review.noi_dung || '';
+        }
+    }).catch(err => console.warn(err));
+
+    // Attach submit handler
+    const submitBtn = document.getElementById('submit-review-btn');
+    if (submitBtn) {
+        submitBtn.onclick = async (e) => {
+            e.stopPropagation();
+            await submitReview(orderId);
+        };
+    }
+}
+
+function closeReviewModal() {
+    const modal = document.getElementById('review-modal');
+    if (modal) modal.style.display = 'none';
+}
+
+async function submitReview(orderId) {
+    if (!checkAuth()) return;
+    const rating = Number(document.getElementById('review-rating').value || 5);
+    const comment = document.getElementById('review-comment').value || '';
+    try {
+        const resp = await fetch(`http://localhost:5000/api/orderreview/${orderId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${getToken()}`
+            },
+            body: JSON.stringify({ rating, comment })
+        });
+        const payload = await resp.json();
+        if (!resp.ok) throw new Error((payload && (payload.error || payload.message)) || 'Lỗi khi gửi đánh giá');
+        alert('Gửi đánh giá thành công');
+        closeReviewModal();
+        markReviewed(orderId);
+    } catch (err) {
+        console.error('Submit review error:', err);
+        alert('Không thể gửi đánh giá: ' + (err.message || err));
+    }
+}
+
+function markReviewed(orderId) {
+    const card = document.querySelector(`.order-card[data-order-id="${orderId}"]`);
+    if (!card) return;
+    const btn = card.querySelector('.order-actions button');
+    if (!btn) return;
+    btn.textContent = 'Đã đánh giá';
+    btn.disabled = true;
+    btn.style.opacity = '0.6';
+}
+
 
 
 let currentOrderData = null;
@@ -1451,6 +1571,18 @@ function attachEventListeners() {
             if (customerId) renderOrders(customerId, statusFilter?.value || 'all');
         });
     }
+
+    // Review modal close handlers
+    const closeReview = document.getElementById('close-review-modal');
+    if (closeReview) closeReview.addEventListener('click', closeReviewModal);
+    const cancelReviewBtn = document.getElementById('cancel-review-btn');
+    if (cancelReviewBtn) cancelReviewBtn.addEventListener('click', closeReviewModal);
+
+    // Close review modal when clicking outside
+    window.addEventListener('click', (event) => {
+        const reviewModal = document.getElementById('review-modal');
+        if (event.target === reviewModal) closeReviewModal();
+    });
 }
 
 // ========== HỆ THỐNG CHAT HOÀN CHỈNH ==========
