@@ -220,6 +220,98 @@ function ensureFilterBar() {
   return bar;
 }
 
+// Helper to know if we are on the book page
+function isBookPage() {
+  const path = window.location.pathname || '';
+  return path.endsWith('/GiaoDien/book.html') || path.endsWith('book.html');
+}
+// Return a consistent container id to use for storage keys for book page filters
+function getStorageContainerId() {
+  // For persistence we prefer a stable key name for the book page filters
+  if (isBookPage()) return 'book-list';
+  // fallback to any existing main container id
+  return getMainProductContainerId() || 'search-book-list';
+}
+  // Storage helpers
+  function storageKeyForGroup(group, containerId) {
+    // Use global storage keys (no container suffix) so filters persist across pages.
+    switch (group) {
+      case 'supplierButtons': return `currentSupplier`;
+      case 'authorButtons': return `currentAuthor`;
+      case 'priceButtons': return `currentPriceRange`;
+      case 'hinhThucButtons': return `currentHinhThuc`;
+      case 'discountButtons': return `currentPromotion`;
+      case 'category': return `currentCategory`;
+      default: return null;
+    }
+  }
+
+  function clearStoredFilterForGroup(group) {
+    const key = storageKeyForGroup(group);
+    if (!key) return;
+    // remove global key
+    localStorage.removeItem(key);
+    // also remove known fallback/container-specific keys
+    const fallbacks = [`${key}_book-list`, `${key}_search-book-list`, `${key}_promotion-book-list`];
+    fallbacks.forEach(k => localStorage.removeItem(k));
+  }
+
+  // Read stored value for a filter group with fallbacks
+  function getStoredFilterValue(group) {
+    const key = storageKeyForGroup(group);
+    if (!key) return null;
+    let v = localStorage.getItem(key);
+    if (v) return v;
+    // fallback to older container-specific keys
+    const fallbacks = [`${key}_book-list`, `${key}_search-book-list`, `${key}_promotion-book-list`];
+    for (const fb of fallbacks) {
+      const vv = localStorage.getItem(fb);
+      if (vv) return vv;
+    }
+    return null;
+  }
+
+  function restoreActiveFromStorage() {
+    // Use global storage keys. For backward compatibility, fall back to older
+    // container-specific keys that may exist (e.g., currentPriceRange_book-list).
+    const groups = ['supplierButtons','authorButtons','priceButtons','hinhThucButtons','discountButtons'];
+    groups.forEach(gid => {
+      const key = storageKeyForGroup(gid);
+      if (!key) return;
+      // Try global key first
+      let stored = localStorage.getItem(key);
+      // fallback keys (old names)
+      if (!stored) {
+        const fallbacks = [
+          `${key}_book-list`,
+          `${key}_search-book-list`,
+          `${key}_promotion-book-list`
+        ];
+        for (const fb of fallbacks) {
+          const v = localStorage.getItem(fb);
+          if (v) { stored = v; break; }
+        }
+      }
+      const cont = document.getElementById(gid);
+      if (!cont) return;
+      // remove existing active
+      cont.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+      if (!stored) {
+        // set 'Tất cả' active
+        const all = Array.from(cont.querySelectorAll('.filter-btn')).find(b => (b.dataset.value === '' || b.dataset.id === ''));
+        if (all) all.classList.add('active');
+        createOrUpdateChip(gid, '', '');
+        return;
+      }
+      // find matching button by data-value or data-id
+      const match = Array.from(cont.querySelectorAll('.filter-btn')).find(b => (b.dataset.value === stored || b.dataset.id === stored));
+      if (match) {
+        match.classList.add('active');
+        createOrUpdateChip(gid, match.textContent.trim(), stored);
+      }
+    });
+  }
+
 function createOrUpdateChip(group, label, value) {
   ensureFilterBar();
   const chips = document.getElementById('filterChips');
@@ -249,6 +341,8 @@ function createOrUpdateChip(group, label, value) {
         else b.classList.remove('active');
       });
     }
+    // clear stored value for this group
+    clearStoredFilterForGroup(group);
     chip.remove();
     // trigger fetch with current active filters
     triggerFilterFetchFromUI();
@@ -290,9 +384,9 @@ function triggerFilterFetchFromUI() {
     createOrUpdateChip(gid, label, val);
   });
 
-  // perform fetch (use MaTL from localStorage if present)
+  // perform fetch (use stored MaTL/category if present)
   const mainContainer = getMainProductContainerId() || 'search-book-list';
-  const MaTL = localStorage.getItem(`currentCategory_${mainContainer}`) || '';
+  const MaTL = getStoredFilterValue('category') || '';
   const search = new URLSearchParams(window.location.search).get('search') || '';
   const query = {
     MaTL: MaTL || undefined,
@@ -306,6 +400,45 @@ function triggerFilterFetchFromUI() {
   Object.keys(query).forEach(k => { if (query[k] === undefined) delete query[k]; });
   fetchProductsWithFilters(query, mainContainer, 20);
 }
+
+// Ensure the visible UI matches what's stored in localStorage.
+// This is useful when the browser restores a cached DOM (back/forward cache)
+// which can show previously-active buttons even after storage was cleared.
+function reconcileUIWithStorage() {
+  if (!isBookPage()) return;
+  const groups = ['supplierButtons','authorButtons','priceButtons','hinhThucButtons','discountButtons'];
+  groups.forEach(gid => {
+    const cont = document.getElementById(gid);
+    if (!cont) return;
+    const stored = getStoredFilterValue(gid);
+    // remove existing active
+    cont.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    if (!stored) {
+      // set 'Tất cả'
+      const all = Array.from(cont.querySelectorAll('.filter-btn')).find(b => (b.dataset.value === '' || b.dataset.id === ''));
+      if (all) all.classList.add('active');
+      // remove chip
+      const chip = document.getElementById('filterChips')?.querySelector(`.filter-chip[data-group="${gid}"]`);
+      if (chip) chip.remove();
+    } else {
+      const match = Array.from(cont.querySelectorAll('.filter-btn')).find(b => (b.dataset.value === stored || b.dataset.id === stored));
+      if (match) {
+        match.classList.add('active');
+        createOrUpdateChip(gid, match.textContent.trim(), stored);
+      }
+    }
+  });
+}
+
+// When navigating via back/forward, some browsers restore the old DOM (bfcache)
+// without re-running scripts. Use pageshow to reconcile the UI with storage.
+window.addEventListener('pageshow', (evt) => {
+  if (!isBookPage()) return;
+  // Always reconcile so cleared filters don't reappear when returning to page
+  reconcileUIWithStorage();
+  // Ensure product list reflects current filters
+  triggerFilterFetchFromUI();
+});
 
 
 
@@ -406,8 +539,11 @@ async function fetchAndDisplayProducts() {
     productList.innerHTML = '<div class="loading">Đang tải sản phẩm...</div>';
 
     let url = 'http://localhost:5000/api/product';
-    const categoryId = localStorage.getItem('currentCategory_book-list');
-    const priceRange = localStorage.getItem('currentPriceRange_book-list');
+  // Only honor saved filters when we are on the book page itself.
+  const categoryKey = storageKeyForGroup('category');
+  const priceKey = storageKeyForGroup('priceButtons');
+  const categoryId = isBookPage() ? (categoryKey ? localStorage.getItem(categoryKey) : null) : null;
+  const priceRange = isBookPage() ? (priceKey ? localStorage.getItem(priceKey) : null) : null;
     const params = new URLSearchParams();
     if (categoryId) params.append('MaTL', categoryId);
     if (priceRange) params.append('priceRange', priceRange);
@@ -754,6 +890,9 @@ async function populateSuppliers() {
       b.addEventListener('click', () => {
         container.querySelectorAll('.filter-btn').forEach(x => x.classList.remove('active'));
         b.classList.add('active');
+        // persist supplier selection
+        const key = storageKeyForGroup('supplierButtons');
+        if (key) localStorage.setItem(key, b.dataset.value || '');
         // central handler will update chips and fetch
         triggerFilterFetchFromUI();
       });
@@ -800,6 +939,8 @@ async function populateHinhThuc() {
       b.addEventListener('click', () => {
         container.querySelectorAll('.filter-btn').forEach(x => x.classList.remove('active'));
         b.classList.add('active');
+        const key = storageKeyForGroup('hinhThucButtons');
+        if (key) localStorage.setItem(key, b.dataset.value || '');
         triggerFilterFetchFromUI();
       });
     });
@@ -857,6 +998,8 @@ async function populateAuthors() {
         b.addEventListener('click', () => {
           container.querySelectorAll('.filter-btn').forEach(x => x.classList.remove('active'));
           b.classList.add('active');
+          const key = storageKeyForGroup('authorButtons');
+          if (key) localStorage.setItem(key, b.dataset.value || '');
           // central handler will handle building query, chips and fetching
           triggerFilterFetchFromUI();
         });
@@ -891,6 +1034,7 @@ async function populateAuthors() {
         }
       });
     }
+    // (restoration is handled once after all populations complete)
   } catch (err) {
     console.error('Lỗi populateAuthors:', err);
   }
@@ -937,96 +1081,110 @@ async function fetchProductsWithFilters(filters, containerId = null, limit = 20)
 }
 
 // Hook up filter UI
-document.addEventListener('DOMContentLoaded', () => {
-  // existing DOMContentLoaded handlers earlier will run too; ensure we wire ours after
-  // wire price button clicks
-  const priceContainer = document.getElementById('priceButtons');
-  if (priceContainer) {
-    priceContainer.querySelectorAll('.filter-btn').forEach(b => {
-      b.addEventListener('click', () => {
-        priceContainer.querySelectorAll('.filter-btn').forEach(x => x.classList.remove('active'));
-        b.classList.add('active');
-        const price = b.dataset.value || '';
-        const currentCategoryLocal = localStorage.getItem('currentCategory_book-list') || '';
-        const activeSupplier = document.querySelector('#supplierButtons .filter-btn.active')?.dataset.value || '';
-        const activeHinh = document.querySelector('#hinhThucButtons .filter-btn.active')?.dataset.value || '';
-        // persist price
-        localStorage.setItem('currentPriceRange_book-list', price);
-        // central handler will update chips and fetch
-        triggerFilterFetchFromUI();
-      });
-    });
-  }
-
-  // populate button lists on load
-  populateSuppliers();
-  populateHinhThuc();
-  populateAuthors();
-  // ensure filter bar exists and wire clear button
-  const bar = ensureFilterBar();
-  const clearBtn = document.getElementById('clearFiltersBtn');
-  if (clearBtn) {
-    clearBtn.addEventListener('click', () => {
-      // reset all groups to 'Tất cả'
-      ['supplierButtons','authorButtons','priceButtons','hinhThucButtons','discountButtons'].forEach(gid => {
-        const container = document.getElementById(gid);
-        if (!container) return;
-        container.querySelectorAll('.filter-btn').forEach(b => {
-          if (b.dataset.value === '' || b.dataset.id === '') b.classList.add('active');
-          else b.classList.remove('active');
+// Only initialize UI behavior on book page
+if (typeof window !== 'undefined' && isBookPage()) {
+  document.addEventListener('DOMContentLoaded', async () => {
+    // wire price button clicks
+    const priceContainer = document.getElementById('priceButtons');
+    if (priceContainer) {
+      priceContainer.querySelectorAll('.filter-btn').forEach(b => {
+        b.addEventListener('click', () => {
+          priceContainer.querySelectorAll('.filter-btn').forEach(x => x.classList.remove('active'));
+          b.classList.add('active');
+          const price = b.dataset.value || '';
+          // persist price using stable storage key
+          const priceKey = storageKeyForGroup('priceButtons');
+          if (priceKey) localStorage.setItem(priceKey, price);
+          // central handler will update chips and fetch
+          triggerFilterFetchFromUI();
         });
       });
-      // clear stored price/category
-      const mainContainer = getMainProductContainerId() || 'search-book-list';
-      localStorage.removeItem(`currentPriceRange_${mainContainer}`);
-      localStorage.removeItem(`currentCategory_${mainContainer}`);
-      // clear chips UI
-      clearAllChips();
-      // fetch all products
-      triggerFilterFetchFromUI();
-    });
-  }
-});
+    }
+
+    // populate button lists on load and wait for them to complete, so we can restore stored selections
+    await Promise.all([populateSuppliers(), populateHinhThuc(), populateAuthors()]);
+    // restore UI from storage and fetch results once
+    try {
+      restoreActiveFromStorage();
+    } catch (e) { /* ignore */ }
+    // Trigger a fetch so restored selections actually refresh the product list
+    triggerFilterFetchFromUI();
+    // ensure filter bar exists and wire clear button
+    const bar = ensureFilterBar();
+    const clearBtn = document.getElementById('clearFiltersBtn');
+    if (clearBtn) {
+      clearBtn.addEventListener('click', () => {
+        // reset all groups to 'Tất cả'
+        ['supplierButtons','authorButtons','priceButtons','hinhThucButtons','discountButtons'].forEach(gid => {
+          const container = document.getElementById(gid);
+          if (!container) return;
+          container.querySelectorAll('.filter-btn').forEach(b => {
+            if (b.dataset.value === '' || b.dataset.id === '') b.classList.add('active');
+            else b.classList.remove('active');
+          });
+        });
+        // clear stored keys (use helper that also removes legacy fallback keys)
+        ['supplierButtons','authorButtons','priceButtons','hinhThucButtons','discountButtons','category'].forEach(gid => {
+          clearStoredFilterForGroup(gid);
+        });
+        // clear chips UI
+        clearAllChips();
+        // fetch all products
+        triggerFilterFetchFromUI();
+      });
+    }
+  });
+}
 
 // Delegated handler to ensure any .filter-btn clicked in the sidebar becomes active (red)
 // and triggers the correct filtering action.
-document.addEventListener('DOMContentLoaded', () => {
-  const sidebar = document.querySelector('.sidebar');
-  if (!sidebar) return;
+if (typeof window !== 'undefined' && isBookPage()) {
+  document.addEventListener('DOMContentLoaded', () => {
+    const sidebar = document.querySelector('.sidebar');
+    if (!sidebar) return;
 
-  sidebar.addEventListener('click', (e) => {
-    const btn = e.target.closest('.filter-btn');
-    if (!btn || !sidebar.contains(btn)) return;
+    sidebar.addEventListener('click', (e) => {
+      const btn = e.target.closest('.filter-btn');
+      if (!btn || !sidebar.contains(btn)) return;
 
-    const parent = btn.parentElement;
-    if (!parent) return;
+      const parent = btn.parentElement;
+      if (!parent) return;
 
-    // Promotions (discount) buttons should call promotion loader
-    if (parent.id === 'discountButtons' || parent.classList.contains('discount-buttons')) {
-      parent.querySelectorAll('.filter-btn').forEach(x => x.classList.remove('active'));
-      btn.classList.add('active');
-      const promoId = btn.dataset.id || '';
-      // create/update chip for promotion selection
-      createOrUpdateChip(parent.id, btn.textContent.trim(), promoId);
-      if (!promoId) {
-        if (typeof loadAllProductsToMain === 'function') loadAllProductsToMain();
-      } else {
-        if (typeof loadProductsByPromotion === 'function') loadProductsByPromotion(promoId);
+      // Promotions (discount) buttons should call promotion loader
+      if (parent.id === 'discountButtons' || parent.classList.contains('discount-buttons')) {
+        parent.querySelectorAll('.filter-btn').forEach(x => x.classList.remove('active'));
+        btn.classList.add('active');
+        const promoId = btn.dataset.id || '';
+        // create/update chip for promotion selection
+        createOrUpdateChip(parent.id, btn.textContent.trim(), promoId);
+        if (!promoId) {
+          if (typeof loadAllProductsToMain === 'function') loadAllProductsToMain();
+        } else {
+          if (typeof loadProductsByPromotion === 'function') loadProductsByPromotion(promoId);
+        }
+        return;
       }
-      return;
-    }
 
-    // General filter groups: supplier, author, price, hinhthuc, format
-    if (['supplierButtons','authorButtons','priceButtons','hinhThucButtons','formatButtons'].includes(parent.id) ||
-        parent.classList.contains('supplier-buttons') || parent.classList.contains('author-buttons') || parent.classList.contains('price-buttons') || parent.classList.contains('format-buttons') || parent.classList.contains('hinhthuc-buttons')) {
-      parent.querySelectorAll('.filter-btn').forEach(x => x.classList.remove('active'));
-      btn.classList.add('active');
+      // General filter groups: supplier, author, price, hinhthuc, format
+      if (['supplierButtons','authorButtons','priceButtons','hinhThucButtons','formatButtons'].includes(parent.id) ||
+          parent.classList.contains('supplier-buttons') || parent.classList.contains('author-buttons') || parent.classList.contains('price-buttons') || parent.classList.contains('format-buttons') || parent.classList.contains('hinhthuc-buttons')) {
+        parent.querySelectorAll('.filter-btn').forEach(x => x.classList.remove('active'));
+        btn.classList.add('active');
 
-      // Use centralized handler so chips and fetch stay in sync
-      triggerFilterFetchFromUI();
-    }
+        // Use centralized handler so chips and fetch stay in sync
+        // persist using our storage key mapping
+        const gid = parent.id;
+        const key = storageKeyForGroup(gid);
+        if (key) {
+          // value can be in data-value or data-id
+          const val = btn.dataset.value || btn.dataset.id || '';
+          localStorage.setItem(key, val);
+        }
+        triggerFilterFetchFromUI();
+      }
+    });
   });
-});
+}
 
 const removeKeyWordSearch = () => {
   const currentPath = window.location.pathname;
@@ -1253,6 +1411,8 @@ async function loadProductsByPromotion(promoId) {
 }
 
 // Khi DOM load xong
-document.addEventListener('DOMContentLoaded', () => {
-  loadPromotionsFromAPI();
-});
+if (typeof window !== 'undefined' && isBookPage()) {
+  document.addEventListener('DOMContentLoaded', () => {
+    loadPromotionsFromAPI();
+  });
+}
