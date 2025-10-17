@@ -12,6 +12,7 @@ const ProductManagement = () => {
   const [products, setProducts] = useState([]);
   const [authors, setAuthors] = useState([]);
   const [categories, setCategories] = useState([]);
+  const [suppliers, setSuppliers] = useState([]);
   const [newProduct, setNewProduct] = useState({
     MaTL: '',
     TenSP: '',
@@ -21,6 +22,13 @@ const ProductManagement = () => {
     TinhTrang: 'Hết hàng',
     DonGia: 0,
     SoLuong: 0,
+    MoTa: '',
+    MaNCC: '',
+    TrongLuong: '',
+    KichThuoc: '',
+    SoTrang: '',
+    HinhThuc: '',
+    MinSoLuong: 0,
   });
   const [editingProduct, setEditingProduct] = useState(null);
   const [minModalVisible, setMinModalVisible] = useState(false);
@@ -32,6 +40,7 @@ const ProductManagement = () => {
   const API_URL = 'http://localhost:5000/api/product';
   const AUTHORS_API_URL = 'http://localhost:5000/api/product/authors';
   const CATEGORIES_API_URL = 'http://localhost:5000/api/product/categories';
+  const SUPPLIERS_API_URL = 'http://localhost:5000/api/product/suppliers';
 
   // Hàm để lấy token từ localStorage
   const getAuthToken = () => {
@@ -73,6 +82,16 @@ const ProductManagement = () => {
     }
   };
 
+  const fetchSuppliers = async () => {
+    try {
+      const response = await axios.get(SUPPLIERS_API_URL);
+      setSuppliers(response.data || []);
+    } catch (error) {
+      console.error('Lỗi khi lấy danh sách nhà cung cấp:', error);
+      message.error('Lỗi khi tải danh sách nhà cung cấp');
+    }
+  };
+
  const fetchProducts = async () => {
   try {
     setLoading(true);
@@ -86,6 +105,13 @@ const ProductManagement = () => {
         // ✅ SỬA LOGIC: Nếu SoLuong > 0 thì "Còn hàng", ngược lại "Hết hàng"
         TinhTrang: (product.SoLuong && product.SoLuong > 0) ? 'Còn hàng' : 'Hết hàng',
         MinSoLuong: product.MinSoLuong || 0,
+        MoTa: product.MoTa || null,
+        MaNCC: product.MaNCC || null,
+        NhaCungCap: product.NhaCungCap || null,
+        TrongLuong: product.TrongLuong == null ? null : Number(product.TrongLuong),
+        KichThuoc: product.KichThuoc || null,
+        SoTrang: product.SoTrang == null ? null : Number(product.SoTrang),
+        HinhThuc: product.HinhThuc || null,
       }));
       setProducts(processedProducts);
     } else {
@@ -103,6 +129,7 @@ const ProductManagement = () => {
     fetchProducts();
     fetchAuthors();
     fetchCategories();
+    fetchSuppliers();
   }, []);
 
   // Xử lý thay đổi file
@@ -147,6 +174,13 @@ const handleAddProduct = async () => {
     if (maTG) {
       formData.append('MaTG', maTG);
     }
+    if (newProduct.MoTa) formData.append('MoTa', newProduct.MoTa);
+    if (newProduct.MaNCC) formData.append('MaNCC', newProduct.MaNCC);
+    if (newProduct.TrongLuong) formData.append('TrongLuong', newProduct.TrongLuong);
+    if (newProduct.KichThuoc) formData.append('KichThuoc', newProduct.KichThuoc);
+    if (newProduct.SoTrang) formData.append('SoTrang', newProduct.SoTrang);
+    if (newProduct.HinhThuc) formData.append('HinhThuc', newProduct.HinhThuc);
+    if (newProduct.MinSoLuong) formData.append('MinSoLuong', newProduct.MinSoLuong);
     // ✅ SỬA: Kiểm tra namXB khác null/undefined và là số hợp lệ
     if (namXB && namXB.toString().trim() && !isNaN(parseInt(namXB))) {
       formData.append('NamXB', parseInt(namXB));
@@ -168,6 +202,13 @@ const handleAddProduct = async () => {
       TinhTrang: 'Hết hàng',
       DonGia: 0,
       SoLuong: 0,
+      MoTa: '',
+      MaNCC: '',
+      TrongLuong: '',
+      KichThuoc: '',
+      SoTrang: '',
+      HinhThuc: '',
+      MinSoLuong: 0,
     });
     setIsModalVisible(false);
     message.success(response.data.message || 'Thêm sản phẩm thành công!');
@@ -216,6 +257,14 @@ const handleUpdateProduct = async () => {
     if (maTG) {
       formData.append('MaTG', maTG);
     }
+    // New fields for update
+    if (editingProduct.MoTa !== undefined) formData.append('MoTa', editingProduct.MoTa);
+    if (editingProduct.MaNCC !== undefined) formData.append('MaNCC', editingProduct.MaNCC);
+    if (editingProduct.TrongLuong !== undefined) formData.append('TrongLuong', editingProduct.TrongLuong);
+    if (editingProduct.KichThuoc !== undefined) formData.append('KichThuoc', editingProduct.KichThuoc);
+    if (editingProduct.SoTrang !== undefined) formData.append('SoTrang', editingProduct.SoTrang);
+    if (editingProduct.HinhThuc !== undefined) formData.append('HinhThuc', editingProduct.HinhThuc);
+    if (editingProduct.MinSoLuong !== undefined) formData.append('MinSoLuong', editingProduct.MinSoLuong);
     // ✅ SỬA: Kiểm tra namXB khác null/undefined và là số hợp lệ
     if (namXB && namXB.toString().trim() && !isNaN(parseInt(namXB))) {
       formData.append('NamXB', parseInt(namXB));
@@ -683,6 +732,115 @@ const handleUpdateProduct = async () => {
                     : setNewProduct({ ...newProduct, NamXB: e.target.value })
                 }
                 placeholder="Nhập năm xuất bản (1900-2024)"
+              />
+            </div>
+            <div className="info-item">
+              <p className="info-label">Mô tả:</p>
+              <Input.TextArea
+                rows={3}
+                value={editingProduct ? editingProduct.MoTa : newProduct.MoTa}
+                onChange={(e) =>
+                  editingProduct
+                    ? setEditingProduct({ ...editingProduct, MoTa: e.target.value })
+                    : setNewProduct({ ...newProduct, MoTa: e.target.value })
+                }
+                placeholder="Mô tả ngắn về sản phẩm"
+              />
+            </div>
+
+            <div className="info-item">
+              <p className="info-label">Nhà cung cấp:</p>
+              <Select
+                size="small"
+                placeholder="Chọn nhà cung cấp"
+                value={editingProduct ? editingProduct.MaNCC : newProduct.MaNCC}
+                onChange={(value) =>
+                  editingProduct
+                    ? setEditingProduct({ ...editingProduct, MaNCC: value })
+                    : setNewProduct({ ...newProduct, MaNCC: value })
+                }
+                style={{ width: '100%' }}
+                allowClear
+                showSearch
+                optionFilterProp="children"
+              >
+                {suppliers.map(s => (
+                  <Option key={s.MaNCC} value={s.MaNCC}>{s.TenNCC}</Option>
+                ))}
+              </Select>
+            </div>
+
+            <div className="info-item">
+              <p className="info-label">Trọng lượng (g):</p>
+              <Input
+                size="small"
+                type="number"
+                value={editingProduct ? editingProduct.TrongLuong : newProduct.TrongLuong}
+                onChange={(e) =>
+                  editingProduct
+                    ? setEditingProduct({ ...editingProduct, TrongLuong: e.target.value })
+                    : setNewProduct({ ...newProduct, TrongLuong: e.target.value })
+                }
+                placeholder="Trọng lượng (gram)"
+              />
+            </div>
+
+            <div className="info-item">
+              <p className="info-label">Kích thước:</p>
+              <Input
+                size="small"
+                value={editingProduct ? editingProduct.KichThuoc : newProduct.KichThuoc}
+                onChange={(e) =>
+                  editingProduct
+                    ? setEditingProduct({ ...editingProduct, KichThuoc: e.target.value })
+                    : setNewProduct({ ...newProduct, KichThuoc: e.target.value })
+                }
+                placeholder="Ví dụ: 20x13x2 cm"
+              />
+            </div>
+
+            <div className="info-item">
+              <p className="info-label">Số trang:</p>
+              <Input
+                size="small"
+                type="number"
+                value={editingProduct ? editingProduct.SoTrang : newProduct.SoTrang}
+                onChange={(e) =>
+                  editingProduct
+                    ? setEditingProduct({ ...editingProduct, SoTrang: e.target.value })
+                    : setNewProduct({ ...newProduct, SoTrang: e.target.value })
+                }
+                placeholder="Số trang"
+              />
+            </div>
+
+            <div className="info-item">
+              <p className="info-label">Hình thức:</p>
+              <Input
+                size="small"
+                value={editingProduct ? editingProduct.HinhThuc : newProduct.HinhThuc}
+                onChange={(e) =>
+                  editingProduct
+                    ? setEditingProduct({ ...editingProduct, HinhThuc: e.target.value })
+                    : setNewProduct({ ...newProduct, HinhThuc: e.target.value })
+                }
+                placeholder="Ví dụ: Bìa mềm / Bìa cứng"
+              />
+            </div>
+
+            <div className="info-item">
+              <p className="info-label">Ngưỡng tối thiểu (MinSoLuong):</p>
+              <Input
+                size="small"
+                type="number"
+                min={0}
+                value={editingProduct ? editingProduct.MinSoLuong : newProduct.MinSoLuong}
+                onChange={(e) =>
+                  editingProduct
+                    ? setEditingProduct({ ...editingProduct, MinSoLuong: Number(e.target.value) })
+                    : setNewProduct({ ...newProduct, MinSoLuong: Number(e.target.value) })
+                }
+                placeholder="Ngưỡng tồn tối thiểu"
               />
             </div>
             <div className="info-item">

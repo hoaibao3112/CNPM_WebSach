@@ -933,11 +933,11 @@ sidebarItems.forEach(item => {
       if (defaultReceiveEl) defaultReceiveEl.textContent = 'Chưa có địa chỉ';
       return;
     }
-  // Hiển thị địa chỉ mặc định = item đầu (chỉ tên đường ở phần detail)
-    const primary = addresses[0];
-    if (defaultReceiveEl) defaultReceiveEl.textContent = `${primary.name || ''} • ${primary.phone || ''} — ${extractStreet(primary.detail) || ''}`;
+    // Find the primary address (is_default flag), fallback to first item
+    let primary = addresses.find(a => a.is_default == 1 || a.is_default === true) || addresses[0];
+    if (primary && defaultReceiveEl) defaultReceiveEl.textContent = `${primary.name || ''} • ${primary.phone || ''} — ${extractStreet(primary.detail) || ''}`;
 
-    otherAddrContainer.innerHTML = addresses.map(addr => `
+    otherAddrContainer.innerHTML = addresses.map((addr, idx) => `
       <div class="address-item" data-id="${addr.id}" data-detail="${encodeURIComponent(addr.detail || '')}" data-province="${encodeURIComponent(addr.province || '')}" data-district="${encodeURIComponent(addr.district || '')}" data-ward="${encodeURIComponent(addr.ward || '')}">
         <div class="address-info">
           <div class="addr-top">
@@ -949,6 +949,7 @@ sidebarItems.forEach(item => {
         <div class="address-actions" style="margin-left:12px">
           <a href="#" class="edit edit-address" data-id="${addr.id}">Sửa</a>
           <button type="button" class="delete delete-address" data-id="${addr.id}">Xóa</button>
+          ${addr.is_default == 1 || addr.is_default === true ? '<span class="default-badge">Mặc định</span>' : `<button type="button" class="set-default" data-id="${addr.id}">Đặt làm mặc định</button>`}
         </div>
       </div>
     `).join('');
@@ -1199,6 +1200,32 @@ sidebarItems.forEach(item => {
     otherAddrContainer.addEventListener('click', async (e) => {
       const editEl = e.target.closest('.edit-address');
       const delEl = e.target.closest('.delete-address');
+      const setDefaultEl = e.target.closest('.set-default');
+      if (setDefaultEl) {
+        e.preventDefault();
+        const id = setDefaultEl.dataset.id;
+        try {
+          // Try dedicated endpoint to set default address
+          let res = await fetch(`http://localhost:5000/api/orders/customer-addresses/${id}/set-default`, {
+            method: 'POST',
+            headers: { Authorization: `Bearer ${token()}` }
+          });
+          if (!res.ok) {
+            // fallback: update addresses by setting is_default flag on server via PUT
+            await updateAddress(id, { is_default: true });
+          } else {
+            const j = await res.json();
+            if (!res.ok) throw new Error(j.error || j.message || 'Không thể đặt mặc định');
+            if (typeof showNotification_khan === 'function') showNotification_khan('success', 'Đã đặt địa chỉ này làm mặc định');
+            await fetchAddresses();
+          }
+        } catch (err) {
+          console.error('set-default error', err);
+          if (typeof showNotification_khan === 'function') showNotification_khan('error', err.message || 'Không thể đặt mặc định');
+        }
+        return;
+      }
+
       if (editEl) {
         e.preventDefault();
         const id = editEl.dataset.id;

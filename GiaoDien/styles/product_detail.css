@@ -546,10 +546,116 @@ body {
   border-radius: 2px;
 }
 
+/* Section title with right-aligned subtitle */
+.product-description .section-title {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+}
+
+.product-description .section-title .title-left {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.product-description .section-title .section-subtitle {
+  color: var(--muted-color, #6c757d);
+  font-size: 0.98rem;
+  font-weight: 500;
+}
+
+@media (max-width: 768px) {
+  .product-description .section-title {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  .product-description .section-title .section-subtitle {
+    align-self: flex-start;
+  }
+}
+
 .description-content {
   line-height: 1.8;
   color: var(--dark-color);
   font-size: var(--font-size-base);
+}
+
+/* NEW: Two-column layout for description + details */
+.product-description .description-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 32px;
+  align-items: start;
+  margin-top: 18px;
+}
+
+.product-description .description-left,
+.product-description .description-right {
+  background: #fff;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.05);
+}
+
+.description-box {
+  background: transparent;
+  padding: 0;
+}
+
+.description-title {
+  font-size: 20px;
+  color:  #2b6cb0;
+  margin: 0 0 12px 0;
+  font-weight: 700;
+}
+
+.description-right .description-content {
+  background: #fff;
+  padding: 18px;
+  border-radius: 10px;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.04);
+}
+
+.product-extra-info {
+  font-size: 16px;
+  color: #333;
+}
+
+.product-extra-info h3 {
+  margin: 0 0 12px 0;
+  font-size: 20px;
+  color: #2b6cb0;
+}
+
+.product-extra-info .detail-list {
+  list-style: disc;
+  padding-left: 22px;
+}
+
+.product-extra-info .detail-list li {
+  margin: 10px 0;
+}
+
+.description-right .description-content {
+  padding: 0; /* already in container, avoid double-padding */
+  color: #444;
+  line-height: 1.8;
+}
+
+/* small screens: stack columns */
+@media (max-width: 768px) {
+  .product-description .description-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .product-description .description-left,
+  .product-description .description-right {
+    padding: 16px;
+  }
 }
 
 /* ========================================

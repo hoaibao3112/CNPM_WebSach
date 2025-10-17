@@ -22,12 +22,28 @@ function generateSimpleResponse(message, products) {
   
   // Tìm kiếm sách
   if (lowerMessage.includes('tìm') || lowerMessage.includes('sách') || lowerMessage.includes('có')) {
-    const foundProduct = products.find(p => 
-      p.TenSP?.toLowerCase().includes(lowerMessage.split(' ').find(word => word.length > 3))
-    );
-    
+    // Lấy các từ có ý nghĩa (độ dài > 2) để tìm khớp với tên sản phẩm hoặc tác giả
+    const words = lowerMessage.split(/\s+/).map(w => w.replace(/[^\p{L}0-9]/gu, '')).filter(w => w && w.length > 2);
+
+    // Nếu không có từ đủ dài, fallback dùng toàn câu
+    const searchTerms = words.length > 0 ? words : [lowerMessage];
+
+    const foundProduct = products.find(p => {
+      const name = (p.TenSP || p.Ten_san_pham || p.name || '').toString().toLowerCase();
+      const author = (p.TenTG || p.TacGia || p.author || '').toString().toLowerCase();
+      return searchTerms.some(term => name.includes(term) || author.includes(term));
+    });
+
     if (foundProduct) {
-      return `Tôi tìm thấy sách "${foundProduct.TenSP}" với giá ${foundProduct.Gia?.toLocaleString('vi-VN')} VNĐ. [PRODUCT_ID: ${foundProduct.MaSP}]`;
+      // Nhiều API/DB có thể trả tên trường giá khác nhau (DonGia, Gia, price,...)
+      const rawPrice = foundProduct.DonGia ?? foundProduct.Gia ?? foundProduct.price ?? foundProduct.Price ?? null;
+      const price = rawPrice != null ? Number(rawPrice) : null;
+      const priceText = price != null && !Number.isNaN(price) ? price.toLocaleString('vi-VN') + ' VNĐ' : 'Liên hệ để biết giá';
+
+      const title = foundProduct.TenSP ?? foundProduct.name ?? foundProduct.Ten_san_pham ?? 'Sản phẩm';
+      const id = foundProduct.MaSP ?? foundProduct.id ?? foundProduct.ID ?? '';
+
+      return `Tôi tìm thấy sách "${title}" với giá ${priceText}. [PRODUCT_ID: ${id}]`;
     } else {
       return 'Tôi không tìm thấy sách phù hợp. Bạn có thể xem thêm sản phẩm khác trên website.';
     }

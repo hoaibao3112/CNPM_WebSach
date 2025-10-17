@@ -10,6 +10,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     if (productInfo.fullData) {
         console.log('Product data from localStorage:', productInfo.data);
+
+
         displayProductDetail(productInfo.data);
         fetchRelatedProducts(productInfo.data.MaSP);
         fetchRatings(productInfo.data.MaSP);
@@ -661,6 +663,46 @@ function displayProductDetail(product) {
         descriptionElement.innerHTML = product.MoTa || 'Không có mô tả';
     }
 
+    // Tải thêm thông tin rút gọn từ API /api/product/:id/info và hiển thị trong phần mô tả
+    (async () => {
+        try {
+            const pid = product.MaSP || product;
+            if (!pid) return;
+            const info = await fetchProductInfo(pid);
+            if (!info) return;
+
+            // Tạo HTML chi tiết rút gọn
+            const infoHtml = document.createElement('div');
+            infoHtml.className = 'product-extra-info';
+            infoHtml.innerHTML = `
+                <h3>Thông tin chi tiết</h3>
+                <ul class="detail-list">
+                    ${info.NhaCungCap ? `<li><strong>Nhà cung cấp:</strong> ${escapeHtml(info.NhaCungCap)}</li>` : ''}
+                    ${info.TacGia ? `<li><strong>Tác giả:</strong> ${escapeHtml(info.TacGia)}</li>` : ''}
+                    ${info.NamXB ? `<li><strong>Năm XB:</strong> ${escapeHtml(String(info.NamXB))}</li>` : ''}
+                    ${info.TrongLuong ? `<li><strong>Trọng lượng:</strong> ${escapeHtml(String(info.TrongLuong))} g</li>` : ''}
+                    ${info.KichThuoc ? `<li><strong>Kích thước:</strong> ${escapeHtml(info.KichThuoc)}</li>` : ''}
+                    ${info.SoTrang ? `<li><strong>Số trang:</strong> ${escapeHtml(String(info.SoTrang))}</li>` : ''}
+                    ${info.HinhThuc ? `<li><strong>Hình thức:</strong> ${escapeHtml(info.HinhThuc)}</li>` : ''}
+                </ul>
+            `;
+
+            // Thêm vào phần details bên trái nếu có, còn không fallback vào cuối phần mô tả
+            const leftContainer = document.querySelector('.product-description .description-left');
+            if (leftContainer) {
+                const existing = leftContainer.querySelector('.product-extra-info');
+                if (existing) existing.remove();
+                leftContainer.appendChild(infoHtml);
+            } else if (descriptionElement) {
+                const existing = descriptionElement.querySelector('.product-extra-info');
+                if (existing) existing.remove();
+                descriptionElement.appendChild(infoHtml);
+            }
+        } catch (err) {
+            console.error('Lỗi khi tải thông tin bổ sung sản phẩm:', err);
+        }
+    })();
+
     // Kiểm tra và hiển thị khuyến mãi
     checkAndDisplayPromotions(product.MaSP);
 
@@ -1294,4 +1336,31 @@ function escapeHtml(unsafe) {
         .replace(/>/g, "&gt;")
         .replace(/"/g, "&quot;")
         .replace(/'/g, "&#039;");
+}
+
+/**
+ * Lấy thông tin rút gọn sản phẩm từ API
+ * Thử gọi relative path first, nếu không có thì gọi full localhost:5000
+ */
+async function fetchProductInfo(productId) {
+    if (!productId) return null;
+    const endpoints = [`/api/product/${productId}/info`, `http://localhost:5000/api/product/${productId}/info`];
+
+    for (const url of endpoints) {
+        try {
+            const res = await fetch(url);
+            if (!res.ok) {
+                // nếu 404 hoặc khác, tiếp tục thử URL tiếp theo
+                console.warn(`fetchProductInfo: non-ok status ${res.status} from ${url}`);
+                continue;
+            }
+            const data = await res.json();
+            return data;
+        } catch (err) {
+            console.warn(`fetchProductInfo: lỗi khi gọi ${url}:`, err.message || err);
+            // tiếp tục thử endpoint kế
+        }
+    }
+
+    return null;
 }

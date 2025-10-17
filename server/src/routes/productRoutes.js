@@ -146,6 +146,17 @@ router.get('/categories', async (req, res) => {
     res.status(500).json({ error: 'Lỗi khi lấy danh sách thể loại' });
   }
 });
+
+// Route lấy danh sách nhà cung cấp cho dropdown
+router.get('/suppliers', async (req, res) => {
+  try {
+    const [suppliers] = await pool.query('SELECT MaNCC, TenNCC FROM nhacungcap ORDER BY TenNCC');
+    res.status(200).json(suppliers);
+  } catch (error) {
+    console.error('Lỗi khi lấy danh sách nhà cung cấp:', error);
+    res.status(500).json({ error: 'Lỗi khi lấy danh sách nhà cung cấp' });
+  }
+});
 // Route lấy sản phẩm theo thể loại - thêm route này
 router.get('/category/:categoryId', async (req, res) => {
   try {
@@ -245,26 +256,105 @@ router.get('/low-stock', async (req, res) => {
 });
 
 // Route lấy sản phẩm theo ID - SỬA QUERY
+// Route lấy chi tiết sản phẩm (kết hợp thông tin nhà cung cấp, tác giả và các trường sách có trong `sanpham`)
 router.get('/:id', async (req, res) => {
   try {
+    const id = req.params.id;
+
     const query = `
-      SELECT s.*, tg.TenTG AS TacGia 
-      FROM sanpham s 
-      LEFT JOIN tacgia tg ON s.MaTG = tg.MaTG 
+      SELECT s.*, tg.TenTG AS TacGia, ncc.TenNCC AS NhaCungCap
+      FROM sanpham s
+      LEFT JOIN tacgia tg ON s.MaTG = tg.MaTG
+      LEFT JOIN nhacungcap ncc ON s.MaNCC = ncc.MaNCC
       WHERE s.MaSP = ?
+      LIMIT 1;
     `;
-    const [product] = await pool.query(query, [req.params.id]);
-    
-    if (product.length === 0) {
+
+    const [rows] = await pool.query(query, [id]);
+
+    if (!rows || rows.length === 0) {
       return res.status(404).json({ error: 'Sản phẩm không tồn tại' });
     }
-    
-    console.log('🔍 Product returned from DB:', product[0]);
-    console.log('🔍 TacGia field value:', product[0].TacGia);
-    res.status(200).json(product[0]);
+
+    const s = rows[0];
+
+    // Normalize bit(1) / boolean field TinhTrang which may come back as Buffer for some MySQL drivers
+    let tinhTrangValue = null;
+    if (s.TinhTrang === null || s.TinhTrang === undefined) tinhTrangValue = null;
+    else if (typeof s.TinhTrang === 'number') tinhTrangValue = s.TinhTrang ? 1 : 0;
+    else if (Buffer.isBuffer(s.TinhTrang)) tinhTrangValue = s.TinhTrang[0] ? 1 : 0;
+    else tinhTrangValue = s.TinhTrang ? 1 : 0;
+
+    const product = {
+      MaSP: s.MaSP,
+      MaTL: s.MaTL,
+      TenSP: s.TenSP,
+      MoTa: s.MoTa,
+      HinhAnh: s.HinhAnh,
+      DonGia: s.DonGia,
+      SoLuong: s.SoLuong,
+      NamXB: s.NamXB,
+      TinhTrang: tinhTrangValue,
+      MaTG: s.MaTG,
+      TacGia: s.TacGia || null,
+      MaNCC: s.MaNCC,
+      NhaCungCap: s.NhaCungCap || null,
+      TrongLuong: s.TrongLuong,
+      KichThuoc: s.KichThuoc,
+      SoTrang: s.SoTrang,
+      HinhThuc: s.HinhThuc
+    };
+
+    res.status(200).json(product);
   } catch (error) {
-    console.error('Error fetching product:', error);
-    res.status(500).json({ error: 'Lỗi khi lấy sản phẩm', details: error.message });
+    console.error('Lỗi khi lấy chi tiết sản phẩm:', error);
+    res.status(500).json({ error: 'Lỗi khi lấy chi tiết sản phẩm', details: error.message });
+  }
+});
+
+// Route trả về thông tin chi tiết rút gọn theo yêu cầu (TacGia, NhaCungCap, TrongLuong, KichThuoc, SoTrang, HinhThuc, NamXB)
+// Đặt trước route '/:id' để tránh conflict
+router.get('/:id/info', async (req, res) => {
+  try {
+    const id = req.params.id;
+
+    const query = `
+      SELECT s.MaSP, s.TenSP, s.NamXB AS NamXB, tg.TenTG AS TacGia, ncc.TenNCC AS NhaCungCap,
+             s.TrongLuong AS TrongLuong,
+             s.KichThuoc AS KichThuoc,
+             s.SoTrang AS SoTrang,
+             s.HinhThuc AS HinhThuc
+      FROM sanpham s
+      LEFT JOIN tacgia tg ON s.MaTG = tg.MaTG
+      LEFT JOIN nhacungcap ncc ON s.MaNCC = ncc.MaNCC
+      WHERE s.MaSP = ?
+      LIMIT 1;
+    `;
+
+    const [rows] = await pool.query(query, [id]);
+
+    if (!rows || rows.length === 0) {
+      return res.status(404).json({ error: 'Sản phẩm không tồn tại' });
+    }
+
+    const r = rows[0];
+
+    const response = {
+      MaSP: r.MaSP,
+      TenSP: r.TenSP,
+      TacGia: r.TacGia || null,
+      NhaCungCap: r.NhaCungCap || null,
+      TrongLuong: r.TrongLuong == null ? null : Number(r.TrongLuong),
+      KichThuoc: r.KichThuoc || null,
+      SoTrang: r.SoTrang == null ? null : Number(r.SoTrang),
+      HinhThuc: r.HinhThuc || null,
+      NamXB: r.NamXB == null ? null : Number(r.NamXB)
+    };
+
+    res.status(200).json(response);
+  } catch (error) {
+    console.error('Lỗi khi lấy info sản phẩm:', error);
+    res.status(500).json({ error: 'Lỗi khi lấy info sản phẩm', details: error.message });
   }
 });
 
@@ -277,7 +367,7 @@ router.get('/:id', async (req, res) => {
 // Route thêm sản phẩm - YÊU CẦU TOKEN VÀ QUYỀN ADMIN/STAFF/NV004/NV007
 router.post('/', authenticateToken, checkAdminPermission, upload.single('HinhAnh'), logFileMiddleware, async (req, res) => {
   try {
-    const { MaTL, TenSP, MaTG, NamXB, TinhTrang, DonGia, SoLuong } = req.body;
+    const { MaTL, TenSP, MaTG, NamXB, TinhTrang, DonGia, SoLuong, MoTa, MaNCC, TrongLuong, KichThuoc, SoTrang, HinhThuc, MinSoLuong } = req.body;
     console.log('🔍 User adding product:', req.user);
     console.log('🔍 Raw request body:', req.body);
     console.log('🔍 Received file:', req.file);
@@ -285,7 +375,7 @@ router.post('/', authenticateToken, checkAdminPermission, upload.single('HinhAnh
     const HinhAnh = req.file ? req.file.filename : null;
 
     const maTLNumber = parseInt(MaTL);
-    const maTGNumber = parseInt(MaTG);
+  const maTGNumber = parseInt(MaTG);
     const tenSPTrimmed = TenSP ? TenSP.trim() : '';
 
     if (isNaN(maTLNumber) || !tenSPTrimmed) {
@@ -304,13 +394,40 @@ router.post('/', authenticateToken, checkAdminPermission, upload.single('HinhAnh
       }
     }
 
+    // Validate MaNCC if provided
+    const maNCCNumber = parseInt(MaNCC);
+    if (!isNaN(maNCCNumber)) {
+      const [existingNCC] = await pool.query('SELECT MaNCC FROM nhacungcap WHERE MaNCC = ?', [maNCCNumber]);
+      if (existingNCC.length === 0) {
+        return res.status(400).json({ error: `Mã nhà cung cấp (MaNCC: ${maNCCNumber}) không tồn tại trong bảng nhacungcap!` });
+      }
+    }
+
     const tinhTrangValue = TinhTrang === '1' || TinhTrang === 1 ? 1 : 0;
     const donGiaValue = parseFloat(DonGia) || 0;
     const soLuongValue = parseInt(SoLuong) || 0;
 
+    const minSoLuongValue = isNaN(parseInt(MinSoLuong)) ? 0 : parseInt(MinSoLuong);
+
     const [result] = await pool.query(
-      'INSERT INTO sanpham (MaTL, TenSP, HinhAnh, MaTG, NamXB, TinhTrang, DonGia, SoLuong) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-      [maTLNumber, tenSPTrimmed, HinhAnh, isNaN(maTGNumber) ? null : maTGNumber, isNaN(namXBNumber) ? null : namXBNumber, tinhTrangValue, donGiaValue, soLuongValue]
+      'INSERT INTO sanpham (MaTL, TenSP, MoTa, HinhAnh, MaTG, NamXB, TinhTrang, DonGia, SoLuong, MinSoLuong, MaNCC, TrongLuong, KichThuoc, SoTrang, HinhThuc) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+      [
+        maTLNumber,
+        tenSPTrimmed,
+        MoTa || null,
+        HinhAnh,
+        isNaN(maTGNumber) ? null : maTGNumber,
+        isNaN(namXBNumber) ? null : namXBNumber,
+        tinhTrangValue,
+        donGiaValue,
+        soLuongValue,
+        minSoLuongValue,
+        isNaN(maNCCNumber) ? null : maNCCNumber,
+        isNaN(parseInt(TrongLuong)) ? null : parseInt(TrongLuong),
+        KichThuoc || null,
+        isNaN(parseInt(SoTrang)) ? null : parseInt(SoTrang),
+        HinhThuc || null
+      ]
     );
 
     if (result.affectedRows === 0) {
@@ -332,13 +449,13 @@ router.post('/', authenticateToken, checkAdminPermission, upload.single('HinhAnh
 router.put('/:id', authenticateToken, checkAdminPermission, upload.single('HinhAnh'), async (req, res) => {
   try {
     const { id } = req.params;
-    const { MaTL, TenSP, MaTG, NamXB, TinhTrang, DonGia, SoLuong } = req.body;
+    const { MaTL, TenSP, MaTG, NamXB, TinhTrang, DonGia, SoLuong, MoTa, MaNCC, TrongLuong, KichThuoc, SoTrang, HinhThuc, MinSoLuong } = req.body;
     const HinhAnh = req.file ? req.file.filename : undefined;
 
     console.log('🔄 User updating product:', req.user);
 
     const maTLNumber = parseInt(MaTL);
-    const maTGNumber = parseInt(MaTG);
+  const maTGNumber = parseInt(MaTG);
     const tenSPTrimmed = TenSP ? TenSP.trim() : '';
 
     if (isNaN(maTLNumber) || !tenSPTrimmed) {
@@ -357,12 +474,21 @@ router.put('/:id', authenticateToken, checkAdminPermission, upload.single('HinhA
       }
     }
 
+    // Validate MaNCC if provided
+    const maNCCNumber = parseInt(MaNCC);
+    if (!isNaN(maNCCNumber)) {
+      const [existingNCC] = await pool.query('SELECT MaNCC FROM nhacungcap WHERE MaNCC = ?', [maNCCNumber]);
+      if (existingNCC.length === 0) {
+        return res.status(400).json({ error: `Mã nhà cung cấp (MaNCC: ${maNCCNumber}) không tồn tại trong bảng nhacungcap!` });
+      }
+    }
+
     const tinhTrangValue = TinhTrang === '1' || TinhTrang === 1 ? 1 : 0;
     const donGiaValue = parseFloat(DonGia) || 0;
     const soLuongValue = parseInt(SoLuong) || 0;
 
-    let updateQuery = 'UPDATE sanpham SET MaTL = ?, TenSP = ?';
-    const updateParams = [maTLNumber, tenSPTrimmed];
+    let updateQuery = 'UPDATE sanpham SET MaTL = ?, TenSP = ?, MoTa = ?';
+    const updateParams = [maTLNumber, tenSPTrimmed, MoTa || null];
 
     if (HinhAnh !== undefined) {
       updateQuery += ', HinhAnh = ?';
@@ -383,8 +509,21 @@ router.put('/:id', authenticateToken, checkAdminPermission, upload.single('HinhA
       updateParams.push(namXBNumber);
     }
 
-    updateQuery += ', TinhTrang = ?, DonGia = ?, SoLuong = ? WHERE MaSP = ?';
-    updateParams.push(tinhTrangValue, donGiaValue, soLuongValue, id);
+    // MaNCC
+    if (isNaN(maNCCNumber)) {
+      updateQuery += ', MaNCC = NULL';
+    } else {
+      updateQuery += ', MaNCC = ?';
+      updateParams.push(maNCCNumber);
+    }
+
+    // Numeric/nullable fields
+    updateQuery += ', TinhTrang = ?, DonGia = ?, SoLuong = ?, MinSoLuong = ?, TrongLuong = ?';
+    updateParams.push(tinhTrangValue, donGiaValue, soLuongValue, isNaN(parseInt(MinSoLuong)) ? 0 : parseInt(MinSoLuong), isNaN(parseInt(TrongLuong)) ? null : parseInt(TrongLuong));
+
+    // Text fields
+    updateQuery += ', KichThuoc = ?, SoTrang = ?, HinhThuc = ? WHERE MaSP = ?';
+    updateParams.push(KichThuoc || null, isNaN(parseInt(SoTrang)) ? null : parseInt(SoTrang), HinhThuc || null, id);
 
     const [result] = await pool.query(updateQuery, updateParams);
 

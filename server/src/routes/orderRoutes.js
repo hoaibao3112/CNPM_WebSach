@@ -336,12 +336,24 @@ router.post('/place-order', authenticateToken, async (req, res) => {
     // BẮT ĐẦU TRANSACTION
     await connection.beginTransaction();
 
-    // Lưu địa chỉ
-    const [addressResult] = await connection.query(
-      'INSERT INTO diachi (MaKH, TenNguoiNhan, SDT, DiaChiChiTiet, TinhThanh, QuanHuyen, PhuongXa) VALUES (?, ?, ?, ?, ?, ?, ?)',
+    // Lưu địa chỉ: trước tiên kiểm tra xem khách hàng đã có địa chỉ giống hệt chưa
+    // Nếu đã có -> reuse MaDiaChi; nếu chưa -> insert mới
+    const [matchingAddrRows] = await connection.query(
+      `SELECT MaDiaChi FROM diachi WHERE MaKH = ? AND TenNguoiNhan = ? AND SDT = ? AND DiaChiChiTiet = ? AND TinhThanh = ? AND QuanHuyen = ? AND PhuongXa = ? LIMIT 1`,
       [customer.makh, customer.name, customer.phone, shippingAddress.detail, shippingAddress.province, shippingAddress.district, shippingAddress.ward]
     );
-    const addressId = addressResult.insertId;
+    let addressId;
+    if (matchingAddrRows && matchingAddrRows.length > 0) {
+      addressId = matchingAddrRows[0].MaDiaChi;
+      console.log(`Reusing existing address MaDiaChi=${addressId} for customer ${customer.makh}`);
+    } else {
+      const [addressResult] = await connection.query(
+        'INSERT INTO diachi (MaKH, TenNguoiNhan, SDT, DiaChiChiTiet, TinhThanh, QuanHuyen, PhuongXa) VALUES (?, ?, ?, ?, ?, ?, ?)',
+        [customer.makh, customer.name, customer.phone, shippingAddress.detail, shippingAddress.province, shippingAddress.district, shippingAddress.ward]
+      );
+      addressId = addressResult.insertId;
+      console.log(`Inserted new address MaDiaChi=${addressId} for customer ${customer.makh}`);
+    }
 
     // Tạo đơn hàng - lưu TongTien = amountAfterDiscount; ghi note quyền lợi/giảm giá
     const noteWithLoyalty = `${notes || ''}\n[LOYALTY] Hạng: ${userTier}; Giảm: ${cfg.discountPercent}% (${discountAmount.toLocaleString()}đ)`;
@@ -1583,6 +1595,43 @@ router.get('/locations/wards/:districtCode', async (req, res) => {
   }
 });
 
+// Resolve single province/district/ward name by code (used by frontend to avoid CORS)
+router.get('/resolve/province/:code', async (req, res) => {
+  try {
+    const { code } = req.params;
+    const r = await fetch(`https://provinces.open-api.vn/api/p/${code}`);
+    const d = await r.json();
+    return res.json({ success: true, name: d.name || String(code) });
+  } catch (err) {
+    console.error('Error resolving province name', err);
+    return res.status(500).json({ error: 'Không thể resolve province', name: String(req.params.code) });
+  }
+});
+
+router.get('/resolve/district/:code', async (req, res) => {
+  try {
+    const { code } = req.params;
+    const r = await fetch(`https://provinces.open-api.vn/api/d/${code}`);
+    const d = await r.json();
+    return res.json({ success: true, name: d.name || String(code) });
+  } catch (err) {
+    console.error('Error resolving district name', err);
+    return res.status(500).json({ error: 'Không thể resolve district', name: String(req.params.code) });
+  }
+});
+
+router.get('/resolve/ward/:code', async (req, res) => {
+  try {
+    const { code } = req.params;
+    const r = await fetch(`https://provinces.open-api.vn/api/w/${code}`);
+    const d = await r.json();
+    return res.json({ success: true, name: d.name || String(code) });
+  } catch (err) {
+    console.error('Error resolving ward name', err);
+    return res.status(500).json({ error: 'Không thể resolve ward', name: String(req.params.code) });
+  }
+});
+
 
 // ✅ Tương tự, cập nhật API admin-refunds nếu có:
 router.get('/admin-refunds', authenticateToken, async (req, res) => {
@@ -2328,7 +2377,8 @@ router.get('/customer-addresses/:customerId', authenticateToken, async (req, res
         DiaChiChiTiet AS detail,
         TinhThanh AS province,
         QuanHuyen AS district,
-        PhuongXa AS ward
+        PhuongXa AS ward,
+        MacDinh AS is_default
       FROM diachi
       WHERE MaKH = ? AND (is_active IS NULL OR is_active = 1)
       ORDER BY MaDiaChi DESC
@@ -2344,9 +2394,16 @@ router.get('/customer-addresses/:customerId', authenticateToken, async (req, res
         name: addr.name,
         phone: addr.phone,
         detail: addr.detail,
+        // resolved human-readable names (may be equal to code on fallback)
         province: prov,
         district: dist,
-        ward: w
+        ward: w,
+        // include whether this is default (MacDinh) for the frontend
+        is_default: (addr.is_default !== undefined ? addr.is_default : (addr.MacDinh !== undefined ? addr.MacDinh : 0)),
+        // keep original codes so frontend can always resolve if needed
+        provinceCode: addr.province,
+        districtCode: addr.district,
+        wardCode: addr.ward
       };
     }));
 
@@ -2448,6 +2505,9 @@ async function handleGetOldAddresses(req, res, addresses) {
           province: prov,
           district: dist,
           ward: wrd,
+          provinceCode: addr.province,
+          districtCode: addr.district,
+          wardCode: addr.ward
         };
       })
     );
@@ -2492,10 +2552,11 @@ router.post('/customer-addresses', authenticateToken, async (req, res) => {
 router.put('/customer-addresses/:addressId', authenticateToken, async (req, res) => {
   const customerId = req.user && req.user.makh;
   const { addressId } = req.params;
-  const { name, phone, detail, province, district, ward } = req.body;
+  const { name, phone, detail, province, district, ward, is_default } = req.body;
 
   if (!customerId) return res.status(401).json({ success: false, error: 'Không xác thực được người dùng' });
-  if (!name && !phone && !detail && !province && !district && !ward) {
+  // allow updating is_default boolean as well
+  if (name === undefined && phone === undefined && detail === undefined && province === undefined && district === undefined && ward === undefined && is_default === undefined) {
     return res.status(400).json({ success: false, error: 'Không có trường cập nhật' });
   }
 
@@ -2522,8 +2583,16 @@ router.put('/customer-addresses/:addressId', authenticateToken, async (req, res)
     if (province !== undefined) { fields.push('TinhThanh = ?'); params.push(province); }
     if (district !== undefined) { fields.push('QuanHuyen = ?'); params.push(district); }
     if (ward !== undefined) { fields.push('PhuongXa = ?'); params.push(ward); }
+  // map incoming is_default to existing DB column `MacDinh`
+  if (is_default !== undefined) { fields.push('MacDinh = ?'); params.push(is_default ? 1 : 0); }
 
     params.push(addressId);
+
+    // If setting this address as default, unset other defaults first (atomic)
+    if (is_default !== undefined && (is_default === true || is_default === 1 || is_default === '1' || is_default === 'true')) {
+      // unset other defaults using existing column `MacDinh`
+      await conn.query(`UPDATE diachi SET MacDinh = 0 WHERE MaKH = ?`, [customerId]);
+    }
 
     await conn.query(`UPDATE diachi SET ${fields.join(', ')} WHERE MaDiaChi = ?`, params);
 
@@ -2586,6 +2655,45 @@ router.delete('/customer-addresses/:addressId', authenticateToken, async (req, r
     await conn.rollback();
     console.error('Delete address error:', err);
     res.status(500).json({ success: false, error: 'Lỗi hệ thống khi xóa địa chỉ', details: err.message });
+  } finally {
+    conn.release();
+  }
+});
+
+// POST /customer-addresses/:addressId/set-default - mark an address as the customer's default
+router.post('/customer-addresses/:addressId/set-default', authenticateToken, async (req, res) => {
+  const customerId = req.user && req.user.makh;
+  const { addressId } = req.params;
+
+  if (!customerId) return res.status(401).json({ success: false, error: 'Không xác thực được người dùng' });
+
+  const conn = await pool.getConnection();
+  try {
+    await conn.beginTransaction();
+
+    // Check ownership
+    const [rows] = await conn.query('SELECT MaDiaChi, MaKH FROM diachi WHERE MaDiaChi = ? FOR UPDATE', [addressId]);
+    if (!rows.length) {
+      await conn.rollback();
+      return res.status(404).json({ success: false, error: 'Không tìm thấy địa chỉ' });
+    }
+    if (rows[0].MaKH != customerId && req.user.userType !== 'admin') {
+      await conn.rollback();
+      return res.status(403).json({ success: false, error: 'Không có quyền đặt địa chỉ này làm mặc định' });
+    }
+
+  // Unset other defaults for this customer using existing column MacDinh
+  await conn.query('UPDATE diachi SET MacDinh = 0 WHERE MaKH = ?', [customerId]);
+
+  // Set this address as default
+  await conn.query('UPDATE diachi SET MacDinh = 1 WHERE MaDiaChi = ?', [addressId]);
+
+    await conn.commit();
+    res.json({ success: true, message: 'Đã đặt địa chỉ làm mặc định' });
+  } catch (err) {
+    await conn.rollback();
+    console.error('Set-default address error:', err);
+    res.status(500).json({ success: false, error: 'Lỗi hệ thống khi đặt mặc định địa chỉ' });
   } finally {
     conn.release();
   }
