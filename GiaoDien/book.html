@@ -37,23 +37,46 @@
             <div class="divider"></div>
             <div class="price-filter-section">
                 <h3>LỌC THEO GIÁ</h3>
-                <div class="price-filter">
-                    <select id="priceRange" onchange="filterProductsByPrice(this.value)">
-                        <option value="">Tất cả</option>
-                        <option value="0-50000">Dưới 50.000đ</option>
-                        <option value="50000-100000">50.000đ - 100.000đ</option>
-                        <option value="100000-200000">100.000đ - 200.000đ</option>
-                        <option value="200000">Trên 200.000đ</option>
-                    </select>
+                <div class="price-buttons" id="priceButtons">
+                    <button class="filter-btn active" data-value="">Tất cả</button>
+                    <button class="filter-btn" data-value="0-50000">Dưới 50.000đ</button>
+                    <button class="filter-btn" data-value="50000-100000">50.000đ - 100.000đ</button>
+                    <button class="filter-btn" data-value="100000-200000">100.000đ - 200.000đ</button>
+                    <button class="filter-btn" data-value="200000">Trên 200.000đ</button>
+                </div>
+            </div>
+            <div class="divider"></div>
+            <div class="supplier-filter">
+                <h3>NHÀ CUNG CẤP</h3>
+                <div class="supplier-buttons" id="supplierButtons">
+                    <!-- buttons will be populated here -->
+                    <button class="filter-btn active" data-value="">Tất cả</button>
+                </div>
+            </div>
+            <div class="divider"></div>
+            <div class="author-filter">
+                <h3>TÁC GIẢ</h3>
+                <div class="author-buttons" id="authorButtons">
+                    <!-- buttons will be populated here -->
+                    <button class="filter-btn active" data-value="">Tất cả</button>
+                </div>
+                <button id="authorToggleBtn" class="view-more-btn" style="margin-top:8px;padding:6px 10px;font-size:13px;display:none;">Xem thêm</button>
+            </div>
+            <div class="divider"></div>
+            <div class="format-filter">
+                <h3>HÌNH THỨC</h3>
+                <div class="format-buttons" id="hinhThucButtons">
+                    <!-- buttons will be populated here -->
+                    <button class="filter-btn active" data-value="">Tất cả</button>
                 </div>
             </div>
             <div class="divider"></div>
             <div class="text-discount-section">
                 <h4>DEAL HOT - GIẢM SỐC</h4>
                 <div class="discount-filter">
-                    <select id="discountSelect">
-                        <option value="">Tất cả</option>
-                    </select>
+                    <div class="discount-buttons" id="discountButtons">
+                        <button class="filter-btn active" data-id="">Tất cả</button>
+                    </div>
                 </div>
                 <ul id="promotions-list"></ul>
                 <div id="deal-hot-list"></div>

@@ -202,6 +202,51 @@ router.get('/', async (req, res) => {
       params.push(req.query.MaTL);
     }
 
+    // Filter by supplier(s) - supports single id or comma-separated ids
+    if (req.query.MaNCC) {
+      const suppliers = String(req.query.MaNCC).split(',').map(s => s.trim()).filter(Boolean);
+      if (suppliers.length === 1) {
+        conditions.push('s.MaNCC = ?');
+        params.push(suppliers[0]);
+      } else if (suppliers.length > 1) {
+        const placeholders = suppliers.map(() => '?').join(',');
+        conditions.push(`s.MaNCC IN (${placeholders})`);
+        params.push(...suppliers);
+      }
+    }
+
+    // Filter by HinhThuc (format/type) - supports single value or comma-separated values
+    if (req.query.HinhThuc) {
+      const types = String(req.query.HinhThuc).split(',').map(t => t.trim()).filter(Boolean);
+      if (types.length === 1) {
+        conditions.push('s.HinhThuc = ?');
+        params.push(types[0]);
+      } else if (types.length > 1) {
+        const placeholders = types.map(() => '?').join(',');
+        conditions.push(`s.HinhThuc IN (${placeholders})`);
+        params.push(...types);
+      }
+    }
+
+    // Filter by author(s) - supports single id or comma-separated ids
+    if (req.query.MaTG) {
+      const authors = String(req.query.MaTG).split(',').map(a => a.trim()).filter(Boolean);
+      if (authors.length === 1) {
+        const mtg = parseInt(authors[0]);
+        if (!isNaN(mtg)) {
+          conditions.push('s.MaTG = ?');
+          params.push(mtg);
+        }
+      } else if (authors.length > 1) {
+        const ids = authors.map(v => parseInt(v)).filter(v => !isNaN(v));
+        if (ids.length) {
+          const placeholders = ids.map(() => '?').join(',');
+          conditions.push(`s.MaTG IN (${placeholders})`);
+          params.push(...ids);
+        }
+      }
+    }
+
     if (req.query.priceRange) {
       const [minPrice, maxPrice] = req.query.priceRange.split('-').map(Number);
       if (!isNaN(minPrice) && !isNaN(maxPrice)) {

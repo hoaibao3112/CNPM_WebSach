@@ -112,6 +112,7 @@ body {
   text-overflow: ellipsis;
   display: -webkit-box;
   -webkit-line-clamp: 2;
+  line-clamp: 2;
   -webkit-box-orient: vertical;
 }
 
@@ -352,6 +353,18 @@ body {
   background: #b71c1c;
 }
 
+/* Small variant for sidebar toggle (author expand/collapse) */
+#authorToggleBtn {
+  background: transparent;
+  color: #d32f2f;
+  border: 1px solid rgba(0,0,0,0.06);
+  box-shadow: none;
+  border-radius: 18px;
+}
+#authorToggleBtn:hover {
+  background: rgba(211,47,47,0.06);
+}
+
 /* Responsive */
 @media (max-width: 768px) {
   #book-list,
@@ -399,6 +412,59 @@ body {
     padding: 10px; /* Giảm padding thêm cho thiết bị nhỏ */
   }
 }
+
+/* Filter chips (top) */
+.active-filter-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: transparent;
+  margin: 12px 0;
+  flex-wrap: wrap;
+}
+
+.filter-chips {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.filter-chip {
+  display: inline-flex;
+  align-items: center;
+  background: #fff7f2;
+  border: 1px solid #ffd6bf;
+  color: #d9734b;
+  padding: 8px 10px;
+  border-radius: 6px;
+  font-size: 14px;
+}
+
+.filter-chip .chip-label { margin-right: 8px; }
+.filter-chip .chip-remove {
+  background: transparent;
+  border: none;
+  color: #d9734b;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 0 4px;
+}
+
+.clear-filters-btn {
+  margin-left: auto;
+  background: transparent;
+  border: 1px solid #f39c12;
+  color: #f39c12;
+  padding: 8px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.clear-filters-btn:hover { background: rgba(243,156,18,0.06); }
+
+.filter-btn.active { background-color: #e74c3c !important; color: #fff !important; }
 /* --- Sách chính trị (politics-section) --- */
 .politics-section {
   margin-bottom: 40px;
@@ -641,6 +707,210 @@ body {
 .price-filter select option {
   padding: 8px;
 }
+
+/* Filter buttons (supplier / hinh thuc) */
+.supplier-buttons,
+.format-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.price-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.discount-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+/* Better visual for promotion buttons */
+.discount-buttons .filter-btn {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 14px 16px;
+  border-radius: 28px;
+  border: 1px solid rgba(0,0,0,0.06);
+  background: #fff;
+  color: rgba(0,0,0,0.65);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.04);
+  font-weight: 500;
+  line-height: 1.1;
+}
+
+.discount-buttons .filter-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 18px rgba(0,0,0,0.08);
+}
+
+.discount-buttons .filter-btn.active {
+  background: #d32f2f;
+  color: #fff;
+  border-color: #b71c1c;
+  box-shadow: 0 8px 18px rgba(211,47,47,0.12);
+}
+
+/* Promotions list on the left (text links) */
+#promotions-list {
+  margin-top: 12px;
+  padding-left: 0;
+}
+
+#promotions-list li {
+  list-style: none;
+  margin-bottom: 10px;
+}
+
+#promotions-list li a {
+  display: block;
+  padding: 10px 12px;
+  border-radius: 14px;
+  background: #fff;
+  border: 1px solid rgba(0,0,0,0.04);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.03);
+  color: rgba(0,0,0,0.6);
+  text-decoration: none;
+  font-weight: 500;
+}
+
+#promotions-list li a small {
+  display: block;
+  font-weight: 400;
+  color: #666;
+  margin-top: 6px;
+  font-size: 13px;
+}
+
+/* Make deal-hot container cards align visually */
+#deal-hot-list .product-item {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  padding: 10px;
+  border-radius: 8px;
+  background: #fff;
+  border: 1px solid rgba(0,0,0,0.04);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.03);
+}
+
+#deal-hot-list .product-item img {
+  width: 72px;
+  height: 72px;
+  object-fit: cover;
+  border-radius: 6px;
+}
+
+.filter-btn {
+  padding: 8px 10px;
+  border-radius: 20px;
+  border: 1px solid #e0e0e0;
+  background: #fff;
+  color: #333;
+  cursor: pointer;
+  font-size: 13px;
+  transition: all 0.12s ease;
+}
+
+.filter-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(0,0,0,0.06);
+}
+
+.filter-btn.active {
+  background: #d32f2f;
+  color: #fff;
+  border-color: #b71c1c;
+}
+
+/* Stronger rule for sidebar filter buttons to avoid overrides */
+.sidebar .filter-btn.active,
+.supplier-buttons .filter-btn.active,
+.author-buttons .filter-btn.active,
+.price-buttons .filter-btn.active,
+.format-buttons .filter-btn.active,
+.discount-buttons .filter-btn.active {
+  background: #d32f2f !important;
+  color: #fff !important;
+  border-color: #b71c1c !important;
+}
+
+/* --- Make all filter groups (supplier, author, price, format, discount) consistent --- */
+.supplier-buttons,
+.author-buttons,
+.price-buttons,
+.format-buttons,
+.discount-buttons {
+  display: block;
+  margin-top: 10px;
+}
+
+/* Discount buttons should behave like pill buttons (not full-width cards) */
+.discount-buttons {
+  flex-direction: row;
+}
+
+.discount-buttons .filter-btn {
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid #e0e0e0;
+  background: #fff;
+  color: #333;
+  box-shadow: none;
+  font-size: 14px;
+  display: block;
+  width: 100%;
+  text-align: left;
+  margin: 6px 0;
+}
+
+.discount-buttons .filter-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(0,0,0,0.06);
+}
+
+.discount-buttons .filter-btn.active {
+  background: #d32f2f;
+  color: #fff;
+  border-color: #b71c1c;
+}
+
+/* Ensure author buttons use the same visual as supplier */
+.author-buttons .filter-btn {
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid #e0e0e0;
+  background: #fff;
+  color: #333;
+  cursor: pointer;
+  font-size: 14px;
+  display: block;
+  width: 100%;
+  text-align: left;
+  margin: 6px 0;
+}
+
+.supplier-buttons .filter-btn,
+.price-buttons .filter-btn,
+.format-buttons .filter-btn {
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid #e0e0e0;
+  background: #fff;
+  color: #333;
+  display: block;
+  width: 100%;
+  text-align: left;
+  margin: 6px 0;
+}
+
 
 /* Discount filter section */
 .text-discount-section {

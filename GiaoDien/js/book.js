@@ -189,6 +189,125 @@ function displayProducts(products, containerId = 'book-list', limit = null) {
   }
 }
 
+// --- Filter chips UI helpers ---
+function ensureFilterBar() {
+  // Only show the filter bar on the book page
+  const path = window.location.pathname || '';
+  const isBookPage = path.endsWith('/GiaoDien/book.html') || path.endsWith('book.html');
+
+  // If there's an existing bar but we're not on the book page, remove it
+  const existingBar = document.getElementById('active-filter-bar');
+  if (!isBookPage) {
+    if (existingBar) existingBar.remove();
+    return null;
+  }
+
+  let bar = existingBar || null;
+  if (!bar) {
+    const main = document.querySelector('.main-content') || document.body;
+    bar = document.createElement('div');
+    bar.id = 'active-filter-bar';
+    bar.className = 'active-filter-bar';
+    bar.innerHTML = `
+      <div class="filter-chips" id="filterChips"></div>
+      <button class="clear-filters-btn" id="clearFiltersBtn">Xóa bộ lọc</button>
+    `;
+    // insert before main product list if possible
+    const ref = document.getElementById('search-book-list') || document.getElementById('book-list');
+    if (ref && ref.parentElement) ref.parentElement.insertBefore(bar, ref);
+    else document.body.insertBefore(bar, document.body.firstChild);
+  }
+  return bar;
+}
+
+function createOrUpdateChip(group, label, value) {
+  ensureFilterBar();
+  const chips = document.getElementById('filterChips');
+  if (!chips) return;
+
+  // if value is empty => remove existing chip for group
+  const existing = chips.querySelector(`.filter-chip[data-group="${group}"]`);
+  if (!value) {
+    if (existing) existing.remove();
+    return;
+  }
+
+  const chip = existing || document.createElement('div');
+  chip.className = 'filter-chip';
+  chip.dataset.group = group;
+  chip.dataset.value = value;
+  chip.innerHTML = `<span class="chip-label">${label}</span><button class="chip-remove" aria-label="remove">×</button>`;
+  if (!existing) chips.appendChild(chip);
+
+  // wire remove
+  chip.querySelector('.chip-remove').addEventListener('click', () => {
+    // reset corresponding filter group to 'Tất cả'
+    const container = document.getElementById(group);
+    if (container) {
+      container.querySelectorAll('.filter-btn').forEach(b => {
+        if (b.dataset.value === '') b.classList.add('active');
+        else b.classList.remove('active');
+      });
+    }
+    chip.remove();
+    // trigger fetch with current active filters
+    triggerFilterFetchFromUI();
+  });
+}
+
+function clearAllChips() {
+  const chips = document.getElementById('filterChips');
+  if (chips) chips.innerHTML = '';
+}
+
+function triggerFilterFetchFromUI() {
+  // read active selections from each filter group and call fetchProductsWithFilters
+  const groups = ['supplierButtons','authorButtons','priceButtons','hinhThucButtons','discountButtons'];
+  const filters = {};
+  groups.forEach(gid => {
+    const container = document.getElementById(gid);
+    if (!container) return;
+    const active = container.querySelector('.filter-btn.active');
+    if (!active) return;
+    const val = active.dataset.value || active.dataset.id || '';
+    if (!val) return;
+    switch(gid) {
+      case 'supplierButtons': filters.MaNCC = val; break;
+      case 'authorButtons': filters.MaTG = val; break;
+      case 'priceButtons': filters.priceRange = val; break;
+      case 'hinhThucButtons': filters.HinhThuc = val; break;
+      case 'discountButtons': filters.MaKM = val; break;
+    }
+  });
+
+  // update chips to reflect current active filters
+  groups.forEach(gid => {
+    const container = document.getElementById(gid);
+    if (!container) return;
+    const active = container.querySelector('.filter-btn.active');
+    const label = active ? (active.textContent || '').trim() : '';
+    const val = active ? (active.dataset.value || active.dataset.id || '') : '';
+    createOrUpdateChip(gid, label, val);
+  });
+
+  // perform fetch (use MaTL from localStorage if present)
+  const mainContainer = getMainProductContainerId() || 'search-book-list';
+  const MaTL = localStorage.getItem(`currentCategory_${mainContainer}`) || '';
+  const search = new URLSearchParams(window.location.search).get('search') || '';
+  const query = {
+    MaTL: MaTL || undefined,
+    priceRange: filters.priceRange,
+    MaNCC: filters.MaNCC,
+    HinhThuc: filters.HinhThuc,
+    MaTG: filters.MaTG,
+    search: search || undefined
+  };
+  // remove undefined keys
+  Object.keys(query).forEach(k => { if (query[k] === undefined) delete query[k]; });
+  fetchProductsWithFilters(query, mainContainer, 20);
+}
+
+
 
 // Hàm hiển thị tất cả sản phẩm
 function showAllProducts(containerId) {
@@ -605,6 +724,310 @@ async function loadListProductSearch() {
   displayProducts(productsSearchMain, 'search-book-list', 10);
 }
 
+// Populate supplier buttons from API
+async function populateSuppliers() {
+  const container = document.getElementById('supplierButtons');
+  if (!container) return;
+  try {
+    const res = await fetch('http://localhost:5000/api/product/suppliers');
+    if (!res.ok) throw new Error('Không tải được danh sách nhà cung cấp');
+    const suppliers = await res.json();
+    // Clear except the 'Tất cả' button (first child)
+    container.innerHTML = '';
+    // Add 'Tất cả'
+    const allBtn = document.createElement('button');
+    allBtn.className = 'filter-btn active';
+    allBtn.dataset.value = '';
+    allBtn.textContent = 'Tất cả';
+    container.appendChild(allBtn);
+
+    suppliers.forEach(s => {
+      const btn = document.createElement('button');
+      btn.className = 'filter-btn';
+      btn.dataset.value = s.MaNCC;
+      btn.textContent = s.TenNCC;
+      container.appendChild(btn);
+    });
+
+    // wire click handlers
+    container.querySelectorAll('.filter-btn').forEach(b => {
+      b.addEventListener('click', () => {
+        container.querySelectorAll('.filter-btn').forEach(x => x.classList.remove('active'));
+        b.classList.add('active');
+        // central handler will update chips and fetch
+        triggerFilterFetchFromUI();
+      });
+    });
+  } catch (err) {
+    console.error('Lỗi populateSuppliers:', err);
+  }
+}
+
+// Populate HinhThuc buttons by querying distinct values from products
+async function populateHinhThuc() {
+  const container = document.getElementById('hinhThucButtons');
+  if (!container) return;
+  try {
+    let values = [];
+    try {
+      const res = await fetch('http://localhost:5000/api/product');
+      if (!res.ok) throw new Error('Không lấy được sản phẩm để xác định HìnhThức');
+      const products = await res.json();
+      const set = new Set();
+      products.forEach(p => { if (p.HinhThuc) set.add(p.HinhThuc); });
+      values = Array.from(set);
+    } catch (err) {
+      console.warn('Fallback populateHinhThuc failed:', err);
+    }
+
+    container.innerHTML = '';
+    const allBtn = document.createElement('button');
+    allBtn.className = 'filter-btn active';
+    allBtn.dataset.value = '';
+    allBtn.textContent = 'Tất cả';
+    container.appendChild(allBtn);
+
+    values.forEach(v => {
+      const btn = document.createElement('button');
+      btn.className = 'filter-btn';
+      btn.dataset.value = v;
+      btn.textContent = v;
+      container.appendChild(btn);
+    });
+
+    // wire click handlers
+    container.querySelectorAll('.filter-btn').forEach(b => {
+      b.addEventListener('click', () => {
+        container.querySelectorAll('.filter-btn').forEach(x => x.classList.remove('active'));
+        b.classList.add('active');
+        triggerFilterFetchFromUI();
+      });
+    });
+
+  } catch (err) {
+    console.error('Lỗi populateHinhThuc:', err);
+  }
+}
+
+// Populate author buttons from API
+async function populateAuthors() {
+  const container = document.getElementById('authorButtons');
+  if (!container) return;
+  try {
+    const res = await fetch('http://localhost:5000/api/product/authors');
+    if (!res.ok) throw new Error('Không tải được danh sách tác giả');
+    const authors = await res.json();
+    // Clear existing buttons and add 'Tất cả'
+    container.innerHTML = '';
+    const allBtn = document.createElement('button');
+    allBtn.className = 'filter-btn active';
+    allBtn.dataset.value = '';
+    allBtn.textContent = 'Tất cả';
+    container.appendChild(allBtn);
+
+    // create buttons but only append first N (8) initially
+    const MAX_VISIBLE = 8;
+    const authorButtons = authors.map(a => {
+      const btn = document.createElement('button');
+      btn.className = 'filter-btn';
+      btn.dataset.value = a.MaTG;
+      btn.title = a.TenTG;
+      btn.textContent = a.TenTG;
+      return btn;
+    });
+
+    authorButtons.forEach((btn, idx) => {
+      if (idx < MAX_VISIBLE) container.appendChild(btn);
+    });
+
+    // show toggle if more than MAX_VISIBLE
+    const toggle = document.getElementById('authorToggleBtn');
+    if (toggle) {
+      if (authorButtons.length > MAX_VISIBLE) {
+        toggle.style.display = 'inline-block';
+        toggle.textContent = 'Xem thêm';
+      } else {
+        toggle.style.display = 'none';
+      }
+    }
+
+    // function to wire click behavior (applies to currently appended buttons)
+    function wireAuthorClicks() {
+      container.querySelectorAll('.filter-btn').forEach(b => {
+        b.addEventListener('click', () => {
+          container.querySelectorAll('.filter-btn').forEach(x => x.classList.remove('active'));
+          b.classList.add('active');
+          // central handler will handle building query, chips and fetching
+          triggerFilterFetchFromUI();
+        });
+      });
+    }
+
+    // initial wire
+    wireAuthorClicks();
+
+    // toggle handler
+    if (toggle) {
+      let expanded = false;
+      toggle.addEventListener('click', () => {
+        if (!expanded) {
+          // append remaining
+          authorButtons.forEach((btn, idx) => {
+            if (idx >= MAX_VISIBLE) container.appendChild(btn);
+          });
+          toggle.textContent = 'Thu gọn';
+          expanded = true;
+          wireAuthorClicks();
+        } else {
+          // collapse to first MAX_VISIBLE
+          // remove nodes after the first (1 + MAX_VISIBLE) because first child is 'Tất cả'
+          const nodes = Array.from(container.querySelectorAll('.filter-btn'));
+          // keep index 0 (Tất cả) and next MAX_VISIBLE
+          nodes.forEach((n, i) => {
+            if (i > MAX_VISIBLE) container.removeChild(n);
+          });
+          toggle.textContent = 'Xem thêm';
+          expanded = false;
+        }
+      });
+    }
+  } catch (err) {
+    console.error('Lỗi populateAuthors:', err);
+  }
+}
+
+function buildProductQuery({ MaTL, priceRange, MaNCC, HinhThuc, MaTG, search }) {
+  const params = new URLSearchParams();
+  if (MaTL) params.append('MaTL', MaTL);
+  if (priceRange) params.append('priceRange', priceRange);
+  if (MaNCC) params.append('MaNCC', Array.isArray(MaNCC) ? MaNCC.join(',') : MaNCC);
+  if (MaTG) params.append('MaTG', Array.isArray(MaTG) ? MaTG.join(',') : MaTG);
+  if (HinhThuc) params.append('HinhThuc', Array.isArray(HinhThuc) ? HinhThuc.join(',') : HinhThuc);
+  if (search) params.append('search', search);
+  return 'http://localhost:5000/api/product?' + params.toString();
+}
+
+function getMainProductContainerId() {
+  const candidates = ['search-book-list', 'book-list', 'promotion-book-list', 'textbook-list', 'politics-book-list', 'science-book-list'];
+  for (const id of candidates) {
+    if (document.getElementById(id)) return id;
+  }
+  return null;
+}
+
+async function fetchProductsWithFilters(filters, containerId = null, limit = 20) {
+  const url = buildProductQuery(filters);
+  const resolvedId = containerId || getMainProductContainerId();
+  if (!resolvedId) {
+    console.warn('No product container found to render filtered results');
+    return;
+  }
+  const productList = document.getElementById(resolvedId);
+  if (!productList) return;
+  try {
+    productList.innerHTML = '<div class="loading">Đang tải sản phẩm...</div>';
+    const res = await fetch(url);
+    if (!res.ok) throw new Error('Lỗi HTTP ' + res.status);
+    const products = await res.json();
+    displayProducts(products, resolvedId, limit);
+  } catch (err) {
+    console.error('Lỗi fetchProductsWithFilters:', err);
+    productList.innerHTML = `<div class="error"><p>${err.message}</p></div>`;
+  }
+}
+
+// Hook up filter UI
+document.addEventListener('DOMContentLoaded', () => {
+  // existing DOMContentLoaded handlers earlier will run too; ensure we wire ours after
+  // wire price button clicks
+  const priceContainer = document.getElementById('priceButtons');
+  if (priceContainer) {
+    priceContainer.querySelectorAll('.filter-btn').forEach(b => {
+      b.addEventListener('click', () => {
+        priceContainer.querySelectorAll('.filter-btn').forEach(x => x.classList.remove('active'));
+        b.classList.add('active');
+        const price = b.dataset.value || '';
+        const currentCategoryLocal = localStorage.getItem('currentCategory_book-list') || '';
+        const activeSupplier = document.querySelector('#supplierButtons .filter-btn.active')?.dataset.value || '';
+        const activeHinh = document.querySelector('#hinhThucButtons .filter-btn.active')?.dataset.value || '';
+        // persist price
+        localStorage.setItem('currentPriceRange_book-list', price);
+        // central handler will update chips and fetch
+        triggerFilterFetchFromUI();
+      });
+    });
+  }
+
+  // populate button lists on load
+  populateSuppliers();
+  populateHinhThuc();
+  populateAuthors();
+  // ensure filter bar exists and wire clear button
+  const bar = ensureFilterBar();
+  const clearBtn = document.getElementById('clearFiltersBtn');
+  if (clearBtn) {
+    clearBtn.addEventListener('click', () => {
+      // reset all groups to 'Tất cả'
+      ['supplierButtons','authorButtons','priceButtons','hinhThucButtons','discountButtons'].forEach(gid => {
+        const container = document.getElementById(gid);
+        if (!container) return;
+        container.querySelectorAll('.filter-btn').forEach(b => {
+          if (b.dataset.value === '' || b.dataset.id === '') b.classList.add('active');
+          else b.classList.remove('active');
+        });
+      });
+      // clear stored price/category
+      const mainContainer = getMainProductContainerId() || 'search-book-list';
+      localStorage.removeItem(`currentPriceRange_${mainContainer}`);
+      localStorage.removeItem(`currentCategory_${mainContainer}`);
+      // clear chips UI
+      clearAllChips();
+      // fetch all products
+      triggerFilterFetchFromUI();
+    });
+  }
+});
+
+// Delegated handler to ensure any .filter-btn clicked in the sidebar becomes active (red)
+// and triggers the correct filtering action.
+document.addEventListener('DOMContentLoaded', () => {
+  const sidebar = document.querySelector('.sidebar');
+  if (!sidebar) return;
+
+  sidebar.addEventListener('click', (e) => {
+    const btn = e.target.closest('.filter-btn');
+    if (!btn || !sidebar.contains(btn)) return;
+
+    const parent = btn.parentElement;
+    if (!parent) return;
+
+    // Promotions (discount) buttons should call promotion loader
+    if (parent.id === 'discountButtons' || parent.classList.contains('discount-buttons')) {
+      parent.querySelectorAll('.filter-btn').forEach(x => x.classList.remove('active'));
+      btn.classList.add('active');
+      const promoId = btn.dataset.id || '';
+      // create/update chip for promotion selection
+      createOrUpdateChip(parent.id, btn.textContent.trim(), promoId);
+      if (!promoId) {
+        if (typeof loadAllProductsToMain === 'function') loadAllProductsToMain();
+      } else {
+        if (typeof loadProductsByPromotion === 'function') loadProductsByPromotion(promoId);
+      }
+      return;
+    }
+
+    // General filter groups: supplier, author, price, hinhthuc, format
+    if (['supplierButtons','authorButtons','priceButtons','hinhThucButtons','formatButtons'].includes(parent.id) ||
+        parent.classList.contains('supplier-buttons') || parent.classList.contains('author-buttons') || parent.classList.contains('price-buttons') || parent.classList.contains('format-buttons') || parent.classList.contains('hinhthuc-buttons')) {
+      parent.querySelectorAll('.filter-btn').forEach(x => x.classList.remove('active'));
+      btn.classList.add('active');
+
+      // Use centralized handler so chips and fetch stay in sync
+      triggerFilterFetchFromUI();
+    }
+  });
+});
+
 const removeKeyWordSearch = () => {
   const currentPath = window.location.pathname;
   const searchParams = new URLSearchParams(window.location.search);
@@ -701,59 +1124,72 @@ window.viewDetail = viewDetail;
 // Load danh sách khuyến mãi và xử lý chọn "Tất cả" hoặc 1 khuyến mãi
 // ============================
 async function loadPromotionsFromAPI() {
-  const discountSelect = document.getElementById('discountSelect');
+  const discountContainer = document.getElementById('discountButtons');
   const dealHotContainer = document.getElementById('deal-hot-list');
+  const promotionsList = document.getElementById('promotions-list');
   const mainContainer = document.getElementById('search-book-list');
 
-  if (!discountSelect || !dealHotContainer || !mainContainer) {
-    console.error('Missing element(s): discountSelect / deal-hot-list / search-book-list');
-    return;
-  }
+  if (!discountContainer || !dealHotContainer || !promotionsList || !mainContainer) return;
 
-  // Reset dropdown và container
-  discountSelect.innerHTML = '<option value="">Tất cả</option>';
+  // Reset UI
+  discountContainer.innerHTML = '';
+  promotionsList.innerHTML = '';
   dealHotContainer.innerHTML = '';
 
   try {
-    console.log('[promotions] fetching /api/books/promotions');
-    const response = await fetch('http://localhost:5000/api/books/promotions', {
-      headers: { 'Accept': 'application/json' }
+    const res = await fetch('http://localhost:5000/api/books/promotions', { headers: { 'Accept': 'application/json' } });
+    if (!res.ok) throw new Error('Lỗi khi tải khuyến mãi');
+    const data = await res.json();
+
+    if (!Array.isArray(data) || data.length === 0) {
+      promotionsList.innerHTML = '<li>Không có khuyến mãi</li>';
+      dealHotContainer.innerHTML = '<div class="no-products"><p>Không có sản phẩm khuyến mãi</p></div>';
+      // still load all products
+      await loadAllProductsToMain();
+      return;
+    }
+
+    // Add 'Tất cả' button
+    const allBtn = document.createElement('button');
+    allBtn.className = 'filter-btn active';
+    allBtn.dataset.id = '';
+    allBtn.textContent = 'Tất cả';
+    discountContainer.appendChild(allBtn);
+
+    data.forEach(promotion => {
+      // left list
+      const li = document.createElement('li');
+      li.innerHTML = `<a href="#" onclick="selectPromotion('${promotion.MaKM}')">${promotion.endpoint}</a>`;
+      promotionsList.appendChild(li);
+
+      // button
+      const btn = document.createElement('button');
+      btn.className = 'filter-btn';
+      btn.dataset.id = promotion.MaKM;
+      btn.textContent = promotion.endpoint;
+      discountContainer.appendChild(btn);
     });
 
-    if (!response.ok) throw new Error(`Lỗi HTTP khi lấy promotions: ${response.status}`);
-    const data = await response.json();
-    console.log('[promotions] data:', data);
-
-    if (!Array.isArray(data)) throw new Error('Dữ liệu promotions trả về không phải mảng');
-
-    // append promotions vào select
-    data.forEach(promo => {
-      const option = document.createElement('option');
-      option.value = String(promo.MaKM);
-      option.textContent = promo.endpoint;
-      discountSelect.appendChild(option);
+    // wire handlers
+    discountContainer.querySelectorAll('.filter-btn').forEach(b => {
+      b.addEventListener('click', async () => {
+        discountContainer.querySelectorAll('.filter-btn').forEach(x => x.classList.remove('active'));
+        b.classList.add('active');
+        const id = b.dataset.id || '';
+        if (!id) {
+          await loadAllProductsToMain();
+        } else {
+          await loadProductsByPromotion(id);
+        }
+      });
     });
 
-    // Mặc định hiển thị tất cả sản phẩm (dùng /api/product)
-    discountSelect.value = "";
+    // load all products by default
     await loadAllProductsToMain();
-
-    // Bắt sự kiện onchange
-    discountSelect.addEventListener('change', async () => {
-      const selectedId = discountSelect.value;
-      console.log('[promotions] changed to', selectedId);
-
-      if (selectedId === "") {
-        // nếu chọn "Tất cả" -> gọi endpoint chung /api/product
-        await loadAllProductsToMain();
-      } else {
-        await loadProductsByPromotion(selectedId);
-      }
-    });
-
-  } catch (error) {
-    console.error('Lỗi khi tải khuyến mãi:', error);
-    discountSelect.innerHTML = '<option value="">Không tải được khuyến mãi</option>';
+  } catch (err) {
+    console.error('Lỗi khi tải khuyến mãi:', err);
+    promotionsList.innerHTML = '<li>Đã có lỗi xảy ra</li>';
+    dealHotContainer.innerHTML = '<div class="no-products"><p>Đã có lỗi xảy ra</p></div>';
   }
 }
 
