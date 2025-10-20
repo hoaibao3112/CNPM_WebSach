@@ -730,4 +730,102 @@ router.get('/status-stats', async (req, res) => {
   }
 });
 
+router.post('/activity/view',  async (req, res) => {
+    const { maSanPham, makh } = req.body; 
+    if (!maSanPham) {
+        return res.status(400).send("Thiếu mã sản phẩm");
+    }
+    const sql = "INSERT INTO hanh_dong_user (makhachhang, loaihanhdong, masanpham) VALUES (?, 'view', ?)";
+    try {
+        await pool.query(sql, [makh, maSanPham]);
+        res.status(201).send({ message: "Ghi nhận hành động xem thành công" });
+    } catch (error) {
+        console.error("Lỗi ghi log 'view':", error);
+        res.status(500).send("Lỗi server");
+    }
+});
+
+router.post('/activity/search', async (req, res) => {
+    const { query, makh } = req.body;
+
+    if (!query) {
+        return res.status(400).send("Thiếu từ khóa tìm kiếm");
+    }
+    const sql = "INSERT INTO hanh_dong_user (makhachhang, loaihanhdong, search_query) VALUES (?, 'search', ?)";
+    try {
+          await pool.query(sql, [makh, query]);
+        res.status(201).send({ message: "Ghi nhận hành động tìm kiếm thành công" });
+    } catch (error) {
+        console.error("Lỗi ghi log 'search':", error);
+        res.status(500).send("Lỗi server");
+    }
+});
+
+
+async function getRecommendationsBySearch(makh) {
+    const [searchRows] = await pool.query(
+        "SELECT DISTINCT search_query FROM hanh_dong_user WHERE makhachhang = ? AND loaihanhdong = 'search' ORDER BY timestamp DESC LIMIT 5",
+        [makh]
+    );
+
+    if (searchRows.length === 0) {
+        return [];
+    }
+    const searchConditions = searchRows.map(() => `(TenSP LIKE ? OR MoTa LIKE ?)`).join(' OR ');
+    const searchValues = searchRows.flatMap(row => [`%${row.search_query}%`, `%${row.search_query}%`]);
+
+    const productSql = `SELECT MaSP, TenSP, HinhAnh, DonGia FROM sanpham WHERE ${searchConditions} LIMIT 10`;
+    const [products] = await pool.query(productSql, searchValues);
+    
+    return products;
+}
+
+router.get('/api/recommendations', async (req, res) => {
+    const { makh } = req.query;
+    const viewSql = `
+        SELECT
+            p2.MaSP, p2.TenSP, p2.HinhAnh, p2.DonGia 
+        FROM
+            SELECT masanpham, timestamp
+                FROM hanh_dong_user
+                WHERE makhachhang = ? 
+                  AND loaihanhdong = 'view'
+                ORDER BY timestamp DESC
+                LIMIT 100 -- Chỉ quét 100 hành động MỚI NHẤT
+            ) AS ua
+        JOIN
+            sanpham AS p1 ON ua.masanpham = p1.MaSP 
+        JOIN
+            sanpham AS p2 ON p1.MaTL = p2.MaTL 
+        WHERE
+            p1.MaSP != p2.MaSP      
+        GROUP BY
+            p2.MaSP, p2.TenSP, p2.HinhAnh, p2.DonGia 
+        ORDER BY
+            MAX(ua.timestamp) DESC      
+        LIMIT 10;
+    `;
+
+    try {
+        const [viewRecommendations] = await pool.query(viewSql, [makh]); 
+        if (viewRecommendations.length > 0) {
+            console.log(`(makh: ${makh}) Đề xuất theo 'view': ${viewRecommendations.length} sản phẩm.`);
+            return res.json(viewRecommendations);
+        }
+        console.log(`(makh: ${makh}) Không có 'view', thử đề xuất theo 'search'.`);
+        const searchRecommendations = await getRecommendationsBySearch(makh);
+
+        if (searchRecommendations.length > 0) {
+            console.log(`(makh: ${makh}) Đề xuất theo 'search': ${searchRecommendations.length} sản phẩm.`);
+            return res.json(searchRecommendations);
+        }
+        console.log(`(makh: ${makh}) Không có dữ liệu để đề xuất.`);
+        return res.json({ message: "Chưa có đủ dữ liệu để đề xuất." });
+
+    } catch (error) {
+        console.error("Lỗi lấy đề xuất:", error);
+        res.status(500).send("Lỗi server");
+    }
+});
+
 export default router;
