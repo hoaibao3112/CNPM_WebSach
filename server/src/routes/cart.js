@@ -112,4 +112,60 @@ router.delete('/clear', authenticateToken, async (req, res) => {
   }
 });
 
+// 🚀 API MUA LẠI ĐƠN HÀNG (reorder)
+// POST /api/cart/reorder/:orderId
+router.post('/reorder/:orderId', authenticateToken, async (req, res) => {
+  const { orderId } = req.params;
+  if (!orderId) return res.status(400).json({ success: false, error: 'Thiếu mã đơn hàng' });
+
+  const connection = await pool.getConnection();
+  try {
+    await connection.beginTransaction();
+
+    // Lấy customerId từ token (hỗ trợ nhiều kiểu tên trường)
+    const customerId = req.user.userId || req.user.makh || req.user.id || req.user.customerId;
+    if (!customerId) {
+        await connection.rollback();
+        return res.status(401).json({ success: false, error: 'Không xác thực được người dùng' });
+    }
+
+    // Lấy chi tiết đơn hàng và kiểm tra quyền sở hữu
+    const [rows] = await connection.query(`
+      SELECT ct.MaSP, ct.SoLuong
+      FROM chitiethoadon ct
+      JOIN hoadon hd ON ct.MaHD = hd.MaHD
+      WHERE ct.MaHD = ? AND hd.makh = ?
+    `, [orderId, customerId]);
+
+    if (!rows || rows.length === 0) {
+      await connection.rollback();
+      return res.status(404).json({ success: false, error: 'Không tìm thấy đơn hàng hoặc không có quyền truy cập' });
+    }
+
+    let readdedCount = 0;
+    for (const item of rows) {
+      const MaSP = item.MaSP;
+      const qty = Number(item.SoLuong) || 1;
+
+      // ✅ SỬA LỖI: INSERT vào bảng 'giohang' (không phải 'giohang_chitiet')
+      // Giả định bảng 'giohang' có các cột MaKH, MaSP, SoLuong
+      const [result] = await connection.query(`
+        INSERT INTO giohang (MaKH, MaSP, SoLuong)
+        VALUES (?, ?, ?)
+        ON DUPLICATE KEY UPDATE SoLuong = SoLuong + VALUES(SoLuong)
+      `, [customerId, MaSP, qty]);
+
+      if (result && result.affectedRows > 0) readdedCount++;
+    }
+
+    await connection.commit();
+    return res.json({ success: true, message: `Đã thêm ${readdedCount} sản phẩm vào giỏ hàng!`, readdedCount });
+  } catch (error) {
+    try { await connection.rollback(); } catch (e) { /* ignore */ }
+    console.error('Lỗi khi reorder:', error);
+    return res.status(500).json({ success: false, error: 'Lỗi server khi mua lại đơn hàng', details: error.message });
+  } finally {
+    connection.release();
+  }
+});
 export default router;

@@ -346,7 +346,58 @@ async function renderCart() {
   updateSummary(subtotal);
   attachEventListeners();
   updateCartCount();
+  // Emit custom event so other scripts can react (e.g., auto checkout after reorder)
+  try { window.dispatchEvent(new CustomEvent('cart:rendered', { detail: { subtotal } })); } catch (e) { /* ignore */ }
 }
+
+// Prefill checkout form when redirected from reorder
+window.addEventListener('cart:rendered', () => {
+  try {
+    const raw = localStorage.getItem('reorder_address');
+    if (!raw) return;
+    const addr = JSON.parse(raw || '{}');
+
+    if (addr.tenkh) {
+      const el = document.getElementById('name');
+      if (el) el.value = addr.tenkh;
+    }
+    if (addr.sdt) {
+      const el = document.getElementById('phone');
+      if (el) el.value = addr.sdt;
+    }
+    if (addr.email) {
+      const el = document.getElementById('email');
+      if (el) el.value = addr.email;
+    }
+    if (addr.tinhthanh) {
+      const el = document.getElementById('tinhthanh');
+      if (el) el.value = addr.tinhthanh;
+    }
+    // Trigger change to load districts (if function exists)
+    const prov = document.getElementById('tinhthanh');
+    if (prov && typeof prov.dispatchEvent === 'function') {
+      prov.dispatchEvent(new Event('change'));
+    }
+    // Delay filling district/ward until they are loaded
+    setTimeout(() => {
+      if (addr.quanhuyen) {
+        const el = document.getElementById('quanhuyen');
+        if (el) el.value = addr.quanhuyen;
+      }
+      if (addr.phuongxa) {
+        const el = document.getElementById('phuongxa');
+        if (el) el.value = addr.phuongxa;
+      }
+      if (addr.diachi) {
+        const el = document.getElementById('diachichitiet');
+        if (el) el.value = addr.diachi;
+      }
+    }, 700);
+
+    // Remove saved reorder address to avoid reusing it later
+    localStorage.removeItem('reorder_address');
+  } catch (e) { console.warn('Failed to prefill reorder address', e); }
+});
 
 // Update order summary
 function updateSummary(subtotal, discount = 0) {
@@ -800,6 +851,149 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   await renderCart();
+  // If user arrived here after a reorder and we have a backup, show restore banner
+  try {
+    const backupRaw = localStorage.getItem('cart_backup_before_reorder');
+    const metaRaw = localStorage.getItem('reorder_meta');
+    if (backupRaw && metaRaw) {
+      showRestoreBanner();
+    }
+  } catch (e) { /* ignore */ }
+});
+
+// Show banner offering to restore previous cart
+function showRestoreBanner() {
+  const existing = document.getElementById('restore-banner');
+  if (existing) return;
+  const banner = document.createElement('div');
+  banner.id = 'restore-banner';
+  banner.style.position = 'fixed';
+  banner.style.top = '80px';
+  banner.style.right = '20px';
+  banner.style.zIndex = '1200';
+  banner.style.background = '#fff3cd';
+  banner.style.border = '1px solid #ffeeba';
+  banner.style.padding = '12px 16px';
+  banner.style.borderRadius = '8px';
+  banner.style.boxShadow = '0 6px 18px rgba(0,0,0,0.08)';
+  banner.innerHTML = `
+    <div style="display:flex;gap:10px;align-items:center;">
+      <div style="flex:1;">Bạn vừa chọn 'Mua lại'. Muốn khôi phục giỏ hàng trước đó hoặc giữ các mặt hàng mới?</div>
+      <div style="display:flex;gap:8px;">
+        <button id="restore-cart-btn" class="btn" style="background:#28a745;color:white;">Khôi phục</button>
+        <button id="keep-reorder-btn" class="btn btn-secondary">Giữ sản phẩm mới</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(banner);
+
+  document.getElementById('restore-cart-btn').addEventListener('click', async () => {
+    await restoreCartFromBackup();
+    removeRestoreBanner();
+  });
+  document.getElementById('keep-reorder-btn').addEventListener('click', () => {
+    // Remove backup, keep current cart
+    localStorage.removeItem('cart_backup_before_reorder');
+    localStorage.removeItem('reorder_meta');
+    removeRestoreBanner();
+  });
+}
+
+function removeRestoreBanner() {
+  const el = document.getElementById('restore-banner');
+  if (el) el.remove();
+}
+
+// Restore cart either by syncing backup to server (if logged in) or replacing localStorage cart
+async function restoreCartFromBackup() {
+  try {
+    const raw = localStorage.getItem('cart_backup_before_reorder');
+    if (!raw) return false;
+    const backup = JSON.parse(raw);
+
+    if (isLoggedIn()) {
+      // send restore to server: delete current cart and insert backup items
+      try {
+        // Clear server cart first
+        await fetch('http://localhost:5000/api/cart/clear', {
+          method: 'DELETE',
+          headers: { 'Authorization': `Bearer ${getToken()}` }
+        });
+
+        // Add each backup item
+        for (const it of backup) {
+          await fetch('http://localhost:5000/api/cart/add', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${getToken()}` },
+            body: JSON.stringify({ productId: it.id, quantity: it.quantity })
+          });
+        }
+      } catch (err) {
+        console.warn('Server restore failed, falling back to local restore', err);
+        localStorage.setItem('cart', JSON.stringify(backup));
+      }
+    } else {
+      // Not logged in — just restore local cart
+      localStorage.setItem('cart', JSON.stringify(backup));
+    }
+
+    // remove backup after restore and re-render
+    localStorage.removeItem('cart_backup_before_reorder');
+    localStorage.removeItem('reorder_meta');
+    await renderCart();
+    showToast('Giỏ hàng đã được khôi phục');
+    return true;
+  } catch (e) {
+    console.error('Restore failed', e);
+    showToast('Không thể khôi phục giỏ hàng');
+    return false;
+  }
+}
+
+// If user navigates away without confirming, try to restore using sendBeacon to server (best-effort)
+window.addEventListener('pagehide', () => {
+  try {
+    const meta = localStorage.getItem('reorder_meta');
+    const backup = localStorage.getItem('cart_backup_before_reorder');
+    if (!meta || !backup) return;
+    // attempt sendBeacon to server to persist backup restore request
+    if (navigator.sendBeacon) {
+      const payload = JSON.stringify({ backup: JSON.parse(backup) });
+      const url = 'http://localhost:5000/api/cart/restore-beacon';
+      navigator.sendBeacon(url, new Blob([payload], { type: 'application/json' }));
+    }
+  } catch (e) { /* ignore */ }
+});
+
+// Auto-checkout when redirected from 'reorder' flow
+document.addEventListener('DOMContentLoaded', () => {
+  try {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('autoCheckout') === '1') {
+      // Wait for renderCart to finish (it dispatches 'cart:rendered')
+      const doCheckout = () => {
+        const checkoutBtn = document.getElementById('checkout-btn');
+        if (checkoutBtn) {
+          // small delay to ensure UI is interactive
+          setTimeout(() => checkoutBtn.click(), 300);
+        } else {
+          // fallback: scroll to checkout area
+          const checkout = document.querySelector('.checkout-section');
+          if (checkout) checkout.scrollIntoView({ behavior: 'smooth' });
+        }
+      };
+
+      window.addEventListener('cart:rendered', function handler() {
+        window.removeEventListener('cart:rendered', handler);
+        doCheckout();
+      });
+
+      // safety timeout if event never fires
+      setTimeout(() => {
+        doCheckout();
+      }, 2500);
+    }
+  } catch (e) { console.warn('autoCheckout init failed', e); }
 });
 
 // Export functions

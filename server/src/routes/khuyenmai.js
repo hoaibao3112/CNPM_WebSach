@@ -119,6 +119,93 @@ router.get('/my-promotions', authenticateToken, async (req, res) => {
   }
 });
 
+// GET /active-products - Lấy danh sách sản phẩm đang được khuyến mãi (active)
+// Trả về mỗi sản phẩm kèm thông tin khuyến mãi áp dụng (nếu nhiều khuyến mãi, lấy khuyến mãi có ưu tiên cao nhất theo GiaTriGiam/GiamToiDa)
+router.get('/active-products', async (req, res) => {
+  try {
+    // Lấy tất cả các khuyến mãi đang active
+    const [activePromotions] = await pool.query(
+      `SELECT k.MaKM, k.TenKM, k.LoaiKM, k.Code, CAST(k.TrangThai AS UNSIGNED) as TrangThai,
+              ct.GiaTriGiam, ct.GiaTriDonToiThieu, ct.GiamToiDa, ct.SoLuongToiThieu
+       FROM khuyen_mai k
+       JOIN ct_khuyen_mai ct ON k.MaKM = ct.MaKM
+       WHERE k.TrangThai = 1
+         AND k.NgayBatDau <= NOW()
+         AND k.NgayKetThuc >= NOW()`
+    );
+
+    if (activePromotions.length === 0) {
+      return res.status(200).json({ data: [] });
+    }
+
+    // Lấy tất cả sản phẩm áp dụng cho các khuyến mãi active
+    // Trả về: MaSP, TenSP, HinhAnh (nếu có), DonGia, MaKM, thông tin khuyến mãi
+    const [rows] = await pool.query(
+      `SELECT sp.MaSP, sp.TenSP, sp.HinhAnh, sp.DonGia, km.MaKM, km.TenKM, km.LoaiKM,
+              ct.GiaTriGiam, ct.GiaTriDonToiThieu, ct.GiamToiDa, ct.SoLuongToiThieu, k.Code,
+              k.NgayBatDau, k.NgayKetThuc
+       FROM sp_khuyen_mai spkm
+       JOIN sanpham sp ON spkm.MaSP = sp.MaSP
+       JOIN khuyen_mai km ON spkm.MaKM = km.MaKM
+       JOIN ct_khuyen_mai ct ON km.MaKM = ct.MaKM
+       JOIN khuyen_mai k ON k.MaKM = km.MaKM
+       WHERE k.TrangThai = 1
+         AND k.NgayBatDau <= NOW()
+         AND k.NgayKetThuc >= NOW()`
+    );
+
+    // Nếu không có sản phẩm được liên kết -> empty
+    if (rows.length === 0) {
+      return res.status(200).json({ data: [] });
+    }
+
+    // Gom nhóm theo MaSP, nếu 1 sản phẩm có nhiều khuyến mãi active thì chọn khuyến mãi tốt nhất
+    const grouped = {};
+    for (const r of rows) {
+      const key = r.MaSP;
+      if (!grouped[key]) grouped[key] = [];
+      grouped[key].push(r);
+    }
+
+    const result = Object.values(grouped).map(list => {
+      // Chọn khuyến mãi ưu tiên: nếu có giam_phan_tram -> chọn theo % lớn nhất; nếu giam_tien_mat -> theo giá tiền lớn nhất
+      let best = list[0];
+      for (const item of list) {
+        if (item.LoaiKM === 'giam_phan_tram' && best.LoaiKM === 'giam_phan_tram') {
+          if ((item.GiaTriGiam || 0) > (best.GiaTriGiam || 0)) best = item;
+        } else if (item.LoaiKM === 'giam_tien_mat' && best.LoaiKM === 'giam_tien_mat') {
+          if ((item.GiaTriGiam || 0) > (best.GiaTriGiam || 0)) best = item;
+        } else if (item.LoaiKM === 'giam_phan_tram' && best.LoaiKM === 'giam_tien_mat') {
+          // ưu tiên phần trăm hơn tiền mặt
+          best = item;
+        }
+      }
+
+      return {
+        MaSP: best.MaSP,
+        TenSP: best.TenSP,
+        HinhAnh: best.HinhAnh || null,
+        DonGia: best.DonGia,
+        MaKM: best.MaKM,
+        TenKM: best.TenKM,
+        LoaiKM: best.LoaiKM,
+        GiaTriGiam: best.GiaTriGiam,
+        GiaTriDonToiThieu: best.GiaTriDonToiThieu,
+        GiamToiDa: best.GiamToiDa,
+        SoLuongToiThieu: best.SoLuongToiThieu,
+        Code: best.Code,
+        NgayBatDau: best.NgayBatDau,
+        NgayKetThuc: best.NgayKetThuc
+      };
+    });
+
+    res.status(200).json({ data: result });
+  } catch (error) {
+    console.error('Error fetching active sale products:', error);
+    res.status(500).json({ error: 'Lỗi khi lấy sản phẩm khuyến mãi', details: error.message });
+  }
+});
+
 // GET /:makm - Chi tiết khuyến mãi
 router.get('/:makm', async (req, res) => {
   try {
@@ -606,3 +693,90 @@ router.post('/claim/:makm', authenticateToken, async (req, res) => {
 });
 
 export default router;
+
+// GET /active-products - Lấy danh sách sản phẩm đang được khuyến mãi (active)
+// Trả về mỗi sản phẩm kèm thông tin khuyến mãi áp dụng (nếu nhiều khuyến mãi, lấy khuyến mãi có ưu tiên cao nhất theo GiaTriGiam/GiamToiDa)
+router.get('/active-products', async (req, res) => {
+  try {
+    // Lấy tất cả các khuyến mãi đang active
+    const [activePromotions] = await pool.query(
+      `SELECT k.MaKM, k.TenKM, k.LoaiKM, k.Code, CAST(k.TrangThai AS UNSIGNED) as TrangThai,
+              ct.GiaTriGiam, ct.GiaTriDonToiThieu, ct.GiamToiDa, ct.SoLuongToiThieu
+       FROM khuyen_mai k
+       JOIN ct_khuyen_mai ct ON k.MaKM = ct.MaKM
+       WHERE k.TrangThai = 1
+         AND k.NgayBatDau <= NOW()
+         AND k.NgayKetThuc >= NOW()`
+    );
+
+    if (activePromotions.length === 0) {
+      return res.status(200).json({ data: [] });
+    }
+
+    // Lấy tất cả sản phẩm áp dụng cho các khuyến mãi active
+    // Trả về: MaSP, TenSP, HinhAnh (nếu có), DonGia, MaKM, thông tin khuyến mãi
+    const [rows] = await pool.query(
+      `SELECT sp.MaSP, sp.TenSP, sp.HinhAnh, sp.DonGia, km.MaKM, km.TenKM, km.LoaiKM,
+              ct.GiaTriGiam, ct.GiaTriDonToiThieu, ct.GiamToiDa, ct.SoLuongToiThieu, k.Code,
+              k.NgayBatDau, k.NgayKetThuc
+       FROM sp_khuyen_mai spkm
+       JOIN sanpham sp ON spkm.MaSP = sp.MaSP
+       JOIN khuyen_mai km ON spkm.MaKM = km.MaKM
+       JOIN ct_khuyen_mai ct ON km.MaKM = ct.MaKM
+       JOIN khuyen_mai k ON k.MaKM = km.MaKM
+       WHERE k.TrangThai = 1
+         AND k.NgayBatDau <= NOW()
+         AND k.NgayKetThuc >= NOW()`
+    );
+
+    // Nếu không có sản phẩm được liên kết -> empty
+    if (rows.length === 0) {
+      return res.status(200).json({ data: [] });
+    }
+
+    // Gom nhóm theo MaSP, nếu 1 sản phẩm có nhiều khuyến mãi active thì chọn khuyến mãi tốt nhất
+    const grouped = {};
+    for (const r of rows) {
+      const key = r.MaSP;
+      if (!grouped[key]) grouped[key] = [];
+      grouped[key].push(r);
+    }
+
+    const result = Object.values(grouped).map(list => {
+      // Chọn khuyến mãi ưu tiên: nếu có giam_phan_tram -> chọn theo % lớn nhất; nếu giam_tien_mat -> theo giá tiền lớn nhất
+      let best = list[0];
+      for (const item of list) {
+        if (item.LoaiKM === 'giam_phan_tram' && best.LoaiKM === 'giam_phan_tram') {
+          if ((item.GiaTriGiam || 0) > (best.GiaTriGiam || 0)) best = item;
+        } else if (item.LoaiKM === 'giam_tien_mat' && best.LoaiKM === 'giam_tien_mat') {
+          if ((item.GiaTriGiam || 0) > (best.GiaTriGiam || 0)) best = item;
+        } else if (item.LoaiKM === 'giam_phan_tram' && best.LoaiKM === 'giam_tien_mat') {
+          // ưu tiên phần trăm hơn tiền mặt
+          best = item;
+        }
+      }
+
+      return {
+        MaSP: best.MaSP,
+        TenSP: best.TenSP,
+        HinhAnh: best.HinhAnh || null,
+        DonGia: best.DonGia,
+        MaKM: best.MaKM,
+        TenKM: best.TenKM,
+        LoaiKM: best.LoaiKM,
+        GiaTriGiam: best.GiaTriGiam,
+        GiaTriDonToiThieu: best.GiaTriDonToiThieu,
+        GiamToiDa: best.GiamToiDa,
+        SoLuongToiThieu: best.SoLuongToiThieu,
+        Code: best.Code,
+        NgayBatDau: best.NgayBatDau,
+        NgayKetThuc: best.NgayKetThuc
+      };
+    });
+
+    res.status(200).json({ data: result });
+  } catch (error) {
+    console.error('Error fetching active sale products:', error);
+    res.status(500).json({ error: 'Lỗi khi lấy sản phẩm khuyến mãi', details: error.message });
+  }
+});

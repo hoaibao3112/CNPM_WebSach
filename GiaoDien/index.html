@@ -7,7 +7,8 @@
   <link rel="stylesheet" href="styles/index.css" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
   <link rel="stylesheet" href="styles/book.css" />
-  <link rel="stylesheet" href="styles/giamgia1.css">
+  <!-- giamgia1 styles are page-specific; don't include on index to avoid style bleed -->
+  <link rel="stylesheet" href="styles/products_sales.css">
   <link rel="icon" href="favicon.ico" type="image/x-icon" />
 </head>
 <body>
@@ -66,6 +67,21 @@
     <img src="img/giamgia/anh8.jpg" alt="Khuyến mãi 8" class="promo-button" onclick="loadContent('/khuyenmai.html?id=8')">
     <img src="img/giamgia/anh9.jpg" alt="Khuyến mãi 9" class="promo-button" onclick="loadContent('/khuyenmai.html?id=9')">
   </div>
+  <!-- Flash Sale component placed here (outside Sách Mới) -->
+  <div id="flash-sale" class="flash-sale-container">
+    <div class="flash-sale-header">
+      <div class="flash-sale-left">
+        <h2>FLASH SALE</h2>
+        <div id="flash-countdown" class="countdown"> </div>
+      </div>
+      <button id="flash-view-all" class="view-all-btn">Xem tất cả</button>
+    </div>
+
+    <div id="flash-products" class="flash-products">
+      <div class="loading">Đang tải khuyến mãi...</div>
+    </div>
+  </div>
+  <script src="js/products_sales.js" defer></script>
   <!-- Main content -->
   <div class="container">
     
@@ -76,6 +92,9 @@
         <div class="view-all">
           <!-- <a href="book.html">Xem tất cả <i class="fas fa-chevron-right"></i></a> -->
         </div>
+
+        <!-- Flash Sale moved above (after promotion-buttons) -->
+
         <div id="book-list" class="product-container"></div>
       </div>
 
@@ -227,5 +246,6 @@
   <script src="js/index.js"></script>
   <script src="js/book.js"></script>
   <script src="js/loadHeader.js"></script>
+  <script src="js/loadComponents.js"></script>
 </body>
 </html>
