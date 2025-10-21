@@ -232,85 +232,85 @@ function getStorageContainerId() {
   // fallback to any existing main container id
   return getMainProductContainerId() || 'search-book-list';
 }
-  // Storage helpers
-  function storageKeyForGroup(group, containerId) {
-    // Use global storage keys (no container suffix) so filters persist across pages.
-    switch (group) {
-      case 'supplierButtons': return `currentSupplier`;
-      case 'authorButtons': return `currentAuthor`;
-      case 'priceButtons': return `currentPriceRange`;
-      case 'hinhThucButtons': return `currentHinhThuc`;
-      case 'discountButtons': return `currentPromotion`;
-      case 'category': return `currentCategory`;
-      default: return null;
-    }
+// Storage helpers
+function storageKeyForGroup(group, containerId) {
+  // Use global storage keys (no container suffix) so filters persist across pages.
+  switch (group) {
+    case 'supplierButtons': return `currentSupplier`;
+    case 'authorButtons': return `currentAuthor`;
+    case 'priceButtons': return `currentPriceRange`;
+    case 'hinhThucButtons': return `currentHinhThuc`;
+    case 'discountButtons': return `currentPromotion`;
+    case 'category': return `currentCategory`;
+    default: return null;
   }
+}
 
-  function clearStoredFilterForGroup(group) {
-    const key = storageKeyForGroup(group);
+function clearStoredFilterForGroup(group) {
+  const key = storageKeyForGroup(group);
+  if (!key) return;
+  // remove global key
+  localStorage.removeItem(key);
+  // also remove known fallback/container-specific keys
+  const fallbacks = [`${key}_book-list`, `${key}_search-book-list`, `${key}_promotion-book-list`];
+  fallbacks.forEach(k => localStorage.removeItem(k));
+}
+
+// Read stored value for a filter group with fallbacks
+function getStoredFilterValue(group) {
+  const key = storageKeyForGroup(group);
+  if (!key) return null;
+  let v = localStorage.getItem(key);
+  if (v) return v;
+  // fallback to older container-specific keys
+  const fallbacks = [`${key}_book-list`, `${key}_search-book-list`, `${key}_promotion-book-list`];
+  for (const fb of fallbacks) {
+    const vv = localStorage.getItem(fb);
+    if (vv) return vv;
+  }
+  return null;
+}
+
+function restoreActiveFromStorage() {
+  // Use global storage keys. For backward compatibility, fall back to older
+  // container-specific keys that may exist (e.g., currentPriceRange_book-list).
+  const groups = ['supplierButtons', 'authorButtons', 'priceButtons', 'hinhThucButtons', 'discountButtons'];
+  groups.forEach(gid => {
+    const key = storageKeyForGroup(gid);
     if (!key) return;
-    // remove global key
-    localStorage.removeItem(key);
-    // also remove known fallback/container-specific keys
-    const fallbacks = [`${key}_book-list`, `${key}_search-book-list`, `${key}_promotion-book-list`];
-    fallbacks.forEach(k => localStorage.removeItem(k));
-  }
-
-  // Read stored value for a filter group with fallbacks
-  function getStoredFilterValue(group) {
-    const key = storageKeyForGroup(group);
-    if (!key) return null;
-    let v = localStorage.getItem(key);
-    if (v) return v;
-    // fallback to older container-specific keys
-    const fallbacks = [`${key}_book-list`, `${key}_search-book-list`, `${key}_promotion-book-list`];
-    for (const fb of fallbacks) {
-      const vv = localStorage.getItem(fb);
-      if (vv) return vv;
+    // Try global key first
+    let stored = localStorage.getItem(key);
+    // fallback keys (old names)
+    if (!stored) {
+      const fallbacks = [
+        `${key}_book-list`,
+        `${key}_search-book-list`,
+        `${key}_promotion-book-list`
+      ];
+      for (const fb of fallbacks) {
+        const v = localStorage.getItem(fb);
+        if (v) { stored = v; break; }
+      }
     }
-    return null;
-  }
-
-  function restoreActiveFromStorage() {
-    // Use global storage keys. For backward compatibility, fall back to older
-    // container-specific keys that may exist (e.g., currentPriceRange_book-list).
-    const groups = ['supplierButtons','authorButtons','priceButtons','hinhThucButtons','discountButtons'];
-    groups.forEach(gid => {
-      const key = storageKeyForGroup(gid);
-      if (!key) return;
-      // Try global key first
-      let stored = localStorage.getItem(key);
-      // fallback keys (old names)
-      if (!stored) {
-        const fallbacks = [
-          `${key}_book-list`,
-          `${key}_search-book-list`,
-          `${key}_promotion-book-list`
-        ];
-        for (const fb of fallbacks) {
-          const v = localStorage.getItem(fb);
-          if (v) { stored = v; break; }
-        }
-      }
-      const cont = document.getElementById(gid);
-      if (!cont) return;
-      // remove existing active
-      cont.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-      if (!stored) {
-        // set 'Tất cả' active
-        const all = Array.from(cont.querySelectorAll('.filter-btn')).find(b => (b.dataset.value === '' || b.dataset.id === ''));
-        if (all) all.classList.add('active');
-        createOrUpdateChip(gid, '', '');
-        return;
-      }
-      // find matching button by data-value or data-id
-      const match = Array.from(cont.querySelectorAll('.filter-btn')).find(b => (b.dataset.value === stored || b.dataset.id === stored));
-      if (match) {
-        match.classList.add('active');
-        createOrUpdateChip(gid, match.textContent.trim(), stored);
-      }
-    });
-  }
+    const cont = document.getElementById(gid);
+    if (!cont) return;
+    // remove existing active
+    cont.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    if (!stored) {
+      // set 'Tất cả' active
+      const all = Array.from(cont.querySelectorAll('.filter-btn')).find(b => (b.dataset.value === '' || b.dataset.id === ''));
+      if (all) all.classList.add('active');
+      createOrUpdateChip(gid, '', '');
+      return;
+    }
+    // find matching button by data-value or data-id
+    const match = Array.from(cont.querySelectorAll('.filter-btn')).find(b => (b.dataset.value === stored || b.dataset.id === stored));
+    if (match) {
+      match.classList.add('active');
+      createOrUpdateChip(gid, match.textContent.trim(), stored);
+    }
+  });
+}
 
 function createOrUpdateChip(group, label, value) {
   ensureFilterBar();
@@ -356,7 +356,7 @@ function clearAllChips() {
 
 function triggerFilterFetchFromUI() {
   // read active selections from each filter group and call fetchProductsWithFilters
-  const groups = ['supplierButtons','authorButtons','priceButtons','hinhThucButtons','discountButtons'];
+  const groups = ['supplierButtons', 'authorButtons', 'priceButtons', 'hinhThucButtons', 'discountButtons'];
   const filters = {};
   groups.forEach(gid => {
     const container = document.getElementById(gid);
@@ -365,7 +365,7 @@ function triggerFilterFetchFromUI() {
     if (!active) return;
     const val = active.dataset.value || active.dataset.id || '';
     if (!val) return;
-    switch(gid) {
+    switch (gid) {
       case 'supplierButtons': filters.MaNCC = val; break;
       case 'authorButtons': filters.MaTG = val; break;
       case 'priceButtons': filters.priceRange = val; break;
@@ -406,7 +406,7 @@ function triggerFilterFetchFromUI() {
 // which can show previously-active buttons even after storage was cleared.
 function reconcileUIWithStorage() {
   if (!isBookPage()) return;
-  const groups = ['supplierButtons','authorButtons','priceButtons','hinhThucButtons','discountButtons'];
+  const groups = ['supplierButtons', 'authorButtons', 'priceButtons', 'hinhThucButtons', 'discountButtons'];
   groups.forEach(gid => {
     const cont = document.getElementById(gid);
     if (!cont) return;
@@ -453,9 +453,26 @@ function showAllProducts(containerId) {
 }
 
 // Xem chi tiết sản phẩm
-function viewDetail(productId) {
-  localStorage.setItem('selectedProductId', productId);
-  window.location.href = 'product_detail.html';
+async function viewDetail(productId) {
+    let customerId = null;
+    try {
+        const userString = localStorage.getItem('user');
+        if (userString) {
+            const userObject = JSON.parse(userString);
+            if (userObject && userObject.makh) {
+                customerId = userObject.makh;
+            }
+        }
+    } catch (error) {
+        console.error("Lỗi khi đọc 'user' từ localStorage:", error);
+    }
+    try {
+        await productViewActivity(productId, customerId); 
+    } catch (apiError) {
+        console.error("Lỗi khi ghi log view:", apiError);
+    }
+    localStorage.setItem('selectedProductId', productId);
+    window.location.href = 'product_detail.html';
 }
 
 // Lọc sản phẩm theo thể loại
@@ -539,11 +556,11 @@ async function fetchAndDisplayProducts() {
     productList.innerHTML = '<div class="loading">Đang tải sản phẩm...</div>';
 
     let url = 'http://localhost:5000/api/product';
-  // Only honor saved filters when we are on the book page itself.
-  const categoryKey = storageKeyForGroup('category');
-  const priceKey = storageKeyForGroup('priceButtons');
-  const categoryId = isBookPage() ? (categoryKey ? localStorage.getItem(categoryKey) : null) : null;
-  const priceRange = isBookPage() ? (priceKey ? localStorage.getItem(priceKey) : null) : null;
+    // Only honor saved filters when we are on the book page itself.
+    const categoryKey = storageKeyForGroup('category');
+    const priceKey = storageKeyForGroup('priceButtons');
+    const categoryId = isBookPage() ? (categoryKey ? localStorage.getItem(categoryKey) : null) : null;
+    const priceRange = isBookPage() ? (priceKey ? localStorage.getItem(priceKey) : null) : null;
     const params = new URLSearchParams();
     if (categoryId) params.append('MaTL', categoryId);
     if (priceRange) params.append('priceRange', priceRange);
@@ -1115,7 +1132,7 @@ if (typeof window !== 'undefined' && isBookPage()) {
     if (clearBtn) {
       clearBtn.addEventListener('click', () => {
         // reset all groups to 'Tất cả'
-        ['supplierButtons','authorButtons','priceButtons','hinhThucButtons','discountButtons'].forEach(gid => {
+        ['supplierButtons', 'authorButtons', 'priceButtons', 'hinhThucButtons', 'discountButtons'].forEach(gid => {
           const container = document.getElementById(gid);
           if (!container) return;
           container.querySelectorAll('.filter-btn').forEach(b => {
@@ -1124,7 +1141,7 @@ if (typeof window !== 'undefined' && isBookPage()) {
           });
         });
         // clear stored keys (use helper that also removes legacy fallback keys)
-        ['supplierButtons','authorButtons','priceButtons','hinhThucButtons','discountButtons','category'].forEach(gid => {
+        ['supplierButtons', 'authorButtons', 'priceButtons', 'hinhThucButtons', 'discountButtons', 'category'].forEach(gid => {
           clearStoredFilterForGroup(gid);
         });
         // clear chips UI
@@ -1166,8 +1183,8 @@ if (typeof window !== 'undefined' && isBookPage()) {
       }
 
       // General filter groups: supplier, author, price, hinhthuc, format
-      if (['supplierButtons','authorButtons','priceButtons','hinhThucButtons','formatButtons'].includes(parent.id) ||
-          parent.classList.contains('supplier-buttons') || parent.classList.contains('author-buttons') || parent.classList.contains('price-buttons') || parent.classList.contains('format-buttons') || parent.classList.contains('hinhthuc-buttons')) {
+      if (['supplierButtons', 'authorButtons', 'priceButtons', 'hinhThucButtons', 'formatButtons'].includes(parent.id) ||
+        parent.classList.contains('supplier-buttons') || parent.classList.contains('author-buttons') || parent.classList.contains('price-buttons') || parent.classList.contains('format-buttons') || parent.classList.contains('hinhthuc-buttons')) {
         parent.querySelectorAll('.filter-btn').forEach(x => x.classList.remove('active'));
         btn.classList.add('active');
 

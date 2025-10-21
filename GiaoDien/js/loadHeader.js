@@ -97,22 +97,41 @@ function handleSearch() {
 
 
 const handleSearchHistory = () => {
-  const form = document.getElementById("search-form");
-  const searchInput = document.getElementById("search-input");
+    const form = document.getElementById("search-form");
+    const searchInput = document.getElementById("search-input");
 
-  if (!form || !searchInput) {
-    return;
-  }
-
-  form.addEventListener("submit", (e) => {
-    e.preventDefault();
-    const value = searchInput.value.trim();
-    if (value) {
-      addSearchHistory(value);
-      searchInput.value = "";
-      window.location.href = `/GiaoDien/book.html?search=` + encodeURIComponent(value);
+    if (!form || !searchInput) {
+        return;
     }
-  });
+
+    form.addEventListener("submit", async (e) => {
+        e.preventDefault(); 
+        const value = searchInput.value.trim();
+        if (value) {
+            let customerId = null;
+
+            try {
+                const userString = localStorage.getItem('user');
+                if (userString) {
+                    const userObject = JSON.parse(userString);
+                    if (userObject && userObject.makh) {
+                        customerId = userObject.makh;
+                    }
+                }
+            } catch (error) {
+                console.error("Lỗi khi đọc 'user' từ localStorage:", error);
+            }
+            try {             
+                await productSearchActivity(value, customerId); 
+            } catch (apiError) {
+                console.error("Lỗi API khi log search:", apiError);
+            }
+            addSearchHistory(value); 
+            searchInput.value = "";
+            
+            window.location.href = `/GiaoDien/book.html?search=` + encodeURIComponent(value);
+        }
+    });
 };
 
 
