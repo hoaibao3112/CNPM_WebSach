@@ -121,7 +121,7 @@ const renderProductSearch = (productsFond, data) => {
     img.src = "img/product/" + itemData.HinhAnh;
     p.textContent = itemData.TenSP;
     item.addEventListener("click", () => {
-      loadProductDetailOnHeader(itemData.MaSP); 
+      loadProductDetailOnHeader(itemData.MaSP);
     });
     item.appendChild(img);
     item.appendChild(p);
@@ -132,8 +132,8 @@ const renderProductSearch = (productsFond, data) => {
 
 async function useSearch(value) {
   const productsFond = document.getElementById("products-fond");
-  const result = await searchProduct(value); 
-  renderProductSearch(productsFond, result); 
+  const result = await searchProduct(value);
+  renderProductSearch(productsFond, result);
 }
 
 // js cho phầm tìm kiếm sản phẩm
@@ -171,12 +171,12 @@ function renderHistory() {
     name.addEventListener("click", async () => {
       searchInput.value = word;
       const resulut = await searchProduct(word)
-      renderProductSearch(productsFond,resulut);
+      renderProductSearch(productsFond, resulut);
     });
 
     let removeBtn = document.createElement("span");
     removeBtn.innerHTML = "&times;";
-    removeBtn.addEventListener("click", () =>{
+    removeBtn.addEventListener("click", () => {
       removeHistory(index)
     });
 
@@ -203,7 +203,24 @@ function clearHistory() {
   renderHistory();
 }
 
-loadProductDetailOnHeader = function(productId) {
+loadProductDetailOnHeader = async function (productId) {
+  let customerId = null;
+  try {
+    const userString = localStorage.getItem('user');
+    if (userString) {
+      const userObject = JSON.parse(userString);
+      if (userObject && userObject.makh) {
+        customerId = userObject.makh;
+      }
+    }
+  } catch (error) {
+    console.error("Lỗi khi đọc 'user' từ localStorage:", error);
+  }
+  try {
+    await productViewActivity(productId, customerId);
+  } catch (apiError) {
+    console.error("Lỗi khi ghi log view:", apiError);
+  }
   localStorage.setItem('selectedProductId', productId);
   window.location.href = `/GiaoDien/product_detail.html?MaSP=${productId}`;
-};
+}
