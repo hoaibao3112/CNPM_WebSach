@@ -7,8 +7,7 @@
   <link rel="stylesheet" href="styles/index.css" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
   <link rel="stylesheet" href="styles/book.css" />
-  <!-- giamgia1 styles are page-specific; don't include on index to avoid style bleed -->
-  <link rel="stylesheet" href="styles/products_sales.css">
+  <link rel="stylesheet" href="styles/giamgia1.css">
   <link rel="icon" href="favicon.ico" type="image/x-icon" />
 </head>
 <body>
@@ -86,6 +85,7 @@
   <div class="container">
     
     <main class="main-content">
+      <div id="recommend-widget-container"></div>
       <!-- Phần Sách Mới -->
       <div class="product-section">
         <h2>Sách Mới</h2>
@@ -243,9 +243,10 @@
       </p>
     </div>
   </footer>
+  <script src="js/customerActivity.js"></script>
+  <script src="js/loadHeader.js"></script>
   <script src="js/index.js"></script>
   <script src="js/book.js"></script>
   <script src="js/loadHeader.js"></script>
-  <script src="js/loadComponents.js"></script>
 </body>
 </html>
