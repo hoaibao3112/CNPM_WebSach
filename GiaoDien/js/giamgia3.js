@@ -456,6 +456,115 @@ function displayPromoCodes() {
   });
 }
 
+// Slide chuyển động
+function initTwoBannerSlider() {
+  const leftSlides = document.querySelector('.left-slider .slides');
+  const rightSlides = document.querySelector('.right-slider .slides');
+  if (!leftSlides || !rightSlides) return;
+
+  // original imgs
+  const leftOrig = Array.from(leftSlides.children);
+  const rightOrig = Array.from(rightSlides.children);
+  if (leftOrig.length === 0 || rightOrig.length === 0) return;
+
+  // tránh init nhiều lần
+  const container = leftSlides.closest('.two-banner-wrapper') || leftSlides.parentElement;
+  if (container.dataset.sliderInited) return;
+  container.dataset.sliderInited = '1';
+
+  // clone first + last cho loop smooth
+  const leftFirstClone = leftOrig[0].cloneNode(true);
+  const leftLastClone  = leftOrig[leftOrig.length - 1].cloneNode(true);
+  const rightFirstClone = rightOrig[0].cloneNode(true);
+  const rightLastClone  = rightOrig[rightOrig.length - 1].cloneNode(true);
+
+  leftSlides.appendChild(leftFirstClone);
+  leftSlides.insertBefore(leftLastClone, leftSlides.firstChild);
+  rightSlides.appendChild(rightFirstClone);
+  rightSlides.insertBefore(rightLastClone, rightSlides.firstChild);
+
+  // cập nhật danh sách ảnh sau khi clone
+  const leftAll = Array.from(leftSlides.querySelectorAll('img, *'));
+  const rightAll = Array.from(rightSlides.querySelectorAll('img, *'));
+  // dùng leftAll.length làm total (giả sử 2 slider bằng nhau số lượng)
+  const total = leftAll.length; // original + 2
+  const stepPercent = 100 / total; // mỗi slot chiếm bao nhiêu % của slides container
+
+  // đảm bảo slides container có width = total * 100% và mỗi item đúng width
+  leftSlides.style.width = `${total * 100}%`;
+  rightSlides.style.width = `${total * 100}%`;
+  leftAll.forEach(el => el.style.width = `${100 / total}%`);
+  rightAll.forEach(el => el.style.width = `${100 / total}%`);
+
+  // start index = 1 vì index 0 là clone last
+  let index = 1;
+  let isTransitioning = false;
+  let autoplayId = null;
+
+  function goTo(i, animate = true) {
+    if (animate) {
+      leftSlides.style.transition = 'transform 0.5s ease';
+      rightSlides.style.transition = 'transform 0.5s ease';
+    } else {
+      leftSlides.style.transition = 'none';
+      rightSlides.style.transition = 'none';
+    }
+    const x = -i * stepPercent;
+    leftSlides.style.transform = `translateX(${x}%)`;
+    rightSlides.style.transform = `translateX(${x}%)`;
+    index = i;
+  }
+
+  function next() {
+    if (isTransitioning) return;
+    isTransitioning = true;
+    goTo(index + 1, true);
+  }
+  function prev() {
+    if (isTransitioning) return;
+    isTransitioning = true;
+    goTo(index - 1, true);
+  }
+
+  function onTransitionEnd() {
+    isTransitioning = false;
+    // nếu ở clone cuối -> reset không animation về real đầu (index = 1)
+    if (index === total - 1) {
+      goTo(1, false);
+    }
+    // nếu ở clone đầu -> reset không animation về real cuối (total - 2)
+    if (index === 0) {
+      goTo(total - 2, false);
+    }
+  }
+
+  leftSlides.addEventListener('transitionend', onTransitionEnd);
+  rightSlides.addEventListener('transitionend', onTransitionEnd);
+
+  const prevBtn = container.querySelector('.prev') || document.querySelector('.prev');
+  const nextBtn = container.querySelector('.next') || document.querySelector('.next');
+  if (prevBtn) prevBtn.addEventListener('click', () => { prev(); restartAuto(); });
+  if (nextBtn) nextBtn.addEventListener('click', () => { next(); restartAuto(); });
+
+  function startAuto() {
+    stopAuto();
+    autoplayId = setInterval(next, 3000);
+  }
+  function stopAuto() { if (autoplayId) clearInterval(autoplayId); autoplayId = null; }
+  function restartAuto() { stopAuto(); startAuto(); }
+
+  container.addEventListener('mouseenter', stopAuto);
+  container.addEventListener('mouseleave', restartAuto);
+
+  // chờ ảnh load xong để set initial pos chính xác
+  const allImgs = Array.from(leftSlides.querySelectorAll('img')).concat(Array.from(rightSlides.querySelectorAll('img')));
+  const promises = allImgs.map(img => img.complete ? Promise.resolve() : new Promise(r => img.addEventListener('load', r)));
+  Promise.all(promises).then(() => {
+    goTo(index, false);
+    startAuto();
+  });
+}
+
 // Khởi tạo trang khi DOM đã sẵn sàng
 document.addEventListener('DOMContentLoaded', async function() {
   // Load vouchers nếu có container
@@ -468,6 +577,9 @@ document.addEventListener('DOMContentLoaded', async function() {
   if (document.getElementById('promo-codes-list')) {
     displayPromoCodes();
   }
+
+  // Chạy slider nếu có slides
+  initTwoBannerSlider();
 });
 
 // Export functions để có thể sử dụng ở file khác
@@ -476,5 +588,6 @@ window.voucherFunctions = {
   renderVouchers,
   displayPromoCodes,
   showModal,
-  isLoggedIn
+  isLoggedIn,
+  initTwoBannerSlider
 };

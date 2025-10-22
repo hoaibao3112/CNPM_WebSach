@@ -1,15 +1,18 @@
 body {
   margin: 0;
   font-family: Arial, sans-serif;
-  background: #b80000;
+  background-color: #DD1B11 !important;
   min-height: 100vh;
 }
-.top-banner {
+
+.top-banner, .inner-banner {
   display: flex;
   justify-content: center;
   margin-top: 32px;
   margin-bottom: 32px;
-}.voucher-btn {
+}
+
+.voucher-btn {
   background: #1976d2;
   color: #fff;
   border: none;
@@ -24,12 +27,20 @@ body {
   transform: scale(1.05);
 }
 
-.top-banner img {
+.top-banner img, .inner-banner img {
+  width: 90vw;
+  max-width: 1200px;
+  border-radius: 24px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.12);
+}
+
+.inner-banner img {
   width: 90vw;
   max-width: 900px;
   border-radius: 24px;
   box-shadow: 0 4px 24px rgba(0,0,0,0.12);
 }
+
 .voucher-list {
   display: flex;
   flex-wrap: wrap;
@@ -128,6 +139,61 @@ body {
   vertical-align: middle;
   cursor: pointer;
 }
+
+.two-banner-wrapper {
+  display: flex;
+  gap: 20px;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  max-width: 1000px;
+  margin: 40px auto;
+}
+
+.slider {
+  width: 50%;
+  overflow: hidden;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.25);
+}
+
+.slides {
+  display: flex;
+  transition: transform 0.8s ease-in-out;
+}
+
+.slides img {
+  width: 100%;
+  height: 300px;
+  object-fit: cover;
+  flex-shrink: 0;
+  opacity: 0.95;
+}
+
+/* Nút điều hướng */
+.prev, .next {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(255,255,255,0.7);
+  color: #333;
+  border: none;
+  font-size: 1rem;
+  padding: 5px 11px;
+  cursor: pointer;
+  border-radius: 50%;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+  transition: background 0.3s, transform 0.2s;
+}
+
+.prev:hover, .next:hover {
+  background: rgba(255,255,255,0.9);
+  transform: translateY(-50%) scale(1.15);
+}
+
+.prev { left: -40px; }
+.next { right: -40px; }
+
 @media (max-width: 1200px) {
   .voucher-list {
     gap: 18px;
@@ -141,3 +207,170 @@ body {
   }
 }
 
+@media (max-width: 768px) {
+  .two-banner-wrapper {
+    flex-direction: column;
+    gap: 16px;
+    max-width: 90vw;
+  }
+
+  .slider {
+    width: 100%;
+  }
+
+  .slides img {
+    height: 220px;
+  }
+
+  .prev, .next {
+    top: 45%;
+    font-size: 1rem;
+    padding: 6px 10px;
+  }
+
+  .prev { left: 10px; }
+  .next { right: 10px; }
+
+  .voucher-list {
+    gap: 20px;
+    padding: 0 16px;
+  }
+
+  .voucher-card {
+    flex: 1 1 calc(50% - 20px);
+    min-width: 240px;
+    max-width: 100%;
+    padding: 14px 16px;
+  }
+
+  .voucher-title {
+    font-size: 1rem;
+  }
+
+  .voucher-desc {
+    font-size: 0.9rem;
+  }
+}
+
+@media (max-width: 430px) {
+  .slides img {
+    height: 180px;
+  }
+
+  .prev, .next {
+    font-size: 0.9rem;
+    padding: 5px 9px;
+  }
+
+  .voucher-list {
+    flex-direction: column;
+    gap: 14px;
+    padding: 0 12px;
+  }
+
+  .voucher-card {
+    flex-direction: column;
+    text-align: center;
+    padding: 12px;
+  }
+
+  .voucher-card .icon {
+    margin-right: 0;
+    margin-bottom: 8px;
+    font-size: 1.6rem;
+  }
+
+  .voucher-title {
+    font-size: 0.95rem;
+  }
+
+  .voucher-desc {
+    font-size: 0.85rem;
+  }
+}
+
+@media (max-width: 376px) {
+  .slides img {
+    height: 145px;
+  }
+
+  .prev, .next {
+    font-size: 0.75rem;
+    padding: 4px 7px;
+  }
+
+  .voucher-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 0 10px;
+    margin: 0 auto;
+  }
+
+  .voucher-list {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;      /* ✅ bẻ về full chiều ngang */
+    justify-content: flex-start;
+    gap: 10px;
+    padding: 0 10px;
+    margin: 0 auto;
+  }
+
+  .voucher-card {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;   /* ✅ icon - text nằm trái */
+    text-align: left;             /* ✅ override text-align center cũ */
+    background: #fff;
+    border-radius: 10px;
+    padding: 10px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+    width: 100%;                  /* ✅ kéo full chiều ngang */
+    max-width: 340px;
+    margin: 0 auto;
+    gap: 10px;
+  }
+
+  .voucher-card .icon {
+    font-size: 1.6rem;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+  }
+
+  .voucher-info {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    flex: 1;
+  }
+
+  .voucher-title {
+    font-size: 0.85rem;
+    font-weight: 600;
+    margin-bottom: 3px;
+    line-height: 1.2;
+  }
+
+  .voucher-desc {
+    font-size: 0.75rem;
+    color: #555;
+    margin-bottom: 6px;
+    line-height: 1.3;
+  }
+
+  .voucher-btn {
+    padding: 5px 12px;
+    font-size: 0.8rem;
+    border-radius: 5px;
+    color: #fff;
+    font-weight: 500;
+    white-space: nowrap;
+    align-self: flex-start;
+  }
+}

@@ -403,6 +403,43 @@ router.get('/:id/info', async (req, res) => {
   }
 });
 
+// Route lấy sản phẩm theo thể loại và năm xuất bản hiện tại
+router.get('/category-current-year/:categoryId?', async (req, res) => {
+  try {
+    const { categoryId } = req.params;
+    const currentYear = new Date().getFullYear(); // năm hiện tại
+
+    let query;
+    let params;
+
+    if (!categoryId || categoryId.toLowerCase() === 'all') {
+      // Lấy tất cả sản phẩm năm hiện tại
+      query = `
+        SELECT *
+        FROM sanpham
+        WHERE NamXB = ?
+      `;
+      params = [currentYear];
+    } else if (!isNaN(categoryId)) {
+      // Lấy sản phẩm theo thể loại + năm hiện tại
+      query = `
+        SELECT *
+        FROM sanpham
+        WHERE MaTL = ? AND NamXB = ?
+      `;
+      params = [parseInt(categoryId), currentYear];
+    } else {
+      return res.status(400).json({ error: 'ID thể loại không hợp lệ' });
+    }
+
+    const [products] = await pool.query(query, params);
+
+    res.status(200).json(products);
+  } catch (error) {
+    console.error('Lỗi khi lấy sản phẩm theo thể loại và năm hiện tại:', error);
+    res.status(500).json({ error: 'Lỗi server', details: error.message });
+  }
+});
 
 
 // =============================================================================
