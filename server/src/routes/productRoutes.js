@@ -300,6 +300,113 @@ router.get('/low-stock', async (req, res) => {
   }
 });
 
+// --- RECOMMENDATIONS: helper + route ---
+async function getRecommendationsBySearch(makh) {
+  const [searchRows] = await pool.query(
+    "SELECT DISTINCT search_query FROM hanh_dong_user WHERE makhachhang = ? AND loaihanhdong = 'search' ORDER BY timestamp DESC LIMIT 5",
+    [makh]
+  );
+  if (searchRows.length === 0) {
+    return [];
+  }
+  const searchConditions = searchRows.map(() => 
+    `(MATCH(TenSP, MoTa) AGAINST(? IN NATURAL LANGUAGE MODE))`
+  ).join(' OR ');
+
+  let searchValues = searchRows.map(row => row.search_query);
+
+  const productSql = `
+    SELECT MaSP, TenSP, HinhAnh, DonGia 
+    FROM sanpham 
+    WHERE ${searchConditions}  -- Đã bỏ dấu ngoặc bao quanh
+    LIMIT 10
+  `;
+  const [products] = await pool.query(productSql, searchValues);
+  return products;
+}
+
+
+router.get('/recommendations', async (req, res) => {
+  const { makh } = req.query;
+
+  if (!makh) {
+    return res.status(400).json({ message: "Thiếu makh" });
+  }
+
+  try {
+    const sqlGetViewed = `
+      SELECT masanpham 
+      FROM hanh_dong_user 
+      WHERE makhachhang = ? AND loaihanhdong = 'view'
+      GROUP BY masanpham
+      ORDER BY MAX(timestamp) DESC 
+      LIMIT 100
+    `;
+        
+    const [viewedRows] = await pool.query(sqlGetViewed, [makh]);
+    const viewedIds = viewedRows.map(row => row.masanpham);
+        
+    let exclusionSql = '';
+    const queryParams = [makh]; 
+
+    if (viewedIds.length > 0) {
+      exclusionSql = 'AND p2.MaSP NOT IN (?)';
+      queryParams.push(viewedIds); 
+    }
+
+    const viewSql = `
+      SELECT
+        p2.MaSP, p2.TenSP, p2.HinhAnh, p2.DonGia,
+        COUNT(p2.MaSP) AS view_frequency
+      FROM
+        (
+          SELECT masanpham, timestamp
+          FROM hanh_dong_user
+          WHERE makhachhang = ? 
+          AND loaihanhdong = 'view'
+          ORDER BY timestamp DESC
+          LIMIT 100
+        ) AS ua
+      JOIN
+        sanpham AS p1 ON ua.masanpham = p1.MaSP 
+      JOIN
+        sanpham AS p2 ON p1.MaTL = p2.MaTL 
+      WHERE
+        p1.MaSP != p2.MaSP 
+        ${exclusionSql}
+      GROUP BY
+        p2.MaSP, p2.TenSP, p2.HinhAnh, p2.DonGia 
+      ORDER BY
+        view_frequency DESC,
+        MAX(ua.timestamp) DESC
+      LIMIT 10;
+    `;
+        
+    const [viewRecommendations] = await pool.query(viewSql, queryParams); 
+        
+    if (viewRecommendations.length > 0) {
+      console.log(`(makh: ${makh}) Đề xuất theo 'view': ${viewRecommendations.length} sản phẩm.`);
+      return res.json(viewRecommendations);
+    }
+
+    console.log(`(makh: ${makh}) Không có 'view', thử đề xuất theo 'search'.`);
+        
+    const searchRecommendations = await getRecommendationsBySearch(makh); 
+
+    if (searchRecommendations.length > 0) {
+      console.log(`(makh: ${makh}) Đề xuất theo 'search': ${searchRecommendations.length} sản phẩm.`);
+      return res.json(searchRecommendations);
+    }
+        
+    console.log(`(makh: ${makh}) Không có dữ liệu để đề xuất.`);
+    return res.json([]); 
+
+  } catch (error) {
+    console.error("Lỗi lấy đề xuất:", error);
+    res.status(500).send("Lỗi server");
+  }
+});
+
 // Route lấy sản phẩm theo ID - SỬA QUERY
 // Route lấy chi tiết sản phẩm (kết hợp thông tin nhà cung cấp, tác giả và các trường sách có trong `sanpham`)
 router.get('/:id', async (req, res) => {
@@ -768,115 +875,7 @@ router.get('/status-stats', async (req, res) => {
 });
 
 
-async function getRecommendationsBySearch(makh) {
-    const [searchRows] = await pool.query(
-        "SELECT DISTINCT search_query FROM hanh_dong_user WHERE makhachhang = ? AND loaihanhdong = 'search' ORDER BY timestamp DESC LIMIT 5",
-        [makh]
-    );
-    if (searchRows.length === 0) {
-        return [];
-    }
-    const searchConditions = searchRows.map(() => 
-        `(MATCH(TenSP, MoTa) AGAINST(? IN NATURAL LANGUAGE MODE))`
-    ).join(' OR ');
 
-    let searchValues = searchRows.map(row => row.search_query);
-
-    const productSql = `
-        SELECT MaSP, TenSP, HinhAnh, DonGia 
-        FROM sanpham 
-        WHERE ${searchConditions}  -- Đã bỏ dấu ngoặc bao quanh
-        LIMIT 10
-    `;
-    const [products] = await pool.query(productSql, searchValues);
-    return products;
-}
-
-
-router.get('/recommendations', async (req, res) => {
-    const { makh } = req.query;
-
-    if (!makh) {
-        return res.status(400).json({ message: "Thiếu makh" });
-    }
-
-    try {
-        const sqlGetViewed = `
-            SELECT masanpham 
-            FROM hanh_dong_user 
-            WHERE makhachhang = ? AND loaihanhdong = 'view'
-            GROUP BY masanpham
-            ORDER BY MAX(timestamp) DESC 
-            LIMIT 100
-        `;
-        
-        // Chạy câu SQL mới
-        const [viewedRows] = await pool.query(sqlGetViewed, [makh]);
-
-        // --- KẾT THÚC SỬA LỖI ---
-        
-        const viewedIds = viewedRows.map(row => row.masanpham);
-        
-        let exclusionSql = '';
-        const queryParams = [makh]; 
-
-        if (viewedIds.length > 0) {
-            exclusionSql = 'AND p2.MaSP NOT IN (?)';
-            queryParams.push(viewedIds); 
-        }
-
-        const viewSql = `
-            SELECT
-                p2.MaSP, p2.TenSP, p2.HinhAnh, p2.DonGia,
-                COUNT(p2.MaSP) AS view_frequency
-            FROM
-                (
-                    SELECT masanpham, timestamp
-                    FROM hanh_dong_user
-                    WHERE makhachhang = ? 
-                    AND loaihanhdong = 'view'
-                    ORDER BY timestamp DESC
-                    LIMIT 100
-                ) AS ua
-            JOIN
-                sanpham AS p1 ON ua.masanpham = p1.MaSP 
-            JOIN
-                sanpham AS p2 ON p1.MaTL = p2.MaTL 
-            WHERE
-                p1.MaSP != p2.MaSP 
-                ${exclusionSql}
-            GROUP BY
-                p2.MaSP, p2.TenSP, p2.HinhAnh, p2.DonGia 
-            ORDER BY
-                view_frequency DESC,
-                MAX(ua.timestamp) DESC
-            LIMIT 10;
-        `;
-        
-        const [viewRecommendations] = await pool.query(viewSql, queryParams); 
-        
-        if (viewRecommendations.length > 0) {
-            console.log(`(makh: ${makh}) Đề xuất theo 'view': ${viewRecommendations.length} sản phẩm.`);
-            return res.json(viewRecommendations);
-        }
-
-        console.log(`(makh: ${makh}) Không có 'view', thử đề xuất theo 'search'.`);
-        
-        const searchRecommendations = await getRecommendationsBySearch(makh); 
-
-        if (searchRecommendations.length > 0) {
-            console.log(`(makh: ${makh}) Đề xuất theo 'search': ${searchRecommendations.length} sản phẩm.`);
-            return res.json(searchRecommendations);
-        }
-        
-        console.log(`(makh: ${makh}) Không có dữ liệu để đề xuất.`);
-        return res.json([]); 
-
-    } catch (error) {
-        console.error("Lỗi lấy đề xuất:", error);
-        res.status(500).send("Lỗi server");
-    }
-});
 
 // Route lấy sản phẩm theo ID - SỬA QUERY
 // Route lấy chi tiết sản phẩm (kết hợp thông tin nhà cung cấp, tác giả và các trường sách có trong `sanpham`)
