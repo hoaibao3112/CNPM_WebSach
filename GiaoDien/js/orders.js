@@ -415,35 +415,49 @@ async function renderOrders(customerId, statusFilter = 'all') {
             // Sử dụng tinhtrang từ database thay vì status đã map
             const statusKey = order.tinhtrang || order.status || 'pending';
             const status = statusDisplay[statusKey] || statusDisplay['pending'];
-            
+
+            // Normalize to a lowercase string to perform flexible checks
+            const statusLower = (String(statusKey) || '').toLowerCase();
+            const isCompleted = statusLower.includes('hoàn thành') || statusLower.includes('hoan thanh') || statusLower.includes('đã giao') || statusLower.includes('giao hàng') || statusLower.includes('delivered') || statusLower.includes('completed');
+
             console.log('Order status mapping:', {
                 orderId: order.id,
                 tinhtrang: order.tinhtrang,
                 status: order.status,
-                finalStatus: status
+                finalStatus: status,
+                isCompleted
             });
+
+            // Only render one Mua lại button (in the header) when order is completed
+            const reorderBtnHtml = isCompleted ? `
+                <button class="btn reorder-btn" data-order-id="${order.id}" aria-label="Mua lại đơn hàng ${order.id}" style="background:#17a2b8; color:white; padding:8px 12px; font-size:13px; border-radius:8px;">
+                    <i class="fas fa-redo" style="margin-right:6px"></i> Mua lại
+                </button>
+            ` : '';
 
             return `
                 <div class="order-card" data-order-id="${order.id}">
                     <div class="order-card-header">
-                        <div>
-                            <span class="order-id">Đơn hàng #${order.id}</span>
-                            <span class="order-date">${formatDateTime(order.createdAt)}</span>
+                            <div>
+                                <span class="order-id">Đơn hàng #${order.id}</span>
+                                <span class="order-date">${formatDateTime(order.createdAt)}</span>
+                            </div>
+                            <div style="display:flex; align-items:center; gap:8px;">
+                                <span class="order-status ${status.class}">
+                                    ${status.text}
+                                </span>
+                                ${reorderBtnHtml}
+                            </div>
                         </div>
-                        <span class="order-status ${status.class}">
-                            ${status.text}
-                        </span>
-                    </div>
                     <div class="order-summary">
                         <div class="order-info">
                             <span class="payment-method">${getPaymentMethodName(order.paymentMethod)}</span>
                             ${order.paymentStatus ? `<span class="payment-status">${order.paymentStatus}</span>` : ''}
                         </div>
-                                                <span class="order-total">${formatPrice(order.totalAmount)}</span>
-                                                <!-- Review button placeholder (injected by JS after render) -->
-                                                <div class="order-actions" style="margin-top:8px; display:flex; gap:8px; justify-content:flex-end;">
-                                                    ${ (order.tinhtrang || order.status || '').toString().toLowerCase().includes('đã giao hằng') ? '' : '' }
-                                                </div>
+                        <span class="order-total">${formatPrice(order.totalAmount)}</span>
+                        <!-- Review button placeholder (injected by JS after render) -->
+                        <div class="order-actions" style="margin-top:8px; display:flex; gap:8px; justify-content:flex-end;">
+                        </div>
                     </div>
                 </div>
             `;
@@ -490,6 +504,25 @@ async function renderOrders(customerId, statusFilter = 'all') {
 
             actions.appendChild(btn);
         });
+
+        // ✅ NEW: Delegate click events for Mua lại buttons (works even if buttons are re-rendered)
+        if (orderListElement) {
+            // remove any previous delegated listener to avoid duplicates
+            if (orderListElement._reorderHandler) {
+                orderListElement.removeEventListener('click', orderListElement._reorderHandler);
+            }
+            orderListElement._reorderHandler = function (e) {
+                const btn = e.target.closest && e.target.closest('.reorder-btn');
+                if (!btn) return;
+                e.stopPropagation(); // prevent opening detail
+                const orderId = btn.dataset.orderId;
+                if (!orderId) return;
+                if (confirm(`Bạn có chắc chắn muốn mua lại đơn hàng #${orderId} không? Tất cả sản phẩm sẽ được thêm vào giỏ hàng.`)) {
+                    reorderOrder(orderId);
+                }
+            };
+            orderListElement.addEventListener('click', orderListElement._reorderHandler);
+        }
     } catch (error) {
         console.error('Lỗi khi hiển thị đơn hàng:', error);
         orderListElement.innerHTML = `
@@ -587,6 +620,81 @@ function markReviewed(orderId) {
     btn.textContent = 'Đã đánh giá';
     btn.disabled = true;
     btn.style.opacity = '0.6';
+}
+
+// ✅ NEW: Hàm gọi API mua lại đơn hàng (fetch order detail first to capture shipping info)
+async function reorderOrder(orderId) {
+    if (!checkAuth()) return;
+
+    const loadingModal = document.getElementById('loading-modal');
+    if (loadingModal) loadingModal.style.display = 'block';
+
+    // First: try to fetch order detail so we can persist address reliably
+    let orderDataForAddress = null;
+    try {
+        orderDataForAddress = await fetchOrderDetail(orderId);
+        if (!orderDataForAddress) orderDataForAddress = {};
+    } catch (e) {
+        console.warn('Could not fetch order detail before reorder:', e);
+        orderDataForAddress = {};
+    }
+
+    // Backup current cart so we can restore if user cancels/leaves without buying
+    try {
+        const backup = await getCart(); // getCart is available on cart page; assume same global
+        localStorage.setItem('cart_backup_before_reorder', JSON.stringify(backup || []));
+        localStorage.setItem('reorder_meta', JSON.stringify({ orderId, ts: Date.now() }));
+    } catch (e) {
+        // If getCart isn't available in this context, try reading local cart
+        try {
+            const local = localStorage.getItem('cart') || '[]';
+            localStorage.setItem('cart_backup_before_reorder', local);
+            localStorage.setItem('reorder_meta', JSON.stringify({ orderId, ts: Date.now() }));
+        } catch (ee) { console.warn('Could not persist cart backup before reorder', ee); }
+    }
+
+    try {
+        const response = await fetch(`http://localhost:5000/api/cart/reorder/${orderId}`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${getToken()}`,
+                'Content-Type': 'application/json'
+            }
+        });
+
+        const result = await response.json().catch(() => ({}));
+        if (!response.ok) {
+            throw new Error(result.error || result.message || 'Không thể mua lại đơn hàng');
+        }
+
+        alert(`✅ ${result.message}\nĐã thêm ${result.readdedCount || 0} sản phẩm vào giỏ hàng. Bạn sẽ được chuyển tới giỏ hàng để hoàn tất thanh toán.`);
+
+        // Persist shipping info from fetched order detail (if present)
+        try {
+            const order = orderDataForAddress || {};
+            const shipping = {
+                tenkh: order.recipientName || order.TenNguoiNhan || order.customerName || '',
+                sdt: order.recipientPhone || order.SDT || order.customerPhone || '',
+                email: order.recipientEmail || order.Email || order.customerEmail || '',
+                tinhthanh: order.province || order.TinhThanh || (order.shippingAddress && order.shippingAddress.province) || '',
+                quanhuyen: order.district || order.QuanHuyen || (order.shippingAddress && order.shippingAddress.district) || '',
+                phuongxa: order.ward || order.PhuongXa || (order.shippingAddress && order.shippingAddress.ward) || '',
+                diachi: order.shippingAddress?.detail || order.DiaChiChiTiet || order.shippingAddress || ''
+            };
+            localStorage.setItem('reorder_address', JSON.stringify(shipping));
+            console.log('Saved reorder address from fetched order:', shipping);
+        } catch (e) {
+            console.warn('Could not persist reorder address', e);
+        }
+
+        // Redirect to cart and request auto-checkout
+        window.location.href = 'cart.html?autoCheckout=1';
+    } catch (error) {
+        console.error('Lỗi khi mua lại đơn hàng:', error);
+        alert(`❌ Lỗi khi mua lại đơn hàng: ${error.message || error}`);
+    } finally {
+        if (loadingModal) loadingModal.style.display = 'none';
+    }
 }
 
 
@@ -1308,6 +1416,9 @@ function showNormalCancelModal() {
     if (modal) {
         modal.style.display = 'block';
         document.getElementById('cancel-reason').value = '';
+
+        // Gắn event listeners cho modal COD
+        attachCODCancelEvents(currentOrderData.id || currentOrderData.MaHD, currentOrderData.paymentMethod || currentOrderData.PhuongThucThanhToan, currentOrderData.paymentStatus || currentOrderData.TrangThaiThanhToan);
     }
 }
 

@@ -1,0 +1,205 @@
+
+/* products_sales.css - styles for the flash sale component */
+
+:root{
+	--flash-bg: #ff6b6b; /* coral-ish background */
+	--card-bg: #fff;
+	--accent: #e53935; /* red for prices/badges */
+	--muted: #9e9e9e;
+	--pill-bg: #000;
+}
+
+.flash-sale-container{
+	background: linear-gradient(180deg, var(--flash-bg) 0%, #ff5b5b 100%);
+	padding: 18px 22px;
+	border-radius: 8px;
+	margin-bottom: 18px;
+}
+
+.flash-sale-header{
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 12px;
+	margin-bottom: 16px;
+}
+
+.flash-sale-left{
+	display:flex;
+	align-items:center;
+	gap:18px;
+}
+
+.flash-sale-left h2{
+	color: white;
+	font-size: 28px;
+	font-weight: 800;
+	letter-spacing: 1px;
+	margin: 0;
+}
+
+.countdown{
+	color: #fff;
+	font-weight: 600;
+}
+
+.countdown .pill, .countdown{ /* allow both direct text and pill blocks */
+	display:inline-block;
+	background: var(--pill-bg);
+	color: #fff;
+	padding: 6px 10px;
+	border-radius: 8px;
+	margin-left: 6px;
+	font-family: 'Courier New', monospace;
+}
+
+.view-all-btn{
+	background: transparent;
+	border: none;
+	color: #0b72ff;
+	font-weight: 600;
+	cursor: pointer;
+}
+
+.flash-products{
+	display:block;
+}
+
+.sale-row{
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+	gap: 18px;
+}
+
+.sale-item{
+	background: var(--card-bg);
+	border-radius: 12px;
+	padding: 14px;
+	box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+	display:flex;
+	flex-direction:column;
+	min-height: 360px;
+}
+
+/* Carousel track styles */
+.sale-track-wrap{
+	position: relative;
+	overflow: hidden;
+	padding: 6px 36px; /* leave space for nav buttons */
+}
+
+.sale-track{
+	display:flex;
+	gap:18px;
+	transition: transform 300ms ease;
+	will-change: transform;
+	align-items:flex-start;
+}
+
+.sale-track .sale-item{
+	min-height: 320px;
+	flex: 0 0 220px; /* default, JS will adjust widths */
+}
+
+.nav-btn{
+	position: absolute;
+	top: 50%;
+	transform: translateY(-50%);
+	width:44px;
+	height:44px;
+	border-radius:50%;
+	border:none;
+	background: #fff;
+	box-shadow: 0 6px 18px rgba(0,0,0,0.12);
+	cursor:pointer;
+	font-weight:700;
+	z-index: 20;
+}
+
+.nav-prev{ left: 6px; }
+.nav-next{ right: 6px; }
+
+.nav-btn:disabled{ opacity:0.45; cursor:default }
+
+.sale-item-link{
+	color: inherit;
+	text-decoration: none;
+	display:flex;
+	flex-direction:column;
+	height:100%;
+}
+
+.sale-item-img{
+	width:100%;
+	height:200px;
+	object-fit:contain;
+	border-radius:8px;
+	background: #fff;
+}
+
+.sale-item-title{
+	margin-top:12px;
+	font-size:15px;
+	color:#222;
+	line-height:1.35;
+	flex:0 0 auto;
+	min-height:48px;
+}
+
+.sale-item-price{
+	margin-top:auto;
+	display:flex;
+	align-items:center;
+	gap:12px;
+}
+
+.discount-price{
+	color: var(--accent);
+	font-size:18px;
+	font-weight:700;
+}
+
+.orig-price{
+	color: var(--muted);
+	text-decoration: line-through;
+	font-size:13px;
+}
+
+.badge-discount{
+	background: var(--accent);
+	color:#fff;
+	font-size:12px;
+	padding:6px 8px;
+	border-radius:6px;
+	display:inline-block;
+}
+
+.error-box{
+	background: rgba(255,255,255,0.9);
+	padding: 16px;
+	border-radius:8px;
+	display:flex;
+	gap:8px;
+	align-items:center;
+	justify-content:center;
+	flex-direction:column;
+}
+
+.retry-btn, .use-cache-btn{
+	background: #0b72ff;
+	color: white;
+	border:none;
+	padding:8px 12px;
+	border-radius:6px;
+	cursor:pointer;
+}
+
+.loading{ color: #fff; font-weight:700; }
+
+@media (max-width: 700px){
+	.sale-item-img{ height:160px }
+	.flash-sale-left h2{ font-size:20px }
+	.sale-row{ grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); }
+	.sale-track-wrap{ padding: 6px 10px }
+}
+

@@ -767,4 +767,219 @@ router.get('/status-stats', async (req, res) => {
   }
 });
 
+
+async function getRecommendationsBySearch(makh) {
+    const [searchRows] = await pool.query(
+        "SELECT DISTINCT search_query FROM hanh_dong_user WHERE makhachhang = ? AND loaihanhdong = 'search' ORDER BY timestamp DESC LIMIT 5",
+        [makh]
+    );
+    if (searchRows.length === 0) {
+        return [];
+    }
+    const searchConditions = searchRows.map(() => 
+        `(MATCH(TenSP, MoTa) AGAINST(? IN NATURAL LANGUAGE MODE))`
+    ).join(' OR ');
+
+    let searchValues = searchRows.map(row => row.search_query);
+
+    const productSql = `
+        SELECT MaSP, TenSP, HinhAnh, DonGia 
+        FROM sanpham 
+        WHERE ${searchConditions}  -- Đã bỏ dấu ngoặc bao quanh
+        LIMIT 10
+    `;
+    const [products] = await pool.query(productSql, searchValues);
+    return products;
+}
+
+
+router.get('/recommendations', async (req, res) => {
+    const { makh } = req.query;
+
+    if (!makh) {
+        return res.status(400).json({ message: "Thiếu makh" });
+    }
+
+    try {
+        const sqlGetViewed = `
+            SELECT masanpham 
+            FROM hanh_dong_user 
+            WHERE makhachhang = ? AND loaihanhdong = 'view'
+            GROUP BY masanpham
+            ORDER BY MAX(timestamp) DESC 
+            LIMIT 100
+        `;
+        
+        // Chạy câu SQL mới
+        const [viewedRows] = await pool.query(sqlGetViewed, [makh]);
+
+        // --- KẾT THÚC SỬA LỖI ---
+        
+        const viewedIds = viewedRows.map(row => row.masanpham);
+        
+        let exclusionSql = '';
+        const queryParams = [makh]; 
+
+        if (viewedIds.length > 0) {
+            exclusionSql = 'AND p2.MaSP NOT IN (?)';
+            queryParams.push(viewedIds); 
+        }
+
+        const viewSql = `
+            SELECT
+                p2.MaSP, p2.TenSP, p2.HinhAnh, p2.DonGia,
+                COUNT(p2.MaSP) AS view_frequency
+            FROM
+                (
+                    SELECT masanpham, timestamp
+                    FROM hanh_dong_user
+                    WHERE makhachhang = ? 
+                    AND loaihanhdong = 'view'
+                    ORDER BY timestamp DESC
+                    LIMIT 100
+                ) AS ua
+            JOIN
+                sanpham AS p1 ON ua.masanpham = p1.MaSP 
+            JOIN
+                sanpham AS p2 ON p1.MaTL = p2.MaTL 
+            WHERE
+                p1.MaSP != p2.MaSP 
+                ${exclusionSql}
+            GROUP BY
+                p2.MaSP, p2.TenSP, p2.HinhAnh, p2.DonGia 
+            ORDER BY
+                view_frequency DESC,
+                MAX(ua.timestamp) DESC
+            LIMIT 10;
+        `;
+        
+        const [viewRecommendations] = await pool.query(viewSql, queryParams); 
+        
+        if (viewRecommendations.length > 0) {
+            console.log(`(makh: ${makh}) Đề xuất theo 'view': ${viewRecommendations.length} sản phẩm.`);
+            return res.json(viewRecommendations);
+        }
+
+        console.log(`(makh: ${makh}) Không có 'view', thử đề xuất theo 'search'.`);
+        
+        const searchRecommendations = await getRecommendationsBySearch(makh); 
+
+        if (searchRecommendations.length > 0) {
+            console.log(`(makh: ${makh}) Đề xuất theo 'search': ${searchRecommendations.length} sản phẩm.`);
+            return res.json(searchRecommendations);
+        }
+        
+        console.log(`(makh: ${makh}) Không có dữ liệu để đề xuất.`);
+        return res.json([]); 
+
+    } catch (error) {
+        console.error("Lỗi lấy đề xuất:", error);
+        res.status(500).send("Lỗi server");
+    }
+});
+
+// Route lấy sản phẩm theo ID - SỬA QUERY
+// Route lấy chi tiết sản phẩm (kết hợp thông tin nhà cung cấp, tác giả và các trường sách có trong `sanpham`)
+router.get('/:id', async (req, res) => {
+  try {
+    const id = req.params.id;
+
+    const query = `
+      SELECT s.*, tg.TenTG AS TacGia, ncc.TenNCC AS NhaCungCap
+      FROM sanpham s
+      LEFT JOIN tacgia tg ON s.MaTG = tg.MaTG
+      LEFT JOIN nhacungcap ncc ON s.MaNCC = ncc.MaNCC
+      WHERE s.MaSP = ?
+      LIMIT 1;
+    `;
+
+    const [rows] = await pool.query(query, [id]);
+
+    if (!rows || rows.length === 0) {
+      return res.status(404).json({ error: 'Sản phẩm không tồn tại' });
+    }
+
+    const s = rows[0];
+
+    // Normalize bit(1) / boolean field TinhTrang which may come back as Buffer for some MySQL drivers
+    let tinhTrangValue = null;
+    if (s.TinhTrang === null || s.TinhTrang === undefined) tinhTrangValue = null;
+    else if (typeof s.TinhTrang === 'number') tinhTrangValue = s.TinhTrang ? 1 : 0;
+    else if (Buffer.isBuffer(s.TinhTrang)) tinhTrangValue = s.TinhTrang[0] ? 1 : 0;
+    else tinhTrangValue = s.TinhTrang ? 1 : 0;
+
+    const product = {
+      MaSP: s.MaSP,
+      MaTL: s.MaTL,
+      TenSP: s.TenSP,
+      MoTa: s.MoTa,
+      HinhAnh: s.HinhAnh,
+      DonGia: s.DonGia,
+      SoLuong: s.SoLuong,
+      NamXB: s.NamXB,
+      TinhTrang: tinhTrangValue,
+      MaTG: s.MaTG,
+      TacGia: s.TacGia || null,
+      MaNCC: s.MaNCC,
+      NhaCungCap: s.NhaCungCap || null,
+      TrongLuong: s.TrongLuong,
+      KichThuoc: s.KichThuoc,
+      SoTrang: s.SoTrang,
+      HinhThuc: s.HinhThuc
+    };
+
+    res.status(200).json(product);
+  } catch (error) {
+    console.error('Lỗi khi lấy chi tiết sản phẩm:', error);
+    res.status(500).json({ error: 'Lỗi khi lấy chi tiết sản phẩm', details: error.message });
+  }
+});
+
+// Route trả về thông tin chi tiết rút gọn theo yêu cầu (TacGia, NhaCungCap, TrongLuong, KichThuoc, SoTrang, HinhThuc, NamXB)
+// Đặt trước route '/:id' để tránh conflict
+router.get('/:id/info', async (req, res) => {
+  try {
+    const id = req.params.id;
+
+    const query = `
+      SELECT s.MaSP, s.TenSP, s.NamXB AS NamXB, tg.TenTG AS TacGia, ncc.TenNCC AS NhaCungCap,
+             s.TrongLuong AS TrongLuong,
+             s.KichThuoc AS KichThuoc,
+             s.SoTrang AS SoTrang,
+             s.HinhThuc AS HinhThuc
+      FROM sanpham s
+      LEFT JOIN tacgia tg ON s.MaTG = tg.MaTG
+      LEFT JOIN nhacungcap ncc ON s.MaNCC = ncc.MaNCC
+      WHERE s.MaSP = ?
+      LIMIT 1;
+    `;
+
+    const [rows] = await pool.query(query, [id]);
+
+    if (!rows || rows.length === 0) {
+      return res.status(404).json({ error: 'Sản phẩm không tồn tại' });
+    }
+
+    const r = rows[0];
+
+    const response = {
+      MaSP: r.MaSP,
+      TenSP: r.TenSP,
+      TacGia: r.TacGia || null,
+      NhaCungCap: r.NhaCungCap || null,
+      TrongLuong: r.TrongLuong == null ? null : Number(r.TrongLuong),
+      KichThuoc: r.KichThuoc || null,
+      SoTrang: r.SoTrang == null ? null : Number(r.SoTrang),
+      HinhThuc: r.HinhThuc || null,
+      NamXB: r.NamXB == null ? null : Number(r.NamXB)
+    };
+
+    res.status(200).json(response);
+  } catch (error) {
+    console.error('Lỗi khi lấy info sản phẩm:', error);
+    res.status(500).json({ error: 'Lỗi khi lấy info sản phẩm', details: error.message });
+  }
+});
+
+
 export default router;

@@ -1,0 +1,195 @@
+/* === WIDGET ĐỀ XUẤT SẢN PHẨM (Fahasa style - tông đỏ) === */
+
+/* --- Biến màu --- */
+:root {
+    --primary-red: #C92127;
+    --text-dark: #333;
+    --text-light: #888;
+    --border-color: #EAEAEA;
+    --page-bg: #F8F8F8;
+    --card-shadow: 0 2px 8px rgba(0, 0, 0, 0.07);
+    --card-shadow-hover: 0 6px 16px rgba(0, 0, 0, 0.12);
+}
+
+/* --- Tổng thể widget --- */
+.recommend-section {
+    max-width: 1080px;
+    margin: 40px auto;
+    background: #fff;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    box-shadow: var(--card-shadow);
+    padding: 24px 28px;
+    overflow: visible;
+}
+
+/* --- Tiêu đề --- */
+.recommend-section h2 {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--text-dark);
+    text-align: center;
+    position: relative;
+    margin: 0 0 24px 0;
+    padding-bottom: 10px;
+}
+
+.recommend-section h2::after {
+    content: '';
+    display: block;
+    width: 60px;
+    height: 3px;
+    background: var(--primary-red);
+    border-radius: 2px;
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+/* --- Lưới sản phẩm --- */
+.product-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr); /* đúng 4 ô như JS */
+    gap: 18px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* --- Thẻ sản phẩm --- */
+.product-card {
+    display: flex;
+    flex-direction: column;
+    background: #fff;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    text-decoration: none;
+    color: var(--text-dark);
+    overflow: hidden;
+    box-shadow: none;
+    transition: all 0.3s ease;
+    min-width: 0; /* tránh tràn grid */
+}
+
+.product-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--card-shadow-hover);
+}
+
+/* --- Hình ảnh sản phẩm --- */
+.card-image {
+    width: 100%;
+    aspect-ratio: 3/4;
+    overflow: hidden;
+    background: #fafafa;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.card-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    padding: 8px;
+    transition: transform 0.3s ease;
+}
+
+.product-card:hover .card-image img {
+    transform: scale(1.05);
+}
+
+/* --- Nội dung sản phẩm --- */
+.card-content {
+    flex-grow: 1;
+    padding: 10px 12px 14px 12px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.card-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-dark);
+    line-height: 1.4;
+    margin: 0 0 8px 0;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-height: 38px;
+}
+
+.card-price {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--primary-red);
+    margin: 0;
+}
+
+/* --- Phân trang --- */
+.pagination-controls {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    margin-top: 24px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border-color);
+}
+
+.page-btn {
+    font-size: 14px;
+    font-weight: 600;
+    min-width: 36px;
+    height: 36px;
+    border-radius: 4px;
+    border: 1px solid var(--border-color);
+    background: #fff;
+    color: var(--text-dark);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.page-btn:hover:not(:disabled) {
+    border-color: var(--primary-red);
+    color: var(--primary-red);
+}
+
+.page-btn.active {
+    background: var(--primary-red);
+    border-color: var(--primary-red);
+    color: #fff;
+    box-shadow: 0 2px 8px rgba(201, 33, 39, 0.3);
+}
+
+.page-btn:disabled {
+    background: var(--page-bg);
+    color: #ccc;
+    cursor: not-allowed;
+}
+
+/* --- Responsive --- */
+@media (max-width: 992px) {
+    .product-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .product-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+    }
+    .recommend-section {
+        padding: 16px;
+    }
+}
+
+@media (max-width: 480px) {
+    .product-grid {
+        grid-template-columns: 1fr;
+    }
+}

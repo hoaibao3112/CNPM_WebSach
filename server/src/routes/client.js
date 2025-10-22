@@ -674,4 +674,42 @@ router.post('/logout', authenticateToken, async (req, res) => {
   }
 });
 
+
+
+
+router.post('/activity/view', async (req, res) => {
+    const { maSanPham, makh } = req.body;
+    if (!maSanPham) {
+        return res.status(400).send("Thiếu mã sản phẩm");
+    }
+    
+    const sql = "INSERT INTO hanh_dong_user (makhachhang, loaihanhdong, masanpham) VALUES (?, 'view', ?)";
+    try {    
+        await pool.query(sql, [makh || null, maSanPham]);
+        res.status(201).send({ message: "Ghi nhận hành động xem thành công" });
+    } catch (error) {
+        console.error("Lỗi ghi log 'view':", error);
+        res.status(500).send("Lỗi server");
+    }
+});
+
+
+router.post('/activity/search', async (req, res) => {
+    const { query, makh } = req.body;
+
+    if (!query) {
+        return res.status(400).send("Thiếu từ khóa tìm kiếm");
+    }
+    
+    const sql = "INSERT INTO hanh_dong_user (makhachhang, loaihanhdong, search_query) VALUES (?, 'search', ?)";
+    try {
+        await pool.query(sql, [makh || null, query]);
+        res.status(201).send({ message: "Ghi nhận hành động tìm kiếm thành công" });
+    } catch (error) {
+        console.error("Lỗi ghi log 'search':", error);
+        res.status(500).send("Lỗi server");
+    }
+});
+
+
 export default router;
