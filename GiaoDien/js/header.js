@@ -16,15 +16,19 @@ function checkLoginStatus() {
   const user = JSON.parse(localStorage.getItem('user') || localStorage.getItem('loggedInUser') || '{}');
 
   const loginLink = document.getElementById('loginLink');
+  const loginLinkDiv = document.getElementById('loginLinkDiv');
+
+  
   const loggedInAccount = document.querySelector('.logged-in-account');
   const accountLink = document.getElementById('accountLink');
 
   if (user && (user.tenkh || user.hoten || user.username || user.makh)) {
-    if (loginLink) loginLink.style.display = 'none';
+    // if (loginLink) loginLink.style.display = 'none'; // MOVE 
     if (loggedInAccount) {
       loggedInAccount.style.display = 'inline-block';
       if (accountLink) {
         accountLink.innerHTML = `<i class="fas fa-user"></i> ${user.tenkh || user.hoten || user.username}`;
+        loginLinkDiv.style.display = 'none' // Code mới
       }
     }
     const accountDropdown = document.querySelector('.account-dropdown .dropdown-content');

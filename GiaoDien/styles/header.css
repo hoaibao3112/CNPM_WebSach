@@ -245,16 +245,26 @@
 /* Hiệu ứng cho icon mũi tên */
 .category-top-dropdown>a>.fa-chevron-down,
 .publisher-dropdown>a>.fa-chevron-down,
-.account-dropdown>a>.fa-chevron-down {
+.account-dropdown>a>.fa-chevron-down
+{
   margin-left: 5px;
   transition: transform 0.3s;
 }
 
 .category-top-dropdown:hover>a>.fa-chevron-down,
 .publisher-dropdown:hover>a>.fa-chevron-down,
-.account-dropdown:hover>a>.fa-chevron-down {
+.account-dropdown:hover>a>.fa-chevron-down,
+.account-dropdown:hover>#loginLinkDiv>a>.fa-chevron-down,
+.account-dropdown>:hover>.accountLinkDiv>.fa-chevron-down
+ {
   transform: rotate(180deg);
 }
+
+.accountLinkDiv{
+  display: flex;
+}
+
+
 
 .category-dropdown {
   position: relative;
@@ -500,7 +510,12 @@ body {
     display: block;
   }
 
-  .top-links > li > a .fa-chevron-down {
+  .top-links > li > a .fa-chevron-down,
+  .fa-chevron-down {
+    display: none;
+  }
+
+  .textTK {
     display: none;
   }
 
@@ -569,7 +584,7 @@ body {
 /* ========== Responsive ≤430px ========== */
 @media screen and (max-width: 430.98px) {
   body {
-    padding-top: 150px; /* header nhiều dòng */
+    padding-top: 120px; /* header nhiều dòng */
   }
 
   .logo {
@@ -725,3 +740,4 @@ body {
   vertical-align: middle;
   transform: translateY(0); 
 }
+

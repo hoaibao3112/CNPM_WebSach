@@ -300,6 +300,147 @@ router.get('/low-stock', async (req, res) => {
   }
 });
 
+// Route lấy sản phẩm theo ID - SỬA QUERY
+// Route lấy chi tiết sản phẩm (kết hợp thông tin nhà cung cấp, tác giả và các trường sách có trong `sanpham`)
+router.get('/:id', async (req, res) => {
+  try {
+    const id = req.params.id;
+
+    const query = `
+      SELECT s.*, tg.TenTG AS TacGia, ncc.TenNCC AS NhaCungCap
+      FROM sanpham s
+      LEFT JOIN tacgia tg ON s.MaTG = tg.MaTG
+      LEFT JOIN nhacungcap ncc ON s.MaNCC = ncc.MaNCC
+      WHERE s.MaSP = ?
+      LIMIT 1;
+    `;
+
+    const [rows] = await pool.query(query, [id]);
+
+    if (!rows || rows.length === 0) {
+      return res.status(404).json({ error: 'Sản phẩm không tồn tại' });
+    }
+
+    const s = rows[0];
+
+    // Normalize bit(1) / boolean field TinhTrang which may come back as Buffer for some MySQL drivers
+    let tinhTrangValue = null;
+    if (s.TinhTrang === null || s.TinhTrang === undefined) tinhTrangValue = null;
+    else if (typeof s.TinhTrang === 'number') tinhTrangValue = s.TinhTrang ? 1 : 0;
+    else if (Buffer.isBuffer(s.TinhTrang)) tinhTrangValue = s.TinhTrang[0] ? 1 : 0;
+    else tinhTrangValue = s.TinhTrang ? 1 : 0;
+
+    const product = {
+      MaSP: s.MaSP,
+      MaTL: s.MaTL,
+      TenSP: s.TenSP,
+      MoTa: s.MoTa,
+      HinhAnh: s.HinhAnh,
+      DonGia: s.DonGia,
+      SoLuong: s.SoLuong,
+      NamXB: s.NamXB,
+      TinhTrang: tinhTrangValue,
+      MaTG: s.MaTG,
+      TacGia: s.TacGia || null,
+      MaNCC: s.MaNCC,
+      NhaCungCap: s.NhaCungCap || null,
+      TrongLuong: s.TrongLuong,
+      KichThuoc: s.KichThuoc,
+      SoTrang: s.SoTrang,
+      HinhThuc: s.HinhThuc
+    };
+
+    res.status(200).json(product);
+  } catch (error) {
+    console.error('Lỗi khi lấy chi tiết sản phẩm:', error);
+    res.status(500).json({ error: 'Lỗi khi lấy chi tiết sản phẩm', details: error.message });
+  }
+});
+
+// Route trả về thông tin chi tiết rút gọn theo yêu cầu (TacGia, NhaCungCap, TrongLuong, KichThuoc, SoTrang, HinhThuc, NamXB)
+// Đặt trước route '/:id' để tránh conflict
+router.get('/:id/info', async (req, res) => {
+  try {
+    const id = req.params.id;
+
+    const query = `
+      SELECT s.MaSP, s.TenSP, s.NamXB AS NamXB, tg.TenTG AS TacGia, ncc.TenNCC AS NhaCungCap,
+             s.TrongLuong AS TrongLuong,
+             s.KichThuoc AS KichThuoc,
+             s.SoTrang AS SoTrang,
+             s.HinhThuc AS HinhThuc
+      FROM sanpham s
+      LEFT JOIN tacgia tg ON s.MaTG = tg.MaTG
+      LEFT JOIN nhacungcap ncc ON s.MaNCC = ncc.MaNCC
+      WHERE s.MaSP = ?
+      LIMIT 1;
+    `;
+
+    const [rows] = await pool.query(query, [id]);
+
+    if (!rows || rows.length === 0) {
+      return res.status(404).json({ error: 'Sản phẩm không tồn tại' });
+    }
+
+    const r = rows[0];
+
+    const response = {
+      MaSP: r.MaSP,
+      TenSP: r.TenSP,
+      TacGia: r.TacGia || null,
+      NhaCungCap: r.NhaCungCap || null,
+      TrongLuong: r.TrongLuong == null ? null : Number(r.TrongLuong),
+      KichThuoc: r.KichThuoc || null,
+      SoTrang: r.SoTrang == null ? null : Number(r.SoTrang),
+      HinhThuc: r.HinhThuc || null,
+      NamXB: r.NamXB == null ? null : Number(r.NamXB)
+    };
+
+    res.status(200).json(response);
+  } catch (error) {
+    console.error('Lỗi khi lấy info sản phẩm:', error);
+    res.status(500).json({ error: 'Lỗi khi lấy info sản phẩm', details: error.message });
+  }
+});
+
+// Route lấy sản phẩm theo thể loại và năm xuất bản hiện tại
+router.get('/category-current-year/:categoryId?', async (req, res) => {
+  try {
+    const { categoryId } = req.params;
+    const currentYear = new Date().getFullYear(); // năm hiện tại
+
+    let query;
+    let params;
+
+    if (!categoryId || categoryId.toLowerCase() === 'all') {
+      // Lấy tất cả sản phẩm năm hiện tại
+      query = `
+        SELECT *
+        FROM sanpham
+        WHERE NamXB = ?
+      `;
+      params = [currentYear];
+    } else if (!isNaN(categoryId)) {
+      // Lấy sản phẩm theo thể loại + năm hiện tại
+      query = `
+        SELECT *
+        FROM sanpham
+        WHERE MaTL = ? AND NamXB = ?
+      `;
+      params = [parseInt(categoryId), currentYear];
+    } else {
+      return res.status(400).json({ error: 'ID thể loại không hợp lệ' });
+    }
+
+    const [products] = await pool.query(query, params);
+
+    res.status(200).json(products);
+  } catch (error) {
+    console.error('Lỗi khi lấy sản phẩm theo thể loại và năm hiện tại:', error);
+    res.status(500).json({ error: 'Lỗi server', details: error.message });
+  }
+});
+
 
 // =============================================================================
 // ROUTES CẦN TOKEN VÀ QUYỀN ADMIN/STAFF (PROTECTED)

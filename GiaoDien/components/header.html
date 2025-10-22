@@ -63,18 +63,19 @@
                     </div>
                 </li>
                 <li class="account-dropdown" id="accountDropdownContainer">
-                    <!-- <a href="login.html" id="loginLink"><i class="fas fa-user"></i> Tài khoản <i
-                            class="fas fa-chevron-down"></i></a> -->
-
-                    <a id="loginLink"><i class="fas fa-user"></i> Tài khoản <i
-                            class="fas fa-chevron-down"></i></a>
+                    <div id="loginLinkDiv">
+                        <a href="login.html" id="loginLink"><i class="fas fa-user"></i><span class="textTK">Tài khoản</span><i class="fas fa-chevron-down"></i></a>
+                    </div>
 
                     <div class="dropdown-content">
                         <a href="login.html"><i class="fas fa-sign-in-alt"></i> Đăng nhập</a>
                         <a href="register.html"><i class="fas fa-user-plus"></i> Đăng ký</a>
                     </div>
-                    <div class="logged-in-account" style="display: none;">
-                        <a href="#" id="accountLink"><i class="fas fa-user"></i> Tên người dùng</a>
+                    <div class="logged-in-account" >
+                        <div class = "accountLinkDiv">
+                            <a href="#" id="accountLink" style="margin-right: 5px;"><i class="fas fa-user"></i> Tên người dùng </a>
+                            <i class="fas fa-chevron-down"></i>
+                        </div>
                         <div class="dropdown-content">
                             <a href="profile.html"><i class="fas fa-user-circle"></i> Hồ sơ</a>
                             <a href="#" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Đăng xuất</a>
