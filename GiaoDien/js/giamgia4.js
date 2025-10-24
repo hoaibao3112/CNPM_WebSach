@@ -20,7 +20,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         div.innerHTML = `
-            <img src="../server/backend/product/${p.HinhAnh}" alt="${p.TenSP}">
+            <img src="img/product/${p.HinhAnh || 'default-book.jpg'}" />
             <div class="item-new-name">
             <span class="new">Mới</span>
             <span class="name">${p.TenSP}</span>
