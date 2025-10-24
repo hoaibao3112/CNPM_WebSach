@@ -53,11 +53,17 @@
             <div id="passwordMessage" style="display: none;"></div>
         </div>
 
-        <div class="login-link">
-            Đã có tài khoản? <a href="login.html">Đăng nhập ngay</a>
-        </div>
+            <!-- Google Sign-in button -->
+            <div id="googleSignIn" style="margin: 16px 0;"></div>
+
+            <div class="login-link">
+                Đã có tài khoản? <a href="login.html">Đăng nhập ngay</a>
+            </div>
     </div>
-    <script src="js/register.js"></script>
-     <script src="js/loadHeader.js"></script>
+        <!-- Google Identity Services -->
+        <script src="https://accounts.google.com/gsi/client" async defer></script>
+        <script src="js/google-auth.js"></script>
+        <script src="js/register.js"></script>
+        <script src="js/loadHeader.js"></script>
 </body>
 </html>

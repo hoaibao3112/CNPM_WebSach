@@ -5,9 +5,9 @@ import jwt from 'jsonwebtoken';
 import { generateOTP, sendOTPEmail } from '../utils/emailService.js';
 import { generateToken, generateRefreshToken } from '../utils/generateToken.js';
 import crypto from 'crypto';
-
+import { OAuth2Client } from 'google-auth-library';
 const router = express.Router();
-
+const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 // Tạo token đặt lại mật khẩu
 const generateResetToken = () => {
   return crypto.randomBytes(32).toString('hex');
@@ -712,4 +712,56 @@ router.post('/activity/search', async (req, res) => {
 });
 
 
+// Đăng nhập / đăng ký bằng Google
+router.post('/auth/google', async (req, res) => {
+  try {
+    const { id_token } = req.body;
+    if (!id_token) return res.status(400).json({ error: 'Thiếu id_token' });
+
+    const ticket = await googleClient.verifyIdToken({
+      idToken: id_token,
+      audience: process.env.GOOGLE_CLIENT_ID
+    });
+
+    const payload = ticket.getPayload();
+    const email = payload.email;
+    const email_verified = payload.email_verified;
+    const name = payload.name || (email ? email.split('@')[0] : 'Người dùng');
+
+    if (!email || !email_verified) {
+      return res.status(400).json({ error: 'Email không hợp lệ hoặc chưa được xác thực bởi Google' });
+    }
+
+    // Kiểm tra user tồn tại
+    const [[existingUser]] = await pool.query('SELECT makh, tenkh, email FROM khachhang WHERE email = ?', [email]);
+
+    let makh;
+    if (existingUser) {
+      makh = existingUser.makh;
+    } else {
+      // Tạo mật khẩu random để lưu (nếu cột matkhau NOT NULL)
+      const randomPass = crypto.randomBytes(16).toString('hex');
+      const hashed = await bcrypt.hash(randomPass, 10);
+
+      const [result] = await pool.query(
+        'INSERT INTO khachhang (tenkh, email, matkhau) VALUES (?, ?, ?)',
+        [name, email, hashed]
+      );
+      makh = result.insertId;
+    }
+
+    const accessToken = generateToken(makh, 'customer');
+    const refreshToken = generateRefreshToken(makh, 'customer');
+
+    return res.status(200).json({
+      message: 'Đăng nhập bằng Google thành công',
+      user: { makh, tenkh: name, email },
+      token: accessToken,
+      refreshToken
+    });
+  } catch (error) {
+    console.error('Lỗi auth/google:', error);
+    return res.status(500).json({ error: 'Lỗi khi xử lý đăng nhập Google' });
+  }
+});
 export default router;
