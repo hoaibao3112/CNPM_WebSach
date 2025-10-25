@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1" />
+	<title>Ưu đãi - Giamgia5</title>
+	<link rel="stylesheet" href="styles/giamgia5.css" />
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+	<!-- Include shared voucher styles so promotions look like giamgia page -->
+	<link rel="stylesheet" href="styles/giamgia.css" />
+    
+
+	<!-- shared header component -->
+	<div id="load-header"></div>
+
+</head>
+<body>
+
+	<header class="hero">
+		<div class="hero-inner">
+			<img src="img/giamgia33/anh1.png" alt="banner" class="hero-banner" />
+			<div class="hero-badge">GIẢM ĐẾN <strong>50%</strong></div>
+		</div>
+	</header>
+
+	<main class="container">
+		<section class="offers">
+			<h2>ƯU ĐÃI XỊN XÒ</h2>
+					<div class="offer-cards" id="offer-cards">
+						</div>
+		</section>
+
+		<section class="products-section">
+			<div class="section-head-text">
+				<h3>SẢN PHẨM MỚI</h3>
+			</div>
+
+			<nav class="product-tabs" data-controls="carousel-new">
+				<button type="button" class="tab-btn active" data-api-endpoint="/api/product/category-current-year/all">Sách Mới</button>
+				</nav>
+
+			<div class="carousel-container">
+				<div class="carousel-viewport">
+					<div class="carousel" id="carousel-new">
+						</div>
+				</div>
+				<button class="carousel-control prev" id="prev-new" aria-label="prev">‹</button>
+				<button class="carousel-control next" id="next-new" aria-label="next">›</button>
+			</div>
+			<div class="section-footer">
+				<button class="view-more-btn">Xem Thêm</button>
+			</div>
+		</section>
+
+		<section class="products-section">
+			<img src="img/giamgia33/anh3.png" alt="Sách Quản Trị Kinh Doanh" class="section-banner" />
+
+			<nav class="product-tabs" data-controls="grid-biz">
+				<button type="button" class="tab-btn active" data-api-endpoint="/api/product/category/1">Quốc Tế Lược Dịch - Sách Bán Chạy</button>
+				<button type="button" class="tab-btn" data-api-endpoint="/api/product/category/2">Quản Trị Lãnh Đạo</button>
+				<button type="button" class="tab-btn" data-api-endpoint="/api/product/category/3">Phân Tích Kinh Tế</button>
+			</nav>
+
+			<div class="product-grid" id="grid-biz">
+				</div>
+
+			<div class="section-footer">
+				<button class="view-more-btn">Xem Thêm</button>
+			</div>
+		</section>
+
+		<section class="products-section">
+			<nav class="product-tabs" data-controls="grid-other">
+				<button type="button" class="tab-btn active" data-api-endpoint="/api/product/category/4">Năm Dài Kinh Tế</button>
+				<button type="button" class="tab-btn" data-api-endpoint="/api/product/category/5">Nhân vật - Bài Học Kinh doanh</button>
+				<button type="button" class="tab-btn" data-api-endpoint="/api/product/category/6">Marketing - Bán Hàng</button>
+			</nav>
+
+			<div class="product-grid" id="grid-other">
+				</div>
+			
+			<div class="section-footer">
+				<button class="view-more-btn">Xem Thêm</button>
+			</div>
+		</section>
+
+
+		<section class="promo-cta">
+			<img src="img/giamgia33/anh1.png" alt="promo"/>
+		</section>
+
+	</main>
+
+	<script src="js/giamgia5.js"></script>
+	<script src="js/loadHeader.js"></script>
+</body>
+</html>
