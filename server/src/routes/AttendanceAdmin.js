@@ -3,6 +3,15 @@ import pool from '../config/connectDatabase.js';
 
 const router = express.Router();
 
+// Utility: normalize date input to YYYY-MM-DD string
+const toDateString = (d) => {
+  const date = d instanceof Date ? d : new Date(d);
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+};
+
 // 1. GET /api/attendance/monthly - Lấy dữ liệu chấm công theo tháng/năm
 router.get('/monthly', async (req, res) => {
   try {
@@ -134,5 +143,79 @@ router.post('/sync-leave', async (req, res) => {
     res.status(500).json({ error: 'Internal server error' });
   }
 });
+
+// 4. POST /api/attendance_admin/sync-missed - Đồng bộ những ngày chưa chấm công
+//    Nếu nhân viên chưa có bản ghi chấm công cho ngày đó => insert 'Nghi_khong_phep'
+//    Nếu có đơn nghỉ đã duyệt bao phủ ngày đó => insert/update 'Nghi_phep'
+//    Body (optional): { date: 'YYYY-MM-DD' } - nếu không truyền sẽ dùng ngày hôm qua
+router.post('/sync-missed', async (req, res) => {
+  try {
+    const { date } = req.body || {};
+    const targetDate = date ? toDateString(date) : toDateString(new Date(Date.now() - 24 * 60 * 60 * 1000));
+
+    // Get all active accounts
+    const [accounts] = await pool.query('SELECT MaTK FROM taikhoan WHERE TinhTrang = 1');
+
+    for (const acc of accounts) {
+      const MaTK = acc.MaTK;
+
+      // Check if attendance record exists for that date
+      const [existing] = await pool.query(
+        'SELECT id FROM cham_cong WHERE MaTK = ? AND DATE(ngay) = ?',
+        [MaTK, targetDate]
+      );
+
+      if (existing.length > 0) continue; // already has an attendance record
+
+      // Check approved leave covering that date
+      const [leaveRows] = await pool.query(
+        'SELECT id FROM xin_nghi_phep WHERE MaTK = ? AND trang_thai = ? AND DATE(?) BETWEEN DATE(ngay_bat_dau) AND DATE(ngay_ket_thuc)',
+        [MaTK, 'Da_duyet', targetDate]
+      );
+
+      const statusToInsert = leaveRows.length > 0 ? 'Nghi_phep' : 'Nghi_khong_phep';
+
+      await pool.query(
+        'INSERT INTO cham_cong (MaTK, ngay, trang_thai, ghi_chu) VALUES (?, ?, ?, ?)',
+        [MaTK, targetDate, statusToInsert, statusToInsert === 'Nghi_phep' ? 'Tự động đồng bộ nghỉ phép' : 'Tự động đánh dấu nghỉ không phép']
+      );
+    }
+
+    res.json({ message: 'Missed attendance synced', date: targetDate });
+  } catch (error) {
+    console.error('Error syncing missed attendance:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Export function to allow server-side scheduled task to call it directly
+export const syncMissedAttendancesForDate = async (dateParam) => {
+  const targetDate = dateParam ? toDateString(dateParam) : toDateString(new Date(Date.now() - 24 * 60 * 60 * 1000));
+  // Get all active accounts
+  const [accounts] = await pool.query('SELECT MaTK FROM taikhoan WHERE TinhTrang = 1');
+
+  for (const acc of accounts) {
+    const MaTK = acc.MaTK;
+
+    const [existing] = await pool.query(
+      'SELECT id FROM cham_cong WHERE MaTK = ? AND DATE(ngay) = ?',
+      [MaTK, targetDate]
+    );
+
+    if (existing.length > 0) continue;
+
+    const [leaveRows] = await pool.query(
+      'SELECT id FROM xin_nghi_phep WHERE MaTK = ? AND trang_thai = ? AND DATE(?) BETWEEN DATE(ngay_bat_dau) AND DATE(ngay_ket_thuc)',
+      [MaTK, 'Da_duyet', targetDate]
+    );
+
+    const statusToInsert = leaveRows.length > 0 ? 'Nghi_phep' : 'Nghi_khong_phep';
+
+    await pool.query(
+      'INSERT INTO cham_cong (MaTK, ngay, trang_thai, ghi_chu) VALUES (?, ?, ?, ?)',
+      [MaTK, targetDate, statusToInsert, statusToInsert === 'Nghi_phep' ? 'Tự động đồng bộ nghỉ phép' : 'Tự động đánh dấu nghỉ không phép']
+    );
+  }
+};
 
 export default router;

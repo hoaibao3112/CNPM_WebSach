@@ -9,6 +9,8 @@ import jwt from 'jsonwebtoken';
 import path from 'path';
 import pool from './src/config/connectDatabase.js'; // Assuming db is exported as pool
 import { initRoutes } from './src/routes/index.js';
+// Import the scheduled sync function from attendance admin route
+import { syncMissedAttendancesForDate } from './src/routes/AttendanceAdmin.js';
 import { createProxyMiddleware } from 'http-proxy-middleware';
 
 // 1. Load environment config
@@ -274,3 +276,36 @@ process.on('SIGTERM', shutdown);
 
 // Start
 startServers();
+
+// Schedule daily missed attendance sync: run once at next 18:00 and then every 24h
+// At 18:00 the job will sync for the current day (mark today's missing attendances)
+const scheduleDailyMissedSync = () => {
+  const runSync = async () => {
+    try {
+      // Sync for today at 18:00
+      const today = new Date();
+      await syncMissedAttendancesForDate(today);
+      console.log('[Attendance Sync] Completed missed attendance sync for', today.toISOString().slice(0,10));
+    } catch (err) {
+      console.error('[Attendance Sync] Error during missed attendance sync:', err);
+    }
+  };
+
+  const now = new Date();
+  let nextRun = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 18, 0, 0); // today at 18:00
+  if (now >= nextRun) {
+    // if it's already past 18:00 today, schedule for tomorrow 18:00
+    nextRun = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 18, 0, 0);
+  }
+  const delay = nextRun.getTime() - now.getTime();
+
+  console.log(`[Attendance Sync] Scheduling first run in ${Math.round(delay/1000)}s at ${nextRun.toISOString()}`);
+
+  setTimeout(() => {
+    runSync();
+    setInterval(runSync, 24 * 60 * 60 * 1000); // every 24h
+  }, delay);
+};
+
+// Start scheduler
+scheduleDailyMissedSync();

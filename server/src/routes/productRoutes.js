@@ -980,5 +980,38 @@ router.get('/:id/info', async (req, res) => {
   }
 });
 
+// Fixed route: chỉ trả về sản phẩm của thể loại có MaTL = 1
+router.get('/theloai/1', async (req, res) => {
+  try {
+    const query = `
+      SELECT 
+        sp.MaSP,
+        sp.TenSP,
+        sp.MoTa,
+        sp.HinhAnh,
+        sp.DonGia,
+        sp.SoLuong,
+        sp.NamXB,
+        tl.TenTL AS TheLoai,
+        tg.TenTG AS TacGia
+      FROM sanpham sp
+      LEFT JOIN theloai tl ON sp.MaTL = tl.MaTL
+      LEFT JOIN tacgia tg ON sp.MaTG = tg.MaTG
+      WHERE sp.MaTL = 1;
+    `;
 
+    const [rows] = await pool.query(query);
+
+    return res.status(200).json({
+      count: rows.length,
+      data: rows
+    });
+  } catch (error) {
+    console.error('❌ Lỗi khi lấy sản phẩm thể loại MaTL=1:', error);
+    return res.status(500).json({
+      error: 'Lỗi server khi lấy sản phẩm thể loại MaTL=1',
+      details: error.message
+    });
+  }
+});
 export default router;
