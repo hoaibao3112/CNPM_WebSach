@@ -780,6 +780,11 @@ footer iframe {
   position: relative;
 }
 
+.original-price{
+  text-decoration: line-through;
+  color: #999;
+}
+
 .overlay-close {
   position: absolute;
   top: 10px;

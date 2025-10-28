@@ -47,6 +47,8 @@ async function loadHeader() {
       handleSearch();
       if (typeof renderHistory === 'function') renderHistory();
 
+      loadAuthorNationalities();
+      
       if (typeof loadListProductSearch === "function") {
         const currentPath = window.location.pathname;
         if (currentPath.endsWith("/GiaoDien/book.html")) {
@@ -134,6 +136,30 @@ const handleSearchHistory = () => {
     });
 };
 
+// Hàm fetch và hiển thị quốc tịch
+async function loadAuthorNationalities() {
+  const dropdown = document.querySelector('.publisher-dropdown .dropdown-content');
+  if (!dropdown) return;
+
+  try {
+    const response = await fetch('http://localhost:5000/api/author/nationalities/list');
+    if (!response.ok) throw new Error(`HTTP lỗi: ${response.status}`);
+
+    const data = await response.json();
+    console.log('Dữ liệu quốc tịch:', data.data); // log ra console
+
+    dropdown.innerHTML = ''; // Xóa nội dung hiện tại
+    (data.data || []).forEach(nation => {
+      const a = document.createElement('a');
+      a.href = `/GiaoDien/author.html?nationality=${encodeURIComponent(nation)}`;
+      a.textContent = nation;
+      dropdown.appendChild(a);
+    });
+
+  } catch (err) {
+    console.error('Lỗi fetch quốc tịch:', err);
+  }
+}
 
 document.addEventListener('DOMContentLoaded', () => {
   loadHeader();
