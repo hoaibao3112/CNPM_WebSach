@@ -4,24 +4,41 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Danh Sách Tác Giả</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
   <link rel="stylesheet" href="styles/author.css">
+  <link rel="stylesheet" href="styles/header.css">
 </head>
 <body>
   <!-- header -->
   <div id="load-header"></div>
 
+  <!-- Thanh điều hướng -->
+  <nav class="navi">
+      <a href="index.html">TRANG CHỦ</a>
+      <span>› TÁC GIẢ</span>
+  </nav>
   
-  <div class="container">
-    <h2>Danh Sách Tác Giả</h2>
+  <div class="wrapper">
+
+    <!-- Khung màu hồng-->
+    <div class="title">
+      <img src="img/author/icon.jpg" alt="Danh sách tác giả">
+      <span>Danh Sách Tác Giả</span>
+    </div>
+
+    <!-- Khung control -->
     <div class="author-controls">
-      <input type="text" id="search-input" placeholder="Tìm kiếm tác giả...">
+      <input type="text" id="search-input-author" placeholder="Tìm kiếm tác giả...">
+
       <div class="pagination">
         <button id="prev-page" disabled>Trang trước</button>
         <span id="page-info">Trang 1 / 1</span>
         <button id="next-page">Trang sau</button>
       </div>
     </div>
-    <div class="author-container" id="author-list">
+
+    <!-- Khung tác giả -->
+    <div class="author-wrapper" id="author-list">
       <div class="loading">Đang tải...</div>
     </div>
   </div>
@@ -36,12 +53,26 @@
           <h2 id="modal-author-name">Tên tác giả</h2>
           <p><strong>Ngày sinh:</strong> <span id="modal-author-birthday">Không rõ</span></p>
           <p><strong>Quốc tịch:</strong> <span id="modal-author-nationality">Không rõ</span></p>
-          <p><strong>Tiểu sử:</strong> <span id="modal-author-bio">Không có tiểu sử</span></p>
+          <p class="bio"><strong>Tiểu sử:</strong> <span id="modal-author-bio">Không có tiểu sử</span></p>
+        </div>
+      </div>
+
+      <div class="book-section">
+        <h2 class="section-title">Tác phẩm của tác giả</h2>
+
+        <div class="books-wrapper">
+          <button class="scroll-btn left">‹</button>
+
+          <div class="books" id="modal-author-products">
+            <!-- JS sẽ render danh sách sách ở đây -->
+          </div>
+
+          <button class="scroll-btn right">›</button>
         </div>
       </div>
     </div>
   </div>
-
+  
   <script src="js/author.js"></script>
   <script src="js/loadHeader.js"></script>
 </body>

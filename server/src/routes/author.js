@@ -72,22 +72,82 @@ router.get('/', async (req, res) => {
   }
 });
 
-// Get author by ID
+// Lấy danh sách tác giả theo quốc tịch
+router.get('/by-nationality', async (req, res) => {
+  try {
+    const { nationality = '', page = 1, limit = 10 } = req.query;
+    const offset = (page - 1) * limit;
+
+    let query = 'SELECT * FROM tacgia';
+    let countQuery = 'SELECT COUNT(*) as total FROM tacgia';
+    const values = [];
+
+    if (nationality) {
+      query += ' WHERE quocTich = ?';
+      countQuery += ' WHERE quocTich = ?';
+      values.push(nationality);
+    }
+
+    query += ' ORDER BY MaTG DESC LIMIT ? OFFSET ?';
+    values.push(parseInt(limit), parseInt(offset));
+
+    const [authors] = await pool.query(query, values);
+    const [[{ total }]] = await pool.query(countQuery, nationality ? [nationality] : []);
+
+    res.status(200).json({
+      data: authors,
+      pagination: {
+        total,
+        page: parseInt(page),
+        limit: parseInt(limit),
+        totalPages: Math.ceil(total / limit)
+      }
+    });
+
+  } catch (error) {
+    console.error('Error fetching authors by nationality:', error);
+    res.status(500).json({
+      error: 'Lỗi khi lấy danh sách tác giả theo quốc tịch',
+      details: error.message
+    });
+  }
+});
+
+// Get author by ID + list of books
 router.get('/:id', async (req, res) => {
   try {
+    const authorId = req.params.id;
+
+    // Lấy thông tin tác giả
     const [[author]] = await pool.query(
-      'SELECT * FROM tacgia WHERE MaTG = ?', 
-      [req.params.id]
+      'SELECT * FROM tacgia WHERE MaTG = ?',
+      [authorId]
     );
 
     if (!author) {
       return res.status(404).json({ error: 'Không tìm thấy tác giả' });
     }
 
-    res.status(200).json(author);
+    // Lấy danh sách sách (sản phẩm) thuộc tác giả đó
+    const [books] = await pool.query(
+      `SELECT 
+          sp.MaSP, 
+          sp.TenSP, 
+          sp.HinhAnh 
+        FROM sanpham AS sp
+        WHERE sp.MaTG = ?`,
+      [authorId]
+    );
+
+    // Trả về dữ liệu đầy đủ
+    res.status(200).json({
+      ...author,
+      books: books || []
+    });
+
   } catch (error) {
     console.error('Error fetching author:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       error: 'Lỗi khi lấy thông tin tác giả',
       details: error.message
     });
@@ -246,6 +306,29 @@ router.delete('/:id', async (req, res) => {
 
     res.status(500).json({ 
       error: 'Lỗi khi xóa tác giả',
+      details: error.message
+    });
+  }
+});
+
+// Lấy danh sách quốc tịch duy nhất
+router.get('/nationalities/list', async (req, res) => {
+  try {
+    const [rows] = await pool.query(
+      `SELECT DISTINCT quocTich 
+       FROM tacgia 
+       WHERE quocTich IS NOT NULL AND quocTich != ''
+       ORDER BY quocTich ASC`
+    );
+
+    // Lọc null và trống
+    const nationalities = rows.map(row => row.quocTich);
+
+    res.status(200).json({ data: nationalities });
+  } catch (error) {
+    console.error('Error fetching nationalities:', error);
+    res.status(500).json({
+      error: 'Lỗi khi lấy danh sách quốc tịch',
       details: error.message
     });
   }
