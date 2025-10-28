@@ -71,6 +71,7 @@
                         <li data-section="gtgt-info"><i class="fas fa-file-invoice"></i> TT xuất hóa đơn GTGT</li>
                         <!-- <li data-section="order-history"><i class="fas fa-shopping-bag"></i> Đơn hàng của tôi</li> -->
                          <li><i class="fas fa-shopping-bag"></i> <a href="orders.html"> Đơn hàng của tôi </a></li>
+                        <li data-section="reviewed-orders"><i class="fas fa-check-circle"></i> Đơn hàng đã đánh giá</li>
                         <li data-section="promo-codes"><i class="fas fa-ticket-alt"></i> Các mã khuyến mãi</li>
                         <li data-section="wishlist"><i class="fas fa-heart"></i> Sản phẩm yêu thích</li>
                         <li id="logout-list-item"><i class="fas fa-sign-out-alt" ></i> Đăng xuất </li>
@@ -266,6 +267,14 @@
                         
                     </div> -->
 
+                    <!-- Phần đơn hàng đã đánh giá -->
+                    <div id="reviewed-orders" class="section hide-section">
+                        <h2>Đơn hàng đã đánh giá</h2>
+                        <div id="reviewed-orders-list" class="orders-grid">
+                            <!-- Danh sách đơn hàng đã đánh giá sẽ được JS render -->
+                        </div>
+                    </div>
+
                     <!-- Phần mã khuyến mãi -->
                     <div id="promo-codes" class="section hide-section">
                         <h2>Các mã khuyến mãi của bạn</h2>
@@ -372,5 +381,34 @@
 
     <script src="js/profile.js"></script>
      <script src="js/loadHeader.js"></script>
+        <!-- Review modal for profile page -->
+        <div id="review-modal" class="modal" style="display:none;">
+            <div class="modal-content" style="max-width:600px;">
+                <span class="close-modal" id="close-review-modal">&times;</span>
+                <div class="modal-header">
+                    <h3>Đánh giá đơn hàng <span id="review-order-id"></span></h3>
+                </div>
+                <div class="modal-body" style="padding:16px;">
+                    <div class="form-group">
+                        <label for="review-rating">Số điểm</label>
+                        <select id="review-rating">
+                            <option value="5">5 - Rất tốt</option>
+                            <option value="4">4 - Tốt</option>
+                            <option value="3">3 - Trung bình</option>
+                            <option value="2">2 - Kém</option>
+                            <option value="1">1 - Rất kém</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="review-comment">Nhận xét</label>
+                        <textarea id="review-comment" rows="5" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer" style="display:flex;gap:8px;justify-content:flex-end;padding:12px;">
+                    <button id="cancel-review-btn" class="btn btn-secondary">Hủy</button>
+                    <button id="submit-review-btn" class="btn btn-danger">Gửi đánh giá</button>
+                </div>
+            </div>
+        </div>
 </body>
 </html>

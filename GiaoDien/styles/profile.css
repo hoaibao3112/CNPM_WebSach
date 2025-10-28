@@ -1347,11 +1347,74 @@ body {
   border-radius: 10px;
   box-shadow: 0 18px 40px rgba(0,0,0,0.18);
 }
+/* ------------------ Reviewed orders (profile) ------------------ */
+#reviewed-orders { padding: 8px 4px 28px; }
+#reviewed-orders h3 {
+  font-size: 1.08rem;
+  margin: 6px 0 14px 0;
+  color: #222;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+#reviewed-orders h3::before {
+  content: '';
+  display: inline-block;
+  width: 6px;
+  height: 28px;
+  background: linear-gradient(180deg,#ff8a65,#ff6f61);
+  border-radius: 4px;
+}
 
-#promoDetailModal .close-x {
-  position: absolute;
-  top: 12px;
-  right: 16px;
-  font-size: 20px;
-  cursor: pointer;
+.reviewed-order-card {
+  display: grid;
+  grid-template-columns: 1fr 180px;
+  gap: 18px;
+  align-items: start;
+  padding: 18px;
+  border-radius: 12px;
+  background: #ffffff;
+  border: 1px solid rgba(17,24,39,0.04);
+  box-shadow: 0 6px 20px rgba(16,24,40,0.04);
+  margin-bottom: 14px;
+  transition: transform 0.16s ease, box-shadow 0.16s ease;
+}
+.reviewed-order-card:hover { transform: translateY(-4px); box-shadow: 0 16px 40px rgba(16,24,40,0.06); }
+
+.reviewed-order-card .order-id {
+  font-weight: 700;
+  color: #111827;
+  font-size: 1.03rem;
+}
+.reviewed-order-card .order-meta { color: #6b7280; font-size: 0.92rem; margin-left: 10px; }
+.reviewed-order-card .order-total { color: #111827; margin-top: 8px; font-weight:700; font-size:1.02rem }
+.reviewed-order-card .comment { margin-top: 10px; color: #374151; font-size: 0.98rem; line-height:1.45 }
+
+.reviewed-order-card .order-actions {
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+  align-items:flex-end;
+  justify-content: space-between;
+}
+.reviewed-order-card .rating {
+  font-size: 16px;
+  color: #ffb400;
+  letter-spacing: 1px;
+  text-shadow: 0 1px 0 rgba(0,0,0,0.06);
+}
+.reviewed-order-card .rating span { display:inline-block; margin-left:4px }
+.reviewed-order-card a.btn { display: inline-block; color: #6a21a8; text-decoration: none; padding: 6px 8px; border-radius: 8px; }
+.reviewed-order-card a.btn:hover { text-decoration: underline; }
+
+.no-orders { display:flex; align-items:center; gap:12px; padding:18px; background:#fff; border-radius:12px; border:1px solid #f3f4f6; }
+.no-orders i { font-size:22px; color:#ff6f61 }
+
+/* compact star fallback for numeric ratings */
+.reviewed-order-card .stars { font-size:16px; color:#ffb400; }
+
+@media (max-width: 760px) {
+  .reviewed-order-card { grid-template-columns: 1fr; }
+  .reviewed-order-card .order-actions { align-items: flex-start; width:100%; }
+  #reviewed-orders h3 { font-size: 1rem; }
 }

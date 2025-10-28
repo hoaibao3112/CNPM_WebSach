@@ -475,7 +475,7 @@ async function renderOrders(customerId, statusFilter = 'all') {
             });
         });
 
-        // After rendering, add Review buttons for completed orders
+        // After rendering, add Review buttons for completed orders — replace with 'Đã đánh giá' when a review exists
         document.querySelectorAll('.order-card').forEach(async card => {
             const orderId = card.dataset.orderId;
             // Determine status text from rendered DOM
@@ -484,7 +484,7 @@ async function renderOrders(customerId, statusFilter = 'all') {
             const isCompleted = statusText.includes('hoàn thành') || statusText.includes('đã giao');
             if (!isCompleted) return;
 
-            // Create review button if not exists
+            // Ensure actions container exists
             let actions = card.querySelector('.order-actions');
             if (!actions) {
                 actions = document.createElement('div');
@@ -492,15 +492,35 @@ async function renderOrders(customerId, statusFilter = 'all') {
                 card.querySelector('.order-summary').appendChild(actions);
             }
 
+            // Check whether this order already has a review for the current user
+            let reviewResp = null;
+            try {
+                reviewResp = await fetchReview(orderId);
+            } catch (e) {
+                console.warn('fetchReview error for', orderId, e);
+            }
+
+            // Server may return { review: {...} } or the review object directly — normalize both
+            const reviewObj = reviewResp && (reviewResp.review || reviewResp) ? (reviewResp.review || reviewResp) : null;
+
             const btn = document.createElement('button');
             btn.className = 'btn';
             btn.style.padding = '6px 10px';
             btn.style.fontSize = '13px';
-            btn.innerHTML = '<i class="fas fa-star"></i> Đánh giá';
-            btn.onclick = (e) => {
-                e.stopPropagation(); // prevent opening detail
-                openReviewModal(orderId);
-            };
+            btn.setAttribute('aria-label', reviewObj ? `Đã đánh giá đơn hàng ${orderId}` : `Đánh giá đơn hàng ${orderId}`);
+
+            if (reviewObj) {
+                // Already reviewed -> show disabled label
+                btn.textContent = 'Đã đánh giá';
+                btn.disabled = true;
+                btn.style.opacity = '0.65';
+            } else {
+                btn.innerHTML = '<i class="fas fa-star"></i> Đánh giá';
+                btn.onclick = (e) => {
+                    e.stopPropagation(); // prevent opening detail
+                    openReviewModal(orderId);
+                };
+            }
 
             actions.appendChild(btn);
         });
@@ -593,6 +613,7 @@ async function submitReview(orderId) {
     const rating = Number(document.getElementById('review-rating').value || 5);
     const comment = document.getElementById('review-comment').value || '';
     try {
+        console.log('Submitting review', { orderId, rating, hasToken: !!getToken() });
         const resp = await fetch(`http://localhost:5000/api/orderreview/${orderId}`, {
             method: 'POST',
             headers: {
@@ -601,8 +622,23 @@ async function submitReview(orderId) {
             },
             body: JSON.stringify({ rating, comment })
         });
-        const payload = await resp.json();
-        if (!resp.ok) throw new Error((payload && (payload.error || payload.message)) || 'Lỗi khi gửi đánh giá');
+
+        console.log('Review POST response status:', resp.status, resp.statusText);
+        let payload = null;
+        try {
+            payload = await resp.json();
+            console.log('Review POST response json:', payload);
+        } catch (parseErr) {
+            const text = await resp.text().catch(() => '<no-body>');
+            console.warn('Review POST response not JSON:', text);
+            payload = { raw: text };
+        }
+
+        if (!resp.ok) {
+            const msg = (payload && (payload.error || payload.message)) || (payload && payload.raw) || 'Lỗi khi gửi đánh giá';
+            throw new Error(msg);
+        }
+
         alert('Gửi đánh giá thành công');
         closeReviewModal();
         markReviewed(orderId);

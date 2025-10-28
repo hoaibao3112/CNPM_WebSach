@@ -20,6 +20,7 @@ async function checkOrderOwnershipAndCompleted(orderId, customerId) {
 router.get('/:orderId', authenticateToken, async (req, res) => {
   try {
     const { orderId } = req.params;
+    console.log('GET /api/orderreview/:orderId called', { orderId, user: req.user && req.user.makh });
     const customerId = req.user && (req.user.makh || req.user.id || req.user.MaKH);
     if (!orderId || isNaN(orderId)) return res.status(400).json({ error: 'Invalid orderId' });
 
@@ -35,6 +36,7 @@ router.get('/:orderId', authenticateToken, async (req, res) => {
 router.post('/:orderId', authenticateToken, async (req, res) => {
   try {
     const { orderId } = req.params;
+    console.log('POST /api/orderreview/:orderId called', { orderId, user: req.user && req.user.makh, body: req.body });
     const customerId = req.user && (req.user.makh || req.user.id || req.user.MaKH);
     const { rating, comment } = req.body;
 

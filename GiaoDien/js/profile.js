@@ -194,6 +194,9 @@ function setupSidebarNavigation() {
         case 'order-history':
           displayOrderHistory?.();
           break;
+        case 'reviewed-orders':
+          displayReviewedOrders?.();
+          break;
         default:
           showSection(sectionId);
           break;
@@ -268,6 +271,177 @@ function displayOrderHistory() {
     orderhistorySection.style.display = 'block';
   }
 }
+
+// Hiển thị đơn hàng đã đánh giá
+function displayReviewedOrders() {
+  showSection('reviewed-orders');
+  // tải danh sách
+  loadReviewedOrders();
+}
+
+// Escape HTML an toàn
+function escapeHtml(text) {
+  if (text == null) return '';
+  return String(text).replace(/[&<>"']/g, function (s) {
+    return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[s];
+  });
+}
+
+// Lấy review cho một đơn hàng
+async function fetchOrderReview(orderId) {
+  const token = localStorage.getItem('token');
+  if (!token) return null;
+  try {
+    const resp = await fetch(`http://localhost:5000/api/orderreview/${orderId}`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    if (!resp.ok) return null;
+    const data = await resp.json();
+    // server returns { review: ... } — return the inner review object (or null)
+    return (data && data.review) ? data.review : null;
+  } catch (e) {
+    console.warn('fetchOrderReview error', e);
+    return null;
+  }
+}
+
+// Tải và render các đơn hàng đã được đánh giá
+async function loadReviewedOrders() {
+  const listEl = document.getElementById('reviewed-orders-list');
+  if (!listEl) return;
+  listEl.innerHTML = '<p>Đang tải...</p>';
+
+  const user = JSON.parse(localStorage.getItem('user') || '{}');
+  const customerId = user.makh || user.id || localStorage.getItem('customerId');
+  const token = localStorage.getItem('token');
+  if (!customerId || !token) {
+    listEl.innerHTML = '<p>Vui lòng đăng nhập để xem danh sách.</p>';
+    return;
+  }
+
+  try {
+    const resp = await fetch(`http://localhost:5000/api/orders/customer-orders/${customerId}`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    if (!resp.ok) throw new Error('Không thể lấy đơn hàng');
+    const orders = await resp.json();
+
+    // Kiểm tra review cho từng đơn (song song)
+    const checks = await Promise.all(orders.map(async o => {
+      const review = await fetchOrderReview(o.id);
+      return { order: o, review };
+    }));
+
+    // Chỉ lấy những đơn đã có review
+    const reviewed = checks.filter(c => c.review).map(c => ({ order: c.order, review: c.review }));
+
+    if (!reviewed.length) {
+      listEl.innerHTML = `<div class="no-orders"><i class="fas fa-star"></i><p>Bạn chưa có đơn hàng nào đã đánh giá.</p></div>`;
+      return;
+    }
+
+    // Render chỉ phần đã đánh giá
+    const parts = [];
+    parts.push(`<h3>Đã đánh giá (${reviewed.length})</h3>`);
+    parts.push(reviewed.map(r => {
+      const o = r.order;
+      const rv = r.review || {};
+      const rating = rv.rating || rv.SoSao || rv.so_diem || rv.SoDiem || 0;
+      const comment = rv.NhanXet || rv.comment || rv.noi_dung || '';
+      const created = new Date(o.createdAt || o.NgayTao || o.NgayDat || Date.now()).toLocaleString('vi-VN');
+      return `
+        <div class="reviewed-order-card" data-order-id="${o.id}" style="border:1px solid #eee;padding:12px;border-radius:8px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:flex-start;gap:12px">
+          <div style="flex:1">
+            <div style="font-weight:600">Đơn hàng #${o.id} <small style="color:#666;margin-left:8px">${created}</small></div>
+            <div style="color:#333;margin-top:6px">Tổng: <strong>${formatPrice(o.totalAmount || o.TongTien || o.TongTienThanhToan || 0)}</strong></div>
+            <div style="margin-top:8px;color:#444">${comment ? escapeHtml(comment).slice(0,200) : '<em>Không có nhận xét</em>'}</div>
+          </div>
+          <div style="width:160px;text-align:right">
+            <div style="font-size:14px;color:#ffb400;margin-bottom:6px">${'★'.repeat(Math.min(5, Math.max(0, Number(rating)))) + '☆'.repeat(Math.max(0,5 - Math.min(5, Math.max(0, Number(rating)))))}</div>
+            <div><a href="orders.html" onclick="localStorage.setItem('currentOrderId', '${o.id}');" class="btn" style="text-decoration:none">Xem chi tiết</a></div>
+          </div>
+        </div>
+      `;
+    }).join(''));
+
+    listEl.innerHTML = parts.join('\n');
+
+  } catch (err) {
+    console.error('loadReviewedOrders error', err);
+    listEl.innerHTML = '<div class="error-message">Không thể tải danh sách. Vui lòng thử lại sau.</div>';
+  }
+}
+
+// Review modal logic for profile page
+let _currentProfileReviewOrderId = null;
+function openProfileReviewModal(orderId) {
+  _currentProfileReviewOrderId = orderId;
+  const modal = document.getElementById('review-modal');
+  if (!modal) return;
+  document.getElementById('review-order-id').textContent = `#${orderId}`;
+  document.getElementById('review-rating').value = '5';
+  document.getElementById('review-comment').value = '';
+
+  // load existing review if any
+  fetchOrderReview(orderId).then(rv => {
+    if (!rv) return;
+    document.getElementById('review-rating').value = String(rv.rating || rv.so_diem || 5);
+    document.getElementById('review-comment').value = rv.comment || rv.noi_dung || '';
+  }).catch(()=>{});
+
+  modal.style.display = 'block';
+}
+
+function closeProfileReviewModal() {
+  const modal = document.getElementById('review-modal');
+  if (modal) modal.style.display = 'none';
+  _currentProfileReviewOrderId = null;
+}
+
+async function submitProfileReview() {
+  if (!_currentProfileReviewOrderId) return;
+  const orderId = _currentProfileReviewOrderId;
+  const rating = Number(document.getElementById('review-rating').value || 5);
+  const comment = document.getElementById('review-comment').value || '';
+  const token = localStorage.getItem('token');
+  if (!token) { alert('Vui lòng đăng nhập'); return; }
+  try {
+    const resp = await fetch(`http://localhost:5000/api/orderreview/${orderId}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({ rating, comment })
+    });
+    const payload = await resp.json().catch(()=>({}));
+    if (!resp.ok) throw new Error(payload.error || payload.message || 'Lỗi khi gửi đánh giá');
+    // success
+    alert('Gửi đánh giá thành công');
+    closeProfileReviewModal();
+    // reload lists
+    loadReviewedOrders();
+  } catch (e) {
+    console.error('submitProfileReview error', e);
+    alert('Không thể gửi đánh giá: ' + (e.message || e));
+  }
+}
+
+// wire modal buttons once DOM is ready
+document.addEventListener('DOMContentLoaded', function () {
+  const closeBtn = document.getElementById('close-review-modal');
+  const cancelBtn = document.getElementById('cancel-review-btn');
+  const submitBtn = document.getElementById('submit-review-btn');
+  if (closeBtn) closeBtn.addEventListener('click', closeProfileReviewModal);
+  if (cancelBtn) cancelBtn.addEventListener('click', closeProfileReviewModal);
+  if (submitBtn) submitBtn.addEventListener('click', function (ev) { ev.stopPropagation(); submitProfileReview(); });
+
+  // close when clicking outside modal content
+  window.addEventListener('click', function (e) {
+    const modal = document.getElementById('review-modal');
+    if (modal && e.target === modal) closeProfileReviewModal();
+  });
+});
 
 
 function displayWishlist() {
