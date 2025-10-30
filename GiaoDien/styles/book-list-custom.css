@@ -1,0 +1,339 @@
+/* Page-scoped custom styles for product list (only apply when <body class="books-page"> is present)
+   This file is safe to include only on book/list pages and will NOT affect index.html.
+
+   Add any further tweaks here; selectors are intentionally high-specificity and prefixed
+   with .books-page to avoid leaking styles to other pages.
+*/
+
+/* Container grid for product cards */
+.books-page .product-container {
+  display: grid;
+  /* Force exactly 4 columns on desktop */
+  grid-template-columns: repeat(4, 1fr) !important;
+  column-gap: 22px !important;
+  row-gap: 22px !important;
+  align-items: start;
+}
+
+/* Ensure children don't force extra columns */
+.books-page .product-container > * {
+  box-sizing: border-box;
+}
+
+/* Card visual */
+.books-page .product-item,
+.books-page .product-card {
+  background: #ffffff;
+  border: 1px solid rgba(0,0,0,0.06);
+  border-radius: 8px;
+  /* reduce padding so content is closer to the image */
+  padding: 8px;
+  box-shadow: 0 6px 18px rgba(16,24,40,0.04);
+  transition: transform 180ms ease, box-shadow 180ms ease;
+  display: flex;
+  flex-direction: column;
+  /* remove large forced min-height so card contracts to content */
+  min-height: 0;
+}
+
+.books-page .product-item:hover,
+.books-page .product-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 10px 30px rgba(16,24,40,0.08);
+}
+
+/* Image area - keep consistent aspect ratio */
+.books-page .product-item .product-image,
+.books-page .product-card img,
+.books-page .product-item img {
+  display: block;
+  width: 100%;
+  /* reduce image height so info appears closer below */
+  height: 220px;
+  object-fit: cover;
+  border-radius: 6px;
+  margin-bottom: 8px;
+}
+
+/* Compact variant for very small cards */
+@media (max-width: 480px) {
+  .books-page .product-item img,
+  .books-page .product-card img {
+    /* smaller images on tiny screens */
+    height: 160px;
+  }
+}
+
+/* Title */
+.books-page .product-item .product-title,
+.books-page .product-card h3 {
+  font-size: 15px;
+  line-height: 1.35;
+  color: #222;
+  /* tighten spacing around title */
+  margin: 4px 0 6px 0;
+  font-weight: 600;
+  flex: 0 0 auto;
+}
+
+/* Meta (author/year) */
+.books-page .product-item .product-author,
+.books-page .product-item .product-year {
+  font-size: 13px;
+  color: #6b6b6b;
+  margin-bottom: 8px;
+}
+
+/* Price */
+.books-page .product-item .price,
+.books-page .product-card .final-price,
+.books-page .product-card .original-price {
+  font-weight: 700;
+}
+
+.books-page .product-item .final-price,
+.books-page .product-card .final-price {
+  color: #d32f2f;
+  font-size: 16px;
+}
+
+.books-page .product-item .original-price,
+.books-page .product-card .original-price {
+  color: #9a9a9a;
+  font-size: 13px;
+  text-decoration: line-through;
+  margin-left: 8px;
+}
+
+/* Action buttons - keep them together at the bottom */
+.books-page .product-item .product-actions,
+.books-page .product-card .product-actions {
+  margin-top: auto; /* push actions to bottom */
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.books-page .product-item .btn-detail,
+.books-page .product-item .btn-add-cart,
+.books-page .product-card .btn,
+.books-page .product-card button {
+  padding: 8px 10px;
+  font-size: 13px;
+  border-radius: 6px;
+}
+
+/* Smaller badge positioning fix (if previous CSS used ::after) */
+.books-page .product-item .product-image::after {
+  display: none; /* fallback to avoid CSS conflicts */
+}
+
+/* Responsive: make grid fewer columns on smaller screens */
+
+@media (max-width: 1200px) {
+  /* 3 columns on medium screens */
+  .books-page .product-container {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 18px;
+  }
+}
+
+@media (max-width: 900px) {
+  /* 2 columns on small screens */
+  .books-page .product-container {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 14px;
+  }
+}
+
+@media (max-width: 480px) {
+  /* 1 column on very small/mobile */
+  .books-page .product-container {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .books-page .product-item img,
+  .books-page .product-card img {
+    height: 220px;
+  }
+}
+
+
+/* Accessibility and small polish */
+.books-page .product-item a,
+.books-page .product-card a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.books-page .product-item .product-title a:hover,
+.books-page .product-card a:hover {
+  text-decoration: underline;
+}
+
+/* Allow page-specific override variables (optional) */
+.books-page {
+  --product-card-radius: 8px;
+  --product-card-gap: 22px;
+}
+
+/* Make the overall page match index look: light grey background and centered container */
+.books-page body, .books-page {
+  background-color: #f5f5f5;
+}
+
+/* Ensure container aligns with index styling when present */
+.books-page .container {
+  max-width: 1250px;
+  margin: 0 auto;
+  padding: 18px;
+}
+
+/* Section title style (match index) */
+.books-page .product-section h2 {
+  font-size: 22px;
+  color: #222;
+  font-weight: 700;
+  margin-bottom: 18px;
+}
+
+/* Sidebar styling to match index card panels */
+.books-page .sidebar {
+  background: #ffffff;
+  border-radius: 8px;
+  padding: 18px;
+  box-shadow: 0 6px 18px rgba(16,24,40,0.04);
+  border: 1px solid rgba(0,0,0,0.04);
+}
+
+.books-page .sidebar h3 {
+  font-size: 16px;
+  margin-bottom: 12px;
+  color: #d32f2f; /* index red accent */
+}
+
+/* Filter buttons consistent with index: red active */
+.books-page .filter-btn {
+  display: inline-block;
+  padding: 8px 12px;
+  margin: 6px 6px 0 0;
+  background: #fff;
+  border: 1px solid rgba(0,0,0,0.06);
+  border-radius: 6px;
+  color: #333;
+  cursor: pointer;
+}
+
+.books-page .filter-btn.active {
+  background-color: #d32f2f;
+  color: #fff;
+  border-color: rgba(0,0,0,0.06);
+}
+
+/* Make product cards visually similar to index's product cards */
+.books-page .product-item .product-image {
+  border-radius: 6px;
+  overflow: hidden;
+  display: block;
+}
+
+.books-page .product-item .product-info {
+  /* slightly smaller top padding so info sits nearer the image */
+  padding: 4px 2px 0 2px;
+}
+
+.books-page .product-item .product-author {
+  color: #888;
+  font-size: 13px;
+}
+
+.books-page .product-item .price-wrapper {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.books-page .product-item .final-price {
+  color: #d32f2f;
+  font-weight: 700;
+}
+
+.books-page .product-item .original-price {
+  color: #9a9a9a;
+  font-size: 13px;
+  text-decoration: line-through;
+}
+
+/* Small badge (category) on card bottom-left */
+.books-page .product-item .product-badge {
+  position: absolute;
+  left: 12px;
+  bottom: 84px;
+  background: #6f42c1; /* purple badge similar to index */
+  color: #fff;
+  padding: 4px 8px;
+  border-radius: 16px;
+  font-size: 12px;
+}
+
+/* Ensure product cards content area doesn't overflow */
+.books-page .product-card, .books-page .product-item {
+  position: relative;
+}
+
+/* Make 'view detail' link look like on index */
+.books-page .btn-detail {
+  background: transparent;
+  color: #333;
+  border: 1px solid rgba(0,0,0,0.06);
+}
+
+.books-page .btn-add-cart {
+  background: #d32f2f;
+  color: #fff;
+  border: none;
+}
+
+/* Responsive tweak: ensure sidebar stacks on mobile like index */
+@media (max-width: 920px) {
+  .books-page .container {
+    padding: 12px;
+  }
+
+  .books-page .sidebar {
+    margin-bottom: 16px;
+  }
+}
+
+/* Override aspect-ratio technique used in global `book.css` which sets
+   .product-image { padding-top: 140% } and causes very tall empty image boxes.
+   Reduce it on the books page so image box is smaller and info sits closer. */
+.books-page .product-item .product-image {
+  /* make the image box shorter (75% gives ~4:3-ish ratio) */
+  padding-top: 75% !important;
+  background: #f8f8f8 !important;
+}
+
+/* Inner img fill and padding overrides to avoid extra whitespace inside the box */
+.books-page .product-item .product-image img,
+.books-page .product-card .product-image img {
+  position: absolute !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+  padding: 8px !important; /* reduce inner padding */
+}
+
+/* More specific override for the search container to ensure 4 columns */
+.books-page #search-book-list.product-container {
+  grid-template-columns: repeat(4, 1fr) !important;
+}
+
+/* If other global rules set large padding on .product-info, tighten it here */
+.books-page .product-item .product-info {
+  padding: 6px 8px 8px 8px !important;
+}

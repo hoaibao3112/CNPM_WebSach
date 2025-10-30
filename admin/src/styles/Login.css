@@ -1,206 +1,282 @@
-/* styles.css */
-.login-container {
-    font-family: 'Roboto', sans-serif;
-    background: linear-gradient(135deg, #f5f7fa 0%, #e4e8eb 100%);
-    min-height: 100vh;
+/* Import một font chữ sạch sẽ, hiện đại (tùy chọn) */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
+
+/* ----- Cài đặt chung ----- */
+body {
+  font-family: 'Poppins', 'Roboto', sans-serif;
+  background-color: #f4f7f6; /* Một màu nền trắng hơi xám nhẹ */
+}
+
+/* ----- Layout chính ----- */
+.login-page-container {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+}
+
+.login-box {
+  width: 100%;
+  max-width: 900px; /* Chiều rộng cố định cho box */
+  display: flex;
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
+  overflow: hidden; /* Đảm bảo các góc bo được giữ */
+}
+
+/* ----- Cột bên trái (Graphic) ----- */
+.login-graphic-side {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 40px;
+  position: relative;
+  /* Ẩn trên màn hình nhỏ */
+  display: none; 
+}
+
+/* Hiển thị lại trên màn hình lớn (desktop) */
+@media (min-width: 768px) {
+  .login-graphic-side {
     display: flex;
-    justify-content: center;
-    align-items: center;
   }
-  
-  .login-form {
-    background: #2c4649;
-    width: 350px;
-    padding: 40px;
-    border-radius: 8px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
-    text-align: center;
-    border: 1px solid rgba(0, 0, 0, 0.05);
-  }
-  
-  
-  .login-title {
-    color: #3498db; /* Màu xanh dương */
-    font-size: 26px;
-    font-weight: 600;
-    margin-bottom: 30px;
-    letter-spacing: 1px;
-    position: relative;
-    padding-bottom: 15px;
-  }
-  
-  .login-title::after {
-    content: "";
-    position: absolute;
-    bottom: 0;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 50px;
-    height: 3px;
-    background: #3498db;
-  }
-  
-  .form-group {
-    margin-bottom: 25px;
-    text-align: left;
-  }
-  
-  .form-group label {
-    display: block;
-    color: #7f8c8d;
-    font-size: 14px;
-    margin-bottom: 8px;
-    font-weight: 500;
-    letter-spacing: 0.5px;
-  }
-  
-  .form-control {
-    width: 100%;
-    padding: 12px 15px;
-    border: 1px solid #e0e0e0;
-    border-radius: 4px;
-    font-size: 14px;
-    transition: all 0.3s;
-    color: #34495e;
-    background-color: #f9f9f9;
-  }
-  
-  .form-control:focus {
-    border-color: #3498db;
-    outline: none;
-    box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
-    background-color: white;
-  }
-  
-  .remember-forgot {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 25px;
-  }
-  
-  .remember-me {
-    display: flex;
-    align-items: center;
-  }
-  
-  .remember-me input {
-    margin-right: 8px;
-    accent-color: #3498db;
-  }
-  
-  .remember-me label {
-    color: #7f8c8d;
-    font-size: 13px;
-    cursor: pointer;
-  }
-  
-  .forgot-password {
-    color: #3498db;
-    text-decoration: none;
-    font-size: 13px;
-    font-weight: 500;
-    transition: color 0.2s;
-  }
-  
-  .forgot-password:hover {
-    color: #2980b9;
-    text-decoration: underline;
-  }
-  
-  .login-btn {
-    background: linear-gradient(to right, #3498db, #2c3e50);
-    color: white;
-    border: none;
-    width: 100%;
-    padding: 14px;
-    border-radius: 4px;
-    font-size: 16px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.3s;
-    letter-spacing: 0.5px;
-    box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
-  }
-  
-  .login-btn:hover {
-    background: linear-gradient(to right, #2980b9, #34495e);
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(52, 152, 219, 0.4);
-  }
-  
-  .login-btn:active {
-    transform: translateY(0);
-  }
-  
-  .divider {
-    margin: 25px 0;
-    color: #bdc3c7;
-    position: relative;
-    font-size: 12px;
-  }
-  
-  .divider::before {
-    content: "";
-    position: absolute;
-    top: 50%;
-    left: 0;
-    right: 0;
-    height: 1px;
-    background: linear-gradient(to right, transparent, #ecf0f1, transparent);
-    z-index: 1;
-  }
-  
-  .divider span {
-    background: white;
-    position: relative;
-    z-index: 2;
-    padding: 0 15px;
-  }
-  
-  .social-login {
-    margin: 25px 0;
-  }
-  
-  .social-login h3 {
-    color: #3498db;
-    font-size: 15px;
-    font-weight: 600;
-    margin: 12px 0;
-    cursor: pointer;
-    transition: color 0.2s;
-  }
-  
-  .social-login h3:hover {
-    color: #2980b9;
-  }
-  
-  .social-login h4 {
-    color: #1abc9c;
-    font-size: 15px;
-    font-weight: 600;
-    margin: 12px 0;
-    cursor: pointer;
-    transition: color 0.2s;
-  }
-  
-  .social-login h4:hover {
-    color: #16a085;
-  }
-  
-  .footer {
-    margin-top: 30px;
-    color: #95a5a6;
-    font-size: 12px;
-    line-height: 1.6;
-  }
-  
-  .error-message {
-    color: #e74c3c;
-    font-size: 14px;
-    margin-bottom: 20px;
-    padding: 10px;
-    background: rgba(231, 76, 60, 0.1);
-    border-radius: 4px;
-    border-left: 3px solid #e74c3c;
-  }
+}
+
+.laptop-graphic-wrapper {
+  width: 280px;
+  height: 280px;
+  background: #f8f9fa; /* Màu nền cho vòng tròn */
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 2;
+}
+
+/* Các hình trang trí nhỏ */
+.graphic-shape {
+  position: absolute;
+  z-index: 1;
+  opacity: 0.7;
+}
+.shape-1 { /* Tam giác xanh lá */
+  width: 0; 
+  height: 0; 
+  border-left: 15px solid transparent;
+  border-right: 15px solid transparent;
+  border-bottom: 25px solid #5cb85c; /* Màu xanh lá cây */
+  top: 20%;
+  right: 15%;
+  transform: rotate(25deg);
+}
+.shape-2 { /* Vòng tròn xanh dương */
+  width: 20px;
+  height: 20px;
+  background: #3498db;
+  border-radius: 50%;
+  top: 25%;
+  left: 15%;
+}
+.shape-3 { /* Tam giác xanh lá nhỏ */
+  width: 0; 
+  height: 0; 
+  border-left: 10px solid transparent;
+  border-right: 10px solid transparent;
+  border-bottom: 18px solid #5cb85c;
+  bottom: 25%;
+  left: 20%;
+  transform: rotate(-30deg);
+}
+.shape-4 { /* Vòng tròn xanh dương nhỏ */
+  width: 15px;
+  height: 15px;
+  background: #3498db;
+  border-radius: 50%;
+  bottom: 30%;
+  right: 20%;
+}
+
+
+/* ----- Cột bên phải (Form) ----- */
+.login-form-side {
+  flex: 1;
+  padding: 40px 50px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.login-form-side h2 {
+  font-size: 28px;
+  font-weight: 700;
+  color: #333;
+  margin-bottom: 30px;
+  text-align: left; /* Tiêu đề "Member Login" căn lề trái */
+}
+
+.login-form-wrapper {
+  width: 100%;
+}
+
+/* ----- Ghi đè style của Ant Design ----- */
+
+/* Ghi đè Input */
+.login-input.ant-input-affix-wrapper,
+.login-input.ant-input-password {
+  background-color: #f0f2f5 !important;
+  border: none !important;
+  border-radius: 40px !important; /* Bo tròn */
+  padding: 12px 20px !important;
+  margin-bottom: 20px !important;
+  box-shadow: none !important; /* Tắt box-shadow khi focus */
+}
+
+/* Ghi đè icon bên trong Input */
+.login-input .anticon {
+  color: #a0a0a0 !important;
+  font-size: 16px;
+}
+
+/* Ghi đè placeholder */
+.login-input input::placeholder {
+  color: #888 !important;
+}
+
+/* Ghi đè nút Login */
+.login-form-button.ant-btn-primary {
+  width: 100%;
+  height: 50px !important;
+  border-radius: 40px !important;
+  background: #5cb85c !important; /* Màu xanh lá cây */
+  border: none !important;
+  font-size: 16px;
+  font-weight: 600;
+  box-shadow: 0 4px 15px rgba(92, 184, 92, 0.3) !important;
+  transition: all 0.3s ease;
+}
+
+.login-form-button.ant-btn-primary:hover {
+  background: #4cae4c !important; /* Màu xanh lá đậm hơn */
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(92, 184, 92, 0.4) !important;
+}
+
+/* ----- Các link phụ ----- */
+
+.login-form-forgot-link {
+  display: block;
+  text-align: center;
+  margin-top: 15px;
+  color: #888;
+  font-size: 13px;
+  font-weight: 500;
+  text-decoration: none;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+}
+
+.login-form-forgot-link:hover {
+  color: #555;
+  text-decoration: underline;
+}
+
+.login-form-create-account {
+  text-align: center;
+  margin-top: 30px;
+  color: #333;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer; /* Cho giống 1 cái link */
+}
+
+.login-form-create-account:hover {
+  color: #000;
+}
+
+/* ----- Thông báo lỗi (lấy từ code cũ) ----- */
+.error-message {
+  color: #e74c3c;
+  font-size: 14px;
+  margin-bottom: 20px;
+  padding: 10px;
+  background: rgba(231, 76, 60, 0.1);
+  border-radius: 4px;
+  border-left: 3px solid #e74c3c;
+  text-align: left;
+}
+
+
+/* ----- CSS TÙY CHỈNH CHO MODAL QUÊN MẬT KHẨU ----- */
+
+/* Box modal tổng */
+.forgot-password-modal .ant-modal-content {
+  border-radius: 12px !important;
+  overflow: hidden; /* Bắt buộc để bo góc header */
+  padding: 0;
+}
+
+/* Header (tiêu đề) */
+.forgot-password-modal .ant-modal-header {
+  background: #5cb85c; /* Màu xanh lá cây (cùng màu login) */
+  border-bottom: none;
+  padding: 16px 24px;
+}
+
+.forgot-password-modal .ant-modal-title {
+  color: white;
+  font-weight: 600;
+  text-align: left; /* Căn lề trái như ảnh */
+}
+
+/* Nút X (đóng modal) */
+.forgot-password-modal .ant-modal-close .ant-modal-close-x {
+  color: rgba(255, 255, 255, 0.8);
+}
+.forgot-password-modal .ant-modal-close:hover .ant-modal-close-x {
+  color: white;
+}
+
+/* Thân modal (chứa form) */
+.forgot-password-modal .ant-modal-body {
+  padding: 30px;
+}
+
+/* Label của form (vd: "Email đăng ký") */
+.forgot-password-modal .ant-form-item-label > label {
+  font-weight: 600;
+  color: #333;
+}
+
+/* Ô input trong modal */
+.forgot-password-modal .ant-input,
+.forgot-password-modal .ant-input-affix-wrapper,
+.forgot-password-modal .ant-input-password {
+  background-color: #f0f2f5 !important;
+  border: none !important;
+  border-radius: 40px !important; /* Bo tròn giống login */
+  padding: 10px 20px !important;
+  box-shadow: none !important;
+}
+
+/* Nút bấm "Gửi OTP", "Xác nhận", v.v. */
+.forgot-password-modal .ant-btn-primary {
+  width: 100%;
+  height: 45px !important; /* Cao vừa phải */
+  border-radius: 40px !important; /* Bo tròn */
+  background: #5cb85c !important; /* Màu xanh lá cây */
+  border: none !important;
+  font-size: 16px;
+  font-weight: 600;
+  margin-top: 10px; /* Thêm chút khoảng cách */
+  transition: all 0.3s ease;
+}
+
+.forgot-password-modal .ant-btn-primary:hover {
+  background: #4cae4c !important; /* Màu xanh lá đậm hơn */
+  transform: translateY(-2px);
+}

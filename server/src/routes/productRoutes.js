@@ -167,14 +167,26 @@ router.get('/category/:categoryId', async (req, res) => {
       return res.status(400).json({ error: 'ID thể loại không hợp lệ' });
     }
 
-    const query = `
+    // Build query and params. For category 6 (sách giáo khoa) limit to 20 items as requested.
+    let query = `
       SELECT s.*, m.TenTG AS TacGia 
       FROM sanpham s 
       LEFT JOIN tacgia m ON s.MaTG = m.MaTG 
       WHERE s.MaTL = ?
     `;
-    
-    const [products] = await pool.query(query, [parseInt(categoryId)]);
+    const params = [parseInt(categoryId)];
+
+      const cid = parseInt(categoryId);
+      if (cid === 6) {
+        query += ' LIMIT 20';
+        console.log('Applying LIMIT 20 for category 6 (textbooks)');
+      } else if (cid === 2 || cid === 4) {
+        // For politics (2) and science (4) return only 10 items as requested
+        query += ' LIMIT 10';
+        console.log(`Applying LIMIT 10 for category ${cid}`);
+    }
+
+    const [products] = await pool.query(query, params);
     
     console.log(`Sản phẩm thể loại ${categoryId}:`, products.length);
     res.status(200).json(products);
@@ -404,6 +416,63 @@ router.get('/recommendations', async (req, res) => {
   } catch (error) {
     console.error("Lỗi lấy đề xuất:", error);
     res.status(500).send("Lỗi server");
+  }
+});
+
+
+// Route: 20 sản phẩm sắp xếp theo Năm xuất bản (thấp -> cao).
+// URL: GET /sorted/year
+// Optional query: MaTL (category id) to filter by category
+router.get('/sorted/year', async (req, res) => {
+  try {
+    const { MaTL } = req.query;
+    let sql = `
+      SELECT s.*, tg.TenTG AS TacGia
+      FROM sanpham s
+      LEFT JOIN tacgia tg ON s.MaTG = tg.MaTG
+    `;
+    const params = [];
+    if (MaTL && !isNaN(MaTL)) {
+      sql += ' WHERE s.MaTL = ?';
+      params.push(parseInt(MaTL));
+    }
+
+    // Put NULL NamXB last, then order ascending and limit 20
+    sql += ` ORDER BY (s.NamXB IS NULL), s.NamXB ASC LIMIT 20`;
+
+    const [rows] = await pool.query(sql, params);
+    res.status(200).json(rows);
+  } catch (error) {
+    console.error('Lỗi khi lấy sản phẩm theo năm (sorted/year):', error);
+    res.status(500).json({ error: 'Lỗi server khi lấy sản phẩm theo năm', details: error.message });
+  }
+});
+
+// Route: 20 sản phẩm sắp xếp theo số lượng tồn kho (cao -> thấp).
+// URL: GET /sorted/stock
+// Optional query: MaTL (category id) to filter by category
+router.get('/sorted/stock', async (req, res) => {
+  try {
+    const { MaTL } = req.query;
+    let sql = `
+      SELECT s.*, tg.TenTG AS TacGia
+      FROM sanpham s
+      LEFT JOIN tacgia tg ON s.MaTG = tg.MaTG
+    `;
+    const params = [];
+    if (MaTL && !isNaN(MaTL)) {
+      sql += ' WHERE s.MaTL = ?';
+      params.push(parseInt(MaTL));
+    }
+
+    // Order by SoLuong (NULLs treated as 0) descending and limit 20
+    sql += ` ORDER BY COALESCE(s.SoLuong, 0) DESC LIMIT 20`;
+
+    const [rows] = await pool.query(sql, params);
+    res.status(200).json(rows);
+  } catch (error) {
+    console.error('Lỗi khi lấy sản phẩm theo tồn kho (sorted/stock):', error);
+    res.status(500).json({ error: 'Lỗi server khi lấy sản phẩm theo tồn kho', details: error.message });
   }
 });
 

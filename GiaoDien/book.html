@@ -6,11 +6,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Trang sách</title>
     <link rel="stylesheet" href="styles/book.css">
+    <!-- Page-scoped custom styles for product list only (won't affect index.html) -->
+    <link rel="stylesheet" href="styles/book-list-custom.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <link rel="icon" href="favicon.ico" type="image/x-icon" />
 </head>
 
-<body>
+<body class="books-page">
     <!-- header -->
     <div id="load-header"></div>
 
@@ -111,6 +113,10 @@
         });
         // Hàm filter sản phẩm
     </script>
+  
+    <!-- Footer placeholder -->
+    <div id="load-footer"></div>
+    <script src="js/loadFooter.js"></script>
 </body>
 
 </html>

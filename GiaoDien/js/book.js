@@ -16,6 +16,33 @@ function escapeHtml(unsafe) {
     .replace(/'/g, '&#039;');
 }
 
+// Robustly extract author name from product object which may come in
+// different shapes depending on the API (string, TenTG, nested object, array)
+function getAuthorName(product) {
+  if (!product) return 'Đang cập nhật';
+  // common direct string field
+  if (product.TacGia && typeof product.TacGia === 'string' && product.TacGia.trim()) return product.TacGia;
+  if (product.TenTG && typeof product.TenTG === 'string' && product.TenTG.trim()) return product.TenTG;
+
+  // nested object: TacGia: { TenTG: '...' } or an array
+  if (product.TacGia && typeof product.TacGia === 'object') {
+    // array of authors
+    if (Array.isArray(product.TacGia) && product.TacGia.length) {
+      const first = product.TacGia[0];
+      if (first && (first.TenTG || first.TacGia)) return first.TenTG || first.TacGia || 'Đang cập nhật';
+    }
+    // object with TenTG
+    if (product.TacGia.TenTG) return product.TacGia.TenTG;
+    if (product.TacGia.name) return product.TacGia.name;
+  }
+
+  // some APIs use TacGiaName or Author
+  if (product.TacGiaName && typeof product.TacGiaName === 'string' && product.TacGiaName.trim()) return product.TacGiaName;
+  if (product.Author && typeof product.Author === 'string' && product.Author.trim()) return product.Author;
+
+  return 'Đang cập nhật';
+}
+
 // Hàm hiển thị toast notification
 function showToast(message) {
   // Tạo phần tử toast
@@ -141,6 +168,21 @@ function displayProducts(products, containerId = 'book-list', limit = null) {
       ? Math.min((product.DaBan / (product.SoLuong + product.DaBan)) * 100, 100)
       : 0;
 
+    // compute author once so we can debug when it's missing
+    const authorName = getAuthorName(product);
+    if (authorName === 'Đang cập nhật') {
+      // helpful debug: print the product's possible author fields so you can inspect in DevTools
+      console.debug('Missing author for product.MaSP=' + (product.MaSP || product.MaSP === 0 ? product.MaSP : '(no id)'), {
+        MaSP: product.MaSP,
+        TenSP: product.TenSP,
+        TacGia: product.TacGia,
+        TenTG: product.TenTG,
+        TacGiaName: product.TacGiaName,
+        Author: product.Author,
+        raw: product
+      });
+    }
+
     productElement.innerHTML = `
       <div class="product-image">
         <img src="img/product/${product.HinhAnh || 'default-book.jpg'}"
@@ -150,7 +192,7 @@ function displayProducts(products, containerId = 'book-list', limit = null) {
       </div>
       <div class="product-info">
         <h3 class="product-title">${escapeHtml(product.TenSP)}</h3>
-        <p class="product-author">Tác giả: ${escapeHtml(product.TacGia || product.TenTG || 'Đang cập nhật')}</p>
+  <p class="product-author">Tác giả: ${escapeHtml(authorName)}</p>
         <p class="product-year">Năm XB: ${product.NamXB || 'Đang cập nhật'}</p>
         <div class="product-price">
           <span class="original-price">${formatPrice(product.GiaGoc || (product.DonGia * 1.25))}đ</span>
@@ -398,7 +440,7 @@ function triggerFilterFetchFromUI() {
   };
   // remove undefined keys
   Object.keys(query).forEach(k => { if (query[k] === undefined) delete query[k]; });
-  fetchProductsWithFilters(query, mainContainer, 20);
+  fetchProductsWithFilters(query, mainContainer, 10);
 }
 
 // Ensure the visible UI matches what's stored in localStorage.
@@ -445,7 +487,10 @@ window.addEventListener('pageshow', (evt) => {
 // Hàm hiển thị tất cả sản phẩm
 function showAllProducts(containerId) {
   const products = allProducts[containerId] || [];
-  displayProducts(products, containerId);
+  // For textbooks we intentionally cap the visible items to 10
+  // to match the requested behavior (never show more than 10).
+  const cap = containerId === 'textbook-list' ? 10 : null;
+  displayProducts(products, containerId, cap);
   const viewMoreContainer = document.querySelector('.view-more-container');
   if (viewMoreContainer) {
     viewMoreContainer.remove();
@@ -554,8 +599,7 @@ async function fetchAndDisplayProducts() {
 
   try {
     productList.innerHTML = '<div class="loading">Đang tải sản phẩm...</div>';
-
-    let url = 'http://localhost:5000/api/product';
+    let url = 'http://localhost:5000/api/product/sorted/year';
     // Only honor saved filters when we are on the book page itself.
     const categoryKey = storageKeyForGroup('category');
     const priceKey = storageKeyForGroup('priceButtons');
@@ -573,7 +617,7 @@ async function fetchAndDisplayProducts() {
     const products = await response.json();
     if (!Array.isArray(products)) throw new Error('Dữ liệu trả về không hợp lệ');
 
-    displayProducts(products, 'book-list', 20);
+  displayProducts(products, 'book-list', 10);
   } catch (error) {
     console.error('Lỗi khi tải sản phẩm:', error);
     productList.innerHTML = `
@@ -597,7 +641,7 @@ async function fetchAndDisplayPromotions() {
     productList.innerHTML = '<div class="loading">Đang tải sách khuyến mãi...</div>';
 
     // Gọi API để lấy sản phẩm khuyến mãi
-    const response = await fetch('http://localhost:5000/api/product', {
+    const response = await fetch('http://localhost:5000/api/product/sorted/stock', {
       headers: { 'Accept': 'application/json' },
     });
     if (!response.ok) throw new Error(`Lỗi HTTP: ${response.status}`);
@@ -623,7 +667,7 @@ async function fetchAndDisplayPromotions() {
       DaBan: product.DaBan || Math.floor(Math.random() * 50) // Giả lập số lượng đã bán
     }));
 
-    displayProducts(productsWithDiscount, 'promotion-book-list', 20);
+  displayProducts(productsWithDiscount, 'promotion-book-list', 10);
   } catch (error) {
     console.error('Lỗi khi tải sách khuyến mãi:', error);
     productList.innerHTML = `
@@ -706,7 +750,7 @@ async function fetchAndDisplayTextbooks() {
     const products = await response.json();
     if (!Array.isArray(products)) throw new Error('Dữ liệu trả về không hợp lệ');
 
-    displayProducts(products, 'textbook-list', 20);
+  displayProducts(products, 'textbook-list', 10);
   } catch (error) {
     console.error('Lỗi khi tải sách giáo khoa:', error);
     productList.innerHTML = `
@@ -759,7 +803,7 @@ async function fetchAndDisplayPoliticsBooks() {
       throw new Error('Dữ liệu trả về không phải mảng');
     }
 
-    displayProducts(products, 'politics-book-list', 20);
+  displayProducts(products, 'politics-book-list', 10);
   } catch (error) {
     console.error('Lỗi khi tải sách chính trị:', error);
     productList.innerHTML = `
@@ -785,7 +829,7 @@ async function fetchAndDisplayScienceBooks() {
     const products = await response.json();
     if (!Array.isArray(products)) throw new Error('Dữ liệu trả về không hợp lệ');
 
-    displayProducts(products, 'science-book-list', 20);
+  displayProducts(products, 'science-book-list', 10);
   } catch (error) {
     console.error('Lỗi khi tải sách khoa học:', error);
     productList.innerHTML = `
@@ -1076,7 +1120,7 @@ function getMainProductContainerId() {
   return null;
 }
 
-async function fetchProductsWithFilters(filters, containerId = null, limit = 20) {
+async function fetchProductsWithFilters(filters, containerId = null, limit = 10) {
   const url = buildProductQuery(filters);
   const resolvedId = containerId || getMainProductContainerId();
   if (!resolvedId) {
