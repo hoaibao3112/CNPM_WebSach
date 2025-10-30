@@ -1,6 +1,8 @@
 import express from 'express';
 import pool from '../config/connectDatabase.js';
 import multer from 'multer';
+import fs from 'fs';
+import path from 'path';
 import { authenticateToken } from '../utils/generateToken.js';
 
 const router = express.Router();
@@ -526,6 +528,52 @@ router.get('/:id', async (req, res) => {
       HinhThuc: s.HinhThuc
     };
 
+    // --- Lấy ảnh phụ từ bảng sanpham_anh và đính kèm vào response ---
+    try {
+      const [imgs] = await pool.query(
+        'SELECT Id, MaSP, FileName, SortOrder, CreatedAt, UpdatedAt FROM sanpham_anh WHERE MaSP = ? ORDER BY SortOrder ASC, Id ASC',
+        [id]
+      );
+
+      // Build public URL for each image. The server serves product images at /product-images/<filename>
+      const baseUrl = process.env.IMG_BASE_URL || (req.protocol + '://' + req.get('host'));
+      // Map DB rows to image objects
+      const imagesFromTable = imgs.map(r => ({
+        id: r.Id,
+        filename: r.FileName,
+        sortOrder: r.SortOrder,
+        createdAt: r.CreatedAt,
+        updatedAt: r.UpdatedAt,
+        url: r.FileName ? `${baseUrl}/product-images/${r.FileName}` : null,
+        isPrimary: false
+      }));
+
+      // Ensure the main image stored in sanpham.HinhAnh is preserved as primary
+      const mainFilename = s.HinhAnh && s.HinhAnh.toString().trim();
+      let images = [];
+      if (mainFilename) {
+        // Find if mainFilename already exists in sanpham_anh
+        const matchIndex = imagesFromTable.findIndex(x => x.filename === mainFilename);
+        if (matchIndex !== -1) {
+          imagesFromTable[matchIndex].isPrimary = true;
+          // move matched to front
+          const [mainImg] = imagesFromTable.splice(matchIndex, 1);
+          images.push(mainImg);
+        } else {
+          // prepend main image object (it may be stored in sanpham.HinhAnh only)
+          images.push({ id: null, filename: mainFilename, sortOrder:  -1, createdAt: null, updatedAt: null, url: `${baseUrl}/product-images/${mainFilename}`, isPrimary: true });
+        }
+      }
+
+      // append other images sorted by sortOrder
+      images = images.concat(imagesFromTable);
+
+      product.images = images;
+    } catch (imgErr) {
+      console.warn('Không thể lấy ảnh phụ cho sản phẩm', id, imgErr.message || imgErr);
+      product.images = [];
+    }
+
     res.status(200).json(product);
   } catch (error) {
     console.error('Lỗi khi lấy chi tiết sản phẩm:', error);
@@ -621,136 +669,142 @@ router.get('/category-current-year/:categoryId?', async (req, res) => {
 // =============================================================================
 // ROUTES CẦN TOKEN VÀ QUYỀN ADMIN/STAFF (PROTECTED)
 // =============================================================================
+router.post(
+  '/',
+  authenticateToken,
+  checkAdminPermission,
+  upload.fields([
+    { name: 'HinhAnh', maxCount: 1 },       // ảnh chính
+    { name: 'ExtraImages', maxCount: 20 }   // ảnh phụ
+  ]),
+  logFileMiddleware,
+  async (req, res) => {
+    let connection;
+    try {
+      const {
+        MaTL, TenSP, MaTG, NamXB, TinhTrang, DonGia, SoLuong, MoTa,
+        MaNCC, TrongLuong, KichThuoc, SoTrang, HinhThuc, MinSoLuong
+      } = req.body;
 
-// Route thêm sản phẩm - YÊU CẦU TOKEN VÀ QUYỀN ADMIN/STAFF/NV004/NV007
-router.post('/', authenticateToken, checkAdminPermission, upload.single('HinhAnh'), logFileMiddleware, async (req, res) => {
-  try {
-    const { MaTL, TenSP, MaTG, NamXB, TinhTrang, DonGia, SoLuong, MoTa, MaNCC, TrongLuong, KichThuoc, SoTrang, HinhThuc, MinSoLuong } = req.body;
-    console.log('🔍 User adding product:', req.user);
-    console.log('🔍 Raw request body:', req.body);
-    console.log('🔍 Received file:', req.file);
+      const mainFile = req.files?.HinhAnh?.[0] || null;
+      const extraFiles = req.files?.ExtraImages || [];
 
-    const HinhAnh = req.file ? req.file.filename : null;
+      const maTLNumber = parseInt(MaTL);
+      const maTGNumber = parseInt(MaTG);
+      const namXBNumber = parseInt(NamXB);
+      const maNCCNumber = parseInt(MaNCC);
 
-    const maTLNumber = parseInt(MaTL);
-  const maTGNumber = parseInt(MaTG);
-    const tenSPTrimmed = TenSP ? TenSP.trim() : '';
-
-    if (isNaN(maTLNumber) || !tenSPTrimmed) {
-      return res.status(400).json({ error: 'Vui lòng cung cấp đầy đủ thông tin bắt buộc (Mã TL, Tên SP)!' });
-    }
-
-    const namXBNumber = parseInt(NamXB);
-    if (!isNaN(namXBNumber) && (namXBNumber < 1900 || namXBNumber > new Date().getFullYear())) {
-      return res.status(400).json({ error: 'Năm xuất bản phải nằm trong khoảng từ 1900 đến năm hiện tại!' });
-    }
-
-    if (!isNaN(maTGNumber)) {
-      const [existingTacGia] = await pool.query('SELECT MaTG FROM tacgia WHERE MaTG = ?', [maTGNumber]);
-      if (existingTacGia.length === 0) {
-        return res.status(400).json({ error: `Mã tác giả (MaTG: ${maTGNumber}) không tồn tại trong bảng tacgia!` });
+      if (isNaN(maTLNumber) || !TenSP?.trim()) {
+        return res.status(400).json({ error: 'Thiếu Mã thể loại hoặc Tên sản phẩm!' });
       }
-    }
 
-    // Validate MaNCC if provided
-    const maNCCNumber = parseInt(MaNCC);
-    if (!isNaN(maNCCNumber)) {
-      const [existingNCC] = await pool.query('SELECT MaNCC FROM nhacungcap WHERE MaNCC = ?', [maNCCNumber]);
-      if (existingNCC.length === 0) {
-        return res.status(400).json({ error: `Mã nhà cung cấp (MaNCC: ${maNCCNumber}) không tồn tại trong bảng nhacungcap!` });
+      const tinhTrangValue = TinhTrang === '1' || TinhTrang === 1 ? 1 : 0;
+      const donGiaValue = parseFloat(DonGia) || 0;
+      const soLuongValue = parseInt(SoLuong) || 0;
+      const minSoLuongValue = parseInt(MinSoLuong) || 0;
+
+      const mainFilename = mainFile ? mainFile.filename : null;
+
+      connection = await pool.getConnection();
+      await connection.beginTransaction();
+
+      // 1️⃣ Thêm sản phẩm vào bảng sanpham
+      const [result] = await connection.query(
+        `INSERT INTO sanpham
+         (MaTL, TenSP, MoTa, HinhAnh, MaTG, NamXB, TinhTrang, DonGia, SoLuong,
+          MinSoLuong, MaNCC, TrongLuong, KichThuoc, SoTrang, HinhThuc)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [
+          maTLNumber,
+          TenSP.trim(),
+          MoTa || null,
+          mainFilename,
+          isNaN(maTGNumber) ? null : maTGNumber,
+          isNaN(namXBNumber) ? null : namXBNumber,
+          tinhTrangValue,
+          donGiaValue,
+          soLuongValue,
+          minSoLuongValue,
+          isNaN(maNCCNumber) ? null : maNCCNumber,
+          isNaN(parseInt(TrongLuong)) ? null : parseInt(TrongLuong),
+          KichThuoc || null,
+          isNaN(parseInt(SoTrang)) ? null : parseInt(SoTrang),
+          HinhThuc || null
+        ]
+      );
+
+      const newProductId = result.insertId;
+
+      // 2️⃣ Thêm ảnh phụ vào sanpham_anh
+      if (extraFiles.length > 0) {
+        const values = extraFiles.map((f, idx) => [newProductId, f.filename, idx]);
+        await connection.query('INSERT INTO sanpham_anh (MaSP, FileName, SortOrder) VALUES ?', [values]);
       }
+
+      await connection.commit();
+      connection.release();
+
+      res.status(201).json({
+        message: 'Thêm sản phẩm thành công!',
+        MaSP: newProductId,
+        PrimaryImage: mainFilename,
+        ExtraImages: extraFiles.map(f => f.filename)
+      });
+    } catch (error) {
+      console.error('❌ Lỗi khi thêm sản phẩm:', error.message || error);
+      if (connection) {
+        try { await connection.rollback(); connection.release(); } catch (e) {}
+      }
+      res.status(500).json({ error: 'Lỗi server khi thêm sản phẩm', details: error.message });
     }
-
-    const tinhTrangValue = TinhTrang === '1' || TinhTrang === 1 ? 1 : 0;
-    const donGiaValue = parseFloat(DonGia) || 0;
-    const soLuongValue = parseInt(SoLuong) || 0;
-
-    const minSoLuongValue = isNaN(parseInt(MinSoLuong)) ? 0 : parseInt(MinSoLuong);
-
-    const [result] = await pool.query(
-      'INSERT INTO sanpham (MaTL, TenSP, MoTa, HinhAnh, MaTG, NamXB, TinhTrang, DonGia, SoLuong, MinSoLuong, MaNCC, TrongLuong, KichThuoc, SoTrang, HinhThuc) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
-      [
-        maTLNumber,
-        tenSPTrimmed,
-        MoTa || null,
-        HinhAnh,
-        isNaN(maTGNumber) ? null : maTGNumber,
-        isNaN(namXBNumber) ? null : namXBNumber,
-        tinhTrangValue,
-        donGiaValue,
-        soLuongValue,
-        minSoLuongValue,
-        isNaN(maNCCNumber) ? null : maNCCNumber,
-        isNaN(parseInt(TrongLuong)) ? null : parseInt(TrongLuong),
-        KichThuoc || null,
-        isNaN(parseInt(SoTrang)) ? null : parseInt(SoTrang),
-        HinhThuc || null
-      ]
-    );
-
-    if (result.affectedRows === 0) {
-      return res.status(500).json({ error: 'Không thể thêm sản phẩm. Vui lòng kiểm tra lại dữ liệu hoặc cơ sở dữ liệu!' });
-    }
-
-    res.status(201).json({ 
-      message: 'Thêm sản phẩm thành công!', 
-      MaSP: result.insertId,
-      createdBy: req.user.makh || req.user.MaTK || req.user.userId
-    });
-  } catch (error) {
-    console.error('Lỗi khi thêm sản phẩm:', error.message || error);
-    res.status(500).json({ error: 'Lỗi khi thêm sản phẩm', details: error.message || 'Không xác định' });
   }
-});
+);
 
 // Route cập nhật sản phẩm - YÊU CẦU TOKEN VÀ QUYỀN ADMIN/STAFF/NV004/NV007
-router.put('/:id', authenticateToken, checkAdminPermission, upload.single('HinhAnh'), async (req, res) => {
+router.put('/:id', authenticateToken, checkAdminPermission, upload.fields([
+  { name: 'HinhAnh', maxCount: 1 },
+  { name: 'ExtraImages', maxCount: 20 }
+]), async (req, res) => {
+  let connection;
   try {
     const { id } = req.params;
-    const { MaTL, TenSP, MaTG, NamXB, TinhTrang, DonGia, SoLuong, MoTa, MaNCC, TrongLuong, KichThuoc, SoTrang, HinhThuc, MinSoLuong } = req.body;
-    const HinhAnh = req.file ? req.file.filename : undefined;
+    const {
+      MaTL, TenSP, MaTG, NamXB, TinhTrang, DonGia, SoLuong, MoTa,
+      MaNCC, TrongLuong, KichThuoc, SoTrang, HinhThuc, MinSoLuong
+    } = req.body;
 
-    console.log('🔄 User updating product:', req.user);
+    // files (if any)
+    const mainFile = req.files?.HinhAnh?.[0] || null;
+    const extraFiles = req.files?.ExtraImages || [];
 
     const maTLNumber = parseInt(MaTL);
-  const maTGNumber = parseInt(MaTG);
-    const tenSPTrimmed = TenSP ? TenSP.trim() : '';
-
-    if (isNaN(maTLNumber) || !tenSPTrimmed) {
-      return res.status(400).json({ error: 'Vui lòng cung cấp đầy đủ thông tin bắt buộc (Mã TL, Tên SP)!' });
-    }
-
+    const maTGNumber = parseInt(MaTG);
     const namXBNumber = parseInt(NamXB);
-    if (!isNaN(namXBNumber) && (namXBNumber < 1900 || namXBNumber > new Date().getFullYear())) {
-      return res.status(400).json({ error: 'Năm xuất bản phải nằm trong khoảng từ 1900 đến năm hiện tại!' });
-    }
-
-    if (!isNaN(maTGNumber)) {
-      const [existingTacGia] = await pool.query('SELECT MaTG FROM tacgia WHERE MaTG = ?', [maTGNumber]);
-      if (existingTacGia.length === 0) {
-        return res.status(400).json({ error: `Mã tác giả (MaTG: ${maTGNumber}) không tồn tại trong bảng tacgia!` });
-      }
-    }
-
-    // Validate MaNCC if provided
     const maNCCNumber = parseInt(MaNCC);
-    if (!isNaN(maNCCNumber)) {
-      const [existingNCC] = await pool.query('SELECT MaNCC FROM nhacungcap WHERE MaNCC = ?', [maNCCNumber]);
-      if (existingNCC.length === 0) {
-        return res.status(400).json({ error: `Mã nhà cung cấp (MaNCC: ${maNCCNumber}) không tồn tại trong bảng nhacungcap!` });
-      }
+
+    if (isNaN(maTLNumber) || !TenSP?.trim()) {
+      return res.status(400).json({ error: 'Thiếu Mã thể loại hoặc Tên sản phẩm!' });
     }
 
     const tinhTrangValue = TinhTrang === '1' || TinhTrang === 1 ? 1 : 0;
     const donGiaValue = parseFloat(DonGia) || 0;
     const soLuongValue = parseInt(SoLuong) || 0;
+    const minSoLuongValue = parseInt(MinSoLuong) || 0;
 
+    // Decide HinhAnh to set: uploaded file preferred; if not, check body HinhAnh (string) else undefined (=no change)
+    const bodyHinhAnh = req.body.HinhAnh || null;
+    const newHinhAnh = mainFile ? mainFile.filename : (bodyHinhAnh ? bodyHinhAnh.toString().trim() : undefined);
+
+    connection = await pool.getConnection();
+    await connection.beginTransaction();
+
+    // Build update query dynamically
     let updateQuery = 'UPDATE sanpham SET MaTL = ?, TenSP = ?, MoTa = ?';
-    const updateParams = [maTLNumber, tenSPTrimmed, MoTa || null];
+    const updateParams = [maTLNumber, TenSP.trim(), MoTa || null];
 
-    if (HinhAnh !== undefined) {
+    if (newHinhAnh !== undefined) {
       updateQuery += ', HinhAnh = ?';
-      updateParams.push(HinhAnh);
+      updateParams.push(newHinhAnh);
     }
 
     if (isNaN(maTGNumber)) {
@@ -767,7 +821,6 @@ router.put('/:id', authenticateToken, checkAdminPermission, upload.single('HinhA
       updateParams.push(namXBNumber);
     }
 
-    // MaNCC
     if (isNaN(maNCCNumber)) {
       updateQuery += ', MaNCC = NULL';
     } else {
@@ -775,27 +828,99 @@ router.put('/:id', authenticateToken, checkAdminPermission, upload.single('HinhA
       updateParams.push(maNCCNumber);
     }
 
-    // Numeric/nullable fields
     updateQuery += ', TinhTrang = ?, DonGia = ?, SoLuong = ?, MinSoLuong = ?, TrongLuong = ?';
-    updateParams.push(tinhTrangValue, donGiaValue, soLuongValue, isNaN(parseInt(MinSoLuong)) ? 0 : parseInt(MinSoLuong), isNaN(parseInt(TrongLuong)) ? null : parseInt(TrongLuong));
+    updateParams.push(tinhTrangValue, donGiaValue, soLuongValue, minSoLuongValue, isNaN(parseInt(TrongLuong)) ? null : parseInt(TrongLuong));
 
-    // Text fields
     updateQuery += ', KichThuoc = ?, SoTrang = ?, HinhThuc = ? WHERE MaSP = ?';
     updateParams.push(KichThuoc || null, isNaN(parseInt(SoTrang)) ? null : parseInt(SoTrang), HinhThuc || null, id);
 
-    const [result] = await pool.query(updateQuery, updateParams);
+    const [result] = await connection.query(updateQuery, updateParams);
 
     if (result.affectedRows === 0) {
+      await connection.rollback();
+      connection.release();
       return res.status(404).json({ error: 'Sản phẩm không tồn tại hoặc không có thay đổi!' });
     }
 
-    res.status(200).json({ 
-      message: 'Cập nhật sản phẩm thành công!',
-      updatedBy: req.user.makh || req.user.MaTK || req.user.userId
-    });
+    // If new extra files uploaded, insert into sanpham_anh
+    if (extraFiles.length > 0) {
+      const values = extraFiles.map((f, idx) => [id, f.filename, idx]);
+      await connection.query('INSERT INTO sanpham_anh (MaSP, FileName, SortOrder) VALUES ?', [values]);
+    }
+
+    await connection.commit();
+    connection.release();
+
+    res.status(200).json({ message: 'Cập nhật sản phẩm thành công!', updatedBy: req.user.makh || req.user.MaTK || req.user.userId });
   } catch (error) {
     console.error('Lỗi khi cập nhật sản phẩm:', error.message || error);
+    if (connection) {
+      try { await connection.rollback(); connection.release(); } catch (e) {}
+    }
     res.status(500).json({ error: 'Lỗi khi cập nhật sản phẩm', details: error.message || 'Không xác định' });
+  }
+});
+
+// Route xóa một ảnh (ảnh phụ trong sanpham_anh hoặc ảnh chính nếu muốn)
+router.delete('/images/:imageId', authenticateToken, checkAdminPermission, async (req, res) => {
+  let connection;
+  try {
+    const { imageId } = req.params;
+    if (!imageId) return res.status(400).json({ error: 'Thiếu imageId' });
+
+    // tìm ảnh trong bảng sanpham_anh
+    const [[imgRow]] = await pool.query('SELECT Id, MaSP, FileName FROM sanpham_anh WHERE Id = ?', [imageId]);
+    if (!imgRow) {
+      return res.status(404).json({ error: 'Không tìm thấy ảnh' });
+    }
+
+    const filename = imgRow.FileName;
+    const maSP = imgRow.MaSP;
+
+    connection = await pool.getConnection();
+    await connection.beginTransaction();
+
+    // Xóa bản ghi khỏi sanpham_anh
+    await connection.query('DELETE FROM sanpham_anh WHERE Id = ?', [imageId]);
+
+    // Nếu file tồn tại trên disk, xóa nó
+    try {
+      const uploadDir = 'C:/Users/PC/Desktop/CNPM/server/backend/product/';
+      const filePath = path.join(uploadDir, filename);
+      if (fs.existsSync(filePath)) {
+        fs.unlinkSync(filePath);
+        console.log('🗑️ Deleted file from disk:', filePath);
+      } else {
+        console.warn('⚠️ File not found on disk:', filePath);
+      }
+    } catch (fsErr) {
+      console.warn('Không thể xóa file trên disk:', fsErr.message || fsErr);
+      // continue - we already deleted DB row
+    }
+
+    // Nếu filename trùng với ảnh chính trong sanpham.HinhAnh, reset HinhAnh về NULL hoặc chọn 1 ảnh khác
+    const [prodRows] = await connection.query('SELECT HinhAnh FROM sanpham WHERE MaSP = ? LIMIT 1', [maSP]);
+    if (prodRows && prodRows.length > 0) {
+      const currentMain = prodRows[0].HinhAnh;
+      if (currentMain && currentMain.toString().trim() === filename) {
+        // tìm 1 ảnh còn lại trong sanpham_anh để đặt làm ảnh chính
+        const [remaining] = await connection.query('SELECT FileName FROM sanpham_anh WHERE MaSP = ? ORDER BY SortOrder ASC LIMIT 1', [maSP]);
+        if (remaining && remaining.length > 0) {
+          await connection.query('UPDATE sanpham SET HinhAnh = ? WHERE MaSP = ?', [remaining[0].FileName, maSP]);
+        } else {
+          await connection.query('UPDATE sanpham SET HinhAnh = NULL WHERE MaSP = ?', [maSP]);
+        }
+      }
+    }
+
+    await connection.commit();
+    connection.release();
+
+    res.status(200).json({ message: 'Xóa ảnh thành công', imageId, filename });
+  } catch (error) {
+    console.error('Lỗi khi xóa ảnh:', error.message || error);
+    if (connection) try { await connection.rollback(); connection.release(); } catch (e) {}
+    res.status(500).json({ error: 'Lỗi khi xóa ảnh', details: error.message });
   }
 });
 
@@ -995,6 +1120,42 @@ router.get('/:id', async (req, res) => {
       SoTrang: s.SoTrang,
       HinhThuc: s.HinhThuc
     };
+
+    // Attach images from sanpham_anh if any
+    try {
+      const [imgs] = await pool.query(
+        'SELECT Id, MaSP, FileName, SortOrder, CreatedAt, UpdatedAt FROM sanpham_anh WHERE MaSP = ? ORDER BY SortOrder ASC, Id ASC',
+        [id]
+      );
+      const baseUrl = process.env.IMG_BASE_URL || (req.protocol + '://' + req.get('host'));
+      const imagesFromTable = imgs.map(r => ({
+        id: r.Id,
+        filename: r.FileName,
+        sortOrder: r.SortOrder,
+        createdAt: r.CreatedAt,
+        updatedAt: r.UpdatedAt,
+        url: r.FileName ? `${baseUrl}/product-images/${r.FileName}` : null,
+        isPrimary: false
+      }));
+
+      const mainFilename = s.HinhAnh && s.HinhAnh.toString().trim();
+      let images = [];
+      if (mainFilename) {
+        const matchIndex = imagesFromTable.findIndex(x => x.filename === mainFilename);
+        if (matchIndex !== -1) {
+          imagesFromTable[matchIndex].isPrimary = true;
+          const [mainImg] = imagesFromTable.splice(matchIndex, 1);
+          images.push(mainImg);
+        } else {
+          images.push({ id: null, filename: mainFilename, sortOrder: -1, createdAt: null, updatedAt: null, url: `${baseUrl}/product-images/${mainFilename}`, isPrimary: true });
+        }
+      }
+      images = images.concat(imagesFromTable);
+      product.images = images;
+    } catch (errImgs) {
+      console.warn('Lỗi lấy sanpham_anh cho MaSP=', id, errImgs.message || errImgs);
+      product.images = [];
+    }
 
     res.status(200).json(product);
   } catch (error) {

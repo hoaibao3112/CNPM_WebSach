@@ -481,10 +481,71 @@ function displayProductDetail(product) {
     // Cập nhật hình ảnh sản phẩm
     const mainImage = document.getElementById('main-product-image');
     if (mainImage) {
-        mainImage.src = `img/product/${product.HinhAnh || 'default-book.jpg'}`;
+        // If API provides an images array, use it; otherwise fallback to HinhAnh
+        const buildSrcFromFilename = (filename) => {
+            if (!filename) return 'https://via.placeholder.com/300x400?text=Book';
+            // if filename looks like a url, use it
+            if (/^https?:\/\//i.test(filename)) return filename;
+            // try client-side img folder first
+            return `img/product/${filename}`;
+        };
+
+        let images = [];
+        if (Array.isArray(product.images) && product.images.length > 0) {
+            images = product.images.map(img => {
+                if (img.url || img.path) return { url: img.url || img.path, id: img.id };
+                if (img.filename) return { url: buildSrcFromFilename(img.filename), filename: img.filename, id: img.id };
+                // if it's a plain string
+                if (typeof img === 'string') return { url: buildSrcFromFilename(img) };
+                return null;
+            }).filter(Boolean);
+        } else if (product.HinhAnh) {
+            images = [{ url: buildSrcFromFilename(product.HinhAnh) }];
+        } else {
+            images = [{ url: 'https://via.placeholder.com/300x400?text=Book' }];
+        }
+
+        // set main image to first image
+        mainImage.src = images[0].url;
         mainImage.alt = escapeHtml(product.TenSP);
-        // Uncomment nếu muốn fallback image
-        // mainImage.onerror = () => mainImage.src = 'https://via.placeholder.com/300x400?text=Book';
+
+        // build thumbnails
+        const thumbsContainer = document.getElementById('product-thumbs');
+        if (thumbsContainer) {
+            thumbsContainer.innerHTML = '';
+            const maxVisible = 5;
+            const total = images.length;
+            const visible = images.slice(0, maxVisible);
+
+            visible.forEach((imgObj, idx) => {
+                const imgEl = document.createElement('img');
+                imgEl.src = imgObj.url;
+                imgEl.alt = escapeHtml(product.TenSP) + (idx === 0 ? ' - chính' : ` - ảnh ${idx+1}`);
+                if (idx === 0) imgEl.classList.add('active');
+                imgEl.addEventListener('click', () => {
+                    // swap main image
+                    mainImage.src = imgObj.url;
+                    // update active class
+                    thumbsContainer.querySelectorAll('img').forEach(i => i.classList.remove('active'));
+                    imgEl.classList.add('active');
+                });
+                thumbsContainer.appendChild(imgEl);
+            });
+
+            if (total > maxVisible) {
+                const moreCount = total - maxVisible;
+                const moreEl = document.createElement('div');
+                moreEl.className = 'thumb-more';
+                moreEl.textContent = `+${moreCount}`;
+                // clicking opens full gallery in new tab (if server path known try to open first image folder)
+                moreEl.addEventListener('click', () => {
+                    // open product gallery: if product has gallery url, try that; otherwise open product page itself
+                    // For now we simply open the main image in a new tab as a simple gallery behaviour
+                    window.open(images[0].url, '_blank');
+                });
+                thumbsContainer.appendChild(moreEl);
+            }
+        }
     }
 
     // Cập nhật giá sản phẩm

@@ -16,7 +16,8 @@ const ProductManagement = () => {
   const [newProduct, setNewProduct] = useState({
     MaTL: '',
     TenSP: '',
-    HinhAnh: null,
+    HinhAnhPrimary: null,
+    HinhAnhPhu: [],
     MaTG: '',
     NamXB: '',
     TinhTrang: 'Hết hàng',
@@ -31,6 +32,7 @@ const ProductManagement = () => {
     MinSoLuong: 0,
   });
   const [editingProduct, setEditingProduct] = useState(null);
+  const [editingExtraFiles, setEditingExtraFiles] = useState([]);
   const [minModalVisible, setMinModalVisible] = useState(false);
   const [minValue, setMinValue] = useState(0);
   const [searchTerm, setSearchTerm] = useState('');
@@ -133,23 +135,96 @@ const ProductManagement = () => {
   }, []);
 
   // Xử lý thay đổi file
-  const handleFileChange = (e, isEditing = false) => {
-    const file = e.target.files[0];
-    if (file) {
+  // Xử lý thay đổi file
+  // fieldType: 'primary' | 'secondary'
+  const handleFileChange = (e, isEditing = false, fieldType = 'primary') => {
+    if (isEditing) {
+      // editing primary image
+      if (fieldType === 'primary') {
+        const file = e.target.files[0];
+        if (file) {
+          if (!file.type.startsWith('image/')) {
+            message.error('Vui lòng chọn một file hình ảnh!');
+            return;
+          }
+          if (file.size > 5 * 1024 * 1024) {
+            message.error('File hình ảnh quá lớn! Vui lòng chọn file dưới 5MB.');
+            return;
+          }
+          setEditingProduct({ ...editingProduct, HinhAnh: file });
+        }
+        return;
+      }
+
+      // editing extra images (add files to editingExtraFiles)
+      if (fieldType === 'extra') {
+        const files = Array.from(e.target.files || []);
+        if (files.length === 0) return;
+        const valid = [];
+        for (const file of files) {
+          if (!file.type.startsWith('image/')) {
+            message.error(`${file.name} không phải là hình ảnh. Bỏ qua.`);
+            continue;
+          }
+          if (file.size > 5 * 1024 * 1024) {
+            message.error(`${file.name} quá lớn (>5MB). Bỏ qua.`);
+            continue;
+          }
+          valid.push(file);
+        }
+        if (valid.length === 0) return;
+        setEditingExtraFiles(prev => [...prev, ...valid]);
+        return;
+      }
+    }
+
+    if (fieldType === 'primary') {
+      const file = e.target.files[0];
+      if (!file) return;
       if (!file.type.startsWith('image/')) {
-        message.error('Vui lòng chọn một file hình ảnh!');
+        message.error('Vui lòng chọn một file hình ảnh cho ảnh chính!');
         return;
       }
       if (file.size > 5 * 1024 * 1024) {
-        message.error('File hình ảnh quá lớn! Vui lòng chọn file dưới 5MB.');
+        message.error('Ảnh chính quá lớn (>5MB).');
         return;
       }
-      if (isEditing) {
-        setEditingProduct({ ...editingProduct, HinhAnh: file });
-      } else {
-        setNewProduct({ ...newProduct, HinhAnh: file });
-      }
+      setNewProduct({ ...newProduct, HinhAnhPrimary: file });
+      return;
     }
+
+    // secondary images (multiple)
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
+
+    const validFiles = [];
+    for (const file of files) {
+      if (!file.type.startsWith('image/')) {
+        message.error(`${file.name} không phải là hình ảnh. Bỏ qua.`);
+        continue;
+      }
+      if (file.size > 5 * 1024 * 1024) {
+        message.error(`${file.name} quá lớn (>5MB). Bỏ qua.`);
+        continue;
+      }
+      validFiles.push(file);
+    }
+
+    if (validFiles.length === 0) return;
+    setNewProduct({ ...newProduct, HinhAnhPhu: [...newProduct.HinhAnhPhu, ...validFiles] });
+  };
+
+  const handleRemoveEditingExtraFile = (index) => {
+    const updated = [...editingExtraFiles];
+    updated.splice(index, 1);
+    setEditingExtraFiles(updated);
+  };
+
+  const removeNewProductSecondaryImage = (index) => {
+    const updated = [...newProduct.HinhAnhPhu];
+    updated.splice(index, 1);
+    setNewProduct({ ...newProduct, HinhAnhPhu: updated });
+    // optional: revoke object URL if used elsewhere
   };
 
  // Thêm sản phẩm - SỬA XỬ LÝ NAMXB
@@ -168,8 +243,12 @@ const handleAddProduct = async () => {
     const formData = new FormData();
     formData.append('MaTL', maTL);
     formData.append('TenSP', tenSP);
-    if (newProduct.HinhAnh) {
-      formData.append('HinhAnh', newProduct.HinhAnh);
+    // Backend expects fields: 'HinhAnh' (primary, single) and 'ExtraImages' (secondary, multiple)
+    if (newProduct.HinhAnhPrimary) {
+      formData.append('HinhAnh', newProduct.HinhAnhPrimary);
+    }
+    if (Array.isArray(newProduct.HinhAnhPhu) && newProduct.HinhAnhPhu.length > 0) {
+      newProduct.HinhAnhPhu.forEach((file) => formData.append('ExtraImages', file));
     }
     if (maTG) {
       formData.append('MaTG', maTG);
@@ -196,7 +275,8 @@ const handleAddProduct = async () => {
     setNewProduct({
       MaTL: '',
       TenSP: '',
-      HinhAnh: null,
+      HinhAnhPrimary: null,
+      HinhAnhPhu: [],
       MaTG: '',
       NamXB: '',
       TinhTrang: 'Hết hàng',
@@ -249,10 +329,19 @@ const handleUpdateProduct = async () => {
     const formData = new FormData();
     formData.append('MaTL', maTL);
     formData.append('TenSP', tenSP);
+    // If user selected a new primary file, append it; otherwise, keep existing HinhAnh value (filename string)
     if (editingProduct.HinhAnh instanceof File) {
       formData.append('HinhAnh', editingProduct.HinhAnh);
     } else if (editingProduct.HinhAnh) {
-      formData.append('HinhAnh', editingProduct.HinhAnh.replace('/img/products/', ''));
+      // editingProduct.HinhAnh might be '/img/products/<filename>' or a filename
+      const possible = editingProduct.HinhAnh.toString();
+      const filenameOnly = possible.includes('/img/products/') ? possible.replace('/img/products/', '') : possible;
+      formData.append('HinhAnh', filenameOnly);
+    }
+
+    // If there are newly added extra images while editing, append them
+    if (Array.isArray(editingExtraFiles) && editingExtraFiles.length > 0) {
+      editingExtraFiles.forEach(f => formData.append('ExtraImages', f));
     }
     if (maTG) {
       formData.append('MaTG', maTG);
@@ -278,6 +367,7 @@ const handleUpdateProduct = async () => {
     
     await fetchProducts();
     setEditingProduct(null);
+  setEditingExtraFiles([]);
     setIsModalVisible(false);
     message.success(response.data.message || 'Cập nhật sản phẩm thành công!');
   } catch (error) {
@@ -478,9 +568,17 @@ const handleUpdateProduct = async () => {
             type="link"
             size="small"
             icon={<EditOutlined />}
-            onClick={() => {
-              setEditingProduct(record);
-              setIsModalVisible(true);
+            onClick={async () => {
+              // fetch full product details (including images) before opening modal
+              try {
+                const res = await axios.get(`${API_URL}/${record.MaSP}`);
+                setEditingProduct(res.data);
+                setEditingExtraFiles([]);
+                setIsModalVisible(true);
+              } catch (err) {
+                console.error('Lỗi khi lấy chi tiết sản phẩm để sửa:', err);
+                message.error('Không thể tải chi tiết sản phẩm. Vui lòng thử lại.');
+              }
             }}
             style={{ padding: 0 }}
           />
@@ -528,7 +626,8 @@ const handleUpdateProduct = async () => {
               setNewProduct({
                 MaTL: '',
                 TenSP: '',
-                HinhAnh: null,
+                HinhAnhPrimary: null,
+                HinhAnhPhu: [],
                 MaTG: '',
                 NamXB: '',
                 TinhTrang: 'Hết hàng',
@@ -668,27 +767,169 @@ const handleUpdateProduct = async () => {
             </div>
             
             <div className="info-item">
-              <p className="info-label">Hình ảnh:</p>
-              <input
-                type="file"
-                accept="image/*"
-                onChange={(e) => handleFileChange(e, !!editingProduct)}
-                style={{ width: '100%', fontSize: '12px' }}
-              />
-              {(editingProduct && editingProduct.HinhAnh && !(editingProduct.HinhAnh instanceof File)) && (
-                <div style={{ marginTop: 8 }}>
-                  <img
-                    src={editingProduct.HinhAnh}
-                    alt="preview"
-                    style={{ 
-                      width: 60, 
-                      height: 60, 
-                      objectFit: 'cover',
-                      border: '1px solid #d9d9d9',
-                      borderRadius: 4
-                    }}
+              <p className="info-label">Ảnh chính:</p>
+              {!editingProduct ? (
+                <>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => handleFileChange(e, false, 'primary')}
+                    style={{ width: '100%', fontSize: '12px' }}
                   />
-                </div>
+                  {newProduct.HinhAnhPrimary && (
+                    <div style={{ marginTop: 8 }}>
+                      <img
+                        src={URL.createObjectURL(newProduct.HinhAnhPrimary)}
+                        alt={newProduct.HinhAnhPrimary.name}
+                        style={{ width: 80, height: 80, objectFit: 'cover', border: '1px solid #d9d9d9', borderRadius: 4 }}
+                      />
+                    </div>
+                  )}
+                  <div style={{ height: 8 }} />
+                  <p className="info-label">Ảnh phụ (có thể chọn nhiều):</p>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    onChange={(e) => handleFileChange(e, false, 'secondary')}
+                    style={{ width: '100%', fontSize: '12px' }}
+                  />
+                  {Array.isArray(newProduct.HinhAnhPhu) && newProduct.HinhAnhPhu.length > 0 && (
+                    <div style={{ display: 'flex', gap: 8, marginTop: 8, flexWrap: 'wrap' }}>
+                      {newProduct.HinhAnhPhu.map((file, idx) => (
+                        <div key={idx} style={{ position: 'relative' }}>
+                          <img
+                            src={URL.createObjectURL(file)}
+                            alt={file.name}
+                            style={{ width: 60, height: 60, objectFit: 'cover', border: '1px solid #d9d9d9', borderRadius: 4 }}
+                          />
+                          <button
+                            type="button"
+                            onClick={() => removeNewProductSecondaryImage(idx)}
+                            style={{ position: 'absolute', top: -6, right: -6, width: 20, height: 20, borderRadius: '50%', border: '1px solid #ccc', background: '#fff', cursor: 'pointer', padding: 0, lineHeight: '18px', textAlign: 'center' }}
+                            aria-label={`Xóa ${file.name}`}
+                          >
+                            ×
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </>
+              ) : (
+                <>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => handleFileChange(e, true, 'primary')}
+                    style={{ width: '100%', fontSize: '12px' }}
+                  />
+                  {/* show current primary image (could be URL string) */}
+                  {editingProduct && editingProduct.HinhAnh && !(editingProduct.HinhAnh instanceof File) && (
+                    <div style={{ marginTop: 8 }}>
+                      <img
+                        src={editingProduct.HinhAnh}
+                        alt="preview"
+                        style={{ width: 80, height: 80, objectFit: 'cover', border: '1px solid #d9d9d9', borderRadius: 4 }}
+                      />
+                    </div>
+                  )}
+
+                  <div style={{ height: 8 }} />
+                  <p className="info-label">Ảnh phụ hiện có:</p>
+                  {/* Existing images from product.images when editing */}
+                  {editingProduct && Array.isArray(editingProduct.images) && editingProduct.images.length > 0 ? (
+                    <div style={{ display: 'flex', gap: 8, marginTop: 8, flexWrap: 'wrap' }}>
+                      {editingProduct.images.map((img, idx) => (
+                        <div key={img.id || `${img.filename}-${idx}`} style={{ position: 'relative', textAlign: 'center' }}>
+                          <img
+                            src={img.url}
+                            alt={img.filename}
+                            style={{ width: 80, height: 80, objectFit: 'cover', border: '1px solid #d9d9d9', borderRadius: 4 }}
+                          />
+                          <div style={{ marginTop: 4, display: 'flex', gap: 4, justifyContent: 'center' }}>
+                            <button
+                              type="button"
+                              onClick={async () => {
+                                // set this image as primary (update sanpham.HinhAnh)
+                                try {
+                                  const config = getAuthConfig();
+                                  const fd = new FormData();
+                                  // send filename only
+                                  const filenameOnly = img.filename;
+                                  fd.append('HinhAnh', filenameOnly);
+                                  await axios.put(`${API_URL}/${editingProduct.MaSP}`, fd, config);
+                                  // refresh product
+                                  const refreshed = await axios.get(`${API_URL}/${editingProduct.MaSP}`);
+                                  setEditingProduct(refreshed.data);
+                                  message.success('Đã đặt ảnh này làm ảnh chính');
+                                } catch (err) {
+                                  console.error('Lỗi khi đặt ảnh chính:', err);
+                                  message.error('Không thể đặt ảnh làm ảnh chính');
+                                }
+                              }}
+                              style={{ padding: '2px 6px', fontSize: 12 }}
+                            >
+                              Đặt làm chính
+                            </button>
+                            <button
+                              type="button"
+                              onClick={async () => {
+                                // delete this image
+                                try {
+                                  const config = getAuthConfig();
+                                  await axios.delete(`${API_URL}/images/${img.id}`, config);
+                                  const refreshed = await axios.get(`${API_URL}/${editingProduct.MaSP}`);
+                                  setEditingProduct(refreshed.data);
+                                  message.success('Xóa ảnh thành công');
+                                } catch (err) {
+                                  console.error('Lỗi khi xóa ảnh:', err);
+                                  message.error('Không thể xóa ảnh');
+                                }
+                              }}
+                              style={{ padding: '2px 6px', fontSize: 12, background: '#fff', border: '1px solid #f5222d', color: '#f5222d' }}
+                            >
+                              × Xóa
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div style={{ marginTop: 8, color: '#888' }}>Không có ảnh phụ</div>
+                  )}
+
+                  <div style={{ height: 8 }} />
+                  <p className="info-label">Thêm ảnh phụ (có thể chọn nhiều):</p>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    onChange={(e) => handleFileChange(e, true, 'extra')}
+                    style={{ width: '100%', fontSize: '12px' }}
+                  />
+                  {Array.isArray(editingExtraFiles) && editingExtraFiles.length > 0 && (
+                    <div style={{ display: 'flex', gap: 8, marginTop: 8, flexWrap: 'wrap' }}>
+                      {editingExtraFiles.map((file, idx) => (
+                        <div key={idx} style={{ position: 'relative' }}>
+                          <img
+                            src={URL.createObjectURL(file)}
+                            alt={file.name}
+                            style={{ width: 60, height: 60, objectFit: 'cover', border: '1px solid #d9d9d9', borderRadius: 4 }}
+                          />
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveEditingExtraFile(idx)}
+                            style={{ position: 'absolute', top: -6, right: -6, width: 20, height: 20, borderRadius: '50%', border: '1px solid #ccc', background: '#fff', cursor: 'pointer', padding: 0, lineHeight: '18px', textAlign: 'center' }}
+                            aria-label={`Xóa ${file.name}`}
+                          >
+                            ×
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </>
               )}
             </div>
             
