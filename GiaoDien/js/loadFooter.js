@@ -16,6 +16,18 @@
     var placeholder = document.getElementById('load-footer');
     if (!placeholder) return;
 
+    // Don't inject footer on the login page(s)
+    try {
+      var path = window.location.pathname || '';
+      if (path.endsWith('/GiaoDien/login.html') || path.endsWith('login.html')) {
+        // ensure placeholder is empty if present
+        placeholder.innerHTML = '';
+        return;
+      }
+    } catch (e) {
+      // ignore — if window isn't available for some reason, continue
+    }
+
     // Try common relative locations in case pages are nested or opened differently
     tryFetch([
       'components/footer.html', // usual path for pages in GiaoDien/

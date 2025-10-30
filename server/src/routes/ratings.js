@@ -4,6 +4,19 @@ import { authenticateToken } from '../utils/generateToken.js';
 
 const router = express.Router();
 
+// Simple admin permission check used for rating moderation
+const checkAdminPermission = (req, res, next) => {
+  if (!req.user) return res.status(403).json({ error: 'Không tìm thấy thông tin user trong token.' });
+  const identifier = req.user.makh || req.user.MaTK || req.user.userId;
+  const userType = req.user.userType;
+  const allowedUsers = ['NV004', 'NV007', '4', '7', 4, 7];
+  const allowedTypes = ['admin', 'staff'];
+  if (allowedUsers.includes(identifier) || allowedTypes.includes(userType)) return next();
+  return res.status(403).json({ error: 'Không có quyền truy cập.' });
+};
+
+
+
 // Hàm kiểm tra dữ liệu đánh giá
 const validateRating = (data) => {
   const errors = [];
@@ -59,7 +72,7 @@ router.get('/:productId', async (req, res) => {
   }
 });
 
-// POST /api/ratings - Thêm hoặc cập nhật đánh giá
+// POST /api/ratings - Thêm đánh giá (mới) vào hàng chờ phê duyệt
 router.post('/', authenticateToken, async (req, res) => {
   try {
     const { masp, sosao, nhanxet } = req.body;
@@ -86,28 +99,72 @@ router.post('/', authenticateToken, async (req, res) => {
       return res.status(404).json({ error: 'Khách hàng không tồn tại' });
     }
 
-    // Upsert đánh giá
+    // Thêm vào bảng pending_danhgia (chờ duyệt)
     const [result] = await pool.query(
-      `INSERT INTO danhgia (MaSP, MaKH, SoSao, NhanXet) 
-       VALUES (?, ?, ?, ?) 
-       ON DUPLICATE KEY UPDATE 
-       SoSao = VALUES(SoSao), 
-       NhanXet = VALUES(NhanXet), 
-       NgayDanhGia = CURRENT_TIMESTAMP`,
+      `INSERT INTO pending_danhgia (MaSP, MaKH, SoSao, NhanXet) VALUES (?, ?, ?, ?)`,
       [parseInt(masp), makh, parseInt(sosao), nhanxet || null]
     );
 
     if (result.affectedRows === 0) {
-      console.error('Failed to save rating:', { masp, makh });
-      return res.status(500).json({ error: 'Không thể lưu đánh giá' });
+      console.error('Failed to create pending rating:', { masp, makh });
+      return res.status(500).json({ error: 'Không thể lưu đánh giá chờ duyệt' });
     }
 
-    const message = result.insertId ? 'Thêm đánh giá thành công' : 'Cập nhật đánh giá thành công';
-    console.log(message, { MaSP: masp, MaKH: makh, SoSao: sosao });
-    res.status(201).json({ message });
+    console.log('Pending rating created', { MaPDG: result.insertId, MaSP: masp, MaKH: makh });
+    res.status(201).json({ message: 'Đã gửi đánh giá. Đánh giá sẽ hiển thị sau khi được quản trị viên duyệt.' });
   } catch (error) {
-    console.error('Lỗi thêm/cập nhật đánh giá:', error.message);
-    res.status(500).json({ error: 'Lỗi khi thêm/cập nhật đánh giá', details: error.message });
+    console.error('Lỗi khi gửi đánh giá chờ duyệt:', error.message || error);
+    res.status(500).json({ error: 'Lỗi khi gửi đánh giá', details: error.message || error });
+  }
+});
+
+// ADMIN: Lấy danh sách đánh giá đang chờ duyệt
+router.get('/pending/list', authenticateToken, checkAdminPermission, async (req, res) => {
+  try {
+    const [rows] = await pool.query(`SELECT MaPDG, MaSP, MaKH, SoSao, NhanXet, NgayDanhGia FROM pending_danhgia ORDER BY NgayDanhGia DESC`);
+    res.status(200).json({ data: rows });
+  } catch (err) {
+    console.error('Error fetching pending ratings:', err.message || err);
+    res.status(500).json({ error: 'Lỗi khi lấy đánh giá chờ duyệt' });
+  }
+});
+
+// ADMIN: Duyệt (approve) một đánh giá chờ duyệt, chuyển sang bảng danhgia
+router.post('/pending/:id/approve', authenticateToken, checkAdminPermission, async (req, res) => {
+  const { id } = req.params;
+  try {
+    // Lấy bản ghi pending
+    const [pendingRows] = await pool.query('SELECT * FROM pending_danhgia WHERE MaPDG = ?', [parseInt(id)]);
+    if (!pendingRows.length) return res.status(404).json({ error: 'Không tìm thấy đánh giá chờ duyệt' });
+    const p = pendingRows[0];
+
+    // Chuyển sang bảng danhgia (upsert để tránh duplicate)
+    const [insertResult] = await pool.query(
+      `INSERT INTO danhgia (MaSP, MaKH, SoSao, NhanXet, NgayDanhGia) VALUES (?, ?, ?, ?, ?)
+       ON DUPLICATE KEY UPDATE SoSao = VALUES(SoSao), NhanXet = VALUES(NhanXet), NgayDanhGia = VALUES(NgayDanhGia)`,
+      [p.MaSP, p.MaKH, p.SoSao, p.NhanXet, p.NgayDanhGia]
+    );
+
+    // Xóa bản ghi pending
+    await pool.query('DELETE FROM pending_danhgia WHERE MaPDG = ?', [parseInt(id)]);
+
+    res.status(200).json({ message: 'Đã duyệt đánh giá và hiển thị trên trang.' });
+  } catch (err) {
+    console.error('Error approving pending rating:', err.message || err);
+    res.status(500).json({ error: 'Lỗi khi duyệt đánh giá', details: err.message || err });
+  }
+});
+
+// ADMIN: Từ chối (xóa) một đánh giá chờ duyệt
+router.delete('/pending/:id', authenticateToken, checkAdminPermission, async (req, res) => {
+  const { id } = req.params;
+  try {
+    const [result] = await pool.query('DELETE FROM pending_danhgia WHERE MaPDG = ?', [parseInt(id)]);
+    if (result.affectedRows === 0) return res.status(404).json({ error: 'Không tìm thấy đánh giá chờ duyệt' });
+    res.status(200).json({ message: 'Đã từ chối và xóa đánh giá chờ duyệt.' });
+  } catch (err) {
+    console.error('Error deleting pending rating:', err.message || err);
+    res.status(500).json({ error: 'Lỗi khi xóa đánh giá chờ duyệt' });
   }
 });
 

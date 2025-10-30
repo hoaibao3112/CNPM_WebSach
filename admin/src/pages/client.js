@@ -1,6 +1,57 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import { Button, Input, message, Table, Modal, Space, Tag, Select } from 'antd';
+import { Button, Input, message, Table, Modal, Space, Tag, Select, Badge } from 'antd';
+
+// Create an axios instance that auto-attaches Authorization from localStorage.
+// If your backend uses cookie-based httpOnly tokens, set withCredentials:true and configure CORS accordingly.
+const api = axios.create({ baseURL: 'http://localhost:5000', withCredentials: false });
+
+const TOKEN_KEYS = ['adminToken', 'token', 'accessToken', 'auth_token', 'jwt', 'authToken', 'wn_token'];
+
+api.interceptors.request.use((config) => {
+  let token = null;
+  let keyFound = null;
+  for (const k of TOKEN_KEYS) {
+    const v = localStorage.getItem(k);
+    if (v) { token = v; keyFound = k; break; }
+  }
+  // If token not in localStorage, try cookies (useful if login saved token as a cookie)
+  if (!token && typeof document !== 'undefined' && document.cookie) {
+    const cookies = document.cookie.split(';').map(c => c.trim());
+    for (const k of TOKEN_KEYS) {
+      const found = cookies.find(c => c.startsWith(k + '='));
+      if (found) {
+        token = decodeURIComponent(found.split('=')[1]);
+        keyFound = k;
+        break;
+      }
+    }
+  }
+  config.headers = config.headers || {};
+  if (token) {
+    config.headers['Authorization'] = token.startsWith('Bearer ') ? token : `Bearer ${token}`;
+    config.headers['X-Auth-Key'] = keyFound; // debug only
+    try { console.debug('api attach token (masked):', token.substring(0,10) + '...', 'key=', keyFound); } catch(e){}
+  } else {
+    delete config.headers['Authorization'];
+    delete config.headers['X-Auth-Key'];
+  }
+  return config;
+});
+
+api.interceptors.response.use(
+  r => r,
+  (error) => {
+    if (error?.response?.status === 401) {
+      const msg = error.response.data?.error || '';
+      if (/Không tìm thấy token|hết hạn|Token đã hết hạn/i.test(msg)) {
+        for (const k of TOKEN_KEYS) localStorage.removeItem(k);
+      }
+      message.error(msg || 'Phiên không hợp lệ. Vui lòng đăng nhập lại.');
+    }
+    return Promise.reject(error);
+  }
+);
 
 const CustomerManagement = () => {
   const [customers, setCustomers] = useState([]);
@@ -15,12 +66,54 @@ const CustomerManagement = () => {
   const [promoList, setPromoList] = useState([]);
   const [promoListLoading, setPromoListLoading] = useState(false);
 
-  const API_URL = 'http://localhost:5000/api/client';
+  // Pending ratings (admin moderation)
+  const [isPendingModalVisible, setIsPendingModalVisible] = useState(false);
+  const [pendingList, setPendingList] = useState([]);
+  const [pendingLoading, setPendingLoading] = useState(false);
+  const [pendingCount, setPendingCount] = useState(0);
+
+  // Auth status for debug: shows if token exists and decoded payload (client-side only)
+  const [authInfo, setAuthInfo] = useState({ present: false, tokenKey: null, payload: null });
+
+  const decodeJwt = (token) => {
+    try {
+      const parts = token.split('.');
+      if (parts.length !== 3) return null;
+      const payload = JSON.parse(atob(parts[1]));
+      return payload;
+    } catch (err) {
+      return null;
+    }
+  };
+
+  // Initialize authInfo from localStorage on mount and when storage changes
+  useEffect(() => {
+    const refreshAuthInfo = () => {
+      let token = null;
+      let keyFound = null;
+      for (const k of TOKEN_KEYS) {
+        const v = localStorage.getItem(k);
+        if (v) { token = v; keyFound = k; break; }
+      }
+      if (token) setAuthInfo({ present: true, tokenKey: keyFound, payload: decodeJwt(token) });
+      else setAuthInfo({ present: false, tokenKey: null, payload: null });
+    };
+    refreshAuthInfo();
+    window.addEventListener('storage', refreshAuthInfo);
+    return () => window.removeEventListener('storage', refreshAuthInfo);
+  }, []);
+
+  // We'll use a dedicated axios instance so every request automatically attaches the token from localStorage.
+  // ⚠️ If your backend uses httpOnly cookies for auth, set withCredentials: true and ensure CORS allows credentials.
+  // For Bearer token header flow (Postman style), keep withCredentials: false.
+  
+  const API_URL = '/api/client';
+  const RATINGS_API = '/api/ratings';
 
   const fetchCustomers = async () => {
     try {
       setLoading(true);
-      const res = await axios.get(API_URL);
+  const res = await api.get(API_URL);
       if (res.data && Array.isArray(res.data.data)) setCustomers(res.data.data);
       else setCustomers([]);
     } catch (err) {
@@ -35,12 +128,36 @@ const CustomerManagement = () => {
     fetchCustomers();
   }, []);
 
+  // Poll pending ratings count every 20s so admin sees notifications
+  useEffect(() => {
+    let mounted = true;
+    const fetchPendingCount = async () => {
+      try {
+  const res = await api.get(`${RATINGS_API}/pending/list`);
+        if (!mounted) return;
+        const count = Array.isArray(res.data?.data) ? res.data.data.length : 0;
+        setPendingCount(count);
+      } catch (err) {
+        // Improved logging so we can see why the request was rejected (401/403/etc.)
+        if (err.response) {
+          console.error('Error fetching pending count:', err.response.status, err.response.data);
+        } else {
+          console.error('Error fetching pending count:', err.message || err);
+        }
+      }
+    };
+
+    fetchPendingCount();
+    const iv = setInterval(fetchPendingCount, 20000);
+    return () => { mounted = false; clearInterval(iv); };
+  }, []);
+
   // delete functionality removed per request
 
   const handleToggleStatus = async (customer) => {
     try {
       const newStatus = customer.tinhtrang === 'Hoạt động' ? 'Ngừng hoạt động' : 'Hoạt động';
-      await axios.patch(`${API_URL}/${customer.makh}/toggle-status`, { tinhtrang: newStatus });
+  await api.patch(`${API_URL}/${customer.makh}/toggle-status`, { tinhtrang: newStatus });
       message.success('Đổi trạng thái thành công');
       fetchCustomers();
     } catch (err) {
@@ -55,7 +172,7 @@ const CustomerManagement = () => {
   const fetchPromoList = async (makh) => {
     try {
       setPromoListLoading(true);
-      const res = await axios.get(`${API_URL}/${makh}/promo-list`);
+  const res = await api.get(`${API_URL}/${makh}/promo-list`);
       if (res.data && Array.isArray(res.data.data)) {
         setPromoList(res.data.data);
         setPromoUsage((p) => ({ ...p, makh }));
@@ -69,6 +186,48 @@ const CustomerManagement = () => {
       message.error(err.response?.data?.error || 'Lỗi khi lấy danh sách mã khuyến mãi');
     } finally {
       setPromoListLoading(false);
+    }
+  };
+
+  // ----- Pending ratings moderation API calls -----
+  const fetchPendingList = async () => {
+    try {
+      setPendingLoading(true);
+  const res = await api.get(`${RATINGS_API}/pending/list`);
+      const rows = Array.isArray(res.data?.data) ? res.data.data : [];
+      setPendingList(rows);
+      setPendingCount(rows.length);
+    } catch (err) {
+      console.error('Error fetching pending list:', err);
+      message.error(err.response?.data?.error || 'Không thể lấy danh sách đánh giá chờ duyệt');
+    } finally {
+      setPendingLoading(false);
+    }
+  };
+
+  const approvePending = async (id) => {
+    try {
+  await api.post(`${RATINGS_API}/pending/${id}/approve`);
+      message.success('Đã duyệt đánh giá');
+      // refresh pending
+      await fetchPendingList();
+      // update the badge count
+      setPendingCount((c) => Math.max(0, c - 1));
+    } catch (err) {
+      console.error('Error approving pending:', err);
+      message.error(err.response?.data?.error || 'Lỗi khi duyệt đánh giá');
+    }
+  };
+
+  const rejectPending = async (id) => {
+    try {
+  await api.delete(`${RATINGS_API}/pending/${id}`);
+      message.success('Đã từ chối đánh giá');
+      await fetchPendingList();
+      setPendingCount((c) => Math.max(0, c - 1));
+    } catch (err) {
+      console.error('Error rejecting pending:', err);
+      message.error(err.response?.data?.error || 'Lỗi khi từ chối đánh giá');
     }
   };
 
@@ -104,7 +263,20 @@ const CustomerManagement = () => {
         <h1>
           <i className="fas fa-users"></i> Quản lý Khách hàng
         </h1>
-        <Button type="default" size="small" onClick={() => fetchCustomers()}>Làm mới</Button>
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+            <Button type="default" size="small" onClick={() => fetchCustomers()}>Làm mới</Button>
+            <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+              {/* Auth status debug */}
+              <div style={{ fontSize: 12, color: authInfo.present ? '#138000' : '#a00', marginRight: 8 }} title={authInfo.payload ? JSON.stringify(authInfo.payload) : (authInfo.present ? 'Token present' : 'No token') }>
+                Auth: {authInfo.present ? 'OK' : 'No token'}
+              </div>
+              <Badge count={pendingCount} offset={[6, 0]}>
+                <Button type="primary" size="small" onClick={() => { setIsPendingModalVisible(true); fetchPendingList(); }}>
+                  Duyệt đánh giá
+                </Button>
+              </Badge>
+            </div>
+          </div>
       </div>
 
       <div className="thongke-content">
@@ -174,6 +346,43 @@ const CustomerManagement = () => {
               { title: 'Ngày claim', dataIndex: 'ngay_lay', key: 'ngay_lay', width: 160 },
               { title: 'Trạng thái', dataIndex: 'claim_trang_thai', key: 'claim_trang_thai', width: 120, render: (t) => <Tag color={t === 'Chua_su_dung' ? 'green' : 'red'}>{t}</Tag> },
               { title: 'Sản phẩm áp dụng', dataIndex: 'products', key: 'products', render: (p) => p && p.length ? p.map(x => x.TenSP).join(', ') : 'Toàn bộ' },
+            ]}
+          />
+        </div>
+      </Modal>
+
+      {/* Pending ratings moderation modal */}
+      <Modal
+        title={`Đánh giá chờ duyệt (${pendingCount})`}
+        open={isPendingModalVisible}
+        onCancel={() => setIsPendingModalVisible(false)}
+        footer={null}
+        width={900}
+        centered
+      >
+        <div style={{ padding: 12 }}>
+          <Table
+            dataSource={pendingList}
+            loading={pendingLoading}
+            rowKey={(r) => r.MaPDG}
+            pagination={{ pageSize: 8 }}
+            size="small"
+            columns={[
+              { title: 'ID', dataIndex: 'MaPDG', key: 'MaPDG', width: 60 },
+              { title: 'Mã SP', dataIndex: 'MaSP', key: 'MaSP', width: 80 },
+              { title: 'Mã KH', dataIndex: 'MaKH', key: 'MaKH', width: 80 },
+              { title: 'Số sao', dataIndex: 'SoSao', key: 'SoSao', width: 80 },
+              { title: 'Nhận xét', dataIndex: 'NhanXet', key: 'NhanXet', render: (t) => t || '-', ellipsis: true },
+              { title: 'Ngày gửi', dataIndex: 'NgayDanhGia', key: 'NgayDanhGia', width: 160 },
+              {
+                title: 'Hành động', key: 'action', width: 180,
+                render: (_, record) => (
+                  <Space size="small">
+                    <Button type="primary" size="small" onClick={() => approvePending(record.MaPDG)}>Duyệt</Button>
+                    <Button danger size="small" onClick={() => rejectPending(record.MaPDG)}>Từ chối</Button>
+                  </Space>
+                )
+              }
             ]}
           />
         </div>

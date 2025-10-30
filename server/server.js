@@ -49,7 +49,11 @@ app.use(cors({
   },
   methods: ['GET', 'POST', 'PUT', 'DELETE','PATCH', 'OPTIONS'],
   credentials: true,
-  allowedHeaders: ['Content-Type', 'Authorization'],
+  // Allow common headers plus our debug header X-Auth-Key which the frontend attaches.
+  // If you later add other custom headers, include them here (or use a function to echo requested headers).
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Auth-Key', 'X-Requested-With', 'Accept', 'Origin'],
+  // Ensure preflight (OPTIONS) returns a friendly status for some clients
+  optionsSuccessStatus: 204,
 }));
 
 // 3. Middleware

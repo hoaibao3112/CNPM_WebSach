@@ -26,7 +26,6 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     setupEventListeners();
-    setupCommentSection(productInfo.data.MaSP || productInfo.data);
     setupRatingSection(productInfo.data.MaSP || productInfo.data);
 });
 
@@ -335,183 +334,17 @@ function generateStarDisplay(rating) {
 /**
  * Thiết lập phần bình luận
  */
-function setupCommentSection(productId) {
-    const commentForm = document.getElementById('comment-form');
-    const commentInput = document.getElementById('comment-input');
-    const submitCommentBtn = document.getElementById('submit-comment');
-    const commentMessage = document.getElementById('comment-message');
-    const charCount = document.getElementById('comment-char-count');
-    const commentsList = document.getElementById('comments-list');
-
-    // Kiểm tra trạng thái đăng nhập
-    const user = JSON.parse(localStorage.getItem('user') || localStorage.getItem('loggedInUser'));
-    const token = localStorage.getItem('token');
-    if (!user || !token) {
-        commentInput.disabled = true;
-        submitCommentBtn.disabled = true;
-        commentMessage.textContent = 'Vui lòng đăng nhập để gửi bình luận.';
-        commentMessage.classList.add('error');
-        return;
-    }
-
-    commentInput.disabled = false;
-    submitCommentBtn.disabled = true;
-
-    const updateCharCount = () => {
-        const length = commentInput.value.length;
-        charCount.textContent = `${length}/500`;
-        charCount.classList.toggle('warning', length > 450);
-        submitCommentBtn.disabled = length === 0;
-    };
-    commentInput.addEventListener('input', updateCharCount);
-    updateCharCount();
-
-    // Tải và hiển thị bình luận
-    displayComments(productId);
-
-    // Sự kiện gửi bình luận (hỗ trợ reply - mabl_cha sẽ được set nếu reply)
-    let currentReplyTo = null; // Để track nếu đang reply comment nào
-    commentForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const commentText = commentInput.value.trim();
-        if (!commentText) {
-            commentMessage.textContent = 'Vui lòng nhập nội dung bình luận.';
-            commentMessage.classList.add('error');
-            return;
-        }
-
-        try {
-            const response = await fetch('http://localhost:5000/api/comments', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
-                body: JSON.stringify({
-                    masp: productId,
-                    noidung: commentText,
-                    mabl_cha: currentReplyTo || null
-                })
-            });
-
-            const result = await response.json();
-            if (!response.ok) {
-                throw new Error(result.errors?.[0] || 'Lỗi khi gửi bình luận');
-            }
-
-            commentInput.value = '';
-            updateCharCount();
-            currentReplyTo = null; // Reset reply mode
-            commentMessage.textContent = 'Bình luận đã được gửi!';
-            commentMessage.classList.remove('error');
-            commentMessage.classList.add('success');
-            displayComments(productId); // Reload comments
-        } catch (error) {
-            commentMessage.textContent = error.message;
-            commentMessage.classList.add('error');
-        }
-    });
-
-    // Xóa thông báo khi nhập lại
-    commentInput.addEventListener('input', () => {
-        commentMessage.textContent = '';
-        commentMessage.classList.remove('error', 'success');
-    });
-
-    // Event delegation cho like và reply buttons
-    commentsList.addEventListener('click', async (e) => {
-        const likeBtn = e.target.closest('.like-btn');
-        if (likeBtn) {
-            const mabl = likeBtn.dataset.mabl;
-            try {
-                const response = await fetch(`http://localhost:5000/api/comments/${mabl}/like`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`
-                    }
-                });
-                const result = await response.json();
-                if (response.ok) {
-                    likeBtn.textContent = result.action === 'liked' ? `Unlike (${result.like_count})` : `Like (${result.like_count})`;
-                    likeBtn.classList.toggle('liked', result.action === 'liked');
-                }
-            } catch (error) {
-                console.error('Error liking comment:', error);
-                showAlert('Lỗi khi like bình luận', 'error');
-            }
-            return;
-        }
-
-        const replyBtn = e.target.closest('.reply-btn');
-        if (replyBtn) {
-            currentReplyTo = replyBtn.dataset.mabl;
-            const placeholder = currentReplyTo ? `Trả lời ${replyBtn.dataset.tenkh}...` : 'Viết bình luận...';
-            commentInput.placeholder = placeholder;
-            commentInput.focus();
-            return;
-        }
-
-        const cancelReplyBtn = e.target.closest('.cancel-reply-btn');
-        if (cancelReplyBtn) {
-            currentReplyTo = null;
-            commentInput.placeholder = 'Viết bình luận...';
-            return;
-        }
-    });
-}
+// Comment functionality removed: setupCommentSection and related handlers were intentionally removed
 
 /**
  * Hiển thị danh sách bình luận (hỗ trợ phân cấp replies và like_count)
  */
-async function displayComments(productId) {
-    const commentsList = document.getElementById('comments-list');
-    try {
-        const response = await fetch(`http://localhost:5000/api/comments/product/${productId}?page=1&limit=10`);
-        if (!response.ok) throw new Error('Lỗi khi tải bình luận');
-        const { data: comments } = await response.json();
-
-        if (comments.length === 0) {
-            commentsList.innerHTML = '<p class="no-comments">Chưa có bình luận nào.</p>';
-            return;
-        }
-
-        // Render comments với replies nested
-        const renderedComments = comments.map(comment => renderComment(comment, true)).join('');
-        commentsList.innerHTML = renderedComments;
-    } catch (error) {
-        console.error('Error:', error);
-        commentsList.innerHTML = '<p class="error">Lỗi khi tải bình luận.</p>';
-    }
-}
+// displayComments removed along with comment rendering
 
 /**
  * Render một comment (recursive cho replies)
  */
-function renderComment(comment, isTopLevel = false) {
-    const repliesHtml = comment.replies ? comment.replies.map(reply => renderComment(reply, false)).join('') : '';
-    const replySection = repliesHtml ? `<div class="replies">${repliesHtml}</div>` : '';
-
-    return `
-        <div class="comment-item ${!isTopLevel ? 'reply' : ''}">
-            <div class="comment-avatar">${escapeHtml(comment.tenkh[0].toUpperCase())}</div>
-            <div class="comment-content">
-                <div class="comment-header">
-                    <span class="comment-user">${escapeHtml(comment.tenkh)}</span>
-                    <span class="comment-date">${formatDate(comment.ngaybinhluan)}</span>
-                </div>
-                <p class="comment-text">${escapeHtml(comment.noidung)}</p>
-                ${replySection}
-                <div class="comment-actions">
-                    <button class="reply-btn" data-mabl="${comment.mabl}" data-tenkh="${escapeHtml(comment.tenkh)}">Trả lời</button>
-                    ${!isTopLevel ? '<button class="cancel-reply-btn">Hủy trả lời</button>' : ''}
-                    <button class="like-btn ${comment.like_count > 0 ? 'liked' : ''}" data-mabl="${comment.mabl}">Like (${comment.like_count || 0})</button>
-                    <span class="reply-count">${comment.reply_count || 0} trả lời</span>
-                </div>
-            </div>
-        </div>
-    `;
-}
+// renderComment removed
 
 /**
  * Gọi API lấy chi tiết sản phẩm
