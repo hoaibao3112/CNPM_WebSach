@@ -58,13 +58,27 @@ function generateSimpleResponse(message, products) {
   if (lowerMessage.includes('xin chào') || lowerMessage.includes('chào') || lowerMessage.includes('hello')) {
     return 'Xin chào! Tôi là trợ lý ảo của cửa hàng sách. Tôi có thể giúp bạn tìm sách, tư vấn sản phẩm. Bạn cần hỗ trợ gì?';
   }
+
+  // Yêu cầu liên hệ / hỗ trợ (trả về đường dẫn Zalo để frontend hiển thị nút)
+  if (lowerMessage.includes('liên hệ') || lowerMessage.includes('lien he') || lowerMessage.includes('hỗ trợ') || lowerMessage.includes('zalo') || lowerMessage.includes('liên hệ tôi') || lowerMessage.includes('liên hệ với')) {
+    const text = 'Bạn có thể liên hệ với chúng tôi qua Zalo hoặc gọi số 0938 424 289. Nhấn nút bên dưới để mở Zalo.';
+      const contact = {
+        type: 'zalo',
+        url: 'https://zalo.me/0374170367',
+        label: 'Nhắn tin qua Zalo',
+        // Serve the backend image via the server so frontend can fetch it across origins
+        qr: 'http://localhost:5000/anh_phu/zalo.png'
+      };
+    return { text, contact };
+  }
   
   // Mặc định
   return `Cảm ơn bạn đã liên hệ! Tôi đã ghi nhận câu hỏi: "${message}". 
   Bạn có thể:
   - Tìm kiếm sách theo tên
   - Hỏi về giá cả
-  - Liên hệ: 0938 424 289`;
+  - Liên hệ: 0374170367 (Zalo)
+  Vui lòng đặt câu hỏi cụ thể hơn để tôi có thể hỗ trợ bạn tốt nhất.`;
 }
 
 router.post('/chat', async (req, res) => {
@@ -76,10 +90,15 @@ router.post('/chat', async (req, res) => {
 
   try {
     const products = await fetchProductContext();
-    const reply = generateSimpleResponse(message, products);
-    
+    const result = generateSimpleResponse(message, products);
+
     res.set('Content-Type', 'application/json; charset=utf-8');
-    res.json({ reply });
+    // If the generator returned an object with contact info, include it in the response
+    if (result && typeof result === 'object' && result.text) {
+      res.json({ reply: result.text, contact: result.contact || null });
+    } else {
+      res.json({ reply: result });
+    }
   } catch (error) {
     console.error('Chat error:', error.message);
     res.status(500).json({ error: 'Lỗi hệ thống. Vui lòng thử lại sau.' });

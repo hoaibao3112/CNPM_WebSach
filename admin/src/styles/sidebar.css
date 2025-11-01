@@ -260,6 +260,34 @@ body.sidebar-closed .sidebar a .badge {
   box-shadow: var(--glow);
 }
 
+/* Make footer labels smaller and prevent wrapping */
+.sidebar-footer .menu-text {
+  font-size: 13px; /* smaller than nav items */
+  line-height: 1.1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: inline-block;
+  max-width: calc(var(--sidebar-open) - 140px); /* keep within footer available space */
+}
+
+/* Tweak footer icon sizes so text and icon align neatly */
+.sidebar-footer .material-icons {
+  font-size: 18px;
+  color: var(--sb-text-dim);
+}
+
+/* Slightly reduce padding of footer link for a tighter look */
+.sidebar-footer .footer-link,
+.sidebar-footer .logout-btn {
+  padding: 8px 10px;
+}
+
+/* When sidebar is collapsed keep icons centered and hide labels */
+body.sidebar-closed .sidebar-footer .menu-text {
+  display: none;
+}
+
 /* ---------- Utility: section heading in nav ---------- */
 .sidebar .section {
   padding: 12px 12px 8px 16px;

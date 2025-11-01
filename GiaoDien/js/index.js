@@ -201,6 +201,19 @@ function setupChat() {
       return;
     }
 
+    // Promo/code quick path: if user asks for promotions show codes directly
+    const promoTrigger = /mã khuyến mãi|ma khuyen mai|khuyến mãi|khuyen mai|mã giảm giá|voucher|code/iu;
+    if (promoTrigger.test(message)) {
+      try {
+        await renderPromotionsInChat();
+      } catch (err) {
+        console.error('Lỗi khi lấy khuyến mãi:', err);
+        addMessage('ai', 'Xin lỗi, không thể tải mã khuyến mãi ngay bây giờ. Vui lòng thử lại sau.');
+      }
+      chatInput.value = '';
+      return;
+    }
+
     // Ẩn gợi ý sản phẩm cũ
     hideProductSuggestion();
 
@@ -239,10 +252,34 @@ function setupChat() {
       // Thêm phản hồi AI với hiệu ứng typing
       await addMessageWithTyping('ai', reply);
 
+      // Nếu server trả về contact object (ví dụ Zalo), hiển thị nút/QR
+      if (data.contact) {
+        try {
+          renderContactInChat(data.contact);
+        } catch (err) {
+          console.error('Lỗi khi hiển thị contact:', err);
+        }
+      }
+
       // Xử lý gợi ý sản phẩm nếu có
       const productInfo = extractProductFromReply(reply);
       if (productInfo) {
         await showProductSuggestionWithDelay(productInfo);
+      }
+
+      // Nếu server không trả về contact nhưng câu trả lời có từ khóa liên hệ/Zalo,
+      // tự động hiển thị biểu tượng/nút Zalo để người dùng nhấn.
+      if (!data.contact) {
+        const contactTrigger = /zalo|liên hệ:|lien he:|\b\d{9,11}\b/i;
+        if (contactTrigger.test(reply)) {
+          const inferredContact = {
+            type: 'zalo',
+            url: 'https://zalo.me/0374170367',
+            label: 'Nhắn tin qua Zalo',
+            qr: '/img/zalo.png'
+          };
+          renderContactInChat(inferredContact);
+        }
       }
 
     } catch (error) {
@@ -446,10 +483,9 @@ async function showProductSuggestionWithDelay(productInfo) {
     }
   } catch (error) {
     console.error('Lỗi tìm sản phẩm:', error);
-    suggestionMessage.innerHTML = `
-      <h4>⚠️ Lỗi tìm kiếm</h4>
-      <p>Không thể tìm kiếm sản phẩm lúc này. Vui lòng thử lại sau!</p>
-    `;
+    // Hide suggestion area instead of showing an error box
+    suggestionMessage.style.display = 'none';
+    suggestionMessage.innerHTML = '';
   }
   
   scrollToBottom(chatMessages);
@@ -551,6 +587,96 @@ function extractProductFromReply(reply) {
   return null;
 }
 
+// Render contact button and optional QR thumbnail into chat
+function renderContactInChat(contact) {
+  // contact: { type, url, label, qr }
+  const chatMessages = document.getElementById('chat-messages');
+  if (!chatMessages) return;
+
+  const wrapper = document.createElement('div');
+  wrapper.className = 'chat-contact';
+
+  const btn = document.createElement('button');
+  btn.className = 'contact-btn';
+  btn.textContent = contact.label || 'Liên hệ';
+  btn.onclick = () => window.open(contact.url, '_blank');
+  wrapper.appendChild(btn);
+
+  if (contact.qr) {
+    // QR thumbnail removed from UI per user request.
+    // If you want to re-enable the thumbnail/modal later, restore this block and ensure contact.qr points to a valid image URL.
+  }
+
+  chatMessages.appendChild(wrapper);
+  scrollToBottom(chatMessages);
+}
+
+// Fetch and render active promotions (codes) into the chat
+async function renderPromotionsInChat() {
+  const chatMessages = document.getElementById('chat-messages');
+  if (!chatMessages) return;
+
+  const loading = document.createElement('div');
+  loading.className = 'chat-message ai';
+  loading.textContent = 'Đang tải mã khuyến mãi...';
+  chatMessages.appendChild(loading);
+  scrollToBottom(chatMessages);
+
+  try {
+  // Use backend absolute URL so frontend served from a different origin can reach the API
+  const backendBase = window.__BACKEND_URL__ || 'http://localhost:5000';
+  const res = await fetch(`${backendBase}/api/khuyenmai?activeOnly=true&limit=10`, { headers: { 'Content-Type': 'application/json; charset=utf-8' } });
+    if (!res.ok) throw new Error('Failed to load promotions');
+    const data = await res.json();
+    // data.data is expected to be an array of promotions
+    const promotions = data.data || data || [];
+
+    // Remove loading
+    loading.remove();
+
+    if (!promotions || promotions.length === 0) {
+      addMessage('ai', 'Hiện tại không có mã khuyến mãi nào. Vui lòng thử lại sau.');
+      return;
+    }
+
+    const wrapper = document.createElement('div');
+    wrapper.className = 'chat-message ai promotion-list';
+
+    let html = '<h4>🎁 Mã khuyến mãi đang có</h4><ul>';
+    promotions.forEach(p => {
+      const code = p.Code || p.code || p.MaKM || ('KM' + (p.MaKM || ''));
+      const title = p.TenKM || p.Ten || 'Khuyến mãi';
+      const ma = p.MaKM || p.MaKM || '';
+      html += `<li><strong>${escapeHtml(String(code))}</strong> — ${escapeHtml(String(title))} `;
+      if (ma) html += `<button class="promo-detail-btn" data-id="${escapeHtml(String(ma))}">Xem</button>`;
+      html += '</li>';
+    });
+    html += '</ul>';
+
+    wrapper.innerHTML = html;
+    chatMessages.appendChild(wrapper);
+    scrollToBottom(chatMessages);
+
+    // Attach click handlers for detail buttons
+    wrapper.querySelectorAll('.promo-detail-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const id = e.currentTarget.getAttribute('data-id');
+        if (id) {
+          // Navigate to the frontend promotions page (load giamgia.html under /GiaoDien)
+          const targetUrl = `${window.location.origin}/GiaoDien/giamgia.html?id=${encodeURIComponent(id)}`;
+          // Load in the same tab per user request
+          window.location.href = targetUrl;
+        }
+      });
+    });
+
+  } catch (err) {
+    loading.remove();
+    console.error(err);
+    addMessage('ai', 'Không thể tải danh sách khuyến mãi. Vui lòng thử lại sau.');
+  }
+}
+
 // Tìm và hiển thị gợi ý sản phẩm (legacy function - giữ để tương thích)
 async function searchAndShowProductSuggestion(productInfo) {
   const suggestionDiv = document.getElementById('product-suggestion');
@@ -610,16 +736,9 @@ async function searchAndShowProductSuggestion(productInfo) {
     scrollToBottom(suggestionDiv);
   } catch (error) {
     console.error('Lỗi tìm kiếm sản phẩm:', error);
-    suggestionDiv.innerHTML = `
-      <div class="product-suggestion-content">
-        <h4>Sản phẩm gợi ý:</h4>
-        <p>Không tìm thấy sản phẩm "${escapeHtml(productInfo.name || 'không xác định')}" lúc này. Hãy thử tìm kiếm thêm!</p>
-      </div>
-    `;
-    suggestionDiv.style.display = 'block';
-    suggestionDiv.style.maxHeight = '150px';
-    suggestionDiv.style.overflowY = 'auto';
-    scrollToBottom(suggestionDiv);
+    // Don't display the product suggestion error UI; keep it hidden
+    suggestionDiv.style.display = 'none';
+    suggestionDiv.innerHTML = '';
   }
 }
 
