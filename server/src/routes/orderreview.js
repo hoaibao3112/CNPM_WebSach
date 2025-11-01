@@ -16,6 +16,26 @@ async function checkOrderOwnershipAndCompleted(orderId, customerId) {
   return { exists: true, completed, owner, order };
 }
 
+//lay the loai dươc mua nhiều nhất từ hóa đơn
+
+router.get("/order-count", async(req, res) => {
+  try {
+    const sql = `SELECT tl.matl ,tl.TenTL, COUNT(sp.MaSP) AS tong_sanpham
+                  FROM chitiethoadon ct
+                  JOIN sanpham sp ON ct.MaSP = sp.MaSP
+                  JOIN theloai tl ON sp.MaTL = tl.MaTL
+                  GROUP BY tl.TenTL, tl.matl
+                  ORDER BY tong_sanpham DESC
+                  LIMIT 3;
+                `
+    const [result] = await pool.query(sql);
+    return res.status(200).json({success: true, data: result})
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({error:"lỗi server" })
+  }
+})
+
 // GET /api/orderreview/:orderId - return current user's review for that order (or null)
 router.get('/:orderId', authenticateToken, async (req, res) => {
   try {
@@ -66,5 +86,7 @@ router.post('/:orderId', authenticateToken, async (req, res) => {
     res.status(500).json({ error: 'Lỗi server', details: err.message });
   }
 });
+
+
 
 export default router;

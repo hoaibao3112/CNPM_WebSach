@@ -841,6 +841,33 @@ async function fetchAndDisplayScienceBooks() {
   }
 }
 
+async function fetchCategoreisbyInvoice() {
+  try {
+    const response = await fetch('http://localhost:5000/api/orderreview/order-count');
+    const category = await response.json();
+    console.log(category)
+    if(category.success) {
+      return category.data
+    }
+  } catch (errro){
+    console.log("Lỗi lấy thể loại từ hóa đơn", errro);
+  }
+}
+
+async function renderCategoryToFil() {
+  const categoryData = await fetchCategoreisbyInvoice();
+  const container = document.getElementById("category-content");
+  if(!container) return;
+
+  categoryData.forEach(cat => {
+    const a = document.createElement("a");
+      a.href = "#";
+      a.textContent = cat.TenTL;
+      a.onclick = () => filterProductsByCategory(cat.matl);
+      container.appendChild(a);
+  })
+}
+
 // Tải danh sách khuyến mãi
 // function loadPromotions() {
 //   const discountSelect = document.getElementById('discountSelect');
@@ -1313,6 +1340,8 @@ function filterProductsByCategoryOnHeader() {
 
 // Gọi khi trang tải xong
 document.addEventListener('DOMContentLoaded', () => {
+  renderCategoryToFil()
+
   const currentPath = window.location.pathname;
   removeKeyWordSearch();
 
