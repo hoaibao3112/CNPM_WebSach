@@ -30,6 +30,7 @@ import order_review from './orderreview.js';
 import VoucherRoutes from './voucher.js';
 import AttendanceAdmin from './AttendanceAdmin.js';
 import bookRoutes from './book.js';
+import recommendationsRoutes from './recommendations.js';
 
 export const initRoutes = (app) => {
   app.use('/auth', authRoutes);
@@ -66,4 +67,5 @@ export const initRoutes = (app) => {
   app.use('/api/attendance_admin', AttendanceAdmin);
   app.use('/api/books', bookRoutes);
   app.use('/api/orderreview',order_review);
+  app.use('/api/recommendations', recommendationsRoutes);
 };

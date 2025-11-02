@@ -20,6 +20,30 @@ async function fetchProductContext() {
 function generateSimpleResponse(message, products) {
   const lowerMessage = message.toLowerCase();
   
+  // Yêu cầu gợi ý sách
+  if (lowerMessage.includes('gợi ý') || lowerMessage.includes('goi y') || lowerMessage.includes('đề xuất') || lowerMessage.includes('de xuat') || lowerMessage.includes('nên đọc')) {
+    return { 
+      text: 'Để tôi gợi ý một số cuốn sách phù hợp với bạn...', 
+      action: 'show-recommendations' 
+    };
+  }
+  
+  // Sách bán chạy
+  if (lowerMessage.includes('bán chạy') || lowerMessage.includes('ban chay') || lowerMessage.includes('phổ biến') || lowerMessage.includes('hot')) {
+    return { 
+      text: 'Đây là những cuốn sách đang được yêu thích nhất...', 
+      action: 'show-trending' 
+    };
+  }
+  
+  // Sách mới
+  if (lowerMessage.includes('sách mới') || lowerMessage.includes('sach moi') || lowerMessage.includes('mới phát hành') || lowerMessage.includes('mới ra')) {
+    return { 
+      text: 'Những cuốn sách mới nhất vừa về...', 
+      action: 'show-new-releases' 
+    };
+  }
+  
   // Tìm kiếm sách
   if (lowerMessage.includes('tìm') || lowerMessage.includes('sách') || lowerMessage.includes('có')) {
     // Lấy các từ có ý nghĩa (độ dài > 2) để tìm khớp với tên sản phẩm hoặc tác giả
@@ -77,6 +101,7 @@ function generateSimpleResponse(message, products) {
   Bạn có thể:
   - Tìm kiếm sách theo tên
   - Hỏi về giá cả
+  - Xem gợi ý sách phù hợp
   - Liên hệ: 0374170367 (Zalo)
   Vui lòng đặt câu hỏi cụ thể hơn để tôi có thể hỗ trợ bạn tốt nhất.`;
 }
@@ -93,10 +118,21 @@ router.post('/chat', async (req, res) => {
     const result = generateSimpleResponse(message, products);
 
     res.set('Content-Type', 'application/json; charset=utf-8');
-    // If the generator returned an object with contact info, include it in the response
-    if (result && typeof result === 'object' && result.text) {
+    
+    // If the generator returned an object with action (recommendations)
+    if (result && typeof result === 'object' && result.action) {
+      res.json({ 
+        reply: result.text, 
+        contact: result.contact || null,
+        action: result.action 
+      });
+    }
+    // If the generator returned an object with contact info
+    else if (result && typeof result === 'object' && result.text) {
       res.json({ reply: result.text, contact: result.contact || null });
-    } else {
+    } 
+    // Plain text response
+    else {
       res.json({ reply: result });
     }
   } catch (error) {

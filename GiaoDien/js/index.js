@@ -155,7 +155,46 @@ function setupChat() {
   function addWelcomeMessage() {
     if (chatMessages.children.length === 0) {
       addMessage('ai', '👋 Xin chào! Tôi là trợ lý AI của cửa hàng sách.\n\n💡 Tôi có thể giúp bạn:\n• Tìm kiếm sách theo tên, tác giả\n• Tư vấn sản phẩm phù hợp\n• Thông tin giá cả, khuyến mãi\n• Giải đáp câu hỏi về sách\n\nHãy hỏi tôi bất cứ điều gì bạn muốn biết! 📚');
+      
+      // Thêm quick action buttons
+      addQuickActionButtons();
     }
+  }
+
+  // Thêm các nút hành động nhanh
+  function addQuickActionButtons() {
+    const quickActions = [
+      { icon: '🎁', text: 'Khuyến mãi', query: 'Có khuyến mãi gì không?' },
+      { icon: '📚', text: 'Sách bán chạy', query: 'Sách nào bán chạy nhất?' },
+      { icon: '🆕', text: 'Sách mới', query: 'Sách mới phát hành' },
+      { icon: '📞', text: 'Liên hệ', query: 'Tôi muốn liên hệ' }
+    ];
+
+    const actionsDiv = document.createElement('div');
+    actionsDiv.classList.add('chat-message', 'ai', 'quick-actions');
+    actionsDiv.innerHTML = `
+      <div class="quick-actions-grid">
+        ${quickActions.map(action => `
+          <button class="quick-action-btn" data-query="${escapeHtml(action.query)}">
+            <span class="action-icon">${action.icon}</span>
+            <span class="action-text">${action.text}</span>
+          </button>
+        `).join('')}
+      </div>
+    `;
+    
+    chatMessages.appendChild(actionsDiv);
+    
+    // Gắn sự kiện click
+    actionsDiv.querySelectorAll('.quick-action-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const query = btn.getAttribute('data-query');
+        chatInput.value = query;
+        handleSendMessage();
+      });
+    });
+    
+    scrollToBottom(chatMessages);
   }
 
   // Mở modal khi nhấn icon chat
@@ -251,6 +290,11 @@ function setupChat() {
       
       // Thêm phản hồi AI với hiệu ứng typing
       await addMessageWithTyping('ai', reply);
+
+      // Xử lý action từ server (recommendations)
+      if (data.action) {
+        await handleChatAction(data.action);
+      }
 
       // Nếu server trả về contact object (ví dụ Zalo), hiển thị nút/QR
       if (data.contact) {
@@ -405,6 +449,107 @@ function setupChat() {
     chatInput.value = '';
     setFormState(true);
   }
+
+  // Xử lý các action từ chatbot (recommendations, etc)
+  async function handleChatAction(action) {
+    const chatMessages = document.getElementById('chat-messages');
+    if (!chatMessages) return;
+
+    const customerId = localStorage.getItem('customerId') || '1';
+    
+    const loading = document.createElement('div');
+    loading.className = 'chat-message ai';
+    loading.textContent = 'Đang tải...';
+    chatMessages.appendChild(loading);
+    scrollToBottom(chatMessages);
+
+    try {
+      let endpoint = '';
+      switch(action) {
+        case 'show-recommendations':
+          endpoint = `/api/recommendations/smart/${customerId}`;
+          break;
+        case 'show-trending':
+          endpoint = '/api/recommendations/trending';
+          break;
+        case 'show-new-releases':
+          endpoint = '/api/recommendations/new-releases';
+          break;
+        default:
+          loading.remove();
+          return;
+      }
+
+      const response = await fetch(`http://localhost:5000${endpoint}`, {
+        headers: { 'Content-Type': 'application/json; charset=utf-8' }
+      });
+
+      if (!response.ok) throw new Error('Failed to load recommendations');
+      
+      const result = await response.json();
+      loading.remove();
+
+      if (!result.data || result.data.length === 0) {
+        addMessage('ai', 'Xin lỗi, hiện tại chưa có sản phẩm phù hợp.');
+        return;
+      }
+
+      // Render product carousel
+      renderProductCarousel(result.data, result.message);
+      
+    } catch (error) {
+      console.error('Error handling chat action:', error);
+      loading.remove();
+      addMessage('ai', 'Xin lỗi, có lỗi xảy ra. Vui lòng thử lại.');
+    }
+  }
+
+  // Render carousel sản phẩm
+  function renderProductCarousel(products, title = 'Gợi ý cho bạn') {
+    const chatMessages = document.getElementById('chat-messages');
+    if (!chatMessages) return;
+
+    const carouselDiv = document.createElement('div');
+    carouselDiv.classList.add('chat-message', 'ai', 'product-carousel-container');
+    
+    carouselDiv.innerHTML = `
+      <h4 style="margin-bottom: 12px;">📚 ${escapeHtml(title)}</h4>
+      <div class="product-carousel">
+        <button class="carousel-btn prev" onclick="scrollCarousel(this, -1)">‹</button>
+        <div class="carousel-track">
+          ${products.map(p => {
+            const price = formatPrice(p.DonGia || p.price || 0);
+            const name = escapeHtml(p.TenSP || p.name || 'Sản phẩm');
+            const author = escapeHtml(p.TenTG || p.author || '');
+            const id = p.MaSP || p.id;
+            const image = p.HinhAnh || p.image || 'default-book.jpg';
+            
+            return `
+              <div class="product-card-mini">
+                <div class="product-image-wrapper">
+                  <img src="img/product/${image}" alt="${name}" 
+                       onerror="this.src='https://via.placeholder.com/150x200?text=Book'">
+                </div>
+                <div class="product-info-mini">
+                  <h5 class="product-name-mini" title="${name}">${name}</h5>
+                  ${author ? `<p class="product-author-mini">${author}</p>` : ''}
+                  <p class="product-price-mini">${price}</p>
+                </div>
+                <button class="view-product-btn" onclick="loadProductDetail('${id}')">
+                  Xem chi tiết
+                </button>
+              </div>
+            `;
+          }).join('')}
+        </div>
+        <button class="carousel-btn next" onclick="scrollCarousel(this, 1)">›</button>
+      </div>
+    `;
+    
+    chatMessages.appendChild(carouselDiv);
+    scrollToBottom(chatMessages);
+  }
+
 
   // Hiển thị gợi ý sản phẩm với delay
 async function showProductSuggestionWithDelay(productInfo) {
@@ -746,4 +891,12 @@ async function searchAndShowProductSuggestion(productInfo) {
 window.loadProductDetail = function(productId) {
   localStorage.setItem('selectedProductId', productId);
   window.location.href = 'product_detail.html';
+};
+
+// Scroll carousel
+window.scrollCarousel = function(button, direction) {
+  const carousel = button.parentElement;
+  const track = carousel.querySelector('.carousel-track');
+  const cardWidth = track.querySelector('.product-card-mini').offsetWidth + 12; // 12px gap
+  track.scrollBy({ left: cardWidth * direction * 2, behavior: 'smooth' });
 };

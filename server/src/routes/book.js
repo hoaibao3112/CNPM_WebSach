@@ -32,7 +32,8 @@ router.get('/promotions', async (req, res) => {
 });
 
 // Lấy danh sách sản phẩm theo khuyến mãi
-router.get('/promotions/:promoId/products', async (req, res) => {
+router.
+get('/promotions/:promoId/products', async (req, res) => {
   const { promoId } = req.params;
 
   try {
