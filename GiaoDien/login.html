@@ -35,10 +35,8 @@
 
       <div class="or-separator">or</div>
 
-      <div class="social-login">
-        <button class="facebook"><i class="fab fa-facebook-f"></i> Facebook</button>
-        <button class="twitter"><i class="fab fa-twitter"></i> Twitter</button>
-      </div>
+      <!-- Google Sign-in button -->
+      <div id="googleSignIn" style="margin: 16px 0;"></div>
 
   <!-- small page footer removed in favor of shared footer -->
     </form>
@@ -82,6 +80,9 @@
     </div>
   </div>
 </div>
+  <!-- Google Identity Services -->
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <script src="js/google-auth.js"></script>
   <script src="js/login.js"></script>
   <script src="js/loadHeader.js"></script>
 

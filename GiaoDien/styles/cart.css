@@ -348,6 +348,19 @@ h2 {
   border: 1px solid #ddd;
   border-radius: 4px;
   font-size: 1rem;
+  transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+.form-input.error {
+  border-color: #e74c3c;
+  box-shadow: 0 0 0 3px rgba(231, 76, 60, 0.1);
+  background-color: #fff5f5;
+}
+
+.form-input:focus.error {
+  outline: none;
+  border-color: #e74c3c;
+  box-shadow: 0 0 0 4px rgba(231, 76, 60, 0.2);
 }
 
 .form-textarea {
@@ -358,6 +371,36 @@ h2 {
   font-size: 1rem;
   resize: vertical;
   min-height: 100px;
+  transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+.form-textarea.error {
+  border-color: #e74c3c;
+  box-shadow: 0 0 0 3px rgba(231, 76, 60, 0.1);
+  background-color: #fff5f5;
+}
+
+.error-message {
+  color: #e74c3c;
+  font-size: 0.875rem;
+  margin-top: 5px;
+  display: none;
+  animation: slideDown 0.3s ease;
+}
+
+.error-message.show {
+  display: block;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* Footer */

@@ -645,29 +645,174 @@ async function checkout() {
   }
 }
 
-// Validate form
+// Clear error styling for a field
+function clearFieldError(fieldId) {
+  const field = document.getElementById(fieldId);
+  if (field) {
+    field.classList.remove('error');
+    const errorMsg = field.parentElement.querySelector('.error-message');
+    if (errorMsg) errorMsg.classList.remove('show');
+  }
+}
+
+// Add error styling to a field
+function showFieldError(fieldId, message) {
+  const field = document.getElementById(fieldId);
+  if (!field) return;
+  
+  field.classList.add('error');
+  
+  // Create or update error message
+  let errorMsg = field.parentElement.querySelector('.error-message');
+  if (!errorMsg) {
+    errorMsg = document.createElement('div');
+    errorMsg.className = 'error-message';
+    field.parentElement.appendChild(errorMsg);
+  }
+  errorMsg.textContent = message;
+  errorMsg.classList.add('show');
+  
+  // Scroll to first error field
+  if (!document.querySelector('.form-input.error:not(#' + fieldId + ')')) {
+    field.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+}
+
+// Validate form with visual feedback
 function validateForm(formData) {
+  let isValid = true;
+  let firstErrorField = null;
+  
+  // Clear all previous errors
+  ['name', 'phone', 'email', 'tinhthanh', 'quanhuyen', 'phuongxa', 'diachichitiet', 'payment-method'].forEach(clearFieldError);
+  
+  // Validate name
   if (!formData.tenkh.trim()) {
-    showToast('Vui lòng nhập họ tên!');
-    return false;
+    showFieldError('name', 'Vui lòng nhập họ tên!');
+    if (!firstErrorField) firstErrorField = 'name';
+    isValid = false;
   }
-  if (!/^\d{10,11}$/.test(formData.sdt)) {
-    showToast('Số điện thoại không hợp lệ!');
-    return false;
+  
+  // Validate phone
+  if (!formData.sdt.trim()) {
+    showFieldError('phone', 'Vui lòng nhập số điện thoại!');
+    if (!firstErrorField) firstErrorField = 'phone';
+    isValid = false;
+  } else if (!/^\d{10,11}$/.test(formData.sdt)) {
+    showFieldError('phone', 'Số điện thoại không hợp lệ (10-11 chữ số)!');
+    if (!firstErrorField) firstErrorField = 'phone';
+    isValid = false;
   }
-  if (!formData.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-    showToast('Email không hợp lệ!');
-    return false;
+  
+  // Validate email
+  if (!formData.email.trim()) {
+    showFieldError('email', 'Vui lòng nhập email!');
+    if (!firstErrorField) firstErrorField = 'email';
+    isValid = false;
+  } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+    showFieldError('email', 'Email không hợp lệ!');
+    if (!firstErrorField) firstErrorField = 'email';
+    isValid = false;
   }
-  if (!formData.tinhthanh || !formData.quanhuyen || !formData.phuongxa || !formData.diachi.trim()) {
-    showToast('Vui lòng điền đầy đủ địa chỉ!');
-    return false;
+  
+  // Validate province
+  if (!formData.tinhthanh) {
+    showFieldError('tinhthanh', 'Vui lòng chọn Tỉnh/Thành phố!');
+    if (!firstErrorField) firstErrorField = 'tinhthanh';
+    isValid = false;
   }
+  
+  // Validate district
+  if (!formData.quanhuyen) {
+    showFieldError('quanhuyen', 'Vui lòng chọn Quận/Huyện!');
+    if (!firstErrorField) firstErrorField = 'quanhuyen';
+    isValid = false;
+  }
+  
+  // Validate ward
+  if (!formData.phuongxa) {
+    showFieldError('phuongxa', 'Vui lòng chọn Phường/Xã!');
+    if (!firstErrorField) firstErrorField = 'phuongxa';
+    isValid = false;
+  }
+  
+  // Validate detailed address
+  if (!formData.diachi.trim()) {
+    showFieldError('diachichitiet', 'Vui lòng nhập địa chỉ chi tiết!');
+    if (!firstErrorField) firstErrorField = 'diachichitiet';
+    isValid = false;
+  }
+  
+  // Validate payment method
   if (!formData.paymentMethod) {
-    showToast('Vui lòng chọn phương thức thanh toán!');
-    return false;
+    showFieldError('payment-method', 'Vui lòng chọn phương thức thanh toán!');
+    if (!firstErrorField) firstErrorField = 'payment-method';
+    isValid = false;
   }
-  return true;
+  
+  // Show toast for first error and scroll to it
+  if (!isValid) {
+    showToast('Vui lòng điền đầy đủ thông tin các trường bắt buộc!');
+    if (firstErrorField) {
+      const field = document.getElementById(firstErrorField);
+      if (field) {
+        setTimeout(() => {
+          field.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          field.focus();
+        }, 100);
+      }
+    }
+  }
+  
+  return isValid;
+}
+
+// Add real-time validation on input
+function setupRealtimeValidation() {
+  const fields = [
+    { id: 'name', validator: (val) => val.trim() !== '', message: 'Họ tên không được để trống' },
+    { id: 'phone', validator: (val) => /^\d{10,11}$/.test(val), message: 'Số điện thoại không hợp lệ' },
+    { id: 'email', validator: (val) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val), message: 'Email không hợp lệ' },
+    { id: 'tinhthanh', validator: (val) => val !== '', message: 'Vui lòng chọn Tỉnh/Thành phố' },
+    { id: 'quanhuyen', validator: (val) => val !== '', message: 'Vui lòng chọn Quận/Huyện' },
+    { id: 'phuongxa', validator: (val) => val !== '', message: 'Vui lòng chọn Phường/Xã' },
+    { id: 'diachichitiet', validator: (val) => val.trim() !== '', message: 'Địa chỉ chi tiết không được để trống' },
+    { id: 'payment-method', validator: (val) => val !== '', message: 'Vui lòng chọn phương thức thanh toán' }
+  ];
+  
+  fields.forEach(({ id, validator, message }) => {
+    const field = document.getElementById(id);
+    if (field) {
+      field.addEventListener('blur', () => {
+        const value = field.value;
+        if (!validator(value)) {
+          showFieldError(id, message);
+        } else {
+          clearFieldError(id);
+        }
+      });
+      
+      field.addEventListener('input', () => {
+        // Clear error as user types
+        if (field.classList.contains('error')) {
+          const value = field.value;
+          if (validator(value)) {
+            clearFieldError(id);
+          }
+        }
+      });
+      
+      field.addEventListener('change', () => {
+        // Validate on change (for selects)
+        const value = field.value;
+        if (!validator(value)) {
+          showFieldError(id, message);
+        } else {
+          clearFieldError(id);
+        }
+      });
+    }
+  });
 }
 
 // Show toast notification
@@ -851,6 +996,10 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   await renderCart();
+  
+  // Setup real-time validation
+  setupRealtimeValidation();
+  
   // If user arrived here after a reorder and we have a backup, show restore banner
   try {
     const backupRaw = localStorage.getItem('cart_backup_before_reorder');

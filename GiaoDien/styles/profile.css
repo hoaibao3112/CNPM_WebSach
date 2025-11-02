@@ -90,6 +90,12 @@ body {
     display: inline-flex;    /* Cho phép căn giữa nếu có icon */
     align-items: center;
     gap: 8px;                /* Khoảng cách giữa icon và chữ */
+    width: 100%;             /* Chiếm full width để dễ click */
+}
+
+.sidebar a:hover {
+    text-decoration: none;   /* Không gạch chân khi hover */
+    color: inherit;
 }
 
 .sidebar ul li {

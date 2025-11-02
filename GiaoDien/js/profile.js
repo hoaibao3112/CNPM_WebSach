@@ -6,6 +6,9 @@ document.addEventListener('DOMContentLoaded', function() {
   setupSidebarNavigation();
   setupChangePasswordButton();
   setupLogoutHandler();
+  
+  // Hiển thị thông tin tài khoản mặc định khi vào trang
+  displayUserProfile();
 });
 
 
@@ -150,6 +153,15 @@ function loadPromoCodes() {
 function setupSidebarNavigation() {
   const sidebarItems = document.querySelectorAll('.sidebar ul li[data-section]');
   let currentActive = null;
+
+  // Handle external links (orders.html, refund-history.html)
+  const externalLinkItems = document.querySelectorAll('.sidebar ul li:not([data-section])');
+  externalLinkItems.forEach(item => {
+    item.addEventListener('mouseenter', function() {
+      // Remove active from other items when hovering external links
+      sidebarItems.forEach(i => i.classList.remove('active'));
+    });
+  });
 
   sidebarItems.forEach(item => {
     item.addEventListener('click', function () {
