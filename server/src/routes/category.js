@@ -101,5 +101,4 @@ router.delete('/:id', async (req, res) => {
     res.status(500).json({ error: 'Lỗi khi xóa thể loại', details: error.message });
   }
 });
-
 export default router;
