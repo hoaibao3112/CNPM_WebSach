@@ -1061,12 +1061,16 @@ sidebarItems.forEach(item => {
     if (province) parts.push(province.trim());
     return parts.join(', ');
   }
-  // location helpers: fetch lists from server proxy
+  // location helpers: fetch lists from local JSON files via backend API
   async function loadProvinces() {
     try {
-      const res = await fetch('http://localhost:5000/api/orders/locations/provinces');
-      const j = await res.json();
-      return (j.data || []);
+      const res = await fetch('http://localhost:5000/api/address/cities');
+      const cities = await res.json();
+      // Transform to match expected format: { code: city_id, name: city_name }
+      return cities.map(city => ({
+        code: city.city_id,
+        name: city.city_name
+      }));
     } catch (e) {
       console.error('loadProvinces', e);
       return [];
@@ -1075,12 +1079,15 @@ sidebarItems.forEach(item => {
   async function loadDistricts(provinceCodeOrName) {
     if (!provinceCodeOrName) return [];
     try {
-      // try numeric code first
-      const res = await fetch(`http://localhost:5000/api/orders/locations/districts/${encodeURIComponent(provinceCodeOrName)}`);
-      const j = await res.json();
-      if (j.data) return j.data;
+      // Use city_id to fetch districts
+      const res = await fetch(`http://localhost:5000/api/address/districts/${encodeURIComponent(provinceCodeOrName)}`);
+      const districts = await res.json();
+      // Transform to match expected format: { code: district_id, name: district_name }
+      return districts.map(district => ({
+        code: district.district_id,
+        name: district.district_name
+      }));
     } catch (e) {
-      // continue to try lookup by name (slow) - the server proxy expects code, so skip
       console.warn('loadDistricts failed for code', provinceCodeOrName, e);
     }
     return [];
@@ -1088,9 +1095,13 @@ sidebarItems.forEach(item => {
   async function loadWards(districtCodeOrName) {
     if (!districtCodeOrName) return [];
     try {
-      const res = await fetch(`http://localhost:5000/api/orders/locations/wards/${encodeURIComponent(districtCodeOrName)}`);
-      const j = await res.json();
-      if (j.data) return j.data;
+      const res = await fetch(`http://localhost:5000/api/address/wards/${encodeURIComponent(districtCodeOrName)}`);
+      const wards = await res.json();
+      // Transform to match expected format: { code: ward_name (use name as code), name: ward_name }
+      return wards.map(ward => ({
+        code: ward.ward_name, // Use ward_name as code since ward_id doesn't exist
+        name: ward.ward_name
+      }));
     } catch (e) {
       console.warn('loadWards failed for code', districtCodeOrName, e);
     }
@@ -1112,33 +1123,84 @@ sidebarItems.forEach(item => {
     }
   }
 
-  function renderAddresses(addresses = []) {
+  async function renderAddresses(addresses = []) {
     if (!otherAddrContainer) return;
     if (!addresses.length) {
       otherAddrContainer.innerHTML = '<p>Chưa có địa chỉ khác.</p>';
       if (defaultReceiveEl) defaultReceiveEl.textContent = 'Chưa có địa chỉ';
       return;
     }
-    // Find the primary address (is_default flag), fallback to first item
-    let primary = addresses.find(a => a.is_default == 1 || a.is_default === true) || addresses[0];
-    if (primary && defaultReceiveEl) defaultReceiveEl.textContent = `${primary.name || ''} • ${primary.phone || ''} — ${extractStreet(primary.detail) || ''}`;
 
-    otherAddrContainer.innerHTML = addresses.map((addr, idx) => `
-      <div class="address-item" data-id="${addr.id}" data-detail="${encodeURIComponent(addr.detail || '')}" data-province="${encodeURIComponent(addr.province || '')}" data-district="${encodeURIComponent(addr.district || '')}" data-ward="${encodeURIComponent(addr.ward || '')}">
-        <div class="address-info">
-          <div class="addr-top">
-            <span class="name">${addr.name || ''}</span>
-            <span class="phone">${addr.phone || ''}</span>
+    // Helper function to get address names from IDs
+    async function getAddressNames(provinceId, districtId, wardIdentifier) {
+      try {
+        const response = await fetch(`http://localhost:5000/api/address/full/${provinceId}/${districtId}/${encodeURIComponent(wardIdentifier)}`);
+        if (!response.ok) return null;
+        const data = await response.json();
+        return data; // { city: "...", district: "...", ward: "..." }
+      } catch (e) {
+        console.warn('Failed to fetch address names', e);
+        return null;
+      }
+    }
+
+    // Convert IDs to names for each address
+    const addressesWithNames = await Promise.all(addresses.map(async (addr) => {
+      let provinceVal = addr.province || '';
+      let districtVal = addr.district || '';
+      let wardVal = addr.ward || '';
+      
+      // Check if province and district are numeric
+      const isProvinceNumeric = /^\d+$/.test(String(provinceVal));
+      const isDistrictNumeric = /^\d+$/.test(String(districtVal));
+      
+      // If province and district are numeric, fetch the names (ward can be name or ID)
+      if (isProvinceNumeric && isDistrictNumeric) {
+        const names = await getAddressNames(provinceVal, districtVal, wardVal);
+        if (names) {
+          return {
+            ...addr,
+            provinceName: names.city || provinceVal,
+            districtName: names.district || districtVal,
+            wardName: names.ward || wardVal
+          };
+        }
+      }
+      
+      return {
+        ...addr,
+        provinceName: provinceVal,
+        districtName: districtVal,
+        wardName: wardVal
+      };
+    }));
+
+    // Find the primary address (is_default flag), fallback to first item
+    let primary = addressesWithNames.find(a => a.is_default == 1 || a.is_default === true) || addressesWithNames[0];
+    if (primary && defaultReceiveEl) {
+      const primaryFullAddr = `${extractStreet(primary.detail) || ''}${primary.wardName ? ', ' + primary.wardName : ''}${primary.districtName ? ', ' + primary.districtName : ''}${primary.provinceName ? ', ' + primary.provinceName : ''}`;
+      defaultReceiveEl.textContent = `${primary.name || ''} • ${primary.phone || ''} — ${primaryFullAddr}`;
+    }
+
+    otherAddrContainer.innerHTML = addressesWithNames.map((addr, idx) => {
+      const fullAddr = `${extractStreet(addr.detail) || ''}${addr.wardName ? ', ' + addr.wardName : ''}${addr.districtName ? ', ' + addr.districtName : ''}${addr.provinceName ? ', ' + addr.provinceName : ''}`;
+      return `
+        <div class="address-item" data-id="${addr.id}" data-detail="${encodeURIComponent(addr.detail || '')}" data-province="${encodeURIComponent(addr.province || '')}" data-district="${encodeURIComponent(addr.district || '')}" data-ward="${encodeURIComponent(addr.ward || '')}">
+          <div class="address-info">
+            <div class="addr-top">
+              <span class="name">${addr.name || ''}</span>
+              <span class="phone">${addr.phone || ''}</span>
+            </div>
+            <div class="addr-detail">${fullAddr}</div>
           </div>
-          <div class="addr-detail">${extractStreet(addr.detail) || ''}</div>
+          <div class="address-actions" style="margin-left:12px">
+            <a href="#" class="edit edit-address" data-id="${addr.id}">Sửa</a>
+            <button type="button" class="delete delete-address" data-id="${addr.id}">Xóa</button>
+            ${addr.is_default == 1 || addr.is_default === true ? '<span class="default-badge">Mặc định</span>' : `<button type="button" class="set-default" data-id="${addr.id}">Đặt làm mặc định</button>`}
+          </div>
         </div>
-        <div class="address-actions" style="margin-left:12px">
-          <a href="#" class="edit edit-address" data-id="${addr.id}">Sửa</a>
-          <button type="button" class="delete delete-address" data-id="${addr.id}">Xóa</button>
-          ${addr.is_default == 1 || addr.is_default === true ? '<span class="default-badge">Mặc định</span>' : `<button type="button" class="set-default" data-id="${addr.id}">Đặt làm mặc định</button>`}
-        </div>
-      </div>
-    `).join('');
+      `;
+    }).join('');
   }
 
   async function createAddress(payload) {

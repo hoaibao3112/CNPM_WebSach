@@ -1,0 +1,3482 @@
+[
+  {
+    "district_id":"1",
+    "district_name":"Quận Ba Đình",
+    "city_id":"1"
+  },
+  {
+    "district_id":"2",
+    "district_name":"Quận Hoàn Kiếm",
+    "city_id":"1"
+  },
+  {
+    "district_id":"3",
+    "district_name":"Quận Tây Hồ",
+    "city_id":"1"
+  },
+  {
+    "district_id":"4",
+    "district_name":"Quận Long Biên",
+    "city_id":"1"
+  },
+  {
+    "district_id":"5",
+    "district_name":"Quận Cầu Giấy",
+    "city_id":"1"
+  },
+  {
+    "district_id":"6",
+    "district_name":"Quận Đống Đa",
+    "city_id":"1"
+  },
+  {
+    "district_id":"7",
+    "district_name":"Quận Hai Bà Trưng",
+    "city_id":"1"
+  },
+  {
+    "district_id":"8",
+    "district_name":"Quận Hoàng Mai",
+    "city_id":"1"
+  },
+  {
+    "district_id":"9",
+    "district_name":"Quận Thanh Xuân",
+    "city_id":"1"
+  },
+  {
+    "district_id":"10",
+    "district_name":"Huyện Sóc Sơn",
+    "city_id":"1"
+  },
+  {
+    "district_id":"11",
+    "district_name":"Huyện Đông Anh",
+    "city_id":"1"
+  },
+  {
+    "district_id":"12",
+    "district_name":"Huyện Gia Lâm",
+    "city_id":"1"
+  },
+  {
+    "district_id":"13",
+    "district_name":"Quận Nam Từ Liêm",
+    "city_id":"1"
+  },
+  {
+    "district_id":"14",
+    "district_name":"Huyện Thanh Trì",
+    "city_id":"1"
+  },
+  {
+    "district_id":"15",
+    "district_name":"Quận Bắc Từ Liêm",
+    "city_id":"1"
+  },
+  {
+    "district_id":"16",
+    "district_name":"Huyện Mê Linh",
+    "city_id":"1"
+  },
+  {
+    "district_id":"17",
+    "district_name":"Quận Hà Đông",
+    "city_id":"1"
+  },
+  {
+    "district_id":"18",
+    "district_name":"Thị xã Sơn Tây",
+    "city_id":"1"
+  },
+  {
+    "district_id":"19",
+    "district_name":"Huyện Ba Vì",
+    "city_id":"1"
+  },
+  {
+    "district_id":"20",
+    "district_name":"Huyện Phúc Thọ",
+    "city_id":"1"
+  },
+  {
+    "district_id":"21",
+    "district_name":"Huyện Đan Phượng",
+    "city_id":"1"
+  },
+  {
+    "district_id":"22",
+    "district_name":"Huyện Hoài Đức",
+    "city_id":"1"
+  },
+  {
+    "district_id":"23",
+    "district_name":"Huyện Quốc Oai",
+    "city_id":"1"
+  },
+  {
+    "district_id":"24",
+    "district_name":"Huyện Thạch Thất",
+    "city_id":"1"
+  },
+  {
+    "district_id":"25",
+    "district_name":"Huyện Chương Mỹ",
+    "city_id":"1"
+  },
+  {
+    "district_id":"26",
+    "district_name":"Huyện Thanh Oai",
+    "city_id":"1"
+  },
+  {
+    "district_id":"27",
+    "district_name":"Huyện Thường Tín",
+    "city_id":"1"
+  },
+  {
+    "district_id":"28",
+    "district_name":"Huyện Phú Xuyên",
+    "city_id":"1"
+  },
+  {
+    "district_id":"29",
+    "district_name":"Huyện Ứng Hòa",
+    "city_id":"1"
+  },
+  {
+    "district_id":"30",
+    "district_name":"Huyện Mỹ Đức",
+    "city_id":"1"
+  },
+  {
+    "district_id":"31",
+    "district_name":"Thành phố Hà Giang",
+    "city_id":"2"
+  },
+  {
+    "district_id":"32",
+    "district_name":"Huyện Đồng Văn",
+    "city_id":"2"
+  },
+  {
+    "district_id":"33",
+    "district_name":"Huyện Mèo Vạc",
+    "city_id":"2"
+  },
+  {
+    "district_id":"34",
+    "district_name":"Huyện Yên Minh",
+    "city_id":"2"
+  },
+  {
+    "district_id":"35",
+    "district_name":"Huyện Quản Bạ",
+    "city_id":"2"
+  },
+  {
+    "district_id":"36",
+    "district_name":"Huyện Vị Xuyên",
+    "city_id":"2"
+  },
+  {
+    "district_id":"37",
+    "district_name":"Huyện Bắc Mê",
+    "city_id":"2"
+  },
+  {
+    "district_id":"38",
+    "district_name":"Huyện Hoàng Su Phì",
+    "city_id":"2"
+  },
+  {
+    "district_id":"39",
+    "district_name":"Huyện Xín Mần",
+    "city_id":"2"
+  },
+  {
+    "district_id":"40",
+    "district_name":"Huyện Bắc Quang",
+    "city_id":"2"
+  },
+  {
+    "district_id":"41",
+    "district_name":"Huyện Quang Bình",
+    "city_id":"2"
+  },
+  {
+    "district_id":"42",
+    "district_name":"Thành phố Cao Bằng",
+    "city_id":"3"
+  },
+  {
+    "district_id":"43",
+    "district_name":"Huyện Bảo Lâm",
+    "city_id":"3"
+  },
+  {
+    "district_id":"44",
+    "district_name":"Huyện Bảo Lạc",
+    "city_id":"3"
+  },
+  {
+    "district_id":"45",
+    "district_name":"Huyện Hà Quảng",
+    "city_id":"3"
+  },
+  {
+    "district_id":"46",
+    "district_name":"Huyện Trùng Khánh",
+    "city_id":"3"
+  },
+  {
+    "district_id":"47",
+    "district_name":"Huyện Hạ Lang",
+    "city_id":"3"
+  },
+  {
+    "district_id":"48",
+    "district_name":"Huyện Quảng Hòa",
+    "city_id":"3"
+  },
+  {
+    "district_id":"49",
+    "district_name":"Huyện Hoà An",
+    "city_id":"3"
+  },
+  {
+    "district_id":"50",
+    "district_name":"Huyện Nguyên Bình",
+    "city_id":"3"
+  },
+  {
+    "district_id":"51",
+    "district_name":"Huyện Thạch An",
+    "city_id":"3"
+  },
+  {
+    "district_id":"52",
+    "district_name":"Thành Phố Bắc Kạn",
+    "city_id":"4"
+  },
+  {
+    "district_id":"53",
+    "district_name":"Huyện Pác Nặm",
+    "city_id":"4"
+  },
+  {
+    "district_id":"54",
+    "district_name":"Huyện Ba Bể",
+    "city_id":"4"
+  },
+  {
+    "district_id":"55",
+    "district_name":"Huyện Ngân Sơn",
+    "city_id":"4"
+  },
+  {
+    "district_id":"56",
+    "district_name":"Huyện Bạch Thông",
+    "city_id":"4"
+  },
+  {
+    "district_id":"57",
+    "district_name":"Huyện Chợ Đồn",
+    "city_id":"4"
+  },
+  {
+    "district_id":"58",
+    "district_name":"Huyện Chợ Mới",
+    "city_id":"4"
+  },
+  {
+    "district_id":"59",
+    "district_name":"Huyện Na Rì",
+    "city_id":"4"
+  },
+  {
+    "district_id":"60",
+    "district_name":"Thành phố Tuyên Quang",
+    "city_id":"5"
+  },
+  {
+    "district_id":"61",
+    "district_name":"Huyện Lâm Bình",
+    "city_id":"5"
+  },
+  {
+    "district_id":"62",
+    "district_name":"Huyện Na Hang",
+    "city_id":"5"
+  },
+  {
+    "district_id":"63",
+    "district_name":"Huyện Chiêm Hóa",
+    "city_id":"5"
+  },
+  {
+    "district_id":"64",
+    "district_name":"Huyện Hàm Yên",
+    "city_id":"5"
+  },
+  {
+    "district_id":"65",
+    "district_name":"Huyện Yên Sơn",
+    "city_id":"5"
+  },
+  {
+    "district_id":"66",
+    "district_name":"Huyện Sơn Dương",
+    "city_id":"5"
+  },
+  {
+    "district_id":"67",
+    "district_name":"Thành phố Lào Cai",
+    "city_id":"6"
+  },
+  {
+    "district_id":"68",
+    "district_name":"Huyện Bát Xát",
+    "city_id":"6"
+  },
+  {
+    "district_id":"69",
+    "district_name":"Huyện Mường Khương",
+    "city_id":"6"
+  },
+  {
+    "district_id":"70",
+    "district_name":"Huyện Si Ma Cai",
+    "city_id":"6"
+  },
+  {
+    "district_id":"71",
+    "district_name":"Huyện Bắc Hà",
+    "city_id":"6"
+  },
+  {
+    "district_id":"72",
+    "district_name":"Huyện Bảo Thắng",
+    "city_id":"6"
+  },
+  {
+    "district_id":"73",
+    "district_name":"Huyện Bảo Yên",
+    "city_id":"6"
+  },
+  {
+    "district_id":"74",
+    "district_name":"Thị xã Sa Pa",
+    "city_id":"6"
+  },
+  {
+    "district_id":"75",
+    "district_name":"Huyện Văn Bàn",
+    "city_id":"6"
+  },
+  {
+    "district_id":"76",
+    "district_name":"Thành phố Điện Biên Phủ",
+    "city_id":"7"
+  },
+  {
+    "district_id":"77",
+    "district_name":"Thị Xã Mường Lay",
+    "city_id":"7"
+  },
+  {
+    "district_id":"78",
+    "district_name":"Huyện Mường Nhé",
+    "city_id":"7"
+  },
+  {
+    "district_id":"79",
+    "district_name":"Huyện Mường Chà",
+    "city_id":"7"
+  },
+  {
+    "district_id":"80",
+    "district_name":"Huyện Tủa Chùa",
+    "city_id":"7"
+  },
+  {
+    "district_id":"81",
+    "district_name":"Huyện Tuần Giáo",
+    "city_id":"7"
+  },
+  {
+    "district_id":"82",
+    "district_name":"Huyện Điện Biên",
+    "city_id":"7"
+  },
+  {
+    "district_id":"83",
+    "district_name":"Huyện Điện Biên Đông",
+    "city_id":"7"
+  },
+  {
+    "district_id":"84",
+    "district_name":"Huyện Mường Ảng",
+    "city_id":"7"
+  },
+  {
+    "district_id":"85",
+    "district_name":"Huyện Nậm Pồ",
+    "city_id":"7"
+  },
+  {
+    "district_id":"86",
+    "district_name":"Thành phố Lai Châu",
+    "city_id":"8"
+  },
+  {
+    "district_id":"87",
+    "district_name":"Huyện Tam Đường",
+    "city_id":"8"
+  },
+  {
+    "district_id":"88",
+    "district_name":"Huyện Mường Tè",
+    "city_id":"8"
+  },
+  {
+    "district_id":"89",
+    "district_name":"Huyện Sìn Hồ",
+    "city_id":"8"
+  },
+  {
+    "district_id":"90",
+    "district_name":"Huyện Phong Thổ",
+    "city_id":"8"
+  },
+  {
+    "district_id":"91",
+    "district_name":"Huyện Than Uyên",
+    "city_id":"8"
+  },
+  {
+    "district_id":"92",
+    "district_name":"Huyện Tân Uyên",
+    "city_id":"8"
+  },
+  {
+    "district_id":"93",
+    "district_name":"Huyện Nậm Nhùn",
+    "city_id":"8"
+  },
+  {
+    "district_id":"94",
+    "district_name":"Thành phố Sơn La",
+    "city_id":"9"
+  },
+  {
+    "district_id":"95",
+    "district_name":"Huyện Quỳnh Nhai",
+    "city_id":"9"
+  },
+  {
+    "district_id":"96",
+    "district_name":"Huyện Thuận Châu",
+    "city_id":"9"
+  },
+  {
+    "district_id":"97",
+    "district_name":"Huyện Mường La",
+    "city_id":"9"
+  },
+  {
+    "district_id":"98",
+    "district_name":"Huyện Bắc Yên",
+    "city_id":"9"
+  },
+  {
+    "district_id":"99",
+    "district_name":"Huyện Phù Yên",
+    "city_id":"9"
+  },
+  {
+    "district_id":"100",
+    "district_name":"Thị xã Mộc Châu",
+    "city_id":"9"
+  },
+  {
+    "district_id":"101",
+    "district_name":"Huyện Yên Châu",
+    "city_id":"9"
+  },
+  {
+    "district_id":"102",
+    "district_name":"Huyện Mai Sơn",
+    "city_id":"9"
+  },
+  {
+    "district_id":"103",
+    "district_name":"Huyện Sông Mã",
+    "city_id":"9"
+  },
+  {
+    "district_id":"104",
+    "district_name":"Huyện Sốp Cộp",
+    "city_id":"9"
+  },
+  {
+    "district_id":"105",
+    "district_name":"Huyện Vân Hồ",
+    "city_id":"9"
+  },
+  {
+    "district_id":"106",
+    "district_name":"Thành phố Yên Bái",
+    "city_id":"10"
+  },
+  {
+    "district_id":"107",
+    "district_name":"Thị xã Nghĩa Lộ",
+    "city_id":"10"
+  },
+  {
+    "district_id":"108",
+    "district_name":"Huyện Lục Yên",
+    "city_id":"10"
+  },
+  {
+    "district_id":"109",
+    "district_name":"Huyện Văn Yên",
+    "city_id":"10"
+  },
+  {
+    "district_id":"110",
+    "district_name":"Huyện Mù Căng Chải",
+    "city_id":"10"
+  },
+  {
+    "district_id":"111",
+    "district_name":"Huyện Trấn Yên",
+    "city_id":"10"
+  },
+  {
+    "district_id":"112",
+    "district_name":"Huyện Trạm Tấu",
+    "city_id":"10"
+  },
+  {
+    "district_id":"113",
+    "district_name":"Huyện Văn Chấn",
+    "city_id":"10"
+  },
+  {
+    "district_id":"114",
+    "district_name":"Huyện Yên Bình",
+    "city_id":"10"
+  },
+  {
+    "district_id":"115",
+    "district_name":"Thành phố Hòa Bình",
+    "city_id":"11"
+  },
+  {
+    "district_id":"116",
+    "district_name":"Huyện Đà Bắc",
+    "city_id":"11"
+  },
+  {
+    "district_id":"117",
+    "district_name":"Huyện Lương Sơn",
+    "city_id":"11"
+  },
+  {
+    "district_id":"118",
+    "district_name":"Huyện Kim Bôi",
+    "city_id":"11"
+  },
+  {
+    "district_id":"119",
+    "district_name":"Huyện Cao Phong",
+    "city_id":"11"
+  },
+  {
+    "district_id":"120",
+    "district_name":"Huyện Tân Lạc",
+    "city_id":"11"
+  },
+  {
+    "district_id":"121",
+    "district_name":"Huyện Mai Châu",
+    "city_id":"11"
+  },
+  {
+    "district_id":"122",
+    "district_name":"Huyện Lạc Sơn",
+    "city_id":"11"
+  },
+  {
+    "district_id":"123",
+    "district_name":"Huyện Yên Thủy",
+    "city_id":"11"
+  },
+  {
+    "district_id":"124",
+    "district_name":"Huyện Lạc Thủy",
+    "city_id":"11"
+  },
+  {
+    "district_id":"125",
+    "district_name":"Thành phố Thái Nguyên",
+    "city_id":"12"
+  },
+  {
+    "district_id":"126",
+    "district_name":"Thành phố Sông Công",
+    "city_id":"12"
+  },
+  {
+    "district_id":"127",
+    "district_name":"Huyện Định Hóa",
+    "city_id":"12"
+  },
+  {
+    "district_id":"128",
+    "district_name":"Huyện Phú Lương",
+    "city_id":"12"
+  },
+  {
+    "district_id":"129",
+    "district_name":"Huyện Đồng Hỷ",
+    "city_id":"12"
+  },
+  {
+    "district_id":"130",
+    "district_name":"Huyện Võ Nhai",
+    "city_id":"12"
+  },
+  {
+    "district_id":"131",
+    "district_name":"Huyện Đại Từ",
+    "city_id":"12"
+  },
+  {
+    "district_id":"132",
+    "district_name":"Thành phố Phổ Yên",
+    "city_id":"12"
+  },
+  {
+    "district_id":"133",
+    "district_name":"Huyện Phú Bình",
+    "city_id":"12"
+  },
+  {
+    "district_id":"134",
+    "district_name":"Thành phố Lạng Sơn",
+    "city_id":"13"
+  },
+  {
+    "district_id":"135",
+    "district_name":"Huyện Tràng Định",
+    "city_id":"13"
+  },
+  {
+    "district_id":"136",
+    "district_name":"Huyện Bình Gia",
+    "city_id":"13"
+  },
+  {
+    "district_id":"137",
+    "district_name":"Huyện Văn Lãng",
+    "city_id":"13"
+  },
+  {
+    "district_id":"138",
+    "district_name":"Huyện Cao Lộc",
+    "city_id":"13"
+  },
+  {
+    "district_id":"139",
+    "district_name":"Huyện Văn Quan",
+    "city_id":"13"
+  },
+  {
+    "district_id":"140",
+    "district_name":"Huyện Bắc Sơn",
+    "city_id":"13"
+  },
+  {
+    "district_id":"141",
+    "district_name":"Huyện Hữu Lũng",
+    "city_id":"13"
+  },
+  {
+    "district_id":"142",
+    "district_name":"Huyện Chi Lăng",
+    "city_id":"13"
+  },
+  {
+    "district_id":"143",
+    "district_name":"Huyện Lộc Bình",
+    "city_id":"13"
+  },
+  {
+    "district_id":"144",
+    "district_name":"Huyện Đình Lập",
+    "city_id":"13"
+  },
+  {
+    "district_id":"145",
+    "district_name":"Thành phố Hạ Long",
+    "city_id":"14"
+  },
+  {
+    "district_id":"146",
+    "district_name":"Thành phố Móng Cái",
+    "city_id":"14"
+  },
+  {
+    "district_id":"147",
+    "district_name":"Thành phố Cẩm Phả",
+    "city_id":"14"
+  },
+  {
+    "district_id":"148",
+    "district_name":"Thành phố Uông Bí",
+    "city_id":"14"
+  },
+  {
+    "district_id":"149",
+    "district_name":"Huyện Bình Liêu",
+    "city_id":"14"
+  },
+  {
+    "district_id":"150",
+    "district_name":"Huyện Tiên Yên",
+    "city_id":"14"
+  },
+  {
+    "district_id":"151",
+    "district_name":"Huyện Đầm Hà",
+    "city_id":"14"
+  },
+  {
+    "district_id":"152",
+    "district_name":"Huyện Hải Hà",
+    "city_id":"14"
+  },
+  {
+    "district_id":"153",
+    "district_name":"Huyện Ba Chẽ",
+    "city_id":"14"
+  },
+  {
+    "district_id":"154",
+    "district_name":"Huyện Vân Đồn",
+    "city_id":"14"
+  },
+  {
+    "district_id":"155",
+    "district_name":"Thành phố Đông Triều",
+    "city_id":"14"
+  },
+  {
+    "district_id":"156",
+    "district_name":"Thị xã Quảng Yên",
+    "city_id":"14"
+  },
+  {
+    "district_id":"157",
+    "district_name":"Huyện Cô Tô",
+    "city_id":"14"
+  },
+  {
+    "district_id":"158",
+    "district_name":"Thành phố Bắc Giang",
+    "city_id":"15"
+  },
+  {
+    "district_id":"159",
+    "district_name":"Huyện Yên Thế",
+    "city_id":"15"
+  },
+  {
+    "district_id":"160",
+    "district_name":"Huyện Tân Yên",
+    "city_id":"15"
+  },
+  {
+    "district_id":"161",
+    "district_name":"Huyện Lạng Giang",
+    "city_id":"15"
+  },
+  {
+    "district_id":"162",
+    "district_name":"Huyện Lục Nam",
+    "city_id":"15"
+  },
+  {
+    "district_id":"163",
+    "district_name":"Huyện Lục Ngạn",
+    "city_id":"15"
+  },
+  {
+    "district_id":"164",
+    "district_name":"Huyện Sơn Động",
+    "city_id":"15"
+  },
+  {
+    "district_id":"165",
+    "district_name":"Thị Xã Việt Yên",
+    "city_id":"15"
+  },
+  {
+    "district_id":"166",
+    "district_name":"Huyện Hiệp Hòa",
+    "city_id":"15"
+  },
+  {
+    "district_id":"167",
+    "district_name":"Thị xã Chũ",
+    "city_id":"15"
+  },
+  {
+    "district_id":"168",
+    "district_name":"Thành phố Việt Trì",
+    "city_id":"16"
+  },
+  {
+    "district_id":"169",
+    "district_name":"Thị xã Phú Thọ",
+    "city_id":"16"
+  },
+  {
+    "district_id":"170",
+    "district_name":"Huyện Đoan Hùng",
+    "city_id":"16"
+  },
+  {
+    "district_id":"171",
+    "district_name":"Huyện Hạ Hoà",
+    "city_id":"16"
+  },
+  {
+    "district_id":"172",
+    "district_name":"Huyện Thanh Ba",
+    "city_id":"16"
+  },
+  {
+    "district_id":"173",
+    "district_name":"Huyện Phù Ninh",
+    "city_id":"16"
+  },
+  {
+    "district_id":"174",
+    "district_name":"Huyện Yên Lập",
+    "city_id":"16"
+  },
+  {
+    "district_id":"175",
+    "district_name":"Huyện Cẩm Khê",
+    "city_id":"16"
+  },
+  {
+    "district_id":"176",
+    "district_name":"Huyện Tam Nông",
+    "city_id":"16"
+  },
+  {
+    "district_id":"177",
+    "district_name":"Huyện Lâm Thao",
+    "city_id":"16"
+  },
+  {
+    "district_id":"178",
+    "district_name":"Huyện Thanh Sơn",
+    "city_id":"16"
+  },
+  {
+    "district_id":"179",
+    "district_name":"Huyện Thanh Thuỷ",
+    "city_id":"16"
+  },
+  {
+    "district_id":"180",
+    "district_name":"Huyện Tân Sơn",
+    "city_id":"16"
+  },
+  {
+    "district_id":"181",
+    "district_name":"Thành phố Vĩnh Yên",
+    "city_id":"17"
+  },
+  {
+    "district_id":"182",
+    "district_name":"Thành phố Phúc Yên",
+    "city_id":"17"
+  },
+  {
+    "district_id":"183",
+    "district_name":"Huyện Lập Thạch",
+    "city_id":"17"
+  },
+  {
+    "district_id":"184",
+    "district_name":"Huyện Tam Dương",
+    "city_id":"17"
+  },
+  {
+    "district_id":"185",
+    "district_name":"Huyện Tam Đảo",
+    "city_id":"17"
+  },
+  {
+    "district_id":"186",
+    "district_name":"Huyện Bình Xuyên",
+    "city_id":"17"
+  },
+  {
+    "district_id":"187",
+    "district_name":"Huyện Yên Lạc",
+    "city_id":"17"
+  },
+  {
+    "district_id":"188",
+    "district_name":"Huyện Vĩnh Tường",
+    "city_id":"17"
+  },
+  {
+    "district_id":"189",
+    "district_name":"Huyện Sông Lô",
+    "city_id":"17"
+  },
+  {
+    "district_id":"190",
+    "district_name":"Thành phố Bắc Ninh",
+    "city_id":"18"
+  },
+  {
+    "district_id":"191",
+    "district_name":"Huyện Yên Phong",
+    "city_id":"18"
+  },
+  {
+    "district_id":"192",
+    "district_name":"Thị xã Quế Võ",
+    "city_id":"18"
+  },
+  {
+    "district_id":"193",
+    "district_name":"Huyện Tiên Du",
+    "city_id":"18"
+  },
+  {
+    "district_id":"194",
+    "district_name":"Thành phố Từ Sơn",
+    "city_id":"18"
+  },
+  {
+    "district_id":"195",
+    "district_name":"Thị xã Thuận Thành",
+    "city_id":"18"
+  },
+  {
+    "district_id":"196",
+    "district_name":"Huyện Gia Bình",
+    "city_id":"18"
+  },
+  {
+    "district_id":"197",
+    "district_name":"Huyện Lương Tài",
+    "city_id":"18"
+  },
+  {
+    "district_id":"198",
+    "district_name":"Thành phố Hải Dương",
+    "city_id":"19"
+  },
+  {
+    "district_id":"199",
+    "district_name":"Thành phố Chí Linh",
+    "city_id":"19"
+  },
+  {
+    "district_id":"200",
+    "district_name":"Huyện Nam Sách",
+    "city_id":"19"
+  },
+  {
+    "district_id":"201",
+    "district_name":"Thị xã Kinh Môn",
+    "city_id":"19"
+  },
+  {
+    "district_id":"202",
+    "district_name":"Huyện Kim Thành",
+    "city_id":"19"
+  },
+  {
+    "district_id":"203",
+    "district_name":"Huyện Thanh Hà",
+    "city_id":"19"
+  },
+  {
+    "district_id":"204",
+    "district_name":"Huyện Cẩm Giàng",
+    "city_id":"19"
+  },
+  {
+    "district_id":"205",
+    "district_name":"Huyện Bình Giang",
+    "city_id":"19"
+  },
+  {
+    "district_id":"206",
+    "district_name":"Huyện Gia Lộc",
+    "city_id":"19"
+  },
+  {
+    "district_id":"207",
+    "district_name":"Huyện Tứ Kỳ",
+    "city_id":"19"
+  },
+  {
+    "district_id":"208",
+    "district_name":"Huyện Ninh Giang",
+    "city_id":"19"
+  },
+  {
+    "district_id":"209",
+    "district_name":"Huyện Thanh Miện",
+    "city_id":"19"
+  },
+  {
+    "district_id":"210",
+    "district_name":"Quận Hồng Bàng",
+    "city_id":"20"
+  },
+  {
+    "district_id":"211",
+    "district_name":"Quận Ngô Quyền",
+    "city_id":"20"
+  },
+  {
+    "district_id":"212",
+    "district_name":"Quận Lê Chân",
+    "city_id":"20"
+  },
+  {
+    "district_id":"213",
+    "district_name":"Quận Hải An",
+    "city_id":"20"
+  },
+  {
+    "district_id":"214",
+    "district_name":"Quận Kiến An",
+    "city_id":"20"
+  },
+  {
+    "district_id":"215",
+    "district_name":"Quận Đồ Sơn",
+    "city_id":"20"
+  },
+  {
+    "district_id":"216",
+    "district_name":"Quận Dương Kinh",
+    "city_id":"20"
+  },
+  {
+    "district_id":"217",
+    "district_name":"Thành phố Thuỷ Nguyên",
+    "city_id":"20"
+  },
+  {
+    "district_id":"218",
+    "district_name":"Quận An Dương",
+    "city_id":"20"
+  },
+  {
+    "district_id":"219",
+    "district_name":"Huyện An Lão",
+    "city_id":"20"
+  },
+  {
+    "district_id":"220",
+    "district_name":"Huyện Kiến Thuỵ",
+    "city_id":"20"
+  },
+  {
+    "district_id":"221",
+    "district_name":"Huyện Tiên Lãng",
+    "city_id":"20"
+  },
+  {
+    "district_id":"222",
+    "district_name":"Huyện Vĩnh Bảo",
+    "city_id":"20"
+  },
+  {
+    "district_id":"223",
+    "district_name":"Huyện Cát Hải",
+    "city_id":"20"
+  },
+  {
+    "district_id":"224",
+    "district_name":"Huyện Bạch Long Vĩ",
+    "city_id":"20"
+  },
+  {
+    "district_id":"225",
+    "district_name":"Thành phố Hưng Yên",
+    "city_id":"21"
+  },
+  {
+    "district_id":"226",
+    "district_name":"Huyện Văn Lâm",
+    "city_id":"21"
+  },
+  {
+    "district_id":"227",
+    "district_name":"Huyện Văn Giang",
+    "city_id":"21"
+  },
+  {
+    "district_id":"228",
+    "district_name":"Huyện Yên Mỹ",
+    "city_id":"21"
+  },
+  {
+    "district_id":"229",
+    "district_name":"Thị xã Mỹ Hào",
+    "city_id":"21"
+  },
+  {
+    "district_id":"230",
+    "district_name":"Huyện Ân Thi",
+    "city_id":"21"
+  },
+  {
+    "district_id":"231",
+    "district_name":"Huyện Khoái Châu",
+    "city_id":"21"
+  },
+  {
+    "district_id":"232",
+    "district_name":"Huyện Kim Động",
+    "city_id":"21"
+  },
+  {
+    "district_id":"233",
+    "district_name":"Huyện Tiên Lữ",
+    "city_id":"21"
+  },
+  {
+    "district_id":"234",
+    "district_name":"Huyện Phù Cừ",
+    "city_id":"21"
+  },
+  {
+    "district_id":"235",
+    "district_name":"Thành phố Thái Bình",
+    "city_id":"22"
+  },
+  {
+    "district_id":"236",
+    "district_name":"Huyện Quỳnh Phụ",
+    "city_id":"22"
+  },
+  {
+    "district_id":"237",
+    "district_name":"Huyện Hưng Hà",
+    "city_id":"22"
+  },
+  {
+    "district_id":"238",
+    "district_name":"Huyện Đông Hưng",
+    "city_id":"22"
+  },
+  {
+    "district_id":"239",
+    "district_name":"Huyện Thái Thụy",
+    "city_id":"22"
+  },
+  {
+    "district_id":"240",
+    "district_name":"Huyện Tiền Hải",
+    "city_id":"22"
+  },
+  {
+    "district_id":"241",
+    "district_name":"Huyện Kiến Xương",
+    "city_id":"22"
+  },
+  {
+    "district_id":"242",
+    "district_name":"Huyện Vũ Thư",
+    "city_id":"22"
+  },
+  {
+    "district_id":"243",
+    "district_name":"Thành phố Phủ Lý",
+    "city_id":"23"
+  },
+  {
+    "district_id":"244",
+    "district_name":"Thị xã Duy Tiên",
+    "city_id":"23"
+  },
+  {
+    "district_id":"245",
+    "district_name":"Thị xã Kim Bảng",
+    "city_id":"23"
+  },
+  {
+    "district_id":"246",
+    "district_name":"Huyện Thanh Liêm",
+    "city_id":"23"
+  },
+  {
+    "district_id":"247",
+    "district_name":"Huyện Bình Lục",
+    "city_id":"23"
+  },
+  {
+    "district_id":"248",
+    "district_name":"Huyện Lý Nhân",
+    "city_id":"23"
+  },
+  {
+    "district_id":"249",
+    "district_name":"Thành phố Nam Định",
+    "city_id":"24"
+  },
+  {
+    "district_id":"250",
+    "district_name":"Huyện Vụ Bản",
+    "city_id":"24"
+  },
+  {
+    "district_id":"251",
+    "district_name":"Huyện Ý Yên",
+    "city_id":"24"
+  },
+  {
+    "district_id":"252",
+    "district_name":"Huyện Nghĩa Hưng",
+    "city_id":"24"
+  },
+  {
+    "district_id":"253",
+    "district_name":"Huyện Nam Trực",
+    "city_id":"24"
+  },
+  {
+    "district_id":"254",
+    "district_name":"Huyện Trực Ninh",
+    "city_id":"24"
+  },
+  {
+    "district_id":"255",
+    "district_name":"Huyện Xuân Trường",
+    "city_id":"24"
+  },
+  {
+    "district_id":"256",
+    "district_name":"Huyện Giao Thủy",
+    "city_id":"24"
+  },
+  {
+    "district_id":"257",
+    "district_name":"Huyện Hải Hậu",
+    "city_id":"24"
+  },
+  {
+    "district_id":"258",
+    "district_name":"Thành phố Tam Điệp",
+    "city_id":"25"
+  },
+  {
+    "district_id":"259",
+    "district_name":"Huyện Nho Quan",
+    "city_id":"25"
+  },
+  {
+    "district_id":"260",
+    "district_name":"Huyện Gia Viễn",
+    "city_id":"25"
+  },
+  {
+    "district_id":"261",
+    "district_name":"Thành phố Hoa Lư",
+    "city_id":"25"
+  },
+  {
+    "district_id":"262",
+    "district_name":"Huyện Yên Khánh",
+    "city_id":"25"
+  },
+  {
+    "district_id":"263",
+    "district_name":"Huyện Kim Sơn",
+    "city_id":"25"
+  },
+  {
+    "district_id":"264",
+    "district_name":"Huyện Yên Mô",
+    "city_id":"25"
+  },
+  {
+    "district_id":"265",
+    "district_name":"Thành phố Thanh Hóa",
+    "city_id":"26"
+  },
+  {
+    "district_id":"266",
+    "district_name":"Thị xã Bỉm Sơn",
+    "city_id":"26"
+  },
+  {
+    "district_id":"267",
+    "district_name":"Thành phố Sầm Sơn",
+    "city_id":"26"
+  },
+  {
+    "district_id":"268",
+    "district_name":"Huyện Mường Lát",
+    "city_id":"26"
+  },
+  {
+    "district_id":"269",
+    "district_name":"Huyện Quan Hóa",
+    "city_id":"26"
+  },
+  {
+    "district_id":"270",
+    "district_name":"Huyện Bá Thước",
+    "city_id":"26"
+  },
+  {
+    "district_id":"271",
+    "district_name":"Huyện Quan Sơn",
+    "city_id":"26"
+  },
+  {
+    "district_id":"272",
+    "district_name":"Huyện Lang Chánh",
+    "city_id":"26"
+  },
+  {
+    "district_id":"273",
+    "district_name":"Huyện Ngọc Lặc",
+    "city_id":"26"
+  },
+  {
+    "district_id":"274",
+    "district_name":"Huyện Cẩm Thủy",
+    "city_id":"26"
+  },
+  {
+    "district_id":"275",
+    "district_name":"Huyện Thạch Thành",
+    "city_id":"26"
+  },
+  {
+    "district_id":"276",
+    "district_name":"Huyện Hà Trung",
+    "city_id":"26"
+  },
+  {
+    "district_id":"277",
+    "district_name":"Huyện Vĩnh Lộc",
+    "city_id":"26"
+  },
+  {
+    "district_id":"278",
+    "district_name":"Huyện Yên Định",
+    "city_id":"26"
+  },
+  {
+    "district_id":"279",
+    "district_name":"Huyện Thọ Xuân",
+    "city_id":"26"
+  },
+  {
+    "district_id":"280",
+    "district_name":"Huyện Thường Xuân",
+    "city_id":"26"
+  },
+  {
+    "district_id":"281",
+    "district_name":"Huyện Triệu Sơn",
+    "city_id":"26"
+  },
+  {
+    "district_id":"282",
+    "district_name":"Huyện Thiệu Hóa",
+    "city_id":"26"
+  },
+  {
+    "district_id":"283",
+    "district_name":"Huyện Hoằng Hóa",
+    "city_id":"26"
+  },
+  {
+    "district_id":"284",
+    "district_name":"Huyện Hậu Lộc",
+    "city_id":"26"
+  },
+  {
+    "district_id":"285",
+    "district_name":"Huyện Nga Sơn",
+    "city_id":"26"
+  },
+  {
+    "district_id":"286",
+    "district_name":"Huyện Như Xuân",
+    "city_id":"26"
+  },
+  {
+    "district_id":"287",
+    "district_name":"Huyện Như Thanh",
+    "city_id":"26"
+  },
+  {
+    "district_id":"288",
+    "district_name":"Huyện Nông Cống",
+    "city_id":"26"
+  },
+  {
+    "district_id":"289",
+    "district_name":"Huyện Quảng Xương",
+    "city_id":"26"
+  },
+  {
+    "district_id":"290",
+    "district_name":"Thị xã Nghi Sơn",
+    "city_id":"26"
+  },
+  {
+    "district_id":"291",
+    "district_name":"Thành phố Vinh",
+    "city_id":"27"
+  },
+  {
+    "district_id":"292",
+    "district_name":"Thị xã Thái Hoà",
+    "city_id":"27"
+  },
+  {
+    "district_id":"293",
+    "district_name":"Huyện Quế Phong",
+    "city_id":"27"
+  },
+  {
+    "district_id":"294",
+    "district_name":"Huyện Quỳ Châu",
+    "city_id":"27"
+  },
+  {
+    "district_id":"295",
+    "district_name":"Huyện Kỳ Sơn",
+    "city_id":"27"
+  },
+  {
+    "district_id":"296",
+    "district_name":"Huyện Tương Dương",
+    "city_id":"27"
+  },
+  {
+    "district_id":"297",
+    "district_name":"Huyện Nghĩa Đàn",
+    "city_id":"27"
+  },
+  {
+    "district_id":"298",
+    "district_name":"Huyện Quỳ Hợp",
+    "city_id":"27"
+  },
+  {
+    "district_id":"299",
+    "district_name":"Huyện Quỳnh Lưu",
+    "city_id":"27"
+  },
+  {
+    "district_id":"300",
+    "district_name":"Huyện Con Cuông",
+    "city_id":"27"
+  },
+  {
+    "district_id":"301",
+    "district_name":"Huyện Tân Kỳ",
+    "city_id":"27"
+  },
+  {
+    "district_id":"302",
+    "district_name":"Huyện Anh Sơn",
+    "city_id":"27"
+  },
+  {
+    "district_id":"303",
+    "district_name":"Huyện Diễn Châu",
+    "city_id":"27"
+  },
+  {
+    "district_id":"304",
+    "district_name":"Huyện Yên Thành",
+    "city_id":"27"
+  },
+  {
+    "district_id":"305",
+    "district_name":"Huyện Đô Lương",
+    "city_id":"27"
+  },
+  {
+    "district_id":"306",
+    "district_name":"Huyện Thanh Chương",
+    "city_id":"27"
+  },
+  {
+    "district_id":"307",
+    "district_name":"Huyện Nghi Lộc",
+    "city_id":"27"
+  },
+  {
+    "district_id":"308",
+    "district_name":"Huyện Nam Đàn",
+    "city_id":"27"
+  },
+  {
+    "district_id":"309",
+    "district_name":"Huyện Hưng Nguyên",
+    "city_id":"27"
+  },
+  {
+    "district_id":"310",
+    "district_name":"Thị xã Hoàng Mai",
+    "city_id":"27"
+  },
+  {
+    "district_id":"311",
+    "district_name":"Thành phố Hà Tĩnh",
+    "city_id":"28"
+  },
+  {
+    "district_id":"312",
+    "district_name":"Thị xã Hồng Lĩnh",
+    "city_id":"28"
+  },
+  {
+    "district_id":"313",
+    "district_name":"Huyện Hương Sơn",
+    "city_id":"28"
+  },
+  {
+    "district_id":"314",
+    "district_name":"Huyện Đức Thọ",
+    "city_id":"28"
+  },
+  {
+    "district_id":"315",
+    "district_name":"Huyện Vũ Quang",
+    "city_id":"28"
+  },
+  {
+    "district_id":"316",
+    "district_name":"Huyện Nghi Xuân",
+    "city_id":"28"
+  },
+  {
+    "district_id":"317",
+    "district_name":"Huyện Can Lộc",
+    "city_id":"28"
+  },
+  {
+    "district_id":"318",
+    "district_name":"Huyện Hương Khê",
+    "city_id":"28"
+  },
+  {
+    "district_id":"319",
+    "district_name":"Huyện Thạch Hà",
+    "city_id":"28"
+  },
+  {
+    "district_id":"320",
+    "district_name":"Huyện Cẩm Xuyên",
+    "city_id":"28"
+  },
+  {
+    "district_id":"321",
+    "district_name":"Huyện Kỳ Anh",
+    "city_id":"28"
+  },
+  {
+    "district_id":"322",
+    "district_name":"Thị xã Kỳ Anh",
+    "city_id":"28"
+  },
+  {
+    "district_id":"323",
+    "district_name":"Thành Phố Đồng Hới",
+    "city_id":"29"
+  },
+  {
+    "district_id":"324",
+    "district_name":"Huyện Minh Hóa",
+    "city_id":"29"
+  },
+  {
+    "district_id":"325",
+    "district_name":"Huyện Tuyên Hóa",
+    "city_id":"29"
+  },
+  {
+    "district_id":"326",
+    "district_name":"Huyện Quảng Trạch",
+    "city_id":"29"
+  },
+  {
+    "district_id":"327",
+    "district_name":"Huyện Bố Trạch",
+    "city_id":"29"
+  },
+  {
+    "district_id":"328",
+    "district_name":"Huyện Quảng Ninh",
+    "city_id":"29"
+  },
+  {
+    "district_id":"329",
+    "district_name":"Huyện Lệ Thủy",
+    "city_id":"29"
+  },
+  {
+    "district_id":"330",
+    "district_name":"Thị xã Ba Đồn",
+    "city_id":"29"
+  },
+  {
+    "district_id":"331",
+    "district_name":"Thành phố Đông Hà",
+    "city_id":"30"
+  },
+  {
+    "district_id":"332",
+    "district_name":"Thị xã Quảng Trị",
+    "city_id":"30"
+  },
+  {
+    "district_id":"333",
+    "district_name":"Huyện Vĩnh Linh",
+    "city_id":"30"
+  },
+  {
+    "district_id":"334",
+    "district_name":"Huyện Hướng Hóa",
+    "city_id":"30"
+  },
+  {
+    "district_id":"335",
+    "district_name":"Huyện Gio Linh",
+    "city_id":"30"
+  },
+  {
+    "district_id":"336",
+    "district_name":"Huyện Đa Krông",
+    "city_id":"30"
+  },
+  {
+    "district_id":"337",
+    "district_name":"Huyện Cam Lộ",
+    "city_id":"30"
+  },
+  {
+    "district_id":"338",
+    "district_name":"Huyện Triệu Phong",
+    "city_id":"30"
+  },
+  {
+    "district_id":"339",
+    "district_name":"Huyện Hải Lăng",
+    "city_id":"30"
+  },
+  {
+    "district_id":"340",
+    "district_name":"Huyện Cồn Cỏ",
+    "city_id":"30"
+  },
+  {
+    "district_id":"341",
+    "district_name":"Quận Thuận Hóa",
+    "city_id":"31"
+  },
+  {
+    "district_id":"342",
+    "district_name":"Quận Phú Xuân",
+    "city_id":"31"
+  },
+  {
+    "district_id":"343",
+    "district_name":"Thị xã Phong Điền",
+    "city_id":"31"
+  },
+  {
+    "district_id":"344",
+    "district_name":"Huyện Quảng Điền",
+    "city_id":"31"
+  },
+  {
+    "district_id":"345",
+    "district_name":"Huyện Phú Vang",
+    "city_id":"31"
+  },
+  {
+    "district_id":"346",
+    "district_name":"Thị xã Hương Thủy",
+    "city_id":"31"
+  },
+  {
+    "district_id":"347",
+    "district_name":"Thị xã Hương Trà",
+    "city_id":"31"
+  },
+  {
+    "district_id":"348",
+    "district_name":"Huyện A Lưới",
+    "city_id":"31"
+  },
+  {
+    "district_id":"349",
+    "district_name":"Huyện Phú Lộc",
+    "city_id":"31"
+  },
+  {
+    "district_id":"350",
+    "district_name":"Quận Liên Chiểu",
+    "city_id":"32"
+  },
+  {
+    "district_id":"351",
+    "district_name":"Quận Thanh Khê",
+    "city_id":"32"
+  },
+  {
+    "district_id":"352",
+    "district_name":"Quận Hải Châu",
+    "city_id":"32"
+  },
+  {
+    "district_id":"353",
+    "district_name":"Quận Sơn Trà",
+    "city_id":"32"
+  },
+  {
+    "district_id":"354",
+    "district_name":"Quận Ngũ Hành Sơn",
+    "city_id":"32"
+  },
+  {
+    "district_id":"355",
+    "district_name":"Quận Cẩm Lệ",
+    "city_id":"32"
+  },
+  {
+    "district_id":"356",
+    "district_name":"Huyện Hòa Vang",
+    "city_id":"32"
+  },
+  {
+    "district_id":"357",
+    "district_name":"Huyện Hoàng Sa",
+    "city_id":"32"
+  },
+  {
+    "district_id":"358",
+    "district_name":"Thành phố Tam Kỳ",
+    "city_id":"33"
+  },
+  {
+    "district_id":"359",
+    "district_name":"Thành phố Hội An",
+    "city_id":"33"
+  },
+  {
+    "district_id":"360",
+    "district_name":"Huyện Tây Giang",
+    "city_id":"33"
+  },
+  {
+    "district_id":"361",
+    "district_name":"Huyện Đông Giang",
+    "city_id":"33"
+  },
+  {
+    "district_id":"362",
+    "district_name":"Huyện Đại Lộc",
+    "city_id":"33"
+  },
+  {
+    "district_id":"363",
+    "district_name":"Thị xã Điện Bàn",
+    "city_id":"33"
+  },
+  {
+    "district_id":"364",
+    "district_name":"Huyện Duy Xuyên",
+    "city_id":"33"
+  },
+  {
+    "district_id":"365",
+    "district_name":"Huyện Quế Sơn",
+    "city_id":"33"
+  },
+  {
+    "district_id":"366",
+    "district_name":"Huyện Nam Giang",
+    "city_id":"33"
+  },
+  {
+    "district_id":"367",
+    "district_name":"Huyện Phước Sơn",
+    "city_id":"33"
+  },
+  {
+    "district_id":"368",
+    "district_name":"Huyện Hiệp Đức",
+    "city_id":"33"
+  },
+  {
+    "district_id":"369",
+    "district_name":"Huyện Thăng Bình",
+    "city_id":"33"
+  },
+  {
+    "district_id":"370",
+    "district_name":"Huyện Tiên Phước",
+    "city_id":"33"
+  },
+  {
+    "district_id":"371",
+    "district_name":"Huyện Bắc Trà My",
+    "city_id":"33"
+  },
+  {
+    "district_id":"372",
+    "district_name":"Huyện Nam Trà My",
+    "city_id":"33"
+  },
+  {
+    "district_id":"373",
+    "district_name":"Huyện Núi Thành",
+    "city_id":"33"
+  },
+  {
+    "district_id":"374",
+    "district_name":"Huyện Phú Ninh",
+    "city_id":"33"
+  },
+  {
+    "district_id":"375",
+    "district_name":"Thành phố Quảng Ngãi",
+    "city_id":"34"
+  },
+  {
+    "district_id":"376",
+    "district_name":"Huyện Bình Sơn",
+    "city_id":"34"
+  },
+  {
+    "district_id":"377",
+    "district_name":"Huyện Trà Bồng",
+    "city_id":"34"
+  },
+  {
+    "district_id":"378",
+    "district_name":"Huyện Sơn Tịnh",
+    "city_id":"34"
+  },
+  {
+    "district_id":"379",
+    "district_name":"Huyện Tư Nghĩa",
+    "city_id":"34"
+  },
+  {
+    "district_id":"380",
+    "district_name":"Huyện Sơn Hà",
+    "city_id":"34"
+  },
+  {
+    "district_id":"381",
+    "district_name":"Huyện Sơn Tây",
+    "city_id":"34"
+  },
+  {
+    "district_id":"382",
+    "district_name":"Huyện Minh Long",
+    "city_id":"34"
+  },
+  {
+    "district_id":"383",
+    "district_name":"Huyện Nghĩa Hành",
+    "city_id":"34"
+  },
+  {
+    "district_id":"384",
+    "district_name":"Huyện Mộ Đức",
+    "city_id":"34"
+  },
+  {
+    "district_id":"385",
+    "district_name":"Thị xã Đức Phổ",
+    "city_id":"34"
+  },
+  {
+    "district_id":"386",
+    "district_name":"Huyện Ba Tơ",
+    "city_id":"34"
+  },
+  {
+    "district_id":"387",
+    "district_name":"Huyện Lý Sơn",
+    "city_id":"34"
+  },
+  {
+    "district_id":"388",
+    "district_name":"Thành phố Quy Nhơn",
+    "city_id":"35"
+  },
+  {
+    "district_id":"389",
+    "district_name":"Huyện An Lão",
+    "city_id":"35"
+  },
+  {
+    "district_id":"390",
+    "district_name":"Thị xã Hoài Nhơn",
+    "city_id":"35"
+  },
+  {
+    "district_id":"391",
+    "district_name":"Huyện Hoài Ân",
+    "city_id":"35"
+  },
+  {
+    "district_id":"392",
+    "district_name":"Huyện Phù Mỹ",
+    "city_id":"35"
+  },
+  {
+    "district_id":"393",
+    "district_name":"Huyện Vĩnh Thạnh",
+    "city_id":"35"
+  },
+  {
+    "district_id":"394",
+    "district_name":"Huyện Tây Sơn",
+    "city_id":"35"
+  },
+  {
+    "district_id":"395",
+    "district_name":"Huyện Phù Cát",
+    "city_id":"35"
+  },
+  {
+    "district_id":"396",
+    "district_name":"Thị xã An Nhơn",
+    "city_id":"35"
+  },
+  {
+    "district_id":"397",
+    "district_name":"Huyện Tuy Phước",
+    "city_id":"35"
+  },
+  {
+    "district_id":"398",
+    "district_name":"Huyện Vân Canh",
+    "city_id":"35"
+  },
+  {
+    "district_id":"399",
+    "district_name":"Thành phố Tuy Hoà",
+    "city_id":"36"
+  },
+  {
+    "district_id":"400",
+    "district_name":"Thị xã Sông Cầu",
+    "city_id":"36"
+  },
+  {
+    "district_id":"401",
+    "district_name":"Huyện Đồng Xuân",
+    "city_id":"36"
+  },
+  {
+    "district_id":"402",
+    "district_name":"Huyện Tuy An",
+    "city_id":"36"
+  },
+  {
+    "district_id":"403",
+    "district_name":"Huyện Sơn Hòa",
+    "city_id":"36"
+  },
+  {
+    "district_id":"404",
+    "district_name":"Huyện Sông Hinh",
+    "city_id":"36"
+  },
+  {
+    "district_id":"405",
+    "district_name":"Huyện Tây Hoà",
+    "city_id":"36"
+  },
+  {
+    "district_id":"406",
+    "district_name":"Huyện Phú Hoà",
+    "city_id":"36"
+  },
+  {
+    "district_id":"407",
+    "district_name":"Thị xã Đông Hòa",
+    "city_id":"36"
+  },
+  {
+    "district_id":"408",
+    "district_name":"Thành phố Nha Trang",
+    "city_id":"37"
+  },
+  {
+    "district_id":"409",
+    "district_name":"Thành phố Cam Ranh",
+    "city_id":"37"
+  },
+  {
+    "district_id":"410",
+    "district_name":"Huyện Cam Lâm",
+    "city_id":"37"
+  },
+  {
+    "district_id":"411",
+    "district_name":"Huyện Vạn Ninh",
+    "city_id":"37"
+  },
+  {
+    "district_id":"412",
+    "district_name":"Thị xã Ninh Hòa",
+    "city_id":"37"
+  },
+  {
+    "district_id":"413",
+    "district_name":"Huyện Khánh Vĩnh",
+    "city_id":"37"
+  },
+  {
+    "district_id":"414",
+    "district_name":"Huyện Diên Khánh",
+    "city_id":"37"
+  },
+  {
+    "district_id":"415",
+    "district_name":"Huyện Khánh Sơn",
+    "city_id":"37"
+  },
+  {
+    "district_id":"416",
+    "district_name":"Huyện Trường Sa",
+    "city_id":"37"
+  },
+  {
+    "district_id":"417",
+    "district_name":"Thành phố Phan Rang-Tháp Chàm",
+    "city_id":"38"
+  },
+  {
+    "district_id":"418",
+    "district_name":"Huyện Bác Ái",
+    "city_id":"38"
+  },
+  {
+    "district_id":"419",
+    "district_name":"Huyện Ninh Sơn",
+    "city_id":"38"
+  },
+  {
+    "district_id":"420",
+    "district_name":"Huyện Ninh Hải",
+    "city_id":"38"
+  },
+  {
+    "district_id":"421",
+    "district_name":"Huyện Ninh Phước",
+    "city_id":"38"
+  },
+  {
+    "district_id":"422",
+    "district_name":"Huyện Thuận Bắc",
+    "city_id":"38"
+  },
+  {
+    "district_id":"423",
+    "district_name":"Huyện Thuận Nam",
+    "city_id":"38"
+  },
+  {
+    "district_id":"424",
+    "district_name":"Thành phố Phan Thiết",
+    "city_id":"39"
+  },
+  {
+    "district_id":"425",
+    "district_name":"Thị xã La Gi",
+    "city_id":"39"
+  },
+  {
+    "district_id":"426",
+    "district_name":"Huyện Tuy Phong",
+    "city_id":"39"
+  },
+  {
+    "district_id":"427",
+    "district_name":"Huyện Bắc Bình",
+    "city_id":"39"
+  },
+  {
+    "district_id":"428",
+    "district_name":"Huyện Hàm Thuận Bắc",
+    "city_id":"39"
+  },
+  {
+    "district_id":"429",
+    "district_name":"Huyện Hàm Thuận Nam",
+    "city_id":"39"
+  },
+  {
+    "district_id":"430",
+    "district_name":"Huyện Tánh Linh",
+    "city_id":"39"
+  },
+  {
+    "district_id":"431",
+    "district_name":"Huyện Đức Linh",
+    "city_id":"39"
+  },
+  {
+    "district_id":"432",
+    "district_name":"Huyện Hàm Tân",
+    "city_id":"39"
+  },
+  {
+    "district_id":"433",
+    "district_name":"Huyện Phú Quí",
+    "city_id":"39"
+  },
+  {
+    "district_id":"434",
+    "district_name":"Thành phố Kon Tum",
+    "city_id":"40"
+  },
+  {
+    "district_id":"435",
+    "district_name":"Huyện Đắk Glei",
+    "city_id":"40"
+  },
+  {
+    "district_id":"436",
+    "district_name":"Huyện Ngọc Hồi",
+    "city_id":"40"
+  },
+  {
+    "district_id":"437",
+    "district_name":"Huyện Đắk Tô",
+    "city_id":"40"
+  },
+  {
+    "district_id":"438",
+    "district_name":"Huyện Kon Plông",
+    "city_id":"40"
+  },
+  {
+    "district_id":"439",
+    "district_name":"Huyện Kon Rẫy",
+    "city_id":"40"
+  },
+  {
+    "district_id":"440",
+    "district_name":"Huyện Đắk Hà",
+    "city_id":"40"
+  },
+  {
+    "district_id":"441",
+    "district_name":"Huyện Sa Thầy",
+    "city_id":"40"
+  },
+  {
+    "district_id":"442",
+    "district_name":"Huyện Tu Mơ Rông",
+    "city_id":"40"
+  },
+  {
+    "district_id":"443",
+    "district_name":"Huyện Ia H’ Drai",
+    "city_id":"40"
+  },
+  {
+    "district_id":"444",
+    "district_name":"Thành phố Pleiku",
+    "city_id":"41"
+  },
+  {
+    "district_id":"445",
+    "district_name":"Thị xã An Khê",
+    "city_id":"41"
+  },
+  {
+    "district_id":"446",
+    "district_name":"Thị xã Ayun Pa",
+    "city_id":"41"
+  },
+  {
+    "district_id":"447",
+    "district_name":"Huyện KBang",
+    "city_id":"41"
+  },
+  {
+    "district_id":"448",
+    "district_name":"Huyện Đăk Đoa",
+    "city_id":"41"
+  },
+  {
+    "district_id":"449",
+    "district_name":"Huyện Chư Păh",
+    "city_id":"41"
+  },
+  {
+    "district_id":"450",
+    "district_name":"Huyện Ia Grai",
+    "city_id":"41"
+  },
+  {
+    "district_id":"451",
+    "district_name":"Huyện Mang Yang",
+    "city_id":"41"
+  },
+  {
+    "district_id":"452",
+    "district_name":"Huyện Kông Chro",
+    "city_id":"41"
+  },
+  {
+    "district_id":"453",
+    "district_name":"Huyện Đức Cơ",
+    "city_id":"41"
+  },
+  {
+    "district_id":"454",
+    "district_name":"Huyện Chư Prông",
+    "city_id":"41"
+  },
+  {
+    "district_id":"455",
+    "district_name":"Huyện Chư Sê",
+    "city_id":"41"
+  },
+  {
+    "district_id":"456",
+    "district_name":"Huyện Đăk Pơ",
+    "city_id":"41"
+  },
+  {
+    "district_id":"457",
+    "district_name":"Huyện Ia Pa",
+    "city_id":"41"
+  },
+  {
+    "district_id":"458",
+    "district_name":"Huyện Krông Pa",
+    "city_id":"41"
+  },
+  {
+    "district_id":"459",
+    "district_name":"Huyện Phú Thiện",
+    "city_id":"41"
+  },
+  {
+    "district_id":"460",
+    "district_name":"Huyện Chư Pưh",
+    "city_id":"41"
+  },
+  {
+    "district_id":"461",
+    "district_name":"Thành phố Buôn Ma Thuột",
+    "city_id":"42"
+  },
+  {
+    "district_id":"462",
+    "district_name":"Thị Xã Buôn Hồ",
+    "city_id":"42"
+  },
+  {
+    "district_id":"463",
+    "district_name":"Huyện Ea H’leo",
+    "city_id":"42"
+  },
+  {
+    "district_id":"464",
+    "district_name":"Huyện Ea Súp",
+    "city_id":"42"
+  },
+  {
+    "district_id":"465",
+    "district_name":"Huyện Buôn Đôn",
+    "city_id":"42"
+  },
+  {
+    "district_id":"466",
+    "district_name":"Huyện Cư M’gar",
+    "city_id":"42"
+  },
+  {
+    "district_id":"467",
+    "district_name":"Huyện Krông Búk",
+    "city_id":"42"
+  },
+  {
+    "district_id":"468",
+    "district_name":"Huyện Krông Năng",
+    "city_id":"42"
+  },
+  {
+    "district_id":"469",
+    "district_name":"Huyện Ea Kar",
+    "city_id":"42"
+  },
+  {
+    "district_id":"470",
+    "district_name":"Huyện M’Đrắk",
+    "city_id":"42"
+  },
+  {
+    "district_id":"471",
+    "district_name":"Huyện Krông Bông",
+    "city_id":"42"
+  },
+  {
+    "district_id":"472",
+    "district_name":"Huyện Krông Pắc",
+    "city_id":"42"
+  },
+  {
+    "district_id":"473",
+    "district_name":"Huyện Krông A Na",
+    "city_id":"42"
+  },
+  {
+    "district_id":"474",
+    "district_name":"Huyện Lắk",
+    "city_id":"42"
+  },
+  {
+    "district_id":"475",
+    "district_name":"Huyện Cư Kuin",
+    "city_id":"42"
+  },
+  {
+    "district_id":"476",
+    "district_name":"Thành phố Gia Nghĩa",
+    "city_id":"43"
+  },
+  {
+    "district_id":"477",
+    "district_name":"Huyện Đăk Glong",
+    "city_id":"43"
+  },
+  {
+    "district_id":"478",
+    "district_name":"Huyện Cư Jút",
+    "city_id":"43"
+  },
+  {
+    "district_id":"479",
+    "district_name":"Huyện Đắk Mil",
+    "city_id":"43"
+  },
+  {
+    "district_id":"480",
+    "district_name":"Huyện Krông Nô",
+    "city_id":"43"
+  },
+  {
+    "district_id":"481",
+    "district_name":"Huyện Đắk Song",
+    "city_id":"43"
+  },
+  {
+    "district_id":"482",
+    "district_name":"Huyện Đắk R’Lấp",
+    "city_id":"43"
+  },
+  {
+    "district_id":"483",
+    "district_name":"Huyện Tuy Đức",
+    "city_id":"43"
+  },
+  {
+    "district_id":"484",
+    "district_name":"Thành phố Đà Lạt",
+    "city_id":"44"
+  },
+  {
+    "district_id":"485",
+    "district_name":"Thành phố Bảo Lộc",
+    "city_id":"44"
+  },
+  {
+    "district_id":"486",
+    "district_name":"Huyện Đam Rông",
+    "city_id":"44"
+  },
+  {
+    "district_id":"487",
+    "district_name":"Huyện Lạc Dương",
+    "city_id":"44"
+  },
+  {
+    "district_id":"488",
+    "district_name":"Huyện Lâm Hà",
+    "city_id":"44"
+  },
+  {
+    "district_id":"489",
+    "district_name":"Huyện Đơn Dương",
+    "city_id":"44"
+  },
+  {
+    "district_id":"490",
+    "district_name":"Huyện Đức Trọng",
+    "city_id":"44"
+  },
+  {
+    "district_id":"491",
+    "district_name":"Huyện Di Linh",
+    "city_id":"44"
+  },
+  {
+    "district_id":"492",
+    "district_name":"Huyện Bảo Lâm",
+    "city_id":"44"
+  },
+  {
+    "district_id":"493",
+    "district_name":"Huyện Đạ Huoai",
+    "city_id":"44"
+  },
+  {
+    "district_id":"494",
+    "district_name":"Thị xã Phước Long",
+    "city_id":"45"
+  },
+  {
+    "district_id":"495",
+    "district_name":"Thành phố Đồng Xoài",
+    "city_id":"45"
+  },
+  {
+    "district_id":"496",
+    "district_name":"Thị xã Bình Long",
+    "city_id":"45"
+  },
+  {
+    "district_id":"497",
+    "district_name":"Huyện Bù Gia Mập",
+    "city_id":"45"
+  },
+  {
+    "district_id":"498",
+    "district_name":"Huyện Lộc Ninh",
+    "city_id":"45"
+  },
+  {
+    "district_id":"499",
+    "district_name":"Huyện Bù Đốp",
+    "city_id":"45"
+  },
+  {
+    "district_id":"500",
+    "district_name":"Huyện Hớn Quản",
+    "city_id":"45"
+  },
+  {
+    "district_id":"501",
+    "district_name":"Huyện Đồng Phú",
+    "city_id":"45"
+  },
+  {
+    "district_id":"502",
+    "district_name":"Huyện Bù Đăng",
+    "city_id":"45"
+  },
+  {
+    "district_id":"503",
+    "district_name":"Thị xã Chơn Thành",
+    "city_id":"45"
+  },
+  {
+    "district_id":"504",
+    "district_name":"Huyện Phú Riềng",
+    "city_id":"45"
+  },
+  {
+    "district_id":"505",
+    "district_name":"Thành phố Tây Ninh",
+    "city_id":"46"
+  },
+  {
+    "district_id":"506",
+    "district_name":"Huyện Tân Biên",
+    "city_id":"46"
+  },
+  {
+    "district_id":"507",
+    "district_name":"Huyện Tân Châu",
+    "city_id":"46"
+  },
+  {
+    "district_id":"508",
+    "district_name":"Huyện Dương Minh Châu",
+    "city_id":"46"
+  },
+  {
+    "district_id":"509",
+    "district_name":"Huyện Châu Thành",
+    "city_id":"46"
+  },
+  {
+    "district_id":"510",
+    "district_name":"Thị xã Hòa Thành",
+    "city_id":"46"
+  },
+  {
+    "district_id":"511",
+    "district_name":"Huyện Gò Dầu",
+    "city_id":"46"
+  },
+  {
+    "district_id":"512",
+    "district_name":"Huyện Bến Cầu",
+    "city_id":"46"
+  },
+  {
+    "district_id":"513",
+    "district_name":"Thị xã Trảng Bàng",
+    "city_id":"46"
+  },
+  {
+    "district_id":"514",
+    "district_name":"Thành phố Thủ Dầu Một",
+    "city_id":"47"
+  },
+  {
+    "district_id":"515",
+    "district_name":"Huyện Bàu Bàng",
+    "city_id":"47"
+  },
+  {
+    "district_id":"516",
+    "district_name":"Huyện Dầu Tiếng",
+    "city_id":"47"
+  },
+  {
+    "district_id":"517",
+    "district_name":"Thành phố Bến Cát",
+    "city_id":"47"
+  },
+  {
+    "district_id":"518",
+    "district_name":"Huyện Phú Giáo",
+    "city_id":"47"
+  },
+  {
+    "district_id":"519",
+    "district_name":"Thành phố Tân Uyên",
+    "city_id":"47"
+  },
+  {
+    "district_id":"520",
+    "district_name":"Thành phố Dĩ An",
+    "city_id":"47"
+  },
+  {
+    "district_id":"521",
+    "district_name":"Thành phố Thuận An",
+    "city_id":"47"
+  },
+  {
+    "district_id":"522",
+    "district_name":"Huyện Bắc Tân Uyên",
+    "city_id":"47"
+  },
+  {
+    "district_id":"523",
+    "district_name":"Thành phố Biên Hòa",
+    "city_id":"48"
+  },
+  {
+    "district_id":"524",
+    "district_name":"Thành phố Long Khánh",
+    "city_id":"48"
+  },
+  {
+    "district_id":"525",
+    "district_name":"Huyện Tân Phú",
+    "city_id":"48"
+  },
+  {
+    "district_id":"526",
+    "district_name":"Huyện Vĩnh Cửu",
+    "city_id":"48"
+  },
+  {
+    "district_id":"527",
+    "district_name":"Huyện Định Quán",
+    "city_id":"48"
+  },
+  {
+    "district_id":"528",
+    "district_name":"Huyện Trảng Bom",
+    "city_id":"48"
+  },
+  {
+    "district_id":"529",
+    "district_name":"Huyện Thống Nhất",
+    "city_id":"48"
+  },
+  {
+    "district_id":"530",
+    "district_name":"Huyện Cẩm Mỹ",
+    "city_id":"48"
+  },
+  {
+    "district_id":"531",
+    "district_name":"Huyện Long Thành",
+    "city_id":"48"
+  },
+  {
+    "district_id":"532",
+    "district_name":"Huyện Xuân Lộc",
+    "city_id":"48"
+  },
+  {
+    "district_id":"533",
+    "district_name":"Huyện Nhơn Trạch",
+    "city_id":"48"
+  },
+  {
+    "district_id":"534",
+    "district_name":"Thành phố Vũng Tàu",
+    "city_id":"49"
+  },
+  {
+    "district_id":"535",
+    "district_name":"Thành phố Bà Rịa",
+    "city_id":"49"
+  },
+  {
+    "district_id":"536",
+    "district_name":"Huyện Châu Đức",
+    "city_id":"49"
+  },
+  {
+    "district_id":"537",
+    "district_name":"Huyện Xuyên Mộc",
+    "city_id":"49"
+  },
+  {
+    "district_id":"538",
+    "district_name":"Huyện Long Đất",
+    "city_id":"49"
+  },
+  {
+    "district_id":"539",
+    "district_name":"Thành phố Phú Mỹ",
+    "city_id":"49"
+  },
+  {
+    "district_id":"540",
+    "district_name":"Huyện Côn Đảo",
+    "city_id":"49"
+  },
+  {
+    "district_id":"541",
+    "district_name":"Quận 1",
+    "city_id":"50"
+  },
+  {
+    "district_id":"542",
+    "district_name":"Quận 12",
+    "city_id":"50"
+  },
+  {
+    "district_id":"543",
+    "district_name":"Quận Gò Vấp",
+    "city_id":"50"
+  },
+  {
+    "district_id":"544",
+    "district_name":"Quận Bình Thạnh",
+    "city_id":"50"
+  },
+  {
+    "district_id":"545",
+    "district_name":"Quận Tân Bình",
+    "city_id":"50"
+  },
+  {
+    "district_id":"546",
+    "district_name":"Quận Tân Phú",
+    "city_id":"50"
+  },
+  {
+    "district_id":"547",
+    "district_name":"Quận Phú Nhuận",
+    "city_id":"50"
+  },
+  {
+    "district_id":"548",
+    "district_name":"Thành phố Thủ Đức",
+    "city_id":"50"
+  },
+  {
+    "district_id":"549",
+    "district_name":"Quận 3",
+    "city_id":"50"
+  },
+  {
+    "district_id":"550",
+    "district_name":"Quận 10",
+    "city_id":"50"
+  },
+  {
+    "district_id":"551",
+    "district_name":"Quận 11",
+    "city_id":"50"
+  },
+  {
+    "district_id":"552",
+    "district_name":"Quận 4",
+    "city_id":"50"
+  },
+  {
+    "district_id":"553",
+    "district_name":"Quận 5",
+    "city_id":"50"
+  },
+  {
+    "district_id":"554",
+    "district_name":"Quận 6",
+    "city_id":"50"
+  },
+  {
+    "district_id":"555",
+    "district_name":"Quận 8",
+    "city_id":"50"
+  },
+  {
+    "district_id":"556",
+    "district_name":"Quận Bình Tân",
+    "city_id":"50"
+  },
+  {
+    "district_id":"557",
+    "district_name":"Quận 7",
+    "city_id":"50"
+  },
+  {
+    "district_id":"558",
+    "district_name":"Huyện Củ Chi",
+    "city_id":"50"
+  },
+  {
+    "district_id":"559",
+    "district_name":"Huyện Hóc Môn",
+    "city_id":"50"
+  },
+  {
+    "district_id":"560",
+    "district_name":"Huyện Bình Chánh",
+    "city_id":"50"
+  },
+  {
+    "district_id":"561",
+    "district_name":"Huyện Nhà Bè",
+    "city_id":"50"
+  },
+  {
+    "district_id":"562",
+    "district_name":"Huyện Cần Giờ",
+    "city_id":"50"
+  },
+  {
+    "district_id":"563",
+    "district_name":"Thành phố Tân An",
+    "city_id":"51"
+  },
+  {
+    "district_id":"564",
+    "district_name":"Thị xã Kiến Tường",
+    "city_id":"51"
+  },
+  {
+    "district_id":"565",
+    "district_name":"Huyện Tân Hưng",
+    "city_id":"51"
+  },
+  {
+    "district_id":"566",
+    "district_name":"Huyện Vĩnh Hưng",
+    "city_id":"51"
+  },
+  {
+    "district_id":"567",
+    "district_name":"Huyện Mộc Hóa",
+    "city_id":"51"
+  },
+  {
+    "district_id":"568",
+    "district_name":"Huyện Tân Thạnh",
+    "city_id":"51"
+  },
+  {
+    "district_id":"569",
+    "district_name":"Huyện Thạnh Hóa",
+    "city_id":"51"
+  },
+  {
+    "district_id":"570",
+    "district_name":"Huyện Đức Huệ",
+    "city_id":"51"
+  },
+  {
+    "district_id":"571",
+    "district_name":"Huyện Đức Hòa",
+    "city_id":"51"
+  },
+  {
+    "district_id":"572",
+    "district_name":"Huyện Bến Lức",
+    "city_id":"51"
+  },
+  {
+    "district_id":"573",
+    "district_name":"Huyện Thủ Thừa",
+    "city_id":"51"
+  },
+  {
+    "district_id":"574",
+    "district_name":"Huyện Tân Trụ",
+    "city_id":"51"
+  },
+  {
+    "district_id":"575",
+    "district_name":"Huyện Cần Đước",
+    "city_id":"51"
+  },
+  {
+    "district_id":"576",
+    "district_name":"Huyện Cần Giuộc",
+    "city_id":"51"
+  },
+  {
+    "district_id":"577",
+    "district_name":"Huyện Châu Thành",
+    "city_id":"51"
+  },
+  {
+    "district_id":"578",
+    "district_name":"Thành phố Mỹ Tho",
+    "city_id":"52"
+  },
+  {
+    "district_id":"579",
+    "district_name":"Thành phố Gò Công",
+    "city_id":"52"
+  },
+  {
+    "district_id":"580",
+    "district_name":"Thị xã Cai Lậy",
+    "city_id":"52"
+  },
+  {
+    "district_id":"581",
+    "district_name":"Huyện Tân Phước",
+    "city_id":"52"
+  },
+  {
+    "district_id":"582",
+    "district_name":"Huyện Cái Bè",
+    "city_id":"52"
+  },
+  {
+    "district_id":"583",
+    "district_name":"Huyện Cai Lậy",
+    "city_id":"52"
+  },
+  {
+    "district_id":"584",
+    "district_name":"Huyện Châu Thành",
+    "city_id":"52"
+  },
+  {
+    "district_id":"585",
+    "district_name":"Huyện Chợ Gạo",
+    "city_id":"52"
+  },
+  {
+    "district_id":"586",
+    "district_name":"Huyện Gò Công Tây",
+    "city_id":"52"
+  },
+  {
+    "district_id":"587",
+    "district_name":"Huyện Gò Công Đông",
+    "city_id":"52"
+  },
+  {
+    "district_id":"588",
+    "district_name":"Huyện Tân Phú Đông",
+    "city_id":"52"
+  },
+  {
+    "district_id":"589",
+    "district_name":"Thành phố Bến Tre",
+    "city_id":"53"
+  },
+  {
+    "district_id":"590",
+    "district_name":"Huyện Châu Thành",
+    "city_id":"53"
+  },
+  {
+    "district_id":"591",
+    "district_name":"Huyện Chợ Lách",
+    "city_id":"53"
+  },
+  {
+    "district_id":"592",
+    "district_name":"Huyện Mỏ Cày Nam",
+    "city_id":"53"
+  },
+  {
+    "district_id":"593",
+    "district_name":"Huyện Giồng Trôm",
+    "city_id":"53"
+  },
+  {
+    "district_id":"594",
+    "district_name":"Huyện Bình Đại",
+    "city_id":"53"
+  },
+  {
+    "district_id":"595",
+    "district_name":"Huyện Ba Tri",
+    "city_id":"53"
+  },
+  {
+    "district_id":"596",
+    "district_name":"Huyện Thạnh Phú",
+    "city_id":"53"
+  },
+  {
+    "district_id":"597",
+    "district_name":"Huyện Mỏ Cày Bắc",
+    "city_id":"53"
+  },
+  {
+    "district_id":"598",
+    "district_name":"Thành phố Trà Vinh",
+    "city_id":"54"
+  },
+  {
+    "district_id":"599",
+    "district_name":"Huyện Càng Long",
+    "city_id":"54"
+  },
+  {
+    "district_id":"600",
+    "district_name":"Huyện Cầu Kè",
+    "city_id":"54"
+  },
+  {
+    "district_id":"601",
+    "district_name":"Huyện Tiểu Cần",
+    "city_id":"54"
+  },
+  {
+    "district_id":"602",
+    "district_name":"Huyện Châu Thành",
+    "city_id":"54"
+  },
+  {
+    "district_id":"603",
+    "district_name":"Huyện Cầu Ngang",
+    "city_id":"54"
+  },
+  {
+    "district_id":"604",
+    "district_name":"Huyện Trà Cú",
+    "city_id":"54"
+  },
+  {
+    "district_id":"605",
+    "district_name":"Huyện Duyên Hải",
+    "city_id":"54"
+  },
+  {
+    "district_id":"606",
+    "district_name":"Thị xã Duyên Hải",
+    "city_id":"54"
+  },
+  {
+    "district_id":"607",
+    "district_name":"Thành phố Vĩnh Long",
+    "city_id":"55"
+  },
+  {
+    "district_id":"608",
+    "district_name":"Huyện Long Hồ",
+    "city_id":"55"
+  },
+  {
+    "district_id":"609",
+    "district_name":"Huyện Mang Thít",
+    "city_id":"55"
+  },
+  {
+    "district_id":"610",
+    "district_name":"Huyện  Vũng Liêm",
+    "city_id":"55"
+  },
+  {
+    "district_id":"611",
+    "district_name":"Huyện Tam Bình",
+    "city_id":"55"
+  },
+  {
+    "district_id":"612",
+    "district_name":"Thị xã Bình Minh",
+    "city_id":"55"
+  },
+  {
+    "district_id":"613",
+    "district_name":"Huyện Trà Ôn",
+    "city_id":"55"
+  },
+  {
+    "district_id":"614",
+    "district_name":"Huyện Bình Tân",
+    "city_id":"55"
+  },
+  {
+    "district_id":"615",
+    "district_name":"Thành phố Cao Lãnh",
+    "city_id":"56"
+  },
+  {
+    "district_id":"616",
+    "district_name":"Thành phố Sa Đéc",
+    "city_id":"56"
+  },
+  {
+    "district_id":"617",
+    "district_name":"Thành phố Hồng Ngự",
+    "city_id":"56"
+  },
+  {
+    "district_id":"618",
+    "district_name":"Huyện Tân Hồng",
+    "city_id":"56"
+  },
+  {
+    "district_id":"619",
+    "district_name":"Huyện Hồng Ngự",
+    "city_id":"56"
+  },
+  {
+    "district_id":"620",
+    "district_name":"Huyện Tam Nông",
+    "city_id":"56"
+  },
+  {
+    "district_id":"621",
+    "district_name":"Huyện Tháp Mười",
+    "city_id":"56"
+  },
+  {
+    "district_id":"622",
+    "district_name":"Huyện Cao Lãnh",
+    "city_id":"56"
+  },
+  {
+    "district_id":"623",
+    "district_name":"Huyện Thanh Bình",
+    "city_id":"56"
+  },
+  {
+    "district_id":"624",
+    "district_name":"Huyện Lấp Vò",
+    "city_id":"56"
+  },
+  {
+    "district_id":"625",
+    "district_name":"Huyện Lai Vung",
+    "city_id":"56"
+  },
+  {
+    "district_id":"626",
+    "district_name":"Huyện Châu Thành",
+    "city_id":"56"
+  },
+  {
+    "district_id":"627",
+    "district_name":"Thành phố Long Xuyên",
+    "city_id":"57"
+  },
+  {
+    "district_id":"628",
+    "district_name":"Thành phố Châu Đốc",
+    "city_id":"57"
+  },
+  {
+    "district_id":"629",
+    "district_name":"Huyện An Phú",
+    "city_id":"57"
+  },
+  {
+    "district_id":"630",
+    "district_name":"Thị xã Tân Châu",
+    "city_id":"57"
+  },
+  {
+    "district_id":"631",
+    "district_name":"Huyện Phú Tân",
+    "city_id":"57"
+  },
+  {
+    "district_id":"632",
+    "district_name":"Huyện Châu Phú",
+    "city_id":"57"
+  },
+  {
+    "district_id":"633",
+    "district_name":"Thị xã Tịnh Biên",
+    "city_id":"57"
+  },
+  {
+    "district_id":"634",
+    "district_name":"Huyện Tri Tôn",
+    "city_id":"57"
+  },
+  {
+    "district_id":"635",
+    "district_name":"Huyện Châu Thành",
+    "city_id":"57"
+  },
+  {
+    "district_id":"636",
+    "district_name":"Huyện Chợ Mới",
+    "city_id":"57"
+  },
+  {
+    "district_id":"637",
+    "district_name":"Huyện Thoại Sơn",
+    "city_id":"57"
+  },
+  {
+    "district_id":"638",
+    "district_name":"Thành phố Rạch Giá",
+    "city_id":"58"
+  },
+  {
+    "district_id":"639",
+    "district_name":"Thành phố Hà Tiên",
+    "city_id":"58"
+  },
+  {
+    "district_id":"640",
+    "district_name":"Huyện Kiên Lương",
+    "city_id":"58"
+  },
+  {
+    "district_id":"641",
+    "district_name":"Huyện Hòn Đất",
+    "city_id":"58"
+  },
+  {
+    "district_id":"642",
+    "district_name":"Huyện Tân Hiệp",
+    "city_id":"58"
+  },
+  {
+    "district_id":"643",
+    "district_name":"Huyện Châu Thành",
+    "city_id":"58"
+  },
+  {
+    "district_id":"644",
+    "district_name":"Huyện Giồng Riềng",
+    "city_id":"58"
+  },
+  {
+    "district_id":"645",
+    "district_name":"Huyện Gò Quao",
+    "city_id":"58"
+  },
+  {
+    "district_id":"646",
+    "district_name":"Huyện An Biên",
+    "city_id":"58"
+  },
+  {
+    "district_id":"647",
+    "district_name":"Huyện An Minh",
+    "city_id":"58"
+  },
+  {
+    "district_id":"648",
+    "district_name":"Huyện Vĩnh Thuận",
+    "city_id":"58"
+  },
+  {
+    "district_id":"649",
+    "district_name":"Thành phố Phú Quốc",
+    "city_id":"58"
+  },
+  {
+    "district_id":"650",
+    "district_name":"Huyện Kiên Hải",
+    "city_id":"58"
+  },
+  {
+    "district_id":"651",
+    "district_name":"Huyện U Minh Thượng",
+    "city_id":"58"
+  },
+  {
+    "district_id":"652",
+    "district_name":"Huyện Giang Thành",
+    "city_id":"58"
+  },
+  {
+    "district_id":"653",
+    "district_name":"Quận Ninh Kiều",
+    "city_id":"59"
+  },
+  {
+    "district_id":"654",
+    "district_name":"Quận Ô Môn",
+    "city_id":"59"
+  },
+  {
+    "district_id":"655",
+    "district_name":"Quận Bình Thuỷ",
+    "city_id":"59"
+  },
+  {
+    "district_id":"656",
+    "district_name":"Quận Cái Răng",
+    "city_id":"59"
+  },
+  {
+    "district_id":"657",
+    "district_name":"Quận Thốt Nốt",
+    "city_id":"59"
+  },
+  {
+    "district_id":"658",
+    "district_name":"Huyện Vĩnh Thạnh",
+    "city_id":"59"
+  },
+  {
+    "district_id":"659",
+    "district_name":"Huyện Cờ Đỏ",
+    "city_id":"59"
+  },
+  {
+    "district_id":"660",
+    "district_name":"Huyện Phong Điền",
+    "city_id":"59"
+  },
+  {
+    "district_id":"661",
+    "district_name":"Huyện Thới Lai",
+    "city_id":"59"
+  },
+  {
+    "district_id":"662",
+    "district_name":"Thành phố Vị Thanh",
+    "city_id":"60"
+  },
+  {
+    "district_id":"663",
+    "district_name":"Thành phố Ngã Bảy",
+    "city_id":"60"
+  },
+  {
+    "district_id":"664",
+    "district_name":"Huyện Châu Thành A",
+    "city_id":"60"
+  },
+  {
+    "district_id":"665",
+    "district_name":"Huyện Châu Thành",
+    "city_id":"60"
+  },
+  {
+    "district_id":"666",
+    "district_name":"Huyện Phụng Hiệp",
+    "city_id":"60"
+  },
+  {
+    "district_id":"667",
+    "district_name":"Huyện Vị Thuỷ",
+    "city_id":"60"
+  },
+  {
+    "district_id":"668",
+    "district_name":"Huyện Long Mỹ",
+    "city_id":"60"
+  },
+  {
+    "district_id":"669",
+    "district_name":"Thị xã Long Mỹ",
+    "city_id":"60"
+  },
+  {
+    "district_id":"670",
+    "district_name":"Thành phố Sóc Trăng",
+    "city_id":"61"
+  },
+  {
+    "district_id":"671",
+    "district_name":"Huyện Châu Thành",
+    "city_id":"61"
+  },
+  {
+    "district_id":"672",
+    "district_name":"Huyện Kế Sách",
+    "city_id":"61"
+  },
+  {
+    "district_id":"673",
+    "district_name":"Huyện Mỹ Tú",
+    "city_id":"61"
+  },
+  {
+    "district_id":"674",
+    "district_name":"Huyện Cù Lao Dung",
+    "city_id":"61"
+  },
+  {
+    "district_id":"675",
+    "district_name":"Huyện Long Phú",
+    "city_id":"61"
+  },
+  {
+    "district_id":"676",
+    "district_name":"Huyện Mỹ Xuyên",
+    "city_id":"61"
+  },
+  {
+    "district_id":"677",
+    "district_name":"Thị xã Ngã Năm",
+    "city_id":"61"
+  },
+  {
+    "district_id":"678",
+    "district_name":"Huyện Thạnh Trị",
+    "city_id":"61"
+  },
+  {
+    "district_id":"679",
+    "district_name":"Thị xã Vĩnh Châu",
+    "city_id":"61"
+  },
+  {
+    "district_id":"680",
+    "district_name":"Huyện Trần Đề",
+    "city_id":"61"
+  },
+  {
+    "district_id":"681",
+    "district_name":"Thành phố Bạc Liêu",
+    "city_id":"62"
+  },
+  {
+    "district_id":"682",
+    "district_name":"Huyện Hồng Dân",
+    "city_id":"62"
+  },
+  {
+    "district_id":"683",
+    "district_name":"Huyện Phước Long",
+    "city_id":"62"
+  },
+  {
+    "district_id":"684",
+    "district_name":"Huyện Vĩnh Lợi",
+    "city_id":"62"
+  },
+  {
+    "district_id":"685",
+    "district_name":"Thị xã Giá Rai",
+    "city_id":"62"
+  },
+  {
+    "district_id":"686",
+    "district_name":"Huyện Đông Hải",
+    "city_id":"62"
+  },
+  {
+    "district_id":"687",
+    "district_name":"Huyện Hoà Bình",
+    "city_id":"62"
+  },
+  {
+    "district_id":"688",
+    "district_name":"Thành phố Cà Mau",
+    "city_id":"63"
+  },
+  {
+    "district_id":"689",
+    "district_name":"Huyện U Minh",
+    "city_id":"63"
+  },
+  {
+    "district_id":"690",
+    "district_name":"Huyện Thới Bình",
+    "city_id":"63"
+  },
+  {
+    "district_id":"691",
+    "district_name":"Huyện Trần Văn Thời",
+    "city_id":"63"
+  },
+  {
+    "district_id":"692",
+    "district_name":"Huyện Cái Nước",
+    "city_id":"63"
+  },
+  {
+    "district_id":"693",
+    "district_name":"Huyện Đầm Dơi",
+    "city_id":"63"
+  },
+  {
+    "district_id":"694",
+    "district_name":"Huyện Năm Căn",
+    "city_id":"63"
+  },
+  {
+    "district_id":"695",
+    "district_name":"Huyện Phú Tân",
+    "city_id":"63"
+  },
+  {
+    "district_id":"696",
+    "district_name":"Huyện Ngọc Hiển",
+    "city_id":"63"
+  }
+]

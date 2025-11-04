@@ -842,13 +842,14 @@ async function loadProvinces() {
   if (!provinceSelect) return;
 
   try {
-    const response = await fetch('https://provinces.open-api.vn/api/');
-    const provinces = await response.json();
+    // Load from local JSON file instead of API
+    const response = await fetch('http://localhost:5000/api/address/cities');
+    const cities = await response.json();
     provinceSelect.innerHTML = '<option value="">-- Chọn Tỉnh/TP --</option>';
-    provinces.forEach(province => {
+    cities.forEach(city => {
       const option = document.createElement('option');
-      option.value = province.code;
-      option.textContent = province.name;
+      option.value = city.city_id;
+      option.textContent = city.city_name;
       provinceSelect.appendChild(option);
     });
   } catch (error) {
@@ -874,12 +875,13 @@ async function loadDistricts() {
   }
 
   try {
-    const response = await fetch(`https://provinces.open-api.vn/api/p/${provinceSelect.value}?depth=2`);
-    const provinceData = await response.json();
-    provinceData.districts.forEach(district => {
+    // Load from local JSON file instead of API
+    const response = await fetch(`http://localhost:5000/api/address/districts/${provinceSelect.value}`);
+    const districts = await response.json();
+    districts.forEach(district => {
       const option = document.createElement('option');
-      option.value = district.code;
-      option.textContent = district.name;
+      option.value = district.district_id;
+      option.textContent = district.district_name;
       districtSelect.appendChild(option);
     });
     districtSelect.disabled = false;
@@ -902,12 +904,13 @@ async function loadWards() {
   }
 
   try {
-    const response = await fetch(`https://provinces.open-api.vn/api/d/${districtSelect.value}?depth=2`);
-    const districtData = await response.json();
-    districtData.wards.forEach(ward => {
+    // Load from local JSON file instead of API
+    const response = await fetch(`http://localhost:5000/api/address/wards/${districtSelect.value}`);
+    const wards = await response.json();
+    wards.forEach(ward => {
       const option = document.createElement('option');
-      option.value = ward.code;
-      option.textContent = ward.name;
+      option.value = ward.ward_name; // Use ward_name as value
+      option.textContent = ward.ward_name;
       wardSelect.appendChild(option);
     });
     wardSelect.disabled = false;
@@ -1197,23 +1200,84 @@ async function loadSavedAddresses() {
     // Clear existing options except placeholder
     select.innerHTML = '<option value="">-- Chọn địa chỉ đã lưu --</option>';
 
-    list.forEach(addr => {
-      // Normalize fields: prefer explicit keys if present
+    // Helper function to get address names from IDs
+    async function getAddressNames(provinceId, districtId, wardIdentifier) {
+      try {
+        const response = await fetch(`http://localhost:5000/api/address/full/${provinceId}/${districtId}/${encodeURIComponent(wardIdentifier)}`);
+        if (!response.ok) {
+          console.warn('API response not ok:', response.status);
+          return null;
+        }
+        const data = await response.json();
+        return data; // { city: "...", district: "...", ward: "..." }
+      } catch (e) {
+        console.warn('Failed to fetch address names', e);
+        return null;
+      }
+    }
+
+    // Process each address
+    for (const addr of list) {
       const option = document.createElement('option');
+      
+      // Get raw values (could be IDs or names)
+      const provinceVal = addr.TinhThanh || addr.province || addr.provinceCode || addr.provinceName || '';
+      const districtVal = addr.QuanHuyen || addr.district || addr.districtCode || addr.districtName || '';
+      const wardVal = addr.PhuongXa || addr.ward || addr.wardCode || addr.wardName || '';
+      const detailVal = addr.DiaChiChiTiet || addr.detail || addr.address || '';
+
+      console.log('🔍 Raw address values:', { provinceVal, districtVal, wardVal, detailVal });
+
+      // Check if values are numeric IDs or already names
+      let provinceName = provinceVal;
+      let districtName = districtVal;
+      let wardName = wardVal;
+
+      // Check if province and district are numeric IDs
+      const isProvinceNumeric = /^\d+$/.test(String(provinceVal));
+      const isDistrictNumeric = /^\d+$/.test(String(districtVal));
+      
+      // Ward might be numeric or already a name
+      const isWardNumeric = /^\d+$/.test(String(wardVal));
+
+      // If province and district are numeric, fetch the names
+      if (isProvinceNumeric && isDistrictNumeric) {
+        console.log('✅ Province and district are numeric, fetching names...');
+        const names = await getAddressNames(provinceVal, districtVal, wardVal);
+        console.log('📦 API Response:', names);
+        if (names) {
+          provinceName = names.city || provinceVal;
+          districtName = names.district || districtVal;
+          wardName = names.ward || wardVal;
+          console.log('✅ Converted to names:', { provinceName, districtName, wardName });
+        } else {
+          console.warn('❌ API returned null');
+        }
+      } else {
+        console.log('⚠️ Not all numeric, using raw values');
+      }
+
       // store minimal JSON as value so we can repopulate fields easily
       const payload = {
         id: addr.MaDiaChi || addr.id || addr.addressId || null,
         name: addr.TenNguoiNhan || addr.recipientName || addr.name || '',
         phone: addr.SDT || addr.recipientPhone || addr.phone || '',
-        detail: addr.DiaChiChiTiet || addr.detail || addr.address || '',
-        province: addr.TinhThanh || addr.province || addr.provinceCode || addr.provinceName || '',
-        district: addr.QuanHuyen || addr.district || addr.districtCode || addr.districtName || '',
-        ward: addr.PhuongXa || addr.ward || addr.wardCode || addr.wardName || ''
+        detail: detailVal,
+        province: provinceVal, // Keep ID for form filling
+        district: districtVal,
+        ward: wardVal,
+        provinceName: provinceName, // Store name for display
+        districtName: districtName,
+        wardName: wardName
       };
+      
       option.value = JSON.stringify(payload);
-      option.textContent = `${payload.detail || ''}${payload.ward ? ', ' + payload.ward : ''}${payload.district ? ', ' + payload.district : ''}${payload.province ? ', ' + payload.province : ''}`;
+      // Display with names instead of IDs
+      const displayText = `${detailVal || ''}${wardName ? ', ' + wardName : ''}${districtName ? ', ' + districtName : ''}${provinceName ? ', ' + provinceName : ''}`;
+      console.log('📝 Display text:', displayText);
+      option.textContent = displayText;
       select.appendChild(option);
-    });
+    }
 
     // helper: wait until a select has at least minOptions (used to wait for districts/wards to populate)
     function waitForOptions(selectEl, minOptions = 2, timeout = 3000) {

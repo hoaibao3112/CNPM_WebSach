@@ -1,0 +1,254 @@
+[
+  {
+    "city_id":"1",
+    "city_name":"Thành phố Hà Nội"
+  },
+  {
+    "city_id":"2",
+    "city_name":"Tỉnh Hà Giang"
+  },
+  {
+    "city_id":"3",
+    "city_name":"Tỉnh Cao Bằng"
+  },
+  {
+    "city_id":"4",
+    "city_name":"Tỉnh Bắc Kạn"
+  },
+  {
+    "city_id":"5",
+    "city_name":"Tỉnh Tuyên Quang"
+  },
+  {
+    "city_id":"6",
+    "city_name":"Tỉnh Lào Cai"
+  },
+  {
+    "city_id":"7",
+    "city_name":"Tỉnh Điện Biên"
+  },
+  {
+    "city_id":"8",
+    "city_name":"Tỉnh Lai Châu"
+  },
+  {
+    "city_id":"9",
+    "city_name":"Tỉnh Sơn La"
+  },
+  {
+    "city_id":"10",
+    "city_name":"Tỉnh Yên Bái"
+  },
+  {
+    "city_id":"11",
+    "city_name":"Tỉnh Hoà Bình"
+  },
+  {
+    "city_id":"12",
+    "city_name":"Tỉnh Thái Nguyên"
+  },
+  {
+    "city_id":"13",
+    "city_name":"Tỉnh Lạng Sơn"
+  },
+  {
+    "city_id":"14",
+    "city_name":"Tỉnh Quảng Ninh"
+  },
+  {
+    "city_id":"15",
+    "city_name":"Tỉnh Bắc Giang"
+  },
+  {
+    "city_id":"16",
+    "city_name":"Tỉnh Phú Thọ"
+  },
+  {
+    "city_id":"17",
+    "city_name":"Tỉnh Vĩnh Phúc"
+  },
+  {
+    "city_id":"18",
+    "city_name":"Tỉnh Bắc Ninh"
+  },
+  {
+    "city_id":"19",
+    "city_name":"Tỉnh Hải Dương"
+  },
+  {
+    "city_id":"20",
+    "city_name":"Thành phố Hải Phòng"
+  },
+  {
+    "city_id":"21",
+    "city_name":"Tỉnh Hưng Yên"
+  },
+  {
+    "city_id":"22",
+    "city_name":"Tỉnh Thái Bình"
+  },
+  {
+    "city_id":"23",
+    "city_name":"Tỉnh Hà Nam"
+  },
+  {
+    "city_id":"24",
+    "city_name":"Tỉnh Nam Định"
+  },
+  {
+    "city_id":"25",
+    "city_name":"Tỉnh Ninh Bình"
+  },
+  {
+    "city_id":"26",
+    "city_name":"Tỉnh Thanh Hóa"
+  },
+  {
+    "city_id":"27",
+    "city_name":"Tỉnh Nghệ An"
+  },
+  {
+    "city_id":"28",
+    "city_name":"Tỉnh Hà Tĩnh"
+  },
+  {
+    "city_id":"29",
+    "city_name":"Tỉnh Quảng Bình"
+  },
+  {
+    "city_id":"30",
+    "city_name":"Tỉnh Quảng Trị"
+  },
+  {
+    "city_id":"31",
+    "city_name":"Thành phố Huế"
+  },
+  {
+    "city_id":"32",
+    "city_name":"Thành phố Đà Nẵng"
+  },
+  {
+    "city_id":"33",
+    "city_name":"Tỉnh Quảng Nam"
+  },
+  {
+    "city_id":"34",
+    "city_name":"Tỉnh Quảng Ngãi"
+  },
+  {
+    "city_id":"35",
+    "city_name":"Tỉnh Bình Định"
+  },
+  {
+    "city_id":"36",
+    "city_name":"Tỉnh Phú Yên"
+  },
+  {
+    "city_id":"37",
+    "city_name":"Tỉnh Khánh Hòa"
+  },
+  {
+    "city_id":"38",
+    "city_name":"Tỉnh Ninh Thuận"
+  },
+  {
+    "city_id":"39",
+    "city_name":"Tỉnh Bình Thuận"
+  },
+  {
+    "city_id":"40",
+    "city_name":"Tỉnh Kon Tum"
+  },
+  {
+    "city_id":"41",
+    "city_name":"Tỉnh Gia Lai"
+  },
+  {
+    "city_id":"42",
+    "city_name":"Tỉnh Đắk Lắk"
+  },
+  {
+    "city_id":"43",
+    "city_name":"Tỉnh Đắk Nông"
+  },
+  {
+    "city_id":"44",
+    "city_name":"Tỉnh Lâm Đồng"
+  },
+  {
+    "city_id":"45",
+    "city_name":"Tỉnh Bình Phước"
+  },
+  {
+    "city_id":"46",
+    "city_name":"Tỉnh Tây Ninh"
+  },
+  {
+    "city_id":"47",
+    "city_name":"Tỉnh Bình Dương"
+  },
+  {
+    "city_id":"48",
+    "city_name":"Tỉnh Đồng Nai"
+  },
+  {
+    "city_id":"49",
+    "city_name":"Tỉnh Bà Rịa – Vũng Tàu"
+  },
+  {
+    "city_id":"50",
+    "city_name":"Thành phố Hồ Chí Minh"
+  },
+  {
+    "city_id":"51",
+    "city_name":"Tỉnh Long An"
+  },
+  {
+    "city_id":"52",
+    "city_name":"Tỉnh Tiền Giang"
+  },
+  {
+    "city_id":"53",
+    "city_name":"Tỉnh Bến Tre"
+  },
+  {
+    "city_id":"54",
+    "city_name":"Tỉnh Trà Vinh"
+  },
+  {
+    "city_id":"55",
+    "city_name":"Tỉnh Vĩnh Long"
+  },
+  {
+    "city_id":"56",
+    "city_name":"Tỉnh Đồng Tháp"
+  },
+  {
+    "city_id":"57",
+    "city_name":"Tỉnh An Giang"
+  },
+  {
+    "city_id":"58",
+    "city_name":"Tỉnh Kiên Giang"
+  },
+  {
+    "city_id":"59",
+    "city_name":"Thành phố Cần Thơ"
+  },
+  {
+    "city_id":"60",
+    "city_name":"Tỉnh Hậu Giang"
+  },
+  {
+    "city_id":"61",
+    "city_name":"Tỉnh Sóc Trăng"
+  },
+  {
+    "city_id":"62",
+    "city_name":"Tỉnh Bạc Liêu"
+  },
+  {
+    "city_id":"63",
+    "city_name":"Tỉnh Cà Mau"
+  }
+]

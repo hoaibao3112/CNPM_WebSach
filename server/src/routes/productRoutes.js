@@ -89,7 +89,7 @@ router.get('/search-product', async (req, res) => {
     JOIN TacGia tg ON sp.MaTG = tg.MaTG
     WHERE sp.TenSP LIKE CONCAT('%', ?, '%')
        OR tg.TenTG LIKE CONCAT('%', ?, '%')
-    LIMIT 0, 50;
+    ;
   `;
   try {
     const [results] = await pool.query(sql, [keyWordSearch, keyWordSearch]);

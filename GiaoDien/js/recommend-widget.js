@@ -34,7 +34,7 @@
         if (!allProducts || allProducts.length === 0) {
             console.log("Không có sản phẩm đề xuất.");
             // still render an empty placeholder so layout is visible to help debugging
-            mountPoint.innerHTML = `<section class="recommend-section"><h2>Có thể bạn quan tâm</h2><div class="widget-empty">Chưa có đề xuất</div></section>`;
+            mountPoint.innerHTML = `<section class="recommend-section"><h2><span class="title-icon">✨</span> Có Thể Bạn Quan Tâm <span class="title-icon">✨</span></h2><div class="widget-empty">Chưa có đề xuất</div></section>`;
             return;
         }
 
@@ -55,7 +55,11 @@
 
         const widgetHtml = `
             <section class="recommend-section">
-                <h2>Có thể bạn quan tâm</h2>
+                <h2>
+                    <span class="title-icon">✨</span>
+                    Có Thể Bạn Quan Tâm
+                    <span class="title-icon">✨</span>
+                </h2>
                 <div class="product-grid" id="widget-product-grid">
                     ${productGridHtml}
                 </div>
