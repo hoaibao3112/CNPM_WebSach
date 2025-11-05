@@ -6,7 +6,7 @@ const addressCache = {
 };
 // Thêm sau dòng khai báo addressCache (sau dòng 6)
 
-// Lấy tên tỉnh/thành phố từ mã
+// Lấy tên tỉnh/thành phố từ mã - SỬ DỤNG BACKEND PROXY
 async function getProvinceName(provinceCode) {
     if (!provinceCode) return '';
     
@@ -16,15 +16,15 @@ async function getProvinceName(provinceCode) {
     }
 
     try {
-        const response = await fetch('https://provinces.open-api.vn/api/p/');
-        const provinces = await response.json();
+        // ✅ Sử dụng backend proxy với đúng port 5000
+        const response = await fetch(`http://localhost:5000/api/orders/resolve/province/${provinceCode}`);
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+        const data = await response.json();
+        const provinceName = data.name || provinceCode;
         
-        // Lưu tất cả provinces vào cache
-        provinces.forEach(province => {
-            addressCache.provinces.set(province.code.toString(), province.name);
-        });
-
-        return addressCache.provinces.get(provinceCode.toString()) || provinceCode;
+        // Lưu vào cache
+        addressCache.provinces.set(provinceCode.toString(), provinceName);
+        return provinceName;
     } catch (error) {
         console.error('Error fetching province:', error);
         return provinceCode;
@@ -91,7 +91,7 @@ function haversineDistance(a, b) {
         return R * c;
 }
 
-// Lấy tên quận/huyện từ mã
+// Lấy tên quận/huyện từ mã - SỬ DỤNG BACKEND PROXY
 async function getDistrictName(districtCode, provinceCode) {
     if (!districtCode) return '';
     
@@ -101,25 +101,33 @@ async function getDistrictName(districtCode, provinceCode) {
     }
 
     try {
-        const response = await fetch(`https://provinces.open-api.vn/api/p/${provinceCode}?depth=2`);
+        // ✅ Sử dụng backend proxy với đúng port 5000
+        const response = await fetch(`http://localhost:5000/api/orders/resolve/district/${districtCode}`);
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
         const data = await response.json();
+        const districtName = data.name || districtCode;
         
-        if (data.districts) {
-            data.districts.forEach(district => {
-                addressCache.districts.set(district.code.toString(), district.name);
-            });
-        }
-
-        return addressCache.districts.get(districtCode.toString()) || districtCode;
+        // Lưu vào cache
+        addressCache.districts.set(districtCode.toString(), districtName);
+        return districtName;
     } catch (error) {
         console.error('Error fetching district:', error);
         return districtCode;
     }
 }
 
-// Lấy tên phường/xã từ mã
+// Lấy tên phường/xã từ mã - SỬ DỤNG BACKEND PROXY
 async function getWardName(wardCode, districtCode) {
     if (!wardCode) return '';
+    
+    // Nếu wardCode đã là tên (có chứa "Phường", "Xã", "Thị trấn"), trả về luôn
+    if (typeof wardCode === 'string' && (
+        wardCode.includes('Phường') || 
+        wardCode.includes('Xã') || 
+        wardCode.includes('Thị trấn')
+    )) {
+        return wardCode;
+    }
     
     // Kiểm tra cache trước
     if (addressCache.wards.has(wardCode)) {
@@ -127,16 +135,15 @@ async function getWardName(wardCode, districtCode) {
     }
 
     try {
-        const response = await fetch(`https://provinces.open-api.vn/api/d/${districtCode}?depth=2`);
+        // ✅ Sử dụng backend proxy với đúng port 5000
+        const response = await fetch(`http://localhost:5000/api/orders/resolve/ward/${wardCode}`);
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
         const data = await response.json();
+        const wardName = data.name || wardCode;
         
-        if (data.wards) {
-            data.wards.forEach(ward => {
-                addressCache.wards.set(ward.code.toString(), ward.name);
-            });
-        }
-
-        return addressCache.wards.get(wardCode.toString()) || wardCode;
+        // Lưu vào cache
+        addressCache.wards.set(wardCode.toString(), wardName);
+        return wardName;
     } catch (error) {
         console.error('Error fetching ward:', error);
         return wardCode;
@@ -896,7 +903,47 @@ async function submitReturnRequest(order) {
     // Cập nhật thông tin giao hàng
     document.getElementById('receiver-name').textContent = order.recipientName || 'N/A';
     document.getElementById('receiver-phone').textContent = order.recipientPhone || 'N/A';
-    document.getElementById('order-notes').textContent = order.notes || 'Không có ghi chú';
+    
+    // ✅ HIỂN THỊ GHI CHÚ VỚI HIGHLIGHT NẾU CÓ PHÍ SHIP
+    const notesElement = document.getElementById('order-notes');
+    if (notesElement) {
+        let notes = order.notes || order.GhiChu || '';
+        
+        // ✅ LỌC BỎ GHI CHÚ SHIPPING SAI CHO ĐƠN HCM
+        const province = order.province || order.TinhThanh || '';
+        const isHCM = isHCMAddress(province);
+        
+        if (isHCM && notes) {
+            // Nếu là đơn HCM, loại bỏ dòng [SHIPPING] có Tỉnh: 50
+            const lines = notes.split('\n');
+            notes = lines.filter(line => {
+                // Loại bỏ dòng [SHIPPING] có mã tỉnh 50 (HCM) nhưng có phí ship > 0
+                if (line.includes('[SHIPPING]') && line.includes('Tỉnh: 50') && !line.includes('0đ')) {
+                    console.log('🗑️ Loại bỏ ghi chú shipping sai:', line);
+                    return false;
+                }
+                return true;
+            }).join('\n').trim();
+        }
+        
+        if (!notes) {
+            notesElement.innerHTML = '<span class="no-notes">Không có ghi chú</span>';
+        } else if (notes.includes('Thu thêm') && notes.includes('phí ship')) {
+            // Ghi chú quan trọng về phí ship
+            notesElement.innerHTML = `
+                <div class="alert alert-warning" style="margin: 0;">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <div>
+                        <strong>⚠️ Lưu ý quan trọng:</strong>
+                        <p style="margin: 5px 0 0 0;">${escapeHtml(notes).replace(/\n/g, '<br>')}</p>
+                    </div>
+                </div>
+            `;
+        } else {
+            // Ghi chú thông thường
+            notesElement.innerHTML = `<span class="order-note">${escapeHtml(notes).replace(/\n/g, '<br>')}</span>`;
+        }
+    }
 
     // Hiển thị loading cho địa chỉ
     const shippingAddressElement = document.getElementById('shipping-address');
@@ -973,8 +1020,9 @@ async function submitReturnRequest(order) {
 
                 selectEl.innerHTML = '<option value="">-- Chọn địa chỉ --</option>' + addresses.map(a => {
                     const id = a.id || a.MaDiaChi || '';
+                    const province = a.province || a.TinhThanh || '';
                     const label = `${a.name || a.TenNguoiNhan || ''} — ${a.detail || a.DiaChiChiTiet || ''}`;
-                    return `<option value="${id}">${escapeHtml(label)}</option>`;
+                    return `<option value="${id}" data-province="${escapeHtml(province)}">${escapeHtml(label)}</option>`;
                 }).join('');
 
                 selectEl.onchange = () => {
@@ -1072,6 +1120,9 @@ async function fetchReturnForOrder(orderId) {
     }
 }
 
+// ✅ BIẾN LƯU THÔNG TIN ĐỂ XÁC NHẬN ĐỔI ĐỊA CHỈ
+let pendingAddressChange = null;
+
 // NEW: submitAddressUpdate - gọi API PUT để cập nhật địa chỉ đơn hàng khi còn 'Chờ xử lý'
 async function submitAddressUpdate(order) {
     if (!checkAuth()) return;
@@ -1084,23 +1135,240 @@ async function submitAddressUpdate(order) {
     // Nếu người dùng chọn địa chỉ đã lưu, gửi MaDiaChi; nếu không, fallback sang gửi thông tin mới
     const selectedSaved = document.getElementById('saved-address-select')?.value;
     let payload = {};
+    let newProvince = '';
+    let newAddressDisplay = '';
+    
     if (selectedSaved) {
         payload.MaDiaChi = selectedSaved;
+        // Lấy tên tỉnh từ select box
+        const addressSelect = document.getElementById('saved-address-select');
+        if (addressSelect) {
+            const selectedOption = addressSelect.selectedOptions[0];
+            newProvince = selectedOption?.getAttribute('data-province') || '';
+            newAddressDisplay = selectedOption?.text || '';
+        }
     } else {
+        const provinceSelect = document.getElementById('edit-province');
+        newProvince = provinceSelect?.selectedOptions[0]?.text || '';
+        
         payload = {
             TenNguoiNhan: document.getElementById('edit-recipient')?.value?.trim(),
             SDT: document.getElementById('edit-phone')?.value?.trim(),
             DiaChiChiTiet: document.getElementById('edit-detail')?.value?.trim(),
-            TinhThanh: document.getElementById('edit-province')?.value?.trim() || null,
-            QuanHuyen: document.getElementById('edit-district')?.value?.trim() || null,
-            PhuongXa: document.getElementById('edit-ward')?.value?.trim() || null
+            TinhThanh: newProvince,
+            QuanHuyen: document.getElementById('edit-district')?.selectedOptions[0]?.text || null,
+            PhuongXa: document.getElementById('edit-ward')?.selectedOptions[0]?.text || null
         };
+
+        newAddressDisplay = `${payload.TenNguoiNhan} - ${payload.DiaChiChiTiet}, ${payload.PhuongXa}, ${payload.QuanHuyen}, ${payload.TinhThanh}`;
 
         if (!payload.TenNguoiNhan || !payload.SDT || !payload.DiaChiChiTiet) {
             showErrorToast('Vui lòng chọn địa chỉ đã lưu hoặc điền Người nhận, SĐT và Địa chỉ chi tiết');
             return;
         }
     }
+
+    // ✅ KIỂM TRA TRƯỚC: Hiển thị modal xác nhận nếu cần
+    let oldProvince = order.province || order.TinhThanh || '';
+    
+    // Nếu oldProvince là mã số, resolve sang tên
+    if (oldProvince && /^\d+$/.test(String(oldProvince).trim())) {
+        console.log('🔄 Resolving old province code:', oldProvince);
+        const resolvedName = await getProvinceName(oldProvince);
+        if (resolvedName) {
+            oldProvince = resolvedName;
+            console.log('✅ Resolved to:', oldProvince);
+        }
+    }
+    
+    const isOldHCM = isHCMAddress(oldProvince);
+    const isNewHCM = isHCMAddress(newProvince);
+
+    console.log('🔍 Checking address change:', {
+        oldProvince,
+        newProvince,
+        isOldHCM,
+        isNewHCM,
+        paymentMethod: order.paymentMethod || order.PhuongThucThanhToan,
+        paymentStatus: order.paymentStatus || order.TrangThaiThanhToan
+    });
+
+    // ✅ LUÔN HIỂN THỊ MODAL XÁC NHẬN (kể cả không có phí)
+    await showAddressChangeConfirmation(order, {
+        oldProvince,
+        newProvince,
+        newAddressDisplay,
+        payload,
+        isOldHCM,
+        isNewHCM
+    });
+}
+
+// ✅ HÀM HIỂN THỊ MODAL XÁC NHẬN ĐỔI ĐỊA CHỈ
+async function showAddressChangeConfirmation(order, addressInfo) {
+    const modal = document.getElementById('address-change-confirmation-modal');
+    if (!modal) {
+        console.error('Address change confirmation modal not found');
+        return;
+    }
+
+    const { oldProvince, newProvince, newAddressDisplay, payload, isOldHCM, isNewHCM } = addressInfo;
+    
+    // Lưu thông tin để xử lý sau khi confirm
+    pendingAddressChange = {
+        order,
+        payload,
+        addressInfo
+    };
+
+    // Hiển thị địa chỉ cũ và mới
+    const oldAddressEl = document.getElementById('confirm-old-address');
+    const newAddressEl = document.getElementById('confirm-new-address');
+    
+    if (oldAddressEl) {
+        const oldFullAddress = await formatFullAddress(order);
+        oldAddressEl.innerHTML = `
+            <div style="font-weight: 500;">${order.recipientName || 'N/A'} - ${order.recipientPhone || 'N/A'}</div>
+            <div style="color: #666; font-size: 14px; margin-top: 4px;">${oldFullAddress}</div>
+        `;
+    }
+    
+    if (newAddressEl) {
+        newAddressEl.innerHTML = `
+            <div style="font-weight: 500; color: #ff5722;">${newAddressDisplay}</div>
+        `;
+    }
+
+    // ✅ TÍNH PHÍ SHIP CHÍNH XÁC dựa trên trọng lượng đơn hàng
+    const paymentMethod = order.paymentMethod || order.PhuongThucThanhToan || '';
+    const paymentStatus = order.paymentStatus || order.TrangThaiThanhToan || '';
+    const currentTotal = order.totalAmount || order.TongTien || 0;
+    
+    console.log('📋 Order details:', {
+        orderId: order.id || order.MaHD,
+        items: order.items,
+        itemsLength: order.items ? order.items.length : 0,
+        isOldHCM,
+        isNewHCM,
+        oldProvince,
+        newProvince
+    });
+    
+    // Lấy tổng trọng lượng từ chi tiết đơn hàng
+    let totalWeight = 0;
+    if (order.items && Array.isArray(order.items) && order.items.length > 0) {
+        totalWeight = order.items.reduce((sum, item) => {
+            const itemWeight = item.weight || item.TrongLuong || 300; // default 300g
+            const quantity = item.quantity || item.SoLuong || 1;
+            console.log(`  📦 Item: ${item.productName || item.TenSP}, Weight: ${itemWeight}g, Qty: ${quantity}`);
+            return sum + (itemWeight * quantity);
+        }, 0);
+    } else {
+        // Nếu không có thông tin trọng lượng, giả định trung bình 500g/sản phẩm
+        console.warn('⚠️ Không có thông tin items, dùng trọng lượng mặc định 500g');
+        totalWeight = 500;
+    }
+    
+    console.log('📦 Tổng trọng lượng đơn hàng:', totalWeight, 'g');
+    
+    // Tính phí ship theo công thức: 15,000đ/500g cho ngoại thành
+    const calculateShipping = (isHCM, weight) => {
+        if (isHCM) return 0; // Free ship HCM
+        const units = Math.ceil(weight / 500);
+        return units * 15000;
+    };
+    
+    const oldShippingFee = calculateShipping(isOldHCM, totalWeight);
+    const newShippingFee = calculateShipping(isNewHCM, totalWeight);
+    const shippingDiff = newShippingFee - oldShippingFee;
+    
+    console.log('💰 Phí ship cũ:', oldShippingFee, '- Phí ship mới:', newShippingFee, '- Chênh lệch:', shippingDiff);
+    
+    // ✅ LUÔN HIỂN THỊ BOX PHÍ SHIP (kể cả khi = 0) để user biết
+    const shippingFeeInfoEl = document.getElementById('shipping-fee-info');
+    if (shippingFeeInfoEl) {
+        // Hiển thị nếu có thay đổi HOẶC nếu địa chỉ mới không phải HCM
+        if (shippingDiff !== 0 || !isNewHCM || !isOldHCM) {
+            shippingFeeInfoEl.style.display = 'block';
+            document.getElementById('confirm-old-shipping-fee').textContent = formatPrice(oldShippingFee);
+            document.getElementById('confirm-new-shipping-fee').textContent = formatPrice(newShippingFee);
+            document.getElementById('confirm-shipping-diff').textContent = 
+                (shippingDiff > 0 ? '+' : '') + formatPrice(shippingDiff);
+            document.getElementById('confirm-shipping-diff').style.color = shippingDiff > 0 ? '#d84315' : '#4caf50';
+        } else {
+            shippingFeeInfoEl.style.display = 'none';
+        }
+    }
+
+    // Thông tin thanh toán
+    const paymentMethodNames = {
+        'COD': 'Thanh toán khi nhận hàng (COD)',
+        'VNPAY': 'Thanh toán online (VNPay)',
+        'BANK': 'Chuyển khoản ngân hàng',
+        'MOMO': 'Ví MoMo',
+        'ZALOPAY': 'Ví ZaloPay'
+    };
+    
+    document.getElementById('confirm-payment-method').textContent = 
+        paymentMethodNames[paymentMethod] || paymentMethod;
+    
+    const newTotal = currentTotal + shippingDiff;
+    document.getElementById('confirm-new-total').textContent = formatPrice(newTotal);
+
+    // Message động
+    const messageEl = document.getElementById('address-change-message');
+    let message = '';
+    
+    if (shippingDiff > 0) {
+        if (paymentMethod === 'VNPAY' && paymentStatus === 'Đã thanh toán') {
+            message = `⚠️ <strong>Lưu ý:</strong> Bạn đã thanh toán online ${formatPrice(currentTotal)}. ` +
+                     `Shipper sẽ <strong style="color: #d84315;">thu thêm ${formatPrice(shippingDiff)}</strong> phí ship khi giao hàng.`;
+        } else if (paymentMethod === 'COD') {
+            message = `� Tổng tiền sẽ tăng từ <strong>${formatPrice(currentTotal)}</strong> lên ` +
+                     `<strong style="color: #d84315;">${formatPrice(newTotal)}</strong>. ` +
+                     `Bạn sẽ thanh toán khi nhận hàng.`;
+        } else {
+            message = `💰 Tổng tiền sẽ thay đổi thành <strong style="color: #d84315;">${formatPrice(newTotal)}</strong>.`;
+        }
+    } else if (shippingDiff < 0) {
+        message = `✅ Phí ship giảm ${formatPrice(Math.abs(shippingDiff))}! Tổng tiền mới: <strong style="color: #4caf50;">${formatPrice(newTotal)}</strong>`;
+    } else {
+        message = `ℹ️ Địa chỉ mới không ảnh hưởng đến phí vận chuyển.`;
+    }
+    
+    if (messageEl && messageEl.querySelector('p')) {
+        messageEl.querySelector('p').innerHTML = message;
+    }
+
+    // Hiển thị modal
+    modal.style.display = 'block';
+}
+
+// ✅ HÀM ĐÓNG MODAL XÁC NHẬN
+function closeAddressChangeModal() {
+    const modal = document.getElementById('address-change-confirmation-modal');
+    if (modal) {
+        modal.style.display = 'none';
+    }
+    pendingAddressChange = null;
+}
+
+// ✅ HÀM XỬ LÝ KHI KHÁCH ĐỒNG Ý ĐỔI ĐỊA CHỈ
+async function confirmAddressChange() {
+    if (!pendingAddressChange) {
+        showErrorToast('Không tìm thấy thông tin thay đổi');
+        return;
+    }
+
+    const { order, payload } = pendingAddressChange;
+    const orderId = order.id || order.MaHD;
+
+    // Đóng modal xác nhận
+    closeAddressChangeModal();
+
+    // Hiển thị loading
+    const loadingModal = document.getElementById('loading-modal');
+    if (loadingModal) loadingModal.style.display = 'flex';
 
     try {
         const resp = await fetch(`http://localhost:5000/api/orders/hoadon/${orderId}/address`, {
@@ -1117,10 +1385,99 @@ async function submitAddressUpdate(order) {
             throw new Error(data.error || data.message || 'Cập nhật địa chỉ thất bại');
         }
 
+        // ✅ HIỂN THỊ THÔNG BÁO PHÙ HỢP
+        let successMessage = data.message || 'Cập nhật địa chỉ thành công';
+        
+        if (data.warning && data.data) {
+            if (data.data.collectOnDelivery) {
+                // Trường hợp VNPay đã thanh toán, thu thêm tiền ship
+                successMessage = `✅ ${successMessage}\n\n`;
+                successMessage += `💵 Shipper sẽ thu thêm: ${formatPrice(data.data.collectOnDelivery)}\n`;
+                successMessage += `📝 ${data.data.note || 'Thu khi giao hàng'}`;
+            } else if (data.data.newTotal) {
+                // Trường hợp COD
+                successMessage = `✅ ${successMessage}\n\n`;
+                successMessage += `💵 Tổng tiền mới: ${formatPrice(data.data.newTotal)}\n`;
+                successMessage += `📝 ${data.data.note || 'Thanh toán khi nhận hàng'}`;
+            }
+        }
+
+        // ✅ CẬP NHẬT UI NGAY TỪ RESPONSE API
+        console.log('🔍 DEBUG: API Response data:', JSON.stringify(data.data, null, 2));
+        
+        if (data.data) {
+            const responseTotal = data.data.TongTien || data.data.newTotal;
+            const responseShipping = data.data.PhiShip || data.data.newShippingFee;
+            
+            console.log('🔍 DEBUG: Extracted values:', {
+                responseTotal,
+                responseShipping,
+                TongTien: data.data.TongTien,
+                newTotal: data.data.newTotal,
+                PhiShip: data.data.PhiShip,
+                newShippingFee: data.data.newShippingFee
+            });
+            
+            if (responseTotal !== undefined) {
+                const totalAmountEl = document.getElementById('order-total');
+                console.log('💰 [RESPONSE] Updating order-total from API response:', responseTotal);
+                console.log('💰 Element exists?', totalAmountEl !== null, 'Current text:', totalAmountEl?.textContent);
+                if (totalAmountEl) {
+                    totalAmountEl.textContent = formatPrice(responseTotal);
+                    console.log('💰 Updated to:', totalAmountEl.textContent);
+                } else {
+                    console.error('❌ Element #order-total NOT FOUND in DOM!');
+                }
+            } else {
+                console.warn('⚠️ responseTotal is undefined!');
+            }
+            
+            if (responseShipping !== undefined) {
+                const shippingFeeEl = document.getElementById('shipping-fee');
+                console.log('🚚 [RESPONSE] Updating shipping-fee from API response:', responseShipping);
+                if (shippingFeeEl) {
+                    shippingFeeEl.textContent = formatPrice(responseShipping);
+                } else {
+                    console.warn('⚠️ Element #shipping-fee NOT FOUND');
+                }
+            }
+        } else {
+            console.error('❌ data.data is empty or undefined!');
+        }
+
+        // ✅ CHỜ 500MS ĐỂ DATABASE COMMIT XONG
+        await new Promise(resolve => setTimeout(resolve, 500));
+
         // Cập nhật UI: refresh chi tiết đơn hàng và danh sách
         const fresh = await fetchOrderDetail(orderId);
+        
+        console.log('🔄 Fresh order data after address change:', {
+            orderId,
+            totalAmount: fresh?.totalAmount,
+            TongTien: fresh?.TongTien,
+            shippingFee: fresh?.shippingFee,
+            PhiShip: fresh?.PhiShip
+        });
+        
         if (fresh) {
             currentOrderData = fresh;
+            
+            // ✅ CẬP NHẬT TỔNG TIỀN TRÊN MODAL
+            const totalAmountEl = document.getElementById('order-total');
+            const newTotal = fresh.totalAmount || fresh.TongTien || 0;
+            console.log('💰 Updating order-total element:', totalAmountEl ? 'Found' : 'NOT FOUND', 'New value:', newTotal);
+            if (totalAmountEl) {
+                totalAmountEl.textContent = formatPrice(newTotal);
+            }
+            
+            // ✅ CẬP NHẬT PHÍ SHIP NẾU CÓ ELEMENT
+            const shippingFeeEl = document.getElementById('shipping-fee');
+            const newShippingFee = fresh.shippingFee || fresh.PhiShip || 0;
+            console.log('🚚 Updating shipping-fee element:', shippingFeeEl ? 'Found' : 'NOT FOUND', 'New value:', newShippingFee);
+            if (shippingFeeEl) {
+                shippingFeeEl.textContent = formatPrice(newShippingFee);
+            }
+            
             // server returns recipient fields from joined diachi
             document.getElementById('receiver-name').textContent = fresh.recipientName || fresh.TenNguoiNhan || payload.TenNguoiNhan || '';
             document.getElementById('receiver-phone').textContent = fresh.recipientPhone || fresh.SDT || payload.SDT || '';
@@ -1136,6 +1493,22 @@ async function submitAddressUpdate(order) {
                 document.getElementById('shipping-address').textContent = await formatFullAddress(shippingParts);
             } catch (e) {
                 document.getElementById('shipping-address').textContent = fresh.shippingAddress || payload.DiaChiChiTiet || '';
+            }
+
+            // ✅ Hiển thị ghi chú quan trọng nếu có
+            const notesEl = document.getElementById('order-notes');
+            if (notesEl && fresh.notes) {
+                if (fresh.notes.includes('Thu thêm') && fresh.notes.includes('phí ship')) {
+                    notesEl.innerHTML = `
+                        <div class="alert alert-warning">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            <strong>⚠️ Lưu ý quan trọng:</strong>
+                            <p>${fresh.notes.replace(/\n/g, '<br>')}</p>
+                        </div>
+                    `;
+                } else {
+                    notesEl.innerHTML = `<p class="order-note">${fresh.notes.replace(/\n/g, '<br>')}</p>`;
+                }
             }
 
             // Ẩn form
@@ -1158,14 +1531,22 @@ async function submitAddressUpdate(order) {
                 }, 300);
             } catch (e) { /* ignore */ }
 
-            alert('Cập nhật địa chỉ thành công');
+            alert(successMessage);
         } else {
-            alert('Cập nhật địa chỉ thành công (đã lưu trên server)');
-            document.getElementById('edit-address-form').style.display = 'none';
+            alert(successMessage);
+            const formEl = document.getElementById('edit-address-form');
+            if (formEl) formEl.style.display = 'none';
         }
     } catch (err) {
         console.error('Update address failed:', err);
         showErrorToast(err.message || 'Lỗi khi cập nhật địa chỉ');
+    } finally {
+        // Ẩn loading modal
+        const loadingModal = document.getElementById('loading-modal');
+        if (loadingModal) loadingModal.style.display = 'none';
+        
+        // Reset pending change
+        pendingAddressChange = null;
     }
 }
 
@@ -4065,3 +4446,31 @@ async function changeOrderStatus(orderId, newStatus, note = '') {
 }
 
 window.changeOrderStatus = changeOrderStatus;
+
+// ✅ Export hàm xử lý modal đổi địa chỉ
+window.closeAddressChangeModal = closeAddressChangeModal;
+window.confirmAddressChange = confirmAddressChange;
+
+// ✅ HÀM KIỂM TRA ĐỊA CHỈ HỒ CHÍ MINH
+function isHCMAddress(province) {
+    if (!province) return false;
+    
+    const hcmKeywords = [
+        'hồ chí minh', 
+        'ho chi minh', 
+        'hcm', 
+        'tp.hcm',
+        'tp hcm',
+        'thành phố hồ chí minh',
+        'thanh pho ho chi minh',
+        'sài gòn',
+        'saigon',
+        '79', // Mã tỉnh HCM (API cũ)
+        '50'  // Mã tỉnh HCM (API mới)
+    ];
+    
+    const provinceLower = String(province).toLowerCase().trim();
+    return hcmKeywords.some(keyword => 
+        provinceLower.includes(keyword)
+    );
+}

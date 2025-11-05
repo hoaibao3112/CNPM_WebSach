@@ -5,8 +5,25 @@ import jwt from 'jsonwebtoken';
 import { VNPay, ignoreLogger, ProductCode, VnpLocale, dateFormat } from 'vnpay';
 import { pointsFromOrderAmount, addLoyaltyPoints, subtractLoyaltyPoints, computeTier } from '../utils/loyalty.js';
 import { sendOrderConfirmationEmail } from '../utils/emailService.js';
+import https from 'https';
+import fetch from 'node-fetch';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
 const router = express.Router();
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// ✅ Load JSON data từ file local
+const citiesData = JSON.parse(fs.readFileSync(path.join(__dirname, '../../migrations/city.json'), 'utf-8'));
+const districtsData = JSON.parse(fs.readFileSync(path.join(__dirname, '../../migrations/district.json'), 'utf-8'));
+const wardsData = JSON.parse(fs.readFileSync(path.join(__dirname, '../../migrations/wards.json'), 'utf-8'));
+
+// ✅ HTTPS Agent để bypass certificate error cho provinces API
+const httpsAgent = new https.Agent({
+  rejectUnauthorized: false
+});
 
 // Hàm sắp xếp object để tạo hash VNPay
 
@@ -26,6 +43,65 @@ function sortObject(obj) {
   }
   return sorted;
 }
+
+// 🚢 Hàm tính phí ship
+/**
+ * Tính phí ship dựa trên địa chỉ và tier khách hàng
+ * @param {string} province - Tỉnh/thành phố giao hàng
+ * @param {number} totalWeight - Tổng trọng lượng đơn hàng (gram)
+ * @param {string} customerTier - Hạng thành viên: 'Đồng', 'Bạc', 'Vàng'
+ * @returns {number} Phí ship (VND)
+ */
+function calculateShippingFee(province, totalWeight, customerTier = 'Đồng') {
+  // Chuẩn hóa tên tỉnh/thành
+  const provinceLower = String(province || '').toLowerCase().trim();
+  
+  // Kiểm tra nội thành TP.HCM - FREE SHIP
+  const isHCM = provinceLower.includes('hồ chí minh') || 
+                provinceLower.includes('ho chi minh') ||
+                provinceLower.includes('hcm') ||
+                provinceLower.includes('tp.hcm') ||
+                provinceLower.includes('tphcm') ||
+                provinceLower === '79' ||  // Mã tỉnh TP.HCM (API cũ)
+                provinceLower === '50';    // Mã tỉnh TP.HCM (API mới)
+
+  if (isHCM) {
+    console.log('📍 Nội thành TP.HCM -> FREE SHIP');
+    return 0;
+  }
+
+  // Ngoài TP.HCM: 15,000 VND / 500g
+  const weightInKg = totalWeight / 1000; // Convert gram to kg
+  const weight500gUnits = Math.ceil((totalWeight || 0) / 500); // Làm tròn lên
+  let shippingFee = weight500gUnits * 15000;
+
+  console.log(`📦 Tổng trọng lượng: ${totalWeight}g (${weightInKg}kg)`);
+  console.log(`📦 Số đơn vị 500g: ${weight500gUnits}`);
+  console.log(`💰 Phí ship gốc: ${shippingFee.toLocaleString('vi-VN')} VND`);
+
+  // Áp dụng giảm giá theo tier
+  let discount = 0;
+  switch (customerTier) {
+    case 'Bạc':
+      discount = 0.20; // Giảm 20%
+      break;
+    case 'Vàng':
+      discount = 0.50; // Giảm 50%
+      break;
+    default:
+      discount = 0; // Đồng: không giảm
+  }
+
+  if (discount > 0) {
+    const discountAmount = Math.round(shippingFee * discount);
+    shippingFee = shippingFee - discountAmount;
+    console.log(`🎁 Tier ${customerTier} giảm ${discount * 100}%: -${discountAmount.toLocaleString('vi-VN')} VND`);
+  }
+
+  console.log(`✅ Phí ship cuối cùng: ${shippingFee.toLocaleString('vi-VN')} VND`);
+  return Math.round(shippingFee);
+}
+
 //cấu hình vnpay
 const vnpay = new VNPay({
   tmnCode: process.env.VNP_TMNCODE,
@@ -283,15 +359,17 @@ router.post('/place-order', authenticateToken, async (req, res) => {
       return res.status(400).json({ error: 'Không có sản phẩm được chọn' });
     }
 
-    // Validate sản phẩm và tồn kho
+    // Validate sản phẩm và tồn kho + Lấy trọng lượng
     const cartItems = [];
+    let totalWeight = 0; // Tổng trọng lượng (gram)
+    
     for (const item of items) {
       if (!item.MaSP || !item.SoLuong || item.SoLuong < 1) {
         return res.status(400).json({ error: `Sản phẩm ${item.MaSP} không hợp lệ` });
       }
       
       const [product] = await connection.query(
-        'SELECT MaSP, DonGia as price, SoLuong as stock, TenSP, HinhAnh FROM sanpham WHERE MaSP = ?',
+        'SELECT MaSP, DonGia as price, SoLuong as stock, TenSP, HinhAnh, TrongLuong FROM sanpham WHERE MaSP = ?',
         [item.MaSP]
       );
       
@@ -303,18 +381,27 @@ router.post('/place-order', authenticateToken, async (req, res) => {
         return res.status(400).json({ error: `Sản phẩm ${item.MaSP} không đủ tồn kho (${product[0].stock} < ${item.SoLuong})` });
       }
       
+      // Tính tổng trọng lượng
+      const productWeight = product[0].TrongLuong || 0; // gram
+      totalWeight += productWeight * item.SoLuong;
+      
       cartItems.push({
         productId: item.MaSP,
         quantity: item.SoLuong,
         price: product[0].price,
         productName: product[0].TenSP,
-        productImage: product[0].HinhAnh
+        productImage: product[0].HinhAnh,
+        weight: productWeight
       });
     }
 
+    console.log(`📦 Tổng trọng lượng đơn hàng: ${totalWeight}g`);
+
     // Tính tổng tiền (subtotal)
     const subtotal = totalAmountDiscouted ? Number(totalAmountDiscouted) : cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
-  console.log('Validated cart items:', cartItems, 'Subtotal:', subtotal);
+  console.log('🔍 [DEBUG] totalAmountDiscouted:', totalAmountDiscouted, 'type:', typeof totalAmountDiscouted);
+  console.log('🔍 [DEBUG] Validated cart items:', cartItems.map(i => `${i.productName}: ${i.price} x ${i.quantity}`));
+  console.log('🔍 [DEBUG] Subtotal:', subtotal);
 
     // Áp dụng quyền lợi theo hạng hội viên
     const customerRow = existingCustomer[0];
@@ -332,6 +419,16 @@ router.post('/place-order', authenticateToken, async (req, res) => {
 
   // Debug output to help verify tier & discount behavior
   console.log('[LOYALTY DEBUG] customerId=', customer.makh, 'tier=', userTier, 'discountPercent=', cfg.discountPercent, 'discountAmount=', discountAmount, 'amountAfterDiscount=', amountAfterDiscount);
+  console.log('🔍 [DEBUG] subtotal:', subtotal, 'discountAmount:', discountAmount, 'amountAfterDiscount:', amountAfterDiscount);
+
+    // 🚢 TÍNH PHÍ SHIP
+    const shippingFee = calculateShippingFee(shippingAddress.province, totalWeight, userTier);
+    console.log(`🚢 Phí ship: ${shippingFee.toLocaleString('vi-VN')} VND`);
+
+    // Tổng tiền cuối cùng = Tiền hàng (đã giảm) + Phí ship
+    const finalTotalAmount = amountAfterDiscount + shippingFee;
+    console.log(`� [DEBUG] amountAfterDiscount: ${amountAfterDiscount}, shippingFee: ${shippingFee}`);
+    console.log(`�💵 Tổng tiền cuối cùng (bao gồm ship): ${finalTotalAmount.toLocaleString('vi-VN')} VND`);
 
     // BẮT ĐẦU TRANSACTION
     await connection.beginTransaction();
@@ -355,12 +452,24 @@ router.post('/place-order', authenticateToken, async (req, res) => {
       console.log(`Inserted new address MaDiaChi=${addressId} for customer ${customer.makh}`);
     }
 
-    // Tạo đơn hàng - lưu TongTien = amountAfterDiscount; ghi note quyền lợi/giảm giá
-    const noteWithLoyalty = `${notes || ''}\n[LOYALTY] Hạng: ${userTier}; Giảm: ${cfg.discountPercent}% (${discountAmount.toLocaleString()}đ)`;
+    // ✅ Resolve tên tỉnh để ghi chú rõ ràng (thay vì mã số)
+    let provinceName = shippingAddress.province;
+    if (/^\d+$/.test(String(provinceName).trim())) {
+      // Nếu là mã số, tìm tên trong citiesData
+      const cityObj = citiesData.find(c => c.city_id === provinceName);
+      if (cityObj) {
+        provinceName = cityObj.city_name;
+        console.log(`📍 Resolved province code ${shippingAddress.province} → ${provinceName}`);
+      }
+    }
+    
+    // Tạo đơn hàng - lưu TongTien bao gồm phí ship; ghi note quyền lợi/giảm giá + phí ship
+    const noteWithLoyalty = `${notes || ''}\n[LOYALTY] Hạng: ${userTier}; Giảm sản phẩm: ${cfg.discountPercent}% (${discountAmount.toLocaleString()}đ)\n[SHIPPING] Phí ship: ${shippingFee.toLocaleString()}đ (${provinceName}, Trọng lượng: ${totalWeight}g)`;
+    
     const [orderResult] = await connection.query(
-      `INSERT INTO hoadon (makh, MaDiaChi, NgayTao, TongTien, PhuongThucThanhToan, GhiChu, tinhtrang, TrangThaiThanhToan) 
-       VALUES (?, ?, NOW(), ?, ?, ?, ?, ?)`,
-      [customer.makh, addressId, amountAfterDiscount, paymentMethod, noteWithLoyalty, 'Chờ xử lý', 'Chưa thanh toán']
+      `INSERT INTO hoadon (makh, MaDiaChi, NgayTao, TongTien, PhuongThucThanhToan, GhiChu, tinhtrang, TrangThaiThanhToan, PhiShip) 
+       VALUES (?, ?, NOW(), ?, ?, ?, ?, ?, ?)`,
+      [customer.makh, addressId, finalTotalAmount, paymentMethod, noteWithLoyalty, 'Chờ xử lý', 'Chưa thanh toán', shippingFee]
     );
     const orderId = orderResult.insertId;
 
@@ -388,14 +497,18 @@ router.post('/place-order', authenticateToken, async (req, res) => {
     await connection.commit();
     console.log('✅ Database operations completed successfully');
 
-    // XỬ LÝ THANH TOÁN: dùng amountAfterDiscount thay vì subtotal
+    // XỬ LÝ THANH TOÁN: dùng finalTotalAmount (bao gồm phí ship)
     if (paymentMethod === 'VNPAY') {
       try {
         const tomorrow = new Date();
         tomorrow.setDate(tomorrow.getDate() + 1);
         
+        console.log('🔍 [VNPay] finalTotalAmount:', finalTotalAmount);
+        console.log('🔍 [VNPay] vnp_Amount (x100):', finalTotalAmount * 100);
+        
+        // ✅ VNPay yêu cầu số tiền phải nhân với 100 (đơn vị: VND x 100)
         const vnpayResponse = await vnpay.buildPaymentUrl({
-          vnp_Amount: amountAfterDiscount,
+          vnp_Amount: finalTotalAmount,
           vnp_IpAddr: req.ip || req.connection.remoteAddress || '127.0.0.1',
           vnp_TxnRef: orderId.toString(),
           vnp_OrderInfo: `Thanh toan don hang ${orderId}`,
@@ -424,7 +537,9 @@ router.post('/place-order', authenticateToken, async (req, res) => {
 
             const orderPayload = {
               id: orderId,
-              total: amountAfterDiscount,
+              total: finalTotalAmount,
+              subtotal: amountAfterDiscount,
+              shippingFee: shippingFee,
               paymentMethod: paymentMethod,
               paymentUrl: vnpayResponse,
               customerName: customer.name,
@@ -447,7 +562,9 @@ router.post('/place-order', authenticateToken, async (req, res) => {
           message: 'Đơn hàng đã được tạo, chuyển hướng thanh toán VNPay',
           appliedTier: userTier,
           discountAmount,
-          amountAfterDiscount
+          amountAfterDiscount,
+          shippingFee,
+          finalTotalAmount
         });
       } catch (vnpayError) {
         console.error('❌ VNPay error:', vnpayError);
@@ -459,10 +576,10 @@ router.post('/place-order', authenticateToken, async (req, res) => {
         });
       }
     } else if (paymentMethod === 'COD') {
-      // COD success: thêm điểm trên amountAfterDiscount (non-blocking)
+      // COD success: thêm điểm trên finalTotalAmount (non-blocking)
       console.log('✅ COD Order completed successfully with ID:', orderId);
       try {
-        const loyRes = await addLoyaltyPoints(connection, customer.makh, amountAfterDiscount);
+        const loyRes = await addLoyaltyPoints(connection, customer.makh, finalTotalAmount);
         console.log(`Loyalty: added points for customer ${customer.makh} (COD order ${orderId})`, { loyRes });
         if (loyRes && loyRes.error) console.warn('Loyalty add returned error (non-blocking):', loyRes.error);
       } catch (e) {
@@ -486,7 +603,9 @@ router.post('/place-order', authenticateToken, async (req, res) => {
 
           const orderPayload = {
             id: orderId,
-            total: amountAfterDiscount,
+            total: finalTotalAmount,
+            subtotal: amountAfterDiscount,
+            shippingFee: shippingFee,
             paymentMethod: paymentMethod,
             customerName: customer.name,
             shippingAddress: emailShippingAddress,
@@ -508,7 +627,9 @@ router.post('/place-order', authenticateToken, async (req, res) => {
         paymentMethod: 'COD',
         appliedTier: userTier,
         discountAmount,
-        amountAfterDiscount
+        amountAfterDiscount,
+        shippingFee,
+        finalTotalAmount
       });
     } else {
       return res.status(400).json({ error: 'Phương thức thanh toán không hợp lệ' });
@@ -912,6 +1033,7 @@ router.get('/customer-orders/detail/:orderId', authenticateToken, async (req, re
         hd.MaHD AS id,
         hd.NgayTao AS createdAt,
         hd.TongTien AS totalAmount,
+        hd.PhiShip AS shippingFee,
         hd.tinhtrang AS status,
         hd.PhuongThucThanhToan AS paymentMethod,
         hd.TrangThaiThanhToan AS paymentStatus,
@@ -936,6 +1058,7 @@ router.get('/customer-orders/detail/:orderId', authenticateToken, async (req, re
         ct.MaSP AS productId,
         sp.TenSP AS productName,
         sp.HinhAnh AS productImage,
+        sp.TrongLuong AS weight,
         ct.DonGia AS price,
         ct.Soluong AS quantity
       FROM chitiethoadon ct
@@ -1556,9 +1679,11 @@ router.get('/customer-refunds/:customerId', authenticateToken, async (req, res) 
 });
 
 // Proxy endpoints for provinces.open-api.vn to provide lists for frontend selects
+// ✅ Sử dụng httpsAgent để bypass certificate error
 router.get('/locations/provinces', async (req, res) => {
   try {
-    const r = await fetch('https://provinces.open-api.vn/api/p/');
+    const r = await fetch('https://provinces.open-api.vn/api/p/', { agent: httpsAgent });
+    if (!r.ok) throw new Error(`HTTP error! status: ${r.status}`);
     const data = await r.json();
     // map to useful shape
     const mapped = data.map(p => ({ code: p.code, name: p.name }));
@@ -1572,7 +1697,8 @@ router.get('/locations/provinces', async (req, res) => {
 router.get('/locations/districts/:provinceCode', async (req, res) => {
   try {
     const { provinceCode } = req.params;
-    const r = await fetch(`https://provinces.open-api.vn/api/p/${provinceCode}?depth=2`);
+    const r = await fetch(`https://provinces.open-api.vn/api/p/${provinceCode}?depth=2`, { agent: httpsAgent });
+    if (!r.ok) throw new Error(`HTTP error! status: ${r.status}`);
     const data = await r.json();
     const districts = (data.districts || []).map(d => ({ code: d.code, name: d.name }));
     res.json({ success: true, data: districts });
@@ -1585,7 +1711,8 @@ router.get('/locations/districts/:provinceCode', async (req, res) => {
 router.get('/locations/wards/:districtCode', async (req, res) => {
   try {
     const { districtCode } = req.params;
-    const r = await fetch(`https://provinces.open-api.vn/api/d/${districtCode}?depth=2`);
+    const r = await fetch(`https://provinces.open-api.vn/api/d/${districtCode}?depth=2`, { agent: httpsAgent });
+    if (!r.ok) throw new Error(`HTTP error! status: ${r.status}`);
     const data = await r.json();
     const wards = (data.wards || []).map(w => ({ code: w.code, name: w.name }));
     res.json({ success: true, data: wards });
@@ -1596,12 +1723,16 @@ router.get('/locations/wards/:districtCode', async (req, res) => {
 });
 
 // Resolve single province/district/ward name by code (used by frontend to avoid CORS)
+// ✅ SỬ DỤNG DỮ LIỆU LOCAL JSON THAY VÌ API EXTERNAL
 router.get('/resolve/province/:code', async (req, res) => {
   try {
     const { code } = req.params;
-    const r = await fetch(`https://provinces.open-api.vn/api/p/${code}`);
-    const d = await r.json();
-    return res.json({ success: true, name: d.name || String(code) });
+    // Tìm trong dữ liệu local
+    const province = citiesData.find(c => c.city_id === String(code));
+    if (province) {
+      return res.json({ success: true, name: province.city_name });
+    }
+    return res.json({ success: true, name: String(code) });
   } catch (err) {
     console.error('Error resolving province name', err);
     return res.status(500).json({ error: 'Không thể resolve province', name: String(req.params.code) });
@@ -1611,9 +1742,12 @@ router.get('/resolve/province/:code', async (req, res) => {
 router.get('/resolve/district/:code', async (req, res) => {
   try {
     const { code } = req.params;
-    const r = await fetch(`https://provinces.open-api.vn/api/d/${code}`);
-    const d = await r.json();
-    return res.json({ success: true, name: d.name || String(code) });
+    // Tìm trong dữ liệu local
+    const district = districtsData.find(d => d.district_id === String(code));
+    if (district) {
+      return res.json({ success: true, name: district.district_name });
+    }
+    return res.json({ success: true, name: String(code) });
   } catch (err) {
     console.error('Error resolving district name', err);
     return res.status(500).json({ error: 'Không thể resolve district', name: String(req.params.code) });
@@ -1623,9 +1757,16 @@ router.get('/resolve/district/:code', async (req, res) => {
 router.get('/resolve/ward/:code', async (req, res) => {
   try {
     const { code } = req.params;
-    const r = await fetch(`https://provinces.open-api.vn/api/w/${code}`);
-    const d = await r.json();
-    return res.json({ success: true, name: d.name || String(code) });
+    // Nếu code đã là tên (chứa chữ), trả về luôn
+    if (typeof code === 'string' && /[a-zA-Zàáạảãâầấậẩẫăằắặẳẵèéẹẻẽêềếệểễìíịỉĩòóọỏõôồốộổỗơờớợởỡùúụủũưừứựửữỳýỵỷỹđ]/i.test(code)) {
+      return res.json({ success: true, name: decodeURIComponent(code) });
+    }
+    // Tìm trong dữ liệu local (nếu là mã số)
+    const ward = wardsData.find(w => w.ward_id === String(code) || w.ward_name === decodeURIComponent(code));
+    if (ward) {
+      return res.json({ success: true, name: ward.ward_name });
+    }
+    return res.json({ success: true, name: decodeURIComponent(code) });
   } catch (err) {
     console.error('Error resolving ward name', err);
     return res.status(500).json({ error: 'Không thể resolve ward', name: String(req.params.code) });
@@ -2699,95 +2840,320 @@ router.post('/customer-addresses/:addressId/set-default', authenticateToken, asy
   }
 });
 
-// API cập nhật địa chỉ của hóa đơn (chỉ khi trạng thái = 'Chờ xử lý')
+// ✅ ĐÃ XÓA ROUTE CŨ - DÙNG ROUTE MỚI Ở DƯỚI (dòng ~2927)
+
+// ✅ API CẬP NHẬT ĐỊA CHỈ - PHIÊN BẢN ĐƠN GIẢN HÓA
 router.put('/hoadon/:id/address', authenticateToken, async (req, res) => {
   const { id } = req.params;
   const userId = req.user && req.user.makh;
   const {
-    MaDiaChi, TenNguoiNhan, SDT, DiaChiChiTiet, TinhThanh, QuanHuyen, PhuongXa
+    MaDiaChi, 
+    TenNguoiNhan, 
+    SDT, 
+    DiaChiChiTiet, 
+    TinhThanh, 
+    QuanHuyen, 
+    PhuongXa
   } = req.body;
 
+  if (!userId) {
+    return res.status(401).json({ success: false, error: 'Chưa đăng nhập' });
+  }
+
   // Nếu không truyền MaDiaChi thì phải cung cấp thông tin địa chỉ mới
-  if (!MaDiaChi && (!TenNguoiNhan || !SDT || !DiaChiChiTiet)) {
-    return res.status(400).json({ success: false, error: 'Thiếu thông tin địa chỉ hoặc MaDiaChi' });
+  if (!MaDiaChi && (!TenNguoiNhan || !SDT || !DiaChiChiTiet || !TinhThanh)) {
+    return res.status(400).json({ 
+      success: false, 
+      error: 'Thiếu thông tin địa chỉ' 
+    });
   }
 
   const conn = await pool.getConnection();
   try {
     await conn.beginTransaction();
 
-    // Khóa đơn để tránh race condition
-    const [rows] = await conn.query(`SELECT MaHD, makh, tinhtrang, MaDiaChi FROM hoadon WHERE MaHD = ? FOR UPDATE`, [id]);
-    if (!rows.length) {
+    // ✅ BƯỚC 1: Lấy thông tin đơn hàng hiện tại
+    const [orderRows] = await conn.query(`
+      SELECT h.MaHD, h.makh, h.MaDiaChi, h.tinhtrang, 
+             h.TrangThaiThanhToan, h.PhuongThucThanhToan, 
+             h.TongTien, h.PhiShip,
+             d.TinhThanh as OldProvince
+      FROM hoadon h
+      LEFT JOIN diachi d ON h.MaDiaChi = d.MaDiaChi
+      WHERE h.MaHD = ? AND h.makh = ?
+      FOR UPDATE
+    `, [id, userId]);
+
+    if (!orderRows.length) {
       await conn.rollback();
-      return res.status(404).json({ success: false, error: 'Không tìm thấy đơn hàng' });
+      return res.status(404).json({ 
+        success: false, 
+        error: 'Không tìm thấy đơn hàng' 
+      });
     }
 
-    const order = rows[0];
+    const order = orderRows[0];
 
-    // Chỉ cho phép khi đang "Chờ xử lý"
-    if (String(order.tinhtrang) !== 'Chờ xử lý') {
+    // ✅ BƯỚC 2: Kiểm tra điều kiện được phép đổi
+    if (order.tinhtrang !== 'Chờ xử lý') {
       await conn.rollback();
-      return res.status(400).json({ success: false, error: 'Chỉ có thể sửa địa chỉ khi đơn đang ở trạng thái "Chờ xử lý"' });
+      return res.status(400).json({
+        success: false,
+        error: 'Chỉ có thể đổi địa chỉ khi đơn đang "Chờ xử lý"',
+        currentStatus: order.tinhtrang
+      });
     }
 
-    // Quyền: chỉ chủ đơn hoặc admin
-    if (String(order.makh) !== String(userId) && req.user.userType !== 'admin') {
-      await conn.rollback();
-      return res.status(403).json({ success: false, error: 'Không có quyền thay đổi địa chỉ đơn hàng này' });
-    }
+    // ✅ BƯỚC 3: Lưu hoặc sử dụng địa chỉ có sẵn
+    let newAddressId = MaDiaChi;
+    let newProvince = TinhThanh;
 
-    let newAddressId = null;
-    // Nếu client truyền MaDiaChi -> validate quyền sở hữu và dùng luôn
-    if (MaDiaChi) {
-      const [addrRows] = await conn.query(`SELECT MaDiaChi, MaKH FROM diachi WHERE MaDiaChi = ? FOR UPDATE`, [MaDiaChi]);
+    if (!MaDiaChi) {
+      // Tạo địa chỉ mới
+      const [addrResult] = await conn.query(`
+        INSERT INTO diachi (MaKH, TenNguoiNhan, SDT, DiaChiChiTiet, 
+                           TinhThanh, QuanHuyen, PhuongXa)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+      `, [userId, TenNguoiNhan, SDT, DiaChiChiTiet, 
+          TinhThanh, QuanHuyen, PhuongXa]);
+      
+      newAddressId = addrResult.insertId;
+    } else {
+      // Lấy thông tin địa chỉ đã chọn
+      const [addrRows] = await conn.query(`
+        SELECT TinhThanh FROM diachi WHERE MaDiaChi = ?
+      `, [MaDiaChi]);
+      
       if (!addrRows.length) {
         await conn.rollback();
-        return res.status(404).json({ success: false, error: 'Địa chỉ không tồn tại' });
+        return res.status(404).json({ 
+          success: false, 
+          error: 'Địa chỉ không tồn tại' 
+        });
       }
-      const addr = addrRows[0];
-      // Chỉ chủ sở hữu địa chỉ hoặc admin được dùng địa chỉ này
-      if (String(addr.MaKH) !== String(order.makh) && req.user.userType !== 'admin') {
-        await conn.rollback();
-        return res.status(403).json({ success: false, error: 'Không có quyền sử dụng địa chỉ này' });
-      }
-      newAddressId = addr.MaDiaChi;
-
-      const note = `\n[${new Date().toLocaleString()}] Đổi địa chỉ giao hàng bởi ${req.user.tenkh || req.user.makh || 'khách'} (id:${userId})`;
-      await conn.query(`UPDATE hoadon SET MaDiaChi = ?, GhiChu = CONCAT(IFNULL(GhiChu,''), ?) WHERE MaHD = ?`, [newAddressId, note, id]);
-    } else {
-      // Chèn địa chỉ mới (không xóa/ghi đè địa chỉ cũ để giữ lịch sử)
-      const [insertRes] = await conn.query(
-        `INSERT INTO diachi (MaKH, TenNguoiNhan, SDT, DiaChiChiTiet, TinhThanh, QuanHuyen, PhuongXa)
-         VALUES (?, ?, ?, ?, ?, ?, ?)`,
-        [order.makh, TenNguoiNhan, SDT, DiaChiChiTiet, TinhThanh || null, QuanHuyen || null, PhuongXa || null]
-      );
-      newAddressId = insertRes.insertId;
-
-      // Cập nhật hóa đơn trỏ sang địa chỉ mới và lưu note
-      const note = `\n[${new Date().toLocaleString()}] Đổi địa chỉ giao hàng bởi ${req.user.tenkh || req.user.makh || 'khách'} (id:${userId})`;
-      await conn.query(`UPDATE hoadon SET MaDiaChi = ?, GhiChu = CONCAT(IFNULL(GhiChu,''), ?) WHERE MaHD = ?`, [newAddressId, note, id]);
+      
+      newProvince = addrRows[0].TinhThanh;
     }
 
-    await conn.commit();
+    // ✅ BƯỚC 4: Tính lại phí ship
+    // Lấy tổng trọng lượng đơn hàng
+    const [weightRows] = await conn.query(`
+      SELECT COALESCE(SUM(sp.TrongLuong * ct.SoLuong), 0) AS totalWeight
+      FROM chitiethoadon ct
+      JOIN sanpham sp ON ct.MaSP = sp.MaSP
+      WHERE ct.MaHD = ?
+    `, [id]);
 
-    res.json({
-      success: true,
-      message: 'Cập nhật địa chỉ thành công',
-      data: {
-        orderId: id,
-        MaDiaChi: newAddressId,
-        address: { TenNguoiNhan, SDT, DiaChiChiTiet, TinhThanh, QuanHuyen, PhuongXa }
-      }
+    const totalWeight = weightRows[0]?.totalWeight || 0;
+
+    // Lấy tier khách hàng
+    const [customerRows] = await conn.query(`
+      SELECT loyalty_tier FROM khachhang WHERE makh = ?
+    `, [userId]);
+
+    const userTier = customerRows[0]?.loyalty_tier || 'Đồng';
+
+    // Tính phí ship cũ và mới
+    const oldShippingFee = order.PhiShip || 
+      calculateShippingFee(order.OldProvince || '', totalWeight, userTier);
+    
+    const newShippingFee = calculateShippingFee(newProvince, totalWeight, userTier);
+    
+    const shippingDiff = newShippingFee - oldShippingFee;
+
+    console.log('🚚 Shipping calculation:', {
+      orderId: id,
+      oldProvince: order.OldProvince,
+      newProvince,
+      totalWeight,
+      userTier,
+      oldShippingFee,
+      newShippingFee,
+      shippingDiff,
+      paymentMethod: order.PhuongThucThanhToan,
+      paymentStatus: order.TrangThaiThanhToan
     });
+
+    // ✅ BƯỚC 5: Xử lý theo kịch bản ĐƠN GIẢN HÓA
+    
+    // TRƯỜNG HỢP 1: Phí ship giảm hoặc không đổi
+    if (shippingDiff <= 0) {
+      const newTotal = order.TongTien - oldShippingFee + newShippingFee;
+      
+      await conn.query(`
+        UPDATE hoadon 
+        SET MaDiaChi = ?,
+            PhiShip = ?,
+            TongTien = ?,
+            GhiChu = CONCAT(
+              IFNULL(GhiChu, ''), 
+              '\n[', NOW(), '] Đổi địa chỉ: Phí ship thay đổi từ ',
+              ?, 'đ → ', ?, 'đ. Tổng tiền mới: ', ?, 'đ'
+            )
+        WHERE MaHD = ?
+      `, [newAddressId, newShippingFee, newTotal,
+          oldShippingFee, newShippingFee, newTotal, id]);
+
+      await conn.commit();
+      
+      console.log('✅ [SHIP GIẢM] Cập nhật thành công:', {
+        orderId: id,
+        oldTotal: order.TongTien,
+        newTotal,
+        oldShippingFee,
+        newShippingFee,
+        shippingDiff
+      });
+      
+      return res.json({
+        success: true,
+        message: 'Cập nhật địa chỉ thành công',
+        data: {
+          orderId: id,
+          newAddressId,
+          oldShippingFee,
+          newShippingFee,
+          shippingDiff,
+          PhiShip: newShippingFee,  // ✅ Trả về phí ship mới
+          TongTien: newTotal,  // ✅ Trả về tổng tiền mới (đã cập nhật vào DB)
+          note: shippingDiff < 0 ? 'Phí ship giảm, tổng tiền giảm' : 'Phí ship không đổi'
+        }
+      });
+    }
+
+    // TRƯỜNG HỢP 2: Phí ship tăng
+    if (shippingDiff > 0) {
+      let noteText = '';
+      let updateQuery = '';
+      let updateParams = [];
+
+      // 🎯 LOGIC CHUNG: Cập nhật địa chỉ + ghi chú thu tiền ship
+      if (order.PhuongThucThanhToan === 'VNPAY' && 
+          order.TrangThaiThanhToan === 'Đã thanh toán') {
+        
+        // ✅ ĐÃ THANH TOÁN VNPAY: Ghi chú thu thêm tiền ship khi giao
+        noteText = `\n[${new Date().toLocaleString('vi-VN')}] ⚠️ ĐỔI ĐỊA CHỈ: Thu thêm ${shippingDiff.toLocaleString()}đ phí ship khi giao hàng (Đã TT VNPay ${order.TongTien.toLocaleString()}đ)`;
+        
+        updateQuery = `
+          UPDATE hoadon 
+          SET MaDiaChi = ?,
+              PhiShip = ?,
+              GhiChu = CONCAT(IFNULL(GhiChu, ''), ?)
+          WHERE MaHD = ?
+        `;
+        updateParams = [newAddressId, newShippingFee, noteText, id];
+        
+      } else if (order.PhuongThucThanhToan === 'COD') {
+        
+        // ✅ COD: Tăng tổng tiền, shipper sẽ thu tổng
+        const newTotal = order.TongTien + shippingDiff;
+        
+        noteText = `\n[${new Date().toLocaleString('vi-VN')}] Đổi địa chỉ: Phí ship tăng ${shippingDiff.toLocaleString()}đ (từ ${oldShippingFee.toLocaleString()}đ → ${newShippingFee.toLocaleString()}đ)`;
+        
+        updateQuery = `
+          UPDATE hoadon 
+          SET MaDiaChi = ?,
+              PhiShip = ?,
+              TongTien = ?,
+              GhiChu = CONCAT(IFNULL(GhiChu, ''), ?)
+          WHERE MaHD = ?
+        `;
+        updateParams = [newAddressId, newShippingFee, newTotal, noteText, id];
+        
+      } else {
+        
+        // ✅ CHƯA THANH TOÁN: Tăng tổng tiền trước khi thanh toán
+        const newTotal = order.TongTien + shippingDiff;
+        
+        noteText = `\n[${new Date().toLocaleString('vi-VN')}] Đổi địa chỉ: Phí ship tăng ${shippingDiff.toLocaleString()}đ. Cập nhật tổng tiền trước khi thanh toán.`;
+        
+        updateQuery = `
+          UPDATE hoadon 
+          SET MaDiaChi = ?,
+              PhiShip = ?,
+              TongTien = ?,
+              GhiChu = CONCAT(IFNULL(GhiChu, ''), ?)
+          WHERE MaHD = ?
+        `;
+        updateParams = [newAddressId, newShippingFee, newTotal, noteText, id];
+      }
+
+      // Thực hiện cập nhật
+      await conn.query(updateQuery, updateParams);
+      await conn.commit();
+
+      // ✅ Response phân biệt theo trường hợp
+      const responseData = {
+        orderId: id,
+        newAddressId,
+        oldProvince: order.OldProvince,
+        newProvince,
+        oldShippingFee,
+        newShippingFee,
+        shippingDiff,
+        PhiShip: newShippingFee  // ✅ Trả về phí ship mới
+      };
+
+      if (order.PhuongThucThanhToan === 'VNPAY' && 
+          order.TrangThaiThanhToan === 'Đã thanh toán') {
+        
+        return res.json({
+          success: true,
+          warning: true,
+          message: `Địa chỉ đã được cập nhật. Shipper sẽ thu thêm ${shippingDiff.toLocaleString()}đ phí ship khi giao hàng.`,
+          data: {
+            ...responseData,
+            TongTien: order.TongTien,  // ✅ Giữ nguyên tổng tiền (VNPAY đã thanh toán)
+            collectOnDelivery: shippingDiff,
+            note: `Đã thanh toán online ${order.TongTien.toLocaleString()}đ. Thu thêm ${shippingDiff.toLocaleString()}đ khi giao.`
+          }
+        });
+        
+      } else if (order.PhuongThucThanhToan === 'COD') {
+        
+        const newTotal = order.TongTien + shippingDiff;
+        
+        return res.json({
+          success: true,
+          warning: true,
+          message: `Phí ship tăng ${shippingDiff.toLocaleString()}đ. Vui lòng trả ${newTotal.toLocaleString()}đ khi nhận hàng.`,
+          data: {
+            ...responseData,
+            TongTien: newTotal,  // ✅ Trả về tổng tiền mới
+            newTotal,
+            note: `Tổng tiền COD: ${newTotal.toLocaleString()}đ (bao gồm phí ship ${newShippingFee.toLocaleString()}đ)`
+          }
+        });
+        
+      } else {
+        
+        const newTotal = order.TongTien + shippingDiff;
+        
+        return res.json({
+          success: true,
+          message: 'Cập nhật địa chỉ và phí ship thành công. Vui lòng thanh toán lại.',
+          data: {
+            ...responseData,
+            TongTien: newTotal,  // ✅ Trả về tổng tiền mới
+            newTotal,
+            requireNewPayment: true,
+            note: 'Tổng tiền đã thay đổi, vui lòng thanh toán lại'
+          }
+        });
+      }
+    }
+
   } catch (err) {
-    try { await conn.rollback(); } catch (e) {}
-    console.error('Update order address error:', err);
-    res.status(500).json({ success: false, error: 'Lỗi khi cập nhật địa chỉ', details: process.env.NODE_ENV === 'development' ? err.message : null });
+    await conn.rollback();
+    console.error('❌ Update order address error:', err);
+    
+    res.status(500).json({ 
+      success: false, 
+      error: 'Lỗi khi cập nhật địa chỉ',
+      details: err.message 
+    });
   } finally {
     conn.release();
   }
 });
-
-
 export default router;

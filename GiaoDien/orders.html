@@ -81,7 +81,10 @@
                         <p><strong>Người nhận:</strong> <span id="receiver-name"></span></p>
                         <p><strong>SĐT:</strong> <span id="receiver-phone"></span></p>
                         <p><strong>Địa chỉ:</strong> <span id="shipping-address"></span></p>
-                        <p><strong>Ghi chú:</strong> <span id="order-notes"></span></p>
+                        <div style="margin-top: 10px;">
+                            <strong>Ghi chú:</strong>
+                            <div id="order-notes" style="margin-top: 5px;"></div>
+                        </div>
                     </div>
 
                     <!-- Delivery Map Section -->
@@ -183,6 +186,80 @@
             <div class="modal-footer" style="display:flex; gap:8px; justify-content:flex-end; padding:12px;">
               <button class="btn btn-secondary" id="cancel-review-btn">Hủy</button>
               <button class="btn btn-danger" id="submit-review-btn">Gửi đánh giá</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- ✅ MODAL XÁC NHẬN ĐỔI ĐỊA CHỈ -->
+        <div id="address-change-confirmation-modal" class="modal" style="display:none;">
+          <div class="modal-content" style="max-width:600px;">
+            <span class="close-modal" onclick="closeAddressChangeModal()">&times;</span>
+            <div class="modal-header" style="background: linear-gradient(135deg, #ff9800, #ff5722); color: white;">
+              <h2><i class="fas fa-exclamation-triangle"></i> Xác nhận thay đổi địa chỉ</h2>
+            </div>
+            <div class="modal-body" style="padding:24px;">
+              <!-- Địa chỉ cũ vs mới -->
+              <div style="background: #f8f9fa; padding: 16px; border-radius: 8px; margin-bottom: 20px;">
+                <div style="margin-bottom: 12px;">
+                  <strong style="color: #666;">📍 Địa chỉ cũ:</strong>
+                  <div id="confirm-old-address" style="padding: 8px 0; color: #333;"></div>
+                </div>
+                <div style="border-top: 1px dashed #ddd; margin: 12px 0;"></div>
+                <div>
+                  <strong style="color: #666;">📍 Địa chỉ mới:</strong>
+                  <div id="confirm-new-address" style="padding: 8px 0; color: #333;"></div>
+                </div>
+              </div>
+
+              <!-- Thông tin phí ship -->
+              <div id="shipping-fee-info" style="background: linear-gradient(135deg, #fff3e0, #ffe0b2); padding: 16px; border-radius: 8px; border-left: 4px solid #ff9800; margin-bottom: 20px; display: none;">
+                <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+                  <i class="fas fa-truck" style="font-size: 24px; color: #ff9800;"></i>
+                  <div style="flex: 1;">
+                    <strong style="color: #e65100; font-size: 16px;">Phí vận chuyển</strong>
+                  </div>
+                </div>
+                <div style="margin: 8px 0;">
+                  <div style="display: flex; justify-content: space-between; padding: 8px 0;">
+                    <span>Phí ship cũ:</span>
+                    <strong id="confirm-old-shipping-fee" style="color: #666;">0đ</strong>
+                  </div>
+                  <div style="display: flex; justify-content: space-between; padding: 8px 0;">
+                    <span>Phí ship mới:</span>
+                    <strong id="confirm-new-shipping-fee" style="color: #ff5722;">0đ</strong>
+                  </div>
+                  <div style="border-top: 2px solid #ff9800; margin: 8px 0;"></div>
+                  <div style="display: flex; justify-content: space-between; padding: 8px 0;">
+                    <span style="font-weight: 600;">Chênh lệch:</span>
+                    <strong id="confirm-shipping-diff" style="color: #d84315; font-size: 18px;">+0đ</strong>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Thông tin thanh toán -->
+              <div id="payment-method-info" style="background: #e3f2fd; padding: 16px; border-radius: 8px; margin-bottom: 20px;">
+                <div style="margin-bottom: 8px;">
+                  <strong>💳 Phương thức thanh toán:</strong> 
+                  <span id="confirm-payment-method"></span>
+                </div>
+                <div>
+                  <strong>💰 Tổng tiền mới:</strong> 
+                  <span id="confirm-new-total" style="color: #d32f2f; font-size: 20px; font-weight: 600;"></span>
+                </div>
+              </div>
+
+              <!-- Message động -->
+              <div id="address-change-message" style="padding: 12px; background: #fff9c4; border-radius: 8px; border-left: 4px solid #fbc02d;">
+                <p style="margin: 0; line-height: 1.6;"></p>
+              </div>
+            </div>
+            <div class="modal-footer" style="display:flex; gap:12px; justify-content:flex-end; padding:16px; background: #f5f5f5;">
+              <button class="btn btn-secondary" onclick="closeAddressChangeModal()">
+                <i class="fas fa-times"></i> Hủy bỏ
+              </button>
+              <button class="btn btn-danger" id="confirm-address-change-btn" onclick="confirmAddressChange()">
+                <i class="fas fa-check"></i> Đồng ý thay đổi
+              </button>
             </div>
           </div>
         </div>

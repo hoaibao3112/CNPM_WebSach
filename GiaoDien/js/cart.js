@@ -343,7 +343,19 @@ async function renderCart() {
     cartItemsBody.appendChild(row);
   });
 
-  updateSummary(subtotal);
+  // Tính phí ship nếu đã chọn địa chỉ
+  let shippingFee = 0;
+  const provinceSelect = document.getElementById('tinhthanh');
+  if (provinceSelect && provinceSelect.value) {
+    const selectedOption = provinceSelect.options[provinceSelect.selectedIndex];
+    const provinceName = selectedOption.dataset.provinceName || selectedOption.textContent;
+    const totalWeight = await getTotalWeight();
+    const customerTier = getCustomerTier();
+    shippingFee = calculateShippingFee(provinceName, totalWeight, customerTier);
+    window.currentShippingFee = shippingFee;
+  }
+
+  updateSummary(subtotal, 0, shippingFee);
   attachEventListeners();
   updateCartCount();
   // Emit custom event so other scripts can react (e.g., auto checkout after reorder)
@@ -399,15 +411,94 @@ window.addEventListener('cart:rendered', () => {
   } catch (e) { console.warn('Failed to prefill reorder address', e); }
 });
 
-// Update order summary
-function updateSummary(subtotal, discount = 0) {
-  const total = Math.max(0, subtotal - discount);
+// 🚢 Tính phí ship dựa trên địa chỉ và tier khách hàng
+function calculateShippingFee(province, totalWeight, customerTier = 'Đồng') {
+  // Chuẩn hóa tên tỉnh/thành
+  const provinceLower = (province || '').toLowerCase().trim();
+  
+  // Kiểm tra nội thành TP.HCM - FREE SHIP
+  const isHCM = provinceLower.includes('hồ chí minh') || 
+                provinceLower.includes('ho chi minh') ||
+                provinceLower.includes('hcm') ||
+                provinceLower.includes('tp.hcm') ||
+                provinceLower.includes('tphcm') ||
+                provinceLower === '79'; // Mã tỉnh TP.HCM
+
+  if (isHCM) {
+    console.log('📍 Nội thành TP.HCM -> FREE SHIP');
+    return 0;
+  }
+
+  // Ngoài TP.HCM: 15,000 VND / 500g
+  const weight500gUnits = Math.ceil((totalWeight || 0) / 500); // Làm tròn lên
+  let shippingFee = weight500gUnits * 15000;
+
+  console.log(`📦 Tổng trọng lượng: ${totalWeight}g`);
+  console.log(`📦 Số đơn vị 500g: ${weight500gUnits}`);
+  console.log(`💰 Phí ship gốc: ${shippingFee.toLocaleString('vi-VN')} VND`);
+
+  // Áp dụng giảm giá theo tier
+  let discount = 0;
+  switch (customerTier) {
+    case 'Bạc':
+      discount = 0.20; // Giảm 20%
+      break;
+    case 'Vàng':
+      discount = 0.50; // Giảm 50%
+      break;
+    default:
+      discount = 0; // Đồng: không giảm
+  }
+
+  if (discount > 0) {
+    const discountAmount = Math.round(shippingFee * discount);
+    shippingFee = shippingFee - discountAmount;
+    console.log(`🎁 Tier ${customerTier} giảm ${discount * 100}%: -${discountAmount.toLocaleString('vi-VN')} VND`);
+  }
+
+  console.log(`✅ Phí ship cuối cùng: ${shippingFee.toLocaleString('vi-VN')} VND`);
+  return Math.round(shippingFee);
+}
+
+// Lấy tổng trọng lượng giỏ hàng
+async function getTotalWeight() {
+  const cart = await getCart();
+  const selectedItems = cart.filter(item => item.selected);
+  
+  // Mặc định nếu không có trọng lượng, giả định mỗi sản phẩm 300g
+  const totalWeight = selectedItems.reduce((sum, item) => {
+    const weight = item.weight || 300; // Default 300g nếu không có
+    return sum + (weight * item.quantity);
+  }, 0);
+  
+  return totalWeight;
+}
+
+// Lấy tier khách hàng
+function getCustomerTier() {
+  const user = JSON.parse(localStorage.getItem('user') || '{}');
+  return user.loyalty_tier || 'Đồng';
+}
+
+// Update order summary với phí ship
+function updateSummary(subtotal, discount = 0, shippingFee = 0) {
+  const total = Math.max(0, subtotal - discount + shippingFee);
   const subtotalElement = document.getElementById('subtotal');
   const discountRow = document.getElementById('discount-row');
   const discountElement = document.getElementById('discount');
+  const shippingElement = document.getElementById('shipping');
   const totalElement = document.getElementById('total');
+  
+  // Elements cho thông tin thẻ và giảm giá ship
+  const memberTierRow = document.getElementById('member-tier-row');
+  const memberTierValue = document.getElementById('member-tier-value');
+  const shippingOriginalRow = document.getElementById('shipping-original-row');
+  const shippingOriginalElement = document.getElementById('shipping-original');
+  const shippingDiscountRow = document.getElementById('shipping-discount-row');
+  const shippingDiscountLabel = document.getElementById('shipping-discount-label');
+  const shippingDiscountElement = document.getElementById('shipping-discount');
 
-  if (!subtotalElement || !discountRow || !discountElement || !totalElement) {
+  if (!subtotalElement || !discountRow || !discountElement || !shippingElement || !totalElement) {
     console.error('Missing summary elements');
     return;
   }
@@ -415,8 +506,68 @@ function updateSummary(subtotal, discount = 0) {
   subtotalElement.textContent = formatPrice(subtotal);
   discountRow.style.display = discount > 0 ? 'flex' : 'none';
   discountElement.textContent = discount > 0 ? `-${formatPrice(discount)}` : '-0đ';
-  totalElement.textContent = formatPrice( total);
+  
+  // Lấy thông tin tier của khách hàng
+  const customerTier = getCustomerTier();
+  const tierInfo = {
+    'Đồng': { name: 'Thẻ Đồng', discount: 0, color: '#cd7f32' },
+    'Bạc': { name: 'Thẻ Bạc', discount: 0.2, color: '#C0C0C0' },
+    'Vàng': { name: 'Thẻ Vàng', discount: 0.5, color: '#FFD700' }
+  };
+  
+  const currentTier = tierInfo[customerTier] || tierInfo['Đồng'];
+  
+  // Hiển thị thông tin thẻ nếu có
+  if (memberTierRow && memberTierValue) {
+    if (customerTier && customerTier !== 'Đồng') {
+      memberTierRow.style.display = 'flex';
+      memberTierValue.textContent = currentTier.name;
+      memberTierValue.style.color = currentTier.color;
+      memberTierValue.style.fontWeight = 'bold';
+    } else {
+      memberTierRow.style.display = 'none';
+    }
+  }
+  
+  // Tính phí ship gốc và giảm giá (nếu có)
+  let shippingOriginal = shippingFee;
+  let shippingDiscount = 0;
+  
+  if (shippingFee > 0 && currentTier.discount > 0) {
+    // Tính phí ship gốc (trước khi giảm giá)
+    shippingOriginal = Math.round(shippingFee / (1 - currentTier.discount));
+    shippingDiscount = shippingOriginal - shippingFee;
+  }
+  
+  // Hiển thị phí ship gốc và giảm giá (nếu có giảm giá)
+  if (shippingOriginalRow && shippingOriginalElement && shippingDiscount > 0) {
+    shippingOriginalRow.style.display = 'flex';
+    shippingOriginalElement.textContent = formatPrice(shippingOriginal);
+  } else if (shippingOriginalRow) {
+    shippingOriginalRow.style.display = 'none';
+  }
+  
+  if (shippingDiscountRow && shippingDiscountLabel && shippingDiscountElement && shippingDiscount > 0) {
+    shippingDiscountRow.style.display = 'flex';
+    shippingDiscountLabel.textContent = `Giảm giá ship (${Math.round(currentTier.discount * 100)}%)`;
+    shippingDiscountElement.textContent = `-${formatPrice(shippingDiscount)}`;
+  } else if (shippingDiscountRow) {
+    shippingDiscountRow.style.display = 'none';
+  }
+  
+  // Hiển thị phí ship sau giảm giá
+  if (shippingFee > 0) {
+    shippingElement.textContent = formatPrice(shippingFee);
+    shippingElement.style.color = '#e74c3c';
+  } else {
+    shippingElement.textContent = 'Miễn phí';
+    shippingElement.style.color = '#27ae60';
+  }
+  
+  totalElement.textContent = formatPrice(total);
 }
+
+// Update order summary
 
 // Attach event listeners
 function attachEventListeners() {
@@ -591,6 +742,7 @@ async function checkout() {
   };
 
   console.log('🔍 Order Data:', JSON.stringify(orderData, null, 2));
+  console.log('🔍 [DEBUG] totalAmountDiscouted =', totalAmountDiscouted);
 
   try {
     console.log('🔄 Sending request to API...');
@@ -850,12 +1002,59 @@ async function loadProvinces() {
       const option = document.createElement('option');
       option.value = city.city_id;
       option.textContent = city.city_name;
+      option.dataset.provinceName = city.city_name; // Lưu tên tỉnh để tính phí ship
       provinceSelect.appendChild(option);
+    });
+    
+    // Thêm event listener để tính phí ship khi chọn tỉnh
+    provinceSelect.addEventListener('change', async () => {
+      await updateShippingFee();
     });
   } catch (error) {
     console.error('Error loading provinces:', error);
     provinceSelect.innerHTML = '<option value="">Không tải được dữ liệu</option>';
   }
+}
+
+// Hàm tính và cập nhật phí ship
+async function updateShippingFee() {
+  const provinceSelect = document.getElementById('tinhthanh');
+  if (!provinceSelect || !provinceSelect.value) {
+    // Chưa chọn tỉnh -> hiển thị "Miễn phí" mặc định
+    const shippingElement = document.getElementById('shipping');
+    if (shippingElement) {
+      shippingElement.textContent = 'Chưa chọn địa chỉ';
+      shippingElement.style.color = '#999';
+    }
+    return;
+  }
+
+  // Lấy tên tỉnh từ option đã chọn
+  const selectedOption = provinceSelect.options[provinceSelect.selectedIndex];
+  const provinceName = selectedOption.dataset.provinceName || selectedOption.textContent;
+
+  // Lấy trọng lượng tổng và tier khách hàng
+  const totalWeight = await getTotalWeight();
+  const customerTier = getCustomerTier();
+
+  // Tính phí ship
+  const shippingFee = calculateShippingFee(provinceName, totalWeight, customerTier);
+
+  // Cập nhật summary với phí ship mới
+  const cart = await getCart();
+  const selectedItems = cart.filter(item => item.selected);
+  const subtotal = selectedItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  
+  // Lấy discount hiện tại (nếu có)
+  const discountElement = document.getElementById('discount');
+  const currentDiscount = discountElement ? parseFloat(discountElement.textContent.replace(/[^0-9]/g, '')) || 0 : 0;
+  
+  updateSummary(subtotal, currentDiscount, shippingFee);
+  
+  // Lưu phí ship vào biến global để dùng khi checkout
+  window.currentShippingFee = shippingFee;
+  
+  console.log(`🚢 Đã cập nhật phí ship: ${shippingFee.toLocaleString('vi-VN')} VND`);
 }
 
 // Load districts

@@ -856,6 +856,91 @@ body {
     font-weight: 600;
 }
 
+/* 🎨 ALERT BOXES - CHO GHI CHÚ QUAN TRỌNG */
+.alert {
+    padding: 15px 20px;
+    margin: 15px 0;
+    border-radius: var(--radius-lg);
+    border-left: 4px solid;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    animation: slideIn 0.3s ease;
+}
+
+.alert i {
+    font-size: 1.2em;
+    margin-top: 2px;
+}
+
+.alert strong {
+    display: block;
+    margin-bottom: 8px;
+    font-size: 1.05em;
+    font-weight: 600;
+}
+
+.alert p {
+    margin: 5px 0;
+    line-height: 1.6;
+}
+
+.alert-warning {
+    background: linear-gradient(135deg, #fff3cd 0%, #ffe69c 100%);
+    border-left-color: #ff9800;
+    color: #856404;
+}
+
+.alert-warning i {
+    color: #ff9800;
+}
+
+.alert-info {
+    background: linear-gradient(135deg, #d1ecf1 0%, #bee5eb 100%);
+    border-left-color: #17a2b8;
+    color: #0c5460;
+}
+
+.alert-info i {
+    color: #17a2b8;
+}
+
+.alert-success {
+    background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+    border-left-color: #28a745;
+    color: #155724;
+}
+
+.alert-success i {
+    color: #28a745;
+}
+
+.alert-danger {
+    background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
+    border-left-color: #dc3545;
+    color: #721c24;
+}
+
+.alert-danger i {
+    color: #dc3545;
+}
+
+.order-note {
+    padding: 12px;
+    background: rgba(255, 255, 255, 0.5);
+    border-left: 3px solid var(--info-color);
+    border-radius: var(--radius-md);
+    margin: 10px 0;
+    line-height: 1.6;
+    white-space: pre-wrap;
+}
+
+.no-notes {
+    color: var(--text-light);
+    font-style: italic;
+    padding: 10px;
+}
+
 /* 🎨 MODERN ORDER ITEMS */
 .order-items {
     display: flex;
@@ -1885,6 +1970,89 @@ body {
         --light-gray: #334155;
         --text-dark: #f1f5f9;
         --text-light: #cbd5e1;
+    }
+}
+
+/* 🎨 ADDRESS CHANGE CONFIRMATION MODAL */
+#address-change-confirmation-modal .modal-content {
+    max-width: 650px;
+    animation: slideIn 0.3s ease;
+}
+
+#address-change-confirmation-modal .modal-header {
+    background: linear-gradient(135deg, #ff9800, #ff5722);
+    color: white;
+    padding: 20px;
+    border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+}
+
+#address-change-confirmation-modal .modal-header h2 {
+    margin: 0;
+    font-size: 1.4em;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+#address-change-confirmation-modal .modal-body {
+    padding: 24px;
+    max-height: 70vh;
+    overflow-y: auto;
+}
+
+#address-change-confirmation-modal .modal-footer {
+    padding: 16px 24px;
+    background: #f5f5f5;
+    border-radius: 0 0 var(--radius-xl) var(--radius-xl);
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+}
+
+#confirm-address-change-btn {
+    background: linear-gradient(135deg, #4caf50, #45a049);
+    color: white;
+    padding: 12px 24px;
+    border: none;
+    border-radius: var(--radius-md);
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+#confirm-address-change-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(76, 175, 80, 0.3);
+}
+
+#address-change-confirmation-modal .btn-secondary {
+    background: #6c757d;
+    color: white;
+}
+
+#address-change-confirmation-modal .btn-secondary:hover {
+    background: #5a6268;
+}
+
+/* Responsive for address change modal */
+@media (max-width: 768px) {
+    #address-change-confirmation-modal .modal-content {
+        max-width: 95%;
+        margin: 20px;
+    }
+    
+    #address-change-confirmation-modal .modal-body {
+        padding: 16px;
+        max-height: 60vh;
+    }
+    
+    #address-change-confirmation-modal .modal-footer {
+        padding: 12px;
+        flex-direction: column;
+    }
+    
+    #address-change-confirmation-modal .modal-footer .btn {
+        width: 100%;
     }
 }
 

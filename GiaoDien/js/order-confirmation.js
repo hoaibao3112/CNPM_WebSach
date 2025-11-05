@@ -144,7 +144,7 @@ document.addEventListener('DOMContentLoaded', async function() {
                         </div>
                         <div class="detail-row">
                             <span class="label">Tổng tiền:</span>
-                            <span class="value total-amount">${displayAmount ? formatPrice(displayAmount) : (orderDetails?.TongTien ? formatPrice(orderDetails.TongTien) : 'N/A')}</span>
+                            <span class="value total-amount">${displayAmount ? formatPrice(displayAmount * 100) : (orderDetails?.TongTien ? formatPrice(orderDetails.TongTien * 100) : 'N/A')}</span>
                         </div>
                         <div class="detail-row">
                             <span class="label">Phương thức:</span>
@@ -207,7 +207,7 @@ document.addEventListener('DOMContentLoaded', async function() {
                         </div>
                         <div class="detail-row">
                             <span class="label">Tổng tiền:</span>
-                            <span class="value total-amount">${displayAmount ? formatPrice(displayAmount) : (orderDetails?.TongTien ? formatPrice(orderDetails.TongTien) : 'N/A')}</span>
+                            <span class="value total-amount">${displayAmount ? formatPrice(displayAmount * 100) : (orderDetails?.TongTien ? formatPrice(orderDetails.TongTien * 100) : 'N/A')}</span>
                         </div>
                         <div class="detail-row">
                             <span class="label">Phương thức:</span>
@@ -287,7 +287,7 @@ document.addEventListener('DOMContentLoaded', async function() {
                         </div>
                         <div class="detail-row">
                             <span class="label">Số tiền:</span>
-                            <span class="value">${displayAmount ? formatPrice(displayAmount) : 'N/A'}</span>
+                            <span class="value">${displayAmount ? formatPrice(displayAmount * 100) : 'N/A'}</span>
                         </div>
                     </div>
                 </div>
