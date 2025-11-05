@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from 'react';
+import { NavLink, useLocation } from 'react-router-dom';
 
 const UserInfo = ({ isSidebarOpen }) => { // Nhận prop isSidebarOpen
   const [userName, setUserName] = useState('');
+  const location = useLocation();
 
   useEffect(() => {
     const userInfo = localStorage.getItem('userInfo');
@@ -11,11 +13,20 @@ const UserInfo = ({ isSidebarOpen }) => { // Nhận prop isSidebarOpen
     }
   }, []);
 
+  const isActive = location.pathname === '/admin/profile';
+
   return (
-    <div className="user-info">
-      {isSidebarOpen && `Xin chào, `}
-      <span className="username">{userName || 'Khách'}</span>
-    </div>
+    <NavLink 
+      to="/admin/profile" 
+      className={`user-info-link ${isActive ? 'active' : ''}`}
+      title="Xem trang cá nhân"
+    >
+      <span className="material-icons">account_circle</span>
+      <div className="user-info-text">
+        {isSidebarOpen && <span className="greeting">Xin chào,</span>}
+        <span className="username">{userName || 'Khách'}</span>
+      </div>
+    </NavLink>
   );
 };
 

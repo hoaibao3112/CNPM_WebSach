@@ -109,14 +109,6 @@ const Sidebar = () => {
 
       <div className="sidebar-footer">
         <UserInfo isSidebarOpen={isOpen} />
-        {/* Profile link pinned to footer */}
-        <NavLink
-          to="/admin/profile"
-          className={location.pathname === '/admin/profile' ? 'footer-link active' : 'footer-link'}
-        >
-          <span className="material-icons">person</span>
-          {isOpen && <span className="menu-text">Trang cá nhân</span>}
-        </NavLink>
         <button
           className="logout-btn logged-in"
           onClick={handleLogout}

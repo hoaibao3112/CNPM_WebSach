@@ -4,19 +4,20 @@
 
 /* ---------- Theme & layout variables ---------- */
 :root {
-  --sidebar-open: 240px; /* Slightly wider for better spacing */
+  --sidebar-open: 260px; /* Slightly wider for better spacing */
   --sidebar-closed: 68px;
 
-  --sb-bg: #0f172a;          /* slate-900 */
-  --sb-bg-hover: #1e293b;    /* brighter hover for contrast */
-  --sb-border: #1f2937;      /* slate-800 */
-  --sb-text: #ffffff;        /* primary text: white */
-  --sb-text-dim: rgba(255,255,255,0.85);    /* slightly dimmed white for secondary text */
+  --sb-bg: #1e293b;          /* slate-800 - softer dark blue */
+  --sb-bg-hover: #334155;    /* slate-700 - lighter hover */
+  --sb-border: #475569;      /* slate-600 - visible border */
+  --sb-text: #f1f5f9;        /* slate-100 - soft white text */
+  --sb-text-dim: #cbd5e1;    /* slate-300 - dimmed text */
   --accent: #6366f1;         /* indigo-500 */
-  --accent-red: #ff4757;     /* red for active state */
-  --ring: rgba(99,102,241,.5); /* Stronger ring for focus */
-  --shadow-1: 0 12px 40px rgba(2,6,23,.12); /* Deeper shadow */
-  --glow: 0 0 8px rgba(99,102,241,.2); /* Subtle glow effect */
+  --accent-red: #ef4444;     /* red-500 for active state */
+  --accent-pink: #ec4899;    /* pink-500 for special highlights */
+  --ring: rgba(99,102,241,.5);
+  --shadow-1: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --glow: 0 0 0 3px rgba(99,102,241,.15);
 }
 
 /* ---------- Content offset controlled centrally ---------- */
@@ -33,10 +34,10 @@ body.sidebar-closed .admin-home { margin-left: var(--sidebar-closed); }
   inset: 0 auto 0 0;
   width: var(--sidebar-open);
   height: 100vh;
-  background: linear-gradient(180deg, var(--sb-bg), #0b1220 80%);
+  background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
   color: var(--sb-text);
   border-right: 1px solid var(--sb-border);
-  box-shadow: var(--shadow-1), var(--glow);
+  box-shadow: var(--shadow-1);
   display: flex;
   flex-direction: column;
   z-index: 1200; /* Above content, below modal */
@@ -46,7 +47,7 @@ body.sidebar-closed .admin-home { margin-left: var(--sidebar-closed); }
 
 body.sidebar-closed .sidebar {
   width: var(--sidebar-closed);
-  box-shadow: 0 8px 20px rgba(2,6,23,.15);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 /* ---------- Header / Brand / Toggle ---------- */
@@ -55,10 +56,10 @@ body.sidebar-closed .sidebar {
   align-items: center;
   justify-content: space-between;
   gap: 10px;
-  padding: 14px 14px 12px 14px;
+  padding: 16px 14px;
   border-bottom: 1px solid var(--sb-border);
-  min-height: 60px;
-  background: linear-gradient(90deg, rgba(255,255,255,.02), transparent);
+  min-height: 70px;
+  background: rgba(255,255,255,.03);
 }
 
 .sidebar .brand {
@@ -115,18 +116,18 @@ body.sidebar-closed .logo-image {
   align-items: center;
   justify-content: center;
   width: 40px; height: 40px;
-  border-radius: 12px;
+  border-radius: 10px;
   border: 1px solid var(--sb-border);
-  background: #0b1220;
+  background: rgba(255,255,255,.08);
+  color: var(--sb-text);
   cursor: pointer;
-  transition: transform .25s ease, background .25s ease, border-color .25s ease, box-shadow .25s ease;
+  transition: transform .25s ease, background .25s ease, border-color .25s ease;
 }
 
 .sidebar-toggle:hover {
-  background: var(--sb-bg-hover);
-  border-color: #2d3b55;
-  transform: scale(1.05);
-  box-shadow: var(--glow);
+  background: rgba(255,255,255,.15);
+  border-color: var(--accent);
+  transform: scale(1.08);
 }
 
 body.sidebar-closed .sidebar .brand .name {
@@ -197,21 +198,19 @@ body.sidebar-closed .sidebar .brand .name {
 
 /* Hover/active */
 .sidebar a:hover {
-  background: rgba(255,255,255,.05);
-  transform: translateX(6px) scale(1.02);
+  background: rgba(255,255,255,.08);
+  transform: translateX(4px);
   color: var(--sb-text);
-  box-shadow: var(--glow);
 }
 
 .sidebar a:hover .icon {
-  transform: scale(1.1);
+  transform: scale(1.08);
 }
 
 .sidebar a.active {
-  background: linear-gradient(45deg, rgba(255,71,87,0.15), rgba(255,71,87,0.1));
-  outline: 2px solid rgba(255,71,87,0.2);
-  color: var(--accent-red);
-  box-shadow: 0 12px 30px rgba(241,0,20,0.08), var(--glow);
+  background: linear-gradient(135deg, rgba(236,72,153,0.2), rgba(239,68,68,0.15));
+  border-left: 3px solid var(--accent-pink);
+  color: #fda4af;
   font-weight: 600;
 }
 
@@ -227,64 +226,191 @@ body.sidebar-closed .sidebar a .badge {
   display: none;
 }
 
-/* ---------- Footer (optional) ---------- */
+/* ---------- Footer - Modern & Clean Design ---------- */
 .sidebar-footer {
   margin-top: auto;
-  padding: 12px 14px 14px 14px;
+  padding: 16px;
   border-top: 1px solid var(--sb-border);
-  background: linear-gradient(180deg, transparent, rgba(0,0,0,.1));
+  background: rgba(0,0,0,.2);
   display: flex;
-  gap: 10px;
+  flex-direction: column;
+  gap: 12px;
 }
 
-.sidebar-footer .btn {
-  flex: 1 1 auto;
+/* User Info Link - Clickable */
+.user-info-link {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  background: linear-gradient(135deg, #7c3aed 0%, #a78bfa 100%);
+  border-radius: 16px;
+  color: white;
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.4;
+  box-shadow: 0 4px 6px -1px rgba(124, 58, 237, 0.3), 
+              0 2px 4px -1px rgba(124, 58, 237, 0.2);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Hover effect for user info */
+.user-info-link:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px -3px rgba(124, 58, 237, 0.4), 
+              0 6px 10px -2px rgba(124, 58, 237, 0.3);
+  background: linear-gradient(135deg, #6d28d9 0%, #7c3aed 100%);
+}
+
+/* Active state when on profile page */
+.user-info-link.active {
+  background: linear-gradient(135deg, #5b21b6 0%, #6d28d9 100%);
+  box-shadow: 0 10px 20px -3px rgba(91, 33, 182, 0.5), 
+              0 6px 10px -2px rgba(91, 33, 182, 0.4);
+}
+
+/* Ripple effect on click */
+.user-info-link:active {
+  transform: translateY(-1px);
+  transition: transform 0.1s;
+}
+
+/* Icon in user info */
+.user-info-link .material-icons {
+  font-size: 32px;
+  color: white;
+  opacity: 0.95;
+  transition: transform 0.3s ease;
+  flex-shrink: 0;
+}
+
+.user-info-link:hover .material-icons {
+  transform: scale(1.1) rotate(5deg);
+}
+
+/* Text container */
+.user-info-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+
+/* Greeting text */
+.user-info-text .greeting {
+  font-size: 12px;
+  opacity: 0.9;
+  font-weight: 400;
+  letter-spacing: 0.3px;
+}
+
+/* Username */
+.user-info-text .username {
+  font-weight: 700;
+  font-size: 16px;
+  letter-spacing: 0.3px;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Collapsed sidebar state for user info */
+body.sidebar-closed .user-info-link {
+  flex-direction: column;
+  padding: 12px 8px;
+  gap: 6px;
+  justify-content: center;
+}
+
+body.sidebar-closed .user-info-link .material-icons {
+  font-size: 28px;
+}
+
+body.sidebar-closed .user-info-text {
+  align-items: center;
+  text-align: center;
+}
+
+body.sidebar-closed .user-info-text .greeting {
+  display: none;
+}
+
+body.sidebar-closed .user-info-text .username {
+  font-size: 11px;
+  max-width: 100%;
+}
+
+/* Footer Links Container */
+.sidebar-footer-links {
+  display: flex;
+  gap: 8px;
+}
+
+/* Logout Button - Full Width */
+.sidebar-footer .logout-btn {
+  width: 100%;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 10px;
-  height: 40px;
-  border-radius: 12px;
-  border: 1px solid var(--sb-border);
-  background: #0b1220;
-  color: var(--sb-text);
-  font-weight: 500;
+  height: 48px;
+  padding: 12px 16px;
+  border-radius: 16px;
+  border: 1px solid rgba(248, 113, 113, 0.3);
+  background: rgba(254, 226, 226, 0.1);
+  color: #fca5a5;
+  font-weight: 600;
+  font-size: 15px;
+  text-decoration: none;
   cursor: pointer;
-  transition: background .25s ease, border-color .25s ease, transform .25s ease, box-shadow .25s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-.sidebar-footer .btn:hover {
-  background: var(--sb-bg-hover);
-  border-color: #2d3b55;
-  transform: scale(1.05);
-  box-shadow: var(--glow);
+.sidebar-footer .logout-btn:hover {
+  background: linear-gradient(135deg, #ef4444, #f87171);
+  color: white;
+  border-color: #ef4444;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px -1px rgba(239, 68, 68, 0.4);
 }
 
-/* Make footer labels smaller and prevent wrapping */
-.sidebar-footer .menu-text {
-  font-size: 13px; /* smaller than nav items */
-  line-height: 1.1;
+.sidebar-footer .logout-btn:active {
+  transform: translateY(0);
+}
+
+/* Icon in logout button */
+.sidebar-footer .logout-btn .material-icons {
+  font-size: 22px;
+  transition: transform 0.3s ease;
+}
+
+.sidebar-footer .logout-btn:hover .material-icons {
+  transform: scale(1.15) rotate(-10deg);
+}
+
+/* Menu Text in logout */
+.sidebar-footer .logout-btn .menu-text {
+  font-size: 14px;
+  line-height: 1.2;
   white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  display: inline-block;
-  max-width: calc(var(--sidebar-open) - 140px); /* keep within footer available space */
+  font-weight: 600;
+  letter-spacing: 0.3px;
 }
 
-/* Tweak footer icon sizes so text and icon align neatly */
-.sidebar-footer .material-icons {
-  font-size: 18px;
-  color: var(--sb-text-dim);
+/* Collapsed Sidebar - Logout Button */
+body.sidebar-closed .sidebar-footer .logout-btn {
+  padding: 12px 8px;
+  justify-content: center;
 }
 
-/* Slightly reduce padding of footer link for a tighter look */
-.sidebar-footer .footer-link,
-.sidebar-footer .logout-btn {
-  padding: 8px 10px;
-}
-
-/* When sidebar is collapsed keep icons centered and hide labels */
-body.sidebar-closed .sidebar-footer .menu-text {
+body.sidebar-closed .sidebar-footer .logout-btn .menu-text {
   display: none;
 }
 
