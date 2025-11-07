@@ -1,6 +1,8 @@
 // Kiểm tra đã đăng nhập (có khách hàng trong localStorage)
 function isLoggedIn() {
-  return !!(localStorage.getItem('token') && localStorage.getItem('customerId'));
+  const token = localStorage.getItem('token');
+  const user = JSON.parse(localStorage.getItem('user') || '{}');
+  return !!(token && user.makh);
 }
 
 // Lấy danh sách khuyến mãi từ API
@@ -101,6 +103,14 @@ function setupClaimEvents() {
       this.textContent = 'Đang lưu...';
 
       const token = localStorage.getItem('token');
+      const user = JSON.parse(localStorage.getItem('user') || '{}');
+      
+      console.log('🔍 DEBUG Claim Promo:');
+      console.log('- MaKM:', maKM);
+      console.log('- Token:', token ? 'Có' : 'Không');
+      console.log('- User:', user);
+      console.log('- MaKH:', user.makh);
+      
       try {
         const response = await fetch(`http://localhost:5000/api/khuyenmai/claim/${maKM}`, {
           method: 'POST',
@@ -109,8 +119,11 @@ function setupClaimEvents() {
             'Content-Type': 'application/json'
           }
         });
+        
+        console.log('📡 Response status:', response.status);
 
         const data = await response.json();
+        console.log('📦 Response data:', data);
 
         if (response.ok) {
           // Lưu mã vào localStorage

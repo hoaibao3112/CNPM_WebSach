@@ -27,9 +27,9 @@ const validatePromotion = (promotionData, isUpdate = false) => {
   }
 
   if (!isUpdate || promotionData.LoaiKM !== undefined) {
-    const validTypes = ['giam_phan_tram', 'giam_tien_mat'];
+    const validTypes = ['giam_phan_tram', 'giam_tien_mat', 'free_ship'];
     if (!promotionData.LoaiKM || !validTypes.includes(promotionData.LoaiKM)) {
-      errors.push('Loại khuyến mãi không hợp lệ (chỉ giam_phan_tram hoặc giam_tien_mat)');
+      errors.push('Loại khuyến mãi không hợp lệ (chỉ giam_phan_tram, giam_tien_mat hoặc free_ship)');
     }
   }
 
@@ -45,7 +45,7 @@ const validatePromotion = (promotionData, isUpdate = false) => {
 // GET / - Lấy danh sách khuyến mãi
 router.get('/', async (req, res) => {
   try {
-    const { page = 1, limit = 10, search = '', activeOnly = false } = req.query;
+    const { page = 1, limit = 10, search = '', activeOnly = false, loaiKM = '' } = req.query;
     const offset = (page - 1) * limit;
     const searchTerm = `%${search}%`;
 
@@ -54,6 +54,12 @@ router.get('/', async (req, res) => {
 
     if (activeOnly === 'true') {
       whereClause += ` AND NgayBatDau <= NOW() AND NgayKetThuc >= NOW() AND TrangThai = 1`;
+    }
+
+    // Lọc theo loại khuyến mãi nếu có
+    if (loaiKM && ['giam_phan_tram', 'giam_tien_mat', 'free_ship'].includes(loaiKM)) {
+      whereClause += ` AND LoaiKM = ?`;
+      params.push(loaiKM);
     }
 
     const [promotions] = await pool.query(
@@ -91,7 +97,7 @@ router.get('/', async (req, res) => {
 router.get('/my-promotions', authenticateToken, async (req, res) => {
   try {
     const makh = req.user.makh;
-    const { activeOnly = false } = req.query;
+    const { activeOnly = false, loaiKM = '' } = req.query;
 
     let whereClause = `WHERE kk.makh = ?`;
     const params = [makh];
@@ -100,12 +106,21 @@ router.get('/my-promotions', authenticateToken, async (req, res) => {
       whereClause += ` AND kk.trang_thai = 'Chua_su_dung' AND kk.ngay_het_han >= NOW()`;
     }
 
+    // Lọc theo loại khuyến mãi nếu có
+    if (loaiKM && ['giam_phan_tram', 'giam_tien_mat', 'free_ship'].includes(loaiKM)) {
+      whereClause += ` AND k.LoaiKM = ?`;
+      params.push(loaiKM);
+    }
+
     const [promotions] = await pool.query(
-      `SELECT k.MaKM, k.TenKM, k.LoaiKM, k.Code, CAST(k.TrangThai AS UNSIGNED) as TrangThai,
-       kk.ngay_lay, kk.trang_thai
+      `SELECT k.MaKM, k.TenKM, k.LoaiKM, k.Code, k.MoTa, CAST(k.TrangThai AS UNSIGNED) as TrangThai,
+       kk.ngay_lay, kk.ngay_het_han, kk.trang_thai,
+       ct.GiaTriDonToiThieu, ct.GiaTriGiam, ct.GiamToiDa
        FROM khachhang_khuyenmai kk
        JOIN khuyen_mai k ON kk.makm = k.MaKM
-       ${whereClause}`,
+       LEFT JOIN ct_khuyen_mai ct ON k.MaKM = ct.MaKM
+       ${whereClause}
+       ORDER BY kk.ngay_lay DESC`,
       params
     );
 
@@ -272,10 +287,13 @@ router.post('/', authenticateToken, async (req, res) => {
 
       const makm = result.insertId;
 
+      // Với Free Ship: GiaTriGiam = 0 (vì không giảm tiền sản phẩm)
+      const giaTriGiam = promotionData.LoaiKM === 'free_ship' ? 0 : (promotionData.GiaTriGiam || 0);
+
       await connection.query(
         `INSERT INTO ct_khuyen_mai (MaKM, GiaTriGiam, GiaTriDonToiThieu, GiamToiDa, SoLuongToiThieu)
          VALUES (?, ?, ?, ?, ?)`,
-        [makm, promotionData.GiaTriGiam, promotionData.GiaTriDonToiThieu || null, promotionData.GiamToiDa || null, promotionData.SoLuongToiThieu || 1]
+        [makm, giaTriGiam, promotionData.GiaTriDonToiThieu || null, promotionData.GiamToiDa || null, promotionData.SoLuongToiThieu || 1]
       );
 
       // Logic xử lý sản phẩm áp dụng:
@@ -328,9 +346,12 @@ router.put('/:makm', authenticateToken, async (req, res) => {
       );
 
       // Cập nhật ct_khuyen_mai
+      // Với Free Ship: GiaTriGiam = 0 (vì không giảm tiền sản phẩm)
+      const giaTriGiam = promotionData.LoaiKM === 'free_ship' ? 0 : (promotionData.GiaTriGiam || 0);
+      
       await connection.query(
         `UPDATE ct_khuyen_mai SET GiaTriGiam = ?, GiaTriDonToiThieu = ?, GiamToiDa = ?, SoLuongToiThieu = ? WHERE MaKM = ?`,
-        [promotionData.GiaTriGiam || null, promotionData.GiaTriDonToiThieu || null, promotionData.GiamToiDa || null, promotionData.SoLuongToiThieu || null, makm]
+        [giaTriGiam, promotionData.GiaTriDonToiThieu || null, promotionData.GiamToiDa || null, promotionData.SoLuongToiThieu || null, makm]
       );
 
       // Xóa tất cả sản phẩm áp dụng cũ
@@ -475,7 +496,8 @@ router.post('/apply-to-cart', authenticateToken, async (req, res) => {
     const { code, cartItems, makh } = req.body;
 
     // 1. Kiểm tra input
-    if (!code || !cartItems || !Array.isArray(cartItems) || cartItems.length === 0) {
+    // ✅ FIX: Cho phép cartItems = [] để hiển thị modal gợi ý sản phẩm khi giỏ trống
+    if (!code || !cartItems || !Array.isArray(cartItems)) {
       return res.status(400).json({ error: 'Thiếu thông tin: Mã khuyến mãi hoặc giỏ hàng' });
     }
 
@@ -513,7 +535,67 @@ router.post('/apply-to-cart', authenticateToken, async (req, res) => {
       return res.status(401).json({ error: 'Bạn chưa nhận mã này hoặc đã hết hạn/sử dụng' });
     }
 
-    // 4. Kiểm tra sản phẩm nào trong giỏ được áp dụng khuyến mãi
+    // 4. Lấy TOÀN BỘ sản phẩm được áp dụng khuyến mãi này
+    const [allKMProducts] = await pool.query(
+      `SELECT sp.MaSP, sp.TenSP, sp.DonGia, sp.HinhAnh
+       FROM sp_khuyen_mai km
+       JOIN sanpham sp ON km.MaSP = sp.MaSP
+       WHERE km.MaKM = ?`,
+      [MaKM]
+    );
+
+    // ✅ FIX: Chuẩn hóa đường dẫn ảnh - xử lý nhiều trường hợp
+    allKMProducts.forEach(product => {
+      if (product.HinhAnh) {
+        let imgPath = product.HinhAnh;
+        
+        // Trường hợp 1: Đường dẫn đầy đủ (img/product/sp08.jpg)
+        if (imgPath.startsWith('img/product/')) {
+          product.HinhAnh = imgPath;
+        }
+        // Trường hợp 2: Chỉ có đường dẫn img/ (img/sp08.jpg)
+        else if (imgPath.startsWith('img/')) {
+          product.HinhAnh = imgPath.replace('img/', 'img/product/');
+        }
+        // Trường hợp 3: Chỉ có tên file (sp08.jpg)
+        else {
+          product.HinhAnh = `img/product/${imgPath}`;
+        }
+      } else {
+        // Không có ảnh -> dùng default
+        product.HinhAnh = 'img/product/default.jpg';
+      }
+    });
+
+    if (allKMProducts.length === 0) {
+      return res.status(400).json({ 
+        error: 'Khuyến mãi này chưa được liên kết với sản phẩm nào',
+        suggestedProducts: []
+      });
+    }
+
+    // ✅ FIX: Nếu giỏ hàng TRỐNG → Trả về gợi ý ngay, không cần kiểm tra tiếp
+    if (cartItems.length === 0) {
+      console.log('🔍 [API] Giỏ hàng trống, trả 402 với gợi ý ngay');
+      const response = { 
+        error: 'Giỏ hàng trống',
+        message: `Mã "${promotion.TenKM}" chỉ áp dụng cho ${allKMProducts.length} sản phẩm. Vui lòng thêm sản phẩm vào giỏ hàng!`,
+        suggestedProducts: allKMProducts.map(p => ({
+          MaSP: p.MaSP,
+          TenSP: p.TenSP,
+          DonGia: p.DonGia,
+          HinhAnh: p.HinhAnh
+        })),
+        requirements: {
+          minAmount: promotion.GiaTriDonToiThieu || 0,
+          minQuantity: promotion.SoLuongToiThieu || 0
+        }
+      };
+      console.log('🔍 [API] Response:', JSON.stringify(response, null, 2));
+      return res.status(402).json(response);
+    }
+
+    // 5. Kiểm tra sản phẩm nào trong giỏ được áp dụng khuyến mãi
     const results = await Promise.all(
       cartItems.map(async (item) => {
         const [rows] = await pool.query(
@@ -536,20 +618,78 @@ router.post('/apply-to-cart', authenticateToken, async (req, res) => {
 
     const kmProducts = results.filter(Boolean);
 
+    // 6. Nếu KHÔNG CÓ sản phẩm khuyến mãi trong giỏ → Gợi ý thêm sản phẩm
     if (kmProducts.length === 0) {
-      return res.status(402).json({ error: 'Mã này không áp dụng cho sản phẩm nào trong giỏ hàng' });
+      console.log('🔍 [API] Giỏ hàng không có sản phẩm KM, trả 402 với gợi ý');
+      console.log('🔍 [API] Số sản phẩm gợi ý:', allKMProducts.length);
+      
+      const response = { 
+        error: 'Giỏ hàng chưa có sản phẩm được giảm giá',
+        message: `Mã "${promotion.TenKM}" chỉ áp dụng cho ${allKMProducts.length} sản phẩm. Vui lòng thêm sản phẩm vào giỏ hàng!`,
+        suggestedProducts: allKMProducts.map(p => ({
+          MaSP: p.MaSP,
+          TenSP: p.TenSP,
+          DonGia: p.DonGia,
+          HinhAnh: p.HinhAnh
+        })),
+        requirements: {
+          minAmount: promotion.GiaTriDonToiThieu || 0,
+          minQuantity: promotion.SoLuongToiThieu || 0
+        }
+      };
+      
+      console.log('🔍 [API] Response:', JSON.stringify(response, null, 2));
+      return res.status(402).json(response);
     }
 
-    // 5. Phân loại sản phẩm
+    // 7. Phân loại sản phẩm
     const kmProductIds = kmProducts.map(p => p.MaSP);
     const nonKmProducts = cartItems.filter(item => !kmProductIds.includes(item.MaSP));
 
-    // 6. Tính tổng tiền
+    // 8. Tính tổng tiền
     const subtotal = kmProducts.reduce((sum, item) => sum + item.DonGia * item.SoLuong, 0);
     const tongSoLuong = kmProducts.reduce((sum, item) => sum + item.SoLuong, 0);
     const tongTienKhongGiam = nonKmProducts.reduce((sum, item) => sum + item.DonGia * item.SoLuong, 0);
 
-    // 7. Tính giảm giá
+    // 9. Kiểm tra điều kiện TRƯỚC KHI tính giảm giá
+    const minAmount = promotion.GiaTriDonToiThieu || 0;
+    const minQuantity = promotion.SoLuongToiThieu || 0;
+    const missingAmount = Math.max(0, minAmount - subtotal);
+    const missingQuantity = Math.max(0, minQuantity - tongSoLuong);
+
+    // Nếu KHÔNG ĐỦ điều kiện → Gợi ý sản phẩm cần thêm
+    if (subtotal < minAmount || tongSoLuong < minQuantity) {
+      // Lọc sản phẩm chưa có trong giỏ hoặc có thể mua thêm
+      const cartProductIds = kmProducts.map(p => p.MaSP);
+      const suggestedProducts = allKMProducts.filter(p => !cartProductIds.includes(p.MaSP));
+
+      return res.status(403).json({
+        error: 'Chưa đủ điều kiện áp dụng mã giảm giá',
+        message: `Để sử dụng mã "${promotion.TenKM}", bạn cần:`,
+        currentStatus: {
+          currentAmount: subtotal,
+          currentQuantity: tongSoLuong,
+          productsInCart: kmProducts.length
+        },
+        requirements: {
+          minAmount: minAmount,
+          minQuantity: minQuantity,
+          missingAmount: missingAmount,
+          missingQuantity: missingQuantity
+        },
+        suggestions: {
+          message: missingAmount > 0 
+            ? `Thêm ${missingAmount.toLocaleString('vi-VN')}đ sản phẩm khuyến mãi nữa` 
+            : `Thêm ${missingQuantity} sản phẩm khuyến mãi nữa`,
+          availableProducts: suggestedProducts.length > 0 ? suggestedProducts : allKMProducts,
+          note: suggestedProducts.length > 0 
+            ? 'Các sản phẩm dưới đây được giảm giá và chưa có trong giỏ hàng của bạn:' 
+            : 'Bạn có thể mua thêm các sản phẩm sau để đủ điều kiện:'
+        }
+      });
+    }
+
+    // 10. Tính giảm giá
     let totalDiscount = 0;
     let total = subtotal + tongTienKhongGiam
     let totalFinal = 0;
@@ -558,49 +698,51 @@ router.post('/apply-to-cart', authenticateToken, async (req, res) => {
     switch (promotion.LoaiKM) {
       case 'giam_phan_tram': {
         console.log("ntádasdassadas")
-        if (subtotal >= (promotion.GiaTriDonToiThieu || 0) && tongSoLuong >= (promotion.SoLuongToiThieu || 0)) {
-          totalDiscount = subtotal * (promotion.GiaTriGiam / 100);
-          totalDiscount = Math.min(totalDiscount, promotion.GiamToiDa || Infinity, subtotal);
-          totalFinal = (subtotal - totalDiscount) + tongTienKhongGiam;
+        // Điều kiện đã kiểm tra ở trên rồi, chỉ cần tính giảm giá
+        totalDiscount = subtotal * (promotion.GiaTriGiam / 100);
+        totalDiscount = Math.min(totalDiscount, promotion.GiamToiDa || Infinity, subtotal);
+        totalFinal = (subtotal - totalDiscount) + tongTienKhongGiam;
 
-          discountDetails = {
-            discountType: 'percentage',
-            value: promotion.GiaTriGiam,
-            discountAmount: totalDiscount,
-            total,
-            totalFinal,
-            products: kmProducts
-          };
-        } else {
-          return res.status(403).json({
-            error: `Không đủ điều kiện áp dụng: 
-                yêu cầu tối thiểu ${promotion.GiaTriDonToiThieu || 0}đ 
-                và số lượng tối thiểu ${promotion.SoLuongToiThieu || 0}`
-          });
-        }
+        discountDetails = {
+          discountType: 'percentage',
+          value: promotion.GiaTriGiam,
+          discountAmount: totalDiscount,
+          total,
+          totalFinal,
+          products: kmProducts
+        };
         break;
       }
 
       case 'giam_tien_mat': {
-        if (subtotal >= (promotion.GiaTriDonToiThieu || 0) && tongSoLuong >= (promotion.SoLuongToiThieu || 0)) {
-          totalDiscount = promotion.GiaTriGiam
-          totalFinal = (subtotal - totalDiscount) + tongTienKhongGiam;
+        // Điều kiện đã kiểm tra ở trên rồi, chỉ cần tính giảm giá
+        totalDiscount = promotion.GiaTriGiam;
+        totalFinal = (subtotal - totalDiscount) + tongTienKhongGiam;
 
-          discountDetails = {
-            discountType: 'fixed_amount',
-            value: promotion.GiaTriGiam,
-            discountAmount: totalDiscount,
-            total,
-            totalFinal,
-            products: kmProducts
-          };
-        } else {
-          return res.status(403).json({
-            error: `Không đủ điều kiện áp dụng: 
-                yêu cầu tối thiểu ${promotion.GiaTriDonToiThieu || 0}đ 
-                và số lượng tối thiểu ${promotion.SoLuongToiThieu || 0}`
-          });
-        }
+        discountDetails = {
+          discountType: 'fixed_amount',
+          value: promotion.GiaTriGiam,
+          discountAmount: totalDiscount,
+          total,
+          totalFinal,
+          products: kmProducts
+        };
+        break;
+      }
+
+      case 'free_ship': {
+        // Khuyến mãi free ship: không giảm tiền sản phẩm, chỉ miễn phí vận chuyển
+        totalFinal = subtotal + tongTienKhongGiam;
+
+        discountDetails = {
+          discountType: 'free_ship',
+          value: 0,
+          discountAmount: 0,
+          total,
+          totalFinal,
+          products: kmProducts,
+          freeShip: true // Đánh dấu để frontend/backend biết đơn này được free ship
+        };
         break;
       }
 

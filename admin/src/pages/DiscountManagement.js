@@ -329,15 +329,26 @@ const handleToggleStatus = async (id, currentStatus) => {
 
   // Render loại khuyến mãi
   const renderPromotionType = (loaiKM) => {
-    const isPercent = loaiKM === 'giam_phan_tram';
-    return (
-      <Tag 
-        color={isPercent ? 'blue' : 'green'} 
-        icon={isPercent ? <PercentageOutlined /> : <DollarOutlined />}
-      >
-        {isPercent ? 'Giảm %' : 'Giảm tiền'}
-      </Tag>
-    );
+    if (loaiKM === 'giam_phan_tram') {
+      return (
+        <Tag color="blue" icon={<PercentageOutlined />}>
+          Giảm %
+        </Tag>
+      );
+    } else if (loaiKM === 'giam_tien_mat') {
+      return (
+        <Tag color="green" icon={<DollarOutlined />}>
+          Giảm tiền
+        </Tag>
+      );
+    } else if (loaiKM === 'free_ship') {
+      return (
+        <Tag color="orange" icon={<GiftOutlined />}>
+          Free Ship
+        </Tag>
+      );
+    }
+    return <Tag>{loaiKM}</Tag>;
   };
 
   const columns = [
@@ -687,6 +698,9 @@ const handleToggleStatus = async (id, currentStatus) => {
                   <Option value="giam_tien_mat">
                     <DollarOutlined /> Giảm tiền mặt
                   </Option>
+                  <Option value="free_ship">
+                    <GiftOutlined /> Miễn phí vận chuyển (Free Ship)
+                  </Option>
                 </Select>
               </Form.Item>
             </Col>
@@ -740,84 +754,119 @@ const handleToggleStatus = async (id, currentStatus) => {
             />
           </Form.Item>
 
-          <Row gutter={16}>
-            <Col span={12}>
-              <Form.Item 
-                label="Giá trị giảm" 
-                name="GiaTriGiam"
-                tooltip="Nhập % (ví dụ: 10) hoặc số tiền (ví dụ: 50000)"
-              >
-                <Input 
-                  type="number" 
-                  placeholder="Ví dụ: 10 hoặc 50000"
-                  addonAfter={
-                    <Form.Item name="LoaiKM" noStyle>
-                      {({ getFieldValue }) => 
-                        getFieldValue('LoaiKM') === 'giam_phan_tram' ? '%' : 'VND'
-                      }
+          <Form.Item noStyle shouldUpdate={(prevValues, currentValues) => prevValues.LoaiKM !== currentValues.LoaiKM}>
+            {({ getFieldValue }) => {
+              const loaiKM = getFieldValue('LoaiKM');
+              const isFreeShip = loaiKM === 'free_ship';
+              const isPercent = loaiKM === 'giam_phan_tram';
+              const isFixed = loaiKM === 'giam_tien_mat';
+
+              return (
+                <>
+                  {/* Chỉ hiện Giá trị giảm khi KHÔNG phải Free Ship */}
+                  {!isFreeShip && (
+                    <Row gutter={16}>
+                      <Col span={12}>
+                        <Form.Item 
+                          label="Giá trị giảm" 
+                          name="GiaTriGiam"
+                          tooltip="Nhập % (ví dụ: 10) hoặc số tiền (ví dụ: 50000)"
+                        >
+                          <Input 
+                            type="number" 
+                            placeholder="Ví dụ: 10 hoặc 50000"
+                            addonAfter={isPercent ? '%' : 'VND'}
+                          />
+                        </Form.Item>
+                      </Col>
+                      <Col span={12}>
+                        <Form.Item 
+                          label="Giá trị đơn tối thiểu" 
+                          name="GiaTriDonToiThieu"
+                          tooltip="Đơn hàng phải có giá trị tối thiểu để áp dụng"
+                        >
+                          <Input 
+                            type="number" 
+                            placeholder="Ví dụ: 100000"
+                            addonAfter="VND"
+                          />
+                        </Form.Item>
+                      </Col>
+                    </Row>
+                  )}
+
+                  {/* Giá trị đơn tối thiểu cho Free Ship */}
+                  {isFreeShip && (
+                    <Form.Item 
+                      label="Giá trị đơn tối thiểu" 
+                      name="GiaTriDonToiThieu"
+                      tooltip="Đơn hàng phải có giá trị tối thiểu để được miễn phí ship"
+                    >
+                      <Input 
+                        type="number" 
+                        placeholder="Ví dụ: 200000"
+                        addonAfter="VND"
+                      />
                     </Form.Item>
-                  }
-                />
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item 
-                label="Giá trị đơn tối thiểu" 
-                name="GiaTriDonToiThieu"
-                tooltip="Đơn hàng phải có giá trị tối thiểu để áp dụng"
-              >
-                <Input 
-                  type="number" 
-                  placeholder="Ví dụ: 100000"
-                  addonAfter="VND"
-                />
-              </Form.Item>
-            </Col>
-          </Row>
+                  )}
 
-          <Row gutter={16}>
-            <Col span={12}>
-              <Form.Item 
-                label="Giảm tối đa" 
-                name="GiamToiDa"
-                tooltip="Số tiền giảm tối đa cho khuyến mãi phần trăm"
-              >
-                <Input 
-                  type="number" 
-                  placeholder="Ví dụ: 200000"
-                  addonAfter="VND"
-                />
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item 
-                label="Số lượng tối thiểu" 
-                name="SoLuongToiThieu"
-                tooltip="Áp dụng cho khuyến mãi giảm tiền"
-              >
-                <Input 
-                  type="number" 
-                  placeholder="Ví dụ: 2"
-                  addonAfter="sản phẩm"
-                />
-              </Form.Item>
-            </Col>
-          </Row>
+                  {/* Chỉ hiện với giảm phần trăm hoặc giảm tiền */}
+                  {!isFreeShip && (
+                    <Row gutter={16}>
+                      {isPercent && (
+                        <Col span={12}>
+                          <Form.Item 
+                            label="Giảm tối đa" 
+                            name="GiamToiDa"
+                            tooltip="Số tiền giảm tối đa cho khuyến mãi phần trăm"
+                          >
+                            <Input 
+                              type="number" 
+                              placeholder="Ví dụ: 200000"
+                              addonAfter="VND"
+                            />
+                          </Form.Item>
+                        </Col>
+                      )}
+                      {isFixed && (
+                        <Col span={12}>
+                          <Form.Item 
+                            label="Số lượng tối thiểu" 
+                            name="SoLuongToiThieu"
+                            tooltip="Áp dụng cho khuyến mãi giảm tiền"
+                          >
+                            <Input 
+                              type="number" 
+                              placeholder="Ví dụ: 2"
+                              addonAfter="sản phẩm"
+                            />
+                          </Form.Item>
+                        </Col>
+                      )}
+                    </Row>
+                  )}
 
-          <Form.Item 
-            label="Sản phẩm áp dụng" 
-            name="SanPhamApDung"
-            tooltip="Để trống nếu áp dụng cho tất cả sản phẩm"
-          >
-            <Select
-              mode="multiple"
-              allowClear
-              placeholder="Chọn sản phẩm hoặc để trống để áp dụng tất cả"
-              options={productOptions}
-              optionFilterProp="label"
-              showSearch
-              style={{ width: '100%' }}
-            />
+                  {/* Sản phẩm áp dụng - ẩn với Free Ship vì áp dụng toàn bộ đơn hàng */}
+                  {!isFreeShip && (
+                    <Form.Item 
+                      label="Sản phẩm áp dụng" 
+                      name="SanPhamApDung"
+                      tooltip="Để trống nếu áp dụng cho tất cả sản phẩm"
+                    >
+                      <Select
+                        mode="multiple"
+                        allowClear
+                        placeholder="Chọn sản phẩm hoặc để trống để áp dụng tất cả"
+                        options={productOptions}
+                        optionFilterProp="label"
+                        showSearch
+                        style={{ width: '100%' }}
+                      />
+                    </Form.Item>
+                  )}
+                </>
+              );
+            }}
           </Form.Item>
         </Form>
       </Modal>

@@ -60,6 +60,251 @@ h2 {
   border-bottom: 1px solid #eee;
 }
 
+/* Saved Promos Section */
+.saved-promos-section {
+  background: linear-gradient(180deg, #fff8e1 0%, #ffffff 100%);
+  border-radius: var(--border-radius);
+  padding: 15px 20px;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 12px rgba(255, 193, 7, 0.15);
+  border: 1px solid #ffe082;
+}
+
+.saved-promos-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  user-select: none;
+}
+
+.saved-promos-header h3 {
+  font-size: 1.1rem;
+  color: #f57c00;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.saved-promos-header h3 i {
+  color: #ff9800;
+}
+
+.toggle-promos-btn {
+  background: transparent;
+  border: none;
+  color: #f57c00;
+  font-size: 1.2rem;
+  cursor: pointer;
+  padding: 5px 10px;
+  transition: transform 0.3s ease;
+}
+
+.toggle-promos-btn.active {
+  transform: rotate(180deg);
+}
+
+.saved-promos-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 15px;
+  margin-top: 15px;
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease;
+}
+
+.saved-promos-list.show {
+  max-height: 1000px;
+  overflow: visible;
+}
+
+.saved-promo-card {
+  background: linear-gradient(135deg, #fff3e0 0%, #ffffff 100%);
+  border: 2px solid #ffe082;
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 0 4px 12px rgba(255, 193, 7, 0.1);
+  transition: all 0.3s ease;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+}
+
+.saved-promo-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, rgba(255, 152, 0, 0.1) 0%, transparent 100%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none; /* ✅ FIX: Không block click vào button */
+  z-index: 0;
+}
+
+.saved-promo-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 20px rgba(255, 152, 0, 0.25);
+  border-color: #ff9800;
+}
+
+.saved-promo-card:hover::before {
+  opacity: 1;
+}
+
+.saved-promo-card.free-ship {
+  border-color: #64b5f6;
+  background: linear-gradient(135deg, #e3f2fd 0%, #ffffff 100%);
+}
+
+.saved-promo-card.free-ship:hover {
+  border-color: #2196f3;
+  box-shadow: 0 6px 20px rgba(33, 150, 243, 0.25);
+}
+
+.promo-type-badge {
+  display: inline-block;
+  background: #ff9800;
+  color: white;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.saved-promo-card.free-ship .promo-type-badge {
+  background: #2196f3;
+}
+
+.promo-code-display {
+  font-size: 1.3rem;
+  font-weight: 800;
+  color: #d84315;
+  background: rgba(255, 255, 255, 0.8);
+  padding: 8px 12px;
+  border-radius: 8px;
+  margin: 8px 0;
+  letter-spacing: 2px;
+  text-align: center;
+  border: 2px dashed #ff9800;
+}
+
+.saved-promo-card.free-ship .promo-code-display {
+  color: #1565c0;
+  border-color: #2196f3;
+}
+
+.promo-details {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(255, 152, 0, 0.2);
+}
+
+.saved-promo-card.free-ship .promo-details {
+  border-top-color: rgba(33, 150, 243, 0.2);
+}
+
+.promo-detail-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.85rem;
+  margin: 5px 0;
+  color: #666;
+}
+
+.promo-detail-row .label {
+  font-weight: 600;
+}
+
+.promo-detail-row .value {
+  color: #333;
+  font-weight: 700;
+}
+
+.promo-status {
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.promo-status.available {
+  background: #e8f5e9;
+  color: #2e7d32;
+}
+
+.promo-status.used {
+  background: #ffebee;
+  color: #c62828;
+}
+
+.promo-status.expired {
+  background: #fafafa;
+  color: #757575;
+}
+
+.use-promo-btn {
+  width: 100%;
+  margin-top: 10px;
+  padding: 10px;
+  background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  font-size: 0.85rem;
+  letter-spacing: 0.5px;
+  position: relative; /* ✅ FIX: Tạo stacking context */
+  z-index: 10; /* ✅ FIX: Đưa button lên trên */
+  pointer-events: auto; /* ✅ FIX: Đảm bảo clickable */
+}
+
+.saved-promo-card.free-ship .use-promo-btn {
+  background: linear-gradient(135deg, #2196f3 0%, #1976d2 100%);
+}
+
+.use-promo-btn:hover {
+  transform: scale(1.02);
+  box-shadow: 0 4px 12px rgba(245, 124, 0, 0.4);
+}
+
+.saved-promo-card.free-ship .use-promo-btn:hover {
+  box-shadow: 0 4px 12px rgba(25, 118, 210, 0.4);
+}
+
+.use-promo-btn:disabled {
+  background: #bdbdbd;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.empty-promos {
+  text-align: center;
+  padding: 30px;
+  color: #999;
+  font-style: italic;
+}
+
+.empty-promos i {
+  font-size: 3rem;
+  color: #ddd;
+  margin-bottom: 10px;
+  display: block;
+}
+
 /* Coupon Section */
 .coupon-section {
   background: white;

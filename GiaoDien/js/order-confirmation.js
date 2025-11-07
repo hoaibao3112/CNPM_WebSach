@@ -101,6 +101,11 @@ document.addEventListener('DOMContentLoaded', async function() {
     const orderId = urlParams.get('orderId');
     const status = urlParams.get('status');
     const amount = urlParams.get('amount');
+    const subtotal = urlParams.get('subtotal');
+    const discount = urlParams.get('discount');
+    const shipping = urlParams.get('shipping');
+    const discountCode = urlParams.get('discountCode');
+    const freeShipCode = urlParams.get('freeShipCode');
     const errorCode = urlParams.get('code');
     const paymentMethod = urlParams.get('paymentMethod');
     const message = urlParams.get('message');
@@ -184,7 +189,36 @@ document.addEventListener('DOMContentLoaded', async function() {
         } 
         // ✅ XỬ LÝ COD SUCCESS
         else if (status === 'cod' || (status === 'success' && paymentMethod === 'COD')) {
-            const displayAmount = amount ? parseInt(amount) : null;
+            const displayAmount = amount ? parseFloat(amount) : null;
+            const displaySubtotal = subtotal ? parseFloat(subtotal) : null;
+            const displayDiscount = discount ? parseFloat(discount) : 0;
+            const displayShipping = shipping ? parseFloat(shipping) : 0;
+            
+            // ✅ Build promo codes display
+            let promoCodesHTML = '';
+            if (discountCode || freeShipCode) {
+                promoCodesHTML = '<div class="detail-section"><div class="section-title"><i class="fas fa-tags"></i> Mã khuyến mãi đã áp dụng</div>';
+                
+                if (discountCode) {
+                    promoCodesHTML += `
+                        <div class="promo-badge" style="background: #fff3cd; padding: 10px; border-radius: 5px; margin: 5px 0;">
+                            <i class="fas fa-tag" style="color: #ff9800;"></i>
+                            <strong style="color: #ff9800;">Mã giảm giá:</strong> ${discountCode}
+                        </div>
+                    `;
+                }
+                
+                if (freeShipCode) {
+                    promoCodesHTML += `
+                        <div class="promo-badge" style="background: #d4edda; padding: 10px; border-radius: 5px; margin: 5px 0;">
+                            <i class="fas fa-shipping-fast" style="color: #28a745;"></i>
+                            <strong style="color: #28a745;">Mã Free Ship:</strong> ${freeShipCode}
+                        </div>
+                    `;
+                }
+                
+                promoCodesHTML += '</div>';
+            }
             
             resultContent.innerHTML = `
                 <div class="success-icon">
@@ -205,9 +239,32 @@ document.addEventListener('DOMContentLoaded', async function() {
                             <span class="label">Ngày đặt:</span>
                             <span class="value">${orderDetails?.NgayTao ? new Date(orderDetails.NgayTao).toLocaleDateString('vi-VN') : new Date().toLocaleDateString('vi-VN')}</span>
                         </div>
+                        ${displaySubtotal ? `
+                        <div class="detail-row">
+                            <span class="label">Tổng phụ:</span>
+                            <span class="value">${formatPrice(displaySubtotal)}</span>
+                        </div>
+                        ` : ''}
+                        ${displayDiscount > 0 ? `
+                        <div class="detail-row">
+                            <span class="label">Giảm giá:</span>
+                            <span class="value" style="color: #27ae60;">-${formatPrice(displayDiscount)}</span>
+                        </div>
+                        ` : ''}
+                        ${displayShipping > 0 ? `
+                        <div class="detail-row">
+                            <span class="label">Phí vận chuyển:</span>
+                            <span class="value">${formatPrice(displayShipping)}</span>
+                        </div>
+                        ` : displayShipping === 0 && freeShipCode ? `
+                        <div class="detail-row">
+                            <span class="label">Phí vận chuyển:</span>
+                            <span class="value" style="color: #27ae60; font-weight: bold;">Miễn phí</span>
+                        </div>
+                        ` : ''}
                         <div class="detail-row">
                             <span class="label">Tổng tiền:</span>
-                            <span class="value total-amount">${displayAmount ? formatPrice(displayAmount * 100) : (orderDetails?.TongTien ? formatPrice(orderDetails.TongTien * 100) : 'N/A')}</span>
+                            <span class="value total-amount">${displayAmount ? formatPrice(displayAmount) : (orderDetails?.TongTien ? formatPrice(orderDetails.TongTien) : 'N/A')}</span>
                         </div>
                         <div class="detail-row">
                             <span class="label">Phương thức:</span>
@@ -226,6 +283,8 @@ document.addEventListener('DOMContentLoaded', async function() {
                             </span>
                         </div>
                     </div>
+                    
+                    ${promoCodesHTML}
                     
                     ${orderDetails?.items ? `
                     <div class="detail-section">

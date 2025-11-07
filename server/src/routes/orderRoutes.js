@@ -328,14 +328,30 @@ router.post('/place-order', authenticateToken, async (req, res) => {
   
   try {
   // Lấy dữ liệu đơn; thông tin khách ưu tiên lấy từ token để tránh mismatch hoặc gian lận
-  const { items, shippingAddress, paymentMethod, notes, totalAmountDiscouted } = req.body;
+  const { 
+    items, 
+    shippingAddress, 
+    paymentMethod, 
+    notes, 
+    subtotal: clientSubtotal,        // ✅ Tổng tiền hàng từ client
+    discount: clientDiscount,        // ✅ Giảm giá đã áp dụng từ client
+    totalAmountDiscouted,            // ✅ Tổng cuối cùng từ client
+    freeShipCode,
+    discountCode                     // ✅ Mã giảm giá đã áp dụng
+  } = req.body;
+  
   const customerId = (req.user && req.user.makh) || (req.body.customer && req.body.customer.makh);
   const customerName = (req.user && (req.user.tenkh || req.user.name)) || (req.body.customer && req.body.customer.name) || '';
   const customerPhone = (req.user && (req.user.sdt || req.user.phone)) || (req.body.customer && req.body.customer.phone) || '';
   if (!customerId) return res.status(401).json({ error: 'Không xác thực được khách hàng' });
   const customer = { makh: customerId, name: customerName, phone: customerPhone };
-  console.log('req.user:', req.user);
-  console.log('received totalAmountDiscouted:', totalAmountDiscouted);
+  
+  console.log('🔍 [ORDER] Received data:');
+  console.log('  - clientSubtotal:', clientSubtotal);
+  console.log('  - clientDiscount:', clientDiscount);
+  console.log('  - totalAmountDiscouted:', totalAmountDiscouted);
+  console.log('  - freeShipCode:', freeShipCode);
+  console.log('  - discountCode:', discountCode);
     
     // Kiểm tra dữ liệu đầu vào
     if (!customer || !items || !shippingAddress || !paymentMethod) {
@@ -397,33 +413,111 @@ router.post('/place-order', authenticateToken, async (req, res) => {
 
     console.log(`📦 Tổng trọng lượng đơn hàng: ${totalWeight}g`);
 
-    // Tính tổng tiền (subtotal)
-    const subtotal = totalAmountDiscouted ? Number(totalAmountDiscouted) : cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
-  console.log('🔍 [DEBUG] totalAmountDiscouted:', totalAmountDiscouted, 'type:', typeof totalAmountDiscouted);
-  console.log('🔍 [DEBUG] Validated cart items:', cartItems.map(i => `${i.productName}: ${i.price} x ${i.quantity}`));
-  console.log('🔍 [DEBUG] Subtotal:', subtotal);
-
-    // Áp dụng quyền lợi theo hạng hội viên
+    // ✅ SỬ DỤNG GIÁ TRỊ TỪ CLIENT (đã tính toán đầy đủ ở frontend)
+    // Không tính lại discount theo tier vì đã áp dụng mã KM rồi
+    const subtotal = clientSubtotal || cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
+    const discountAmount = clientDiscount || 0; // Giảm giá từ mã KM
+    const amountAfterDiscount = subtotal - discountAmount;
+    
+    console.log('🔍 [ORDER] Price calculation:');
+    console.log('  - subtotal:', subtotal);
+    console.log('  - discountAmount:', discountAmount, '(from promo code)');
+    console.log('  - amountAfterDiscount:', amountAfterDiscount);
+    
+    // Lấy thông tin tier cho ghi chú (existingCustomer đã query ở trên rồi)
     const customerRow = existingCustomer[0];
     const userTier = customerRow.loyalty_tier || computeTier(customerRow.loyalty_points || 0);
 
-    const tierConfig = {
-      'Đồng': { discountPercent: 0, freeShipThreshold: 0, pointsMult: 1 },
-      'Bạc':  { discountPercent: 3, freeShipThreshold: 200000, pointsMult: 1.2 },
-      'Vàng': { discountPercent: 7, freeShipThreshold: 0, pointsMult: 1.5 },
-    };
-    const cfg = tierConfig[userTier] || tierConfig['Đồng'];
+    // ✅ XỬ LÝ MÃ GIẢM GIÁ (nếu có) - Đánh dấu đã sử dụng
+    if (discountCode && discountCode.trim() && discountAmount > 0) {
+      try {
+        const [[discountPromo]] = await connection.query(
+          `SELECT k.MaKM, k.TenKM, k.LoaiKM 
+           FROM khuyen_mai k
+           WHERE k.Code = ? 
+             AND k.LoaiKM IN ('giam_phan_tram', 'giam_tien_mat')
+             AND k.TrangThai = 1`,
+          [discountCode.trim()]
+        );
 
-    const discountAmount = Math.round(subtotal * (cfg.discountPercent / 100));
-    const amountAfterDiscount = Math.max(0, subtotal - discountAmount);
-
-  // Debug output to help verify tier & discount behavior
-  console.log('[LOYALTY DEBUG] customerId=', customer.makh, 'tier=', userTier, 'discountPercent=', cfg.discountPercent, 'discountAmount=', discountAmount, 'amountAfterDiscount=', amountAfterDiscount);
-  console.log('🔍 [DEBUG] subtotal:', subtotal, 'discountAmount:', discountAmount, 'amountAfterDiscount:', amountAfterDiscount);
+        if (discountPromo) {
+          // Đánh dấu mã đã sử dụng
+          await connection.query(
+            `UPDATE khachhang_khuyenmai 
+             SET trang_thai = 'Da_su_dung' 
+             WHERE makh = ? AND makm = ?`,
+            [customer.makh, discountPromo.MaKM]
+          );
+          console.log(`✅ Đã đánh dấu mã giảm giá ${discountCode} là đã sử dụng`);
+        }
+      } catch (discountError) {
+        console.error('❌ Error marking discount code as used:', discountError);
+        // Không throw error, chỉ log
+      }
+    }
 
     // 🚢 TÍNH PHÍ SHIP
-    const shippingFee = calculateShippingFee(shippingAddress.province, totalWeight, userTier);
-    console.log(`🚢 Phí ship: ${shippingFee.toLocaleString('vi-VN')} VND`);
+    let shippingFee = calculateShippingFee(shippingAddress.province, totalWeight, userTier);
+    let isFreeShip = false;
+    
+    // Kiểm tra mã free ship (nếu có)
+    if (freeShipCode && freeShipCode.trim()) {
+      try {
+        const [[freeShipPromo]] = await connection.query(
+          `SELECT k.MaKM, k.TenKM, k.LoaiKM, k.Code, CAST(k.TrangThai AS UNSIGNED) AS TrangThai,
+                  ct.GiaTriDonToiThieu
+           FROM khuyen_mai k
+           JOIN ct_khuyen_mai ct ON k.MaKM = ct.MaKM
+           WHERE k.Code = ? 
+             AND k.LoaiKM = 'free_ship'
+             AND k.TrangThai = 1 
+             AND k.NgayBatDau <= NOW() 
+             AND k.NgayKetThuc >= NOW()`,
+          [freeShipCode.trim()]
+        );
+
+        if (freeShipPromo) {
+          // Kiểm tra khách hàng đã claim mã free ship chưa
+          const [[claim]] = await connection.query(
+            `SELECT * 
+             FROM khachhang_khuyenmai 
+             WHERE makh = ? 
+               AND makm = ? 
+               AND trang_thai = 'Chua_su_dung' 
+               AND ngay_het_han >= NOW()`,
+            [customer.makh, freeShipPromo.MaKM]
+          );
+
+          if (claim) {
+            // Kiểm tra điều kiện tối thiểu
+            if (subtotal >= (freeShipPromo.GiaTriDonToiThieu || 0)) {
+              shippingFee = 0;
+              isFreeShip = true;
+              console.log(`🎉 Áp dụng mã free ship: ${freeShipCode}`);
+              
+              // Đánh dấu mã đã sử dụng
+              await connection.query(
+                `UPDATE khachhang_khuyenmai 
+                 SET trang_thai = 'Da_su_dung' 
+                 WHERE makh = ? AND makm = ?`,
+                [customer.makh, freeShipPromo.MaKM]
+              );
+            } else {
+              console.log(`⚠️ Mã free ship không đủ điều kiện tối thiểu: ${freeShipPromo.GiaTriDonToiThieu}`);
+            }
+          } else {
+            console.log(`⚠️ Khách hàng chưa claim mã free ship hoặc đã sử dụng`);
+          }
+        } else {
+          console.log(`⚠️ Mã free ship không hợp lệ hoặc đã hết hạn: ${freeShipCode}`);
+        }
+      } catch (freeShipError) {
+        console.error('❌ Error checking free ship code:', freeShipError);
+        // Không throw error, chỉ log và tiếp tục với phí ship thông thường
+      }
+    }
+    
+    console.log(`🚢 Phí ship cuối cùng: ${shippingFee.toLocaleString('vi-VN')} VND (Free ship: ${isFreeShip})`);
 
     // Tổng tiền cuối cùng = Tiền hàng (đã giảm) + Phí ship
     const finalTotalAmount = amountAfterDiscount + shippingFee;
@@ -463,13 +557,21 @@ router.post('/place-order', authenticateToken, async (req, res) => {
       }
     }
     
-    // Tạo đơn hàng - lưu TongTien bao gồm phí ship; ghi note quyền lợi/giảm giá + phí ship
-    const noteWithLoyalty = `${notes || ''}\n[LOYALTY] Hạng: ${userTier}; Giảm sản phẩm: ${cfg.discountPercent}% (${discountAmount.toLocaleString()}đ)\n[SHIPPING] Phí ship: ${shippingFee.toLocaleString()}đ (${provinceName}, Trọng lượng: ${totalWeight}g)`;
+    // Tạo đơn hàng - lưu TongTien bao gồm phí ship; ghi note khuyến mãi + phí ship
+    const shipNote = isFreeShip ? `Phí ship: 0đ (FREE SHIP - Mã: ${freeShipCode})` : `Phí ship: ${shippingFee.toLocaleString()}đ (${provinceName}, Trọng lượng: ${totalWeight}g)`;
+    
+    // ✅ Ghi chú về khuyến mãi đã áp dụng
+    let promoNote = '';
+    if (discountCode && discountAmount > 0) {
+      promoNote = `[PROMO] Mã: ${discountCode}; Giảm giá: ${discountAmount.toLocaleString()}đ\n`;
+    }
+    
+    const noteWithDetails = `${notes || ''}\n${promoNote}[LOYALTY] Hạng: ${userTier}\n[SHIPPING] ${shipNote}`;
     
     const [orderResult] = await connection.query(
       `INSERT INTO hoadon (makh, MaDiaChi, NgayTao, TongTien, PhuongThucThanhToan, GhiChu, tinhtrang, TrangThaiThanhToan, PhiShip) 
        VALUES (?, ?, NOW(), ?, ?, ?, ?, ?, ?)`,
-      [customer.makh, addressId, finalTotalAmount, paymentMethod, noteWithLoyalty, 'Chờ xử lý', 'Chưa thanh toán', shippingFee]
+      [customer.makh, addressId, finalTotalAmount, paymentMethod, noteWithDetails, 'Chờ xử lý', 'Chưa thanh toán', shippingFee]
     );
     const orderId = orderResult.insertId;
 

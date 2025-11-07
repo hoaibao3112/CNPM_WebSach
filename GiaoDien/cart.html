@@ -21,18 +21,17 @@
       </a>
     </div>
     <h1 class="page-title">GIỎ HÀNG CỦA BẠN</h1>
-    <div class="coupon-section">
-      <div class="coupon-box">
-        <i class="fas fa-tag"></i>
-        <p>Bạn có mã giảm giá? Nhập mã tại đây</p>
-        <div class="coupon-input">
-          <!--<input type="text" placeholder="Nhập mã giảm giá" id="coupon-code">-->
-          <input type="text" placeholder="Nhập mã giảm giá" id="coupon-code" list="saved-coupons">
-          <datalist id="saved-coupons">
-            <!-- JS sẽ tự động thêm option -->
-          </datalist>
-          <button class="apply-btn" id="apply-coupon">ÁP DỤNG</button>
-        </div>
+    
+    <!-- Danh sách mã khuyến mãi của bạn -->
+    <div class="saved-promos-section" id="saved-promos-section" style="display: none;">
+      <div class="saved-promos-header">
+        <h3><i class="fas fa-tags"></i> Mã khuyến mãi của bạn</h3>
+        <button class="toggle-promos-btn" id="toggle-promos-btn">
+          <i class="fas fa-chevron-down"></i>
+        </button>
+      </div>
+      <div class="saved-promos-list" id="saved-promos-list">
+        <!-- Các mã khuyến mãi sẽ được load bằng JavaScript -->
       </div>
     </div>
 
@@ -87,6 +86,15 @@
               <span>Giảm giá</span>
               <span id="discount">-0đ</span>
             </div>
+            <!-- Thông tin mã khuyến mãi đã áp dụng -->
+            <div class="order-row" id="promo-code-row" style="display: none; background: #e8f5e9; padding: 10px; border-radius: 5px; margin: 5px 0;">
+              <span style="color: #27ae60; font-weight: 600;">
+                <i class="fas fa-tag"></i> Mã: <span id="promo-code-value"></span>
+              </span>
+              <button id="remove-promo" style="background: transparent; border: none; color: #e74c3c; cursor: pointer; font-size: 18px;">
+                <i class="fas fa-times-circle"></i>
+              </button>
+            </div>
             <div class="order-row" id="member-tier-row" style="display: none;">
               <span id="member-tier-label">Thẻ thành viên</span>
               <span id="member-tier-value"></span>
@@ -98,6 +106,15 @@
             <div class="order-row" id="shipping-discount-row" style="display: none;">
               <span id="shipping-discount-label">Giảm giá ship</span>
               <span id="shipping-discount" style="color: #27ae60;">-0đ</span>
+            </div>
+            <!-- Thông tin mã Free Ship đã áp dụng -->
+            <div class="order-row" id="free-ship-code-row" style="display: none; background: #fff3cd; padding: 10px; border-radius: 5px; margin: 5px 0;">
+              <span style="color: #ff9800; font-weight: 600;">
+                <i class="fas fa-shipping-fast"></i> Free Ship: <span id="free-ship-code-value"></span>
+              </span>
+              <button id="remove-free-ship" style="background: transparent; border: none; color: #e74c3c; cursor: pointer; font-size: 18px;">
+                <i class="fas fa-times-circle"></i>
+              </button>
             </div>
             <div class="order-row">
               <span>Phí vận chuyển</span>
