@@ -32,6 +32,10 @@ import AttendanceAdmin from './AttendanceAdmin.js';
 import bookRoutes from './book.js';
 import recommendationsRoutes from './recommendations.js';
 import addressRoutes from './address.js';
+import preferenceRoutes from './preferenceRoutes.js';
+import favoritesRoutes from './favoritesRoutes.js';
+import couponRoutes from './couponRoutes.js';
+import recommendationRoutes from './recommendationRoutes.js';
 
 export const initRoutes = (app) => {
   app.use('/auth', authRoutes);
@@ -70,4 +74,8 @@ export const initRoutes = (app) => {
   app.use('/api/orderreview',order_review);
   app.use('/api/recommendations', recommendationsRoutes);
   app.use('/api/address', addressRoutes);
+  app.use('/api/preferences', preferenceRoutes);
+  app.use('/api/favorites', favoritesRoutes);
+  app.use('/api/coupons', couponRoutes);
+  app.use('/api/recommendation', recommendationRoutes);
 };

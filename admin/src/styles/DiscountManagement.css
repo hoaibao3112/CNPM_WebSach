@@ -1,8 +1,14 @@
 .discount-management-container {
   padding: 24px;
-  padding-left: 170px; /* Thêm padding-left để thu bảng sang phải */
+  margin-left: 260px; /* Dùng margin-left thay vì padding-left để tránh bị sidebar che */
   background-color: #f5f5f5;
   min-height: 100vh;
+  transition: margin-left 0.3s ease; /* Smooth transition khi sidebar đóng/mở */
+}
+
+/* Khi sidebar đóng lại */
+body.sidebar-closed .discount-management-container {
+  margin-left: 68px; /* Width của sidebar khi đóng */
 }
 
 .header-section {

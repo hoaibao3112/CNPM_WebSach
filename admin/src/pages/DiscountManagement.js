@@ -17,7 +17,12 @@ import {
   Typography,
   Divider,
   Spin,
-  Badge
+  Badge,
+  Tabs,
+  Statistic,
+  Switch,
+  InputNumber,
+  Rate
 } from 'antd';
 import {
   PlusOutlined,
@@ -30,12 +35,21 @@ import {
   CalendarOutlined,
   PercentageOutlined,
   DollarOutlined,
-  TagOutlined
+  TagOutlined,
+  TagsOutlined,
+  SendOutlined,
+  FormOutlined,
+  BarChartOutlined,
+  UserOutlined,
+  CheckCircleOutlined,
+  CloseCircleOutlined,
+  DownloadOutlined
 } from '@ant-design/icons';
 import axios from 'axios';
 import dayjs from 'dayjs';
 import '../styles/DiscountManagement.css';
 
+const { TabPane } = Tabs;
 const { Option } = Select;
 const { Title, Text } = Typography;
 const { RangePicker } = DatePicker;
@@ -80,6 +94,48 @@ const DiscountManagement = () => {
   const [productOptions, setProductOptions] = useState([]);
   const [toggleStatusLoading, setToggleStatusLoading] = useState({});
   const [stats, setStats] = useState({ total: 0, active: 0, inactive: 0 });
+  
+  // States for Coupon Management Tab
+  const [coupons, setCoupons] = useState([]);
+  const [couponLoading, setCouponLoading] = useState(false);
+  const [showCouponForm, setShowCouponForm] = useState(false);
+  const [couponFormType, setCouponFormType] = useState('add');
+  const [couponForm] = Form.useForm();
+  const [editingCoupon, setEditingCoupon] = useState(null);
+
+  // States for Preference Form Management Tab
+  const [preferenceForms, setPreferenceForms] = useState([]);
+  const [preferenceLoading, setPreferenceLoading] = useState(false);
+  const [showPreferenceForm, setShowPreferenceForm] = useState(false);
+  const [preferenceFormType, setPreferenceFormType] = useState('add');
+  const [preferenceForm] = Form.useForm();
+  const [editingPreferenceForm, setEditingPreferenceForm] = useState(null);
+  const [selectedFormDetail, setSelectedFormDetail] = useState(null);
+  
+  // States for Question Management
+  const [showQuestionManager, setShowQuestionManager] = useState(false);
+  const [currentFormForQuestions, setCurrentFormForQuestions] = useState(null);
+  const [questions, setQuestions] = useState([]);
+  const [questionForm] = Form.useForm();
+  const [optionForm] = Form.useForm();
+  const [editingQuestion, setEditingQuestion] = useState(null);
+  const [showAddOption, setShowAddOption] = useState(null); // ID của câu hỏi đang thêm option
+  const [categories, setCategories] = useState([]);
+  const [authors, setAuthors] = useState([]);
+  
+  // States for Customer Responses Tab
+  const [customerResponses, setCustomerResponses] = useState([]);
+  const [responsesLoading, setResponsesLoading] = useState(false);
+  const [selectedResponse, setSelectedResponse] = useState(null);
+  const [showResponseDetail, setShowResponseDetail] = useState(false);
+  const [responseStats, setResponseStats] = useState({
+    totalResponses: 0,
+    withConsent: 0,
+    uniqueCustomers: 0
+  });
+  
+  // Active tab state
+  const [activeTab, setActiveTab] = useState('1');
 
   // Lấy danh sách khuyến mãi
   useEffect(() => {
@@ -146,6 +202,488 @@ const DiscountManagement = () => {
       console.error('Error fetching products:', err);
       setProductOptions([]);
     }
+  };
+
+  // ===== COUPON MANAGEMENT FUNCTIONS =====
+  const fetchCoupons = async () => {
+    setCouponLoading(true);
+    try {
+      const response = await axios.get('http://localhost:5000/api/coupons/admin/all', {
+        headers: { Authorization: `Bearer ${localStorage.getItem('authToken')}` }
+      });
+      setCoupons(response.data.data || []);
+    } catch (err) {
+      message.error('Không thể tải danh sách coupon');
+      console.error(err);
+    } finally {
+      setCouponLoading(false);
+    }
+  };
+
+  const handleAddCoupon = () => {
+    setCouponFormType('add');
+    setEditingCoupon(null);
+    couponForm.resetFields();
+    setShowCouponForm(true);
+  };
+
+  const handleEditCoupon = (coupon) => {
+    setCouponFormType('edit');
+    setEditingCoupon(coupon);
+    
+    // Map DB ENUM to frontend format
+    let loaiGiamUI = 'fixed';
+    if (coupon.LoaiGiamGia === 'PERCENT') loaiGiamUI = 'percent';
+    else if (coupon.LoaiGiamGia === 'AMOUNT') loaiGiamUI = 'fixed';
+    else if (coupon.LoaiGiamGia === 'FREESHIP') loaiGiamUI = 'freeship';
+    
+    // Extract TenPhieu from MoTa (if format is "TenPhieu - MoTa")
+    const moTaParts = coupon.MoTa?.split(' - ') || [];
+    const tenPhieu = moTaParts.length > 1 ? moTaParts[0] : '';
+    const moTa = moTaParts.length > 1 ? moTaParts.slice(1).join(' - ') : coupon.MoTa;
+    
+    couponForm.setFieldsValue({
+      MaPhieu: coupon.MaPhieu,
+      TenPhieu: tenPhieu,
+      MoTa: moTa,
+      LoaiGiam: loaiGiamUI,
+      GiaTriGiam: coupon.GiaTriGiam,
+      GiaTriDonToiThieu: 0, // DB không có field này
+      SoLuongPhatHanh: coupon.SoLanSuDungToiDa,
+      NgayHetHan: coupon.NgayHetHan ? dayjs(coupon.NgayHetHan) : null
+    });
+    setShowCouponForm(true);
+  };
+
+  const handleSaveCoupon = async () => {
+    try {
+      const values = await couponForm.validateFields();
+      const payload = {
+        ...values,
+        NgayHetHan: values.NgayHetHan ? values.NgayHetHan.format('YYYY-MM-DD') : null
+      };
+
+      if (couponFormType === 'add') {
+        await axios.post('http://localhost:5000/api/coupons/admin/create', payload, {
+          headers: { Authorization: `Bearer ${localStorage.getItem('authToken')}` }
+        });
+        message.success('Tạo coupon thành công!');
+      } else {
+        await axios.put(`http://localhost:5000/api/coupons/admin/${editingCoupon.MaPhieu}`, payload, {
+          headers: { Authorization: `Bearer ${localStorage.getItem('authToken')}` }
+        });
+        message.success('Cập nhật coupon thành công!');
+      }
+
+      setShowCouponForm(false);
+      fetchCoupons();
+    } catch (err) {
+      message.error(err.response?.data?.message || 'Có lỗi xảy ra');
+      console.error(err);
+    }
+  };
+
+  const handleDeleteCoupon = (maPhieu) => {
+    Modal.confirm({
+      title: 'Xác nhận xóa',
+      content: 'Bạn có chắc chắn muốn xóa coupon này?',
+      okText: 'Xóa',
+      cancelText: 'Hủy',
+      okType: 'danger',
+      onOk: async () => {
+        try {
+          await axios.delete(`http://localhost:5000/api/coupons/admin/${maPhieu}`, {
+            headers: { Authorization: `Bearer ${localStorage.getItem('authToken')}` }
+          });
+          message.success('Xóa coupon thành công!');
+          fetchCoupons();
+        } catch (err) {
+          message.error('Không thể xóa coupon');
+          console.error(err);
+        }
+      }
+    });
+  };
+
+  // ===== PREFERENCE FORM MANAGEMENT FUNCTIONS =====
+  const fetchPreferenceForms = async () => {
+    setPreferenceLoading(true);
+    try {
+      const response = await axios.get('http://localhost:5000/api/preferences/admin/forms', {
+        headers: { Authorization: `Bearer ${localStorage.getItem('authToken')}` }
+      });
+      setPreferenceForms(response.data.data || []);
+    } catch (err) {
+      message.error('Không thể tải danh sách form');
+      console.error(err);
+    } finally {
+      setPreferenceLoading(false);
+    }
+  };
+
+  const handleAddPreferenceForm = () => {
+    setPreferenceFormType('add');
+    setEditingPreferenceForm(null);
+    preferenceForm.resetFields();
+    setShowPreferenceForm(true);
+  };
+
+  const handleEditPreferenceForm = (form) => {
+    setPreferenceFormType('edit');
+    setEditingPreferenceForm(form);
+    preferenceForm.setFieldsValue({
+      TenForm: form.TenForm,
+      MoTa: form.MoTa,
+      IsActive: form.TrangThai === 1  // Map TrangThai to IsActive
+    });
+    setShowPreferenceForm(true);
+  };
+
+  const handleSavePreferenceForm = async () => {
+    try {
+      const values = await preferenceForm.validateFields();
+      const payload = {
+        TenForm: values.TenForm,
+        MoTa: values.MoTa,
+        TrangThai: values.IsActive ? 1 : 0  // Map IsActive to TrangThai
+      };
+
+      if (preferenceFormType === 'add') {
+        await axios.post('http://localhost:5000/api/preferences/admin/forms', payload, {
+          headers: { Authorization: `Bearer ${localStorage.getItem('authToken')}` }
+        });
+        message.success('Tạo form thành công!');
+      } else {
+        await axios.put(`http://localhost:5000/api/preferences/admin/forms/${editingPreferenceForm.MaForm}`, payload, {
+          headers: { Authorization: `Bearer ${localStorage.getItem('authToken')}` }
+        });
+        message.success('Cập nhật form thành công!');
+      }
+
+      setShowPreferenceForm(false);
+      fetchPreferenceForms();
+    } catch (err) {
+      message.error(err.response?.data?.message || 'Có lỗi xảy ra');
+      console.error(err);
+    }
+  };
+
+  const handleDeletePreferenceForm = (formId) => {
+    Modal.confirm({
+      title: 'Xác nhận xóa',
+      content: 'Bạn có chắc chắn muốn xóa form này? Các câu hỏi liên quan cũng sẽ bị xóa.',
+      okText: 'Xóa',
+      cancelText: 'Hủy',
+      okType: 'danger',
+      onOk: async () => {
+        try {
+          await axios.delete(`http://localhost:5000/api/preferences/admin/forms/${formId}`, {
+            headers: { Authorization: `Bearer ${localStorage.getItem('authToken')}` }
+          });
+          message.success('Xóa form thành công!');
+          fetchPreferenceForms();
+        } catch (err) {
+          message.error('Không thể xóa form');
+          console.error(err);
+        }
+      }
+    });
+  };
+
+  const handleViewFormDetail = async (formId) => {
+    try {
+      const response = await axios.get(`http://localhost:5000/api/preferences/admin/forms/${formId}`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem('authToken')}` }
+      });
+      setSelectedFormDetail(response.data.data);
+      Modal.info({
+        title: 'Chi tiết Form',
+        width: 800,
+        content: (
+          <div>
+            <p><strong>Tên:</strong> {response.data.data.TenForm}</p>
+            <p><strong>Mô tả:</strong> {response.data.data.MoTa}</p>
+            <p><strong>Số câu hỏi:</strong> {response.data.data.questions?.length || 0}</p>
+            <Divider />
+            {response.data.data.questions?.map((q, idx) => (
+              <div key={q.CauHoiID} style={{ marginBottom: 16 }}>
+                <Text strong>Câu {idx + 1}: {q.NoiDungCauHoi}</Text>
+                <div style={{ marginLeft: 16 }}>
+                  <Text type="secondary">Loại: {q.LoaiCauHoi}</Text>
+                  <ul>
+                    {q.options?.map(opt => (
+                      <li key={opt.LuaChonID}>{opt.NoiDung}</li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            ))}
+          </div>
+        )
+      });
+    } catch (err) {
+      message.error('Không thể tải chi tiết form');
+      console.error(err);
+    }
+  };
+
+  // Load data based on active tab
+  useEffect(() => {
+    if (activeTab === '2') {
+      fetchCoupons();
+    } else if (activeTab === '3') {
+      fetchPreferenceForms();
+      fetchCategoriesAndAuthors(); // Load dropdown data
+    } else if (activeTab === '4') {
+      fetchCustomerResponses();
+    }
+  }, [activeTab]);
+
+  // Fetch categories and authors for dropdowns
+  const fetchCategoriesAndAuthors = async () => {
+    try {
+      const [catRes, authRes] = await Promise.all([
+        axios.get('http://localhost:5000/api/product/categories', {
+          headers: { Authorization: `Bearer ${localStorage.getItem('authToken')}` }
+        }),
+        axios.get('http://localhost:5000/api/author', {
+          headers: { Authorization: `Bearer ${localStorage.getItem('authToken')}` }
+        })
+      ]);
+      setCategories(catRes.data || []);
+      setAuthors(authRes.data || []);
+    } catch (err) {
+      console.error('Error fetching categories/authors:', err);
+    }
+  };
+
+  // ===== QUESTION MANAGEMENT FUNCTIONS =====
+  const handleManageQuestions = async (formId) => {
+    try {
+      setCurrentFormForQuestions(formId);
+      const response = await axios.get(`http://localhost:5000/api/preferences/admin/forms/${formId}`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem('authToken')}` }
+      });
+      setQuestions(response.data.data.questions || []);
+      setShowQuestionManager(true);
+    } catch (err) {
+      message.error('Không thể tải danh sách câu hỏi');
+      console.error(err);
+    }
+  };
+
+  // ===== CUSTOMER RESPONSES FUNCTIONS =====
+  const fetchCustomerResponses = async () => {
+    setResponsesLoading(true);
+    try {
+      // Lấy tất cả form để có thể query responses
+      const formsResponse = await axios.get('http://localhost:5000/api/preferences/admin/forms', {
+        headers: { Authorization: `Bearer ${localStorage.getItem('authToken')}` }
+      });
+      
+      const forms = formsResponse.data.data || [];
+      
+      // Lấy responses từ tất cả forms
+      const allResponses = [];
+      for (const form of forms) {
+        try {
+          const responsesRes = await axios.get(
+            `http://localhost:5000/api/preferences/admin/forms/${form.MaForm}/responses`,
+            {
+              headers: { Authorization: `Bearer ${localStorage.getItem('authToken')}` }
+            }
+          );
+          
+          const responses = responsesRes.data.data || [];
+          responses.forEach(res => {
+            allResponses.push({
+              ...res,
+              TenForm: form.TenForm,
+              MaForm: form.MaForm
+            });
+          });
+        } catch (err) {
+          console.error(`Error fetching responses for form ${form.MaForm}:`, err);
+        }
+      }
+      
+      setCustomerResponses(allResponses);
+      
+      // Tính stats
+      const totalResponses = allResponses.length;
+      const withConsent = allResponses.filter(r => r.DongYSuDung === 1).length;
+      const uniqueCustomers = new Set(allResponses.map(r => r.makh)).size;
+      
+      setResponseStats({
+        totalResponses,
+        withConsent,
+        uniqueCustomers
+      });
+      
+    } catch (err) {
+      message.error('Không thể tải danh sách phản hồi');
+      console.error(err);
+    } finally {
+      setResponsesLoading(false);
+    }
+  };
+
+  const handleViewResponseDetail = async (response) => {
+    try {
+      // Fetch chi tiết câu trả lời
+      const detailRes = await axios.get(
+        `http://localhost:5000/api/preferences/admin/forms/${response.MaForm}/responses`,
+        {
+          headers: { Authorization: `Bearer ${localStorage.getItem('authToken')}` }
+        }
+      );
+      
+      // Tìm response cụ thể
+      const fullResponse = (detailRes.data.data || []).find(
+        r => r.MaPhanHoi === response.MaPhanHoi
+      );
+      
+      if (fullResponse) {
+        setSelectedResponse({
+          ...fullResponse,
+          TenForm: response.TenForm
+        });
+        setShowResponseDetail(true);
+      } else {
+        message.error('Không tìm thấy chi tiết phản hồi');
+      }
+    } catch (err) {
+      message.error('Không thể tải chi tiết phản hồi');
+      console.error(err);
+    }
+  };
+
+  const handleExportResponses = () => {
+    // Convert to CSV
+    const headers = ['Mã phản hồi', 'Khách hàng', 'Form', 'Ngày trả lời', 'Đồng ý'];
+    const rows = customerResponses.map(r => [
+      r.MaPhanHoi,
+      r.TenKH || r.makh,
+      r.TenForm,
+      new Date(r.NgayPhanHoi).toLocaleDateString('vi-VN'),
+      r.DongYSuDung === 1 ? 'Có' : 'Không'
+    ]);
+    
+    let csvContent = headers.join(',') + '\n';
+    rows.forEach(row => {
+      csvContent += row.join(',') + '\n';
+    });
+    
+    // Download
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `customer_responses_${new Date().getTime()}.csv`;
+    link.click();
+    
+    message.success('Đã xuất file CSV thành công!');
+  };
+
+  const handleAddQuestion = async () => {
+    try {
+      const values = await questionForm.validateFields();
+      const payload = {
+        MaForm: currentFormForQuestions,
+        NoiDungCauHoi: values.NoiDungCauHoi,
+        LoaiCauHoi: values.LoaiCauHoi,
+        BatBuoc: values.BatBuoc ? 1 : 0,
+        ThuTu: values.ThuTu || 0
+      };
+
+      await axios.post('http://localhost:5000/api/preferences/admin/questions', payload, {
+        headers: { Authorization: `Bearer ${localStorage.getItem('authToken')}` }
+      });
+
+      message.success('Thêm câu hỏi thành công!');
+      questionForm.resetFields();
+      // Reload questions
+      handleManageQuestions(currentFormForQuestions);
+    } catch (err) {
+      message.error(err.response?.data?.message || 'Có lỗi xảy ra');
+      console.error(err);
+    }
+  };
+
+  const handleDeleteQuestion = (questionId) => {
+    Modal.confirm({
+      title: 'Xác nhận xóa',
+      content: 'Bạn có chắc chắn muốn xóa câu hỏi này? Các lựa chọn liên quan cũng sẽ bị xóa.',
+      okText: 'Xóa',
+      cancelText: 'Hủy',
+      okType: 'danger',
+      onOk: async () => {
+        try {
+          await axios.delete(`http://localhost:5000/api/preferences/admin/questions/${questionId}`, {
+            headers: { Authorization: `Bearer ${localStorage.getItem('authToken')}` }
+          });
+          message.success('Xóa câu hỏi thành công!');
+          handleManageQuestions(currentFormForQuestions);
+        } catch (err) {
+          message.error('Không thể xóa câu hỏi');
+          console.error(err);
+        }
+      }
+    });
+  };
+
+  const handleAddOption = async (questionId) => {
+    try {
+      const values = await optionForm.validateFields();
+      const payload = {
+        MaCauHoi: questionId,
+        NoiDungLuaChon: values.NoiDungLuaChon,
+        MaTL: values.MaTL || null,
+        MaTG: values.MaTG || null,
+        HinhThuc: values.HinhThuc || null,
+        MaKhoangGia: values.MaKhoangGia || null,
+        NamXBTu: values.NamXBTu || null,
+        NamXBDen: values.NamXBDen || null,
+        SoTrangTu: values.SoTrangTu || null,
+        SoTrangDen: values.SoTrangDen || null,
+        TrongSo: values.TrongSo || 1.0,
+        ThuTu: values.ThuTu || 0
+      };
+
+      await axios.post('http://localhost:5000/api/preferences/admin/options', payload, {
+        headers: { Authorization: `Bearer ${localStorage.getItem('authToken')}` }
+      });
+
+      message.success('Thêm lựa chọn thành công!');
+      optionForm.resetFields();
+      setShowAddOption(null);
+      // Reload questions
+      handleManageQuestions(currentFormForQuestions);
+    } catch (err) {
+      message.error(err.response?.data?.message || 'Có lỗi xảy ra');
+      console.error(err);
+    }
+  };
+
+  const handleDeleteOption = (optionId) => {
+    Modal.confirm({
+      title: 'Xác nhận xóa',
+      content: 'Bạn có chắc chắn muốn xóa lựa chọn này?',
+      okText: 'Xóa',
+      cancelText: 'Hủy',
+      okType: 'danger',
+      onOk: async () => {
+        try {
+          await axios.delete(`http://localhost:5000/api/preferences/admin/options/${optionId}`, {
+            headers: { Authorization: `Bearer ${localStorage.getItem('authToken')}` }
+          });
+          message.success('Xóa lựa chọn thành công!');
+          handleManageQuestions(currentFormForQuestions);
+        } catch (err) {
+          message.error('Không thể xóa lựa chọn');
+          console.error(err);
+        }
+      }
+    });
   };
 
   // Xem chi tiết
@@ -470,77 +1008,449 @@ const handleToggleStatus = async (id, currentStatus) => {
     <div className="discount-management-container">
       <div className="header-section">
         <Title level={2} style={{ margin: 0, color: '#1890ff' }}>
-          <GiftOutlined /> Quản lý khuyến mãi
+          <GiftOutlined /> Quản lý Khuyến mãi & Coupon
         </Title>
-        
-        {/* Statistics Cards */}
-        <Row gutter={16} style={{ margin: '16px 0' }}>
-          <Col span={8}>
-            <Card size="small" className="stat-card">
-              <div className="stat-content">
-                <div className="stat-number">{stats.total}</div>
-                <div className="stat-label">Tổng khuyến mãi</div>
-              </div>
-            </Card>
-          </Col>
-          <Col span={8}>
-            <Card size="small" className="stat-card success">
-              <div className="stat-content">
-                <div className="stat-number">{stats.active}</div>
-                <div className="stat-label">Đang hoạt động</div>
-              </div>
-            </Card>
-          </Col>
-          <Col span={8}>
-            <Card size="small" className="stat-card warning">
-              <div className="stat-content">
-                <div className="stat-number">{stats.inactive}</div>
-                <div className="stat-label">Ngừng hoạt động</div>
-              </div>
-            </Card>
-          </Col>
-        </Row>
-
-        {/* Controls */}
-        <div className="controls-section">
-          <Input.Search
-            placeholder="Tìm kiếm tên khuyến mãi..."
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            style={{ width: 200 }}
-            allowClear
-            prefix={<SearchOutlined />}
-          />
-          <Button
-            type="primary"
-            icon={<PlusOutlined />}
-            onClick={() => handleShowForm('add')}
-            size="large"
-          >
-            Thêm khuyến mãi
-          </Button>
-        </div>
       </div>
 
-      <Card className="table-card">
-        <Table
-          columns={columns}
-          dataSource={promotions}
-          rowKey="MaKM"
-          loading={loading}
-          pagination={{ 
-            pageSize: 10, 
-            showSizeChanger: true,
-            showQuickJumper: true,
-            showTotal: (total, range) => 
-              `${range[0]}-${range[1]} của ${total} khuyến mãi`
-          }}
-          locale={{ emptyText: error || 'Không có khuyến mãi nào' }}
-          scroll={{ x: 1000 }}
-          size="small"
-          className="promotion-table"
-        />
-      </Card>
+      <Tabs activeKey={activeTab} onChange={setActiveTab} type="card" size="large">
+        {/* Tab 1: Khuyến mãi hiện tại */}
+        <TabPane 
+          tab={
+            <span>
+              <TagOutlined />
+              Khuyến mãi
+            </span>
+          } 
+          key="1"
+        >
+          {/* Statistics Cards */}
+          <Row gutter={16} style={{ margin: '16px 0' }}>
+            <Col span={8}>
+              <Card size="small" className="stat-card">
+                <div className="stat-content">
+                  <div className="stat-number">{stats.total}</div>
+                  <div className="stat-label">Tổng khuyến mãi</div>
+                </div>
+              </Card>
+            </Col>
+            <Col span={8}>
+              <Card size="small" className="stat-card success">
+                <div className="stat-content">
+                  <div className="stat-number">{stats.active}</div>
+                  <div className="stat-label">Đang hoạt động</div>
+                </div>
+              </Card>
+            </Col>
+            <Col span={8}>
+              <Card size="small" className="stat-card warning">
+                <div className="stat-content">
+                  <div className="stat-number">{stats.inactive}</div>
+                  <div className="stat-label">Ngừng hoạt động</div>
+                </div>
+              </Card>
+            </Col>
+          </Row>
+
+          {/* Controls */}
+          <div className="controls-section">
+            <Input.Search
+              placeholder="Tìm kiếm tên khuyến mãi..."
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              style={{ width: 200 }}
+              allowClear
+              prefix={<SearchOutlined />}
+            />
+            <Button
+              type="primary"
+              icon={<PlusOutlined />}
+              onClick={() => handleShowForm('add')}
+            >
+              Thêm khuyến mãi
+            </Button>
+          </div>
+
+          {error && (
+            <div className="error-message" style={{ padding: 12, background: '#fff2e8', borderRadius: 4, marginBottom: 16 }}>
+              {error}
+            </div>
+          )}
+
+          <Table
+            columns={columns}
+            dataSource={promotions}
+            rowKey="MaKM"
+            loading={loading}
+            pagination={{ pageSize: 10 }}
+            scroll={{ x: 1200 }}
+          />
+        </TabPane>
+
+        {/* Tab 2: Quản lý Coupon */}
+        <TabPane 
+          tab={
+            <span>
+              <TagsOutlined />
+              Phiếu giảm giá (Coupon)
+            </span>
+          } 
+          key="2"
+        >
+          <div className="controls-section" style={{ marginBottom: 16 }}>
+            <Button
+              type="primary"
+              icon={<PlusOutlined />}
+              onClick={handleAddCoupon}
+            >
+              Thêm Coupon
+            </Button>
+          </div>
+
+          <Table
+            loading={couponLoading}
+            dataSource={coupons}
+            rowKey="MaPhieu"
+            pagination={{ pageSize: 10 }}
+            columns={[
+              {
+                title: 'Mã Phiếu',
+                dataIndex: 'MaPhieu',
+                key: 'MaPhieu',
+                width: 120,
+                render: (text) => <Tag color="blue">{text}</Tag>
+              },
+              {
+                title: 'Tên Phiếu',
+                dataIndex: 'MoTa',
+                key: 'MoTa',
+                width: 200,
+                ellipsis: true
+              },
+              {
+                title: 'Loại giảm',
+                dataIndex: 'LoaiGiamGia',
+                key: 'LoaiGiamGia',
+                width: 120,
+                render: (type) => {
+                  const typeMap = {
+                    'PERCENT': { text: 'Phần trăm', color: 'green' },
+                    'AMOUNT': { text: 'Cố định', color: 'orange' },
+                    'FREESHIP': { text: 'Freeship', color: 'blue' }
+                  };
+                  const mapped = typeMap[type] || { text: type, color: 'default' };
+                  return <Tag color={mapped.color}>{mapped.text}</Tag>;
+                }
+              },
+              {
+                title: 'Giá trị giảm',
+                dataIndex: 'GiaTriGiam',
+                key: 'GiaTriGiam',
+                width: 120,
+                render: (value, record) => {
+                  if (record.LoaiGiamGia === 'PERCENT') {
+                    return `${value}%`;
+                  } else if (record.LoaiGiamGia === 'FREESHIP') {
+                    return 'Miễn phí ship';
+                  } else {
+                    return `${value?.toLocaleString()} đ`;
+                  }
+                }
+              },
+              {
+                title: 'Sử dụng',
+                key: 'usage',
+                width: 120,
+                render: (_, record) => `${record.DaSuDung || 0}/${record.SoLanSuDungToiDa || 0}`
+              },
+              {
+                title: 'Hết hạn',
+                dataIndex: 'NgayHetHan',
+                key: 'NgayHetHan',
+                width: 120,
+                render: (date) => date ? dayjs(date).format('DD/MM/YYYY') : 'Vĩnh viễn'
+              },
+              {
+                title: 'Thao tác',
+                key: 'action',
+                width: 150,
+                render: (_, record) => (
+                  <Space>
+                    <Tooltip title="Chỉnh sửa">
+                      <Button 
+                        icon={<EditOutlined />} 
+                        size="small" 
+                        type="primary"
+                        onClick={() => handleEditCoupon(record)}
+                      />
+                    </Tooltip>
+                    <Tooltip title="Xóa">
+                      <Button
+                        icon={<DeleteOutlined />}
+                        size="small"
+                        danger
+                        onClick={() => handleDeleteCoupon(record.MaPhieu)}
+                      />
+                    </Tooltip>
+                  </Space>
+                )
+              }
+            ]}
+          />
+        </TabPane>
+
+        {/* Tab 3: Quản lý Form sở thích */}
+        <TabPane 
+          tab={
+            <span>
+              <FormOutlined />
+              Form sở thích khách hàng
+            </span>
+          } 
+          key="3"
+        >
+          <div className="controls-section" style={{ marginBottom: 16 }}>
+            <Button
+              type="primary"
+              icon={<PlusOutlined />}
+              onClick={handleAddPreferenceForm}
+            >
+              Thêm Form
+            </Button>
+          </div>
+
+          <Table
+            loading={preferenceLoading}
+            dataSource={preferenceForms}
+            rowKey="MaForm"
+            pagination={{ pageSize: 10 }}
+            columns={[
+              {
+                title: 'ID',
+                dataIndex: 'MaForm',
+                key: 'MaForm',
+                width: 80
+              },
+              {
+                title: 'Tên Form',
+                dataIndex: 'TenForm',
+                key: 'TenForm',
+                width: 200
+              },
+              {
+                title: 'Mô tả',
+                dataIndex: 'MoTa',
+                key: 'MoTa',
+                ellipsis: true
+              },
+              {
+                title: 'Trạng thái',
+                dataIndex: 'TrangThai',
+                key: 'TrangThai',
+                width: 120,
+                render: (status) => (
+                  <Tag color={status === 1 ? 'green' : 'red'}>
+                    {status === 1 ? 'Hoạt động' : 'Ngừng'}
+                  </Tag>
+                )
+              },
+              {
+                title: 'Ngày tạo',
+                dataIndex: 'NgayTao',
+                key: 'NgayTao',
+                width: 120,
+                render: (date) => date ? dayjs(date).format('DD/MM/YYYY') : '-'
+              },
+              {
+                title: 'Thao tác',
+                key: 'action',
+                width: 180,
+                render: (_, record) => (
+                  <Space>
+                    <Tooltip title="Quản lý câu hỏi">
+                      <Button 
+                        icon={<BarChartOutlined />} 
+                        size="small"
+                        type="default"
+                        onClick={() => handleManageQuestions(record.MaForm)}
+                      >
+                        Câu hỏi ({record.SoCauHoi || 0})
+                      </Button>
+                    </Tooltip>
+                    <Tooltip title="Chỉnh sửa">
+                      <Button 
+                        icon={<EditOutlined />} 
+                        size="small" 
+                        type="primary"
+                        onClick={() => handleEditPreferenceForm(record)}
+                      />
+                    </Tooltip>
+                    <Tooltip title="Xóa">
+                      <Button
+                        icon={<DeleteOutlined />}
+                        size="small"
+                        danger
+                        onClick={() => handleDeletePreferenceForm(record.MaForm)}
+                      />
+                    </Tooltip>
+                  </Space>
+                )
+              }
+            ]}
+          />
+        </TabPane>
+
+        {/* Tab 4: Phản hồi khách hàng - MỚI */}
+        <TabPane 
+          tab={
+            <span>
+              <UserOutlined />
+              Phản hồi khách hàng
+            </span>
+          } 
+          key="4"
+        >
+          {/* Statistics Cards */}
+          <Row gutter={16} style={{ margin: '16px 0' }}>
+            <Col span={8}>
+              <Card size="small" className="stat-card">
+                <div className="stat-content">
+                  <div className="stat-number">{responseStats.totalResponses}</div>
+                  <div className="stat-label">Tổng phản hồi</div>
+                </div>
+              </Card>
+            </Col>
+            <Col span={8}>
+              <Card size="small" className="stat-card success">
+                <div className="stat-content">
+                  <div className="stat-number">{responseStats.uniqueCustomers}</div>
+                  <div className="stat-label">Khách hàng tham gia</div>
+                </div>
+              </Card>
+            </Col>
+            <Col span={8}>
+              <Card size="small" className="stat-card warning">
+                <div className="stat-content">
+                  <div className="stat-number">{responseStats.withConsent}</div>
+                  <div className="stat-label">Đồng ý cá nhân hóa</div>
+                </div>
+              </Card>
+            </Col>
+          </Row>
+
+          <div className="controls-section" style={{ marginBottom: 16 }}>
+            <Button
+              icon={<DownloadOutlined />}
+              onClick={handleExportResponses}
+              disabled={customerResponses.length === 0}
+            >
+              Xuất CSV
+            </Button>
+          </div>
+
+          <Table
+            loading={responsesLoading}
+            dataSource={customerResponses}
+            rowKey="MaPhanHoi"
+            pagination={{ 
+              pageSize: 15,
+              showTotal: (total) => `Tổng ${total} phản hồi`
+            }}
+            columns={[
+              {
+                title: '#',
+                dataIndex: 'MaPhanHoi',
+                key: 'MaPhanHoi',
+                width: 80,
+                render: (id) => <Tag color="blue">#{id}</Tag>
+              },
+              {
+                title: 'Khách hàng',
+                key: 'customer',
+                width: 150,
+                render: (_, record) => (
+                  <div>
+                    <div><strong>ID: {record.makh}</strong></div>
+                    <div style={{ fontSize: 12, color: '#666' }}>
+                      {record.TenKH || 'Chưa có tên'}
+                    </div>
+                  </div>
+                )
+              },
+              {
+                title: 'Form',
+                dataIndex: 'TenForm',
+                key: 'TenForm',
+                ellipsis: true,
+                render: (text) => (
+                  <Tooltip title={text}>
+                    <Text>{text}</Text>
+                  </Tooltip>
+                )
+              },
+              {
+                title: 'Ngày trả lời',
+                dataIndex: 'NgayPhanHoi',
+                key: 'NgayPhanHoi',
+                width: 150,
+                sorter: (a, b) => new Date(a.NgayPhanHoi) - new Date(b.NgayPhanHoi),
+                render: (date) => (
+                  <div>
+                    <div>{dayjs(date).format('DD/MM/YYYY')}</div>
+                    <div style={{ fontSize: 11, color: '#999' }}>
+                      {dayjs(date).format('HH:mm:ss')}
+                    </div>
+                  </div>
+                )
+              },
+              {
+                title: 'Số câu trả lời',
+                key: 'answerCount',
+                width: 120,
+                align: 'center',
+                render: (_, record) => (
+                  <Tag color="purple">
+                    {record.answers?.length || 0} câu
+                  </Tag>
+                )
+              },
+              {
+                title: 'Đồng ý',
+                dataIndex: 'DongYSuDung',
+                key: 'DongYSuDung',
+                width: 100,
+                align: 'center',
+                filters: [
+                  { text: 'Có', value: 1 },
+                  { text: 'Không', value: 0 }
+                ],
+                onFilter: (value, record) => record.DongYSuDung === value,
+                render: (consent) => (
+                  consent === 1 ? 
+                    <Tag color="green" icon={<CheckCircleOutlined />}>Có</Tag> : 
+                    <Tag color="default" icon={<CloseCircleOutlined />}>Không</Tag>
+                )
+              },
+              {
+                title: 'Thao tác',
+                key: 'action',
+                width: 120,
+                fixed: 'right',
+                render: (_, record) => (
+                  <Button
+                    icon={<EyeOutlined />}
+                    size="small"
+                    type="primary"
+                    onClick={() => handleViewResponseDetail(record)}
+                  >
+                    Chi tiết
+                  </Button>
+                )
+              }
+            ]}
+            scroll={{ x: 1200 }}
+          />
+        </TabPane>
+      </Tabs>
 
       {/* Modal chi tiết */}
       <Modal
@@ -869,6 +1779,632 @@ const handleToggleStatus = async (id, currentStatus) => {
             }}
           </Form.Item>
         </Form>
+      </Modal>
+
+      {/* Modal Coupon Form */}
+      <Modal
+        open={showCouponForm}
+        title={couponFormType === 'add' ? 'Thêm Coupon mới' : 'Chỉnh sửa Coupon'}
+        onCancel={() => setShowCouponForm(false)}
+        onOk={handleSaveCoupon}
+        okText="Lưu"
+        cancelText="Hủy"
+        width={700}
+      >
+        <Form form={couponForm} layout="vertical">
+          <Form.Item 
+            label="Mã Phiếu" 
+            name="MaPhieu"
+            rules={[{ required: true, message: 'Vui lòng nhập mã phiếu' }]}
+          >
+            <Input placeholder="Ví dụ: FREESHIP2025" />
+          </Form.Item>
+
+          <Form.Item 
+            label="Tên Phiếu" 
+            name="TenPhieu"
+            rules={[{ required: true, message: 'Vui lòng nhập tên phiếu' }]}
+          >
+            <Input placeholder="Ví dụ: Miễn phí vận chuyển" />
+          </Form.Item>
+
+          <Form.Item label="Mô tả" name="MoTa">
+            <Input.TextArea rows={3} placeholder="Mô tả chi tiết về coupon" />
+          </Form.Item>
+
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item 
+                label="Loại giảm" 
+                name="LoaiGiam"
+                rules={[{ required: true, message: 'Vui lòng chọn loại giảm' }]}
+              >
+                <Select placeholder="Chọn loại">
+                  <Option value="percent">Phần trăm (%)</Option>
+                  <Option value="fixed">Cố định (VND)</Option>
+                  <Option value="freeship">Miễn phí vận chuyển</Option>
+                </Select>
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item 
+                label="Giá trị giảm" 
+                name="GiaTriGiam"
+                rules={[{ required: true, message: 'Vui lòng nhập giá trị' }]}
+              >
+                <InputNumber 
+                  style={{ width: '100%' }}
+                  min={0}
+                  placeholder="Nhập giá trị"
+                />
+              </Form.Item>
+            </Col>
+          </Row>
+
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item label="Đơn hàng tối thiểu" name="GiaTriDonToiThieu">
+                <InputNumber 
+                  style={{ width: '100%' }}
+                  min={0}
+                  placeholder="0 = không giới hạn"
+                  addonAfter="VND"
+                />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item label="Số lượng phát hành" name="SoLuongPhatHanh">
+                <InputNumber 
+                  style={{ width: '100%' }}
+                  min={1}
+                  placeholder="Số lượng"
+                />
+              </Form.Item>
+            </Col>
+          </Row>
+
+          <Form.Item label="Ngày hết hạn" name="NgayHetHan">
+            <DatePicker 
+              style={{ width: '100%' }}
+              format="DD/MM/YYYY"
+              placeholder="Chọn ngày hết hạn"
+            />
+          </Form.Item>
+        </Form>
+      </Modal>
+
+      {/* Modal Preference Form */}
+      <Modal
+        open={showPreferenceForm}
+        title={preferenceFormType === 'add' ? 'Thêm Form sở thích mới' : 'Chỉnh sửa Form sở thích'}
+        onCancel={() => setShowPreferenceForm(false)}
+        onOk={handleSavePreferenceForm}
+        okText="Lưu"
+        cancelText="Hủy"
+        width={600}
+      >
+        <Form form={preferenceForm} layout="vertical">
+          <Form.Item 
+            label="Tên Form" 
+            name="TenForm"
+            rules={[{ required: true, message: 'Vui lòng nhập tên form' }]}
+          >
+            <Input placeholder="Ví dụ: Khảo sát sở thích đọc sách" />
+          </Form.Item>
+
+          <Form.Item 
+            label="Mô tả" 
+            name="MoTa"
+            rules={[{ required: true, message: 'Vui lòng nhập mô tả' }]}
+          >
+            <Input.TextArea rows={4} placeholder="Mô tả mục đích của form" />
+          </Form.Item>
+
+          <Form.Item 
+            label="Trạng thái" 
+            name="IsActive"
+            valuePropName="checked"
+            initialValue={true}
+          >
+            <Switch checkedChildren="Hoạt động" unCheckedChildren="Tắt" />
+          </Form.Item>
+
+          <div style={{ padding: '12px', background: '#e6f7ff', borderRadius: 4, marginTop: 16 }}>
+            <Text type="secondary">
+              💡 <strong>Lưu ý:</strong> Sau khi tạo form, bạn có thể thêm câu hỏi và lựa chọn thông qua API hoặc script <code>createQuestions.js</code>
+            </Text>
+          </div>
+        </Form>
+      </Modal>
+
+      {/* Modal Question Manager */}
+      <Modal
+        open={showQuestionManager}
+        title={
+          <div>
+            <FormOutlined style={{ marginRight: 8, color: '#1890ff' }} />
+            Quản lý câu hỏi - Form #{currentFormForQuestions}
+          </div>
+        }
+        onCancel={() => {
+          setShowQuestionManager(false);
+          setShowAddOption(null);
+          questionForm.resetFields();
+          optionForm.resetFields();
+        }}
+        footer={null}
+        width={1000}
+        style={{ top: 20 }}
+      >
+        <div style={{ maxHeight: '70vh', overflowY: 'auto' }}>
+          {/* Danh sách câu hỏi hiện có */}
+          <Card 
+            title={`📋 Danh sách câu hỏi (${questions.length})`}
+            size="small"
+            style={{ marginBottom: 24 }}
+          >
+            {questions.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: 32, color: '#999' }}>
+                <FormOutlined style={{ fontSize: 48, marginBottom: 16 }} />
+                <div>Chưa có câu hỏi nào. Hãy thêm câu hỏi mới bên dưới.</div>
+              </div>
+            ) : (
+              <Space direction="vertical" style={{ width: '100%' }} size="middle">
+                {questions.map((q, idx) => (
+                  <Card 
+                    key={q.MaCauHoi}
+                    type="inner"
+                    size="small"
+                    title={
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <Tag color="blue">#{idx + 1}</Tag>
+                        <Text strong>{q.NoiDungCauHoi}</Text>
+                        {q.BatBuoc === 1 && <Tag color="red">Bắt buộc</Tag>}
+                        <Tag color="purple">{q.LoaiCauHoi}</Tag>
+                      </div>
+                    }
+                    extra={
+                      <Space>
+                        <Button
+                          size="small"
+                          icon={<PlusOutlined />}
+                          onClick={() => setShowAddOption(q.MaCauHoi)}
+                        >
+                          Thêm lựa chọn
+                        </Button>
+                        <Button
+                          size="small"
+                          danger
+                          icon={<DeleteOutlined />}
+                          onClick={() => handleDeleteQuestion(q.MaCauHoi)}
+                        />
+                      </Space>
+                    }
+                  >
+                    {/* Hiển thị options */}
+                    {q.options && q.options.length > 0 ? (
+                      <div style={{ marginTop: 8 }}>
+                        <Text type="secondary" style={{ fontSize: 12 }}>
+                          Lựa chọn ({q.options.length}):
+                        </Text>
+                        <div style={{ marginTop: 8, display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                          {q.options.map(opt => (
+                            <Tag 
+                              key={opt.MaLuaChon}
+                              closable
+                              onClose={() => handleDeleteOption(opt.MaLuaChon)}
+                              color="default"
+                            >
+                              {opt.NoiDungLuaChon}
+                              {opt.MaTL && ` [TL:${opt.MaTL}]`}
+                              {opt.MaTG && ` [TG:${opt.MaTG}]`}
+                              {opt.TrongSo && ` (${opt.TrongSo}x)`}
+                            </Tag>
+                          ))}
+                        </div>
+                      </div>
+                    ) : (
+                      <Text type="secondary" italic style={{ fontSize: 12 }}>
+                        Chưa có lựa chọn. Click "Thêm lựa chọn" để thêm.
+                      </Text>
+                    )}
+
+                    {/* Form thêm option (hiện khi click) */}
+                    {showAddOption === q.MaCauHoi && (
+                      <Card 
+                        size="small" 
+                        style={{ marginTop: 16, background: '#f5f5f5' }}
+                        title="➕ Thêm lựa chọn mới"
+                        extra={
+                          <Button 
+                            size="small" 
+                            onClick={() => setShowAddOption(null)}
+                          >
+                            Hủy
+                          </Button>
+                        }
+                      >
+                        <Form 
+                          form={optionForm} 
+                          layout="vertical"
+                          onFinish={() => handleAddOption(q.MaCauHoi)}
+                        >
+                          <Row gutter={16}>
+                            <Col span={12}>
+                              <Form.Item
+                                label="Nội dung lựa chọn"
+                                name="NoiDungLuaChon"
+                                rules={[{ required: true, message: 'Vui lòng nhập nội dung' }]}
+                              >
+                                <Input placeholder="VD: Tiểu thuyết" />
+                              </Form.Item>
+                            </Col>
+                            <Col span={6}>
+                              <Form.Item label="Trọng số" name="TrongSo" initialValue={1.0}>
+                                <InputNumber style={{ width: '100%' }} min={0} step={0.1} />
+                              </Form.Item>
+                            </Col>
+                            <Col span={6}>
+                              <Form.Item label="Thứ tự" name="ThuTu" initialValue={0}>
+                                <InputNumber style={{ width: '100%' }} min={0} />
+                              </Form.Item>
+                            </Col>
+                          </Row>
+
+                          {/* Conditional fields based on question type */}
+                          {q.LoaiCauHoi === 'entity_theloai' && (
+                            <Form.Item label="Thể loại" name="MaTL">
+                              <Select 
+                                placeholder="Chọn thể loại"
+                                showSearch
+                                filterOption={(input, option) =>
+                                  option.children.toLowerCase().includes(input.toLowerCase())
+                                }
+                              >
+                                {categories.map(cat => (
+                                  <Option key={cat.MaTL} value={cat.MaTL}>
+                                    {cat.TenTL}
+                                  </Option>
+                                ))}
+                              </Select>
+                            </Form.Item>
+                          )}
+
+                          {q.LoaiCauHoi === 'entity_tacgia' && (
+                            <Form.Item label="Tác giả" name="MaTG">
+                              <Select 
+                                placeholder="Chọn tác giả"
+                                showSearch
+                                filterOption={(input, option) =>
+                                  option.children.toLowerCase().includes(input.toLowerCase())
+                                }
+                              >
+                                {authors.map(auth => (
+                                  <Option key={auth.MaTG} value={auth.MaTG}>
+                                    {auth.TenTG}
+                                  </Option>
+                                ))}
+                              </Select>
+                            </Form.Item>
+                          )}
+
+                          {q.LoaiCauHoi === 'entity_hinhthuc' && (
+                            <Form.Item label="Hình thức" name="HinhThuc">
+                              <Select placeholder="Chọn hình thức">
+                                <Option value="Bìa cứng">Bìa cứng</Option>
+                                <Option value="Bìa mềm">Bìa mềm</Option>
+                                <Option value="Bìa gáy xoắn">Bìa gáy xoắn</Option>
+                                <Option value="Ebook">Ebook</Option>
+                              </Select>
+                            </Form.Item>
+                          )}
+
+                          {q.LoaiCauHoi === 'entity_khoanggia' && (
+                            <Form.Item label="Mã khoảng giá" name="MaKhoangGia">
+                              <Input placeholder="VD: LT100, 100-200, GT500" />
+                            </Form.Item>
+                          )}
+
+                          {q.LoaiCauHoi === 'entity_namxb' && (
+                            <Row gutter={16}>
+                              <Col span={12}>
+                                <Form.Item label="Năm XB từ" name="NamXBTu">
+                                  <InputNumber style={{ width: '100%' }} placeholder="2020" />
+                                </Form.Item>
+                              </Col>
+                              <Col span={12}>
+                                <Form.Item label="Năm XB đến" name="NamXBDen">
+                                  <InputNumber style={{ width: '100%' }} placeholder="2025" />
+                                </Form.Item>
+                              </Col>
+                            </Row>
+                          )}
+
+                          {q.LoaiCauHoi === 'entity_sotrang' && (
+                            <Row gutter={16}>
+                              <Col span={12}>
+                                <Form.Item label="Số trang từ" name="SoTrangTu">
+                                  <InputNumber style={{ width: '100%' }} placeholder="1" />
+                                </Form.Item>
+                              </Col>
+                              <Col span={12}>
+                                <Form.Item label="Số trang đến" name="SoTrangDen">
+                                  <InputNumber style={{ width: '100%' }} placeholder="200" />
+                                </Form.Item>
+                              </Col>
+                            </Row>
+                          )}
+
+                          <Form.Item>
+                            <Button type="primary" htmlType="submit" icon={<PlusOutlined />}>
+                              Thêm lựa chọn
+                            </Button>
+                          </Form.Item>
+                        </Form>
+                      </Card>
+                    )}
+                  </Card>
+                ))}
+              </Space>
+            )}
+          </Card>
+
+          <Divider />
+
+          {/* Form thêm câu hỏi mới */}
+          <Card 
+            title="➕ Thêm câu hỏi mới"
+            size="small"
+          >
+            <Form form={questionForm} layout="vertical" onFinish={handleAddQuestion}>
+              <Form.Item
+                label="Nội dung câu hỏi"
+                name="NoiDungCauHoi"
+                rules={[{ required: true, message: 'Vui lòng nhập nội dung câu hỏi' }]}
+              >
+                <Input.TextArea 
+                  rows={2}
+                  placeholder="VD: Bạn thích đọc thể loại sách nào?"
+                />
+              </Form.Item>
+
+              <Row gutter={16}>
+                <Col span={12}>
+                  <Form.Item
+                    label="Loại câu hỏi"
+                    name="LoaiCauHoi"
+                    rules={[{ required: true, message: 'Vui lòng chọn loại' }]}
+                  >
+                    <Select placeholder="Chọn loại câu hỏi">
+                      <Option value="single">Single Choice (Chọn 1)</Option>
+                      <Option value="multiple_choice">Multiple Choice (Chọn nhiều)</Option>
+                      <Option value="entity_theloai">Liên kết Thể loại</Option>
+                      <Option value="entity_tacgia">Liên kết Tác giả</Option>
+                      <Option value="entity_khoanggia">Liên kết Khoảng giá</Option>
+                      <Option value="entity_hinhthuc">Liên kết Hình thức</Option>
+                      <Option value="entity_namxb">Liên kết Năm XB</Option>
+                      <Option value="entity_sotrang">Liên kết Số trang</Option>
+                    </Select>
+                  </Form.Item>
+                </Col>
+                <Col span={6}>
+                  <Form.Item label="Thứ tự" name="ThuTu" initialValue={0}>
+                    <InputNumber style={{ width: '100%' }} min={0} />
+                  </Form.Item>
+                </Col>
+                <Col span={6}>
+                  <Form.Item label="Bắt buộc" name="BatBuoc" valuePropName="checked">
+                    <Switch checkedChildren="Có" unCheckedChildren="Không" />
+                  </Form.Item>
+                </Col>
+              </Row>
+
+              <Form.Item>
+                <Button type="primary" htmlType="submit" icon={<PlusOutlined />}>
+                  Thêm câu hỏi
+                </Button>
+              </Form.Item>
+            </Form>
+          </Card>
+        </div>
+      </Modal>
+
+      {/* Modal Response Detail - MỚI */}
+      <Modal
+        open={showResponseDetail}
+        title={
+          <div>
+            <UserOutlined style={{ marginRight: 8, color: '#1890ff' }} />
+            Chi tiết phản hồi khách hàng
+          </div>
+        }
+        onCancel={() => {
+          setShowResponseDetail(false);
+          setSelectedResponse(null);
+        }}
+        footer={null}
+        width={900}
+      >
+        {selectedResponse ? (
+          <div>
+            {/* Thông tin khách hàng */}
+            <Card size="small" style={{ marginBottom: 16 }}>
+              <Row gutter={16}>
+                <Col span={8}>
+                  <Text strong>Mã phản hồi:</Text>
+                  <div><Tag color="blue">#{selectedResponse.MaPhanHoi}</Tag></div>
+                </Col>
+                <Col span={8}>
+                  <Text strong>Khách hàng:</Text>
+                  <div>
+                    <UserOutlined /> ID: {selectedResponse.makh}
+                    {selectedResponse.TenKH && (
+                      <div style={{ fontSize: 12, color: '#666' }}>
+                        {selectedResponse.TenKH}
+                      </div>
+                    )}
+                  </div>
+                </Col>
+                <Col span={8}>
+                  <Text strong>Form:</Text>
+                  <div>{selectedResponse.TenForm}</div>
+                </Col>
+              </Row>
+              <Divider style={{ margin: '12px 0' }} />
+              <Row gutter={16}>
+                <Col span={8}>
+                  <Text strong>Ngày trả lời:</Text>
+                  <div>{dayjs(selectedResponse.NgayPhanHoi).format('DD/MM/YYYY HH:mm:ss')}</div>
+                </Col>
+                <Col span={8}>
+                  <Text strong>Đồng ý sử dụng:</Text>
+                  <div>
+                    {selectedResponse.DongYSuDung === 1 ? 
+                      <Tag color="green" icon={<CheckCircleOutlined />}>Có</Tag> : 
+                      <Tag color="default">Không</Tag>
+                    }
+                  </div>
+                </Col>
+                <Col span={8}>
+                  <Text strong>Số câu trả lời:</Text>
+                  <div>
+                    <Tag color="purple">{selectedResponse.answers?.length || 0} câu</Tag>
+                  </div>
+                </Col>
+              </Row>
+            </Card>
+
+            {/* Danh sách câu trả lời */}
+            <Card 
+              title={
+                <span>
+                  <FormOutlined style={{ marginRight: 8 }} />
+                  Câu trả lời chi tiết
+                </span>
+              }
+              size="small"
+            >
+              {selectedResponse.answers && selectedResponse.answers.length > 0 ? (
+                <Space direction="vertical" style={{ width: '100%' }} size="middle">
+                  {selectedResponse.answers.map((answer, idx) => (
+                    <Card 
+                      key={answer.MaTraLoi || idx}
+                      type="inner"
+                      size="small"
+                      style={{ background: '#fafafa' }}
+                    >
+                      <div style={{ marginBottom: 12 }}>
+                        <Tag color="blue">Câu {idx + 1}</Tag>
+                        <Text strong style={{ fontSize: 15 }}>
+                          {answer.NoiDungCauHoi || 'Câu hỏi không xác định'}
+                        </Text>
+                        {answer.BatBuoc === 1 && (
+                          <Tag color="red" style={{ marginLeft: 8 }}>Bắt buộc</Tag>
+                        )}
+                        <Tag color="purple" style={{ marginLeft: 8 }}>
+                          {answer.LoaiCauHoi || 'N/A'}
+                        </Tag>
+                      </div>
+
+                      <div style={{ paddingLeft: 24 }}>
+                        {/* Hiển thị câu trả lời theo loại */}
+                        {answer.NoiDungLuaChon && (
+                          <div>
+                            <Text type="secondary">Lựa chọn: </Text>
+                            <Tag color="green" style={{ fontSize: 13 }}>
+                              {answer.NoiDungLuaChon}
+                            </Tag>
+                          </div>
+                        )}
+
+                        {answer.VanBan && (
+                          <div>
+                            <Text type="secondary">Văn bản tự do: </Text>
+                            <div style={{ 
+                              marginTop: 8, 
+                              padding: 12, 
+                              background: 'white', 
+                              borderRadius: 4,
+                              border: '1px solid #e8e8e8'
+                            }}>
+                              {answer.VanBan}
+                            </div>
+                          </div>
+                        )}
+
+                        {answer.DiemDanhGia && (
+                          <div>
+                            <Text type="secondary">Đánh giá: </Text>
+                            <Rate disabled value={answer.DiemDanhGia} />
+                            <Text style={{ marginLeft: 8 }}>({answer.DiemDanhGia}/5)</Text>
+                          </div>
+                        )}
+
+                        {/* Hiển thị metadata nếu có */}
+                        {(answer.MaTL || answer.MaTG || answer.HinhThuc || answer.MaKhoangGia) && (
+                          <div style={{ marginTop: 8 }}>
+                            <Text type="secondary" style={{ fontSize: 11 }}>
+                              Metadata: 
+                              {answer.MaTL && ` Thể loại: ${answer.MaTL}`}
+                              {answer.MaTG && ` | Tác giả: ${answer.MaTG}`}
+                              {answer.HinhThuc && ` | Hình thức: ${answer.HinhThuc}`}
+                              {answer.MaKhoangGia && ` | Khoảng giá: ${answer.MaKhoangGia}`}
+                              {answer.TrongSo && ` | Trọng số: ${answer.TrongSo}`}
+                            </Text>
+                          </div>
+                        )}
+                      </div>
+                    </Card>
+                  ))}
+                </Space>
+              ) : (
+                <div style={{ textAlign: 'center', padding: 32, color: '#999' }}>
+                  <FormOutlined style={{ fontSize: 48, marginBottom: 16 }} />
+                  <div>Không có câu trả lời nào</div>
+                </div>
+              )}
+            </Card>
+
+            {/* Điểm sở thích (nếu có) */}
+            {selectedResponse.preferences && selectedResponse.preferences.length > 0 && (
+              <Card 
+                title={
+                  <span>
+                    <BarChartOutlined style={{ marginRight: 8 }} />
+                    Điểm sở thích
+                  </span>
+                }
+                size="small"
+                style={{ marginTop: 16 }}
+              >
+                <Row gutter={[16, 16]}>
+                  {selectedResponse.preferences.map((pref, idx) => (
+                    <Col span={8} key={idx}>
+                      <Card size="small" style={{ background: '#f0f5ff' }}>
+                        <div style={{ textAlign: 'center' }}>
+                          <Text type="secondary" style={{ fontSize: 11 }}>
+                            {pref.LoaiThucThe}
+                          </Text>
+                          <div style={{ fontSize: 20, fontWeight: 'bold', color: '#1890ff' }}>
+                            {pref.DiemSo.toFixed(1)}
+                          </div>
+                          <Text style={{ fontSize: 12 }}>
+                            {pref.KhoaThucThe}
+                          </Text>
+                        </div>
+                      </Card>
+                    </Col>
+                  ))}
+                </Row>
+              </Card>
+            )}
+          </div>
+        ) : (
+          <div style={{ textAlign: 'center', padding: 40 }}>
+            <Spin size="large" />
+            <div style={{ marginTop: 16 }}>Đang tải chi tiết...</div>
+          </div>
+        )}
       </Modal>
     </div>
   );
