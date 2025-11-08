@@ -154,19 +154,23 @@ router.get('/active-products', async (req, res) => {
     }
 
     // Lấy tất cả sản phẩm áp dụng cho các khuyến mãi active
-    // Trả về: MaSP, TenSP, HinhAnh (nếu có), DonGia, MaKM, thông tin khuyến mãi
+    // JOIN đầy đủ với bảng sanpham và tacgia để lấy thông tin chi tiết
     const [rows] = await pool.query(
-      `SELECT sp.MaSP, sp.TenSP, sp.HinhAnh, sp.DonGia, km.MaKM, km.TenKM, km.LoaiKM,
-              ct.GiaTriGiam, ct.GiaTriDonToiThieu, ct.GiamToiDa, ct.SoLuongToiThieu, k.Code,
-              k.NgayBatDau, k.NgayKetThuc
+      `SELECT sp.MaSP, sp.TenSP, sp.HinhAnh, sp.DonGia, sp.SoLuong, sp.NamXB,
+              tg.TenTG as TacGia,
+              km.MaKM, km.TenKM, km.LoaiKM,
+              ct.GiaTriGiam, ct.GiaTriDonToiThieu, ct.GiamToiDa, ct.SoLuongToiThieu, 
+              k.Code, k.NgayBatDau, k.NgayKetThuc
        FROM sp_khuyen_mai spkm
        JOIN sanpham sp ON spkm.MaSP = sp.MaSP
+       LEFT JOIN tacgia tg ON sp.MaTG = tg.MaTG
        JOIN khuyen_mai km ON spkm.MaKM = km.MaKM
        JOIN ct_khuyen_mai ct ON km.MaKM = ct.MaKM
        JOIN khuyen_mai k ON k.MaKM = km.MaKM
        WHERE k.TrangThai = 1
          AND k.NgayBatDau <= NOW()
-         AND k.NgayKetThuc >= NOW()`
+         AND k.NgayKetThuc >= NOW()
+         AND sp.SoLuong > 0`
     );
 
     // Nếu không có sản phẩm được liên kết -> empty
@@ -201,6 +205,9 @@ router.get('/active-products', async (req, res) => {
         TenSP: best.TenSP,
         HinhAnh: best.HinhAnh || null,
         DonGia: best.DonGia,
+        SoLuong: best.SoLuong || 0,
+        NamXB: best.NamXB || null,
+        TacGia: best.TacGia || 'Đang cập nhật',
         MaKM: best.MaKM,
         TenKM: best.TenKM,
         LoaiKM: best.LoaiKM,
