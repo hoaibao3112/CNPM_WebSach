@@ -283,7 +283,7 @@ async function renderCart() {
   const emptyCartMessage = document.getElementById('empty-cart');
 
   if (!cartItemsBody || !emptyCartMessage) {
-    console.error('Missing cart-items-body or empty-cart elements');
+    // Không phải trang cart, bỏ qua
     return;
   }
 
@@ -1908,6 +1908,15 @@ async function removeFreeShipCode() {
 
 // Initialize
 document.addEventListener('DOMContentLoaded', async () => {
+  // Chỉ chạy logic cart đầy đủ nếu đang ở trang cart.html
+  const isCartPage = window.location.pathname.includes('cart.html');
+  
+  if (!isCartPage) {
+    // Nếu không phải trang cart, chỉ cập nhật cart count
+    updateCartCount();
+    return;
+  }
+  
   // Always load provinces first so selects are ready
   const tinhthanh = document.getElementById('tinhthanh');
   if (tinhthanh) {
@@ -1974,7 +1983,7 @@ async function loadSavedPromos() {
   const toggleBtn = document.getElementById('toggle-promos-btn');
   
   if (!savedPromosSection || !savedPromosList) {
-    console.error('❌ Missing promo sections!');
+    // Không phải trang cart, bỏ qua
     return;
   }
   
@@ -2861,6 +2870,10 @@ async function loadSavedAddresses() {
 
   // Wait for DOMContentLoaded then ensure Leaflet is present and init
   document.addEventListener('DOMContentLoaded', () => {
+    // Chỉ khởi tạo map nếu ở trang cart
+    const isCartPage = window.location.pathname.includes('cart.html');
+    if (!isCartPage) return;
+    
     // if Leaflet already present, init immediately; otherwise wait a short time
     if (window.L) initLeaflet();
     else {
@@ -2868,7 +2881,7 @@ async function loadSavedAddresses() {
       const intv = setInterval(() => {
         if (window.L) { clearInterval(intv); initLeaflet(); }
         waited += 100;
-        if (waited > 3000) { clearInterval(intv); console.warn('Leaflet did not load in time'); }
+        if (waited > 3000) { clearInterval(intv); /* Không log warning nữa */ }
       }, 100);
     }
 

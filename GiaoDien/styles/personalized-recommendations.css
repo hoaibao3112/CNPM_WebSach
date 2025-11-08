@@ -432,47 +432,6 @@
 }
 
 /* ============================================
-   Toast Notification
-   ============================================ */
-.recommendation-toast {
-  position: fixed;
-  bottom: -100px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: white;
-  padding: 15px 25px;
-  border-radius: 50px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  font-size: 14px;
-  font-weight: 600;
-  z-index: 10000;
-  transition: bottom 0.3s ease;
-}
-
-.recommendation-toast.show {
-  bottom: 30px;
-}
-
-.recommendation-toast.success {
-  border-left: 4px solid #27ae60;
-}
-
-.recommendation-toast.success i {
-  color: #27ae60;
-}
-
-.recommendation-toast.error {
-  border-left: 4px solid #e74c3c;
-}
-
-.recommendation-toast.error i {
-  color: #e74c3c;
-}
-
-/* ============================================
    Responsive Design
    ============================================ */
 @media (max-width: 1400px) {

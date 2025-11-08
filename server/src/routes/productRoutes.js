@@ -317,7 +317,7 @@ router.get('/low-stock', async (req, res) => {
 // --- RECOMMENDATIONS: helper + route ---
 async function getRecommendationsBySearch(makh) {
   const [searchRows] = await pool.query(
-    "SELECT DISTINCT search_query FROM hanh_dong_user WHERE makhachhang = ? AND loaihanhdong = 'search' ORDER BY timestamp DESC LIMIT 5",
+    "SELECT search_query FROM hanh_dong_user WHERE makhachhang = ? AND loaihanhdong = 'search' ORDER BY timestamp DESC LIMIT 5",
     [makh]
   );
   if (searchRows.length === 0) {

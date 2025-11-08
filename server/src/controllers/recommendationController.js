@@ -65,7 +65,7 @@ export const getPersonalizedRecommendations = async (req, res) => {
             FROM diem_sothich_khachhang 
             WHERE makh = ? 
               AND LoaiThucThe = 'theloai' 
-              AND KhoaThucThe = CAST(sp.MaTL AS CHAR)
+              AND KhoaThucThe = CAST(sp.MaTL AS CHAR) COLLATE utf8mb4_unicode_ci
           ), 0) * 0.40 +
           
           -- Điểm tác giả (trọng số 30%)
@@ -74,7 +74,7 @@ export const getPersonalizedRecommendations = async (req, res) => {
             FROM diem_sothich_khachhang 
             WHERE makh = ? 
               AND LoaiThucThe = 'tacgia' 
-              AND KhoaThucThe = CAST(sp.MaTG AS CHAR)
+              AND KhoaThucThe = CAST(sp.MaTG AS CHAR) COLLATE utf8mb4_unicode_ci
           ), 0) * 0.30 +
           
           -- Điểm hình thức (trọng số 15%)
@@ -83,7 +83,7 @@ export const getPersonalizedRecommendations = async (req, res) => {
             FROM diem_sothich_khachhang 
             WHERE makh = ? 
               AND LoaiThucThe = 'hinhthuc' 
-              AND KhoaThucThe = sp.HinhThuc
+              AND KhoaThucThe = CONVERT(sp.HinhThuc USING utf8mb4) COLLATE utf8mb4_unicode_ci
           ), 0) * 0.15 +
           
           -- Điểm khoảng giá (trọng số 10%)
@@ -164,21 +164,12 @@ export const getPersonalizedRecommendations = async (req, res) => {
       LEFT JOIN tacgia tg ON sp.MaTG = tg.MaTG
       WHERE sp.TinhTrang = b'1' 
         AND sp.SoLuong > 0
-        -- Loại bỏ sản phẩm đã mua (optional)
-        AND sp.MaSP NOT IN (
-          SELECT DISTINCT ct.MaSP 
-          FROM chitietdonhang ct
-          JOIN donhang dh ON ct.MaDonHang = dh.MaDonHang
-          WHERE dh.makh = ?
-          LIMIT 100
-        )
       HAVING RecommendationScore > 0
       ORDER BY RecommendationScore DESC, sp.NamXB DESC, sp.MaSP DESC
       LIMIT ? OFFSET ?`,
       [
         makh, makh, makh, makh, makh, makh, makh, makh, // 8 lần cho scoring
         makh, makh, makh, // 3 lần cho năm XB
-        makh, // 1 lần cho exclude purchased
         parseInt(limit), 
         parseInt(offset)
       ]
@@ -200,7 +191,7 @@ export const getPersonalizedRecommendations = async (req, res) => {
              FROM diem_sothich_khachhang
              WHERE makh = ? AND LoaiThucThe = 'tacgia'
            )
-           OR sp.HinhThuc IN (
+           OR sp.HinhThuc COLLATE utf8mb4_unicode_ci IN (
              SELECT KhoaThucThe
              FROM diem_sothich_khachhang
              WHERE makh = ? AND LoaiThucThe = 'hinhthuc'

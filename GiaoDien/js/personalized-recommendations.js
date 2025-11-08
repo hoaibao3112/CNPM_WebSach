@@ -30,22 +30,30 @@ const PersonalizedRecommendations = {
       const customerId = this.getCustomerId();
       
       if (!customerId) {
-        console.log('Khách chưa đăng nhập, hiển thị sản phẩm mặc định');
-        await this.loadDefaultRecommendations();
+        console.log('Khách chưa đăng nhập - không hiển thị gợi ý');
+        this.hideComponent();
         return;
       }
 
-      // Load recommendations và insights song song
-      await Promise.all([
-        this.loadPersonalizedRecommendations(customerId),
-        this.loadCustomerInsights(customerId)
-      ]);
+      // Kiểm tra xem khách hàng đã điền form sở thích chưa
+      const hasPreferences = await this.checkCustomerPreferences(customerId);
+      
+      if (!hasPreferences) {
+        console.log('Khách hàng chưa điền form sở thích - không hiển thị gợi ý');
+        this.hideComponent();
+        return;
+      }
+
+      // Load recommendations
+      await this.loadPersonalizedRecommendations(customerId);
+      // Note: loadCustomerInsights bị comment vì endpoint chưa cần thiết
+      // await this.loadCustomerInsights(customerId);
 
       this.render();
     } catch (error) {
       console.error('Lỗi khởi tạo component:', error);
       this.state.error = error.message;
-      this.renderError();
+      this.hideComponent();
     }
   },
 
@@ -54,11 +62,42 @@ const PersonalizedRecommendations = {
    */
   getCustomerId() {
     try {
+      // Thử lấy từ customerId trước (dùng bởi preference-widget)
+      let customerId = localStorage.getItem('customerId');
+      if (customerId) {
+        console.log('✅ Found customerId:', customerId);
+        return customerId;
+      }
+
+      // Thử lấy từ customerInfo
       const customerInfo = localStorage.getItem(this.config.storageKeys.customerInfo);
-      if (!customerInfo) return null;
-      
-      const parsed = JSON.parse(customerInfo);
-      return parsed.makh || parsed.MaKH || null;
+      if (customerInfo) {
+        const parsed = JSON.parse(customerInfo);
+        customerId = parsed.makh || parsed.MaKH;
+        console.log('✅ Found from customerInfo:', customerId);
+        return customerId;
+      }
+
+      // Thử lấy từ user object
+      const user = localStorage.getItem('user');
+      if (user) {
+        const parsed = JSON.parse(user);
+        customerId = parsed.makh || parsed.MaKH;
+        console.log('✅ Found from user:', customerId);
+        return customerId;
+      }
+
+      // Thử lấy từ loggedInUser
+      const loggedInUser = localStorage.getItem('loggedInUser');
+      if (loggedInUser) {
+        const parsed = JSON.parse(loggedInUser);
+        customerId = parsed.makh || parsed.MaKH;
+        console.log('✅ Found from loggedInUser:', customerId);
+        return customerId;
+      }
+
+      console.warn('⚠️ Không tìm thấy customerId trong localStorage');
+      return null;
     } catch (error) {
       console.error('Lỗi lấy thông tin khách hàng:', error);
       return null;
@@ -73,12 +112,72 @@ const PersonalizedRecommendations = {
   },
 
   /**
+   * Kiểm tra khách hàng đã có sở thích chưa
+   */
+  async checkCustomerPreferences(customerId) {
+    try {
+      console.log('🔍 Kiểm tra sở thích cho khách hàng:', customerId);
+      
+      // Sử dụng API check preferences giống preference-widget
+      const response = await fetch(
+        `${this.config.apiBaseUrl}/preferences/check?makh=${customerId}`,
+        {
+          headers: this.getHeaders()
+        }
+      );
+
+      if (!response.ok) {
+        console.warn('⚠️ API check preferences lỗi:', response.status);
+        return false;
+      }
+
+      const result = await response.json();
+      console.log('📦 Result check preferences:', result);
+      
+      // Kiểm tra xem có data sở thích không
+      if (result.success && result.data) {
+        const hasPreferences = result.data.hasPreferences || false;
+        console.log('✅ Khách hàng đã có sở thích:', hasPreferences);
+        return hasPreferences;
+      }
+      
+      return false;
+    } catch (error) {
+      console.error('❌ Lỗi kiểm tra sở thích:', error);
+      return false;
+    }
+  },
+
+  /**
+   * Ẩn component
+   */
+  hideComponent() {
+    const container = document.getElementById('personalized-recommendations');
+    if (container) {
+      container.style.display = 'none';
+      container.innerHTML = '';
+    }
+  },
+
+  /**
+   * Hiển thị component
+   */
+  showComponent() {
+    const container = document.getElementById('personalized-recommendations');
+    if (container) {
+      container.style.display = 'block';
+    }
+  },
+
+  /**
    * Load sản phẩm gợi ý cá nhân hóa
    */
   async loadPersonalizedRecommendations(customerId) {
     this.state.isLoading = true;
     
     try {
+      console.log('🔍 Đang load recommendations cho khách hàng:', customerId);
+      
       const response = await fetch(
         `${this.config.apiBaseUrl}/recommendation/personalized?makh=${customerId}&limit=${this.config.defaultLimit}`,
         {
@@ -86,31 +185,57 @@ const PersonalizedRecommendations = {
         }
       );
 
+      console.log('📡 Response status:', response.status);
+
       if (!response.ok) {
-        // Nếu không có recommendations, load sản phẩm mặc định
-        console.warn('Không thể tải sản phẩm gợi ý cá nhân, dùng mặc định');
-        await this.loadDefaultRecommendations();
+        // Lấy error message từ server
+        let errorMessage = response.statusText;
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.message || errorData.error || errorMessage;
+          console.error('⚠️ API error details:', errorData);
+        } catch (e) {
+          // Không parse được JSON
+        }
+        console.warn('⚠️ API trả về lỗi:', response.status, errorMessage);
+        // Không hiển thị gì nếu API lỗi
+        this.hideComponent();
         return;
       }
 
       const data = await response.json();
+      console.log('📦 Data nhận được:', data);
       
       // Kiểm tra cấu trúc response từ API
       if (data.success && Array.isArray(data.data)) {
+        if (data.data.length === 0) {
+          console.warn('⚠️ Không có sản phẩm gợi ý');
+          this.hideComponent();
+          return;
+        }
+        console.log('✅ Có', data.data.length, 'sản phẩm gợi ý cá nhân hóa');
         this.state.recommendations = data.data;
+        this.state.isLoading = false;
       } else if (Array.isArray(data)) {
+        if (data.length === 0) {
+          console.warn('⚠️ Không có sản phẩm gợi ý');
+          this.hideComponent();
+          return;
+        }
+        console.log('✅ Có', data.length, 'sản phẩm (array trực tiếp)');
         this.state.recommendations = data;
+        this.state.isLoading = false;
       } else {
-        // Không có recommendations, dùng mặc định
-        await this.loadDefaultRecommendations();
+        console.warn('⚠️ Data không đúng format');
+        // Không hiển thị gì
+        this.hideComponent();
         return;
       }
       
-      this.state.isLoading = false;
     } catch (error) {
-      console.error('Lỗi load recommendations:', error);
-      // Fallback to default
-      await this.loadDefaultRecommendations();
+      console.error('❌ Lỗi load recommendations:', error);
+      // Ẩn component nếu có lỗi
+      this.hideComponent();
     }
   },
 
@@ -145,67 +270,6 @@ const PersonalizedRecommendations = {
   },
 
   /**
-   * Load sản phẩm mặc định (cho khách chưa đăng nhập)
-   */
-  async loadDefaultRecommendations() {
-    this.state.isLoading = true;
-    
-    try {
-      // Lấy tất cả sản phẩm từ API với headers đúng
-      const response = await fetch(`${this.config.apiBaseUrl}/product`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      // Kiểm tra content-type trước khi parse JSON
-      const contentType = response.headers.get('content-type');
-      if (!contentType || !contentType.includes('application/json')) {
-        throw new Error('Response không phải JSON. Server có thể đang trả về HTML.');
-      }
-
-      const products = await response.json();
-      
-      // Kiểm tra và xử lý dữ liệu
-      if (!Array.isArray(products)) {
-        console.warn('Response không phải array:', products);
-        this.state.recommendations = [];
-        this.state.isLoading = false;
-        this.render();
-        return;
-      }
-
-      // Sắp xếp theo ngày thêm mới nhất và lấy limit đầu tiên
-      const sortedProducts = products
-        .filter(p => p && p.MaSP) // Lọc sản phẩm hợp lệ
-        .sort((a, b) => {
-          const dateA = new Date(a.NgayThem || a.ngaythem || 0);
-          const dateB = new Date(b.NgayThem || b.ngaythem || 0);
-          return dateB - dateA; // Mới nhất trước
-        })
-        .slice(0, this.config.defaultLimit);
-
-      this.state.recommendations = sortedProducts;
-      this.state.isLoading = false;
-      this.render();
-    } catch (error) {
-      console.error('Lỗi load default recommendations:', error);
-      console.error('Error details:', {
-        message: error.message,
-        stack: error.stack
-      });
-      this.state.isLoading = false;
-      this.state.recommendations = []; // Set empty để không hiển thị lỗi liên tục
-      this.renderError();
-    }
-  },
-
-  /**
    * Lấy headers cho API request
    */
   getHeaders() {
@@ -230,6 +294,9 @@ const PersonalizedRecommendations = {
       console.error('Container #personalized-recommendations không tồn tại');
       return;
     }
+
+    // Đảm bảo container được hiển thị
+    this.showComponent();
 
     if (this.state.isLoading) {
       container.innerHTML = this.renderLoading();
@@ -486,47 +553,69 @@ const PersonalizedRecommendations = {
    */
   async handleAddToCart(productId) {
     try {
-      const customerId = this.getCustomerId();
+      console.log('🛒 handleAddToCart called with productId:', productId, typeof productId);
+      console.log('📦 Current recommendations:', this.state.recommendations);
       
-      if (!customerId) {
-        alert('Vui lòng đăng nhập để thêm vào giỏ hàng');
-        window.location.href = 'login.html';
-        return;
-      }
-
-      // Find product in recommendations
+      // Find product in recommendations - so sánh cả string và number
       const product = this.state.recommendations.find(
-        p => (p.MaSP || p.masp) === productId
+        p => String(p.MaSP || p.masp || '') === String(productId)
       );
 
+      console.log('🔍 Found product:', product);
+
       if (!product) {
+        console.error('❌ Không tìm thấy sản phẩm với ID:', productId);
+        console.error('Available IDs:', this.state.recommendations.map(p => p.MaSP || p.masp));
         throw new Error('Không tìm thấy sản phẩm');
       }
 
-      const response = await fetch(`${this.config.apiBaseUrl}/cart/add`, {
-        method: 'POST',
-        headers: this.getHeaders(),
-        body: JSON.stringify({
-          makh: customerId,
-          masp: productId,
-          soluong: 1
-        })
-      });
+      // Lấy thông tin sản phẩm
+      const productName = product.TenSP || product.tensp || 'Sản phẩm';
+      const price = product.DonGia || product.dongia || 0;
+      const image = product.HinhAnh || product.hinhanh || 'img/product/default.jpg';
 
-      if (!response.ok) {
-        throw new Error('Không thể thêm vào giỏ hàng');
+      console.log('📦 Product info:', { productId, productName, price, image });
+
+      // Sử dụng hàm addToCart từ cart.js hoặc book.js nếu có
+      if (typeof window.addToCart === 'function') {
+        console.log('✅ Using window.addToCart');
+        await window.addToCart(productId, 1, productName, price, image);
+        this.showToast('✅ Đã thêm vào giỏ hàng!', 'success');
+      } else {
+        console.log('⚠️ window.addToCart not found, using API directly');
+        // Fallback: Gọi API trực tiếp
+        const customerId = this.getCustomerId();
+        
+        if (!customerId) {
+          this.showToast('⚠️ Vui lòng đăng nhập để thêm vào giỏ hàng', 'warning');
+          setTimeout(() => window.location.href = 'login.html', 1500);
+          return;
+        }
+
+        const response = await fetch(`${this.config.apiBaseUrl}/cart/add`, {
+          method: 'POST',
+          headers: this.getHeaders(),
+          body: JSON.stringify({
+            makh: customerId,
+            masp: productId,
+            soluong: 1
+          })
+        });
+
+        if (!response.ok) {
+          throw new Error('Không thể thêm vào giỏ hàng');
+        }
+
+        this.showToast('✅ Đã thêm vào giỏ hàng!', 'success');
       }
-
-      // Show success message
-      this.showToast('Đã thêm vào giỏ hàng!', 'success');
       
       // Update cart count if exists
-      if (window.updateCartCount) {
+      if (typeof window.updateCartCount === 'function') {
         window.updateCartCount();
       }
     } catch (error) {
-      console.error('Lỗi thêm vào giỏ hàng:', error);
-      this.showToast('Không thể thêm vào giỏ hàng', 'error');
+      console.error('❌ Lỗi thêm vào giỏ hàng:', error);
+      this.showToast('❌ Không thể thêm vào giỏ hàng', 'error');
     }
   },
 

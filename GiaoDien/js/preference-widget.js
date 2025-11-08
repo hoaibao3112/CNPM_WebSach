@@ -391,6 +391,9 @@
 
       // Success - show coupon code
       showSuccessModal(result.data.couponCode);
+      
+      // Reload personalized recommendations component
+      reloadRecommendations();
 
     } catch (error) {
       console.error('Lỗi submit form:', error);
@@ -483,6 +486,19 @@
       setTimeout(() => modal.remove(), 300);
     }
   };
+
+  /**
+   * Reload recommendations component
+   */
+  function reloadRecommendations() {
+    // Gọi lại init của PersonalizedRecommendations component nếu tồn tại
+    if (window.PersonalizedRecommendations && typeof window.PersonalizedRecommendations.init === 'function') {
+      console.log('🔄 Reload personalized recommendations...');
+      setTimeout(() => {
+        window.PersonalizedRecommendations.init();
+      }, 1000); // Delay 1s để đảm bảo data đã được lưu vào DB
+    }
+  }
 
   /**
    * Escape HTML
