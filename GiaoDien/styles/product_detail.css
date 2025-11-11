@@ -502,6 +502,13 @@ body {
   box-shadow: var(--shadow-lg);
 }
 
+/* Make add-to-cart and buy-now buttons use a smaller font and slightly reduced padding */
+.add-to-cart-btn, .buy-now-btn {
+  font-size: var(--font-size-sm); /* smaller text */
+  padding: 0.9rem 1.5rem; /* reduce vertical padding */
+  min-width: 150px; /* slightly smaller min width to fit text */
+}
+
 .buy-now-btn {
   background: var(--gradient-danger);
   color: white;
@@ -2914,7 +2921,8 @@ body {
 }
 
 .product-promotions {
-  width: 86%;
+  width: 76%;
+  
 }
 
 /* Responsive - Mobile sẽ hiển thị promotion dưới ảnh */
