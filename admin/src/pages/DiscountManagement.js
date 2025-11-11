@@ -905,12 +905,19 @@ const handleToggleStatus = async (id, currentStatus) => {
       title: 'Tên khuyến mãi', 
       dataIndex: 'TenKM', 
       key: 'TenKM',
+      width: 200, // limit column width to avoid overlapping actions
       ellipsis: {
         showTitle: false,
       },
       render: (tenKM) => (
         <Tooltip placement="topLeft" title={tenKM}>
-          <Text strong>{tenKM}</Text>
+          <Text strong style={{
+            display: 'inline-block',
+            maxWidth: 220,
+            whiteSpace: 'nowrap',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis'
+          }}>{tenKM}</Text>
         </Tooltip>
       ),
     },
@@ -918,14 +925,14 @@ const handleToggleStatus = async (id, currentStatus) => {
       title: 'Loại KM', 
       dataIndex: 'LoaiKM', 
       key: 'LoaiKM',
-      width: 120,
+      width: 100,
       render: renderPromotionType
     },
     { 
       title: 'Mã code', 
       dataIndex: 'Code', 
       key: 'Code',
-      width: 120,
+      width: 100,
       render: (code) => (
         <Tag icon={<TagOutlined />} color="purple">
           {code}
@@ -935,14 +942,16 @@ const handleToggleStatus = async (id, currentStatus) => {
     {
       title: 'Thời gian',
       key: 'time',
-      width: 200,
+      width: 140, // tightened column width
       render: (_, record) => (
-        <div>
-          <div style={{ fontSize: '12px', color: '#666' }}>
-            <CalendarOutlined /> Từ: {record.NgayBatDau?.slice(0, 10)}
+        <div style={{ lineHeight: 1.1 }}>
+          <div style={{ fontSize: '11px', color: '#666', display: 'flex', alignItems: 'center', gap: 6 }}>
+            <CalendarOutlined style={{ fontSize: 14 }} />
+            <span>Từ: {record.NgayBatDau?.slice(0, 10)}</span>
           </div>
-          <div style={{ fontSize: '12px', color: '#666' }}>
-            <CalendarOutlined /> Đến: {record.NgayKetThuc?.slice(0, 10)}
+          <div style={{ fontSize: '11px', color: '#666', display: 'flex', alignItems: 'center', gap: 6 }}>
+            <CalendarOutlined style={{ fontSize: 14 }} />
+            <span>Đến: {record.NgayKetThuc?.slice(0, 10)}</span>
           </div>
         </div>
       ),
@@ -951,13 +960,17 @@ const handleToggleStatus = async (id, currentStatus) => {
       title: 'Trạng thái',
       dataIndex: 'TrangThai',
       key: 'TrangThai',
-      width: 130,
-      render: renderStatus,
+      width: 110,
+      render: (trangThai) => (
+        <div style={{ fontSize: 12, display: 'flex', alignItems: 'center', gap: 6 }}>
+          {renderStatus(trangThai)}
+        </div>
+      ),
     },
     {
       title: 'Thao tác',
     key: 'action',
-    width: 200,
+    width: 150,
     render: (_, record) => {
       // Logic đúng: 1 = hoạt động, 0 = ngừng hoạt động
       const isActive = Number(record.TrangThai) === 1;
