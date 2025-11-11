@@ -2921,8 +2921,8 @@ body {
 }
 
 .product-promotions {
-  width: 76%;
-  
+  width: 103%;
+  max-width: 78rem;
 }
 
 /* Responsive - Mobile sẽ hiển thị promotion dưới ảnh */
