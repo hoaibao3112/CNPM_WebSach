@@ -237,7 +237,8 @@ body {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 4rem;
-  align-items: start;
+  align-items: center;
+  height: 90vh;
 }
 
 .product-images {
@@ -249,7 +250,7 @@ body {
   overflow: hidden;
   box-shadow: var(--shadow-lg);
   background: white;
-  padding: 2rem;
+  padding: 1rem;
   text-align: center;
   position: relative;
 }
@@ -266,9 +267,11 @@ body {
 }
 
 .main-image img {
-  max-width: 100%;
+  min-width: 16vw;
+  max-width: 75%;
+  min-height: 20vh;
   height: auto;
-  max-height: 600px;
+  max-height: 80%;
   object-fit: contain;
   border-radius: var(--border-radius-sm);
   transition: var(--transition);
@@ -310,11 +313,18 @@ body {
   font-weight: 600;
 }
 
+.product-info {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  height: 80%;
+}
+
 .product-info h1 {
   font-size: var(--font-size-3xl);
   font-weight: 800;
   color: var(--primary-color);
-  margin-bottom: 1.5rem;
+  margin-bottom: 2.5%;
   line-height: 1.2;
   background: var(--gradient-primary);
   -webkit-background-clip: text;
@@ -323,10 +333,10 @@ body {
 }
 
 .product-meta {
-  background: var(--light-color);
-  padding: 1.5rem;
+  background: white;
+  padding: 1rem 1rem;
   border-radius: var(--border-radius);
-  margin-bottom: 2rem;
+  margin-bottom: 2%;
   border-left: 4px solid var(--secondary-color);
 }
 
@@ -334,8 +344,8 @@ body {
   display: flex;
   align-items: center;
   margin-bottom: 0.75rem;
-  font-size: var(--font-size-sm);
-  color: var(--dark-color);
+  color: black;
+  font-size: 500;
   font-weight: 500;
 }
 
@@ -356,12 +366,16 @@ body {
 .price-section {
   background: var(--gradient-danger); /* ĐÂY - đã là màu đỏ rồi */
   color: white;
-  padding: 2rem;
+  padding: 0.5% 20%;
   border-radius: var(--border-radius-lg);
-  margin-bottom: 2rem;
+  margin-bottom: 2.5%;
   position: relative;
   overflow: hidden;
   box-shadow: var(--shadow-lg);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 12rem;
 }
 
 .price-section::before {
@@ -376,9 +390,8 @@ body {
 }
 
 .current-price {
-  font-size: var(--font-size-4xl);
+  font-size: 1.7rem;
   font-weight: 900;
-  margin-bottom: 0.5rem;
   text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
 }
 
@@ -386,7 +399,7 @@ body {
   font-size: var(--font-size-lg);
   text-decoration: line-through;
   opacity: 0.8;
-  margin-bottom: 0.5rem;
+  margin-bottom: 2.5%;
 }
 
 .discount {
@@ -409,19 +422,21 @@ body {
 
 .delivery-info {
   background: white;
-  padding: 1.5rem;
+  padding: 1rem 1rem;
   border-radius: var(--border-radius);
-  margin-bottom: 2rem;
+  margin-bottom: 2.5%;
   box-shadow: var(--shadow-sm);
   border: 1px solid #e9ecef;
+  border-left: 4px solid var(--secondary-color);
 }
 
 .delivery-item {
   display: flex;
   align-items: center;
   margin-bottom: 1rem;
-  font-size: var(--font-size-sm);
-  color: var(--dark-color);
+  color: black;
+  font-size: 500;
+  font-weight: 500;
 }
 
 .delivery-item:last-child {
@@ -442,8 +457,9 @@ body {
 
 .action-buttons {
   display: flex;
-  gap: 1rem;
-  margin-bottom: 2rem;
+  margin-bottom: 2.5%;
+  align-items: center;
+  justify-content: space-between;
 }
 
 .btn {
@@ -511,13 +527,13 @@ body {
    WISHLIST
 ======================================== */
 .wishlist {
-  margin-top: 1rem;
+  margin-bottom: 2.5%;
 }
 
 .wishlist button {
   background: none;
-  border: 2px dashed #dee2e6;
-  color: #6c757d;
+  border: 2px dashed #f14f4f;
+  color: #f14f4f;
   cursor: pointer;
   padding: 1rem 2rem; /* Tăng từ 0.75rem 1.5rem */
   border-radius: var(--border-radius);
@@ -531,8 +547,8 @@ body {
 }
 
 .wishlist button:hover {
-  border-color: var(--accent-color);
-  color: var(--accent-color);
+  border-color: #f04141;
+  color: #f04141;
   background: rgba(231, 76, 60, 0.05);
 }
 
@@ -2627,7 +2643,7 @@ body {
   }
 
   .product-detail-section {
-    gap: 15px;
+    gap: 0.5%;
   }
 
   .main-image img {
@@ -2809,6 +2825,7 @@ body {
   display: flex;
   flex-direction: column;
   gap: 2rem;
+  height: 80%;
 }
 
 /* Cập nhật grid layout cho product-detail-section */

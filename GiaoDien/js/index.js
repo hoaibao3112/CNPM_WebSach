@@ -5,21 +5,47 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // Hiển thị slideshow
-let slideIndex = [0, 0];
-const slideColumns = document.querySelectorAll('.slideshow-column');
+const largeImg = document.querySelector('.slide-large img');
+  const smallImgs = document.querySelectorAll('.slide-small img');
 
-function showSlides() {
-  slideColumns.forEach((column, i) => {
-    const slides = column.getElementsByClassName('mySlides');
-    for (let j = 0; j < slides.length; j++) {
-      slides[j].style.display = 'none';
-    }
-    slideIndex[i]++;
-    if (slideIndex[i] > slides.length) slideIndex[i] = 1;
-    slides[slideIndex[i] - 1].style.display = 'block';
+  const images = [
+    "img/anhnen/17d.jpg", "img/anhnen/18d.jpg", "img/anhnen/14d.jpg",
+    "img/anhnen/15d.jpg", "img/anhnen/13d.jpg", "img/anhnen/9d.jpg",
+    "img/anhnen/10d.jpg", "img/anhnen/11d.jpg", "img/anhnen/12d.jpg",
+    "img/anhnen/16d.jpg"
+  ];
+
+  let index = 0;
+
+  function updateSlides() {
+    largeImg.src = images[index % images.length];
+    smallImgs[0].src = images[(index + 1) % images.length];
+    smallImgs[1].src = images[(index + 2) % images.length];
+    index += 3;
+  }
+
+  document.addEventListener("DOMContentLoaded", () => {
+    updateSlides();
+    setInterval(updateSlides, 3000);
   });
-  setTimeout(showSlides, 3000);
-}
+
+
+
+// let slideIndex = [0, 0];
+// const slideColumns = document.querySelectorAll('.slideshow-column');
+
+// function showSlides() {
+//   slideColumns.forEach((column, i) => {
+//     const slides = column.getElementsByClassName('mySlides');
+//     for (let j = 0; j < slides.length; j++) {
+//       slides[j].style.display = 'none';
+//     }
+//     slideIndex[i]++;
+//     if (slideIndex[i] > slides.length) slideIndex[i] = 1;
+//     slides[slideIndex[i] - 1].style.display = 'block';
+//   });
+//   setTimeout(showSlides, 3000);
+// }
 
 // Định dạng giá
 function formatPrice(price) {
