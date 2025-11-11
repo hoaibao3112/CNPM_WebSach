@@ -573,14 +573,15 @@ footer iframe {
 
 /* Chat Icon (giữ nguyên) */
 .chat-icon {
-    position: fixed;
-    bottom: 20px;
-    right: 20px;
-    width: 60px;
-    height: 60px;
-    cursor: pointer;
-    z-index: 1000;
-    transition: transform 0.3s ease;
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  width: 60px;
+  height: 60px;
+  cursor: pointer;
+  z-index: 10050; /* raised to avoid being covered by overlays */
+  transition: transform 0.3s ease;
+  pointer-events: auto;
 }
 
 .chat-icon:hover {
@@ -596,17 +597,17 @@ footer iframe {
 
 /* Chat Modal */
 .chat-modal {
-    display: none;
-    position: fixed;
-    bottom: 90px;
-    right: 20px;
-    width: 350px;
-    max-height: 70vh;
-    z-index: 1001;
-    background-color: #fff;
-    border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-    overflow: hidden;
+  display: none;
+  position: fixed;
+  bottom: 90px;
+  right: 20px;
+  width: 350px;
+  max-height: 70vh;
+  z-index: 10051; /* above chat-icon */
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  overflow: hidden;
 }
 
 .chat-modal-content {

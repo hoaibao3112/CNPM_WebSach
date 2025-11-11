@@ -195,6 +195,8 @@
         .then(function(res){ return res.text(); })
         .then(function(html){
           document.getElementById('load-footer').innerHTML = html;
+            // Notify other scripts that footer (and chat HTML) has been loaded
+            try { window.dispatchEvent(new Event('footerLoaded')); } catch (e) { /* old browsers */ }
         })
         .catch(function(err){
           console.error('Failed to load footer:', err);

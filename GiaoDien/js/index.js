@@ -1,6 +1,21 @@
 document.addEventListener('DOMContentLoaded', () => {
-  showSlides();
-  setupChat();
+  // Initialize slideshow safely: some builds use showSlides(), others use updateSlides().
+  if (typeof showSlides === 'function') {
+    try { showSlides(); } catch (e) { console.warn('showSlides() failed:', e); }
+  } else if (typeof updateSlides === 'function') {
+    try { updateSlides(); setInterval(updateSlides, 3000); } catch (e) { console.warn('updateSlides() failed:', e); }
+  }
+
+  // Defer setupChat until footer (which contains chat HTML) is injected.
+  if (document.getElementById('chat-icon')) {
+    setupChat();
+  } else {
+    window.addEventListener('footerLoaded', () => {
+      setTimeout(() => {
+        if (document.getElementById('chat-icon')) setupChat();
+      }, 0);
+    }, { once: true });
+  }
   // setupFAQ();
 });
 

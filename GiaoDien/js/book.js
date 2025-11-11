@@ -667,7 +667,7 @@ async function fetchAndDisplayPromotions() {
       DaBan: product.DaBan || Math.floor(Math.random() * 50) // Giả lập số lượng đã bán
     }));
 
-  displayProducts(productsWithDiscount, 'promotion-book-list', 10);
+  displayProducts(productsWithDiscount, 'promotion-book-list', 5);
   } catch (error) {
     console.error('Lỗi khi tải sách khuyến mãi:', error);
     productList.innerHTML = `
@@ -803,7 +803,7 @@ async function fetchAndDisplayPoliticsBooks() {
       throw new Error('Dữ liệu trả về không phải mảng');
     }
 
-  displayProducts(products, 'politics-book-list', 10);
+  displayProducts(products, 'politics-book-list', 5);
   } catch (error) {
     console.error('Lỗi khi tải sách chính trị:', error);
     productList.innerHTML = `
@@ -829,7 +829,7 @@ async function fetchAndDisplayScienceBooks() {
     const products = await response.json();
     if (!Array.isArray(products)) throw new Error('Dữ liệu trả về không hợp lệ');
 
-  displayProducts(products, 'science-book-list', 10);
+  displayProducts(products, 'science-book-list', 5);
   } catch (error) {
     console.error('Lỗi khi tải sách khoa học:', error);
     productList.innerHTML = `
