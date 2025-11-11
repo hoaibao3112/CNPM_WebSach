@@ -27,6 +27,15 @@ document.addEventListener('DOMContentLoaded', function() {
 
     setupEventListeners();
     setupRatingSection(productInfo.data.MaSP || productInfo.data);
+
+
+    const container = document.getElementById('promotions-container');
+    container.addEventListener('wheel', function(e) {
+    if (e.deltaY !== 0) {
+        e.preventDefault();
+        container.scrollLeft += e.deltaY * 4; // Tăng hệ số để cuộn nhanh hơn
+    }
+});
 });
 
 /**
@@ -802,11 +811,11 @@ function displayPromotions(promotions) {
                         <span>${config.label}</span>
                     </div>
                     <div class="promotion-type">${isExpired ? 'Hết hạn' : 'Đang áp dụng'}</div>
+                    <div class="promotion-title">${escapeHtml(promotion.TenKM)}</div>
                 </div>
                 
                 <div class="promotion-content">
                     <div class="promotion-info">
-                        <div class="promotion-title">${escapeHtml(promotion.TenKM)}</div>
                         <div class="promotion-desc">${promotion.MoTa ? escapeHtml(promotion.MoTa) : 'Khuyến mãi đặc biệt'}</div>
                         ${conditionsHtml}
                     </div>
