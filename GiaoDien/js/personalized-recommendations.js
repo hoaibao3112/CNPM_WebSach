@@ -7,7 +7,7 @@ const PersonalizedRecommendations = {
   // Configuration
   config: {
     apiBaseUrl: 'http://localhost:5000/api',
-    defaultLimit: 10,
+  defaultLimit: 8,
     storageKeys: {
       customerInfo: 'customerInfo',
       authToken: 'authToken'
@@ -18,6 +18,8 @@ const PersonalizedRecommendations = {
   state: {
     isLoading: false,
     recommendations: [],
+    // number of items currently shown in the UI (for "Xem thêm")
+    currentLimit: 8,
     customerInsights: null,
     error: null
   },
@@ -214,7 +216,9 @@ const PersonalizedRecommendations = {
           return;
         }
         console.log('✅ Có', data.data.length, 'sản phẩm gợi ý cá nhân hóa');
-        this.state.recommendations = data.data;
+  this.state.recommendations = data.data;
+  // reset current limit when new data arrives
+  this.state.currentLimit = this.config.defaultLimit;
         this.state.isLoading = false;
       } else if (Array.isArray(data)) {
         if (data.length === 0) {
@@ -223,7 +227,9 @@ const PersonalizedRecommendations = {
           return;
         }
         console.log('✅ Có', data.length, 'sản phẩm (array trực tiếp)');
-        this.state.recommendations = data;
+  this.state.recommendations = data;
+  // reset current limit when new data arrives
+  this.state.currentLimit = this.config.defaultLimit;
         this.state.isLoading = false;
       } else {
         console.warn('⚠️ Data không đúng format');
@@ -356,11 +362,30 @@ const PersonalizedRecommendations = {
    * Render danh sách sản phẩm
    */
   renderProducts() {
+    const visible = this.state.recommendations.slice(0, this.state.currentLimit || this.config.defaultLimit);
+    const moreAvailable = this.state.recommendations.length > visible.length;
     return `
       <div class="recommendations-products">
-        ${this.state.recommendations.map(product => this.renderProductCard(product)).join('')}
+        ${visible.map(product => this.renderProductCard(product)).join('')}
       </div>
+      ${moreAvailable ? `
+        <div class="view-more-container">
+          <button class="view-more-recommendations">Xem thêm</button>
+        </div>
+      ` : ''}
     `;
+  },
+
+  /**
+   * Xử lý xem thêm (tăng giới hạn hiển thị)
+   */
+  handleViewMore() {
+    const total = this.state.recommendations.length;
+    const inc = this.config.defaultLimit || 10;
+    const next = (this.state.currentLimit || inc) + inc;
+    this.state.currentLimit = next >= total ? total : next;
+    // re-render to show more items
+    this.render();
   },
 
   /**
@@ -535,6 +560,15 @@ const PersonalizedRecommendations = {
     if (viewAllBtn) {
       viewAllBtn.addEventListener('click', () => {
         this.handleViewAll();
+      });
+    }
+
+    // View more (in-place expand)
+    const viewMoreBtn = document.querySelector('.view-more-recommendations');
+    if (viewMoreBtn) {
+      viewMoreBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        this.handleViewMore();
       });
     }
   },

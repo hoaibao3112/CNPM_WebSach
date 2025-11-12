@@ -139,24 +139,165 @@ export const submitPreferences = async (req, res) => {
       }
     }
 
-    // Chấm điểm sở thích
-    await calculatePreferenceScores(connection, makh, responseId);
-
-    // Phát coupon freeship (nếu chưa có)
+    // Chấm điểm sở thích (chỉ khi khách đồng ý sử dụng dữ liệu)
+    if (consent) {
+      await calculatePreferenceScores(connection, makh, responseId);
+    }
+    
+    // Phát coupon liên kết với form (nếu form có MaKM) - chỉ phát khi consent = true
     let couponCode = null;
-    const [existingCoupon] = await connection.query(
-      `SELECT MaPhieu FROM phieugiamgia_phathanh 
-       WHERE makh = ? AND MaPhieu = 'FREESHIP2025' LIMIT 1`,
-      [makh]
+    // Lấy MaKM được liên kết trong form (nếu admin đã gắn coupon vào form)
+    const [[formRow]] = await connection.query(
+      `SELECT MaKM FROM form_sothich WHERE MaForm = ? LIMIT 1`,
+      [formId]
     );
 
-    if (!existingCoupon || existingCoupon.length === 0) {
-      // Phát coupon mới
-      await connection.query(
-        `INSERT INTO phieugiamgia_phathanh (makh, MaPhieu) VALUES (?, 'FREESHIP2025')`,
-        [makh]
+    const formMaKM = formRow ? formRow.MaKM : null;
+
+    if (formMaKM && consent) {
+      // Try to use promotion's configured public Code (if available) so coupon code matches promotion
+      const [[promoRow]] = await connection.query(
+        `SELECT * FROM khuyen_mai WHERE MaKM = ? LIMIT 1`,
+        [formMaKM]
       );
-      couponCode = 'FREESHIP2025';
+
+      const promo = promoRow || null;
+
+      // If promotion has a Code (public code), prefer to use it as MaPhieu
+      let preferredCode = promo && promo.Code ? promo.Code : null;
+
+      // If preferredCode exists, see if a phieugiamgia template already uses it
+      if (preferredCode) {
+        const [tplByCode] = await connection.query(
+          `SELECT * FROM phieugiamgia WHERE MaPhieu = ? LIMIT 1`,
+          [preferredCode]
+        );
+        if (tplByCode && tplByCode.length > 0) {
+          // Use existing template
+          const template = tplByCode[0];
+          const [issued] = await connection.query(
+            `SELECT MaPhieu FROM phieugiamgia_phathanh WHERE makh = ? AND MaPhieu = ? LIMIT 1`,
+            [makh, template.MaPhieu]
+          );
+          if (issued && issued.length > 0) {
+            couponCode = issued[0].MaPhieu;
+          } else {
+            await connection.query(
+              `INSERT INTO phieugiamgia_phathanh (makh, MaPhieu) VALUES (?, ?)`,
+              [makh, template.MaPhieu]
+            );
+            await connection.query(
+              `INSERT INTO khachhang_khuyenmai (makh, makm, ngay_lay, ngay_het_han, trang_thai) VALUES (?, ?, NOW(), ?, 'Chua_su_dung')`,
+              [makh, formMaKM, null]
+            );
+            couponCode = template.MaPhieu;
+          }
+        } else {
+          // Preferred code not used yet -> create a new phieugiamgia using preferredCode and link to MaKM
+          try {
+            await connection.query(
+              `INSERT INTO phieugiamgia (MaPhieu, MaKM, MoTa, SoLanSuDungToiDa, TrangThai)
+               VALUES (?, ?, ?, ?, ?)`,
+              [preferredCode, formMaKM, (promo && promo.TenKM) ? (`${promo.TenKM}`) : `Freeship from form ${formMaKM}`, 1, 1]
+            );
+
+            await connection.query(
+              `INSERT INTO phieugiamgia_phathanh (makh, MaPhieu) VALUES (?, ?)`,
+              [makh, preferredCode]
+            );
+
+            await connection.query(
+              `INSERT INTO khachhang_khuyenmai (makh, makm, ngay_lay, ngay_het_han, trang_thai) VALUES (?, ?, NOW(), ?, 'Chua_su_dung')`,
+              [makh, formMaKM, null]
+            );
+
+            couponCode = preferredCode;
+          } catch (err) {
+            // If preferredCode insertion fails (duplicate race or constraint), fall back to search/create by MaKM
+            // We'll continue to the fallback logic below
+            console.warn('Preferred code insert failed, falling back to MaKM search/create:', err.message);
+          }
+        }
+      }
+
+      // If couponCode not set yet, try to find any existing template by MaKM (legacy behavior)
+      if (!couponCode) {
+        const [templates] = await connection.query(
+          `SELECT p.* FROM phieugiamgia p
+           JOIN khuyen_mai km ON p.MaKM = km.MaKM
+           WHERE p.MaKM = ? AND km.LoaiKM = 'free_ship' AND p.TrangThai = 1
+           LIMIT 1`,
+          [formMaKM]
+        );
+
+        const template = templates && templates.length > 0 ? templates[0] : null;
+
+        if (template) {
+          // Check if the user already received this coupon
+          const [issued] = await connection.query(
+            `SELECT MaPhieu FROM phieugiamgia_phathanh WHERE makh = ? AND MaPhieu = ? LIMIT 1`,
+            [makh, template.MaPhieu]
+          );
+
+          if (issued && issued.length > 0) {
+            couponCode = issued[0].MaPhieu;
+          } else {
+            // Issue the existing template to the user
+            await connection.query(
+              `INSERT INTO phieugiamgia_phathanh (makh, MaPhieu) VALUES (?, ?)`,
+              [makh, template.MaPhieu]
+            );
+
+            // Legacy compatibility
+            await connection.query(
+              `INSERT INTO khachhang_khuyenmai (makh, makm, ngay_lay, ngay_het_han, trang_thai) VALUES (?, ?, NOW(), ?, 'Chua_su_dung')`,
+              [makh, formMaKM, null]
+            );
+
+            couponCode = template.MaPhieu;
+          }
+        } else {
+          // No template by MaKM -> generate a fallback code (use unique generator)
+          const generateCode = (prefix = 'FS') => {
+            const rand = Math.random().toString(36).substring(2, 8).toUpperCase();
+            const ts = Date.now().toString(36).toUpperCase().slice(-6);
+            return `${prefix}${ts}${rand}`.slice(0, 32);
+          };
+
+          let newCode = generateCode('FS');
+          let tries = 0;
+          while (tries < 5) {
+            const [exists] = await connection.query(
+              `SELECT MaPhieu FROM phieugiamgia WHERE MaPhieu = ? LIMIT 1`,
+              [newCode]
+            );
+            if (!exists || exists.length === 0) break;
+            newCode = generateCode('FS');
+            tries++;
+          }
+
+          // Insert fallback template and ensure MaKM is set
+          await connection.query(
+            `INSERT INTO phieugiamgia (MaPhieu, MaKM, MoTa, SoLanSuDungToiDa, TrangThai)
+             VALUES (?, ?, ?, ?, ?)`,
+            [newCode, formMaKM, (formMaKM ? ('Form:' + formMaKM) : 'Freeship from form'), 1, 1]
+          );
+
+          // Issue it
+          await connection.query(
+            `INSERT INTO phieugiamgia_phathanh (makh, MaPhieu) VALUES (?, ?)`,
+            [makh, newCode]
+          );
+
+          // Legacy compatibility
+          await connection.query(
+            `INSERT INTO khachhang_khuyenmai (makh, makm, ngay_lay, ngay_het_han, trang_thai) VALUES (?, ?, NOW(), ?, 'Chua_su_dung')`,
+            [makh, formMaKM, null]
+          );
+
+          couponCode = newCode;
+        }
+      }
     }
 
     await connection.commit();
@@ -501,12 +642,14 @@ export const createForm = async (req, res) => {
     const { 
       TenForm, tenForm,
       MoTa, moTa,
-      IsActive, isActive, TrangThai, trangThai 
+      IsActive, isActive, TrangThai, trangThai,
+      MaKM, maKM
     } = req.body;
 
     const formName = TenForm || tenForm;
     const description = MoTa || moTa || '';
     const status = IsActive !== undefined ? (IsActive ? 1 : 0) : (isActive !== undefined ? (isActive ? 1 : 0) : (TrangThai !== undefined ? TrangThai : (trangThai !== undefined ? trangThai : 1)));
+  const couponId = MaKM || maKM || null;
 
     if (!formName) {
       return res.status(400).json({
@@ -517,8 +660,8 @@ export const createForm = async (req, res) => {
     }
 
     const [result] = await pool.query(
-      `INSERT INTO form_sothich (TenForm, MoTa, TrangThai) VALUES (?, ?, ?)`,
-      [formName, description, status]
+      `INSERT INTO form_sothich (TenForm, MoTa, TrangThai, MaKM) VALUES (?, ?, ?, ?)`,
+      [formName, description, status, couponId]
     );
 
     return res.json({
@@ -606,9 +749,13 @@ export const updateForm = async (req, res) => {
     const description = MoTa !== undefined ? MoTa : moTa;
     const status = IsActive !== undefined ? (IsActive ? 1 : 0) : (isActive !== undefined ? (isActive ? 1 : 0) : (TrangThai !== undefined ? TrangThai : trangThai));
 
+    // Accept optional MaKM to link a coupon to the form
+    const { MaKM, maKM } = req.body;
+    const couponId = MaKM || maKM || null;
+
     await pool.query(
-      `UPDATE form_sothich SET TenForm = ?, MoTa = ?, TrangThai = ? WHERE MaForm = ?`,
-      [formName, description, status, id]
+      `UPDATE form_sothich SET TenForm = ?, MoTa = ?, TrangThai = ?, MaKM = ? WHERE MaForm = ?`,
+      [formName, description, status, couponId, id]
     );
 
     return res.json({

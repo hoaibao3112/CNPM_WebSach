@@ -123,16 +123,13 @@ COMMENT='Sản phẩm khách hàng đánh dấu yêu thích';
 CREATE TABLE `phieugiamgia` (
   `MaPhieu` VARCHAR(32) PRIMARY KEY,
   `MoTa` VARCHAR(255) COMMENT 'Mô tả phiếu',
-  `LoaiGiamGia` ENUM('FREESHIP','PERCENT','AMOUNT') NOT NULL,
-  `GiaTriGiam` DECIMAL(10,2) NOT NULL DEFAULT 0 COMMENT 'Giá trị giảm (%, VND hoặc 100% ship)',
-  `NgayHetHan` DATETIME NULL COMMENT 'Ngày hết hạn (NULL = không giới hạn)',
   `SoLanSuDungToiDa` INT DEFAULT 1 COMMENT 'Số lần sử dụng tối đa mỗi khách',
   `TrangThai` TINYINT(1) DEFAULT 1 COMMENT '1=Hoạt động, 0=Vô hiệu',
   `NgayTao` DATETIME DEFAULT CURRENT_TIMESTAMP,
-  INDEX `idx_loai` (`LoaiGiamGia`),
+  `MaKM` VARCHAR(32) NULL COMMENT 'Nếu liên kết với khuyến mãi (ví dụ freeship) - FK khuyen_mai.MaKM',
   INDEX `idx_trangthai` (`TrangThai`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
-COMMENT='Phiếu giảm giá/freeship';
+COMMENT='Phiếu giảm giá/freeship (đơn giản hóa: loại/giá trị/expiry đã được tách sang khuyến mãi)';
 
 -- 9. Bảng Phát hành Phiếu cho Khách hàng
 CREATE TABLE `phieugiamgia_phathanh` (
@@ -241,8 +238,8 @@ INSERT INTO `luachon_cauhoi` (`MaCauHoi`, `NoiDungLuaChon`, `SoTrangTu`, `SoTran
 (@Q6, 'Dày (> 400 trang)', 400, 9999, 1.0, 3);
 
 -- Tạo 1 phiếu freeship mẫu
-INSERT INTO `phieugiamgia` (`MaPhieu`, `MoTa`, `LoaiGiamGia`, `GiaTriGiam`, `NgayHetHan`, `SoLanSuDungToiDa`, `TrangThai`)
-VALUES ('FREESHIP2025', 'Freeship toàn quốc cho khách hoàn thành khảo sát sở thích', 'FREESHIP', 100, DATE_ADD(NOW(), INTERVAL 3 MONTH), 1, 1);
+INSERT INTO `phieugiamgia` (`MaPhieu`, `MoTa`, `SoLanSuDungToiDa`, `TrangThai`, `MaKM`)
+VALUES ('FREESHIP2025', 'Freeship toàn quốc cho khách hoàn thành khảo sát sở thích', 1, 1, NULL);
 
 -- ============================================
 -- Hoàn tất migration

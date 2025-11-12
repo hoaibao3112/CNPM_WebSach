@@ -124,19 +124,27 @@ function loadWishlist() {
 
 
 function loadPromoCodes() {
-  const promoList = JSON.parse(localStorage.getItem('myPromos') || '[]');
+  const promoListRaw = JSON.parse(localStorage.getItem('myPromos') || '[]');
+  // Filter out promos that have been used (status === 'used')
+  const promoList = (promoListRaw || []).filter(p => {
+    try {
+      return !p.status || String(p.status).toLowerCase().trim() !== 'used';
+    } catch (e) {
+      return true;
+    }
+  });
   const container = document.getElementById('promo-codes-list');
   if (!container) return;
 
   if (!promoList.length) {
-    container.innerHTML = '<p class="empty-wishlist">Bạn chưa có mã khuyến mãi nào.</p>';
+    container.innerHTML = '<p class="empty-wishlist">Bạn không có mã khuyến mãi chưa sử dụng.</p>';
     return;
   }
 
   container.innerHTML = promoList.map(promo => `
-    <div class="promo-code-card" data-makm="${promo.makm}" style="cursor:pointer">
+    <div class="promo-code-card" data-makm="${promo.MaKM || promo.makm || ''}" style="cursor:pointer">
       <div class="promo-code-title"><i class="fas fa-ticket-alt"></i> Mã ưu đãi</div>
-      <div class="promo-code-value">${promo.code}</div>
+      <div class="promo-code-value">${promo.code || promo.MaPhieu || ''}</div>
       <div class="promo-code-expiry">Ngày nhận: ${promo.ngay_lay || ''}</div>
       ${promo.expiry ? `<div class="promo-code-expiry">HSD: ${promo.expiry}</div>` : ''}
       <div class="promo-code-status">${promo.status || ''}</div>
@@ -489,20 +497,27 @@ function displayWishlist() {
 
 function displayPromoCodes() {
   showSection('promo-codes'); // Hiển thị section mã khuyến mãi
-
-  const promoList = JSON.parse(localStorage.getItem('myPromos') || '[]');
+  const promoListRaw = JSON.parse(localStorage.getItem('myPromos') || '[]');
+  // Only display unused promos
+  const promoList = (promoListRaw || []).filter(p => {
+    try {
+      return !p.status || String(p.status).toLowerCase().trim() !== 'used';
+    } catch (e) {
+      return true;
+    }
+  });
   const container = document.getElementById('promo-codes-list');
   if (!container) return;
 
   if (!promoList.length) {
-    container.innerHTML = '<p class="empty-wishlist">Bạn chưa có mã khuyến mãi nào.</p>';
+    container.innerHTML = '<p class="empty-wishlist">Bạn không có mã khuyến mãi chưa sử dụng.</p>';
     return;
   }
 
   container.innerHTML = promoList.map(promo => `
-    <div class="promo-code-card" data-makm="${promo.makm}" style="cursor:pointer">
+    <div class="promo-code-card" data-makm="${promo.MaKM || promo.makm || ''}" style="cursor:pointer">
       <div class="promo-code-title"><i class="fas fa-ticket-alt"></i> Mã ưu đãi</div>
-      <div class="promo-code-value">${promo.code}</div>
+      <div class="promo-code-value">${promo.code || promo.MaPhieu || ''}</div>
       <div class="promo-code-expiry">Ngày nhận: ${promo.ngay_lay || ''}</div>
       ${promo.expiry ? `<div class="promo-code-expiry">HSD: ${promo.expiry}</div>` : ''}
       <div class="promo-code-status">${promo.status || ''}</div>
@@ -895,10 +910,13 @@ function setupPromoDetailEvents() {
   const promoCards = document.querySelectorAll('.promo-code-card');
   promoCards.forEach(card => {
     card.addEventListener('click', async function() {
-      const makm = this.getAttribute('data-makm');
+      let makm = this.getAttribute('data-makm');
+      // guard against literal strings 'undefined' or 'null'
+      if (!makm || makm === 'undefined' || makm === 'null') return;
+      makm = makm.toString().trim();
       if (!makm) return;
       try {
-        const res = await fetch(`http://localhost:5000/api/khuyenmai/${makm}`);
+        const res = await fetch(`http://localhost:5000/api/khuyenmai/${encodeURIComponent(makm)}`);
         const data = await res.json();
         if (data && !data.error) {
           let html = `<h3>${data.TenKM}</h3>

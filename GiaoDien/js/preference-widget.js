@@ -33,15 +33,29 @@
         return;
       }
 
-      const response = await fetch(`${API_BASE}/preferences/check?makh=${customerId}`);
-      const result = await response.json();
+      // Lấy form active hiện tại từ server
+      const formResp = await fetch(`${API_BASE}/preferences/form`);
+      const formResult = await formResp.json();
 
-      if (result.success && result.data.hasPreferences) {
-        console.log('Khách hàng đã điền form sở thích');
+      if (!formResult.success || !formResult.data) {
+        // Nếu không có form active, không hiển thị
+        console.log('Không có form sở thích đang hoạt động');
         return;
       }
 
-      // Chưa điền form -> hiển thị widget mời điền
+      // Lưu form hiện tại vào biến global để tái sử dụng
+      currentForm = formResult.data;
+
+      const response = await fetch(`${API_BASE}/preferences/check?makh=${customerId}`);
+      const result = await response.json();
+
+      // Nếu khách đã điền và phản hồi gần nhất là cho chính form active -> không hiển thị
+      if (result.success && result.data.hasPreferences && result.data.latestResponse && Number(result.data.latestResponse.MaForm) === Number(currentForm.MaForm)) {
+        console.log('Khách hàng đã điền form sở thích (phiên bản mới nhất)');
+        return;
+      }
+
+      // Nếu chưa điền form active (hoặc đã điền nhưng cho form cũ) -> hiển thị widget mời điền
       showPreferencePrompt();
     } catch (error) {
       console.error('Lỗi khi kiểm tra sở thích:', error);
@@ -84,14 +98,18 @@
    */
   async function loadAndShowPreferenceForm() {
     try {
-      const response = await fetch(`${API_BASE}/preferences/form`);
-      const result = await response.json();
+      // Use currentForm if already loaded by checkUserPreferences, otherwise fetch
+      if (!currentForm) {
+        const response = await fetch(`${API_BASE}/preferences/form`);
+        const result = await response.json();
 
-      if (!result.success || !result.data) {
-        throw new Error('Không thể tải form sở thích');
+        if (!result.success || !result.data) {
+          throw new Error('Không thể tải form sở thích');
+        }
+
+        currentForm = result.data;
       }
 
-      currentForm = result.data;
       renderPreferenceModal(currentForm);
     } catch (error) {
       console.error('Lỗi khi tải form:', error);
@@ -389,11 +407,25 @@
         throw new Error(result.message || 'Có lỗi xảy ra');
       }
 
-      // Success - show coupon code
-      showSuccessModal(result.data.couponCode);
-      
+      // Success - save coupon to customer's profile (localStorage) and show coupon code
+      const couponCode = result.data.couponCode;
+      try {
+        await saveCustomerCouponsToLocal(customerId);
+      } catch (err) {
+        // Fallback: if we cannot fetch issued coupons, append the returned code to localStorage
+        appendCouponToLocalFallback(couponCode);
+      }
+
+      showSuccessModal(couponCode);
+
       // Reload personalized recommendations component
       reloadRecommendations();
+
+      // Re-enable submit button and reset text
+      if (submitBtn) {
+        submitBtn.innerHTML = originalText;
+        submitBtn.disabled = false;
+      }
 
     } catch (error) {
       console.error('Lỗi submit form:', error);
@@ -498,6 +530,43 @@
         window.PersonalizedRecommendations.init();
       }, 1000); // Delay 1s để đảm bảo data đã được lưu vào DB
     }
+  }
+
+  /**
+   * Lấy danh sách coupon đã được phát cho khách hàng từ server và lưu vào localStorage
+   */
+  async function saveCustomerCouponsToLocal(customerId) {
+    if (!customerId) throw new Error('Missing customerId');
+    const token = localStorage.getItem('token') || localStorage.getItem('authToken');
+    const resp = await fetch(`${API_BASE}/coupons/my-coupons?makh=${customerId}`, {
+      headers: token ? { Authorization: `Bearer ${token}` } : {}
+    });
+    const json = await resp.json();
+    if (!json.success) throw new Error('Không lấy được danh sách coupon');
+    const coupons = json.data || [];
+
+    // Map server response to a simple client-friendly shape used by profile page
+    const mapped = coupons.map(item => ({
+      maPhatHanh: item.MaPhatHanh || null,
+      code: item.MaPhieu || '',
+      ngay_lay: item.NgayPhatHanh ? new Date(item.NgayPhatHanh).toLocaleDateString('vi-VN') : '',
+      expiry: null, // expiry removed from phieugiamgia schema; promotions may carry expiry
+      status: item.Status || (item.NgaySuDung ? 'used' : (item.TrangThai === 0 ? 'inactive' : 'available')),
+      MaKM: item.MaKM || null,
+      MoTa: item.MoTa || ''
+    }));
+
+    // Save to localStorage for profile page to read
+    localStorage.setItem('myPromos', JSON.stringify(mapped));
+  }
+
+  // Fallback: nếu không thể gọi API, thêm mã coupon tạm thời vào localStorage
+  function appendCouponToLocalFallback(code) {
+    if (!code) return;
+    const existing = JSON.parse(localStorage.getItem('myPromos') || '[]');
+    if (existing.some(p => p.code === code)) return;
+    existing.unshift({ maPhatHanh: null, code, ngay_lay: new Date().toLocaleDateString('vi-VN'), expiry: null, status: 'available', MaKM: null, MoTa: '' });
+    localStorage.setItem('myPromos', JSON.stringify(existing));
   }
 
   /**

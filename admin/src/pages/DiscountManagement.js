@@ -66,6 +66,8 @@ const defaultForm = {
   GiamToiDa: null,
   SoLuongToiThieu: null,
   SanPhamApDung: [],
+  Audience: 'PUBLIC',
+  IsClaimable: 1,
 };
 
 const generateRandomCode = (length = 8) => {
@@ -231,26 +233,19 @@ const DiscountManagement = () => {
     setCouponFormType('edit');
     setEditingCoupon(coupon);
     
-    // Map DB ENUM to frontend format
-    let loaiGiamUI = 'fixed';
-    if (coupon.LoaiGiamGia === 'PERCENT') loaiGiamUI = 'percent';
-    else if (coupon.LoaiGiamGia === 'AMOUNT') loaiGiamUI = 'fixed';
-    else if (coupon.LoaiGiamGia === 'FREESHIP') loaiGiamUI = 'freeship';
-    
+  // No longer map discount type - backend schema simplified
     // Extract TenPhieu from MoTa (if format is "TenPhieu - MoTa")
     const moTaParts = coupon.MoTa?.split(' - ') || [];
     const tenPhieu = moTaParts.length > 1 ? moTaParts[0] : '';
     const moTa = moTaParts.length > 1 ? moTaParts.slice(1).join(' - ') : coupon.MoTa;
-    
+
     couponForm.setFieldsValue({
       MaPhieu: coupon.MaPhieu,
       TenPhieu: tenPhieu,
       MoTa: moTa,
-      LoaiGiam: loaiGiamUI,
-      GiaTriGiam: coupon.GiaTriGiam,
-      GiaTriDonToiThieu: 0, // DB không có field này
+      GiaTriDonToiThieu: 0, // DB không có field này (placeholder)
       SoLuongPhatHanh: coupon.SoLanSuDungToiDa,
-      NgayHetHan: coupon.NgayHetHan ? dayjs(coupon.NgayHetHan) : null
+      MaKM: coupon.MaKM || null,
     });
     setShowCouponForm(true);
   };
@@ -258,9 +253,15 @@ const DiscountManagement = () => {
   const handleSaveCoupon = async () => {
     try {
       const values = await couponForm.validateFields();
+
+      // Build payload matching backend phieugiamgia columns (simplified schema)
+      const moTaCombined = (values.TenPhieu ? values.TenPhieu : '') + (values.MoTa ? (values.TenPhieu ? ' - ' : '') + values.MoTa : '');
+
       const payload = {
-        ...values,
-        NgayHetHan: values.NgayHetHan ? values.NgayHetHan.format('YYYY-MM-DD') : null
+        MaPhieu: values.MaPhieu,
+        MoTa: moTaCombined || null,
+        SoLanSuDungToiDa: values.SoLuongPhatHanh || 1,
+        MaKM: values.MaKM || null
       };
 
       if (couponFormType === 'add') {
@@ -331,10 +332,13 @@ const DiscountManagement = () => {
   const handleEditPreferenceForm = (form) => {
     setPreferenceFormType('edit');
     setEditingPreferenceForm(form);
+    // Try to pre-select a coupon that links to the form's MaKM (if any)
+    const matchedCoupon = coupons.find(c => c.MaKM && form.MaKM && c.MaKM === form.MaKM);
     preferenceForm.setFieldsValue({
       TenForm: form.TenForm,
       MoTa: form.MoTa,
-      IsActive: form.TrangThai === 1  // Map TrangThai to IsActive
+      IsActive: form.TrangThai === 1,  // Map TrangThai to IsActive
+      SelectedCoupon: matchedCoupon ? matchedCoupon.MaPhieu : null
     });
     setShowPreferenceForm(true);
   };
@@ -342,10 +346,18 @@ const DiscountManagement = () => {
   const handleSavePreferenceForm = async () => {
     try {
       const values = await preferenceForm.validateFields();
+      // If admin selected a coupon template, derive MaKM from that coupon
+      let maKMToSend = null;
+      if (values.SelectedCoupon) {
+        const sel = coupons.find(c => c.MaPhieu === values.SelectedCoupon);
+        maKMToSend = sel?.MaKM || null;
+      }
+
       const payload = {
         TenForm: values.TenForm,
         MoTa: values.MoTa,
-        TrangThai: values.IsActive ? 1 : 0  // Map IsActive to TrangThai
+        TrangThai: values.IsActive ? 1 : 0, // Map IsActive to TrangThai
+        MaKM: maKMToSend
       };
 
       if (preferenceFormType === 'add') {
@@ -433,6 +445,8 @@ const DiscountManagement = () => {
       fetchCoupons();
     } else if (activeTab === '3') {
       fetchPreferenceForms();
+      // Ensure coupon templates are available when managing preference forms
+      fetchCoupons();
       fetchCategoriesAndAuthors(); // Load dropdown data
     } else if (activeTab === '4') {
       fetchCustomerResponses();
@@ -724,6 +738,8 @@ const DiscountManagement = () => {
         SoLuongToiThieu: data.SoLuongToiThieu,
         SanPhamApDung: data.SanPhamApDung || [],
         MaKM: data.MaKM,
+        Audience: data.Audience || 'PUBLIC',
+        IsClaimable: typeof data.IsClaimable !== 'undefined' ? !!data.IsClaimable : true,
       });
     } else {
       form.setFieldsValue(defaultForm);
@@ -740,6 +756,10 @@ const DiscountManagement = () => {
       // Chuyển ngày về string
       values.NgayBatDau = values.NgayBatDau ? values.NgayBatDau.format('YYYY-MM-DD') : '';
       values.NgayKetThuc = values.NgayKetThuc ? values.NgayKetThuc.format('YYYY-MM-DD') : '';
+      // Normalize IsClaimable to integer expected by backend
+      if (typeof values.IsClaimable !== 'undefined') {
+        values.IsClaimable = values.IsClaimable ? 1 : 0;
+      }
       
       if (formType === 'add') {
         await axios.post('http://localhost:5000/api/khuyenmai', values, {
@@ -1140,34 +1160,18 @@ const handleToggleStatus = async (id, currentStatus) => {
                 ellipsis: true
               },
               {
-                title: 'Loại giảm',
-                dataIndex: 'LoaiGiamGia',
-                key: 'LoaiGiamGia',
-                width: 120,
-                render: (type) => {
-                  const typeMap = {
-                    'PERCENT': { text: 'Phần trăm', color: 'green' },
-                    'AMOUNT': { text: 'Cố định', color: 'orange' },
-                    'FREESHIP': { text: 'Freeship', color: 'blue' }
-                  };
-                  const mapped = typeMap[type] || { text: type, color: 'default' };
-                  return <Tag color={mapped.color}>{mapped.text}</Tag>;
-                }
+                title: 'Liên kết KM',
+                dataIndex: 'MaKM',
+                key: 'MaKM',
+                width: 160,
+                render: (m) => m ? <Tag color="cyan">{m}</Tag> : '-'
               },
               {
-                title: 'Giá trị giảm',
-                dataIndex: 'GiaTriGiam',
-                key: 'GiaTriGiam',
+                title: 'Trạng thái',
+                dataIndex: 'TrangThai',
+                key: 'TrangThai',
                 width: 120,
-                render: (value, record) => {
-                  if (record.LoaiGiamGia === 'PERCENT') {
-                    return `${value}%`;
-                  } else if (record.LoaiGiamGia === 'FREESHIP') {
-                    return 'Miễn phí ship';
-                  } else {
-                    return `${value?.toLocaleString()} đ`;
-                  }
-                }
+                render: (t) => t === 1 ? <Tag color="green">Hoạt động</Tag> : <Tag color="default">Vô hiệu</Tag>
               },
               {
                 title: 'Sử dụng',
@@ -1175,13 +1179,7 @@ const handleToggleStatus = async (id, currentStatus) => {
                 width: 120,
                 render: (_, record) => `${record.DaSuDung || 0}/${record.SoLanSuDungToiDa || 0}`
               },
-              {
-                title: 'Hết hạn',
-                dataIndex: 'NgayHetHan',
-                key: 'NgayHetHan',
-                width: 120,
-                render: (date) => date ? dayjs(date).format('DD/MM/YYYY') : 'Vĩnh viễn'
-              },
+              
               {
                 title: 'Thao tác',
                 key: 'action',
@@ -1677,6 +1675,34 @@ const handleToggleStatus = async (id, currentStatus) => {
             />
           </Form.Item>
 
+          {/* Audience & IsClaimable - visible to admin, default depends on LoaiKM */}
+          <Form.Item noStyle shouldUpdate={(prevValues, currentValues) => prevValues.LoaiKM !== currentValues.LoaiKM}>
+            {({ getFieldValue }) => {
+              const loaiKM = getFieldValue('LoaiKM');
+              const defaultAudience = loaiKM === 'free_ship' ? 'FORM_ONLY' : 'PUBLIC';
+              const defaultIsClaimable = loaiKM === 'free_ship' ? 0 : 1;
+
+              return (
+                <Row gutter={16} style={{ marginTop: 8 }}>
+                  <Col span={12}>
+                    <Form.Item label="Audience" name="Audience" initialValue={defaultAudience}>
+                      <Select>
+                        <Option value="PUBLIC">PUBLIC</Option>
+                        <Option value="FORM_ONLY">FORM_ONLY</Option>
+                        <Option value="PRIVATE">PRIVATE</Option>
+                      </Select>
+                    </Form.Item>
+                  </Col>
+                  <Col span={12}>
+                    <Form.Item label="IsClaimable" name="IsClaimable" valuePropName="checked" initialValue={!!defaultIsClaimable}>
+                      <Switch checkedChildren="Có" unCheckedChildren="Không" />
+                    </Form.Item>
+                  </Col>
+                </Row>
+              );
+            }}
+          </Form.Item>
+
           <Form.Item noStyle shouldUpdate={(prevValues, currentValues) => prevValues.LoaiKM !== currentValues.LoaiKM}>
             {({ getFieldValue }) => {
               const loaiKM = getFieldValue('LoaiKM');
@@ -1825,64 +1851,99 @@ const handleToggleStatus = async (id, currentStatus) => {
             <Input.TextArea rows={3} placeholder="Mô tả chi tiết về coupon" />
           </Form.Item>
 
-          <Row gutter={16}>
-            <Col span={12}>
-              <Form.Item 
-                label="Loại giảm" 
-                name="LoaiGiam"
-                rules={[{ required: true, message: 'Vui lòng chọn loại giảm' }]}
-              >
-                <Select placeholder="Chọn loại">
-                  <Option value="percent">Phần trăm (%)</Option>
-                  <Option value="fixed">Cố định (VND)</Option>
-                  <Option value="freeship">Miễn phí vận chuyển</Option>
-                </Select>
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item 
-                label="Giá trị giảm" 
-                name="GiaTriGiam"
-                rules={[{ required: true, message: 'Vui lòng nhập giá trị' }]}
-              >
-                <InputNumber 
-                  style={{ width: '100%' }}
-                  min={0}
-                  placeholder="Nhập giá trị"
-                />
-              </Form.Item>
-            </Col>
-          </Row>
+          {/* Loại giảm & Giá trị giảm: hide when MaKM is selected (coupon linked to promotion) */}
+          <Form.Item noStyle shouldUpdate={(prevValues, currentValues) => prevValues.MaKM !== currentValues.MaKM || prevValues.LoaiGiam !== currentValues.LoaiGiam}>
+            {({ getFieldValue }) => {
+              const hasMaKM = !!getFieldValue('MaKM');
+              const isAdd = couponFormType === 'add';
+              const loaiRules = (hasMaKM || isAdd) ? [] : [{ required: true, message: 'Vui lòng chọn loại giảm' }];
+              const giaTriRules = (hasMaKM || isAdd) ? [] : [{ required: true, message: 'Vui lòng nhập giá trị' }];
 
-          <Row gutter={16}>
-            <Col span={12}>
-              <Form.Item label="Đơn hàng tối thiểu" name="GiaTriDonToiThieu">
-                <InputNumber 
-                  style={{ width: '100%' }}
-                  min={0}
-                  placeholder="0 = không giới hạn"
-                  addonAfter="VND"
-                />
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item label="Số lượng phát hành" name="SoLuongPhatHanh">
-                <InputNumber 
-                  style={{ width: '100%' }}
-                  min={1}
-                  placeholder="Số lượng"
-                />
-              </Form.Item>
-            </Col>
-          </Row>
+              // Hide these fields when MaKM is present OR when creating a new coupon (add form)
+              if (hasMaKM || isAdd) return null;
 
-          <Form.Item label="Ngày hết hạn" name="NgayHetHan">
-            <DatePicker 
-              style={{ width: '100%' }}
-              format="DD/MM/YYYY"
-              placeholder="Chọn ngày hết hạn"
-            />
+              return (
+                <Row gutter={16}>
+                  <Col span={12}>
+                    <Form.Item 
+                      label="Loại giảm" 
+                      name="LoaiGiam"
+                      rules={loaiRules}
+                    >
+                      <Select placeholder="Chọn loại">
+                        <Option value="percent">Phần trăm (%)</Option>
+                        <Option value="fixed">Cố định (VND)</Option>
+                        <Option value="freeship">Miễn phí vận chuyển</Option>
+                      </Select>
+                    </Form.Item>
+                  </Col>
+                  <Col span={12}>
+                    <Form.Item 
+                      label="Giá trị giảm" 
+                      name="GiaTriGiam"
+                      rules={giaTriRules}
+                    >
+                      <InputNumber 
+                        style={{ width: '100%' }}
+                        min={0}
+                        placeholder="Nhập giá trị"
+                      />
+                    </Form.Item>
+                  </Col>
+                </Row>
+              );
+            }}
           </Form.Item>
+
+          <Form.Item
+            label="Coupon liên kết (MaKM)"
+            name="MaKM"
+          >
+            <Select placeholder="Chọn MaKM (khuyến mãi free ship)" allowClear showSearch optionFilterProp="children">
+              {promotions && promotions
+                .filter(p => p.LoaiKM === 'free_ship')
+                .map(p => (
+                  <Option key={p.MaKM} value={p.MaKM}>
+                    {p.TenKM} {p.Code ? `(${p.Code})` : ''}
+                  </Option>
+                ))}
+            </Select>
+          </Form.Item>
+
+          <Form.Item noStyle shouldUpdate={(prevValues, currentValues) => prevValues.MaKM !== currentValues.MaKM}>
+            {({ getFieldValue }) => {
+              const hasMaKM = !!getFieldValue('MaKM');
+              const isAdd = couponFormType === 'add';
+              // Hide GiaTriDonToiThieu when MaKM present OR when adding a coupon
+              return (
+                <Row gutter={16}>
+                  <Col span={12}>
+                    {!(hasMaKM || isAdd) ? (
+                      <Form.Item label="Đơn hàng tối thiểu" name="GiaTriDonToiThieu">
+                        <InputNumber 
+                          style={{ width: '100%' }}
+                          min={0}
+                          placeholder="0 = không giới hạn"
+                          addonAfter="VND"
+                        />
+                      </Form.Item>
+                    ) : null}
+                  </Col>
+                  <Col span={12}>
+                    <Form.Item label="Số lượng phát hành" name="SoLuongPhatHanh">
+                      <InputNumber 
+                        style={{ width: '100%' }}
+                        min={1}
+                        placeholder="Số lượng"
+                      />
+                    </Form.Item>
+                  </Col>
+                </Row>
+              );
+            }}
+          </Form.Item>
+
+          {/* Ngày hết hạn đã bị loại bỏ khỏi form theo yêu cầu */}
         </Form>
       </Modal>
 
@@ -1920,6 +1981,19 @@ const handleToggleStatus = async (id, currentStatus) => {
             initialValue={true}
           >
             <Switch checkedChildren="Hoạt động" unCheckedChildren="Tắt" />
+          </Form.Item>
+
+          <Form.Item label="Phiếu giảm giá liên kết" name="SelectedCoupon">
+            <Select placeholder="Chọn phiếu giảm giá (coupon template)" allowClear showSearch optionFilterProp="children">
+              {coupons && coupons
+                // List coupon templates that are linked to a promotion (have MaKM)
+                .filter(c => c.MaKM)
+                .map(c => (
+                  <Option key={c.MaPhieu} value={c.MaPhieu}>
+                    {(c.MoTa || c.MaPhieu).slice(0, 60)} ({c.MaPhieu})
+                  </Option>
+                ))}
+            </Select>
           </Form.Item>
 
           <div style={{ padding: '12px', background: '#e6f7ff', borderRadius: 4, marginTop: 16 }}>

@@ -5,9 +5,10 @@
   "main": "server.js",
   "type": "module",
   "scripts": {
-    "start": "nodemon --exec babel-node server.js",
-    "dev": "NODE_ENV=development nodemon --exec babel-node server.js",
-    "prod": "NODE_ENV=production node server.js"
+  "start": "nodemon --exec babel-node server.js",
+  "dev": "NODE_ENV=development nodemon --exec babel-node server.js",
+  "prod": "NODE_ENV=production node server.js",
+  "hash-taikhoan": "node ./src/utils/hashTaikhoanPasswords.js"
   },
   "keywords": [],
   "author": "",

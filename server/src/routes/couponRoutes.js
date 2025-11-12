@@ -5,6 +5,7 @@ import {
   useCoupon,
   getAvailableCouponsCount,
   getAllCoupons,
+  getCouponDetail,
   createCoupon,
   updateCoupon,
   deleteCoupon,
@@ -28,6 +29,13 @@ router.get('/my-coupons', getMyCoupons);
  * @access  Private
  */
 router.get('/validate', validateCoupon);
+
+/**
+ * @route   GET /api/coupons/detail
+ * @desc    Lấy chi tiết coupon (an toàn cho mã phát từ form)
+ * @access  Private
+ */
+router.get('/detail', getCouponDetail);
 
 /**
  * @route   POST /api/coupons/use

@@ -205,6 +205,50 @@
     letter-spacing: -0.3px;
 }
 
+/* --- Author / Meta (NamXB, SoLuong) --- */
+.card-author {
+    font-size: 13px;
+    color: var(--text-dark); /* author in black/dark color */
+    font-weight: 600;
+    margin: 0 0 6px 0;
+    display: block;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.card-meta {
+    font-size: 12px;
+    color: var(--text-light);
+    margin: 0 0 8px 0;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.card-meta span {
+    background: rgba(76, 175, 80, 0.06);
+    border: 1px solid rgba(76, 175, 80, 0.08);
+    padding: 4px 8px;
+    border-radius: 999px;
+    color: #4a7a4a;
+    font-weight: 600;
+}
+
+.card-meta .stock {
+    color: #1b5e20;
+    font-weight: 700;
+}
+
+.card-meta .stock.low {
+    color: #d32f2f; /* red when low */
+}
+
+.card-meta .year {
+    color: #4a4a4a;
+    font-weight: 600;
+}
+
 /* --- Phân trang --- */
 .pagination-controls {
     display: flex;

@@ -29,7 +29,8 @@
         let customerId = getCustomerId();
         // If no customerId available (e.g. visiting profile before login),
         // attempt to fetch public/popular recommendations so the widget still shows.
-        allProducts = await getRecommendations(customerId || 'public');
+            // pass 'public' when no customerId to let server return popular items
+            allProducts = await getRecommendations(customerId || 'public');
 
         if (!allProducts || allProducts.length === 0) {
             console.log("Không có sản phẩm đề xuất.");
@@ -130,10 +131,7 @@
      * Hàm gọi API lấy đề xuất
      */
     async function getRecommendations(customerId) {
-        if (!customerId) {
-            console.warn("Không có customerId, không thể lấy đề xuất.");
-            return [];
-        }
+        // customerId may be 'public' to fetch popular products
         try {
             const response = await fetch(`${API_URL}?makh=${customerId}`);
             if (!response.ok) {
@@ -196,8 +194,13 @@
                 ${imageHtml}
             </div>
             <div class="card-content">
-                <h3 class="card-title">${escapeHtml(product.TenSP)}</h3>
-                <p class="card-price">${price}</p>
+                    <h3 class="card-title">${escapeHtml(product.TenSP)}</h3>
+                    ${product.TacGia ? `<p class="card-author">Tác giả: ${escapeHtml(product.TacGia)}</p>` : ''}
+                    <p class="card-meta">
+                      ${product.NamXB ? `Năm: ${escapeHtml(String(product.NamXB))}` : ''}
+                      ${product.SoLuong !== undefined && product.SoLuong !== null ? ` • Còn: ${escapeHtml(String(product.SoLuong))}` : ''}
+                    </p>
+                    <p class="card-price">${price}</p>
             </div>
         </a>
     `;

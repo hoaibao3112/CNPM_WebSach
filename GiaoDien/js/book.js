@@ -750,7 +750,7 @@ async function fetchAndDisplayTextbooks() {
     const products = await response.json();
     if (!Array.isArray(products)) throw new Error('Dữ liệu trả về không hợp lệ');
 
-  displayProducts(products, 'textbook-list', 10);
+  displayProducts(products, 'textbook-list', 5);
   } catch (error) {
     console.error('Lỗi khi tải sách giáo khoa:', error);
     productList.innerHTML = `

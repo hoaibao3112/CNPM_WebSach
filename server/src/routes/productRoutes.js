@@ -330,8 +330,9 @@ async function getRecommendationsBySearch(makh) {
   let searchValues = searchRows.map(row => row.search_query);
 
   const productSql = `
-    SELECT MaSP, TenSP, HinhAnh, DonGia 
-    FROM sanpham 
+    SELECT s.MaSP, s.TenSP, s.HinhAnh, s.DonGia, s.MaTG, s.NamXB, s.SoLuong, tg.TenTG AS TacGia
+    FROM sanpham s
+    LEFT JOIN tacgia tg ON s.MaTG = tg.MaTG
     WHERE ${searchConditions}  -- Đã bỏ dấu ngoặc bao quanh
     LIMIT 10
   `;
@@ -342,9 +343,23 @@ async function getRecommendationsBySearch(makh) {
 
 router.get('/recommendations', async (req, res) => {
   const { makh } = req.query;
-
-  if (!makh) {
-    return res.status(400).json({ message: "Thiếu makh" });
+  // If makh is missing or explicit 'public', return popular products instead of personalized recommendations
+  if (!makh || makh === 'public') {
+    try {
+      const popularSql = `
+        SELECT s.MaSP, s.TenSP, s.HinhAnh, s.DonGia, s.MaTG, s.NamXB, s.SoLuong, tg.TenTG AS TacGia
+        FROM sanpham s
+        LEFT JOIN tacgia tg ON s.MaTG = tg.MaTG
+        WHERE s.TinhTrang = 1 OR s.TinhTrang IS NULL
+        ORDER BY COALESCE(s.SoLuong, 0) DESC, s.DonGia DESC
+        LIMIT 10
+      `;
+      const [popular] = await pool.query(popularSql);
+      return res.json(popular);
+    } catch (err) {
+      console.error('Lỗi khi lấy sản phẩm phổ biến:', err);
+      return res.status(500).json({ message: 'Lỗi server' });
+    }
   }
 
   try {
@@ -370,7 +385,14 @@ router.get('/recommendations', async (req, res) => {
 
     const viewSql = `
       SELECT
-        p2.MaSP, p2.TenSP, p2.HinhAnh, p2.DonGia,
+        p2.MaSP,
+        p2.TenSP,
+        p2.HinhAnh,
+        p2.DonGia,
+        p2.MaTG,
+        p2.NamXB,
+        p2.SoLuong,
+        tg.TenTG AS TacGia,
         COUNT(p2.MaSP) AS view_frequency
       FROM
         (
@@ -385,11 +407,12 @@ router.get('/recommendations', async (req, res) => {
         sanpham AS p1 ON ua.masanpham = p1.MaSP 
       JOIN
         sanpham AS p2 ON p1.MaTL = p2.MaTL 
+      LEFT JOIN tacgia tg ON p2.MaTG = tg.MaTG
       WHERE
         p1.MaSP != p2.MaSP 
         ${exclusionSql}
       GROUP BY
-        p2.MaSP, p2.TenSP, p2.HinhAnh, p2.DonGia 
+        p2.MaSP, p2.TenSP, p2.HinhAnh, p2.DonGia, p2.MaTG, p2.NamXB, p2.SoLuong, tg.TenTG
       ORDER BY
         view_frequency DESC,
         MAX(ua.timestamp) DESC

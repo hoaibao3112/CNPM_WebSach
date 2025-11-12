@@ -1,7 +1,7 @@
 import express from 'express';
 import pool from '../config/connectDatabase.js';
 import jwt from 'jsonwebtoken';
-//import bcrypt from 'bcryptjs'; // Thêm thư viện mã hóa mật khẩu
+import bcrypt from 'bcryptjs'; // dùng bcrypt để so sánh mật khẩu đã hash
 
 const router = express.Router();
 
@@ -36,9 +36,33 @@ router.post('/', async (req, res) => {
 
     const account = accounts[0];
     
-    // 3. Kiểm tra mật khẩu (nên dùng bcrypt.compare nếu mật khẩu được hash)
-    // Nếu chưa hash mật khẩu, so sánh trực tiếp
-    if (account.MatKhau !== MatKhau) {
+    // 3. Kiểm tra mật khẩu
+    // Nếu mật khẩu trong DB đã được hash (bcrypt), dùng bcrypt.compare.
+    // Nếu mật khẩu là plaintext (dữ liệu cũ), so sánh trực tiếp và
+    // - nếu đúng, upgrade bằng cách hash mật khẩu rồi cập nhật DB (giúp di chuyển dần dữ liệu cũ).
+    let passwordMatch = false;
+    const stored = account.MatKhau || '';
+
+    if (stored.startsWith('$2a$') || stored.startsWith('$2b$') || stored.startsWith('$2y$')) {
+      // bcrypt hash
+      passwordMatch = await bcrypt.compare(MatKhau, stored);
+    } else {
+      // Plain-text fallback (migrate to bcrypt on successful auth)
+      passwordMatch = stored === MatKhau;
+      if (passwordMatch) {
+        try {
+          const newHash = await bcrypt.hash(MatKhau, 10);
+          await pool.query('UPDATE taikhoan SET MatKhau = ? WHERE MaTK = ?', [newHash, account.MaTK]);
+          // update local object so we don't accidentally leak plain password
+          account.MatKhau = newHash;
+        } catch (err) {
+          console.error('Lỗi khi nâng cấp mật khẩu sang hash:', err);
+          // không block login nếu cập nhật hash thất bại; người dùng vẫn được đăng nhập
+        }
+      }
+    }
+
+    if (!passwordMatch) {
       return res.status(401).json({
         success: false,
         error: 'Sai mật khẩu',

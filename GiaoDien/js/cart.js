@@ -1998,20 +1998,46 @@ async function loadSavedPromos() {
   
   try {
     // Load tất cả mã khuyến mãi (bao gồm cả Free Ship và giảm giá)
+    // NOTE: Some coupons (issued via preference form) are stored in coupons endpoint
+    // (phieugiamgia_phathanh). We fetch both sources and merge so all user's coupons
+    // appear in the saved promos panel.
     const res = await fetch(`http://localhost:5000/api/khuyenmai/my-promotions?activeOnly=true`, {
       headers: {
         "Authorization": `Bearer ${getToken()}`,
       }
     });
-    
     const data = await res.json();
-    
-    if (!res.ok || !data.data || data.data.length === 0) {
-      savedPromosSection.style.display = 'none';
-      return;
+
+    // If promotions API fails, continue — we'll still try to fetch coupons
+    let promoList = Array.isArray(data.data) ? data.data.slice() : [];
+
+    // ALSO fetch issued coupons (e.g., freeship issued by preference form)
+    try {
+      const couponsRes = await fetch(`http://localhost:5000/api/coupons/my-coupons?makh=${getUserId()}`, {
+        headers: {
+          Authorization: `Bearer ${getToken()}`
+        }
+      });
+      const couponsJson = await couponsRes.json();
+      if (couponsRes.ok && Array.isArray(couponsJson.data)) {
+        const couponPromos = couponsJson.data.map(c => ({
+          // Map couponController response to the shape expected by the UI
+          MaKM: c.promotion ? c.promotion.MaKM : null,
+          LoaiKM: c.promotion ? c.promotion.LoaiKM : (c.MaKM ? c.MaKM : null),
+          Code: c.MaPhieu || c.MaPhieu || c.MaPhieu,
+          NgayLay: c.NgayPhatHanh || c.Ngay_lay || null,
+          NgayHetHan: null,
+          trang_thai: (c.Status === 'used' || c.NgaySuDung) ? 'Da_su_dung' : (c.TrangThai === 0 ? 'Ngung' : 'Chua_su_dung'),
+          __source: 'coupon' // debug hint
+        }));
+
+        // Prepend coupon-sourced promos so they appear first
+        promoList = [...couponPromos, ...promoList];
+        console.log('🔁 Merged coupons from /api/coupons/my-coupons into promo list, count:', promoList.length);
+      }
+    } catch (e) {
+      console.warn('Không thể tải coupons từ /api/coupons/my-coupons:', e);
     }
-    
-    const promoList = data.data;
     
     // Hiển thị section
     savedPromosSection.style.display = 'block';
@@ -2038,14 +2064,41 @@ async function loadSavedPromos() {
       header.addEventListener('click', headerClickHandler);
     }
     
-    // Render promo cards
-    console.log('📋 Rendering promo cards, total:', promoList.length);
-    
-    savedPromosList.innerHTML = promoList.map((promo, index) => {
+    // Render promo cards with pagination (show 6 per page) and add prev/next controls
+    console.log('📋 Rendering promo cards (paginated), total:', promoList.length);
+
+    const pageSize = 6;
+    let currentPage = 0;
+    const totalPages = Math.max(1, Math.ceil(promoList.length / pageSize));
+
+    // Create controls container (prev / page indicator / next)
+    let controls = savedPromosSection.querySelector('.promo-controls');
+    if (!controls) {
+      controls = document.createElement('div');
+      controls.className = 'promo-controls';
+      controls.style.display = 'flex';
+      controls.style.justifyContent = 'center';
+      controls.style.alignItems = 'center';
+      controls.style.gap = '12px';
+      controls.style.marginTop = '12px';
+      controls.style.width = '100%';
+      controls.innerHTML = `
+        <button class="promo-prev" aria-label="Previous promos" style="padding:6px 10px;border-radius:6px;border:1px solid #ddd;background:#fff;cursor:pointer;">‹</button>
+        <span class="promo-page-indicator" style="font-weight:600;color:#555">1/${totalPages}</span>
+        <button class="promo-next" aria-label="Next promos" style="padding:6px 10px;border-radius:6px;border:1px solid #ddd;background:#fff;cursor:pointer;">›</button>
+      `;
+      savedPromosSection.appendChild(controls);
+    }
+
+    const pageIndicator = controls.querySelector('.promo-page-indicator');
+    const prevBtn = controls.querySelector('.promo-prev');
+    const nextBtn = controls.querySelector('.promo-next');
+
+    function buildCardHtml(promo, index) {
       const isFreeShip = promo.LoaiKM === 'free_ship';
       const isUsed = promo.trang_thai === 'Da_su_dung';
       const isExpired = promo.NgayHetHan && new Date(promo.NgayHetHan) < new Date();
-      
+
       let statusClass = 'available';
       let statusText = 'Chưa sử dụng';
       if (isUsed) {
@@ -2055,14 +2108,11 @@ async function loadSavedPromos() {
         statusClass = 'expired';
         statusText = 'Hết hạn';
       }
-      
-      // Định dạng ngày nhận
+
       const ngayNhan = promo.NgayLay ? new Date(promo.NgayLay).toLocaleDateString('vi-VN') : 'N/A';
       const ngayHetHan = promo.NgayHetHan ? new Date(promo.NgayHetHan).toLocaleDateString('vi-VN') : '';
-      
       const buttonDisabled = isUsed || isExpired;
-      console.log(`📌 Promo ${index + 1}: ${promo.Code} - Type: ${promo.LoaiKM} - Status: ${statusText} - Button disabled: ${buttonDisabled}`);
-      
+
       return `
         <div class="saved-promo-card ${isFreeShip ? 'free-ship' : ''}" data-code="${promo.Code}">
           <div class="promo-type-badge">
@@ -2087,63 +2137,55 @@ async function loadSavedPromos() {
           </div>
           <button class="use-promo-btn" 
                   data-promo-code="${promo.Code}"
-                  ${isUsed || isExpired ? 'disabled' : ''} 
-                  onclick="console.log('🔥 Áp dụng mã: ${promo.Code}'); window.applyPromoFromSaved('${promo.Code}', event); return false;"
+                  ${buttonDisabled ? 'disabled' : ''} 
                   style="cursor: pointer; pointer-events: auto;">
-            ${isUsed || isExpired ? 'Không khả dụng' : 'ÁP DỤNG NGAY'}
+            ${buttonDisabled ? 'Không khả dụng' : 'ÁP DỤNG NGAY'}
           </button>
         </div>
       `;
-    }).join('');
-    
-    console.log('✅ Promo cards rendered with onclick handlers');
-    
-    // 🔥 GẮN EVENT LISTENER SAU KHI RENDER (backup nếu onclick không hoạt động)
-    setTimeout(() => {
-      const buttons = savedPromosList.querySelectorAll('.use-promo-btn:not([disabled])');
-      console.log(`🔗 Attaching event listeners to ${buttons.length} buttons`);
-      
-      buttons.forEach((btn, index) => {
-        const code = btn.getAttribute('data-promo-code');
-        if (!code) {
-          console.warn(`⚠️ Button ${index} has no data-promo-code`);
-          return;
-        }
-        
-        console.log(`📌 Attaching event to button ${index + 1}: ${code}`);
-        
-        // Remove old listener nếu có
-        btn.onclick = null;
-        
-        // Add new listener
-        btn.onclick = function(e) {
-          console.log(`🎯🎯🎯 === BUTTON CLICKED VIA LISTENER === 🎯🎯🎯`);
-          console.log(`Button index: ${index}, Code: ${code}`);
-          console.log('Event:', e);
-          console.log('Button element:', btn);
-          console.log('Button disabled?', btn.disabled);
-          
-          // ✅ Thay alert bằng toast notification
-          // showToast(`🎫 Đang áp dụng mã: ${code}...`);
-          
-          e.preventDefault();
-          e.stopPropagation();
-          
-          if (typeof window.applyPromoFromSaved === 'function') {
-            console.log('✅ Calling window.applyPromoFromSaved...');
-            window.applyPromoFromSaved(code, e);
-          } else {
-            console.error('❌ applyPromoFromSaved not found!');
-            showToast('❌ Lỗi: Chức năng áp dụng mã chưa sẵn sàng. Vui lòng tải lại trang!');
-          }
-          return false;
-        };
-        
-        console.log(`✅ Event attached to button ${index + 1}`);
-      });
-      
-      console.log('✅✅✅ All event listeners attached successfully');
-    }, 100);
+    }
+
+    function renderPage(page) {
+      currentPage = Math.max(0, Math.min(page, totalPages - 1));
+      const start = currentPage * pageSize;
+      const pageItems = promoList.slice(start, start + pageSize);
+      savedPromosList.innerHTML = pageItems.map((p, i) => buildCardHtml(p, start + i)).join('');
+
+      // update indicator and disable state
+      if (pageIndicator) pageIndicator.textContent = `${currentPage + 1}/${totalPages}`;
+      if (prevBtn) prevBtn.disabled = currentPage === 0;
+      if (nextBtn) nextBtn.disabled = currentPage >= totalPages - 1;
+
+      // attach handlers to buttons in the current page
+      setTimeout(() => {
+        const buttons = savedPromosList.querySelectorAll('.use-promo-btn:not([disabled])');
+        buttons.forEach((btn) => {
+          const code = btn.getAttribute('data-promo-code');
+          btn.onclick = function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            if (typeof window.applyPromoFromSaved === 'function') {
+              window.applyPromoFromSaved(code, e);
+            } else {
+              showToast('Chức năng áp dụng mã chưa sẵn sàng. Vui lòng tải lại trang!');
+            }
+            return false;
+          };
+        });
+      }, 50);
+    }
+
+    // Initial render
+    renderPage(0);
+
+    // If only one page, hide controls
+    if (totalPages <= 1) {
+      controls.style.display = 'none';
+    } else {
+      controls.style.display = 'flex';
+      prevBtn.addEventListener('click', (e) => { e.preventDefault(); renderPage(currentPage - 1); });
+      nextBtn.addEventListener('click', (e) => { e.preventDefault(); renderPage(currentPage + 1); });
+    }
     
   } catch (error) {
     console.error('Lỗi load danh sách mã khuyến mãi:', error);
@@ -2185,13 +2227,18 @@ window.applyPromoFromSaved = async function(code, event) {
     });
     const freeShipData = await freeShipRes.json();
     const isFreeShip = freeShipData.data?.some(p => p.Code === code && p.trang_thai === 'Chua_su_dung');
+
+    // Fallback: if the promo card in DOM was rendered with class 'free-ship', treat it as free ship
+    const clickedCard = clickedBtn ? clickedBtn.closest('.saved-promo-card') : null;
+    const domIsFreeShip = clickedCard ? clickedCard.classList.contains('free-ship') : false;
+    const isFreeShipFinal = Boolean(isFreeShip || domIsFreeShip);
     
     // ✅ KIỂM TRA GIỎ HÀNG SAU KHI XÁC ĐỊNH LOẠI MÃ
     const cart = await getCart();
     const selectedItems = cart.filter(item => item.selected);
 
     // ✅ CHỈ MÃ FREE SHIP MỚI CẦN SẢN PHẨM TRONG GIỎ
-    if (isFreeShip && selectedItems.length === 0) {
+    if (isFreeShipFinal && selectedItems.length === 0) {
       showToast("Vui lòng chọn sản phẩm trước khi áp dụng mã Free Ship!");
       throw new Error("No items selected for free ship");
     }
@@ -2199,8 +2246,23 @@ window.applyPromoFromSaved = async function(code, event) {
     if (isFreeShip) {
       // ============= MÃ FREE SHIP =============
       if (appliedFreeShipCode) {
+        // If same code already applied, just inform user and update UI
+        if (appliedFreeShipCode.code === code) {
+          showToast(`Mã Free Ship "${code}" đã được áp dụng`);
+          if (clickedBtn) {
+            clickedBtn.textContent = '✓ Đã áp dụng';
+            clickedBtn.style.background = '#27ae60';
+            clickedBtn.disabled = true;
+          }
+          return;
+        }
+
         showToast(`Đã áp dụng mã Free Ship: ${appliedFreeShipCode.code}. Vui lòng xóa mã cũ trước!`);
-        throw new Error("Free ship already applied");
+        if (clickedBtn && typeof originalText === 'string') {
+          clickedBtn.disabled = false;
+          clickedBtn.textContent = originalText;
+        }
+        return;
       }
       
       appliedFreeShipCode = { code };
@@ -2256,8 +2318,23 @@ window.applyPromoFromSaved = async function(code, event) {
     } else {
       // ============= MÃ GIẢM GIÁ =============
       if (appliedDiscountCode) {
+        // If the same discount code is being reapplied, just update UI and inform
+        if (appliedDiscountCode.code === code) {
+          showToast(`Mã "${code}" đã được áp dụng`);
+          if (clickedBtn) {
+            clickedBtn.textContent = '✓ Đã áp dụng';
+            clickedBtn.style.background = '#27ae60';
+            clickedBtn.disabled = true;
+          }
+          return;
+        }
+
         showToast(`Đã áp dụng mã giảm giá: ${appliedDiscountCode.code}. Vui lòng xóa mã cũ trước!`);
-        throw new Error("Discount already applied");
+        if (clickedBtn && typeof originalText === 'string') {
+          clickedBtn.disabled = false;
+          clickedBtn.textContent = originalText;
+        }
+        return;
       }
       
       // ✅ CHO PHÉP GỌI API NGAY CẢ KHI GIỎ TRỐNG (backend sẽ trả về gợi ý)

@@ -253,6 +253,11 @@ body {
   padding: 1rem;
   text-align: center;
   position: relative;
+  /* Keep a fixed visual height to avoid page jump when image changes */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 60vh;
 }
 
 .main-image::before {
@@ -267,14 +272,16 @@ body {
 }
 
 .main-image img {
-  min-width: 16vw;
-  max-width: 75%;
-  min-height: 20vh;
+  /* Constrain image inside fixed container to prevent layout shift */
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
   height: auto;
-  max-height: 80%;
   object-fit: contain;
   border-radius: var(--border-radius-sm);
   transition: var(--transition);
+  display: block;
+  margin: 0 auto;
 }
 
 .main-image:hover img {
@@ -2922,7 +2929,7 @@ body {
 
 .product-promotions {
   width: 103%;
-  max-width: 78rem;
+  max-width: 69rem;
 }
 
 /* Responsive - Mobile sẽ hiển thị promotion dưới ảnh */
