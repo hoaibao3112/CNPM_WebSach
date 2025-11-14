@@ -2957,3 +2957,75 @@ body {
     margin-bottom: 0;
   }
 }
+
+/* ========================================
+   SAVE PROMO (Lưu mã) BUTTON STYLES
+   Use class `promotion-save-btn` on the save button.
+   Also support `.promotion-detail-btn.save` as a backward-compatible variant.
+======================================== */
+.promotion-save-btn,
+.promotion-detail-btn.save {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.45rem 0.75rem;
+  border-radius: 8px;
+  background: #ffffff;
+  color: var(--secondary-color);
+  border: 1px solid var(--secondary-color);
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease, color 0.18s ease;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+  min-width: auto;
+  white-space: nowrap;
+}
+
+.promotion-save-btn i,
+.promotion-detail-btn.save i {
+  font-size: 1rem;
+  width: 1.2rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.promotion-save-btn:hover,
+.promotion-detail-btn.save:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 14px rgba(0,0,0,0.12);
+}
+
+/* Saved state: filled, green accent */
+.promotion-save-btn.saved,
+.promotion-detail-btn.save.saved {
+  background: var(--gradient-success);
+  color: #fff;
+  border-color: transparent;
+  box-shadow: 0 8px 20px rgba(39,174,96,0.18);
+}
+
+/* When saved, prevent further clicks and show proper cursor */
+.promotion-save-btn.saved,
+.promotion-detail-btn.save.saved {
+  cursor: default;
+  pointer-events: none;
+}
+
+/* Focus / keyboard accessibility */
+.promotion-save-btn:focus,
+.promotion-detail-btn.save:focus {
+  outline: none;
+  box-shadow: 0 0 0 4px rgba(39,174,96,0.12);
+}
+
+/* Smaller on very small screens */
+@media (max-width: 430px) {
+  .promotion-save-btn,
+  .promotion-detail-btn.save {
+    padding: 0.35rem 0.6rem;
+    font-size: 0.9rem;
+    gap: 0.4rem;
+  }
+}

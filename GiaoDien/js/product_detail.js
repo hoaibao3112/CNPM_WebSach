@@ -750,6 +750,15 @@ function displayPromotions(promotions) {
 
     promotionSection.style.display = 'block';
 
+    // load saved promos from localStorage so we can mark saved buttons
+    const myPromosCache = JSON.parse(localStorage.getItem('myPromos') || '[]');
+    const savedLocalCache = JSON.parse(localStorage.getItem('savedPromotions') || '[]');
+
+    const myPromoIds = myPromosCache.map(p => String(p.MaKM || p.id || ''));
+    const myPromoCodes = myPromosCache.map(p => String(p.code || p.MaPhieu || ''));
+    const savedLocalIds = savedLocalCache.map(p => String(p.id || ''));
+    const savedLocalCodes = savedLocalCache.map(p => String(p.code || ''));
+
     promotionContainer.innerHTML = promotions.map(promotion => {
         const now = new Date();
         const endDate = new Date(promotion.NgayKetThuc);
@@ -803,6 +812,11 @@ function displayPromotions(promotions) {
             `;
         }
 
+        // Determine if this promotion has already been saved/claimed locally or in profile
+        const promoIdStr = String(promotion.MaKM || promotion.MaPhieu || '');
+        const promoCodeStr = String(promotion.Code || promotion.MaPhieu || '');
+        const isSaved = myPromoIds.includes(promoIdStr) || myPromoCodes.includes(promoCodeStr) || savedLocalIds.includes(promoIdStr) || savedLocalCodes.includes(promoCodeStr);
+
         return `
             <div class="promotion-card ${isExpired ? 'promotion-expired' : ''}" data-promotion-id="${promotion.MaKM}">
                 <div class="promotion-header">
@@ -832,12 +846,17 @@ function displayPromotions(promotions) {
                         <i class="fas fa-info-circle"></i>
                         Chi tiết
                     </button>
-                    ${!isExpired ? `
-                        <button class="promotion-apply-btn" onclick="applyPromotion('${promotion.Code || ''}', ${promotion.MaKM})">
-                            <i class="fas fa-check"></i>
-                            Áp dụng
+                    ${!isExpired ? (isSaved ? `
+                        <button class="promotion-save-btn saved" aria-pressed="true" disabled>
+                            <i class="fas fa-bookmark"></i>
+                            Đã lưu
                         </button>
-                    ` : ''}
+                    ` : `
+                        <button class="promotion-save-btn" onclick="savePromotion('${promotion.Code || ''}', ${promotion.MaKM})">
+                            <i class="fas fa-bookmark"></i>
+                            Lưu mã
+                        </button>
+                    `) : ''}
                 </div>
             </div>
         `;
@@ -1018,11 +1037,98 @@ function applyPromotion(code, promotionId) {
     }
 }
 
+/**
+ * Lưu mã khuyến mãi (không áp dụng ngay) — sử dụng để "Lưu mã" từ giao diện chi tiết sản phẩm
+ * Mã sẽ được lưu vào localStorage dưới key `savedPromotions` để người dùng có thể áp dụng khi thanh toán.
+ */
+function savePromotion(code, promotionId) {
+    if (!code) {
+        showAlert('Mã khuyến mãi không hợp lệ', 'error');
+        return;
+    }
+
+    const token = localStorage.getItem('token');
+
+    // Helper to mark button UI as saved (change text/icon & disable)
+    const markButtonSaved = () => {
+        try {
+            const card = document.querySelector(`.promotion-card[data-promotion-id="${promotionId}"]`);
+            const btn = card?.querySelector('.promotion-save-btn') || card?.querySelector('.promotion-detail-btn.save');
+            if (!btn) return;
+
+            // Add saved class for visual styles
+            btn.classList.add('saved');
+            // Make button non-interactive once saved
+            btn.setAttribute('aria-pressed', 'true');
+            try { btn.disabled = true; } catch (e) { /* some elements may not support disabled */ }
+
+            // Replace content with saved icon + label
+            btn.innerHTML = '<i class="fas fa-bookmark"></i> Đã lưu';
+        } catch (e) {
+            // ignore
+            console.error('markButtonSaved error', e);
+        }
+    };
+
+    // If user is logged in, try to claim/save promo on server (store in profile)
+    if (token) {
+        (async () => {
+            try {
+                const res = await fetch(`http://localhost:5000/api/khuyenmai/claim/${promotionId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                const data = await res.json().catch(() => ({}));
+
+                if (res.ok) {
+                    // add to local myPromos cache so profile page reflects change immediately
+                    const myPromos = JSON.parse(localStorage.getItem('myPromos') || '[]');
+                    const exists = myPromos.some(p => (p.MaKM && String(p.MaKM) === String(promotionId)) || p.code === code || p.MaPhieu === code);
+                    if (!exists) {
+                        myPromos.unshift({ MaKM: promotionId, code: code, ngay_lay: (data.ngay_lay || new Date().toISOString()), status: 'Chua_su_dung' });
+                        localStorage.setItem('myPromos', JSON.stringify(myPromos));
+                    }
+
+                    markButtonSaved();
+                    showAlert('Đã lưu mã khuyến mãi vào hồ sơ', 'success');
+                } else {
+                    // 401 -> not authenticated
+                    if (res.status === 401) {
+                        showAlert('Vui lòng đăng nhập để lưu mã vào hồ sơ', 'info');
+                    } else {
+                        showAlert(data.error || data.message || 'Không thể lưu mã khuyến mãi', 'error');
+                    }
+                }
+            } catch (err) {
+                console.error('Error claiming promotion:', err);
+                showAlert('Lỗi khi lưu mã khuyến mãi. Vui lòng thử lại.', 'error');
+            }
+        })();
+        return;
+    }
+
+    // If not logged in, fallback to local saved list and prompt to login to save in profile
+    let saved = JSON.parse(localStorage.getItem('savedPromotions') || '[]');
+    if (!saved.some(p => p.code === code)) {
+        saved.push({ id: promotionId, code: code, savedAt: new Date().toISOString() });
+        localStorage.setItem('savedPromotions', JSON.stringify(saved));
+        markButtonSaved();
+        showAlert(`Đã lưu mã khuyến mãi cục bộ: ${code}. Đăng nhập để lưu vào hồ sơ.`, 'success');
+    } else {
+        showAlert('Mã khuyến mãi đã được lưu (cục bộ)', 'info');
+    }
+}
+
 // Export các function để có thể sử dụng từ HTML
 window.copyPromotionCode = copyPromotionCode;
 window.showPromotionDetail = showPromotionDetail;
 window.closePromotionDetail = closePromotionDetail;
 window.applyPromotion = applyPromotion;
+window.savePromotion = savePromotion;
 
 // ========================================
 // HẾT PHẦN MỚI: KHUYẾN MÃI
