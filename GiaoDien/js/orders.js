@@ -508,7 +508,16 @@ async function renderOrders(customerId, statusFilter = 'all') {
             }
 
             // Server may return { review: {...} } or the review object directly — normalize both
-            const reviewObj = reviewResp && (reviewResp.review || reviewResp) ? (reviewResp.review || reviewResp) : null;
+            let reviewObj = null;
+            if (reviewResp) {
+                if (typeof reviewResp === 'object' && Object.prototype.hasOwnProperty.call(reviewResp, 'review')) {
+                    // API returns { review: null } when not found — keep null in that case
+                    reviewObj = reviewResp.review || null;
+                } else {
+                    // API returned the review object directly
+                    reviewObj = reviewResp;
+                }
+            }
 
             const btn = document.createElement('button');
             btn.className = 'btn';
@@ -592,11 +601,20 @@ function openReviewModal(orderId) {
     document.getElementById('review-comment').value = '';
     modal.style.display = 'block';
 
+    // Initialize star widget and show default stars immediately
+    try {
+        initStarRating();
+        setStarRatingUI(Number(document.getElementById('review-rating').value || 5));
+    } catch (e) { console.warn('Star widget init failed', e); }
+
     // Load existing review if any
     fetchReview(orderId).then(review => {
         if (review) {
-            document.getElementById('review-rating').value = String(review.rating || review.so_diem || 5);
+            const rVal = Number(review.rating || review.so_diem || 5);
+            document.getElementById('review-rating').value = String(rVal);
             document.getElementById('review-comment').value = review.comment || review.noi_dung || '';
+            // reflect existing review in star UI
+            try { setStarRatingUI(rVal); } catch (e) { console.warn('setStarRatingUI failed', e); }
         }
     }).catch(err => console.warn(err));
 
@@ -4473,4 +4491,52 @@ function isHCMAddress(province) {
     return hcmKeywords.some(keyword => 
         provinceLower.includes(keyword)
     );
+}
+
+// ----- Star rating widget helpers -----
+function setStarRatingUI(rating) {
+    const input = document.getElementById('review-rating');
+    const stars = document.querySelectorAll('#review-stars .star');
+    if (input) input.value = String(rating || 0);
+    stars.forEach(s => {
+        const v = Number(s.dataset.value || 0);
+        if (v <= rating) s.classList.add('filled'); else s.classList.remove('filled');
+    });
+}
+
+function initStarRating() {
+    const container = document.getElementById('review-stars');
+    if (!container) return;
+    if (container._initialized) return;
+    container._initialized = true;
+    const stars = container.querySelectorAll('.star');
+    stars.forEach(star => {
+        star.addEventListener('click', (e) => {
+            const v = Number(star.dataset.value || 0);
+            setStarRatingUI(v);
+        });
+        star.addEventListener('mouseover', (e) => {
+            const hv = Number(star.dataset.value || 0);
+            stars.forEach(s => {
+                if (Number(s.dataset.value) <= hv) s.classList.add('hover'); else s.classList.remove('hover');
+            });
+        });
+        star.addEventListener('mouseout', () => {
+            stars.forEach(s => s.classList.remove('hover'));
+        });
+    });
+    // keyboard support
+    container.setAttribute('tabindex', '0');
+    container.addEventListener('keydown', (e) => {
+        const input = document.getElementById('review-rating');
+        let val = Number(input?.value || 0);
+        if (e.key === 'ArrowLeft' || e.key === 'ArrowDown') {
+            val = Math.max(1, val - 1); setStarRatingUI(val); e.preventDefault();
+        } else if (e.key === 'ArrowRight' || e.key === 'ArrowUp') {
+            val = Math.min(5, val + 1); setStarRatingUI(val); e.preventDefault();
+        } else if (/^[1-5]$/.test(e.key)) {
+            setStarRatingUI(Number(e.key));
+            e.preventDefault();
+        }
+    });
 }

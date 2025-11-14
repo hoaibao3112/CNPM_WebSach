@@ -169,14 +169,15 @@
             <div class="modal-body" style="padding:16px;">
               <p>Vui lòng cho chúng tôi biết cảm nhận của bạn về đơn hàng này.</p>
               <div style="margin:12px 0;">
-                <label for="review-rating">Số sao:</label>
-                <select id="review-rating" style="margin-left:8px; padding:6px;">
-                  <option value="5">5 - Rất tốt</option>
-                  <option value="4">4 - Tốt</option>
-                  <option value="3">3 - Trung bình</option>
-                  <option value="2">2 - Kém</option>
-                  <option value="1">1 - Rất kém</option>
-                </select>
+                <label>Số sao:</label>
+                <div id="review-stars" class="star-rating" style="margin-top:8px;">
+                  <input type="hidden" id="review-rating" value="5">
+                  <span class="star" data-value="1" aria-hidden="true">☆</span>
+                  <span class="star" data-value="2" aria-hidden="true">☆</span>
+                  <span class="star" data-value="3" aria-hidden="true">☆</span>
+                  <span class="star" data-value="4" aria-hidden="true">☆</span>
+                  <span class="star" data-value="5" aria-hidden="true">☆</span>
+                </div>
               </div>
               <div>
                 <label for="review-comment">Nhận xét (tuỳ chọn):</label>
@@ -491,6 +492,15 @@
     <!-- Thêm Leaflet JS -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
     <script src="js/orders.js"></script>
+        <style>
+          /* Star rating styles for review modal */
+          .star-rating { display:inline-flex; align-items:center; }
+          .star-rating .star { font-size:30px; color:#d1d1d1; cursor:pointer; margin-right:6px; user-select:none; transition: color 120ms ease; }
+          .star-rating .star.filled { color:#ffc107; }
+          .star-rating .star.hover { color:#ffb300; }
+          /* Make stars larger on mobile */
+          @media (max-width:480px){ .star-rating .star{ font-size:26px; } }
+        </style>
     <script>
 // ✅ DEBUG FUNCTIONS
 function debugRefundModal() {

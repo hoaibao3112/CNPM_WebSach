@@ -165,11 +165,7 @@ function initializeEventListeners() {
         refreshBtn.addEventListener('click', loadRefundHistory);
     }
     
-    // Export button
-    const exportBtn = document.getElementById('export-btn');
-    if (exportBtn) {
-        exportBtn.addEventListener('click', exportRefundData);
-    }
+    // Export button removed from UI
     
     // Search
     const searchBtn = document.getElementById('search-btn');
@@ -264,10 +260,7 @@ async function loadRefundHistory() {
 
         if (result.success) {
             refundData = result.data || [];
-            
-            // Update summary
-            updateSummaryCards(result.summary);
-            
+
             // Apply current filters
             applyFilters();
             
@@ -337,36 +330,7 @@ function hideAllStates() {
 }
 
 // ===== SUMMARY CARDS =====
-function updateSummaryCards(summary) {
-    if (!summary) {
-        console.log('⚠️ No summary data provided');
-        return;
-    }
-
-    console.log('📊 Updating summary cards:', summary);
-
-    // Update total amount
-    const totalElement = document.getElementById('total-refund-amount');
-    if (totalElement) {
-        totalElement.textContent = formatPrice(summary.totalAmount || 0);
-    }
-
-    // Update counts
-    const successElement = document.getElementById('success-count');
-    if (successElement) {
-        successElement.textContent = summary.successCount || 0;
-    }
-
-    const pendingElement = document.getElementById('pending-count');
-    if (pendingElement) {
-        pendingElement.textContent = summary.pendingCount || 0;
-    }
-
-    const failedElement = document.getElementById('failed-count');
-    if (failedElement) {
-        failedElement.textContent = summary.failedCount || 0;
-    }
-}
+// summary cards removed — no DOM updates needed
 
 // ===== FILTERING & SORTING =====
 function applyFilters() {

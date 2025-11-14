@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import axios from 'axios';
-import { Modal, Button, Select, message, Table, Tag, Space, Input, Avatar, Badge, Dropdown, Menu } from 'antd';
-import { ExclamationCircleFilled, EyeOutlined, DeleteOutlined, MessageOutlined, SendOutlined, UserOutlined, CustomerServiceOutlined, CloseOutlined, BellOutlined } from '@ant-design/icons';
+import { Modal, Button, Select, message, Table, Tag, Space, Input, Avatar, Badge, Dropdown, Menu, Rate, Divider } from 'antd';
+import { ExclamationCircleFilled, EyeOutlined, DeleteOutlined, MessageOutlined, SendOutlined, UserOutlined, CustomerServiceOutlined, CloseOutlined, BellOutlined, StarOutlined } from '@ant-design/icons';
 
 const { confirm } = Modal;
 const { Search, TextArea } = Input;
@@ -128,6 +128,10 @@ const InvoiceManagement = () => {
   const [customerInfo, setCustomerInfo] = useState(null);
   const [displayedMessageIds, setDisplayedMessageIds] = useState(new Set());
   const [sendingMessage, setSendingMessage] = useState(false);
+  // Review modal state
+  const [reviewModalVisible, setReviewModalVisible] = useState(false);
+  const [reviewData, setReviewData] = useState(null);
+  const [reviewLoading, setReviewLoading] = useState(false);
   
   // ✨ THÊM CÁC STATE CHO THÔNG BÁO
   const [unreadCount, setUnreadCount] = useState(0);
@@ -412,6 +416,30 @@ const handleViewInvoice = async (id) => {
   }
 };
 
+  // View review for an order (admin can view any order's review because server allows admin)
+  const handleViewReview = async (orderId) => {
+    try {
+      setReviewLoading(true);
+      const token = localStorage.getItem('authToken') || localStorage.getItem('token');
+      console.log('🔒 handleViewReview - token preview:', token ? (token.substring(0, 30) + '...') : '<no-token>');
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+      console.log('🔎 handleViewReview - headers:', headers);
+      const res = await axios.get(`http://localhost:5000/api/orderreview/${orderId}`, { headers });
+      console.log('🔎 handleViewReview - API response:', res && res.data ? res.data : res);
+      if (res && res.data) {
+        setReviewData(res.data.review || null);
+        setReviewModalVisible(true);
+      } else {
+        message.info('Không có đánh giá cho đơn hàng này');
+      }
+    } catch (error) {
+      console.error('❌ Fetch review error:', error.response?.data || error.message);
+      message.error('Không thể tải đánh giá');
+    } finally {
+      setReviewLoading(false);
+    }
+  };
+
   // ✅ Start chat with customer - CẬP NHẬT ĐỂ ĐÁNH DẤU ĐÃ ĐỌC
   const handleChatWithCustomer = async (customerId) => {
     console.log('🚀 Starting chat with customer:', customerId);
@@ -583,11 +611,42 @@ const handleViewInvoice = async (id) => {
   };
 
   // ✅ Handle status change
-  const handleStatusChange = async (id, newStatus) => {
+  // Wrapper that optionally confirms revert actions and forwards an optional note
+  const onStatusSelect = async (id, newStatus, prevStatus) => {
+    try {
+      const prevIndex = orderStatuses.findIndex(s => s.value === prevStatus);
+      const newIndex = orderStatuses.findIndex(s => s.value === newStatus);
+
+      // If moving backwards (reverting) ask for confirmation
+      if (newIndex >= 0 && prevIndex >= 0 && newIndex < prevIndex) {
+        return confirm({
+          title: `Xác nhận hoàn tác trạng thái`,
+          icon: <ExclamationCircleFilled />,
+          content: `Bạn sắp chuyển trạng thái từ "${prevStatus}" về "${newStatus}". Hành động này có thể ảnh hưởng đến quy trình xử lý. Bạn có chắc muốn tiếp tục?`,
+          okText: 'Xác nhận',
+          cancelText: 'Hủy',
+          async onOk() {
+            // optional note could be collected here in future; for now send a force flag
+            await handleStatusChange(id, newStatus, 'Chuyển trạng thái (hoàn tác) bởi quản trị viên', true);
+          }
+        });
+      }
+
+      // Normal forward change
+      await handleStatusChange(id, newStatus);
+    } catch (error) {
+      console.error('❌ onStatusSelect error:', error);
+      message.error('Không thể cập nhật trạng thái');
+    }
+  };
+
+  const handleStatusChange = async (id, newStatus, ghichu = null, force = false) => {
     try {
       const token = localStorage.getItem('authToken');
       await axios.put(`http://localhost:5000/api/orders/hoadon/${id}/trangthai`, { 
-        trangthai: newStatus 
+        trangthai: newStatus,
+        ghichu: ghichu,
+        force: force
       }, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -595,7 +654,8 @@ const handleViewInvoice = async (id) => {
       fetchInvoices();
     } catch (error) {
       console.error('❌ Status change error:', error);
-      message.error('Cập nhật trạng thái thất bại');
+      const errMsg = error.response?.data?.error || 'Cập nhật trạng thái thất bại';
+      message.error(errMsg);
     }
   };
 
@@ -795,7 +855,7 @@ const handleViewInvoice = async (id) => {
         <Select
           value={status}
           style={{ width: 140 }}
-          onChange={(value) => handleStatusChange(record.id, value)}
+          onChange={(value) => onStatusSelect(record.id, value, record.status)}
           dropdownMatchSelectWidth={false}
           size="small"
         >
@@ -818,6 +878,13 @@ const handleViewInvoice = async (id) => {
             icon={<EyeOutlined />} 
             onClick={() => handleViewInvoice(record.id)}
             title="Xem chi tiết"
+          />
+          <Button
+            size="small"
+            icon={<StarOutlined />}
+            onClick={() => handleViewReview(record.id)}
+            loading={reviewLoading}
+            title="Xem đánh giá"
           />
           <Button 
             size="small"
@@ -1051,6 +1118,59 @@ const handleViewInvoice = async (id) => {
               />
             </div>
           </div>
+        )}
+      </Modal>
+
+      {/* Modal xem đánh giá (giao diện mới đẹp hơn) */}
+      <Modal
+        title={null}
+        open={reviewModalVisible}
+        onCancel={() => { setReviewModalVisible(false); setReviewData(null); }}
+        footer={[
+          <Button key="close-review" onClick={() => { setReviewModalVisible(false); setReviewData(null); }}>
+            Đóng
+          </Button>
+        ]}
+        width={640}
+        bodyStyle={{ padding: 0 }}
+      >
+        {reviewLoading ? (
+          <div style={{ padding: 24 }}>Đang tải...</div>
+        ) : reviewData ? (
+          <div className="review-modal-root">
+            <div className="review-modal-header">
+              <div className="review-title">Đánh giá đơn hàng #{selectedInvoice?.id || ''}</div>
+            </div>
+
+            <div className="review-modal-body">
+              <div className="review-top">
+                <Avatar size={56} style={{ backgroundColor: '#7265e6', marginRight: 12 }} icon={<UserOutlined />}> 
+                  {reviewData.customerName ? reviewData.customerName.split(' ').map(n => n[0]).slice(0,2).join('').toUpperCase() : ''}
+                </Avatar>
+
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+                    <div style={{ minWidth: 0 }}>
+                      <div className="review-customer-name">{reviewData.customerName || `Khách hàng ${reviewData.MaKH || ''}`}</div>
+                      <div className="review-date">{reviewData.NgayDanhGia ? new Date(reviewData.NgayDanhGia).toLocaleString('vi-VN') : ''}</div>
+                    </div>
+                    <div className="review-rating">
+                      <Rate allowHalf value={Number(reviewData.SoSao || reviewData.rating || reviewData.so_diem || 0)} disabled />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <Divider style={{ margin: '12px 0' }} />
+
+              <div className="review-comment-box">
+                <div className="comment-label">Nhận xét</div>
+                <div className="comment-content">{reviewData.NhanXet || reviewData.comment || reviewData.noi_dung || <i>Chưa có nhận xét</i>}</div>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div style={{ padding: 24 }}>Không có đánh giá cho đơn hàng này.</div>
         )}
       </Modal>
 
@@ -1689,6 +1809,78 @@ const handleViewInvoice = async (id) => {
           .chat-input-container {
             padding: 16px 20px;
           }
+        }
+        /* Review modal styles */
+        .review-modal-root {
+          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
+        }
+
+        .review-modal-header {
+          background: linear-gradient(90deg, #1890ff 0%, #40a9ff 100%);
+          padding: 18px 24px;
+          color: #ffffff;
+          border-top-left-radius: 6px;
+          border-top-right-radius: 6px;
+        }
+
+        .review-title {
+          font-weight: 700;
+          font-size: 16px;
+        }
+
+        .review-modal-body {
+          padding: 20px 24px 24px 24px;
+          background: #fff;
+          border-bottom-left-radius: 6px;
+          border-bottom-right-radius: 6px;
+        }
+
+        .review-top {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+        }
+
+        .review-customer-name {
+          font-size: 15px;
+          font-weight: 700;
+          color: #222;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+
+        .review-date {
+          font-size: 12px;
+          color: #888;
+          margin-top: 4px;
+        }
+
+        .review-rating {
+          margin-left: 12px;
+          display: flex;
+          align-items: center;
+        }
+
+        .review-comment-box {
+          margin-top: 8px;
+          padding: 14px;
+          border-radius: 8px;
+          background: #fafafa;
+          border: 1px solid rgba(0,0,0,0.04);
+        }
+
+        .comment-label {
+          font-size: 12px;
+          color: #666;
+          margin-bottom: 8px;
+        }
+
+        .comment-content {
+          font-size: 14px;
+          line-height: 1.6;
+          color: #333;
+          white-space: pre-wrap;
         }
       `}</style>
     </div>

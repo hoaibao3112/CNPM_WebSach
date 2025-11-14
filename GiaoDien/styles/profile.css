@@ -1410,8 +1410,18 @@ body {
   text-shadow: 0 1px 0 rgba(0,0,0,0.06);
 }
 .reviewed-order-card .rating span { display:inline-block; margin-left:4px }
-.reviewed-order-card a.btn { display: inline-block; color: #6a21a8; text-decoration: none; padding: 6px 8px; border-radius: 8px; }
-.reviewed-order-card a.btn:hover { text-decoration: underline; }
+.reviewed-order-card a.btn {
+  display: inline-block;
+  background: linear-gradient(90deg,#6a21a8,#8e3fcf);
+  color: #fff;
+  text-decoration: none;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-weight: 700;
+  box-shadow: 0 6px 18px rgba(106,33,168,0.18);
+  transition: transform 0.12s ease, box-shadow 0.12s ease, opacity 0.12s;
+}
+.reviewed-order-card a.btn:hover { transform: translateY(-2px); opacity: 0.95; }
 
 .no-orders { display:flex; align-items:center; gap:12px; padding:18px; background:#fff; border-radius:12px; border:1px solid #f3f4f6; }
 .no-orders i { font-size:22px; color:#ff6f61 }

@@ -369,7 +369,7 @@ async function loadReviewedOrders() {
       const rating = rv.rating || rv.SoSao || rv.so_diem || rv.SoDiem || 0;
       const comment = rv.NhanXet || rv.comment || rv.noi_dung || '';
       const created = new Date(o.createdAt || o.NgayTao || o.NgayDat || Date.now()).toLocaleString('vi-VN');
-      return `
+            return `
         <div class="reviewed-order-card" data-order-id="${o.id}" style="border:1px solid #eee;padding:12px;border-radius:8px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:flex-start;gap:12px">
           <div style="flex:1">
             <div style="font-weight:600">Đơn hàng #${o.id} <small style="color:#666;margin-left:8px">${created}</small></div>
@@ -378,7 +378,7 @@ async function loadReviewedOrders() {
           </div>
           <div style="width:160px;text-align:right">
             <div style="font-size:14px;color:#ffb400;margin-bottom:6px">${'★'.repeat(Math.min(5, Math.max(0, Number(rating)))) + '☆'.repeat(Math.max(0,5 - Math.min(5, Math.max(0, Number(rating)))))}</div>
-            <div><a href="orders.html" onclick="localStorage.setItem('currentOrderId', '${o.id}');" class="btn" style="text-decoration:none">Xem chi tiết</a></div>
+            <div><a href="#" onclick="openOrderDetailFromProfile('${o.id}'); return false;" class="btn" style="text-decoration:none">Xem chi tiết</a></div>
           </div>
         </div>
       `;
@@ -393,6 +393,52 @@ async function loadReviewedOrders() {
 }
 
 // Review modal logic for profile page
+// Helper: open order detail from profile page. Tries to call global showOrderDetail(order).
+window.openOrderDetailFromProfile = async function(orderId) {
+  try {
+    // If showOrderDetail is available, try to obtain the full order object then call it
+    if (typeof window.showOrderDetail === 'function') {
+      let orderObj = null;
+      // If there is a global fetchOrderDetail helper, use it
+      if (typeof window.fetchOrderDetail === 'function') {
+        try {
+          orderObj = await window.fetchOrderDetail(orderId);
+        } catch (e) {
+          console.warn('fetchOrderDetail failed, will try fetch API', e);
+        }
+      }
+
+      // Fallback: call API directly
+      if (!orderObj) {
+        try {
+          const token = localStorage.getItem('token');
+          const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
+          const resp = await fetch(`http://localhost:5000/api/orders/${orderId}`, { headers });
+          if (resp.ok) orderObj = await resp.json();
+        } catch (e) {
+          console.warn('Direct order fetch failed', e);
+        }
+      }
+
+      if (orderObj) {
+        try {
+          window.showOrderDetail(orderObj);
+          return;
+        } catch (e) {
+          console.warn('showOrderDetail failed', e);
+        }
+      }
+    }
+
+    // Fallback: store id and navigate to orders page
+    localStorage.setItem('currentOrderId', String(orderId));
+    window.location.href = 'orders.html';
+  } catch (err) {
+    console.error('openOrderDetailFromProfile error', err);
+    localStorage.setItem('currentOrderId', String(orderId));
+    window.location.href = 'orders.html';
+  }
+};
 let _currentProfileReviewOrderId = null;
 function openProfileReviewModal(orderId) {
   _currentProfileReviewOrderId = orderId;

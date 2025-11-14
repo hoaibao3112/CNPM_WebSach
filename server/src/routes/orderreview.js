@@ -1,6 +1,7 @@
 import express from 'express';
 import pool from '../config/connectDatabase.js';
 import { authenticateToken } from '../utils/generateToken.js';
+import jwt from 'jsonwebtoken';
 
 const router = express.Router();
 
@@ -36,15 +37,57 @@ router.get("/order-count", async(req, res) => {
   }
 })
 
-// GET /api/orderreview/:orderId - return current user's review for that order (or null)
-router.get('/:orderId', authenticateToken, async (req, res) => {
+// GET /api/orderreview/:orderId - return review for that order. Token is optional;
+// - If token present and userType is admin/staff, return any review for the order
+// - If token present for a customer, return only their review
+// - If no token present, return public review for the order (if any)
+router.get('/:orderId', async (req, res) => {
   try {
     const { orderId } = req.params;
-    console.log('GET /api/orderreview/:orderId called', { orderId, user: req.user && req.user.makh });
-    const customerId = req.user && (req.user.makh || req.user.id || req.user.MaKH);
+    // Try to optionally verify token if present in cookie or Authorization header
+    const token = req.cookies?.token || (req.headers['authorization'] && req.headers['authorization'].split(' ')[1]);
+    let optionalUser = null;
+    if (token) {
+      try {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your_default_secret_key');
+        optionalUser = decoded;
+        console.log('Optional token verified for orderreview GET:', { user: optionalUser });
+      } catch (e) {
+        console.warn('Optional token invalid or expired for orderreview GET:', e.message);
+        // proceed without user
+      }
+    }
+
     if (!orderId || isNaN(orderId)) return res.status(400).json({ error: 'Invalid orderId' });
 
-    const [rows] = await pool.query('SELECT * FROM danhgia_donhang WHERE MaHD = ? AND MaKH = ?', [parseInt(orderId), customerId]);
+    // If requester is admin/staff, allow fetching review for the order regardless of owner
+    if (optionalUser && (optionalUser.userType === 'admin' || optionalUser.userType === 'staff' || optionalUser.userType === 'superadmin')) {
+      console.log('Admin/staff fetch by user:', optionalUser);
+      const [rows] = await pool.query(
+        `SELECT d.*, kh.tenkh AS customerName
+         FROM danhgia_donhang d
+         LEFT JOIN khachhang kh ON d.MaKH = kh.makh
+         WHERE d.MaHD = ?`,
+        [parseInt(orderId)]
+      );
+      return res.status(200).json({ review: rows[0] || null });
+    }
+
+    // If authenticated customer, return only their review
+    if (optionalUser && (optionalUser.makh || optionalUser.id || optionalUser.MaKH)) {
+      const customerId = optionalUser.makh || optionalUser.id || optionalUser.MaKH;
+      const [rows] = await pool.query('SELECT * FROM danhgia_donhang WHERE MaHD = ? AND MaKH = ?', [parseInt(orderId), customerId]);
+      return res.status(200).json({ review: rows[0] || null });
+    }
+
+    // No token: public fetch — return any review for the order (useful for admin staff who can't send token)
+    const [rows] = await pool.query(
+      `SELECT d.MaDGHD AS MaDGHD, d.MaHD, d.MaKH, d.SoSao, d.NhanXet, d.NgayDanhGia, kh.tenkh AS customerName
+       FROM danhgia_donhang d
+       LEFT JOIN khachhang kh ON d.MaKH = kh.makh
+       WHERE d.MaHD = ?`,
+      [parseInt(orderId)]
+    );
     return res.status(200).json({ review: rows[0] || null });
   } catch (err) {
     console.error('GET /api/orderreview/:orderId error', err);
