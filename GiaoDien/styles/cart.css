@@ -122,6 +122,39 @@ h2 {
   overflow: visible;
 }
 
+/* Highlight promo / free-ship boxes inside summary
+   NOTE: do NOT force display here — initial visibility is controlled by inline styles
+   set in HTML and by JavaScript. Forcing display via CSS (e.g. using !important)
+   prevents the JS from hiding the boxes when no code is applied. */
+#promo-code-row, #free-ship-code-row {
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px !important;
+  border-radius: 10px;
+  gap: 12px;
+}
+
+#promo-code-row span, #free-ship-code-row span {
+  display: inline-flex; align-items: center; gap: 8px;
+}
+
+#member-tier-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: linear-gradient(90deg, rgba(255,243,224,0.6), rgba(255,255,255,0.4));
+  margin: 6px 0;
+}
+
+#member-tier-value {
+  color: #b07b00; /* subtle gold */
+  font-weight: 700;
+}
+
+#shipping { font-weight: 700; color: var(--success-color); }
+
 .saved-promo-card {
   background: linear-gradient(135deg, #fff3e0 0%, #ffffff 100%);
   border: 2px solid #ffe082;
@@ -528,45 +561,86 @@ h2 {
   background: #1a252f;
 }
 
-/* Order Summary */
+/* Order Summary - refreshed design */
 .order-summary {
-  background: white;
-  border-radius: var(--border-radius);
-  padding: 25px;
-  box-shadow: var(--box-shadow);
+  background: linear-gradient(180deg, #ffffff 0%, #fbffff 100%);
+  border-radius: 14px;
+  padding: 22px;
+  box-shadow: 0 8px 24px rgba(20, 40, 80, 0.06);
   margin-bottom: 30px;
+  border: 1px solid rgba(34, 49, 63, 0.04);
+}
+
+.order-summary h2 {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 1.15rem;
+  margin-bottom: 18px;
+}
+
+.order-totals {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
 .order-row {
   display: flex;
   justify-content: space-between;
-  margin-bottom: 15px;
+  align-items: center;
+  padding: 10px 12px;
+  border-radius: 10px;
+}
+
+.order-row:not(.order-total) {
+  background: #ffffff;
+}
+
+.order-row small {
+  color: #666;
+  font-size: 0.9rem;
 }
 
 .order-total {
-  font-weight: bold;
-  font-size: 1.1rem;
-  margin-top: 20px;
-  padding-top: 15px;
-  border-top: 1px solid #eee;
+  font-weight: 800;
+  font-size: 1.25rem;
+  margin-top: 8px;
+  padding: 14px 12px;
+  border-radius: 12px;
+  background: linear-gradient(90deg, rgba(39,174,96,0.06), rgba(39,174,96,0.02));
+  color: var(--dark-color);
+}
+
+.order-row span:first-child { color: #444; }
+.order-row span:last-child { color: #111; font-weight: 700; }
+
+/* Make the final total amount more prominent and red */
+.order-total span:last-child {
+  color: var(--accent-color);
+  font-weight: 900;
+  font-size: 1.15rem;
 }
 
 .checkout-btn {
   width: 100%;
-  padding: 15px;
-  background: var(--success-color);
+  padding: 14px 16px;
+  background: linear-gradient(90deg, #16a34a 0%, #059669 100%);
   color: white;
   border: none;
-  border-radius: 4px;
-  font-size: 1.1rem;
-  font-weight: 600;
+  border-radius: 10px;
+  font-size: 1.05rem;
+  font-weight: 700;
   cursor: pointer;
-  transition: background 0.3s;
-  margin-top: 20px;
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+  margin-top: 18px;
+  box-shadow: 0 8px 20px rgba(5,150,105,0.12);
 }
 
+.checkout-btn:active { transform: translateY(1px); }
+
 .checkout-btn:hover {
-  background: #219955;
+  box-shadow: 0 12px 28px rgba(5,150,105,0.18);
 }
 
 /* Customer Info */
@@ -928,7 +1002,13 @@ h2 {
   width: 20px;
   height: 20px;
   cursor: pointer;
+  /* Ensure checkbox sits above any accidental overlays and stays clickable */
+  position: relative;
+  z-index: 6;
 }
+
+/* Make the select cell itself a safe click target */
+.select-col { position: relative; }
 
 /* Adjust existing column widths to accommodate new column */
 .product-col { width: 35%; }

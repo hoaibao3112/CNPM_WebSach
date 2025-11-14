@@ -263,7 +263,6 @@ const DiscountManagement = () => {
         SoLanSuDungToiDa: values.SoLuongPhatHanh || 1,
         MaKM: values.MaKM || null
       };
-
       if (couponFormType === 'add') {
         await axios.post('http://localhost:5000/api/coupons/admin/create', payload, {
           headers: { Authorization: `Bearer ${localStorage.getItem('authToken')}` }

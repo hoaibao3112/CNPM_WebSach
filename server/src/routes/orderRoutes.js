@@ -413,11 +413,12 @@ router.post('/place-order', authenticateToken, async (req, res) => {
 
     console.log(`📦 Tổng trọng lượng đơn hàng: ${totalWeight}g`);
 
-    // ✅ SỬ DỤNG GIÁ TRỊ TỪ CLIENT (đã tính toán đầy đủ ở frontend)
-    // Không tính lại discount theo tier vì đã áp dụng mã KM rồi
-    const subtotal = clientSubtotal || cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
-    const discountAmount = clientDiscount || 0; // Giảm giá từ mã KM
-    const amountAfterDiscount = subtotal - discountAmount;
+  // ===== Giá trị tiền quay về từ client (dùng làm fallback) =====
+  // Nhưng chúng ta phải tái tính toàn bộ mã khuyến mãi server-side để tránh bị sửa đổi từ client.
+  let subtotal = clientSubtotal || cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  // discountAmount có thể bị override bởi server-side calculation
+  let discountAmount = clientDiscount || 0; // Giảm giá từ mã KM (client-sent, dùng như fallback)
+  const amountAfterDiscount = subtotal - discountAmount;
     
     console.log('🔍 [ORDER] Price calculation:');
     console.log('  - subtotal:', subtotal);
@@ -428,31 +429,143 @@ router.post('/place-order', authenticateToken, async (req, res) => {
     const customerRow = existingCustomer[0];
     const userTier = customerRow.loyalty_tier || computeTier(customerRow.loyalty_points || 0);
 
-    // ✅ XỬ LÝ MÃ GIẢM GIÁ (nếu có) - Đánh dấu đã sử dụng
-    if (discountCode && discountCode.trim() && discountAmount > 0) {
+    // ===== Server-side recalculation & validation for discountCode =====
+    // We'll compute canonical discountAmountServer and override client value if different.
+    let promoToMark = null; // { type: 'khachhang_khuyenmai'|'phieugiamgia_phathanh', ma: ... , code: ... }
+    if (discountCode && String(discountCode).trim()) {
       try {
-        const [[discountPromo]] = await connection.query(
-          `SELECT k.MaKM, k.TenKM, k.LoaiKM 
+        const code = String(discountCode).trim();
+        // 1) Try to find promotion record by code (khuyen_mai)
+        const [[foundPromo]] = await connection.query(
+          `SELECT k.*, CAST(k.TrangThai AS UNSIGNED) as TrangThai, ct.GiaTriGiam, ct.GiaTriDonToiThieu, ct.GiamToiDa, ct.SoLuongToiThieu
            FROM khuyen_mai k
-           WHERE k.Code = ? 
-             AND k.LoaiKM IN ('giam_phan_tram', 'giam_tien_mat')
-             AND k.TrangThai = 1`,
-          [discountCode.trim()]
+           LEFT JOIN ct_khuyen_mai ct ON k.MaKM = ct.MaKM
+           WHERE k.Code = ? AND k.TrangThai = 1 AND k.NgayBatDau <= NOW() AND k.NgayKetThuc >= NOW() LIMIT 1`,
+          [code]
         );
 
-        if (discountPromo) {
-          // Đánh dấu mã đã sử dụng
-          await connection.query(
-            `UPDATE khachhang_khuyenmai 
-             SET trang_thai = 'Da_su_dung' 
-             WHERE makh = ? AND makm = ?`,
-            [customer.makh, discountPromo.MaKM]
+        let promotion = foundPromo || null;
+        let couponIssuedRow = null;
+
+        // 2) If not found in khuyen_mai, try coupon issuance table for this customer
+        if (!promotion) {
+          const [[couponRow]] = await connection.query(
+            `SELECT ph.*, p.MaKM as Coupon_MaKM, p.TrangThai as Coupon_TrangThai, p.MaPhieu as Coupon_Code, p.MoTa as Coupon_MoTa
+             FROM phieugiamgia_phathanh ph
+             JOIN phieugiamgia p ON ph.MaPhieu = p.MaPhieu
+             WHERE ph.MaPhieu = ? AND ph.makh = ? LIMIT 1`,
+            [code, customer.makh]
           );
-          console.log(`✅ Đã đánh dấu mã giảm giá ${discountCode} là đã sử dụng`);
+
+          if (couponRow) {
+            couponIssuedRow = couponRow;
+            // if linked to MaKM, load that promotion
+            if (couponRow.Coupon_MaKM) {
+              const [[promoFromCoupon]] = await connection.query(
+                `SELECT k.*, CAST(k.TrangThai AS UNSIGNED) as TrangThai, ct.GiaTriGiam, ct.GiaTriDonToiThieu, ct.GiamToiDa, ct.SoLuongToiThieu
+                 FROM khuyen_mai k
+                 LEFT JOIN ct_khuyen_mai ct ON k.MaKM = ct.MaKM
+                 WHERE k.MaKM = ? AND k.TrangThai = 1 AND k.NgayBatDau <= NOW() AND k.NgayKetThuc >= NOW() LIMIT 1`,
+                [couponRow.Coupon_MaKM]
+              );
+              promotion = promoFromCoupon || null;
+            } else {
+              // coupon-only (no MaKM) — we can treat it as a simple fixed amount or template; for safety fallback to zero if not explicitly supported
+              promotion = {
+                MaKM: null,
+                LoaiKM: null,
+                GiaTriDonToiThieu: 0,
+                GiaTriGiam: 0,
+                GiamToiDa: null,
+                Audience: null
+              };
+            }
+          }
         }
-      } catch (discountError) {
-        console.error('❌ Error marking discount code as used:', discountError);
-        // Không throw error, chỉ log
+
+        // If we have a promotion, compute discount server-side
+        if (promotion) {
+          const promoType = String(promotion.LoaiKM || '').toLowerCase();
+
+          // Build eligible product list
+          let eligibleItems = [];
+          if (promotion.MaKM) {
+            // Find which cart items are linked to this promotion
+            const rows = await Promise.all(cartItems.map(async it => {
+              const [r] = await connection.query(
+                `SELECT 1 FROM sp_khuyen_mai WHERE MaKM = ? AND MaSP = ? LIMIT 1`,
+                [promotion.MaKM, it.productId]
+              );
+              return r && r.length ? it : null;
+            }));
+            eligibleItems = rows.filter(Boolean);
+
+            // If none linked but promotion is free_ship or form-only/private-assigned -> apply to all
+            if (eligibleItems.length === 0) {
+              const isFree = promoType === 'free_ship';
+              const isFormOnly = promotion.Audience === 'FORM_ONLY';
+              // check customer assignment
+              let customerAssigned = false;
+              try {
+                const [[assigned]] = await connection.query(`SELECT * FROM khachhang_khuyenmai WHERE makh = ? AND makm = ? LIMIT 1`, [customer.makh, promotion.MaKM]);
+                customerAssigned = !!assigned;
+              } catch (e) { /* ignore */ }
+
+              if (isFree || isFormOnly || (promotion.Audience === 'PRIVATE' && customerAssigned)) {
+                eligibleItems = cartItems.map(it => it);
+              }
+            }
+          } else {
+            // No MaKM (coupon-only) -> apply to all cart items
+            eligibleItems = cartItems.map(it => it);
+          }
+
+          // Calculate subtotalEligible and quantity
+          const subtotalEligible = eligibleItems.reduce((s, it) => s + (it.price || 0) * (it.quantity || 0), 0);
+          const totalQtyEligible = eligibleItems.reduce((s, it) => s + (it.quantity || 0), 0);
+
+          // Enforce promotion minima
+          const minAmount = promotion.GiaTriDonToiThieu || 0;
+          const minQty = promotion.SoLuongToiThieu || 0;
+
+          let computedDiscount = 0;
+          if (subtotalEligible >= minAmount && totalQtyEligible >= minQty) {
+            if (promoType === 'giam_phan_tram') {
+              const pct = Number(promotion.GiaTriGiam || 0);
+              computedDiscount = Math.round(subtotalEligible * (pct / 100));
+              if (promotion.GiamToiDa) computedDiscount = Math.min(computedDiscount, Math.round(Number(promotion.GiamToiDa)));
+              computedDiscount = Math.min(computedDiscount, subtotalEligible);
+            } else if (promoType === 'giam_tien_mat') {
+              computedDiscount = Math.round(Number(promotion.GiaTriGiam || 0));
+              computedDiscount = Math.min(computedDiscount, subtotalEligible);
+            } else if (promoType === 'free_ship') {
+              // free_ship: discount in money terms is 0; shipping handled separately
+              computedDiscount = 0;
+            } else {
+              computedDiscount = 0;
+            }
+          } else {
+            console.log(`⚠️ Promotion ${discountCode} minima not met on server (required amount ${minAmount}, qty ${minQty})`);
+            computedDiscount = 0;
+          }
+
+          // Override discountAmount with server-computed value
+          if (computedDiscount !== discountAmount) {
+            console.log(`🔁 Overriding client discount (${discountAmount}) with server-computed discount (${computedDiscount}) for code ${discountCode}`);
+            discountAmount = computedDiscount;
+          }
+
+          // Prepare to mark promo as used later (after order created) if computedDiscount > 0 or promo is free_ship
+          if (promotion.MaKM) {
+            promoToMark = { type: 'khachhang_khuyenmai', MaKM: promotion.MaKM };
+          } else if (couponIssuedRow) {
+            promoToMark = { type: 'phieugiamgia_phathanh', code: couponIssuedRow.MaPhieu };
+          }
+        } else {
+          console.log(`⚠️ Không tìm thấy khuyến mãi cho mã: ${discountCode} (server)`);
+        }
+      } catch (e) {
+        console.error('❌ Error while recalculating promotion on server:', e);
       }
     }
 
@@ -519,10 +632,25 @@ router.post('/place-order', authenticateToken, async (req, res) => {
     
     console.log(`🚢 Phí ship cuối cùng: ${shippingFee.toLocaleString('vi-VN')} VND (Free ship: ${isFreeShip})`);
 
-    // Tổng tiền cuối cùng = Tiền hàng (đã giảm) + Phí ship
-    const finalTotalAmount = amountAfterDiscount + shippingFee;
-    console.log(`� [DEBUG] amountAfterDiscount: ${amountAfterDiscount}, shippingFee: ${shippingFee}`);
-    console.log(`�💵 Tổng tiền cuối cùng (bao gồm ship): ${finalTotalAmount.toLocaleString('vi-VN')} VND`);
+    // ===== Server-side membership discount when FreeShip is applied =====
+    // Frontend applies a percent discount on subtotal when FreeShip is active
+    // (Bạc: 3%, Vàng: 5%) and subtotal >= 300000. We must replicate here.
+    let memberDiscountAmount = 0;
+    if (isFreeShip) {
+      const memberPctMap = { 'Bạc': 0.03, 'Vàng': 0.05 };
+      const pct = memberPctMap[userTier] || 0;
+      if (pct > 0 && subtotal >= 300000) {
+        memberDiscountAmount = Math.round(subtotal * pct);
+        console.log(`🎖️ Member tier ${userTier} discount applied server-side: -${memberDiscountAmount.toLocaleString('vi-VN')} (${pct * 100}%)`);
+      } else if (pct > 0) {
+        console.log(`ℹ️ Member tier ${userTier} eligible but subtotal < 300k -> no member discount`);
+      }
+    }
+
+    // Tổng tiền cuối cùng = Tiền hàng (đã giảm từ mã KM) - memberDiscountAmount + Phí ship
+    const finalTotalAmount = Math.max(0, amountAfterDiscount - memberDiscountAmount + shippingFee);
+    console.log(`� [DEBUG] subtotal: ${subtotal}, amountAfterDiscount: ${amountAfterDiscount}, memberDiscountAmount: ${memberDiscountAmount}, shippingFee: ${shippingFee}`);
+    console.log(`�💵 Tổng tiền cuối cùng (bao gồm ship & member): ${finalTotalAmount.toLocaleString('vi-VN')} VND`);
 
     // BẮT ĐẦU TRANSACTION
     await connection.beginTransaction();
@@ -565,8 +693,14 @@ router.post('/place-order', authenticateToken, async (req, res) => {
     if (discountCode && discountAmount > 0) {
       promoNote = `[PROMO] Mã: ${discountCode}; Giảm giá: ${discountAmount.toLocaleString()}đ\n`;
     }
-    
-    const noteWithDetails = `${notes || ''}\n${promoNote}[LOYALTY] Hạng: ${userTier}\n[SHIPPING] ${shipNote}`;
+
+    // Ghi chú member discount nếu có
+    let memberNote = '';
+    if (memberDiscountAmount && memberDiscountAmount > 0) {
+      memberNote = `[MEMBER] Giảm theo hạng ${userTier}: ${memberDiscountAmount.toLocaleString()}đ\n`;
+    }
+
+    const noteWithDetails = `${notes || ''}\n${promoNote}${memberNote}[LOYALTY] Hạng: ${userTier}\n[SHIPPING] ${shipNote}`;
     
     const [orderResult] = await connection.query(
       `INSERT INTO hoadon (makh, MaDiaChi, NgayTao, TongTien, PhuongThucThanhToan, GhiChu, tinhtrang, TrangThaiThanhToan, PhiShip) 
@@ -574,6 +708,32 @@ router.post('/place-order', authenticateToken, async (req, res) => {
       [customer.makh, addressId, finalTotalAmount, paymentMethod, noteWithDetails, 'Chờ xử lý', 'Chưa thanh toán', shippingFee]
     );
     const orderId = orderResult.insertId;
+
+    // ===== Persist promo usage (mark as used) inside the same transaction =====
+    if (promoToMark) {
+      try {
+        if (promoToMark.type === 'khachhang_khuyenmai' && promoToMark.MaKM) {
+          if (discountAmount > 0) {
+            await connection.query(
+              `UPDATE khachhang_khuyenmai SET trang_thai = 'Da_su_dung' WHERE makh = ? AND makm = ?`,
+              [customer.makh, promoToMark.MaKM]
+            );
+            console.log(`✅ Đã đánh dấu khuyến mãi MaKM=${promoToMark.MaKM} là đã sử dụng cho makh=${customer.makh}`);
+          }
+        } else if (promoToMark.type === 'phieugiamgia_phathanh' && promoToMark.code) {
+          if (discountAmount > 0) {
+            await connection.query(
+              `UPDATE phieugiamgia_phathanh SET NgaySuDung = NOW(), MaDonHang = ? WHERE makh = ? AND MaPhieu = ? AND NgaySuDung IS NULL LIMIT 1`,
+              [orderId, customer.makh, promoToMark.code]
+            );
+            console.log(`✅ Đã đánh dấu coupon ${promoToMark.code} (phieugiamgia_phathanh) là đã sử dụng cho makh=${customer.makh}`);
+          }
+        }
+      } catch (markErr) {
+        console.error('❌ Error marking promo usage after order insert:', markErr);
+        // don't throw - just log; order creation should still continue
+      }
+    }
 
     // Lưu chi tiết đơn hàng
     for (const item of cartItems) {
@@ -665,6 +825,7 @@ router.post('/place-order', authenticateToken, async (req, res) => {
           appliedTier: userTier,
           discountAmount,
           amountAfterDiscount,
+          memberDiscountAmount,
           shippingFee,
           finalTotalAmount
         });
@@ -730,6 +891,7 @@ router.post('/place-order', authenticateToken, async (req, res) => {
         appliedTier: userTier,
         discountAmount,
         amountAfterDiscount,
+        memberDiscountAmount,
         shippingFee,
         finalTotalAmount
       });

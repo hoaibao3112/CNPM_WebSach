@@ -826,33 +826,117 @@ async function renderPromotionsInChat() {
     }
 
     const wrapper = document.createElement('div');
-    wrapper.className = 'chat-message ai promotion-list';
+    // start collapsed by default (show first 3 items)
+    wrapper.className = 'chat-message ai promotion-list promo-collapsed';
 
-    let html = '<h4>🎁 Mã khuyến mãi đang có</h4><ul>';
-    promotions.forEach(p => {
+    // Build card-style HTML for each promotion (render all; CSS controls visibility)
+    let html = '<h4>🎁 Mã khuyến mãi đang có</h4><div class="promo-cards">';
+    promotions.forEach((p, idx) => {
       const code = p.Code || p.code || p.MaKM || ('KM' + (p.MaKM || ''));
       const title = p.TenKM || p.Ten || 'Khuyến mãi';
-      const ma = p.MaKM || p.MaKM || '';
-      html += `<li><strong>${escapeHtml(String(code))}</strong> — ${escapeHtml(String(title))} `;
-      if (ma) html += `<button class="promo-detail-btn" data-id="${escapeHtml(String(ma))}">Xem</button>`;
-      html += '</li>';
+      const desc = p.MoTa || p.MieuTa || p.Description || '';
+      const ma = p.MaKM || '';
+      const exp = p.HanSD || p.HSD || p.NgayHetHan || p.Expiry || '';
+
+      html += `
+      <div class="promo-card-detailed" data-idx="${idx + 1}">
+        <div class="promo-left">
+          <div class="promo-percent">%
+            <div class="promo-label">Giảm %</div>
+          </div>
+        </div>
+        <div class="promo-body">
+          <h4 class="promo-title">${escapeHtml(String(title))}</h4>
+          ${desc ? `<p class="promo-sub">${escapeHtml(String(desc))}</p>` : ''}
+          <p class="promo-code-line">Mã: <span class="promo-code-value">${escapeHtml(String(code))}</span></p>
+          ${exp ? `<p class="promo-expire">HSD: <a class="promo-expire-link" href="#">${escapeHtml(String(exp))}</a></p>` : ''}
+          <p class="promo-status">Đang hoạt động</p>
+          <div class="promo-actions">
+            <button class="promo-save-btn" data-id="${escapeHtml(String(ma))}" data-code="${escapeHtml(String(code))}">Xem chi tiết</button>
+            <button class="promo-info-btn" title="Thông tin">i</button>
+            ${ma ? `<button class="promo-detail-btn" data-id="${escapeHtml(String(ma))}" style="display:none">Xem</button>` : ''}
+          </div>
+        </div>
+      </div>`;
     });
-    html += '</ul>';
+    html += '</div>';
+
+    // Add controls (toggle) — label will be set below
+    html += `<div class="promo-controls"><button class="promo-toggle-btn" aria-expanded="false">Xem thêm</button></div>`;
 
     wrapper.innerHTML = html;
     chatMessages.appendChild(wrapper);
     scrollToBottom(chatMessages);
 
-    // Attach click handlers for detail buttons
+    // Update toggle label based on number of promos
+    const total = promotions.length;
+    const toggleBtn = wrapper.querySelector('.promo-toggle-btn');
+    if (toggleBtn) {
+      const setLabel = (collapsed) => {
+        if (collapsed) {
+          const more = Math.max(0, total - 3);
+          toggleBtn.textContent = more > 0 ? `Xem thêm (${more})` : 'Xem thêm';
+          toggleBtn.setAttribute('aria-expanded', 'false');
+        } else {
+          toggleBtn.textContent = 'Thu gọn';
+          toggleBtn.setAttribute('aria-expanded', 'true');
+        }
+      };
+
+      setLabel(true);
+
+      toggleBtn.addEventListener('click', () => {
+        const collapsed = wrapper.classList.toggle('promo-collapsed');
+        setLabel(collapsed);
+        // keep chat scrolled to bottom so user sees changes
+        scrollToBottom(chatMessages);
+      });
+    }
+
+    // Attach click handler for promo save buttons (now navigates to detail page; fallback to copy)
+    wrapper.querySelectorAll('.promo-save-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const id = e.currentTarget.getAttribute('data-id');
+        const code = e.currentTarget.getAttribute('data-code');
+        if (id) {
+          const targetUrl = `${window.location.origin}/GiaoDien/giamgia.html?id=${encodeURIComponent(id)}`;
+          window.location.href = targetUrl;
+          return;
+        }
+
+        // Fallback: copy code to clipboard
+        if (code && navigator.clipboard) {
+          navigator.clipboard.writeText(code).then(() => {
+            const old = e.currentTarget.textContent;
+            e.currentTarget.textContent = 'Đã sao chép';
+            setTimeout(() => { e.currentTarget.textContent = old; }, 1800);
+          }).catch(() => {
+            window.prompt('Sao chép mã khuyến mãi:', code);
+          });
+        } else if (code) {
+          window.prompt('Sao chép mã khuyến mãi:', code);
+        }
+      });
+    });
+
+    // Attach click handlers for hidden detail buttons if present
     wrapper.querySelectorAll('.promo-detail-btn').forEach(btn => {
       btn.addEventListener('click', (e) => {
         const id = e.currentTarget.getAttribute('data-id');
         if (id) {
-          // Navigate to the frontend promotions page (load giamgia.html under /GiaoDien)
           const targetUrl = `${window.location.origin}/GiaoDien/giamgia.html?id=${encodeURIComponent(id)}`;
-          // Load in the same tab per user request
           window.location.href = targetUrl;
         }
+      });
+    });
+
+    // Info buttons can open a small tooltip/modal — simple alert for now
+    wrapper.querySelectorAll('.promo-info-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const card = e.currentTarget.closest('.promo-card-detailed');
+        const codeEl = card?.querySelector('.promo-code-value');
+        const titleEl = card?.querySelector('.promo-title');
+        alert(`${titleEl?.textContent || 'Khuyến mãi'}\nMã: ${codeEl?.textContent || ''}`);
       });
     });
 

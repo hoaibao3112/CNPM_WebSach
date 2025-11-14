@@ -40,7 +40,8 @@ async function getCart() {
           price: item.price,
           image: item.image,
           quantity: item.quantity,
-          selected: item.Selected !== false
+          // Normalize Selected coming from DB (tinyint 0/1) into boolean
+          selected: Boolean(item.Selected)
         }));
       }
       console.error('Error fetching cart from server:', await response.json());
@@ -527,7 +528,25 @@ function updateSummary(subtotal, discount = 0, shippingFee = 0, shippingInfo = n
   const cleanDiscount = parseFloat(discount) || 0;
   const cleanShippingFee = parseFloat(shippingFee) || 0;
   
-  const total = Math.max(0, cleanSubtotal - cleanDiscount + cleanShippingFee);
+  // ===== Membership discount when FreeShip is applied =====
+  // If FreeShip is active, membership no longer discounts shipping;
+  // instead it gives a percentage discount on subtotal when subtotal >= 300000
+  let memberDiscountAmount = 0;
+  const hasFreeShipGlobal = appliedFreeShipCode !== null;
+  if (hasFreeShipGlobal) {
+    // membership percent map when FreeShip applied
+    const memberPctMap = { 'Bạc': 0.03, 'Vàng': 0.05 };
+    const tier = getCustomerTier();
+    const pct = memberPctMap[tier] || 0;
+    if (pct > 0 && cleanSubtotal >= 300000) {
+      memberDiscountAmount = Math.round(cleanSubtotal * pct);
+      console.log(`🎖️ Membership (${tier}) discount on subtotal: ${pct * 100}% -> ${memberDiscountAmount}`);
+    } else if (pct > 0 && cleanSubtotal < 300000) {
+      console.log(`ℹ️ Membership (${tier}) active but subtotal < 300000 => no member discount applied`);
+    }
+  }
+
+  const total = Math.max(0, cleanSubtotal - cleanDiscount - memberDiscountAmount + cleanShippingFee);
   
   console.log('🧮 Calculated values:', {
     cleanSubtotal,
@@ -544,6 +563,7 @@ function updateSummary(subtotal, discount = 0, shippingFee = 0, shippingInfo = n
   
   // Elements cho thông tin thẻ và giảm giá ship
   const memberTierRow = document.getElementById('member-tier-row');
+  const memberTierLabel = document.getElementById('member-tier-label');
   const memberTierValue = document.getElementById('member-tier-value');
   const shippingOriginalRow = document.getElementById('shipping-original-row');
   const shippingOriginalElement = document.getElementById('shipping-original');
@@ -570,33 +590,49 @@ function updateSummary(subtotal, discount = 0, shippingFee = 0, shippingInfo = n
   
   const currentTier = tierInfo[customerTier] || tierInfo['Đồng'];
   
-  // ✅ CHỈ HIỂN THỊ THÔNG TIN THẺ VÀ GIẢM SHIP KHI KHÔNG CÓ FREE SHIP
-  const hasFreeShip = appliedFreeShipCode !== null;
-  
-  if (!hasFreeShip && shippingInfo && shippingInfo.discount > 0) {
-    // Hiển thị thông tin thẻ hội viên
-    if (memberTierRow && memberTierValue) {
-      memberTierRow.style.display = 'flex';
+  // Hiển thị thông tin thẻ hội viên và (nếu có) hiển thị số tiền giảm tương ứng
+  const hasFreeShip = hasFreeShipGlobal;
+
+  if (memberTierRow && memberTierLabel && memberTierValue) {
+    memberTierRow.style.display = 'flex';
+    // Default left label
+    memberTierLabel.textContent = 'Thẻ thành viên';
+
+    // If FreeShip applied, membership becomes a percent-on-subtotal (if eligible)
+    if (hasFreeShip) {
+      if (memberDiscountAmount > 0) {
+        // Show monetary reduction on the right (aligned like discount row)
+        memberTierValue.textContent = `-${formatPrice(memberDiscountAmount)}`;
+        // Short suffix on the left label to indicate Free Ship override
+        memberTierLabel.innerHTML = `${currentTier.name} <small>(đã có mã free ship)</small>`;
+      } else {
+        // No monetary reduction yet — show requirement notice on the left, clear right
+        memberTierLabel.innerHTML = `${currentTier.name} <small>(Yêu cầu ≥300k)</small>`;
+        memberTierValue.textContent = '';
+      }
+    } else {
+      // No FreeShip: membership affects shipping only — show tier name on the right
+      memberTierLabel.textContent = 'Thẻ thành viên';
       memberTierValue.textContent = currentTier.name;
-      memberTierValue.style.color = currentTier.color;
-      memberTierValue.style.fontWeight = 'bold';
     }
-    
-    // Hiển thị phí ship gốc
+
+    memberTierValue.style.color = currentTier.color;
+    memberTierValue.style.fontWeight = 'bold';
+  }
+
+  // Chỉ hiển thị các thông tin phí ship (gốc / giảm theo tier) khi không có Free Ship
+  if (!hasFreeShip && shippingInfo && shippingInfo.discount > 0) {
     if (shippingOriginalRow && shippingOriginalElement) {
       shippingOriginalRow.style.display = 'flex';
       shippingOriginalElement.textContent = formatPrice(shippingInfo.original);
     }
-    
-    // Hiển thị giảm giá ship
+
     if (shippingDiscountRow && shippingDiscountLabel && shippingDiscountElement) {
       shippingDiscountRow.style.display = 'flex';
-      shippingDiscountLabel.textContent = `Giảm giá ship (${Math.round(shippingInfo.tierDiscount * 100)}%)`;
+      shippingDiscountLabel.textContent = `Giảm giá ship (${Math.round((shippingInfo.tierDiscount || 0) * 100)}%)`;
       shippingDiscountElement.textContent = `-${formatPrice(shippingInfo.discount)}`;
     }
   } else {
-    // ẨN thông tin thẻ và giảm ship (khi có Free Ship hoặc không có giảm giá)
-    if (memberTierRow) memberTierRow.style.display = 'none';
     if (shippingOriginalRow) shippingOriginalRow.style.display = 'none';
     if (shippingDiscountRow) shippingDiscountRow.style.display = 'none';
   }
@@ -611,6 +647,9 @@ function updateSummary(subtotal, discount = 0, shippingFee = 0, shippingInfo = n
   }
   
   totalElement.textContent = formatPrice(total);
+
+  // Optional: expose member discount for other scripts (checkout) via global
+  window.currentMemberDiscount = memberDiscountAmount;
 }
 
 // Update order summary
@@ -630,6 +669,20 @@ function attachEventListeners() {
   document.querySelectorAll('.select-item').forEach(checkbox => {
     checkbox.addEventListener('change', async e => {
       await toggleSelection(parseInt(e.target.dataset.index), e.target.checked);
+    });
+  });
+
+  // Improve usability: clicking the select cell toggles the checkbox as a fallback
+  // This helps when small overlays or tight spacing make the checkbox itself hard to click.
+  document.querySelectorAll('.select-col').forEach(td => {
+    td.addEventListener('click', (e) => {
+      // If the actual input was clicked, let the normal handler run
+      if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'LABEL')) return;
+      const cb = td.querySelector('.select-item');
+      if (!cb) return;
+      // Toggle the checkbox and fire change event so existing handlers run
+      cb.checked = !cb.checked;
+      cb.dispatchEvent(new Event('change', { bubbles: true }));
     });
   });
 
@@ -776,15 +829,32 @@ async function checkout() {
   const totalAmount = subtotal - discount + shippingFee;
   console.log('💰 Tính toán tổng tiền:', { subtotal, discount, shippingFee, totalAmount });
 
+  // ====== TÍNH memberDiscount KHI FreeShip đang áp dụng ======
+  let memberDiscountAmount = 0;
+  let memberTier = getCustomerTier();
+  if (appliedFreeShipCode) {
+    const memberPctMap = { 'Bạc': 0.03, 'Vàng': 0.05 };
+    const pct = memberPctMap[memberTier] || 0;
+    if (pct > 0 && subtotal >= 300000) {
+      memberDiscountAmount = Math.round(subtotal * pct);
+    }
+  }
+
+  // Recompute total including membership discount (if any)
+  const totalAmountWithMember = Math.max(0, subtotal - discount - memberDiscountAmount + shippingFee);
+  console.log('💳 Member discount:', { memberTier, memberDiscountAmount, totalAmountWithMember });
+
   // ✅ Lấy cả 2 mã (nếu có)
   const freeShipCode = appliedFreeShipCode ? appliedFreeShipCode.code : null;
   const discountCode = appliedDiscountCode ? appliedDiscountCode.code : null;
   
   const orderData = {
     // ✅ GỬI ĐẦY ĐỦ THÔNG TIN: subtotal gốc, discount đã áp dụng, và tổng cuối
-    subtotal: subtotal,           // Tổng tiền hàng (chưa giảm)
-    discount: discount,           // Số tiền giảm giá (từ mã KM)
-    totalAmountDiscouted: totalAmount, // Tổng cuối cùng (subtotal - discount + shipping)
+  subtotal: subtotal,           // Tổng tiền hàng (chưa giảm)
+  discount: discount,           // Số tiền giảm giá (từ mã KM)
+  memberDiscount: memberDiscountAmount, // Số tiền giảm do thẻ hội viên (nếu có)
+  memberTier: memberTier,       // Hạng hội viên
+  totalAmountDiscouted: totalAmountWithMember, // Tổng cuối cùng (subtotal - discount - memberDiscount + shipping)
     freeShipCode: freeShipCode, // Mã Free Ship (nếu có)
     discountCode: discountCode, // Mã giảm giá (nếu có)
     customer: {
@@ -808,7 +878,7 @@ async function checkout() {
   };
 
   console.log('🔍 Order Data:', JSON.stringify(orderData, null, 2));
-  console.log('🔍 [DEBUG] totalAmountDiscouted =', totalAmount);
+  console.log('🔍 [DEBUG] totalAmountDiscouted =', totalAmountWithMember);
 
   try {
     console.log('🔄 Sending request to API...');
@@ -1934,7 +2004,28 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // ✅ KHÔI PHỤC MÃ KHUYẾN MÃI ĐÃ ÁP DỤNG TỪ LOCALSTORAGE
   const hasRestoredCodes = restoreAppliedCodes();
-  
+
+  // If logged in, refresh user profile to ensure loyalty_tier is up-to-date
+  // This fixes cases where cart reads a stale/missing localStorage.user and shows 'Thẻ Đồng'
+  if (isLoggedIn()) {
+    try {
+      const token = getToken();
+      if (token) {
+        const resp = await fetch('http://localhost:5000/api/client/profile', {
+          method: 'GET',
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const j = await resp.json().catch(() => ({}));
+        if (resp.ok && j.user) {
+          localStorage.setItem('user', JSON.stringify(j.user));
+          console.log('♻️ Refreshed local user profile on cart page');
+        }
+      }
+    } catch (err) {
+      console.warn('Could not refresh profile on cart init', err);
+    }
+  }
+
   await renderCart();
   
   // ✅ HIỂN THỊ LẠI CÁC BOX MÃ KHUYẾN MÃI SAU KHI RENDER
@@ -2278,12 +2369,34 @@ window.applyPromoFromSaved = async function(code, event) {
         shippingElement.style.color = '#27ae60';
       }
       
-      // ẨN thông tin giảm ship theo thẻ hội viên (vì đã free ship rồi)
-      const memberTierRow = document.getElementById('member-tier-row');
+      // Hiển thị thẻ hội viên vẫn đang hoạt động nhưng ghi chú rõ rằng lợi ích
+      // phí ship của thẻ bị ghi đè bởi mã Free Ship. Ẩn chỉ phần giảm ship (số tiền)
+  const memberTierRow = document.getElementById('member-tier-row');
+  const memberTierLabel = document.getElementById('member-tier-label');
+  const memberTierValue = document.getElementById('member-tier-value');
       const shippingOriginalRow = document.getElementById('shipping-original-row');
       const shippingDiscountRow = document.getElementById('shipping-discount-row');
-      if (memberTierRow) memberTierRow.style.display = 'none';
-      if (shippingOriginalRow) shippingOriginalRow.style.display = 'none';
+
+      if (memberTierRow && memberTierLabel && memberTierValue) {
+        // Hiển thị luôn thông tin thẻ (không ẩn nữa)
+        memberTierRow.style.display = 'flex';
+        const customerTier = getCustomerTier();
+        const tierInfo = {
+          'Đồng': { name: 'Thẻ Đồng', color: '#cd7f32' },
+          'Bạc': { name: 'Thẻ Bạc', color: '#C0C0C0' },
+          'Vàng': { name: 'Thẻ Vàng', color: '#FFD700' }
+        };
+        const currentTier = tierInfo[customerTier] || tierInfo['Đồng'];
+        // Show tier name on the left and a small status; no monetary member discount here because
+        // when Free Ship is applied the monetary discount is shown by updateSummary() on the right.
+        memberTierLabel.textContent = currentTier.name + ' (Đang hoạt động)';
+        memberTierValue.textContent = '';
+        memberTierValue.style.color = currentTier.color;
+        memberTierValue.style.fontWeight = 'bold';
+      }
+
+      // Hiển thị phí ship gốc (nếu có) – displayAppliedPromo đã xử lý phần này.
+      // Ẩn dòng "giảm ship" vì khi Free Ship được áp dụng thì không có số tiền giảm thực tế
       if (shippingDiscountRow) shippingDiscountRow.style.display = 'none';
       
       // Tính lại tổng
