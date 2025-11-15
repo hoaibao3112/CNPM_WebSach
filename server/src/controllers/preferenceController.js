@@ -187,7 +187,12 @@ export const submitPreferences = async (req, res) => {
               [makh, template.MaPhieu]
             );
             await connection.query(
-              `INSERT INTO khachhang_khuyenmai (makh, makm, ngay_lay, ngay_het_han, trang_thai) VALUES (?, ?, NOW(), ?, 'Chua_su_dung')`,
+              `INSERT INTO khachhang_khuyenmai (makh, makm, ngay_lay, ngay_het_han, trang_thai)
+               VALUES (?, ?, NOW(), ?, 'Chua_su_dung')
+               ON DUPLICATE KEY UPDATE
+                 ngay_lay = VALUES(ngay_lay),
+                 ngay_het_han = COALESCE(VALUES(ngay_het_han), ngay_het_han),
+                 trang_thai = VALUES(trang_thai)`,
               [makh, formMaKM, null]
             );
             couponCode = template.MaPhieu;
@@ -207,7 +212,12 @@ export const submitPreferences = async (req, res) => {
             );
 
             await connection.query(
-              `INSERT INTO khachhang_khuyenmai (makh, makm, ngay_lay, ngay_het_han, trang_thai) VALUES (?, ?, NOW(), ?, 'Chua_su_dung')`,
+              `INSERT INTO khachhang_khuyenmai (makh, makm, ngay_lay, ngay_het_han, trang_thai)
+               VALUES (?, ?, NOW(), ?, 'Chua_su_dung')
+               ON DUPLICATE KEY UPDATE
+                 ngay_lay = VALUES(ngay_lay),
+                 ngay_het_han = COALESCE(VALUES(ngay_het_han), ngay_het_han),
+                 trang_thai = VALUES(trang_thai)`,
               [makh, formMaKM, null]
             );
 
@@ -250,7 +260,12 @@ export const submitPreferences = async (req, res) => {
 
             // Legacy compatibility
             await connection.query(
-              `INSERT INTO khachhang_khuyenmai (makh, makm, ngay_lay, ngay_het_han, trang_thai) VALUES (?, ?, NOW(), ?, 'Chua_su_dung')`,
+              `INSERT INTO khachhang_khuyenmai (makh, makm, ngay_lay, ngay_het_han, trang_thai)
+               VALUES (?, ?, NOW(), ?, 'Chua_su_dung')
+               ON DUPLICATE KEY UPDATE
+                 ngay_lay = VALUES(ngay_lay),
+                 ngay_het_han = COALESCE(VALUES(ngay_het_han), ngay_het_han),
+                 trang_thai = VALUES(trang_thai)`,
               [makh, formMaKM, null]
             );
 
@@ -290,10 +305,15 @@ export const submitPreferences = async (req, res) => {
           );
 
           // Legacy compatibility
-          await connection.query(
-            `INSERT INTO khachhang_khuyenmai (makh, makm, ngay_lay, ngay_het_han, trang_thai) VALUES (?, ?, NOW(), ?, 'Chua_su_dung')`,
-            [makh, formMaKM, null]
-          );
+            await connection.query(
+              `INSERT INTO khachhang_khuyenmai (makh, makm, ngay_lay, ngay_het_han, trang_thai)
+               VALUES (?, ?, NOW(), ?, 'Chua_su_dung')
+               ON DUPLICATE KEY UPDATE
+                 ngay_lay = VALUES(ngay_lay),
+                 ngay_het_han = COALESCE(VALUES(ngay_het_han), ngay_het_han),
+                 trang_thai = VALUES(trang_thai)`,
+              [makh, formMaKM, null]
+            );
 
           couponCode = newCode;
         }

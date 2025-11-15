@@ -935,6 +935,37 @@ body {
     white-space: pre-wrap;
 }
 
+/* Improve wrapping and prevent visual overlap for multi-line notes */
+#order-notes {
+    display: block;
+    width: 100%;
+    box-sizing: border-box;
+    word-wrap: break-word; /* legacy */
+    overflow-wrap: anywhere; /* handle long tokens/URLs */
+    -webkit-font-smoothing: antialiased;
+}
+
+.order-note {
+    display: block; /* ensure block-level layout so backgrounds don't overlap */
+    white-space: pre-wrap; /* preserve newlines but allow wrapping */
+    word-break: break-word;
+    overflow-wrap: break-word;
+    line-height: 1.6;
+    padding: 12px 14px;
+    background: rgba(255, 255, 255, 0.95); /* slightly more opaque for readability */
+    color: #111827;
+    border-left: 3px solid var(--info-color);
+    border-radius: var(--radius-md);
+    margin: 8px 0;
+    position: relative;
+    z-index: 1; /* keep note above decorative backgrounds */
+}
+
+/* Make alert inner paragraph transparent background to avoid stacked boxes */
+.alert p {
+    background: transparent;
+}
+
 .no-notes {
     color: var(--text-light);
     font-style: italic;

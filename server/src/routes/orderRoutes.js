@@ -1829,7 +1829,15 @@ router.get('/customer-refunds/:customerId', authenticateToken, async (req, res) 
         rr.refundRequestId,
         rr.refundAmount,
         rr.refundReason,
-        rr.status,
+        -- Normalize status codes to match frontend expectation (THANH_CONG, DANG_XL, THAT_BAI)
+        CASE rr.status
+          WHEN 'PENDING' THEN 'DANG_XL'
+          WHEN 'PROCESSING' THEN 'DANG_XL'
+          WHEN 'COMPLETED' THEN 'THANH_CONG'
+          WHEN 'REJECTED' THEN 'THAT_BAI'
+          WHEN 'CANCELLED' THEN 'THAT_BAI'
+          ELSE rr.status
+        END AS status,
         rr.createdAt,
         rr.processedAt,
         rr.bankAccount,
@@ -1838,6 +1846,7 @@ router.get('/customer-refunds/:customerId', authenticateToken, async (req, res) 
         hd.NgayTao AS orderDate,
         hd.TongTien AS orderAmount,
         kh.tenkh AS customerName,
+        -- Human-readable label for admin/customer UI
         CASE rr.status
           WHEN 'PENDING' THEN 'Chờ xử lý'
           WHEN 'PROCESSING' THEN 'Đang xử lý'
