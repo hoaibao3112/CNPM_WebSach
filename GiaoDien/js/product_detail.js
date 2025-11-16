@@ -487,6 +487,21 @@ function displayProductDetail(product) {
         yearElement.textContent = product.NamXB || 'Đang cập nhật';
     }
 
+    // Hiển thị Nhà xuất bản (nhiều API/DB có thể dùng trường khác nhau)
+    const publisherElement = document.getElementById('product-publisher');
+    if (publisherElement) {
+        const publisherCandidates = [
+            product.NhaXuatBan,
+            product.NhaSanXuat,
+            product.NXB,
+            product.NhaXB,
+            product.Publisher,
+            product.NhaXuatBan_Ten
+        ];
+        const publisher = publisherCandidates.find(p => p !== undefined && p !== null && String(p).trim() !== '');
+        publisherElement.textContent = publisher ? String(publisher).trim() : 'Đang cập nhật';
+    }
+
     // Cập nhật hình ảnh sản phẩm
     const mainImage = document.getElementById('main-product-image');
     if (mainImage) {
@@ -581,6 +596,7 @@ function displayProductDetail(product) {
                 <h3>Thông tin chi tiết</h3>
                 <ul class="detail-list">
                     ${info.NhaCungCap ? `<li><strong>Nhà cung cấp:</strong> ${escapeHtml(info.NhaCungCap)}</li>` : ''}
+                    ${info.NhaXuatBan || info.NhaXB || info.NhaSanXuat ? `<li><strong>Nhà xuất bản:</strong> ${escapeHtml(info.NhaXuatBan || info.NhaXB || info.NhaSanXuat)}</li>` : ''}
                     ${info.TacGia ? `<li><strong>Tác giả:</strong> ${escapeHtml(info.TacGia)}</li>` : ''}
                     ${info.NamXB ? `<li><strong>Năm XB:</strong> ${escapeHtml(String(info.NamXB))}</li>` : ''}
                     ${info.TrongLuong ? `<li><strong>Trọng lượng:</strong> ${escapeHtml(String(info.TrongLuong))} g</li>` : ''}
@@ -1172,8 +1188,14 @@ function displayRelatedProducts(products) {
         container.innerHTML = '<p>Không có sản phẩm liên quan</p>';
         return;
     }
-  
-    container.innerHTML = products.map(product => `
+    container.innerHTML = products.map(product => {
+        // Show only publication year under the title (fallbacks for different field names)
+        const year = product.NamXB || product.NamXb || product.Nam || product.Year || '';
+        const smallMeta = year && String(year).trim() !== ''
+            ? `<p class="product-small-meta">Năm XB: ${escapeHtml(String(year))}</p>`
+            : '';
+
+        return `
         <div class="product-card">
             <a href="product_detail.html?id=${product.MaSP}" 
                onclick="saveProductBeforeRedirect(${JSON.stringify(product)})">
@@ -1181,6 +1203,7 @@ function displayRelatedProducts(products) {
                      alt="${escapeHtml(product.TenSP)}" 
                      onerror="this.src='https://via.placeholder.com/300x400?text=Book'">
                 <h3>${escapeHtml(product.TenSP)}</h3>
+                ${smallMeta}
                 <div class="price-wrapper">
                     <div class="final-price">${formatPrice(product.DonGia)}</div>
                     ${product.GiaBia > product.DonGia ? 
@@ -1188,7 +1211,7 @@ function displayRelatedProducts(products) {
                 </div>
             </a>
         </div>
-    `).join('');
+    `}).join('');
 }
 
 /**

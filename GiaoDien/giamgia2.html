@@ -7,6 +7,7 @@
   <link rel="stylesheet" href="styles/giamgia2.css">
   <link rel="stylesheet" href="styles/index.css">
   <link rel="stylesheet" href="styles/header.css">
+  <link rel="stylesheet" href="styles/recommend-widget.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
@@ -28,7 +29,7 @@
     </div>
     <div class="promo-offers">
       <div class="offer-card">
-        <img src="https://via.placeholder.com/50?text=Freeship" alt="Freeship Icon">
+        <div class="offer-icon" style="font-size:28px; color:#00bbf9; padding-right:12px; display:flex; align-items:center;"><i class="fa-solid fa-truck"></i></div>
         <div class="offer-details">
           <p>Freeship 100% Tối đa 20K (Brand Day NCC)</p>
           <p>HSD: 31/05/25</p>
@@ -36,7 +37,7 @@
         </div>
       </div>
       <div class="offer-card">
-        <img src="https://via.placeholder.com/50?text=Discount" alt="Discount Icon">
+        <div class="offer-icon" style="font-size:28px; color:#ff6b6b; padding-right:12px; display:flex; align-items:center;"><i class="fa-solid fa-percent"></i></div>
         <div class="offer-details">
           <p>Giảm 12% Brand Day</p>
           <p>Làm tối đa 30K cho Đơn hàng từ 199K</p>
@@ -48,18 +49,23 @@
   </div>
 
   <!-- Top Sản phẩm bán chạy -->
-  <div class="top-products">
-    <h2>TOP SẢN PHẨM BÁN CHẠY</h2>
-    <div class="product-slides">
-      <img src="img/anhnen2/anh3.jpg" alt="Product 1" class="slide-image">
-      <img src="img/anhnen2/anh4.jpg" alt="Product 2" class="slide-image">
-      <img src="img/anhnen2/anh5.jpg" alt="Product 3" class="slide-image">
+  <div class="top-products-container">
+    <div style="max-width:1100px; margin:0 auto;">
+      <div class="top-products-title-row">
+        <div class="section-title">Quốc Tế Lược Dịch - Sách Bán Chạy</div>
+        <div></div>
+      </div>
+      <h2 style="color:#e94b4b; margin:0 0 18px; font-size:28px; letter-spacing:1px;">TOP SẢN PHẨM BÁN CHẠY</h2>
+      <div class="product-slides"></div>
     </div>
   </div>
+  <!-- Recommend widget mount point -->
+  <div id="recommend-widget-container"></div>
   <script src="js/giamgia2.js"></script>
   <script src="js/loadHeader.js"></script>
   <!-- Footer placeholder -->
   <div id="load-footer"></div>
   <script src="js/loadFooter.js"></script>
+  <script src="js/recommend-widget.js"></script>
 </body>
 </html>

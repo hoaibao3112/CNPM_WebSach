@@ -163,7 +163,7 @@ function displayProducts(products, containerId = 'multi-category-list', limit = 
              onerror="this.src='img/default-book.jpg'">
         ${isOutOfStock ? '<span class="stock-status">HẾT HÀNG</span>' : ''}
         <div class="product-badge">MÃ: ${product.MaSP}</div>
-        ${product.DiscountLabel ? `<div class="sale-badge">${product.DiscountLabel}</div>` : ''}
+        ${product.DiscountLabel ? `<div class="sale-badge" data-small="true">${product.DiscountLabel}</div>` : ''}
       </div>
       <div class="product-info">
         <h3 class="product-title">${product.TenSP}</h3>
@@ -171,9 +171,10 @@ function displayProducts(products, containerId = 'multi-category-list', limit = 
         <div class="product-price">
           ${product.GiaKhuyenMai ? `<span class="price">${formatPrice(product.GiaKhuyenMai)}đ</span>
           <span class="original-price">${formatPrice(product.DonGia)}đ</span>` : `<span class="price">${formatPrice(product.DonGia)}đ</span>`}
+          ${product.DiscountLabel ? `<span class="discount">${product.DiscountLabel}</span>` : ''}
         </div>
-        <small>Khuyến mãi: ${product.TenKM || ''}</small>
-        <button class="view-promo-detail" ${isOutOfStock ? 'disabled' : ''}>Xem chi tiết khuyến mãi</button>
+        <p class="promo-text-small">${product.TenKM ? `Khuyến mãi: ${product.TenKM}` : ''}</p>
+        <button class="view-promo-detail" ${isOutOfStock ? 'disabled' : ''}>Xem chi tiết</button>
       </div>
     `;
 
@@ -231,11 +232,15 @@ async function fetchAndDisplayMultiCategoryProducts() {
       return {
         MaSP: p.MaSP,
         TenSP: p.TenSP,
+        TacGia: p.TacGia || p.TacGiaName || '',
         HinhAnh: p.HinhAnh,
         DonGia: original,
         GiaKhuyenMai: discounted,
         DiscountLabel: discountLabel,
         TenKM: p.TenKM,
+        SoLuong: p.SoLuong,
+        DaBan: p.DaBan,
+        TinhTrang: p.TinhTrang,
         MaKM: p.MaKM,
         LoaiKM: p.LoaiKM,
         NgayBatDau: p.NgayBatDau,

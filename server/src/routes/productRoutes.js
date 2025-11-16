@@ -473,6 +473,76 @@ router.get('/sorted/year', async (req, res) => {
   }
 });
 
+// Route: Top-selling products (theo số lượng đã bán)
+// URL: GET /top-selling?limit=10&days=90
+// - `limit` số sản phẩm trả về (mặc định 10)
+// - `days` khoảng thời gian tính (số ngày gần nhất, mặc định 90)
+router.get('/top-selling', async (req, res) => {
+  try {
+    const limit = parseInt(req.query.limit, 10) || 10;
+    const days = parseInt(req.query.days, 10) || 90;
+
+    const sinceDate = new Date();
+    sinceDate.setDate(sinceDate.getDate() - days);
+    // Format YYYY-MM-DD for MySQL
+    const yyyy = sinceDate.getFullYear();
+    const mm = String(sinceDate.getMonth() + 1).padStart(2, '0');
+    const dd = String(sinceDate.getDate()).padStart(2, '0');
+    const sinceStr = `${yyyy}-${mm}-${dd}`;
+
+    const sql = `
+      SELECT s.MaSP, s.TenSP, s.HinhAnh, s.DonGia, s.SoLuong,
+             tg.TenTG AS TacGia,
+             COALESCE(SUM(cthd.SoLuong), 0) AS SoldQty,
+             MAX(k.MaKM) AS MaKM,
+             MAX(k.TenKM) AS TenKM,
+             MAX(k.LoaiKM) AS LoaiKM,
+             MAX(ct.GiaTriGiam) AS GiaTriGiam,
+             MAX(ct.GiaTriDonToiThieu) AS GiaTriDonToiThieu,
+             MAX(ct.GiamToiDa) AS GiamToiDa
+      FROM chitiethoadon cthd
+      JOIN hoadon h ON cthd.MaHD = h.MaHD AND h.tinhtrang IN ('Đã giao hàng','Đã giao') AND DATE(h.NgayTao) >= ?
+      JOIN sanpham s ON cthd.MaSP = s.MaSP
+      LEFT JOIN tacgia tg ON s.MaTG = tg.MaTG
+      LEFT JOIN sp_khuyen_mai spkm ON s.MaSP = spkm.MaSP
+      LEFT JOIN khuyen_mai k ON spkm.MaKM = k.MaKM
+           AND k.TrangThai = 1
+           AND k.NgayBatDau <= NOW()
+           AND k.NgayKetThuc >= NOW()
+      LEFT JOIN ct_khuyen_mai ct ON k.MaKM = ct.MaKM
+      GROUP BY s.MaSP, s.TenSP, s.HinhAnh, s.DonGia, s.SoLuong, tg.TenTG
+      ORDER BY SoldQty DESC
+      LIMIT ?
+    `;
+
+    const [rows] = await pool.query(sql, [sinceStr, limit]);
+
+    // Normalize HinhAnh path (fallbacks similar to other code)
+    const normalized = rows.map(r => ({
+      MaSP: r.MaSP,
+      TenSP: r.TenSP,
+      HinhAnh: r.HinhAnh && r.HinhAnh.startsWith('http') ? r.HinhAnh : (r.HinhAnh ? `/backend/product/${r.HinhAnh}` : null),
+      DonGia: r.DonGia,
+      SoLuong: r.SoLuong,
+      TacGia: r.TacGia,
+      SoldQty: Number(r.SoldQty) || 0,
+      Promotion: r.MaKM ? {
+        MaKM: r.MaKM,
+        TenKM: r.TenKM,
+        LoaiKM: r.LoaiKM,
+        GiaTriGiam: r.GiaTriGiam,
+        GiaTriDonToiThieu: r.GiaTriDonToiThieu,
+        GiamToiDa: r.GiamToiDa
+      } : null
+    }));
+
+    res.status(200).json(normalized);
+  } catch (error) {
+    console.error('Lỗi khi lấy top-selling:', error);
+    res.status(500).json({ error: 'Lỗi khi lấy top sản phẩm bán chạy', details: error.message });
+  }
+});
+
 // Route: 20 sản phẩm sắp xếp theo số lượng tồn kho (cao -> thấp).
 // URL: GET /sorted/stock
 // Optional query: MaTL (category id) to filter by category
