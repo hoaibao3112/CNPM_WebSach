@@ -91,20 +91,20 @@ export const submitPreferences = async (req, res) => {
     if (existing && existing.length > 0) {
       // Đã submit rồi - cho phép update
       responseId = existing[0].MaPhanHoi;
-      
-      // Xóa câu trả lời cũ
+      // Trừ đi đóng góp điểm từ phản hồi cũ (giữ aggregation nhiều form)
+      try {
+        await applyResponseScores(connection, makh, responseId, -1, formId);
+      } catch (e) {
+        console.warn('Could not subtract old response scores:', e.message);
+      }
+
+      // Xóa câu trả lời cũ (chúng ta đã trừ điểm bên trên)
       await connection.query(
         `DELETE FROM traloi_sothich WHERE MaPhanHoi = ?`,
         [responseId]
       );
 
-      // Xóa điểm cũ
-      await connection.query(
-        `DELETE FROM diem_sothich_khachhang WHERE makh = ?`,
-        [makh]
-      );
-
-      // Update consent
+      // Update consent and timestamp
       await connection.query(
         `UPDATE phanhoi_sothich SET DongYSuDung = ?, NgayPhanHoi = NOW() WHERE MaPhanHoi = ?`,
         [consent, responseId]
@@ -141,7 +141,14 @@ export const submitPreferences = async (req, res) => {
 
     // Chấm điểm sở thích (chỉ khi khách đồng ý sử dụng dữ liệu)
     if (consent) {
-      await calculatePreferenceScores(connection, makh, responseId);
+      // Add contribution from this (new) response
+      try {
+        await applyResponseScores(connection, makh, responseId, +1, formId);
+      } catch (e) {
+        console.warn('Could not apply response scores:', e.message);
+        // fallback to previous function
+        await calculatePreferenceScores(connection, makh, responseId);
+      }
     }
     
     // Phát coupon liên kết với form (nếu form có MaKM) - chỉ phát khi consent = true
@@ -413,6 +420,103 @@ async function calculatePreferenceScores(connection, makh, responseId) {
 }
 
 /**
+ * Apply or remove contribution of a specific response to the customer's preference scores.
+ * multiplier: +1 to add, -1 to subtract
+ */
+async function applyResponseScores(connection, makh, responseId, multiplier = 1, formId = null) {
+  // multiplier should be +1 or -1
+  multiplier = Number(multiplier) >= 0 ? 1 : -1;
+
+  const [answers] = await connection.query(
+    `SELECT tl.MaLuaChon, lc.MaTL, lc.MaTG, lc.HinhThuc, lc.MaKhoangGia,
+            lc.NamXBTu, lc.NamXBDen, lc.SoTrangTu, lc.SoTrangDen, lc.TrongSo
+     FROM traloi_sothich tl
+     JOIN luachon_cauhoi lc ON tl.MaLuaChon = lc.MaLuaChon
+     WHERE tl.MaPhanHoi = ?`,
+    [responseId]
+  );
+
+  const scoreMap = {};
+  for (let ans of answers) {
+    const weight = parseFloat(ans.TrongSo || 1.0);
+    if (ans.MaTL) {
+      const key = `theloai:${ans.MaTL}`;
+      scoreMap[key] = (scoreMap[key] || 0) + weight;
+    }
+    if (ans.MaTG) {
+      const key = `tacgia:${ans.MaTG}`;
+      scoreMap[key] = (scoreMap[key] || 0) + weight;
+    }
+    if (ans.HinhThuc) {
+      const key = `hinhthuc:${ans.HinhThuc}`;
+      scoreMap[key] = (scoreMap[key] || 0) + weight;
+    }
+    if (ans.MaKhoangGia) {
+      const key = `khoanggia:${ans.MaKhoangGia}`;
+      scoreMap[key] = (scoreMap[key] || 0) + weight;
+    }
+    if (ans.NamXBTu && ans.NamXBDen) {
+      const key = `namxb:${ans.NamXBTu}-${ans.NamXBDen}`;
+      scoreMap[key] = (scoreMap[key] || 0) + weight;
+    }
+    if (ans.SoTrangTu && ans.SoTrangDen) {
+      const key = `sotrang:${ans.SoTrangTu}-${ans.SoTrangDen}`;
+      scoreMap[key] = (scoreMap[key] || 0) + weight;
+    }
+  }
+
+  for (let [key, deltaScore] of Object.entries(scoreMap)) {
+    const [LoaiThucThe, KhoaThucThe] = key.split(':');
+    const change = Math.round(deltaScore) * multiplier;
+
+    // Read current value
+    const [rows] = await connection.query(
+      `SELECT DiemSo FROM diem_sothich_khachhang WHERE makh = ? AND LoaiThucThe = ? AND KhoaThucThe = ? LIMIT 1`,
+      [makh, LoaiThucThe, KhoaThucThe]
+    );
+
+    const oldScore = (rows && rows.length > 0) ? Number(rows[0].DiemSo || 0) : 0;
+    const newScore = Math.max(0, oldScore + change);
+
+    if (change > 0) {
+      // insert or add
+      await connection.query(
+        `INSERT INTO diem_sothich_khachhang (makh, LoaiThucThe, KhoaThucThe, DiemSo, NgayTao, NgayCapNhat, last_form_id)
+         VALUES (?, ?, ?, ?, NOW(), NOW(), ?)
+         ON DUPLICATE KEY UPDATE DiemSo = DiemSo + VALUES(DiemSo), NgayCapNhat = NOW(), last_form_id = VALUES(last_form_id)`,
+        [makh, LoaiThucThe, KhoaThucThe, change, formId]
+      );
+    } else if (change < 0) {
+      if (newScore <= 0) {
+        await connection.query(
+          `DELETE FROM diem_sothich_khachhang WHERE makh = ? AND LoaiThucThe = ? AND KhoaThucThe = ?`,
+          [makh, LoaiThucThe, KhoaThucThe]
+        );
+      } else {
+        await connection.query(
+          `UPDATE diem_sothich_khachhang SET DiemSo = ?, NgayCapNhat = NOW() WHERE makh = ? AND LoaiThucThe = ? AND KhoaThucThe = ?`,
+          [newScore, makh, LoaiThucThe, KhoaThucThe]
+        );
+      }
+    } else {
+      // no-op
+    }
+
+    // Insert history record
+    try {
+      await connection.query(
+        `INSERT INTO diem_sothich_history (makh, LoaiThucThe, KhoaThucThe, oldScore, newScore, strategy, form_id, note, changed_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
+        [makh, LoaiThucThe, KhoaThucThe, oldScore, newScore, multiplier > 0 ? 'submit_add' : 'submit_subtract', formId, multiplier > 0 ? 'applied from submit' : 'removed from previous submit']
+      );
+    } catch (e) {
+      // history insert should not block main flow
+      console.warn('Could not insert history for applyResponseScores:', e.message);
+    }
+  }
+}
+
+/**
  * Lấy gợi ý sản phẩm dựa trên sở thích
  * GET /api/preferences/recommendations?makh=X&limit=20
  */
@@ -622,6 +726,235 @@ export const checkPreferences = async (req, res) => {
   }
 };
 
+/**
+ * Merge form sở thích mới với dữ liệu hiện tại
+ * POST /api/preferences/merge
+ * Body: { makh, formId, strategy, newWeight, removeAbsent, preferences: [{LoaiThucThe, KhoaThucThe, DiemSo}] }
+ */
+export const mergePreferenceForm = async (req, res) => {
+  const connection = await pool.getConnection();
+  try {
+    await connection.beginTransaction();
+
+    const { makh, formId = null, strategy = 'weighted', newWeight = 0.7, removeAbsent = true, preferences } = req.body;
+
+    if (!makh || !Array.isArray(preferences)) {
+      await connection.rollback();
+      return res.status(400).json({ success: false, message: 'Thiếu makh hoặc preferences không hợp lệ' });
+    }
+
+    // Normalize incoming preferences into a map key -> incomingScore
+    const incomingMap = new Map();
+    for (let p of preferences) {
+      if (!p.LoaiThucThe || p.KhoaThucThe === undefined) continue;
+      const key = `${p.LoaiThucThe}::${String(p.KhoaThucThe)}`;
+      const score = Math.max(0, Math.min(100, Number(p.DiemSo || 0)));
+      incomingMap.set(key, score);
+    }
+
+    // Fetch existing preferences for user
+    const [existingRows] = await connection.query(
+      `SELECT LoaiThucThe, KhoaThucThe, DiemSo FROM diem_sothich_khachhang WHERE makh = ?`,
+      [makh]
+    );
+
+    const existingMap = new Map();
+    for (let r of existingRows) {
+      const k = `${r.LoaiThucThe}::${String(r.KhoaThucThe)}`;
+      existingMap.set(k, r.DiemSo);
+    }
+
+    const updates = [];
+
+    // Apply incoming preferences
+    for (let [key, incomingScore] of incomingMap.entries()) {
+      const [LoaiThucThe, KhoaThucThe] = key.split('::');
+      const has = existingMap.has(key);
+      const oldScore = has ? existingMap.get(key) : 0;
+      let finalScore = incomingScore;
+
+      if (strategy === 'replace') {
+        finalScore = incomingScore;
+      } else if (strategy === 'additive') {
+        finalScore = Math.min(100, Math.round(oldScore + incomingScore));
+      } else {
+        // weighted default
+        const w = Number(newWeight) || 0.7;
+        finalScore = Math.round(oldScore * (1 - w) + incomingScore * w);
+      }
+
+      finalScore = Math.max(0, Math.min(100, finalScore));
+
+      // Upsert into diem_sothich_khachhang
+      await connection.query(
+        `INSERT INTO diem_sothich_khachhang (makh, LoaiThucThe, KhoaThucThe, DiemSo, NgayTao, NgayCapNhat, last_form_id)
+         VALUES (?, ?, ?, ?, NOW(), NOW(), ?)
+         ON DUPLICATE KEY UPDATE DiemSo = VALUES(DiemSo), NgayCapNhat = NOW(), last_form_id = VALUES(last_form_id)`,
+        [makh, LoaiThucThe, KhoaThucThe, finalScore, formId]
+      );
+
+      // Insert history
+      await connection.query(
+        `INSERT INTO diem_sothich_history (makh, LoaiThucThe, KhoaThucThe, oldScore, newScore, strategy, form_id)
+         VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        [makh, LoaiThucThe, KhoaThucThe, oldScore || 0, finalScore, strategy, formId]
+      );
+
+      updates.push({ LoaiThucThe, KhoaThucThe, oldScore: oldScore || 0, newScore: finalScore });
+    }
+
+    // Handle removals: existing keys not present in incoming
+    if (removeAbsent) {
+      const decay = 0.5; // reduce to 50% by default
+      for (let [key, oldScore] of existingMap.entries()) {
+        if (!incomingMap.has(key)) {
+          const [LoaiThucThe, KhoaThucThe] = key.split('::');
+          const reduced = Math.round(oldScore * decay);
+          if (reduced < 5) {
+            // delete
+            await connection.query(
+              `DELETE FROM diem_sothich_khachhang WHERE makh = ? AND LoaiThucThe = ? AND KhoaThucThe = ?`,
+              [makh, LoaiThucThe, KhoaThucThe]
+            );
+            await connection.query(
+              `INSERT INTO diem_sothich_history (makh, LoaiThucThe, KhoaThucThe, oldScore, newScore, strategy, form_id, note)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+              [makh, LoaiThucThe, KhoaThucThe, oldScore, 0, 'decay_deleted', formId, 'auto-deleted after decay']
+            );
+            updates.push({ LoaiThucThe, KhoaThucThe, oldScore, newScore: 0, removed: true });
+          } else {
+            await connection.query(
+              `UPDATE diem_sothich_khachhang SET DiemSo = ?, NgayCapNhat = NOW() WHERE makh = ? AND LoaiThucThe = ? AND KhoaThucThe = ?`,
+              [reduced, makh, LoaiThucThe, KhoaThucThe]
+            );
+            await connection.query(
+              `INSERT INTO diem_sothich_history (makh, LoaiThucThe, KhoaThucThe, oldScore, newScore, strategy, form_id)
+               VALUES (?, ?, ?, ?, ?, ?, ?)`,
+              [makh, LoaiThucThe, KhoaThucThe, oldScore, reduced, 'decay_reduced', formId]
+            );
+            updates.push({ LoaiThucThe, KhoaThucThe, oldScore, newScore: reduced });
+          }
+        }
+      }
+    }
+
+    await connection.commit();
+
+    // After commit, compute a small set of updated recommendations to return immediately
+    try {
+      const recLimit = 5;
+      const sql = `
+      SELECT 
+        sp.MaSP, 
+        sp.TenSP, 
+        sp.DonGia, 
+        sp.HinhAnh,
+        sp.HinhThuc,
+        sp.NamXB,
+        sp.SoLuong,
+        tl.TenTL,
+        tg.TenTG,
+        (
+          COALESCE((SELECT DiemSo FROM diem_sothich_khachhang 
+                    WHERE makh = ? AND LoaiThucThe = 'theloai' 
+                    AND KhoaThucThe = CAST(sp.MaTL AS CHAR)), 0) * 0.35 +
+          COALESCE((SELECT DiemSo FROM diem_sothich_khachhang 
+                    WHERE makh = ? AND LoaiThucThe = 'tacgia' 
+                    AND KhoaThucThe = CAST(sp.MaTG AS CHAR)), 0) * 0.30 +
+          COALESCE((SELECT DiemSo FROM diem_sothich_khachhang 
+                    WHERE makh = ? AND LoaiThucThe = 'hinhthuc' 
+                    AND KhoaThucThe = sp.HinhThuc), 0) * 0.15 +
+          CASE 
+            WHEN sp.DonGia < 100000 THEN 
+              COALESCE((SELECT DiemSo FROM diem_sothich_khachhang 
+                        WHERE makh = ? AND LoaiThucThe = 'khoanggia' 
+                        AND KhoaThucThe = 'LT100'), 0)
+            WHEN sp.DonGia BETWEEN 100000 AND 200000 THEN 
+              COALESCE((SELECT DiemSo FROM diem_sothich_khachhang 
+                        WHERE makh = ? AND LoaiThucThe = 'khoanggia' 
+                        AND KhoaThucThe = '100-200'), 0)
+            WHEN sp.DonGia BETWEEN 200000 AND 300000 THEN 
+              COALESCE((SELECT DiemSo FROM diem_sothich_khachhang 
+                        WHERE makh = ? AND LoaiThucThe = 'khoanggia' 
+                        AND KhoaThucThe = '200-300'), 0)
+            WHEN sp.DonGia BETWEEN 300000 AND 500000 THEN 
+              COALESCE((SELECT DiemSo FROM diem_sothich_khachhang 
+                        WHERE makh = ? AND LoaiThucThe = 'khoanggia' 
+                        AND KhoaThucThe = '300-500'), 0)
+            ELSE 
+              COALESCE((SELECT DiemSo FROM diem_sothich_khachhang 
+                        WHERE makh = ? AND LoaiThucThe = 'khoanggia' 
+                        AND KhoaThucThe = 'GT500'), 0)
+          END * 0.10 +
+          (CASE 
+            WHEN sp.NamXB >= 2023 THEN 
+              COALESCE((SELECT DiemSo FROM diem_sothich_khachhang 
+                        WHERE makh = ? AND LoaiThucThe = 'namxb' 
+                        AND KhoaThucThe LIKE '2023-%'), 0)
+            WHEN sp.NamXB BETWEEN 2020 AND 2022 THEN 
+              COALESCE((SELECT DiemSo FROM diem_sothich_khachhang 
+                        WHERE makh = ? AND LoaiThucThe = 'namxb' 
+                        AND KhoaThucThe LIKE '2020-%'), 0)
+            ELSE 
+              COALESCE((SELECT DiemSo FROM diem_sothich_khachhang 
+                        WHERE makh = ? AND LoaiThucThe = 'namxb' 
+                        AND KhoaThucThe LIKE '1900-%'), 0)
+          END) * 0.05 +
+          (CASE 
+            WHEN sp.SoTrang < 200 THEN 
+              COALESCE((SELECT DiemSo FROM diem_sothich_khachhang 
+                        WHERE makh = ? AND LoaiThucThe = 'sotrang' 
+                        AND KhoaThucThe LIKE '1-200'), 0)
+            WHEN sp.SoTrang BETWEEN 200 AND 400 THEN 
+              COALESCE((SELECT DiemSo FROM diem_sothich_khachhang 
+                        WHERE makh = ? AND LoaiThucThe = 'sotrang' 
+                        AND KhoaThucThe LIKE '200-400'), 0)
+            ELSE 
+              COALESCE((SELECT DiemSo FROM diem_sothich_khachhang 
+                        WHERE makh = ? AND LoaiThucThe = 'sotrang' 
+                        AND KhoaThucThe LIKE '400-%'), 0)
+          END) * 0.05
+        ) AS TongDiem
+      FROM sanpham sp
+      LEFT JOIN theloai tl ON sp.MaTL = tl.MaTL
+      LEFT JOIN tacgia tg ON sp.MaTG = tg.MaTG
+      WHERE sp.TinhTrang = b'1' AND sp.SoLuong > 0
+      ORDER BY TongDiem DESC, sp.NamXB DESC
+      LIMIT ?
+      `;
+
+      // params: 14 makh placeholders + limit
+      const params = Array(14).fill(makh).concat([recLimit]);
+      const [recs] = await pool.query(sql, params);
+
+      // Normalize TongDiem -> RecommendationPercent
+      try {
+        const scores = recs.map(p => Number(p.TongDiem || 0));
+        const max = scores.length ? Math.max(...scores) : 0;
+        if (max > 0) {
+          recs.forEach(p => { p.RecommendationPercent = Math.round((Number(p.TongDiem || 0) / max) * 100); });
+        } else {
+          recs.forEach(p => { p.RecommendationPercent = 0; });
+        }
+      } catch (err) {
+        recs.forEach(p => { p.RecommendationPercent = 0; });
+      }
+
+      return res.json({ success: true, message: 'Cập nhật sở thích thành công', updates, recommendations: recs });
+    } catch (err) {
+      // If recommendation computation fails, still return success for updates
+      console.warn('Could not compute immediate recommendations:', err.message);
+      return res.json({ success: true, message: 'Cập nhật sở thích thành công', updates });
+    }
+  } catch (error) {
+    await connection.rollback();
+    console.error('Error mergePreferenceForm:', error);
+    return res.status(500).json({ success: false, message: 'Lỗi khi hợp nhất sở thích', error: error.message });
+  } finally {
+    connection.release();
+  }
+};
+
 // ============== ADMIN APIs ==============
 
 /**
@@ -827,7 +1160,8 @@ export const getFormResponses = async (req, res) => {
     const offset = (page - 1) * limit;
 
     const [responses] = await pool.query(
-      `SELECT pr.*, kh.tenkh, kh.email
+      `SELECT pr.*, kh.tenkh, kh.email,
+         (SELECT COUNT(*) FROM traloi_sothich tl WHERE tl.MaPhanHoi = pr.MaPhanHoi) AS SoCauTraLoi
        FROM phanhoi_sothich pr
        JOIN khachhang kh ON pr.makh = kh.makh
        WHERE pr.MaForm = ?
@@ -857,6 +1191,36 @@ export const getFormResponses = async (req, res) => {
       message: 'Lỗi khi lấy danh sách phản hồi',
       error: error.message
     });
+  }
+};
+
+/**
+ * Lấy chi tiết phản hồi (các câu trả lời) theo MaPhanHoi
+ * GET /api/preferences/admin/responses/:id
+ */
+export const getResponseDetail = async (req, res) => {
+  try {
+    const { id } = req.params; // MaPhanHoi
+    if (!id) return res.status(400).json({ success: false, message: 'Thiếu MaPhanHoi' });
+
+    // Lấy tất cả câu trả lời liên quan tới phản hồi
+    const [answers] = await pool.query(
+      `SELECT tl.MaPhanHoi, tl.MaCauHoi, tl.MaLuaChon, tl.VanBan, tl.DiemDanhGia,
+              lc.NoiDungLuaChon, lc.MaTL, lc.MaTG, lc.HinhThuc, lc.MaKhoangGia, lc.NamXBTu, lc.NamXBDen, lc.SoTrangTu, lc.SoTrangDen
+       FROM traloi_sothich tl
+       LEFT JOIN luachon_cauhoi lc ON tl.MaLuaChon = lc.MaLuaChon
+       WHERE tl.MaPhanHoi = ?
+       ORDER BY tl.MaCauHoi`,
+      [id]
+    );
+
+    // Count
+    const count = answers.length;
+
+    return res.json({ success: true, data: { answers, count } });
+  } catch (error) {
+    console.error('Error getResponseDetail:', error);
+    return res.status(500).json({ success: false, message: 'Lỗi khi lấy chi tiết phản hồi', error: error.message });
   }
 };
 
@@ -977,6 +1341,24 @@ export const createOption = async (req, res) => {
       });
     }
 
+    // Validate MaKhoangGia against allowed enum values to avoid SQL insertion errors
+    // Allowed values are defined in the migration as ENUM('LT100','100-200','200-300','300-500','GT500')
+    const ALLOWED_PRICE_RANGES = [
+      'LT100', '100-200', '200-300', '300-400', '400-500',
+      '500-700', '700-1000', '1000-2000', '300-500', 'GT500', 'GT2000'
+    ];
+    if (priceRange !== null && priceRange !== undefined && priceRange !== '') {
+      // sometimes admin UI may send a human label like '300-400' by mistake — reject and return helpful message
+      if (!ALLOWED_PRICE_RANGES.includes(String(priceRange))) {
+        return res.status(400).json({
+          success: false,
+          message: 'Giá trị MaKhoangGia không hợp lệ',
+          allowedValues: ALLOWED_PRICE_RANGES,
+          received: priceRange
+        });
+      }
+    }
+
     const [result] = await pool.query(
       `INSERT INTO luachon_cauhoi 
        (MaCauHoi, NoiDungLuaChon, MaTL, MaTG, HinhThuc, MaKhoangGia, NamXBTu, NamXBDen, SoTrangTu, SoTrangDen, TrongSo, ThuTu)
@@ -996,6 +1378,92 @@ export const createOption = async (req, res) => {
       message: 'Lỗi khi tạo lựa chọn',
       error: error.message
     });
+  }
+};
+
+/**
+ * Cập nhật lựa chọn (Admin)
+ * PUT /api/admin/options/:id
+ */
+export const updateOption = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const {
+      NoiDungLuaChon, noiDungLuaChon,
+      MaTL, maTL,
+      MaTG, maTG,
+      HinhThuc, hinhThuc,
+      MaKhoangGia, maKhoangGia,
+      NamXBTu, namXBTu,
+      NamXBDen, namXBDen,
+      SoTrangTu, soTrangTu,
+      SoTrangDen, soTrangDen,
+      TrongSo, trongSo,
+      ThuTu, thuTu
+    } = req.body;
+
+    const content = NoiDungLuaChon || noiDungLuaChon;
+    const categoryId = MaTL || maTL || null;
+    const authorId = MaTG || maTG || null;
+    const format = HinhThuc || hinhThuc || null;
+    const priceRange = MaKhoangGia || maKhoangGia || null;
+    const yearFrom = NamXBTu || namXBTu || null;
+    const yearTo = NamXBDen || namXBDen || null;
+    const pageFrom = SoTrangTu || soTrangTu || null;
+    const pageTo = SoTrangDen || soTrangDen || null;
+    const weight = TrongSo !== undefined ? TrongSo : (trongSo !== undefined ? trongSo : undefined);
+    const order = ThuTu !== undefined ? ThuTu : (thuTu !== undefined ? thuTu : undefined);
+
+    // Validate priceRange if provided
+    const ALLOWED_PRICE_RANGES = [
+      'LT100', '100-200', '200-300', '300-400', '400-500',
+      '500-700', '700-1000', '1000-2000', '300-500', 'GT500', 'GT2000'
+    ];
+    if (priceRange !== null && priceRange !== undefined && priceRange !== '') {
+      if (!ALLOWED_PRICE_RANGES.includes(String(priceRange))) {
+        return res.status(400).json({
+          success: false,
+          message: 'Giá trị MaKhoangGia không hợp lệ',
+          allowedValues: ALLOWED_PRICE_RANGES,
+          received: priceRange
+        });
+      }
+    }
+
+    // Build dynamic SET clause for partial updates
+    const sets = [];
+    const params = [];
+
+    if (content !== undefined) { sets.push('NoiDungLuaChon = ?'); params.push(content); }
+    if (categoryId !== undefined) { sets.push('MaTL = ?'); params.push(categoryId); }
+    if (authorId !== undefined) { sets.push('MaTG = ?'); params.push(authorId); }
+    if (format !== undefined) { sets.push('HinhThuc = ?'); params.push(format); }
+    if (priceRange !== undefined) { sets.push('MaKhoangGia = ?'); params.push(priceRange); }
+    if (yearFrom !== undefined) { sets.push('NamXBTu = ?'); params.push(yearFrom); }
+    if (yearTo !== undefined) { sets.push('NamXBDen = ?'); params.push(yearTo); }
+    if (pageFrom !== undefined) { sets.push('SoTrangTu = ?'); params.push(pageFrom); }
+    if (pageTo !== undefined) { sets.push('SoTrangDen = ?'); params.push(pageTo); }
+    if (weight !== undefined) { sets.push('TrongSo = ?'); params.push(weight); }
+    if (order !== undefined) { sets.push('ThuTu = ?'); params.push(order); }
+
+    if (sets.length === 0) {
+      return res.status(400).json({ success: false, message: 'Không có trường nào để cập nhật' });
+    }
+
+    const sql = `UPDATE luachon_cauhoi SET ${sets.join(', ')} WHERE MaLuaChon = ?`;
+    params.push(id);
+
+    const [result] = await pool.query(sql, params);
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ success: false, message: 'Không tìm thấy lựa chọn để cập nhật' });
+    }
+
+    return res.json({ success: true, message: 'Cập nhật lựa chọn thành công' });
+  } catch (error) {
+    console.error('Error updateOption:', error);
+    return res.status(500).json({ success: false, message: 'Lỗi khi cập nhật lựa chọn', error: error.message });
   }
 };
 

@@ -129,11 +129,19 @@ async function main() {
       3
     );
 
+    // More granular ranges from 100k up to 2M
     await createOption(q3, 'Dưới 100.000đ', { MaKhoangGia: 'LT100', TrongSo: 1.0, ThuTu: 1 });
     await createOption(q3, '100.000đ - 200.000đ', { MaKhoangGia: '100-200', TrongSo: 1.0, ThuTu: 2 });
     await createOption(q3, '200.000đ - 300.000đ', { MaKhoangGia: '200-300', TrongSo: 1.0, ThuTu: 3 });
-    await createOption(q3, '300.000đ - 500.000đ', { MaKhoangGia: '300-500', TrongSo: 1.0, ThuTu: 4 });
-    await createOption(q3, 'Trên 500.000đ', { MaKhoangGia: 'GT500', TrongSo: 1.0, ThuTu: 5 });
+    await createOption(q3, '300.000đ - 400.000đ', { MaKhoangGia: '300-400', TrongSo: 1.0, ThuTu: 4 });
+    await createOption(q3, '400.000đ - 500.000đ', { MaKhoangGia: '400-500', TrongSo: 1.0, ThuTu: 5 });
+    await createOption(q3, '500.000đ - 700.000đ', { MaKhoangGia: '500-700', TrongSo: 1.0, ThuTu: 6 });
+    await createOption(q3, '700.000đ - 1.000.000đ', { MaKhoangGia: '700-1000', TrongSo: 1.0, ThuTu: 7 });
+    await createOption(q3, '1.000.000đ - 2.000.000đ', { MaKhoangGia: '1000-2000', TrongSo: 1.0, ThuTu: 8 });
+    await createOption(q3, 'Trên 2.000.000đ', { MaKhoangGia: 'GT2000', TrongSo: 1.0, ThuTu: 9 });
+    // Keep legacy ranges for compatibility
+    await createOption(q3, '300.000đ - 500.000đ (legacy)', { MaKhoangGia: '300-500', TrongSo: 1.0, ThuTu: 10 });
+    await createOption(q3, 'Trên 500.000đ (legacy)', { MaKhoangGia: 'GT500', TrongSo: 1.0, ThuTu: 11 });
 
     // Example 4: Hình thức sách
     console.log('\n📝 Creating Format Question...');

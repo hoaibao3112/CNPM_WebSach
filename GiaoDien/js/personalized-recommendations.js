@@ -431,14 +431,7 @@ const PersonalizedRecommendations = {
             ${pages ? `<span class="product-pages">${pages} trang</span>` : ''}
           </div>
 
-          ${recommendationScore > 0 ? `
-            <div class="recommendation-match">
-              <div class="match-bar">
-                <div class="match-fill" style="width: ${recommendationScore}%"></div>
-              </div>
-              <span class="match-text">${Math.round(recommendationScore)}% phù hợp</span>
-            </div>
-          ` : ''}
+          <!-- Recommendation match percentage removed per admin request -->
           
           <div class="product-price">
             <span class="price">${this.formatPrice(finalPrice)}</span>

@@ -543,28 +543,22 @@ const DiscountManagement = () => {
 
   const handleViewResponseDetail = async (response) => {
     try {
-      // Fetch chi tiết câu trả lời
+      // Fetch chi tiết câu trả lời từ endpoint mới (trả về answers array)
       const detailRes = await axios.get(
-        `http://localhost:5000/api/preferences/admin/forms/${response.MaForm}/responses`,
+        `http://localhost:5000/api/preferences/admin/responses/${response.MaPhanHoi}`,
         {
           headers: { Authorization: `Bearer ${localStorage.getItem('authToken')}` }
         }
       );
-      
-      // Tìm response cụ thể
-      const fullResponse = (detailRes.data.data || []).find(
-        r => r.MaPhanHoi === response.MaPhanHoi
-      );
-      
-      if (fullResponse) {
-        setSelectedResponse({
-          ...fullResponse,
-          TenForm: response.TenForm
-        });
-        setShowResponseDetail(true);
-      } else {
-        message.error('Không tìm thấy chi tiết phản hồi');
-      }
+
+      const answers = detailRes.data.data?.answers || [];
+
+      // Merge metadata we already have (response) with fetched answers
+      setSelectedResponse({
+        ...response,
+        answers,
+      });
+      setShowResponseDetail(true);
     } catch (err) {
       message.error('Không thể tải chi tiết phản hồi');
       console.error(err);
@@ -1419,7 +1413,7 @@ const handleToggleStatus = async (id, currentStatus) => {
                 align: 'center',
                 render: (_, record) => (
                   <Tag color="purple">
-                    {record.answers?.length || 0} câu
+                    {(record.SoCauTraLoi ?? record.answers?.length ?? 0)} câu
                   </Tag>
                 )
               },
@@ -2187,7 +2181,19 @@ const handleToggleStatus = async (id, currentStatus) => {
 
                           {q.LoaiCauHoi === 'entity_khoanggia' && (
                             <Form.Item label="Mã khoảng giá" name="MaKhoangGia">
-                              <Input placeholder="VD: LT100, 100-200, GT500" />
+                              <Select placeholder="Chọn mã khoảng giá (ví dụ: 300.000đ - 400.000đ)">
+                                <Option value="LT100">Dưới 100.000đ</Option>
+                                <Option value="100-200">100.000đ - 200.000đ</Option>
+                                <Option value="200-300">200.000đ - 300.000đ</Option>
+                                <Option value="300-400">300.000đ - 400.000đ</Option>
+                                <Option value="400-500">400.000đ - 500.000đ</Option>
+                                <Option value="500-700">500.000đ - 700.000đ</Option>
+                                <Option value="700-1000">700.000đ - 1.000.000đ</Option>
+                                <Option value="1000-2000">1.000.000đ - 2.000.000đ</Option>
+                                <Option value="GT2000">Trên 2.000.000đ</Option>
+                                <Option value="300-500">300.000đ - 500.000đ (legacy)</Option>
+                                <Option value="GT500">Trên 500.000đ (legacy)</Option>
+                              </Select>
                             </Form.Item>
                           )}
 

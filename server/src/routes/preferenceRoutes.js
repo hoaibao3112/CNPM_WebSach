@@ -10,11 +10,13 @@ import {
   updateForm,
   deleteForm,
   getFormResponses,
+  getResponseDetail,
   createQuestion,
   deleteQuestion,
   createOption,
   deleteOption
 } from '../controllers/preferenceController.js';
+import { recomputePreferencesForCustomer } from '../controllers/recomputeController.js';
 
 const router = express.Router();
 
@@ -91,6 +93,30 @@ router.delete('/admin/forms/:id', deleteForm);
  * @access  Admin only
  */
 router.get('/admin/forms/:id/responses', getFormResponses);
+
+/**
+ * @route   GET /api/preferences/admin/responses/:id
+ * @desc    Lấy chi tiết 1 phản hồi theo MaPhanHoi (Admin)
+ * @access  Admin only
+ */
+router.get('/admin/responses/:id', getResponseDetail);
+
+/**
+ * @route   POST /api/preferences/admin/recompute/:makh
+ * @desc    Recompute aggregated preferences for a customer from all consented responses
+ * @access  Admin only
+ */
+router.post('/admin/recompute/:makh', async (req, res) => {
+  try {
+    const { makh } = req.params;
+    if (!makh) return res.status(400).json({ success: false, message: 'Thiếu makh' });
+    const result = await recomputePreferencesForCustomer(makh);
+    return res.json({ success: true, data: result });
+  } catch (err) {
+    console.error('Error admin recompute:', err);
+    return res.status(500).json({ success: false, message: 'Lỗi khi tái tính sở thích', error: err.message });
+  }
+});
 
 /**
  * @route   POST /api/preferences/admin/questions

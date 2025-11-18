@@ -41,6 +41,10 @@ export const getPersonalizedRecommendations = async (req, res) => {
     const preferenceMap = buildPreferenceMap(preferences);
 
     // 3. Query sản phẩm với scoring thông minh
+    // Build params array to match all '?' placeholders in the SQL above
+    const makhPlaceholderCount = 15; // number of times we use makh in the scoring SQL
+    const paramsForProducts = Array(makhPlaceholderCount).fill(makh).concat([parseInt(limit), parseInt(offset)]);
+
     const [products] = await pool.query(
       `SELECT 
         sp.MaSP,
@@ -112,22 +116,56 @@ export const getPersonalizedRecommendations = async (req, res) => {
                   AND LoaiThucThe = 'khoanggia' 
                   AND KhoaThucThe = '200-300'
               ), 0)
-            WHEN sp.DonGia BETWEEN 300000 AND 499999 THEN 
+            WHEN sp.DonGia BETWEEN 300000 AND 399999 THEN 
               COALESCE((
                 SELECT DiemSo 
                 FROM diem_sothich_khachhang 
                 WHERE makh = ? 
                   AND LoaiThucThe = 'khoanggia' 
-                  AND KhoaThucThe = '300-500'
+                  AND KhoaThucThe IN ('300-400','300-500')
+              ), 0)
+            WHEN sp.DonGia BETWEEN 400000 AND 499999 THEN 
+              COALESCE((
+                SELECT DiemSo 
+                FROM diem_sothich_khachhang 
+                WHERE makh = ? 
+                  AND LoaiThucThe = 'khoanggia' 
+                  AND KhoaThucThe IN ('400-500','300-500')
+              ), 0)
+            WHEN sp.DonGia BETWEEN 500000 AND 699999 THEN 
+              COALESCE((
+                SELECT DiemSo 
+                FROM diem_sothich_khachhang 
+                WHERE makh = ? 
+                  AND LoaiThucThe = 'khoanggia' 
+                  AND KhoaThucThe IN ('500-700','300-500','GT500')
+              ), 0)
+            WHEN sp.DonGia BETWEEN 700000 AND 999999 THEN 
+              COALESCE((
+                SELECT DiemSo 
+                FROM diem_sothich_khachhang 
+                WHERE makh = ? 
+                  AND LoaiThucThe = 'khoanggia' 
+                  AND KhoaThucThe = '700-1000'
+              ), 0)
+            WHEN sp.DonGia BETWEEN 1000000 AND 1999999 THEN 
+              COALESCE((
+                SELECT DiemSo 
+                FROM diem_sothich_khachhang 
+                WHERE makh = ? 
+                  AND LoaiThucThe = 'khoanggia' 
+                  AND KhoaThucThe = '1000-2000'
+              ), 0)
+            WHEN sp.DonGia >= 2000000 THEN 
+              COALESCE((
+                SELECT DiemSo 
+                FROM diem_sothich_khachhang 
+                WHERE makh = ? 
+                  AND LoaiThucThe = 'khoanggia' 
+                  AND KhoaThucThe IN ('GT2000','GT500')
               ), 0)
             ELSE 
-              COALESCE((
-                SELECT DiemSo 
-                FROM diem_sothich_khachhang 
-                WHERE makh = ? 
-                  AND LoaiThucThe = 'khoanggia' 
-                  AND KhoaThucThe = 'GT500'
-              ), 0)
+              0
           END * 0.10 +
           
           -- Điểm năm xuất bản (trọng số 5%)
@@ -164,16 +202,27 @@ export const getPersonalizedRecommendations = async (req, res) => {
       LEFT JOIN tacgia tg ON sp.MaTG = tg.MaTG
       WHERE sp.TinhTrang = b'1' 
         AND sp.SoLuong > 0
-      HAVING RecommendationScore > 0
       ORDER BY RecommendationScore DESC, sp.NamXB DESC, sp.MaSP DESC
       LIMIT ? OFFSET ?`,
-      [
-        makh, makh, makh, makh, makh, makh, makh, makh, // 8 lần cho scoring
-        makh, makh, makh, // 3 lần cho năm XB
-        parseInt(limit), 
-        parseInt(offset)
-      ]
+      paramsForProducts
     );
+
+    // Normalize RecommendationScore into a 0-100 percent (user-facing "độ phù hợp")
+    try {
+      const scores = products.map(p => Number(p.RecommendationScore || 0));
+      const max = scores.length ? Math.max(...scores) : 0;
+      if (max > 0) {
+        products.forEach(p => {
+          const s = Number(p.RecommendationScore || 0);
+          p.RecommendationPercent = Math.round((s / max) * 100);
+        });
+      } else {
+        products.forEach(p => { p.RecommendationPercent = 0; });
+      }
+    } catch (err) {
+      console.warn('Could not compute RecommendationPercent:', err.message);
+      products.forEach(p => { p.RecommendationPercent = 0; });
+    }
 
     // 4. Đếm tổng số sản phẩm phù hợp
     const [[{ total }]] = await pool.query(
