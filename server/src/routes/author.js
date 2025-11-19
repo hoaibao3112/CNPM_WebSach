@@ -129,15 +129,18 @@ router.get('/:id', async (req, res) => {
     }
 
     // Lấy danh sách sách (sản phẩm) thuộc tác giả đó
-    const [books] = await pool.query(
-      `SELECT 
-          sp.MaSP, 
-          sp.TenSP, 
-          sp.HinhAnh 
-        FROM sanpham AS sp
-        WHERE sp.MaTG = ?`,
-      [authorId]
-    );
+    // Một số bản ghi có thể không đặt MaTG nhưng có tác giả trong bảng tacgia;
+    // do đó so sánh sẽ tìm theo MaTG hoặc theo tên tác giả trong bảng tacgia (không phân biệt hoa thường).
+    const authorName = (author.TenTG || '').trim();
+    const booksQuery = `
+      SELECT sp.MaSP, sp.TenSP, sp.HinhAnh, sp.MaTG
+      FROM sanpham AS sp
+      LEFT JOIN tacgia tg ON sp.MaTG = tg.MaTG
+      WHERE sp.MaTG = ?
+         OR (tg.TenTG IS NOT NULL AND LOWER(TRIM(tg.TenTG)) = LOWER(?))
+    `;
+    const [books] = await pool.query(booksQuery, [authorId, authorName]);
+    console.log(`Author ${authorId} (${authorName}) - books found:`, books.length);
 
     // Trả về dữ liệu đầy đủ
     res.status(200).json({

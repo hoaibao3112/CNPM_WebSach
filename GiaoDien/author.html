@@ -19,55 +19,58 @@
   </nav>
   
   <div class="wrapper">
-
-    <!-- Khung màu hồng-->
-    <div class="title">
-      <img src="img/author/icon.jpg" alt="Danh sách tác giả">
-      <span>Danh Sách Tác Giả</span>
-    </div>
-
-    <!-- Khung control -->
-    <div class="author-controls">
-      <input type="text" id="search-input-author" placeholder="Tìm kiếm tác giả...">
-
-      <div class="pagination">
-        <button id="prev-page" disabled>Trang trước</button>
-        <span id="page-info">Trang 1 / 1</span>
-        <button id="next-page">Trang sau</button>
+    <header class="page-head">
+      <div class="page-icon"><img src="img/author/icon.jpg" alt="Danh sách tác giả"></div>
+      <div class="page-title">
+        <h1>Danh Sách Tác Giả</h1>
+        <p class="subtitle">Khám phá tác giả yêu thích của bạn</p>
       </div>
-    </div>
+      <div class="controls">
+        <input type="text" id="search-input-author" placeholder="Tìm kiếm tác giả...">
+        <div class="pagination">
+          <button id="prev-page" disabled>‹</button>
+          <span id="page-info">Trang 1 / 1</span>
+          <button id="next-page">›</button>
+        </div>
+      </div>
+    </header>
 
-    <!-- Khung tác giả -->
-    <div class="author-wrapper" id="author-list">
+    <main class="author-grid" id="author-list">
       <div class="loading">Đang tải...</div>
-    </div>
+    </main>
   </div>
 
   <!-- Modal for Author Details -->
   <div id="author-modal" class="modal">
-    <div class="modal-content">
-      <span class="close">&times;</span>
-      <div class="author-details">
-        <img id="modal-author-image" src="img/placeholder.jpg" alt="Tác giả">
-        <div class="author-info">
+    <div class="modal-content card">
+      <button class="close" aria-label="Đóng">×</button>
+
+      <div class="modal-top">
+        <div class="avatar-wrap">
+          <img id="modal-author-image" src="img/author/icon.jpg" alt="Tác giả">
+        </div>
+        <div class="modal-heading">
           <h2 id="modal-author-name">Tên tác giả</h2>
-          <p><strong>Ngày sinh:</strong> <span id="modal-author-birthday">Không rõ</span></p>
-          <p><strong>Quốc tịch:</strong> <span id="modal-author-nationality">Không rõ</span></p>
-          <p class="bio"><strong>Tiểu sử:</strong> <span id="modal-author-bio">Không có tiểu sử</span></p>
+          <div class="meta">
+            <div><strong>Ngày sinh:</strong> <span id="modal-author-birthday">Không rõ</span></div>
+            <div><strong>Quốc tịch:</strong> <span id="modal-author-nationality">Không rõ</span></div>
+          </div>
         </div>
       </div>
 
+      <div class="modal-bio">
+        <h3>Tiểu sử</h3>
+        <p id="modal-author-bio">Không có tiểu sử</p>
+      </div>
+
       <div class="book-section">
-        <h2 class="section-title">Tác phẩm của tác giả</h2>
-
+        <h3 class="section-title">Tác phẩm của tác giả</h3>
         <div class="books-wrapper">
-          <button class="scroll-btn left">‹</button>
-
+          <button class="scroll-btn left" aria-label="Lùi">‹</button>
           <div class="books" id="modal-author-products">
             <!-- JS sẽ render danh sách sách ở đây -->
           </div>
-
-          <button class="scroll-btn right">›</button>
+          <button class="scroll-btn right" aria-label="Tiến">›</button>
         </div>
       </div>
     </div>
