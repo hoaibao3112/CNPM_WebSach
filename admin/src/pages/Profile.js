@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import {
-  Card, Spin, message, Button, Modal, Form, Input, Row, Col, Avatar, Typography, Table
+  Card, Spin, message, Button, Modal, Form, Input, Row, Col, Avatar, Typography, Table, Upload
 } from 'antd';
 import {
   UserOutlined, LockOutlined, CheckCircleOutlined, LogoutOutlined, DollarCircleOutlined, EyeOutlined
@@ -21,6 +21,23 @@ const Profile = () => {
   const [attendanceLoading, setAttendanceLoading] = useState(false);
   const [showResignModal, setShowResignModal] = useState(false);
   const [resignLoading, setResignLoading] = useState(false);
+  const [showAvatarModal, setShowAvatarModal] = useState(false);
+  const [avatarFile, setAvatarFile] = useState(null);
+  const [avatarUploading, setAvatarUploading] = useState(false);
+  // computed avatar src
+  const apiBase = process.env.REACT_APP_API_BASE || 'http://localhost:5000';
+  const [avatarSrc, setAvatarSrc] = useState(undefined);
+
+  const buildAvatarSrc = (anh) => {
+    if (!anh) return undefined;
+    if (anh.startsWith('http')) return anh;
+    // remove leading slashes
+    const clean = anh.replace(/^\/+/, '');
+    // if path already contains uploads, use it
+    if (clean.startsWith('uploads/')) return `${apiBase}/${clean}`;
+    // otherwise assume it's a filename stored in nhanvien and prefix uploads/nhanvien/
+    return `${apiBase}/uploads/nhanvien/${clean}`;
+  };
 
   // Chi tiết ngày công
   const [detailModal, setDetailModal] = useState(false);
@@ -43,6 +60,9 @@ const Profile = () => {
           headers: { Authorization: `Bearer ${token}` }
         });
         setUserInfo(res.data);
+        // compute avatar src if present
+        const anh = res.data?.Anh;
+        setAvatarSrc(buildAvatarSrc(anh));
       } catch (error) {
         message.error('Lỗi khi tải thông tin cá nhân!');
       } finally {
@@ -51,6 +71,14 @@ const Profile = () => {
     };
     fetchProfile();
   }, []);
+
+  // update avatarSrc whenever userInfo changes (helps when refreshed after upload)
+  useEffect(() => {
+    if (!userInfo) return;
+    console.log('Profile loaded:', userInfo);
+    const anh = userInfo?.Anh;
+    setAvatarSrc(buildAvatarSrc(anh));
+  }, [userInfo]);
 
   const fetchSalary = async () => {
     setSalaryLoading(true);
@@ -295,12 +323,16 @@ const Profile = () => {
                   <Avatar
                     size={96}
                     icon={<UserOutlined />}
+                    src={avatarSrc}
                     style={{
-                      background: 'linear-gradient(135deg, #6366f1 0%, #60a5fa 100%)',
+                      background: avatarSrc ? undefined : 'linear-gradient(135deg, #6366f1 0%, #60a5fa 100%)',
                       marginBottom: 12,
                       boxShadow: '0 2px 8px #b3bcdf',
                     }}
                   />
+                  <div style={{ marginTop: 8 }}>
+                    <Button size="small" onClick={() => setShowAvatarModal(true)}>Thay ảnh</Button>
+                  </div>
                   <Title level={3} style={{ marginBottom: 0, color: '#1e293b' }}>{userInfo.TenNV || userInfo.TenTK}</Title>
                   <Text type="secondary" style={{ fontSize: 16 }}>{userInfo.TenNQ}</Text>
                 </div>
@@ -327,6 +359,75 @@ const Profile = () => {
               </Card>
             </Col>
             {/* Modal lương cá nhân */}
+            {/* Modal thay ảnh đại diện */}
+            <Modal
+              title="Thay ảnh đại diện"
+              open={showAvatarModal}
+              onCancel={() => { setShowAvatarModal(false); setAvatarFile(null); }}
+              footer={null}
+            >
+              <div style={{ textAlign: 'center' }}>
+                <Upload
+                  beforeUpload={(file) => {
+                    const isImage = /image\/(jpeg|png|gif|jpg)/.test(file.type);
+                    if (!isImage) {
+                      message.error('Chỉ cho phép file ảnh!');
+                      return Upload.LIST_IGNORE;
+                    }
+                    setAvatarFile(file);
+                    return false; // prevent auto upload
+                  }}
+                  maxCount={1}
+                  showUploadList={{ showPreviewIcon: false }}
+                >
+                  <Button>Chọn ảnh</Button>
+                </Upload>
+                <div style={{ marginTop: 12 }}>
+                  <Button
+                    type="primary"
+                    loading={avatarUploading}
+                    onClick={async () => {
+                      if (!avatarFile) return message.warning('Vui lòng chọn ảnh trước khi tải lên');
+                      setAvatarUploading(true);
+                      try {
+                        const token = localStorage.getItem('authToken');
+                        const form = new FormData();
+                        // Backend requires TenNV, SDT, Email - include existing values so validation passes
+                        form.append('TenNV', userInfo.TenNV || '');
+                        form.append('SDT', userInfo.SDT || '');
+                        form.append('Email', userInfo.Email || '');
+                        form.append('GioiTinh', userInfo.GioiTinh || '');
+                        form.append('DiaChi', userInfo.DiaChi || '');
+                        form.append('TinhTrang', userInfo.TinhTrang ? '1' : '0');
+                        form.append('Anh', avatarFile);
+
+                        const res = await axios.put(
+                          `http://localhost:5000/api/users/${userInfo.MaNV}`,
+                          form,
+                          { headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'multipart/form-data' } }
+                        );
+                        message.success(res.data?.message || 'Cập nhật ảnh thành công');
+                        // refresh profile info
+                        const tokenStored = localStorage.getItem('authToken');
+                        const { MaTK } = JSON.parse(localStorage.getItem('userInfo') || '{}');
+                        const profileRes = await axios.get(`http://localhost:5000/api/users/by-matk/${MaTK}`, { headers: { Authorization: `Bearer ${tokenStored}` } });
+                        setUserInfo(profileRes.data);
+                        setShowAvatarModal(false);
+                        setAvatarFile(null);
+                      } catch (err) {
+                        console.error(err);
+                        message.error(err.response?.data?.error || 'Tải ảnh thất bại');
+                      } finally {
+                        setAvatarUploading(false);
+                      }
+                    }}
+                    style={{ marginLeft: 8 }}
+                  >
+                    Tải lên
+                  </Button>
+                </div>
+              </div>
+            </Modal>
             <Modal
               title="Lịch sử lương cá nhân"
               open={showSalaryModal}
