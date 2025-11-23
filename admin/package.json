@@ -20,6 +20,7 @@
         "bcryptjs": "^3.0.2",
         "chart.js": "^4.5.0",
         "dayjs": "^1.11.13",
+        "html2pdf.js": "^0.12.1",
         "jspdf": "^2.5.1",
         "jspdf-autotable": "^3.5.31",
         "moment": "^2.30.1",

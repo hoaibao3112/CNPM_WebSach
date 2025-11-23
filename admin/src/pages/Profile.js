@@ -266,75 +266,80 @@ const Profile = () => {
               paddingRight: 24,
             }}
           >
-            <Col xs={24} md={20} lg={16} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+            <Col xs={24} md={20} lg={16} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', maxWidth: 900 }}>
               <Card
                 bordered={false}
                 style={{
                   width: '100%',
-                  maxWidth: 700, // Tăng chiều rộng form thông tin nhân viên
-                  boxShadow: '0 4px 24px #d1d9e6',
-                  borderRadius: 20,
-                  background: 'linear-gradient(135deg, #e0e7ff 0%, #fff 100%)',
+                  maxWidth: 900, // Tăng chiều rộng form thông tin nhân viên
+                  padding: 28,
+                  boxShadow: '0 8px 32px rgba(16,24,40,0.08)',
+                  borderRadius: 24,
+                  background: 'linear-gradient(135deg, #eef4ff 0%, #fff 100%)',
                   marginTop: 40,
                 }}
                 actions={[
-                  <Button
-                    icon={<LockOutlined />}
-                    type="primary"
-                    onClick={() => setShowPwdModal(true)}
-                    key="changepwd"
-                    style={{ borderRadius: 8 }}
-                  >
-                    Đổi mật khẩu
-                  </Button>,
-                  <Button
-                    icon={<CheckCircleOutlined />}
-                    type="default"
-                    loading={attendanceLoading}
-                    onClick={handleCheckIn}
-                    key="checkin"
-                    style={{ borderRadius: 8, color: '#52c41a', borderColor: '#52c41a' }}
-                  >
-                    Chấm công hôm nay
-                  </Button>,
-                  <Button
-                    icon={<LogoutOutlined />}
-                    danger
-                    type="primary"
-                    onClick={() => setShowResignModal(true)}
-                    key="resign"
-                    style={{ borderRadius: 8 }}
-                  >
-                    Xin nghỉ việc
-                  </Button>,
-                  <Button
-                    icon={<DollarCircleOutlined />}
-                    type="dashed"
-                    onClick={fetchSalary}
-                    key="salary"
-                    style={{ borderRadius: 8, color: '#2563eb', borderColor: '#2563eb' }}
-                    loading={salaryLoading}
-                  >
-                    Xem lương cá nhân
-                  </Button>
+                  <div key="card-actions" style={{ width: '100%', display: 'flex', justifyContent: 'center' }}>
+                    <div style={{ maxWidth: 980, width: '100%', display: 'flex', gap: 10, justifyContent: 'center', padding: '6px 8px' }}>
+                      <Button
+                        icon={<LockOutlined />}
+                        type="primary"
+                        onClick={() => setShowPwdModal(true)}
+                        key="changepwd"
+                        style={{ borderRadius: 8, padding: '6px 12px', minHeight: 38, fontSize: 14 }}
+                      >
+                        Đổi mật khẩu
+                      </Button>
+                      <Button
+                        icon={<CheckCircleOutlined />}
+                        type="default"
+                        loading={attendanceLoading}
+                        onClick={handleCheckIn}
+                        key="checkin"
+                        style={{ borderRadius: 8, color: '#52c41a', borderColor: '#52c41a', padding: '6px 12px', minHeight: 38, fontSize: 14 }}
+                      >
+                        Chấm công hôm nay
+                      </Button>
+                      <Button
+                        icon={<LogoutOutlined />}
+                        danger
+                        type="primary"
+                        onClick={() => setShowResignModal(true)}
+                        key="resign"
+                        style={{ borderRadius: 8, padding: '6px 12px', minHeight: 38, fontSize: 14 }}
+                      >
+                        Xin nghỉ việc
+                      </Button>
+                      <Button
+                        icon={<DollarCircleOutlined />}
+                        type="dashed"
+                        onClick={fetchSalary}
+                        key="salary"
+                        style={{ borderRadius: 8, color: '#2563eb', borderColor: '#2563eb', padding: '6px 12px', minHeight: 38, fontSize: 14 }}
+                        loading={salaryLoading}
+                      >
+                        Xem lương cá nhân
+                      </Button>
+                    </div>
+                  </div>
                 ]}
               >
                 <div style={{ textAlign: 'center', marginBottom: 24 }}>
                   <Avatar
-                    size={96}
+                    size={120}
                     icon={<UserOutlined />}
                     src={avatarSrc}
                     style={{
                       background: avatarSrc ? undefined : 'linear-gradient(135deg, #6366f1 0%, #60a5fa 100%)',
-                      marginBottom: 12,
-                      boxShadow: '0 2px 8px #b3bcdf',
+                      marginBottom: 14,
+                      boxShadow: '0 6px 18px rgba(99,123,241,0.18)',
                     }}
                   />
                   <div style={{ marginTop: 8 }}>
                     <Button size="small" onClick={() => setShowAvatarModal(true)}>Thay ảnh</Button>
                   </div>
-                  <Title level={3} style={{ marginBottom: 0, color: '#1e293b' }}>{userInfo.TenNV || userInfo.TenTK}</Title>
-                  <Text type="secondary" style={{ fontSize: 16 }}>{userInfo.TenNQ}</Text>
+                  <Title level={2} style={{ marginBottom: 4, color: '#0f172a' }}>{userInfo.TenNV || userInfo.TenTK}</Title>
+                  <Text type="secondary" style={{ fontSize: 15 }}>{userInfo.TenNQ}</Text>
                 </div>
                 <Row gutter={[16, 8]}>
                   <Col span={12}><Text strong>Mã tài khoản:</Text></Col>

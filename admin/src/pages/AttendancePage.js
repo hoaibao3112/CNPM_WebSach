@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import Select from 'react-select';
 import axios from 'axios';
+import { jsPDF } from 'jspdf';
 import '../styles/AttendancePage.css';
 
 // Map trạng thái API sang giao diện
@@ -30,21 +31,14 @@ const frontendToApiStatus = {
   'Đi trễ': 'Di_tre',
 };
 
-const apiToFrontendStatus = {
-  Di_lam: 'Đi làm',
-  Nghi_phep: 'Nghỉ phép',
-  Nghi_khong_phep: 'Nghỉ KP',
-  Lam_them: 'Tăng ca',
-  Di_tre: 'Đi trễ',
-  Chua_cham_cong: '',
-};
-
 // Thứ trong tuần
 const weekdayLabels = ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'];
 const getWeekday = (year, month, day) => {
   const date = new Date(year, month - 1, day);
   return weekdayLabels[date.getDay()];
 };
+
+const isSunday = (year, month, day) => getWeekday(year, month, day) === 'CN';
 
 // Hàm làm tròn về trăm đồng gần nhất
 function roundToHundred(num) {
@@ -105,6 +99,8 @@ const AttendancePage = () => {
 
   // Xử lý click vào ngày để lưu thay đổi tạm thời
   const handleDayClick = (day) => {
+    // Không cho chỉnh vào Chủ nhật
+    if (isSunday(year, month, day)) return;
     if (!selectedEmployee || !selectedStatus) return;
     const apiStatus = frontendToApiStatus[selectedStatus];
     const ngay = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
@@ -215,6 +211,109 @@ const AttendancePage = () => {
     }
   };
 
+  // Tạo HTML phiếu lương theo mẫu yêu cầu (dùng để xuất PDF)
+  const generatePayslipHtml = (info) => {
+    const tong = getTongLuong();
+    const formatted = (v) => (Number(v || 0)).toLocaleString();
+    const title = `LƯƠNG THÁNG ${month}/${year} CỦA ${info.MaNV || info.MaTK || ''}`;
+
+    // Return a fragment (no <html>/<head>/<body>) so html2pdf can render the element correctly
+    return `
+      <style>
+        .payslip-container { font-family: 'Segoe UI', Roboto, Arial, sans-serif; color:#222; }
+        .payslip-box { width: 800px; margin: 20px auto; background:#fff; border-radius:8px; overflow:hidden }
+        .payslip-header { background:#1976d2; color:#fff; padding:14px 20px; font-weight:700; font-size:18px }
+        .payslip-row { display:flex; padding:14px 20px; align-items:center; border-bottom:1px solid #eef0f2 }
+        .payslip-label { flex:1; color:#546e7a; font-size:16px }
+        .payslip-value { width:240px; text-align:right; font-weight:600; font-size:16px }
+        .muted { color:#666 }
+        .total-row { background:#f5f7fa; }
+        .total-left { color:#1976d2; font-weight:700; font-size:18px }
+        .total-right { color:#1976d2; font-weight:700; font-size:18px; text-align:right }
+        .status { padding:12px 20px }
+      </style>
+      <div class="payslip-container">
+        <div class="payslip-box">
+          <div class="payslip-header">${title}</div>
+          <div class="payslip-row"><div class="payslip-label">Số ngày làm</div><div class="payslip-value">${info.soNgayLam || 0}</div></div>
+          <div class="payslip-row"><div class="payslip-label">Số giờ tăng ca</div><div class="payslip-value">${info.soGioTangCa || 0}</div></div>
+          <div class="payslip-row"><div class="payslip-label">Số ngày nghỉ không phép</div><div class="payslip-value">${info.soNgayNghiKhongPhep || 0}</div></div>
+          <div class="payslip-row"><div class="payslip-label">Số ngày đi trễ</div><div class="payslip-value">${info.soNgayDiTre || 0}</div></div>
+          <div class="payslip-row"><div class="payslip-label">Lương cơ bản</div><div class="payslip-value">${formatted(info.luong_co_ban)} đ</div></div>
+          <div class="payslip-row"><div class="payslip-label">Phụ cấp</div><div class="payslip-value">${formatted(info.phu_cap)} đ</div></div>
+          <div class="payslip-row"><div class="payslip-label">Thưởng</div><div class="payslip-value">${formatted(info.thuong)} đ</div></div>
+          <div class="payslip-row"><div class="payslip-label">Phạt</div><div class="payslip-value">${formatted(info.phat)} đ</div></div>
+          <div class="payslip-row total-row"><div class="total-left">Tổng lương</div><div class="total-right">${formatted(tong)} đ</div></div>
+          <div class="status">Trạng thái: <span class="muted">${info.trang_thai === 'Da_tra' ? 'Đã chi trả' : 'Chưa chi trả'}</span></div>
+          <div style="padding:18px 20px 30px 20px;">
+            <div style="margin-bottom:18px; text-align:center; font-weight:600;">Xác nhận nhận tiền của admin</div>
+            <div style="display:flex; justify-content:space-between; gap:40px; margin-top:24px;">
+              <div style="flex:1; text-align:center">
+                <div style="border-top:1px solid #999; padding-top:8px;">Người nhận</div>
+              </div>
+              <div style="flex:1; text-align:center">
+                <div style="border-top:1px solid #999; padding-top:8px;">Admin</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+  };
+
+
+  // Tải PDF phiếu lương về máy
+  // Tải PDF phiếu lương về máy (dùng html2canvas + jsPDF giống `statistical.js`)
+  const handleDownloadPayslipPdf = async (info) => {
+    if (!info) return;
+    let container = null;
+    try {
+      const html = generatePayslipHtml(info);
+      container = document.createElement('div');
+      container.style.position = 'fixed';
+      container.style.left = '0';
+      container.style.top = '0';
+      container.style.width = '820px';
+      container.style.zIndex = '10000';
+      // keep visible so html2canvas can render
+      container.style.opacity = '1';
+      container.style.pointerEvents = 'none';
+      container.style.background = '#fff';
+      container.innerHTML = html;
+      document.body.appendChild(container);
+
+      console.log('Payslip container appended for PDF generation', container);
+      console.log('Payslip container innerHTML length:', container.innerHTML.length);
+
+      // dynamic import of html2canvas (same pattern as statistical.js)
+      const hc = await import('html2canvas');
+      const html2canvas = hc.default || hc;
+
+      // Allow render
+      await new Promise((r) => setTimeout(r, 300));
+
+      const canvas = await html2canvas(container, { scale: 2, useCORS: true, logging: false });
+      const imgData = canvas.toDataURL('image/png');
+
+      const doc = new jsPDF('p', 'mm', 'a4');
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const margin = 10;
+      const usableWidth = pageWidth - margin * 2;
+      const imgProps = doc.getImageProperties(imgData);
+      const imgHeight = (imgProps.height * usableWidth) / imgProps.width;
+      doc.addImage(imgData, 'PNG', margin, 10, usableWidth, imgHeight);
+
+      const filename = `Phieu_luong_${info.MaNV || info.MaTK || 'NV'}_${month}_${year}.pdf`;
+      doc.save(filename);
+      console.log('PDF saved:', filename);
+    } catch (err) {
+      console.error('Failed to generate PDF (html2canvas/jsPDF)', err);
+      alert('Tạo PDF thất bại. Hãy thử lại hoặc cài `html2canvas` (npm i html2canvas) nếu cần.');
+    } finally {
+      try { if (container) document.body.removeChild(container); } catch (e) {}
+    }
+  };
+
   return (
     <div className="thongke-page">
       <div className="thongke-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -265,9 +364,19 @@ const AttendancePage = () => {
               <tbody>
                 {employees.map((nv, idx) => {
                   const days = nv.days || {};
-                  const chamCongCount = Object.values(days).filter(
-                    (d) => d.trang_thai && d.trang_thai !== 'Chua_cham_cong'
+                  // số ngày làm việc trong tháng (không tính Chủ nhật)
+                  const requiredWorkdays = Array.from({ length: daysInMonth }, (_, i) => i + 1).filter(
+                    (d) => getWeekday(year, month, d) !== 'CN'
                   ).length;
+                  // đếm số ngày đã được chấm (không tính Chủ nhật)
+                  let chamCongCount = 0;
+                  for (let d = 1; d <= daysInMonth; d++) {
+                    if (getWeekday(year, month, d) === 'CN') continue;
+                    const dayInfo = days[d];
+                    const status = dayInfo?.trang_thai || 'Chua_cham_cong';
+                    if (status && status !== 'Chua_cham_cong') chamCongCount++;
+                  }
+                  const done = chamCongCount >= requiredWorkdays;
                   return (
                     <tr
                       key={nv.MaNV}
@@ -283,8 +392,8 @@ const AttendancePage = () => {
                     >
                       <td>{idx + 1}</td>
                       <td>{nv.TenNV}</td>
-                      <td style={{ color: chamCongCount > 0 ? '#4CAF50' : '#F44336' }}>
-                        {chamCongCount > 0 ? 'Đã chấm công' : 'Chưa chấm công'}
+                      <td style={{ color: done ? '#4CAF50' : '#F44336' }}>
+                        {done ? 'Đã chấm công' : 'Chưa chấm công'}
                       </td>
                     </tr>
                   );
@@ -328,6 +437,28 @@ const AttendancePage = () => {
                     <tr>
                       {row.map((day) => {
                         const ngay = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                        // Nếu là Chủ nhật -> hiển thị là ngày nghỉ và không cho click
+                        if (isSunday(year, month, day)) {
+                          return (
+                            <td
+                              key={day}
+                              style={{
+                                background: '#eceff1',
+                                color: '#1976d2',
+                                whiteSpace: 'pre-line',
+                                cursor: 'default',
+                                minWidth: 55,
+                                maxWidth: 80,
+                                fontSize: 16,
+                                padding: 10,
+                              }}
+                            >
+                              <div style={{ fontWeight: 'bold' }}>{day}</div>
+                              <div>Nghỉ CN</div>
+                            </td>
+                          );
+                        }
+
                         const dayData = pendingChanges[ngay] || (selectedEmployee?.days ? selectedEmployee.days[day] : {});
                         const apiStatus = dayData?.trang_thai || 'Chua_cham_cong';
                         let cellText = statusLabels[apiStatus] || '';
@@ -513,6 +644,25 @@ const AttendancePage = () => {
                       Xác nhận chi trả lương
                     </button>
                   )}
+                  {/* Nút in phiếu lương (luôn cho in khi có salaryInfo) */}
+                  {/* In phiếu lương đã được loại bỏ; chỉ giữ nút Tải PDF dưới mẫu mới */}
+                  <button
+                    style={{
+                      marginTop: 12,
+                      marginLeft: 12,
+                      background: '#6a1b9a',
+                      color: '#fff',
+                      fontWeight: 'bold',
+                      padding: '8px 18px',
+                      border: 'none',
+                      borderRadius: 4,
+                      cursor: 'pointer'
+                    }}
+                    onClick={() => handleDownloadPayslipPdf(salaryInfo)}
+                    disabled={!salaryInfo}
+                  >
+                    Tải PDF
+                  </button>
                 </div>
               )}
             </div>
