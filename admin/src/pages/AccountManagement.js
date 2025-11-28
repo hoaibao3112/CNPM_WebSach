@@ -12,7 +12,7 @@ import {
 } from '@ant-design/icons';
 import { PermissionContext } from '../components/PermissionContext';
 
-const { Search } = Input;
+// `Search` unused; removed to avoid eslint no-unused-vars warning
 const { Option } = Select;
 const { confirm } = Modal;
 const { TabPane } = Tabs;
@@ -36,22 +36,10 @@ const AccountManagement = () => {
     quyenList: [],
     permissions: [], // Danh sách quyền của nhóm quyền hiện tại
     features: [], // Danh sách chức năng (cho việc thêm quyền)
-    newPermission: { MaCN: undefined, HanhDong: '', TinhTrang: '1' }, // Form thêm quyền mới
+    newPermission: { MaCN: undefined, HanhDong: [], TinhTrang: '1' }, // Form thêm quyền mới
   });
 
-  const {
-    accounts,
-    newAccount,
-    editingAccount,
-    searchTerm,
-    isModalVisible,
-    loading,
-    error,
-    quyenList,
-    permissions,
-    features,
-    newPermission,
-  } = state;
+  const { accounts, newAccount, editingAccount, searchTerm, isModalVisible, loading, error, quyenList, permissions, features, newPermission } = state;
 
   const API_URL = 'http://localhost:5000/api/accounts';
   const PERMISSION_API = 'http://localhost:5000/api/permissions';
@@ -67,7 +55,7 @@ const AccountManagement = () => {
       const [accountsResp, rolesResp, featuresResp] = await Promise.all([
         axios.get(API_URL, { headers: { Authorization: `Bearer ${token}` } }),
         axios.get('http://localhost:5000/api/roles/list/active', { headers: { Authorization: `Bearer ${token}` } }),
-        axios.get(`${PERMISSION_API}/features`, { headers: { Authorization: `Bearer ${token}` } }), // Lấy danh sách chức năng
+        axios.get(`${PERMISSION_API}/features`, { headers: { Authorization: `Bearer ${token}` } }),
       ]);
 
       setState(prev => ({
@@ -90,6 +78,7 @@ const AccountManagement = () => {
       setState(prev => ({ ...prev, loading: false }));
     }
   };
+  
 
   useEffect(() => {
     if (hasPermission('Tài khoản', 'Đọc')) {
@@ -269,21 +258,26 @@ const AccountManagement = () => {
       message.error('Bạn không có quyền thêm quyền!');
       return;
     }
-    if (!newPermission.MaCN || !newPermission.HanhDong) {
-      message.error('Vui lòng nhập đầy đủ chức năng và hành động!');
+    // Hỗ trợ chọn nhiều hành động cùng lúc (newPermission.HanhDong là mảng)
+    if (!newPermission.MaCN || !newPermission.HanhDong || newPermission.HanhDong.length === 0) {
+      message.error('Vui lòng chọn chức năng và ít nhất một hành động!');
       return;
     }
 
     try {
       const token = localStorage.getItem('authToken');
-      await axios.post(PERMISSION_API, {
-        MaQuyen: editingAccount.MaQuyen,
-        MaCN: newPermission.MaCN,
-        HanhDong: newPermission.HanhDong,
-        TinhTrang: parseInt(newPermission.TinhTrang),
-      }, { headers: { Authorization: `Bearer ${token}` } });
+      // Gửi nhiều request (mỗi hành động 1 bản ghi)
+      const requests = newPermission.HanhDong.map((hd) =>
+        axios.post(PERMISSION_API, {
+          MaQuyen: editingAccount.MaQuyen,
+          MaCN: newPermission.MaCN,
+          HanhDong: hd,
+          TinhTrang: parseInt(newPermission.TinhTrang),
+        }, { headers: { Authorization: `Bearer ${token}` } })
+      );
+      await Promise.all(requests);
       await fetchPermissions(editingAccount.MaQuyen);
-      setState(prev => ({ ...prev, newPermission: { MaCN: undefined, HanhDong: '', TinhTrang: '1' } }));
+      setState(prev => ({ ...prev, newPermission: { MaCN: undefined, HanhDong: [], TinhTrang: '1' } }));
       message.success('Thêm quyền thành công!');
     } catch (error) {
       message.error(`Lỗi khi thêm quyền: ${error.response?.data?.error || error.message}`);
@@ -591,15 +585,8 @@ const AccountManagement = () => {
           {editingAccount && (
             <TabPane tab="Quyền của nhóm" key="2">
               <h3>Quyền của nhóm {quyenList.find(q => q.MaNQ === editingAccount?.MaQuyen)?.TenNQ}</h3>
-              <Table
-                columns={permissionColumns}
-                dataSource={permissions}
-                rowKey="MaCTQ"
-                pagination={false}
-                size="small"
-              />
               {hasPermission('Phân quyền', 'Thêm') && (
-                <div style={{ marginTop: 16 }}>
+                <div style={{ marginBottom: 12 }}>
                   <h4>Thêm quyền mới</h4>
                   <Form layout="inline">
                     <Form.Item label="Chức năng">
@@ -612,11 +599,18 @@ const AccountManagement = () => {
                       </Select>
                     </Form.Item>
                     <Form.Item label="Hành động">
-                      <Input
+                      <Select
+                        mode="multiple"
+                        placeholder="Chọn hành động (Đọc, Thêm, Sửa, Xóa)"
                         value={newPermission.HanhDong}
-                        onChange={(e) => setState(prev => ({ ...prev, newPermission: { ...prev.newPermission, HanhDong: e.target.value } }))}
-                        placeholder="e.g. Đọc, Sửa"
-                      />
+                        onChange={(v) => setState(prev => ({ ...prev, newPermission: { ...prev.newPermission, HanhDong: v } }))}
+                        style={{ minWidth: 220 }}
+                      >
+                        <Option value="Đọc">Đọc</Option>
+                        <Option value="Thêm">Thêm</Option>
+                        <Option value="Sửa">Sửa</Option>
+                        <Option value="Xóa">Xóa</Option>
+                      </Select>
                     </Form.Item>
                     <Form.Item label="Trạng thái">
                       <Select
@@ -634,6 +628,13 @@ const AccountManagement = () => {
                   </Form>
                 </div>
               )}
+              <Table
+                columns={permissionColumns}
+                dataSource={permissions}
+                rowKey="MaCTQ"
+                pagination={false}
+                size="small"
+              />
             </TabPane>
           )}
         </Tabs>

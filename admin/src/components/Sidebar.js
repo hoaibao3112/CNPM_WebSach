@@ -24,7 +24,7 @@ const Sidebar = () => {
   }, [isOpen]);
   const navigate = useNavigate();
   const location = useLocation();
-  const { hasPermission } = useContext(PermissionContext);
+  const { hasPermission, permissions } = useContext(PermissionContext);
 
   const menuItems = [
     { to: '/admin', icon: 'dashboard', text: 'Trang Chủ', permission: null },
@@ -48,9 +48,32 @@ const Sidebar = () => {
     { to: '/admin/returns', icon: 'assignment_return', text: 'Quản lý trả hàng', permission: 'Trả Hàng' }
   ];
 
-  const filteredMenuItems = menuItems.filter(
-    (item) => !item.permission || hasPermission(item.permission, 'Đọc')
-  );
+  // Normalize function (same as PermissionContext) to compare names safely
+  const normalize = (s) => {
+    if (!s && s !== '') return '';
+    try {
+      return String(s)
+        .normalize('NFD')
+        .replace(/\p{Diacritic}/gu, '')
+        .toLowerCase()
+        .trim();
+    } catch (e) {
+      return String(s)
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .toLowerCase()
+        .trim();
+    }
+  };
+
+  // Show menu item if:
+  // - it has no permission requirement OR
+  // - there exists at least one active permission (any action) for that function
+  const filteredMenuItems = menuItems.filter((item) => {
+    if (!item.permission) return true;
+    const fn = normalize(item.permission);
+    return permissions.some((perm) => normalize(perm.TenCN) === fn);
+  });
 
   const handleLogout = async () => {
     try {
@@ -109,6 +132,12 @@ const Sidebar = () => {
 
       <div className="sidebar-footer">
         <UserInfo isSidebarOpen={isOpen} />
+        {localStorage.getItem('showPerms') === '1' && (
+          <div style={{ padding: '8px', maxHeight: 180, overflow: 'auto', background: '#0b2233', color: '#fff', marginTop: 8 }}>
+            <div style={{ fontSize: 12, marginBottom: 6 }}>DEBUG Permissions (showPerms=1)</div>
+            <pre style={{ fontSize: 11, whiteSpace: 'pre-wrap' }}>{JSON.stringify(permissions, null, 2)}</pre>
+          </div>
+        )}
         <button
           className="logout-btn logged-in"
           onClick={handleLogout}

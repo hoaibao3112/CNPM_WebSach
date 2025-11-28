@@ -66,12 +66,12 @@ export const PermissionProvider = ({ children }) => {
     const result = permissions.some((perm) => {
       const ten = normalize(perm.TenCN);
       const hanh = normalize(perm.HanhDong);
-      // allow exact match or containing match for action (covers variants)
-      const actionMatches = hanh === actNorm || hanh.includes(actNorm) || actNorm.includes(hanh);
+      // Strict match for action to avoid false positives (use exact equality)
+      const actionMatches = hanh === actNorm;
       return ten === fnNorm && actionMatches;
     });
 
-    console.log(`Checking permission: ${functionName} - ${action} => ${result}`, 'Permissions:', permissions);
+    console.log(`Checking permission: ${functionName} - ${action} => ${result}`);
     return result;
   };
 

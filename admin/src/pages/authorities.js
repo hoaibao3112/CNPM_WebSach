@@ -1,5 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useContext } from 'react';
 import axios from 'axios';
+import { PermissionContext } from '../components/PermissionContext';
 import { Button, Input, message, Table, Modal, Space, Select } from 'antd';
 import { EditOutlined, DeleteOutlined, ExclamationCircleFilled, LockOutlined, UnlockOutlined } from '@ant-design/icons';
 
@@ -79,6 +80,8 @@ const PermissionManagement = () => {
     fetchRolesAndFeatures();
   }, []);
 
+  const { refreshPermissions } = useContext(PermissionContext);
+
   // Handle input changes
   const handleInputChange = (field, value) => {
     if (editingPermission) {
@@ -122,6 +125,12 @@ const PermissionManagement = () => {
 
       await axios.post(API_URL, payload);
       await fetchPermissions();
+      try {
+        await refreshPermissions();
+      } catch (err) {
+        // ignore refresh error but log
+        console.warn('refreshPermissions failed after add:', err);
+      }
       setState(prev => ({
         ...prev,
         newPermission: {
@@ -151,6 +160,11 @@ const PermissionManagement = () => {
 
       await axios.put(`${API_URL}/${editingPermission.MaCTQ}`, payload);
       await fetchPermissions();
+      try {
+        await refreshPermissions();
+      } catch (err) {
+        console.warn('refreshPermissions failed after update:', err);
+      }
       setState(prev => ({
         ...prev,
         editingPermission: null,
@@ -175,6 +189,11 @@ const PermissionManagement = () => {
         try {
           await axios.delete(`${API_URL}/${MaCTQ}`);
           await fetchPermissions();
+              try {
+                await refreshPermissions();
+              } catch (err) {
+                console.warn('refreshPermissions failed after delete:', err);
+              }
           message.success('Xóa quyền thành công!');
         } catch (error) {
           message.error(`Lỗi khi xóa: ${error.message}`);
@@ -198,6 +217,11 @@ const PermissionManagement = () => {
             TinhTrang: newStatus,
           });
           await fetchPermissions();
+              try {
+                await refreshPermissions();
+              } catch (err) {
+                console.warn('refreshPermissions failed after toggle status:', err);
+              }
           message.success(`Đã ${newStatus === '1' ? 'kích hoạt' : 'tạm ẩn'} quyền!`);
         } catch (error) {
           message.error(`Lỗi khi đổi trạng thái: ${error.message}`);
