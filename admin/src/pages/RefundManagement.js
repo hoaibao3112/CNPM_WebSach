@@ -705,7 +705,14 @@ const RefundManagement = () => {
 
         {/* Detail Modal - CẬP NHẬT */}
         {showModal && selectedRefund && (
-          <div className="modal portal-modal" style={{display: 'block'}}>
+          <div
+            className="modal portal-modal"
+            style={{
+              display: 'block',
+              backgroundColor: 'rgba(255, 255, 255, 0.08)',
+              backdropFilter: 'blur(6px)'
+            }}
+          >
             <div className="modal-content refund-detail-content">
               <div className="modal-header">
                 <h2><i className="fas fa-receipt"></i> Chi tiết yêu cầu hoàn tiền</h2>
@@ -881,7 +888,14 @@ const RefundManagement = () => {
 
         {/* Process Modal - THÊM MỚI */}
         {showProcessModal && selectedRefund && (
-          <div className="modal portal-modal" style={{display: 'block'}}>
+          <div
+            className="modal portal-modal"
+            style={{
+              display: 'block',
+              backgroundColor: 'rgba(255, 255, 255, 0.08)',
+              backdropFilter: 'blur(6px)'
+            }}
+          >
             <div className="modal-content process-modal-content">
               <div className="modal-header">
                 <h2>

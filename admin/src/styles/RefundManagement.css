@@ -720,14 +720,20 @@
     top: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(0, 0, 0, 0.6);
-    backdrop-filter: blur(5px);
+    /* Lighter, less black overlay for better UX */
+    background-color: rgba(0, 0, 0, 0.18);
+    backdrop-filter: blur(6px);
     display: flex;                     /* center modal content */
     align-items: center;               /* vertical centering */
     justify-content: center;           /* horizontal centering */
     padding: 20px;                     /* breathing room for small viewports */
     overflow: auto;                    /* allow inner scrolling without expanding viewport */
     box-sizing: border-box;
+}
+
+/* Specific override for portal modals if we want them even lighter */
+.modal.portal-modal {
+    background-color: rgba(16, 24, 40, 0.12);
 }
 
 .refund-detail-content {
@@ -1620,5 +1626,20 @@
 @keyframes notification-bounce {
     0%, 100% { transform: scale(1); }
     50% { transform: scale(1.2); }
+}
+
+/* ===== Portal modal override (force lighter overlay) ===== */
+.modal.portal-modal,
+.portal-modal.modal {
+    /* much lighter, less-obtrusive overlay for modals mounted via portal */
+    background-color: rgba(16, 24, 40, 0.12) !important;
+    backdrop-filter: blur(6px) !important;
+}
+
+/* If a separate overlay element is used elsewhere, provide a fallback selector */
+.portal-modal + .modal-overlay,
+.portal-modal ~ .modal-overlay {
+    background-color: rgba(16, 24, 40, 0.12) !important;
+    backdrop-filter: blur(6px) !important;
 }
 

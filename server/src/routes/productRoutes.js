@@ -462,8 +462,8 @@ router.get('/sorted/year', async (req, res) => {
       params.push(parseInt(MaTL));
     }
 
-    // Put NULL NamXB last, then order ascending and limit 20
-    sql += ` ORDER BY (s.NamXB IS NULL), s.NamXB ASC LIMIT 20`;
+    // Put NULL NamXB last, then order newest -> oldest (DESC) and limit 20
+    sql += ` ORDER BY (s.NamXB IS NULL), s.NamXB DESC LIMIT 20`;
 
     const [rows] = await pool.query(sql, params);
     res.status(200).json(rows);

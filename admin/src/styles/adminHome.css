@@ -40,9 +40,19 @@ body.sidebar-open .admin-home { margin-left: 220px; }
 body.sidebar-closed .admin-home { margin-left: 64px; }
 
 /* ensure popovers mounted into body appear above sidebar */
-.portal-safe, .ant-modal, .modal, .popover, .rc-dropdown, .dropdown {
+.portal-safe, .ant-modal, .popover, .rc-dropdown, .dropdown {
   z-index: 3000 !important;
   transform: none !important;
+}
+
+/* Global: ensure modal overlays mounted in admin are light by default.
+   This rule targets overlay wrapper selectors and portal modals and uses
+   moderate specificity so it can override darker rules from page CSS. */
+.modal-overlay,
+.modal.portal-modal,
+.modal.portal-modal + .modal-overlay {
+  background-color: rgba(16, 24, 40, 0.12) !important;
+  backdrop-filter: blur(6px) !important;
 }
 
 /* ---------- Left column: small info panel ---------- */

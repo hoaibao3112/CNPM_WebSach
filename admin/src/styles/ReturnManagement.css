@@ -218,7 +218,8 @@
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(6, 10, 18, 0.75);
+  /* Lighter overlay so background is visible but de-emphasized */
+  background: rgba(16, 24, 40, 0.12);
   display: flex;
   align-items: center;
   justify-content: center;
