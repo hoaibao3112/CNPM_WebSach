@@ -170,6 +170,12 @@ export async function sendOrderConfirmationEmail(email, order = {}) {
     .filter(Boolean)
     .join(', ');
 
+  // Promo codes / vouchers (try several common property names for compatibility)
+  const promoCode = safe(
+    order.promoCode || order.voucherCode || order.voucher || order.discountCode || order.code || ''
+  );
+  const freeShipCode = safe(order.freeShipCode || order.shipVoucher || order.freeShip || '');
+
   // Tính toán tổng
   const items = Array.isArray(order.items) ? order.items : [];
   const subtotal = items.reduce((s, it) => {
@@ -367,7 +373,7 @@ export async function sendOrderConfirmationEmail(email, order = {}) {
                       </tr>
                       ${discount > 0 ? `
                       <tr>
-                        <td align="left" style="padding:6px 0;color:#6b7280;font:400 14px Arial;">Giảm giá</td>
+                        <td align="left" style="padding:6px 0;color:#6b7280;font:400 14px Arial;">Giảm giá${promoCode ? ` <span style="font-weight:600;color:#0b1220;">(Mã: ${promoCode})</span>` : ''}</td>
                         <td align="right" style="padding:6px 0;color:#111827;font:700 14px Arial;">- ${fmt(discount)}đ</td>
                       </tr>` : ''}
                       ${tax > 0 ? `
@@ -376,7 +382,7 @@ export async function sendOrderConfirmationEmail(email, order = {}) {
                         <td align="right" style="padding:6px 0;color:#111827;font:700 14px Arial;">${fmt(tax)}đ</td>
                       </tr>` : ''}
                       <tr>
-                        <td align="left" style="padding:6px 0;color:#6b7280;font:400 14px Arial;">Phí vận chuyển</td>
+                        <td align="left" style="padding:6px 0;color:#6b7280;font:400 14px Arial;">Phí vận chuyển${freeShipCode ? ` <span style="font-weight:600;color:#0b1220;">(Miễn phí - Mã: ${freeShipCode})</span>` : ''}</td>
                         <td align="right" style="padding:6px 0;color:#111827;font:700 14px Arial;">${fmt(shippingFee)}đ</td>
                       </tr>
                       <tr>
@@ -439,9 +445,9 @@ export async function sendOrderConfirmationEmail(email, order = {}) {
     }),
     '',
     `Tạm tính: ${fmt(subtotal)}đ`,
-    discount > 0 ? `Giảm giá: -${fmt(discount)}đ` : '',
+    discount > 0 ? `Giảm giá${promoCode ? ` (Mã: ${promoCode})` : ''}: -${fmt(discount)}đ` : '',
     tax > 0 ? `Thuế: ${fmt(tax)}đ` : '',
-    `Phí vận chuyển: ${fmt(shippingFee)}đ`,
+    `Phí vận chuyển${freeShipCode ? ` (Miễn phí - Mã: ${freeShipCode})` : ''}: ${fmt(shippingFee)}đ`,
     `TỔNG PHẢI TRẢ: ${fmt(grandTotal)}đ`,
     orderNote ? `\nGhi chú: ${orderNote}` : '',
     '',

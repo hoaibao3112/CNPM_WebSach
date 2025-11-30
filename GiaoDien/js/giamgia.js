@@ -3,6 +3,17 @@ function isLoggedIn() {
   return !!(localStorage.getItem('token') && localStorage.getItem('customerId'));
 }
 
+// Trả về nhãn hiển thị cho loại khuyến mãi
+function getPromotionTypeLabel(loaiKM) {
+  if (!loaiKM) return 'Không xác định';
+  const key = String(loaiKM).toLowerCase();
+  if (key === 'giam_phan_tram') return 'Giảm theo phần trăm';
+  if (key === 'giam_tien_mat') return 'Giảm tiền mặt';
+  if (key === 'free_ship' || key === 'freeship') return 'Miễn phí vận chuyển';
+  if (key === 'gift' || key === 'qua_tang') return 'Quà tặng';
+  return loaiKM;
+}
+
 // Lấy danh sách khuyến mãi từ API
 async function fetchVouchers() {
   try {
@@ -52,6 +63,12 @@ function renderVouchers(vouchers) {
         icon: '<i class="fa-solid fa-truck"></i>', 
         label: 'Miễn ship', 
         color: '#45B7D1' 
+      },
+      // Hỗ trợ nhãn từ backend 'free_ship' (underscore)
+      'free_ship': {
+        icon: '<i class="fa-solid fa-truck"></i>',
+        label: 'Miễn ship',
+        color: '#45B7D1'
       },
       'gift': { 
         icon: '<i class="fa-solid fa-gift"></i>', 
@@ -219,8 +236,8 @@ function showVoucherDetail(voucher) {
             <strong>Mô tả:</strong> ${voucher.MoTa || 'Không có mô tả'}
           </div>
           <div class="detail-item">
-            <strong>Loại voucher:</strong> 
-            <span class="voucher-type">${voucher.LoaiKM === 'giam_phan_tram' ? 'Giảm theo phần trăm' : 'Giảm tiền mặt'}</span>
+            <strong>Loại voucher:</strong>
+            <span class="voucher-type">${getPromotionTypeLabel(voucher.LoaiKM)}</span>
           </div>
           <div class="detail-item">
             <strong>Trạng thái:</strong> 

@@ -78,9 +78,13 @@ async function syncLocalCartToServer() {
           'Authorization': `Bearer ${getToken()}`,
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ productId: item.id, quantity: item.quantity })
+        body: JSON.stringify({ productId: Number(item.id), quantity: item.quantity })
       });
-      if (!response.ok) console.error('Sync error for product:', item.id, await response.json());
+      if (!response.ok) {
+        let err = null;
+        try { err = await response.json(); } catch(e) { err = { raw: await response.text() }; }
+        console.error('Sync error for product:', item.id, response.status, err);
+      }
     } catch (error) {
       console.error('Sync cart error:', error);
     }
@@ -98,7 +102,7 @@ async function addToCart(productId, quantity = 1, productName, price, image) {
           'Authorization': `Bearer ${getToken()}`,
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ productId, quantity })
+        body: JSON.stringify({ productId: Number(productId), quantity })
       });
       if (response.ok) {
         await renderCart();
@@ -106,7 +110,10 @@ async function addToCart(productId, quantity = 1, productName, price, image) {
         updateCartCount();
         return true;
       }
-      showToast((await response.json()).error || 'Lỗi khi thêm vào giỏ hàng');
+      let errBody = null;
+      try { errBody = await response.json(); } catch (e) { errBody = { raw: await response.text() }; }
+      console.error('Add to cart failed:', response.status, errBody);
+      showToast(errBody?.error || errBody?.message || errBody?.raw || 'Lỗi khi thêm vào giỏ hàng');
       return false;
     } catch (error) {
       console.error('Add to cart error:', error);
@@ -1593,54 +1600,61 @@ async function applyPromo() {
 
     // Bước 1: Kiểm tra xem mã này có phải Free Ship không
     try {
-      const freeShipRes = await fetch(`http://localhost:5000/api/khuyenmai/my-promotions?loaiKM=free_ship&activeOnly=true`, {
-        headers: {
-          "Authorization": `Bearer ${getToken()}`,
+      // first try my-promotions (issued to customer)
+      let validFreeShip = null;
+      try {
+        const freeShipRes = await fetch(`http://localhost:5000/api/khuyenmai/my-promotions?loaiKM=free_ship&activeOnly=true`, {
+          headers: { "Authorization": `Bearer ${getToken()}` }
+        });
+        const freeShipData = await freeShipRes.json();
+        if (freeShipRes.ok && freeShipData.data) {
+          validFreeShip = freeShipData.data.find(promo => promo.Code === code && promo.trang_thai === 'Chua_su_dung');
         }
-      });
-      
-      const freeShipData = await freeShipRes.json();
-      
-      if (freeShipRes.ok && freeShipData.data) {
-        const validFreeShip = freeShipData.data.find(promo => 
-          promo.Code === code && 
-          promo.trang_thai === 'Chua_su_dung'
-        );
-        
-        if (validFreeShip) {
-          // ✅ KIỂM TRA: Đã có mã Free Ship chưa?
-          if (appliedFreeShipCode) {
-            showToast("Bạn đã áp dụng mã Free Ship rồi. Vui lòng xóa mã cũ trước!");
+      } catch (e) {
+        console.warn('my-promotions lookup failed:', e);
+      }
+
+      // if not found, try public promotions (admin-created public free_ship)
+      if (!validFreeShip) {
+        try {
+          const publicRes = await fetch(`http://localhost:5000/api/khuyenmai?search=${encodeURIComponent(code)}&loaiKM=free_ship&activeOnly=true&limit=50`);
+          const publicData = await publicRes.json();
+          if (publicRes.ok && publicData.data) {
+            validFreeShip = publicData.data.find(p => String(p.Code || '').toUpperCase() === code.toUpperCase());
+          }
+        } catch (e) {
+          console.warn('public promotions lookup failed:', e);
+        }
+      }
+
+      if (validFreeShip) {
+        // ✅ KIỂM TRA: Đã có mã Free Ship chưa?
+        if (appliedFreeShipCode) {
+          if (appliedFreeShipCode.code === code) {
+            showToast(`Mã Free Ship "${code}" đã được áp dụng`);
             return;
           }
-          
-          // Đây là mã Free Ship
-          const subtotal = selectedItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
-          
-          if (subtotal >= (validFreeShip.GiaTriDonToiThieu || 0)) {
-            appliedFreeShipCode = {
-              code: code,
-              details: validFreeShip
-            };
-            
-            // ✅ LƯU VÀO LOCALSTORAGE
-            saveAppliedCodes();
-            
-            await displayAppliedPromo(code, 'free_ship');
-            
-            // ✅ XÓA Ô INPUT SAU KHI ÁP DỤNG THÀNH CÔNG
-            document.getElementById('coupon-code').value = '';
-            
-            showToast("Áp dụng mã Free Ship thành công!");
-            return;
-          } else {
-            showToast(`Đơn hàng phải đạt tối thiểu ${formatPrice(validFreeShip.GiaTriDonToiThieu)} để sử dụng mã này`);
-            return;
-          }
+          showToast(`Đã áp dụng mã Free Ship: ${appliedFreeShipCode.code}. Vui lòng xóa mã cũ trước!`);
+          return;
+        }
+
+        // Đây là mã Free Ship
+        const subtotal = selectedItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
+
+        if (subtotal >= (validFreeShip.GiaTriDonToiThieu || 0)) {
+          appliedFreeShipCode = { code: code, details: validFreeShip };
+          saveAppliedCodes();
+          await displayAppliedPromo(code, 'free_ship');
+          document.getElementById('coupon-code').value = '';
+          showToast('Áp dụng mã Free Ship thành công!');
+          return;
+        } else {
+          showToast(`Đơn hàng phải đạt tối thiểu ${formatPrice(validFreeShip.GiaTriDonToiThieu)} để sử dụng mã này`);
+          return;
         }
       }
     } catch (error) {
-      console.log('Không phải mã Free Ship, kiểm tra mã giảm giá...');
+      console.log('Không phải mã Free Ship (hoặc lỗi kiểm tra), tiếp tục kiểm tra mã giảm giá...', error);
     }
 
     // Bước 2: Nếu không phải Free Ship, kiểm tra mã giảm giá sản phẩm
@@ -2002,8 +2016,17 @@ document.addEventListener('DOMContentLoaded', async () => {
     try { await loadSavedAddresses(); } catch (e) { console.warn('loadSavedAddresses failed', e); }
   }
 
-  // ✅ KHÔI PHỤC MÃ KHUYẾN MÃI ĐÃ ÁP DỤNG TỪ LOCALSTORAGE
+  // ✅ LOAD danh sách mã server trước, rồi KHÔI PHỤC mã từ localStorage và xác thực với server
+  await loadSavedPromos();
   const hasRestoredCodes = restoreAppliedCodes();
+  // Sau khi khôi phục mã từ localStorage, verify với server (nếu user logged in)
+  if (hasRestoredCodes && isLoggedIn()) {
+    try {
+      await verifyAppliedCodesAgainstServer();
+    } catch (e) {
+      console.warn('verifyAppliedCodesAgainstServer failed', e);
+    }
+  }
 
   // If logged in, refresh user profile to ensure loyalty_tier is up-to-date
   // This fixes cases where cart reads a stale/missing localStorage.user and shows 'Thẻ Đồng'
@@ -2125,11 +2148,59 @@ async function loadSavedPromos() {
         // Prepend coupon-sourced promos so they appear first
         promoList = [...couponPromos, ...promoList];
         console.log('🔁 Merged coupons from /api/coupons/my-coupons into promo list, count:', promoList.length);
+
+        // --- Filter out promos that are used/expired/unavailable ---
+        const now = new Date();
+        const isBadStatus = (s) => {
+          if (!s) return false;
+          const st = String(s).toLowerCase();
+          return st.includes('da_su_dung') || st.includes('đã sử dụng') || st.includes('used') || st.includes('hết hạn') || st.includes('het han') || st.includes('expired') || st.includes('ngung') || st.includes('ngưng') || st.includes('ngưng hiệu lực') || st.includes('không hợp lệ');
+        };
+
+        promoList = promoList.filter(p => {
+          try {
+            // status fields may be named differently
+            if (isBadStatus(p.trang_thai) || isBadStatus(p.status) || isBadStatus(p.Status)) return false;
+
+            // expiry checks: NgayHetHan, expiry, expiryDate
+            const expiryVal = p.NgayHetHan || p.expiry || p.expiryDate || p.expiry_at || p.HanSuDung;
+            if (expiryVal) {
+              const d = new Date(expiryVal);
+              if (!isNaN(d) && d < now) return false;
+            }
+
+            // For promo entries that include a 'ngay_lay' older than 90 days, treat as stale
+            const ngx = p.ngay_lay || p.NgayLay || p.receivedAt;
+            if (ngx) {
+              const d2 = new Date(ngx);
+              if (!isNaN(d2)) {
+                const ageDays = (now - d2) / (1000*60*60*24);
+                if (ageDays > 365) return false; // very old
+              }
+            }
+
+            return true;
+          } catch (e) {
+            return true;
+          }
+        });
+
+        console.log('🔍 After filtering used/expired promos, count =', promoList.length);
       }
     } catch (e) {
       console.warn('Không thể tải coupons từ /api/coupons/my-coupons:', e);
     }
     
+    // Lọc bỏ các mã đã sử dụng (Da_su_dung) trước khi hiển thị
+    promoList = promoList.filter(p => !(p.trang_thai && String(p.trang_thai).toLowerCase() === 'da_su_dung'));
+
+    // Nếu không còn mã nào hợp lệ thì ẩn section hoàn toàn
+    if (!promoList || promoList.length === 0) {
+      console.log('ℹ️ Không có mã khuyến mãi hợp lệ để hiển thị, ẩn section');
+      savedPromosSection.style.display = 'none';
+      return;
+    }
+
     // Hiển thị section
     savedPromosSection.style.display = 'block';
     
@@ -2284,6 +2355,77 @@ async function loadSavedPromos() {
   }
 }
 
+// Verify restored localStorage-applied codes against server state and clear if used/invalid
+async function verifyAppliedCodesAgainstServer() {
+  try {
+    const makh = getUserId();
+    if (!makh) return;
+
+    // Verify discount code
+    if (appliedDiscountCode && appliedDiscountCode.code) {
+      const code = appliedDiscountCode.code;
+      // Check user's claimed promos
+      try {
+        const res = await fetch(`http://localhost:5000/api/khuyenmai/my-promotions`, {
+          headers: { Authorization: `Bearer ${getToken()}` }
+        });
+        const j = await res.json().catch(() => ({}));
+        const found = Array.isArray(j.data) && j.data.find(p => String(p.Code || '').toUpperCase() === String(code).toUpperCase());
+        if (found && found.trang_thai === 'Da_su_dung') {
+          // promo already used on server -> clear local
+          console.log('verifyAppliedCodes: discount code marked used on server, clearing local:', code);
+          appliedDiscountCode = null;
+          appliedDiscountAmount = 0;
+          saveAppliedCodes();
+          await removeDiscountCode();
+        }
+      } catch (e) {
+        console.warn('verifyAppliedCodes: my-promotions check failed', e);
+      }
+
+      // Also check issued coupons endpoint as fallback
+      try {
+        const couponsRes = await fetch(`http://localhost:5000/api/coupons/my-coupons?makh=${makh}`, {
+          headers: { Authorization: `Bearer ${getToken()}` }
+        });
+        const couponsJson = await couponsRes.json().catch(() => ({}));
+        const foundCoupon = Array.isArray(couponsJson.data) && couponsJson.data.find(c => String(c.MaPhieu || '').toUpperCase() === String(code).toUpperCase());
+        if (foundCoupon && (foundCoupon.NgaySuDung || foundCoupon.Status === 'used')) {
+          console.log('verifyAppliedCodes: coupon already used on server, clearing local:', code);
+          appliedDiscountCode = null;
+          appliedDiscountAmount = 0;
+          saveAppliedCodes();
+          await removeDiscountCode();
+        }
+      } catch (e) {
+        console.warn('verifyAppliedCodes: coupons/my-coupons check failed', e);
+      }
+    }
+
+    // Verify free ship code
+    if (appliedFreeShipCode && appliedFreeShipCode.code) {
+      const code = appliedFreeShipCode.code;
+      try {
+        const res = await fetch(`http://localhost:5000/api/khuyenmai/my-promotions?loaiKM=free_ship`, {
+          headers: { Authorization: `Bearer ${getToken()}` }
+        });
+        const j = await res.json().catch(() => ({}));
+        const found = Array.isArray(j.data) && j.data.find(p => String(p.Code || '').toUpperCase() === String(code).toUpperCase());
+        if (found && found.trang_thai === 'Da_su_dung') {
+          console.log('verifyAppliedCodes: free ship code used on server, clearing local:', code);
+          appliedFreeShipCode = null;
+          saveAppliedCodes();
+          await removeFreeShipCode();
+        }
+      } catch (e) {
+        console.warn('verifyAppliedCodes: free_ship my-promotions check failed', e);
+      }
+    }
+  } catch (err) {
+    console.error('verifyAppliedCodesAgainstServer unexpected error', err);
+  }
+}
+
 // Apply promo code from saved list (trực tiếp, không cần input box)
 window.applyPromoFromSaved = async function(code, event) {
   console.log('🚀🚀🚀 === applyPromoFromSaved START === 🚀🚀🚀');
@@ -2312,12 +2454,29 @@ window.applyPromoFromSaved = async function(code, event) {
       throw new Error("Invalid code");
     }
 
-    // Kiểm tra loại mã
-    const freeShipRes = await fetch(`http://localhost:5000/api/khuyenmai/my-promotions?loaiKM=free_ship&activeOnly=true`, {
-      headers: { "Authorization": `Bearer ${getToken()}` }
-    });
-    const freeShipData = await freeShipRes.json();
-    const isFreeShip = freeShipData.data?.some(p => p.Code === code && p.trang_thai === 'Chua_su_dung');
+    // Kiểm tra loại mã (thử my-promotions trước, sau đó lookup public promotions)
+    let isFreeShip = false;
+    try {
+      const freeShipRes = await fetch(`http://localhost:5000/api/khuyenmai/my-promotions?loaiKM=free_ship&activeOnly=true`, {
+        headers: { "Authorization": `Bearer ${getToken()}` }
+      });
+      const freeShipData = await freeShipRes.json();
+      isFreeShip = freeShipData.data?.some(p => p.Code === code && p.trang_thai === 'Chua_su_dung');
+    } catch (e) {
+      console.warn('my-promotions lookup failed:', e);
+    }
+
+    if (!isFreeShip) {
+      try {
+        const publicRes = await fetch(`http://localhost:5000/api/khuyenmai?search=${encodeURIComponent(code)}&loaiKM=free_ship&activeOnly=true&limit=50`);
+        const publicData = await publicRes.json();
+        if (publicRes.ok && publicData.data) {
+          isFreeShip = publicData.data.some(p => String(p.Code || '').toUpperCase() === code.toUpperCase());
+        }
+      } catch (e) {
+        console.warn('public promotions lookup failed:', e);
+      }
+    }
 
     // Fallback: if the promo card in DOM was rendered with class 'free-ship', treat it as free ship
     const clickedCard = clickedBtn ? clickedBtn.closest('.saved-promo-card') : null;
@@ -2334,8 +2493,18 @@ window.applyPromoFromSaved = async function(code, event) {
       throw new Error("No items selected for free ship");
     }
     
-    if (isFreeShip) {
+    if (isFreeShipFinal) {
       // ============= MÃ FREE SHIP =============
+      // Prevent applying a second different Free Ship
+      if (appliedFreeShipCode && appliedFreeShipCode.code && appliedFreeShipCode.code !== code) {
+        showToast(`Đã áp dụng mã Free Ship: ${appliedFreeShipCode.code}. Vui lòng xóa mã cũ trước!`);
+        if (clickedBtn && typeof originalText === 'string') {
+          clickedBtn.disabled = false;
+          clickedBtn.textContent = originalText;
+        }
+        return;
+      }
+
       if (appliedFreeShipCode) {
         // If same code already applied, just inform user and update UI
         if (appliedFreeShipCode.code === code) {
@@ -2347,13 +2516,6 @@ window.applyPromoFromSaved = async function(code, event) {
           }
           return;
         }
-
-        showToast(`Đã áp dụng mã Free Ship: ${appliedFreeShipCode.code}. Vui lòng xóa mã cũ trước!`);
-        if (clickedBtn && typeof originalText === 'string') {
-          clickedBtn.disabled = false;
-          clickedBtn.textContent = originalText;
-        }
-        return;
       }
       
       appliedFreeShipCode = { code };

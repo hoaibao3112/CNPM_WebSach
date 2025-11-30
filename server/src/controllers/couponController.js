@@ -27,7 +27,7 @@ export const getMyCoupons = async (req, res) => {
         ph.MaPhieu,
         ph.NgayPhatHanh,
         ph.NgaySuDung,
-        ph.MaDonHang,
+        
         p.MoTa,
         p.MaKM,
         p.TrangThai,
@@ -65,7 +65,7 @@ export const getMyCoupons = async (req, res) => {
       MaPhieu: row.MaPhieu,
       NgayPhatHanh: row.NgayPhatHanh,
       NgaySuDung: row.NgaySuDung,
-      MaDonHang: row.MaDonHang,
+      
       MoTa: row.MoTa,
       MaKM: row.MaKM,
       TrangThai: row.TrangThai,
@@ -219,13 +219,13 @@ export const useCoupon = async (req, res) => {
       status: () => ({ json: () => {} })
     });
 
-    // Cập nhật NgaySuDung
+    // Cập nhật NgaySuDung (we do not persist MaDonHang anymore)
     await pool.query(
       `UPDATE phieugiamgia_phathanh 
-       SET NgaySuDung = NOW(), MaDonHang = ?
+       SET NgaySuDung = NOW(), TrangThaiSuDung = 'DA_SU_DUNG'
        WHERE makh = ? AND MaPhieu = ? AND NgaySuDung IS NULL
        LIMIT 1`,
-      [orderId || null, makh, code]
+      [makh, code]
     );
 
     return res.json({
@@ -295,7 +295,7 @@ export const getCouponDetail = async (req, res) => {
 
     // Tìm bản phát hành coupon của khách (nếu có)
     const [issuedRows] = await pool.query(
-      `SELECT ph.MaPhatHanh, ph.MaPhieu, ph.NgayPhatHanh, ph.NgaySuDung, ph.MaDonHang, p.MoTa, p.MaKM, p.TrangThai
+      `SELECT ph.MaPhatHanh, ph.MaPhieu, ph.NgayPhatHanh, ph.NgaySuDung, p.MoTa, p.MaKM, p.TrangThai
        FROM phieugiamgia_phathanh ph
        JOIN phieugiamgia p ON ph.MaPhieu = p.MaPhieu
        WHERE ph.makh = ? AND ph.MaPhieu = ? LIMIT 1`,
@@ -365,7 +365,7 @@ export const getCouponDetail = async (req, res) => {
           MaPhieu: issued.MaPhieu,
           NgayPhatHanh: issued.NgayPhatHanh,
           NgaySuDung: issued.NgaySuDung,
-          MaDonHang: issued.MaDonHang,
+      
           MoTa: issued.MoTa,
           MaKM: issued.MaKM,
           TrangThai: issued.TrangThai,

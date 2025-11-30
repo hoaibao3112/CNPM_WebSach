@@ -126,8 +126,22 @@ document.addEventListener('DOMContentLoaded', async function() {
     setTimeout(() => {
         // ✅ XỬ LÝ VNPAY SUCCESS
         if (status === 'success' && (!paymentMethod || paymentMethod === 'VNPAY')) {
-            const displayAmount = amount ? parseInt(amount) / 100 : null;
-            
+            // If subtotal/discount/shipping were provided in URL (e.g., after applying promos), compute total from parts.
+            const displayAmountParam = amount ? parseFloat(amount) : null; // amount param may be provided by gateway
+            const displaySubtotal = subtotal ? parseFloat(subtotal) : null;
+            const displayDiscount = discount ? parseFloat(discount) : 0;
+            const displayShipping = shipping ? parseFloat(shipping) : 0;
+
+            let finalTotal = null;
+            if (displaySubtotal !== null) {
+                finalTotal = Math.max(0, displaySubtotal - (displayDiscount || 0) + (displayShipping || 0));
+            } else if (orderDetails && typeof orderDetails.TongTien !== 'undefined') {
+                finalTotal = parseFloat(orderDetails.TongTien);
+            } else if (displayAmountParam !== null) {
+                // gateway amount may be in smallest currency unit; try to use it directly
+                finalTotal = displayAmountParam;
+            }
+
             resultContent.innerHTML = `
                 <div class="success-icon">
                     <i class="fas fa-check-circle"></i>
@@ -149,7 +163,7 @@ document.addEventListener('DOMContentLoaded', async function() {
                         </div>
                         <div class="detail-row">
                             <span class="label">Tổng tiền:</span>
-                            <span class="value total-amount">${displayAmount ? formatPrice(displayAmount * 100) : (orderDetails?.TongTien ? formatPrice(orderDetails.TongTien * 100) : 'N/A')}</span>
+                            <span class="value total-amount">${finalTotal !== null ? formatPrice(finalTotal) : 'N/A'}</span>
                         </div>
                         <div class="detail-row">
                             <span class="label">Phương thức:</span>
@@ -193,12 +207,12 @@ document.addEventListener('DOMContentLoaded', async function() {
             const displaySubtotal = subtotal ? parseFloat(subtotal) : null;
             const displayDiscount = discount ? parseFloat(discount) : 0;
             const displayShipping = shipping ? parseFloat(shipping) : 0;
-            
+
             // ✅ Build promo codes display
             let promoCodesHTML = '';
             if (discountCode || freeShipCode) {
                 promoCodesHTML = '<div class="detail-section"><div class="section-title"><i class="fas fa-tags"></i> Mã khuyến mãi đã áp dụng</div>';
-                
+
                 if (discountCode) {
                     promoCodesHTML += `
                         <div class="promo-badge" style="background: #fff3cd; padding: 10px; border-radius: 5px; margin: 5px 0;">
@@ -207,7 +221,7 @@ document.addEventListener('DOMContentLoaded', async function() {
                         </div>
                     `;
                 }
-                
+
                 if (freeShipCode) {
                     promoCodesHTML += `
                         <div class="promo-badge" style="background: #d4edda; padding: 10px; border-radius: 5px; margin: 5px 0;">
@@ -216,10 +230,20 @@ document.addEventListener('DOMContentLoaded', async function() {
                         </div>
                     `;
                 }
-                
+
                 promoCodesHTML += '</div>';
             }
-            
+
+            // Compute final total from parts if available
+            let finalTotal = null;
+            if (displaySubtotal !== null) {
+                finalTotal = Math.max(0, displaySubtotal - (displayDiscount || 0) + (displayShipping || 0));
+            } else if (orderDetails && typeof orderDetails.TongTien !== 'undefined') {
+                finalTotal = parseFloat(orderDetails.TongTien);
+            } else if (displayAmount !== null) {
+                finalTotal = displayAmount;
+            }
+
             resultContent.innerHTML = `
                 <div class="success-icon">
                     <i class="fas fa-check-circle"></i>
@@ -264,7 +288,7 @@ document.addEventListener('DOMContentLoaded', async function() {
                         ` : ''}
                         <div class="detail-row">
                             <span class="label">Tổng tiền:</span>
-                            <span class="value total-amount">${displayAmount ? formatPrice(displayAmount) : (orderDetails?.TongTien ? formatPrice(orderDetails.TongTien) : 'N/A')}</span>
+                            <span class="value total-amount">${finalTotal !== null ? formatPrice(finalTotal) : 'N/A'}</span>
                         </div>
                         <div class="detail-row">
                             <span class="label">Phương thức:</span>

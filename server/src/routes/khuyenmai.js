@@ -1007,7 +1007,7 @@ router.post('/apply-to-cart', authenticateToken, async (req, res) => {
       return res.status(403).json({ error: 'Điều kiện áp dụng khuyến mãi không đạt yêu cầu' });
     }
 
-    // 8. Trả về kết quả
+    // 8. Trả về kết quả (chỉ tính và trả thông tin giảm giá)
     res.status(200).json({
       success: true,
       discountDetails

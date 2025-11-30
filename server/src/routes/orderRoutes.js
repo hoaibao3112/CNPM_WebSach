@@ -427,7 +427,10 @@ router.post('/place-order', authenticateToken, async (req, res) => {
     
     // Lấy thông tin tier cho ghi chú (existingCustomer đã query ở trên rồi)
     const customerRow = existingCustomer[0];
-    const userTier = customerRow.loyalty_tier || computeTier(customerRow.loyalty_points || 0);
+    // Prefer loyalty tier from token (req.user) if present — keeps frontend & server consistent
+    const tokenTier = (req.user && (req.user.loyalty_tier || req.user.loyalty_tier === 0)) ? req.user.loyalty_tier : null;
+    const userTier = tokenTier || customerRow.loyalty_tier || computeTier(customerRow.loyalty_points || 0);
+    console.log('🔍 [LOYALTY] tokenTier=', tokenTier, 'dbTier=', customerRow.loyalty_tier, 'loyalty_points=', customerRow.loyalty_points, '-> userTier=', userTier);
 
     // ===== Server-side recalculation & validation for discountCode =====
     // We'll compute canonical discountAmountServer and override client value if different.
@@ -449,12 +452,13 @@ router.post('/place-order', authenticateToken, async (req, res) => {
 
         // 2) If not found in khuyen_mai, try coupon issuance table for this customer
         if (!promotion) {
+          // Try to find issued coupon by either the issuance field or the public coupon code
           const [[couponRow]] = await connection.query(
             `SELECT ph.*, p.MaKM as Coupon_MaKM, p.TrangThai as Coupon_TrangThai, p.MaPhieu as Coupon_Code, p.MoTa as Coupon_MoTa
              FROM phieugiamgia_phathanh ph
              JOIN phieugiamgia p ON ph.MaPhieu = p.MaPhieu
-             WHERE ph.MaPhieu = ? AND ph.makh = ? LIMIT 1`,
-            [code, customer.makh]
+             WHERE (ph.MaPhieu = ? OR p.MaPhieu = ?) AND ph.makh = ? LIMIT 1`,
+            [code, code, customer.makh]
           );
 
           if (couponRow) {
@@ -485,6 +489,7 @@ router.post('/place-order', authenticateToken, async (req, res) => {
 
         // If we have a promotion, compute discount server-side
         if (promotion) {
+          console.log('🔍 [PROMO FOUND] promotion=', promotion);
           const promoType = String(promotion.LoaiKM || '').toLowerCase();
 
           // Build eligible product list
@@ -524,6 +529,8 @@ router.post('/place-order', authenticateToken, async (req, res) => {
           const subtotalEligible = eligibleItems.reduce((s, it) => s + (it.price || 0) * (it.quantity || 0), 0);
           const totalQtyEligible = eligibleItems.reduce((s, it) => s + (it.quantity || 0), 0);
 
+          console.log('🔍 [ELIGIBLE ITEMS] ids=', eligibleItems.map(i=>i.productId), 'subtotalEligible=', subtotalEligible, 'totalQtyEligible=', totalQtyEligible);
+
           // Enforce promotion minima
           const minAmount = promotion.GiaTriDonToiThieu || 0;
           const minQty = promotion.SoLuongToiThieu || 0;
@@ -550,6 +557,7 @@ router.post('/place-order', authenticateToken, async (req, res) => {
           }
 
           // Override discountAmount with server-computed value
+          console.log('🔍 [COMPUTED DISCOUNT] beforeOverride=', computedDiscount, 'clientDiscount=', discountAmount);
           if (computedDiscount !== discountAmount) {
             console.log(`🔁 Overriding client discount (${discountAmount}) with server-computed discount (${computedDiscount}) for code ${discountCode}`);
             discountAmount = computedDiscount;
@@ -561,6 +569,7 @@ router.post('/place-order', authenticateToken, async (req, res) => {
           } else if (couponIssuedRow) {
             promoToMark = { type: 'phieugiamgia_phathanh', code: couponIssuedRow.MaPhieu };
           }
+          console.log('🔍 [PROMO SELECTED TO MARK] promoToMark=', promoToMark);
         } else {
           console.log(`⚠️ Không tìm thấy khuyến mãi cho mã: ${discountCode} (server)`);
         }
@@ -622,7 +631,45 @@ router.post('/place-order', authenticateToken, async (req, res) => {
             console.log(`⚠️ Khách hàng chưa claim mã free ship hoặc đã sử dụng`);
           }
         } else {
-          console.log(`⚠️ Mã free ship không hợp lệ hoặc đã hết hạn: ${freeShipCode}`);
+          // Nếu không tìm thấy trong khuyen_mai (Code), thử tìm trong bảng phieugiamgia_phathanh (mã phát hành từ form)
+          try {
+            const [[issued]] = await connection.query(
+              `SELECT ph.MaPhatHanh, ph.MaPhieu, ph.NgayPhatHanh, ph.NgaySuDung,
+                      k.MaKM AS Promo_MaKM, k.Code AS Promo_Code, k.LoaiKM AS Promo_LoaiKM, ct.GiaTriDonToiThieu AS Promo_GiaTriDonToiThieu
+               FROM phieugiamgia_phathanh ph
+               JOIN phieugiamgia p ON ph.MaPhieu = p.MaPhieu
+               JOIN khuyen_mai k ON p.MaKM = k.MaKM
+               LEFT JOIN ct_khuyen_mai ct ON k.MaKM = ct.MaKM
+               WHERE ph.MaPhieu = ? AND ph.makh = ? LIMIT 1`,
+              [freeShipCode.trim(), customer.makh]
+            );
+
+            if (issued) {
+              if (!issued.NgaySuDung) {
+                // Check promo type directly from joined khuyen_mai row
+                const promoType = String(issued.Promo_LoaiKM || '').toLowerCase();
+                const minAmountReq = issued.Promo_GiaTriDonToiThieu || 0;
+
+                if (promoType !== 'free_ship') {
+                  console.log(`⚠️ Phiếu ${issued.MaPhieu} liên kết MaKM=${issued.Promo_MaKM} không phải free_ship (Loại=${issued.Promo_LoaiKM})`);
+                } else if (subtotal < minAmountReq) {
+                  console.log(`⚠️ Phiếu ${issued.MaPhieu} yêu cầu tối thiểu ${minAmountReq}`);
+                } else {
+                  shippingFee = 0;
+                  isFreeShip = true;
+                  console.log(`🎉 Áp dụng mã free ship (issued): ${issued.MaPhieu} (MaKM=${issued.Promo_MaKM})`);
+                  // Mark the issued voucher after order creation
+                  promoToMark = { type: 'phieugiamgia_phathanh', code: issued.MaPhieu };
+                }
+              } else {
+                console.log(`⚠️ Phiếu ${issued.MaPhieu} đã được sử dụng trước đó: NgaySuDung=${issued.NgaySuDung}`);
+              }
+            } else {
+              console.log(`⚠️ Mã free ship không hợp lệ hoặc đã hết hạn: ${freeShipCode}`);
+            }
+          } catch (e2) {
+            console.error('❌ Error while checking issued free-ship coupon:', e2);
+          }
         }
       } catch (freeShipError) {
         console.error('❌ Error checking free ship code:', freeShipError);
@@ -646,6 +693,8 @@ router.post('/place-order', authenticateToken, async (req, res) => {
         console.log(`ℹ️ Member tier ${userTier} eligible but subtotal < 300k -> no member discount`);
       }
     }
+
+    console.log('🔍 [SUMMARY DEBUG] subtotal=', subtotal, 'discountAmount=', discountAmount, 'memberDiscountAmount=', memberDiscountAmount, 'shippingFee=', shippingFee);
 
     // Tổng tiền cuối cùng = Tiền hàng (đã giảm từ mã KM) - memberDiscountAmount + Phí ship
     const finalTotalAmount = Math.max(0, amountAfterDiscount - memberDiscountAmount + shippingFee);
@@ -693,6 +742,10 @@ router.post('/place-order', authenticateToken, async (req, res) => {
     if (discountCode && discountAmount > 0) {
       promoNote = `[PROMO] Mã: ${discountCode}; Giảm giá: ${discountAmount.toLocaleString()}đ\n`;
     }
+    // Nếu promoToMark là phiếu phát hành (issued coupon), thêm mã phiếu vào ghi chú
+    if (!promoNote && promoToMark && promoToMark.type === 'phieugiamgia_phathanh' && promoToMark.code) {
+      promoNote = `[PROMO] Phiếu: ${promoToMark.code}\n`;
+    }
 
     // Ghi chú member discount nếu có
     let memberNote = '';
@@ -712,22 +765,101 @@ router.post('/place-order', authenticateToken, async (req, res) => {
     // ===== Persist promo usage (mark as used) inside the same transaction =====
     if (promoToMark) {
       try {
+        console.log('🔍 [PROMO MARK] promoToMark=', promoToMark, 'discountAmount=', discountAmount, 'isFreeShip=', isFreeShip);
+
         if (promoToMark.type === 'khachhang_khuyenmai' && promoToMark.MaKM) {
-          if (discountAmount > 0) {
-            await connection.query(
-              `UPDATE khachhang_khuyenmai SET trang_thai = 'Da_su_dung' WHERE makh = ? AND makm = ?`,
+          try {
+            const [preRows] = await connection.query(
+              `SELECT * FROM khachhang_khuyenmai WHERE makh = ? AND makm = ? LIMIT 1`,
               [customer.makh, promoToMark.MaKM]
             );
-            console.log(`✅ Đã đánh dấu khuyến mãi MaKM=${promoToMark.MaKM} là đã sử dụng cho makh=${customer.makh}`);
+            console.log('🔎 [PRE-MARK] khachhang_khuyenmai select result =', preRows && preRows.length ? preRows[0] : null);
+
+            // Mark claimed customer promo as used if discount was actually applied OR free-ship was applied
+            if (discountAmount > 0 || isFreeShip) {
+              // Note: the table `khachhang_khuyenmai` in some schemas does not have a
+              // `NgaySuDung` column. Only phieugiamgia_phathanh has NgaySuDung in our
+              // migrations. To avoid ER_BAD_FIELD_ERROR, update only `trang_thai` here.
+              const [updateRes] = await connection.query(
+                `UPDATE khachhang_khuyenmai SET trang_thai = 'Da_su_dung' WHERE makh = ? AND makm = ? AND trang_thai = 'Chua_su_dung' LIMIT 1`,
+                [customer.makh, promoToMark.MaKM]
+              );
+              console.log('🔎 [MARK RESULT] khachhang_khuyenmai update result =', updateRes && updateRes.affectedRows ? { affectedRows: updateRes.affectedRows } : updateRes);
+              if (updateRes && updateRes.affectedRows && updateRes.affectedRows > 0) {
+                console.log(`✅ Đã đánh dấu khuyến mãi MaKM=${promoToMark.MaKM} là đã sử dụng cho makh=${customer.makh}`);
+              } else {
+                  console.log(`⚠️ UPDATE không ảnh hưởng dòng nào cho khachhang_khuyenmai (makh=${customer.makh}, MaKM=${promoToMark.MaKM})`);
+                  // Fallback: nếu không có row trong khachhang_khuyenmai, thử đánh dấu bất kỳ phiếu phát hành nào liên quan tới MaKM
+                  try {
+                    const [fallbackRes] = await connection.query(
+                          `UPDATE phieugiamgia_phathanh ph
+                            JOIN phieugiamgia p ON ph.MaPhieu = p.MaPhieu
+                            SET ph.NgaySuDung = NOW(), ph.TrangThaiSuDung = 'DA_SU_DUNG'
+                            WHERE ph.makh = ? AND p.MaKM = ? AND ph.NgaySuDung IS NULL`,
+                           [customer.makh, promoToMark.MaKM]
+                    );
+                    console.log('🔎 [FALLBACK MARK] phieugiamgia_phathanh update result =', fallbackRes && fallbackRes.affectedRows ? { affectedRows: fallbackRes.affectedRows } : fallbackRes);
+                    if (fallbackRes && fallbackRes.affectedRows && fallbackRes.affectedRows > 0) {
+                      console.log(`✅ Fallback: Đã đánh dấu phieugiamgia_phathanh liên quan MaKM=${promoToMark.MaKM} cho makh=${customer.makh}`);
+                    }
+                  } catch (fbErr) {
+                    console.error('❌ Lỗi fallback đánh dấu phieugiamgia_phathanh:', fbErr);
+                  }
+              }
+            } else {
+              console.log(`ℹ️ Không đánh dấu MaKM=${promoToMark.MaKM} cho makh=${customer.makh} vì không có giảm giá và không phải free-ship`);
+            }
+          } catch (innerErr) {
+            console.error('❌ Lỗi khi kiểm tra/đánh dấu khachhang_khuyenmai:', innerErr);
           }
         } else if (promoToMark.type === 'phieugiamgia_phathanh' && promoToMark.code) {
-          if (discountAmount > 0) {
-            await connection.query(
-              `UPDATE phieugiamgia_phathanh SET NgaySuDung = NOW(), MaDonHang = ? WHERE makh = ? AND MaPhieu = ? AND NgaySuDung IS NULL LIMIT 1`,
-              [orderId, customer.makh, promoToMark.code]
+          try {
+            const [preCoupon] = await connection.query(
+              `SELECT * FROM phieugiamgia_phathanh WHERE MaPhieu = ? AND makh = ? LIMIT 1`,
+              [promoToMark.code, customer.makh]
             );
-            console.log(`✅ Đã đánh dấu coupon ${promoToMark.code} (phieugiamgia_phathanh) là đã sử dụng cho makh=${customer.makh}`);
+            console.log('🔎 [PRE-MARK] phieugiamgia_phathanh select result =', preCoupon && preCoupon.length ? preCoupon[0] : null);
+
+            // For issued coupons, mark them when discount was applied (non-zero) OR when explicitly free-ship
+            if (discountAmount > 0 || isFreeShip) {
+              const [updateRes] = await connection.query(
+                `UPDATE phieugiamgia_phathanh SET NgaySuDung = NOW(), TrangThaiSuDung = 'DA_SU_DUNG' WHERE makh = ? AND MaPhieu = ? AND NgaySuDung IS NULL LIMIT 1`,
+                [customer.makh, promoToMark.code]
+              );
+              console.log('🔎 [MARK RESULT] phieugiamgia_phathanh update result =', updateRes && updateRes.affectedRows ? { affectedRows: updateRes.affectedRows } : updateRes);
+              if (updateRes && updateRes.affectedRows && updateRes.affectedRows > 0) {
+                console.log(`✅ Đã đánh dấu coupon ${promoToMark.code} (phieugiamgia_phathanh) là đã sử dụng cho makh=${customer.makh}`);
+              } else {
+                console.log(`⚠️ UPDATE không ảnh hưởng dòng nào cho phieugiamgia_phathanh (MaPhieu=${promoToMark.code}, makh=${customer.makh})`);
+                // Fallback: thử cập nhật khachhang_khuyenmai nếu có liên quan tới MaKM của phieugiamgia
+                try {
+                  const [pRow] = await connection.query(
+                    `SELECT p.MaKM FROM phieugiamgia p WHERE p.MaPhieu = ? LIMIT 1`,
+                    [promoToMark.code]
+                  );
+                  const linkedMaKM = pRow && pRow.length ? pRow[0].MaKM : null;
+                  if (linkedMaKM) {
+                    const [fbUpdate] = await connection.query(
+                      `UPDATE khachhang_khuyenmai SET trang_thai = 'Da_su_dung', NgaySuDung = NOW() WHERE makh = ? AND makm = ? AND trang_thai = 'Chua_su_dung' LIMIT 1`,
+                      [customer.makh, linkedMaKM]
+                    );
+                    console.log('🔎 [FALLBACK MARK] khachhang_khuyenmai update result =', fbUpdate && fbUpdate.affectedRows ? { affectedRows: fbUpdate.affectedRows } : fbUpdate);
+                    if (fbUpdate && fbUpdate.affectedRows && fbUpdate.affectedRows > 0) {
+                      console.log(`✅ Fallback: Đã đánh dấu khachhang_khuyenmai MaKM=${linkedMaKM} cho makh=${customer.makh}`);
+                    }
+                  }
+                } catch (fbErr) {
+                  console.error('❌ Lỗi fallback đánh dấu khachhang_khuyenmai:', fbErr);
+                }
+              }
+            } else {
+              console.log(`ℹ️ Không đánh dấu coupon ${promoToMark.code} vì không có giảm giá và không phải free-ship`);
+            }
+          } catch (innerErr) {
+            console.error('❌ Lỗi khi kiểm tra/đánh dấu phieugiamgia_phathanh:', innerErr);
           }
+        } else {
+          console.log('ℹ️ promoToMark không phải kiểu đã biết hoặc thiếu dữ liệu:', promoToMark);
         }
       } catch (markErr) {
         console.error('❌ Error marking promo usage after order insert:', markErr);
@@ -893,7 +1025,8 @@ router.post('/place-order', authenticateToken, async (req, res) => {
         amountAfterDiscount,
         memberDiscountAmount,
         shippingFee,
-        finalTotalAmount
+        finalTotalAmount,
+        appliedPromo: promoToMark || null
       });
     } else {
       return res.status(400).json({ error: 'Phương thức thanh toán không hợp lệ' });
