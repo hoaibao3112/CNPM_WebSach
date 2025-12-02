@@ -335,10 +335,14 @@ router.post('/place-order', authenticateToken, async (req, res) => {
     notes, 
     subtotal: clientSubtotal,        // ✅ Tổng tiền hàng từ client
     discount: clientDiscount,        // ✅ Giảm giá đã áp dụng từ client
-    totalAmountDiscouted,            // ✅ Tổng cuối cùng từ client
+    totalAmount,                     // may be provided by client (new name)
+    totalAmountDiscouted,            // legacy field name from client
     freeShipCode,
     discountCode                     // ✅ Mã giảm giá đã áp dụng
   } = req.body;
+
+  // Support both client-sent names: prefer `totalAmount`, fallback to legacy `totalAmountDiscouted`
+  const clientFinalTotal = (typeof totalAmount !== 'undefined') ? totalAmount : totalAmountDiscouted;
   
   const customerId = (req.user && req.user.makh) || (req.body.customer && req.body.customer.makh);
   const customerName = (req.user && (req.user.tenkh || req.user.name)) || (req.body.customer && req.body.customer.name) || '';
@@ -349,7 +353,7 @@ router.post('/place-order', authenticateToken, async (req, res) => {
   console.log('🔍 [ORDER] Received data:');
   console.log('  - clientSubtotal:', clientSubtotal);
   console.log('  - clientDiscount:', clientDiscount);
-  console.log('  - totalAmountDiscouted:', totalAmountDiscouted);
+  console.log('  - clientFinalTotal (client-provided):', clientFinalTotal);
   console.log('  - freeShipCode:', freeShipCode);
   console.log('  - discountCode:', discountCode);
     
@@ -605,7 +609,7 @@ router.post('/place-order', authenticateToken, async (req, res) => {
              FROM khachhang_khuyenmai 
              WHERE makh = ? 
                AND makm = ? 
-               AND trang_thai = 'Chua_su_dung' 
+               AND UPPER(REPLACE(trang_thai, ' ', '_')) = 'CHUA_SU_DUNG' 
                AND ngay_het_han >= NOW()`,
             [customer.makh, freeShipPromo.MaKM]
           );
@@ -633,6 +637,7 @@ router.post('/place-order', authenticateToken, async (req, res) => {
         } else {
           // Nếu không tìm thấy trong khuyen_mai (Code), thử tìm trong bảng phieugiamgia_phathanh (mã phát hành từ form)
           try {
+            // Try to match issued coupon by several common identifiers: MaPhieu, MaPhatHanh, p.MaPhieu or p.Code
             const [[issued]] = await connection.query(
               `SELECT ph.MaPhatHanh, ph.MaPhieu, ph.NgayPhatHanh, ph.NgaySuDung,
                       k.MaKM AS Promo_MaKM, k.Code AS Promo_Code, k.LoaiKM AS Promo_LoaiKM, ct.GiaTriDonToiThieu AS Promo_GiaTriDonToiThieu
@@ -640,8 +645,8 @@ router.post('/place-order', authenticateToken, async (req, res) => {
                JOIN phieugiamgia p ON ph.MaPhieu = p.MaPhieu
                JOIN khuyen_mai k ON p.MaKM = k.MaKM
                LEFT JOIN ct_khuyen_mai ct ON k.MaKM = ct.MaKM
-               WHERE ph.MaPhieu = ? AND ph.makh = ? LIMIT 1`,
-              [freeShipCode.trim(), customer.makh]
+               WHERE (ph.MaPhieu = ? OR ph.MaPhatHanh = ? OR p.MaPhieu = ? OR p.Code = ?) AND ph.makh = ? LIMIT 1`,
+              [freeShipCode.trim(), freeShipCode.trim(), freeShipCode.trim(), freeShipCode.trim(), customer.makh]
             );
 
             if (issued) {
@@ -682,15 +687,33 @@ router.post('/place-order', authenticateToken, async (req, res) => {
     // ===== Server-side membership discount when FreeShip is applied =====
     // Frontend applies a percent discount on subtotal when FreeShip is active
     // (Bạc: 3%, Vàng: 5%) and subtotal >= 300000. We must replicate here.
+    // Normalize userTier because it may arrive as number, unaccented text, or DB/token string
+    const normalizeTier = tier => {
+      if (!tier && tier !== 0) return 'Đồng';
+      const t = String(tier).trim();
+      if (/vang|v[aàảãáạ]ng/i.test(t)) return 'Vàng';
+      if (/bac|b[aàảãáạ]c/i.test(t)) return 'Bạc';
+      if (/đồng|dong|dong/i.test(t)) return 'Đồng';
+      // numeric mapping (common): 2 -> Vàng, 1 -> Bạc, 0 -> Đồng
+      if (!isNaN(Number(t))) {
+        const n = Number(t);
+        if (n >= 2) return 'Vàng';
+        if (n === 1) return 'Bạc';
+        return 'Đồng';
+      }
+      return t; // fallback to raw
+    };
+
+    const userTierNormalized = normalizeTier(userTier);
     let memberDiscountAmount = 0;
     if (isFreeShip) {
       const memberPctMap = { 'Bạc': 0.03, 'Vàng': 0.05 };
-      const pct = memberPctMap[userTier] || 0;
+      const pct = memberPctMap[userTierNormalized] || 0;
       if (pct > 0 && subtotal >= 300000) {
         memberDiscountAmount = Math.round(subtotal * pct);
-        console.log(`🎖️ Member tier ${userTier} discount applied server-side: -${memberDiscountAmount.toLocaleString('vi-VN')} (${pct * 100}%)`);
+        console.log(`🎖️ Member tier ${userTierNormalized} discount applied server-side: -${memberDiscountAmount.toLocaleString('vi-VN')} (${pct * 100}%)`);
       } else if (pct > 0) {
-        console.log(`ℹ️ Member tier ${userTier} eligible but subtotal < 300k -> no member discount`);
+        console.log(`ℹ️ Member tier ${userTierNormalized} eligible but subtotal < 300k -> no member discount`);
       }
     }
 
@@ -781,7 +804,7 @@ router.post('/place-order', authenticateToken, async (req, res) => {
               // `NgaySuDung` column. Only phieugiamgia_phathanh has NgaySuDung in our
               // migrations. To avoid ER_BAD_FIELD_ERROR, update only `trang_thai` here.
               const [updateRes] = await connection.query(
-                `UPDATE khachhang_khuyenmai SET trang_thai = 'Da_su_dung' WHERE makh = ? AND makm = ? AND trang_thai = 'Chua_su_dung' LIMIT 1`,
+                `UPDATE khachhang_khuyenmai SET trang_thai = 'Da_su_dung' WHERE makh = ? AND makm = ? AND UPPER(REPLACE(trang_thai, ' ', '_')) = 'CHUA_SU_DUNG' LIMIT 1`,
                 [customer.makh, promoToMark.MaKM]
               );
               console.log('🔎 [MARK RESULT] khachhang_khuyenmai update result =', updateRes && updateRes.affectedRows ? { affectedRows: updateRes.affectedRows } : updateRes);
@@ -840,7 +863,7 @@ router.post('/place-order', authenticateToken, async (req, res) => {
                   const linkedMaKM = pRow && pRow.length ? pRow[0].MaKM : null;
                   if (linkedMaKM) {
                     const [fbUpdate] = await connection.query(
-                      `UPDATE khachhang_khuyenmai SET trang_thai = 'Da_su_dung', NgaySuDung = NOW() WHERE makh = ? AND makm = ? AND trang_thai = 'Chua_su_dung' LIMIT 1`,
+                      `UPDATE khachhang_khuyenmai SET trang_thai = 'Da_su_dung', NgaySuDung = NOW() WHERE makh = ? AND makm = ? AND UPPER(REPLACE(trang_thai, ' ', '_')) = 'CHUA_SU_DUNG' LIMIT 1`,
                       [customer.makh, linkedMaKM]
                     );
                     console.log('🔎 [FALLBACK MARK] khachhang_khuyenmai update result =', fbUpdate && fbUpdate.affectedRows ? { affectedRows: fbUpdate.affectedRows } : fbUpdate);
@@ -914,6 +937,7 @@ router.post('/place-order', authenticateToken, async (req, res) => {
         });
         
         console.log('✅ VNPay URL generated for order:', orderId);
+        console.log('🔗 [VNPay] Full Payment URL:', vnpayResponse);
         // Attempt to send order confirmation email (non-blocking)
         (async () => {
           try {
@@ -1141,6 +1165,7 @@ router.get('/hoadon/:id', async (req, res) => {
         hd.MaHD,
         hd.NgayTao,
         hd.TongTien,
+        hd.PhiShip,
         hd.PhuongThucThanhToan,
         hd.GhiChu,
         hd.tinhtrang,

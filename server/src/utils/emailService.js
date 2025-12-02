@@ -176,19 +176,44 @@ export async function sendOrderConfirmationEmail(email, order = {}) {
   );
   const freeShipCode = safe(order.freeShipCode || order.shipVoucher || order.freeShip || '');
 
+  // Customer display name: try multiple common shapes
+  const customerDisplay = safe(
+    order.customerName ||
+    (order.customer && (order.customer.name || order.customer.tenkh)) ||
+    (typeof order.customer === 'string' ? order.customer : '')
+  );
+
   // Tính toán tổng
   const items = Array.isArray(order.items) ? order.items : [];
-  const subtotal = items.reduce((s, it) => {
+  // Prefer server-provided fields when available. Fall back to computing from items.
+  const subtotalFromItems = items.reduce((s, it) => {
     const qty = Number(it.quantity || it.Soluong || 0);
     const price = Number(it.price || it.DonGia || 0);
     return s + qty * price;
   }, 0);
-  const shippingFee = Number(order.shippingFee || 0);
-  const discount = Number(order.discount || order.voucherDiscount || 0);
+
+  const subtotal = Number(
+    (typeof order.subtotal !== 'undefined' && order.subtotal !== null) ? order.subtotal : subtotalFromItems
+  );
+
+  const shippingFee = Number(
+    (typeof order.shippingFee !== 'undefined' && order.shippingFee !== null) ? order.shippingFee : (order.shipping || 0)
+  );
+
+  const discount = Number(
+    (typeof order.discount !== 'undefined' && order.discount !== null) ? order.discount : (order.voucherDiscount || 0)
+  );
+
+  const memberDiscount = Number(
+    (typeof order.memberDiscount !== 'undefined' && order.memberDiscount !== null) ? order.memberDiscount : (order.memberDiscountAmount || 0)
+  );
+
   const tax = Number(order.tax || 0); // nếu có
-  // Nếu backend đã tính total thì ưu tiên, không thì tự cộng
-  const computedTotal = subtotal - discount + shippingFee + tax;
-  const grandTotal = Number(order.total || order.amount || computedTotal);
+
+  // If backend provided final total name variants, prefer them in this order
+  const grandTotal = Number(
+    order.totalAmount || order.total || order.amount || (subtotal - discount - memberDiscount + shippingFee + tax)
+  );
 
   // ── Ảnh sản phẩm (attachments cid) ────────────────────────────────────────────
   const attachments = [];
@@ -307,7 +332,7 @@ export async function sendOrderConfirmationEmail(email, order = {}) {
             <td class="px" style="padding:24px 28px;border-bottom:1px solid #f0f2f5;">
               <div style="font:700 22px/1.35 Arial;color:#081028;">Đơn hàng của bạn đã được tạo</div>
               <div style="margin-top:8px;font:400 14px/1.6 Arial;color:#495057;">
-                Xin chào <strong>${safe(order.customerName || order.customer || '')}</strong> — cảm ơn bạn đã mua sắm tại ${brandName}.
+                Xin chào <strong>${customerDisplay}</strong> — cảm ơn bạn đã mua sắm tại ${brandName}.
                 Dưới đây là tóm tắt đơn hàng của bạn.
               </div>
             </td>
@@ -375,6 +400,11 @@ export async function sendOrderConfirmationEmail(email, order = {}) {
                       <tr>
                         <td align="left" style="padding:6px 0;color:#6b7280;font:400 14px Arial;">Giảm giá${promoCode ? ` <span style="font-weight:600;color:#0b1220;">(Mã: ${promoCode})</span>` : ''}</td>
                         <td align="right" style="padding:6px 0;color:#111827;font:700 14px Arial;">- ${fmt(discount)}đ</td>
+                      </tr>` : ''}
+                      ${memberDiscount > 0 ? `
+                      <tr>
+                        <td align="left" style="padding:6px 0;color:#6b7280;font:400 14px Arial;">Giảm theo thẻ thành viên${order.memberTier ? ` <span style="font-weight:600;color:#0b1220;">(${order.memberTier})</span>` : ''}</td>
+                        <td align="right" style="padding:6px 0;color:#111827;font:700 14px Arial;">- ${fmt(memberDiscount)}đ</td>
                       </tr>` : ''}
                       ${tax > 0 ? `
                       <tr>
@@ -446,6 +476,7 @@ export async function sendOrderConfirmationEmail(email, order = {}) {
     '',
     `Tạm tính: ${fmt(subtotal)}đ`,
     discount > 0 ? `Giảm giá${promoCode ? ` (Mã: ${promoCode})` : ''}: -${fmt(discount)}đ` : '',
+    memberDiscount > 0 ? `Giảm theo thẻ thành viên${order.memberTier ? ` (${order.memberTier})` : ''}: -${fmt(memberDiscount)}đ` : '',
     tax > 0 ? `Thuế: ${fmt(tax)}đ` : '',
     `Phí vận chuyển${freeShipCode ? ` (Miễn phí - Mã: ${freeShipCode})` : ''}: ${fmt(shippingFee)}đ`,
     `TỔNG PHẢI TRẢ: ${fmt(grandTotal)}đ`,

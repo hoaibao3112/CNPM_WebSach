@@ -1204,13 +1204,16 @@ export const getResponseDetail = async (req, res) => {
     if (!id) return res.status(400).json({ success: false, message: 'Thiếu MaPhanHoi' });
 
     // Lấy tất cả câu trả lời liên quan tới phản hồi
+    // JOIN thêm bảng cauhoi_sothich để lấy NoiDungCauHoi, LoaiCauHoi, BatBuoc
     const [answers] = await pool.query(
       `SELECT tl.MaPhanHoi, tl.MaCauHoi, tl.MaLuaChon, tl.VanBan, tl.DiemDanhGia,
+              ch.NoiDungCauHoi, ch.LoaiCauHoi, ch.BatBuoc,
               lc.NoiDungLuaChon, lc.MaTL, lc.MaTG, lc.HinhThuc, lc.MaKhoangGia, lc.NamXBTu, lc.NamXBDen, lc.SoTrangTu, lc.SoTrangDen
        FROM traloi_sothich tl
+       LEFT JOIN cauhoi_sothich ch ON tl.MaCauHoi = ch.MaCauHoi
        LEFT JOIN luachon_cauhoi lc ON tl.MaLuaChon = lc.MaLuaChon
        WHERE tl.MaPhanHoi = ?
-       ORDER BY tl.MaCauHoi`,
+       ORDER BY ch.ThuTu, tl.MaCauHoi`,
       [id]
     );
 

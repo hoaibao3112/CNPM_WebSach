@@ -126,20 +126,42 @@ document.addEventListener('DOMContentLoaded', async function() {
     setTimeout(() => {
         // ✅ XỬ LÝ VNPAY SUCCESS
         if (status === 'success' && (!paymentMethod || paymentMethod === 'VNPAY')) {
-            // If subtotal/discount/shipping were provided in URL (e.g., after applying promos), compute total from parts.
+            // Prefer server-side totals when available (safer): use orderDetails.TongTien and orderDetails.PhiShip
             const displayAmountParam = amount ? parseFloat(amount) : null; // amount param may be provided by gateway
             const displaySubtotal = subtotal ? parseFloat(subtotal) : null;
             const displayDiscount = discount ? parseFloat(discount) : 0;
-            const displayShipping = shipping ? parseFloat(shipping) : 0;
+            // Prefer server shipping if present
+            const displayShipping = (orderDetails && typeof orderDetails.PhiShip !== 'undefined' && orderDetails.PhiShip !== null)
+                ? Number(orderDetails.PhiShip)
+                : (shipping ? parseFloat(shipping) : 0);
 
+            // If server provided final total, use it. Fallback to parts or gateway amount.
             let finalTotal = null;
-            if (displaySubtotal !== null) {
-                finalTotal = Math.max(0, displaySubtotal - (displayDiscount || 0) + (displayShipping || 0));
-            } else if (orderDetails && typeof orderDetails.TongTien !== 'undefined') {
+            if (orderDetails && typeof orderDetails.TongTien !== 'undefined' && orderDetails.TongTien !== null) {
                 finalTotal = parseFloat(orderDetails.TongTien);
+            } else if (displaySubtotal !== null) {
+                finalTotal = Math.max(0, displaySubtotal - (displayDiscount || 0) + (displayShipping || 0));
             } else if (displayAmountParam !== null) {
-                // gateway amount may be in smallest currency unit; try to use it directly
                 finalTotal = displayAmountParam;
+            }
+
+            // Extract promo/member info from server note if available
+            let serverPromo = null;
+            let serverMember = null;
+            if (orderDetails && orderDetails.GhiChu) {
+                try {
+                    const note = orderDetails.GhiChu || '';
+                    // look for [PROMO] Mã: CODE; Giảm giá: 12.345đ
+                    const promoMatch = note.match(/\[PROMO\].*Mã:\s*([^;\n\r]+)(?:;\s*Giảm giá:\s*([0-9.,]+)đ)?/i);
+                    if (promoMatch) {
+                        serverPromo = { code: promoMatch[1].trim(), amount: promoMatch[2] ? Number(promoMatch[2].replace(/[.,]/g, '')) : null };
+                    }
+                    // look for [MEMBER] Giảm theo hạng X: 12.345đ
+                    const memberMatch = note.match(/\[MEMBER\].*?:\s*([0-9.,]+)đ/i);
+                    if (memberMatch) {
+                        serverMember = { amount: Number(memberMatch[1].replace(/[.,]/g, '')) };
+                    }
+                } catch (e) { console.warn('Could not parse server GhiChu for promo/member info', e); }
             }
 
             resultContent.innerHTML = `
@@ -165,6 +187,29 @@ document.addEventListener('DOMContentLoaded', async function() {
                             <span class="label">Tổng tiền:</span>
                             <span class="value total-amount">${finalTotal !== null ? formatPrice(finalTotal) : 'N/A'}</span>
                         </div>
+                        ${serverPromo ? `
+                        <div class="detail-row">
+                            <span class="label">Giảm giá (mã):</span>
+                            <span class="value" style="color: #27ae60;">-${serverPromo.amount ? formatPrice(serverPromo.amount) : '—'} </span>
+                        </div>
+                        ` : ''}
+                        ${serverMember ? `
+                        <div class="detail-row">
+                            <span class="label">Giảm theo thẻ thành viên:</span>
+                            <span class="value" style="color: #27ae60;">-${formatPrice(serverMember.amount)}</span>
+                        </div>
+                        ` : ''}
+                        ${displayShipping > 0 ? `
+                        <div class="detail-row">
+                            <span class="label">Phí vận chuyển:</span>
+                            <span class="value">${formatPrice(displayShipping)}</span>
+                        </div>
+                        ` : displayShipping === 0 && (freeShipCode || (orderDetails && orderDetails.PhiShip === 0)) ? `
+                        <div class="detail-row">
+                            <span class="label">Phí vận chuyển:</span>
+                            <span class="value" style="color: #27ae60; font-weight: bold;">Miễn phí</span>
+                        </div>
+                        ` : ''}
                         <div class="detail-row">
                             <span class="label">Phương thức:</span>
                             <span class="value">VNPay</span>

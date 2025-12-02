@@ -816,7 +816,7 @@ async function checkout() {
   // ✅ Tính tổng tiền ĐÚNG (subtotal - discount + shipping)
   const subtotal = selectedItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
   const discount = appliedDiscountAmount || 0;
-  
+
   // Tính phí ship
   let shippingFee = 0;
   if (appliedFreeShipCode) {
@@ -833,9 +833,6 @@ async function checkout() {
     }
   }
   
-  const totalAmount = subtotal - discount + shippingFee;
-  console.log('💰 Tính toán tổng tiền:', { subtotal, discount, shippingFee, totalAmount });
-
   // ====== TÍNH memberDiscount KHI FreeShip đang áp dụng ======
   let memberDiscountAmount = 0;
   let memberTier = getCustomerTier();
@@ -847,21 +844,21 @@ async function checkout() {
     }
   }
 
-  // Recompute total including membership discount (if any)
-  const totalAmountWithMember = Math.max(0, subtotal - discount - memberDiscountAmount + shippingFee);
-  console.log('💳 Member discount:', { memberTier, memberDiscountAmount, totalAmountWithMember });
+  // Final total including membership discount
+  const totalAmount = Math.max(0, subtotal - discount - memberDiscountAmount + shippingFee);
+  console.log('💰 Tính toán tổng tiền:', { subtotal, discount, memberDiscountAmount, shippingFee, totalAmount });
 
   // ✅ Lấy cả 2 mã (nếu có)
   const freeShipCode = appliedFreeShipCode ? appliedFreeShipCode.code : null;
   const discountCode = appliedDiscountCode ? appliedDiscountCode.code : null;
   
   const orderData = {
-    // ✅ GỬI ĐẦY ĐỦ THÔNG TIN: subtotal gốc, discount đã áp dụng, và tổng cuối
-  subtotal: subtotal,           // Tổng tiền hàng (chưa giảm)
-  discount: discount,           // Số tiền giảm giá (từ mã KM)
-  memberDiscount: memberDiscountAmount, // Số tiền giảm do thẻ hội viên (nếu có)
-  memberTier: memberTier,       // Hạng hội viên
-  totalAmountDiscouted: totalAmountWithMember, // Tổng cuối cùng (subtotal - discount - memberDiscount + shipping)
+    // ✅ GỬI ĐẦY ĐỦ THÔNG TIN: subtotal gốc, discount đã áp dụng, member discount và tổng cuối
+    subtotal: subtotal,           // Tổng tiền hàng (chưa giảm)
+    discount: discount,           // Số tiền giảm giá (từ mã KM)
+    memberDiscount: memberDiscountAmount, // Số tiền giảm do thẻ hội viên (nếu có)
+    memberTier: memberTier,       // Hạng hội viên
+    totalAmount: totalAmount,     // Tổng cuối cùng (subtotal - discount - memberDiscount + shipping)
     freeShipCode: freeShipCode, // Mã Free Ship (nếu có)
     discountCode: discountCode, // Mã giảm giá (nếu có)
     customer: {
@@ -885,7 +882,7 @@ async function checkout() {
   };
 
   console.log('🔍 Order Data:', JSON.stringify(orderData, null, 2));
-  console.log('🔍 [DEBUG] totalAmountDiscouted =', totalAmountWithMember);
+  console.log('🔍 [DEBUG] final totalAmount =', totalAmount);
 
   try {
     console.log('🔄 Sending request to API...');
@@ -914,6 +911,13 @@ async function checkout() {
     if (result.success) {
       // ✅ XÓA CÁC MÃ KHUYẾN MÃI ĐÃ LƯU
       clearSavedCodes();
+      // ✅ Cập nhật localStorage.myPromos: loại bỏ các mã đã dùng (nếu có)
+      try {
+        if (appliedFreeShipCode && appliedFreeShipCode.code) removePromoFromLocal(appliedFreeShipCode.code);
+        if (appliedDiscountCode && appliedDiscountCode.code) removePromoFromLocal(appliedDiscountCode.code);
+        // Refresh saved promos UI
+        await loadSavedPromos();
+      } catch (e) { console.warn('⚠️ Could not sync local myPromos after checkout:', e); }
       
       if (formData.paymentMethod === 'VNPAY' && result.paymentUrl) {
         console.log('🔄 Redirecting to VNPay:', result.paymentUrl);
@@ -1587,6 +1591,25 @@ function clearSavedCodes() {
   console.log('🗑️ Cleared saved promo codes');
 }
 
+// Remove a promo from localStorage.myPromos by code (or MaPhieu)
+function removePromoFromLocal(code) {
+  if (!code) return false;
+  try {
+    const raw = localStorage.getItem('myPromos') || '[]';
+    const arr = JSON.parse(raw);
+    const filtered = arr.filter(p => {
+      const candidates = [p.code, p.MaPhieu, p.Code, p.MaPhatHanh, p.maPhatHanh, p.MaPhieu];
+      return !candidates.some(c => c && String(c).toUpperCase() === String(code).toUpperCase());
+    });
+    localStorage.setItem('myPromos', JSON.stringify(filtered));
+    console.log(`🔻 Removed promo ${code} from localStorage.myPromos (remaining: ${filtered.length})`);
+    return true;
+  } catch (e) {
+    console.warn('⚠️ removePromoFromLocal failed:', e);
+    return false;
+  }
+}
+
 async function applyPromo() {
   try {
     const cart = await getCart();
@@ -2194,6 +2217,25 @@ async function loadSavedPromos() {
     // Lọc bỏ các mã đã sử dụng (Da_su_dung) trước khi hiển thị
     promoList = promoList.filter(p => !(p.trang_thai && String(p.trang_thai).toLowerCase() === 'da_su_dung'));
 
+    // Persist normalized promo list to localStorage.myPromos so other pages (profile, product) stay in sync
+    try {
+      const normalizedForLocal = promoList.map(p => ({
+        MaPhatHanh: p.MaPhatHanh || p.maPhatHanh || null,
+        MaPhieu: p.Code || p.MaPhieu || p.MaPhieu || null,
+        code: p.Code || p.MaPhieu || p.MaPhieu || null,
+        MaKM: p.MaKM || p.MaKM || null,
+        LoaiKM: p.LoaiKM || p.LoaiKM || p.LoaiKM || null,
+        MoTa: p.MoTa || p.MoTa || null,
+        NgayLay: p.NgayLay || p.Ngay_lay || p.NgayPhatHanh || null,
+        NgayHetHan: p.NgayHetHan || p.expiry || p.expiryDate || null,
+        status: p.trang_thai || p.Status || (p.NgaySuDung ? 'Da_su_dung' : 'Chua_su_dung')
+      }));
+      localStorage.setItem('myPromos', JSON.stringify(normalizedForLocal));
+      console.log('🔁 localStorage.myPromos updated from server, count=', normalizedForLocal.length);
+    } catch (e) {
+      console.warn('⚠️ Could not persist myPromos to localStorage:', e);
+    }
+
     // Nếu không còn mã nào hợp lệ thì ẩn section hoàn toàn
     if (!promoList || promoList.length === 0) {
       console.log('ℹ️ Không có mã khuyến mãi hợp lệ để hiển thị, ẩn section');
@@ -2589,6 +2631,8 @@ window.applyPromoFromSaved = async function(code, event) {
       updateSummary(subtotal, discount, 0, null); // shipping = 0, shippingInfo = null
       
       showToast(`✅ Đã áp dụng mã Free Ship: ${code}`);
+      // Remove used issued coupon from local cache if present
+      try { removePromoFromLocal(code); await loadSavedPromos(); } catch(e){/* ignore */}
       
     } else {
       // ============= MÃ GIẢM GIÁ =============
@@ -2710,6 +2754,8 @@ window.applyPromoFromSaved = async function(code, event) {
       updateSummary(discountDetails.subtotal, totalDiscount, currentShipping, shippingInfo);
       
       showToast(`✅ Đã áp dụng mã giảm giá: ${code} (-${formatPrice(totalDiscount)})`);
+      // If this code was an issued coupon in local cache, remove it so UI stays in sync
+      try { removePromoFromLocal(code); await loadSavedPromos(); } catch(e){/* ignore */}
     }
     
     if (clickedBtn) {

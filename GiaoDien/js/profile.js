@@ -123,16 +123,48 @@ function loadWishlist() {
 }
 
 
-function loadPromoCodes() {
-  const promoListRaw = JSON.parse(localStorage.getItem('myPromos') || '[]');
-  // Filter out promos that have been used (status === 'used')
-  const promoList = (promoListRaw || []).filter(p => {
+async function loadPromoCodes() {
+  // If user is logged in, prefer server list to keep data authoritative
+  const token = localStorage.getItem('token');
+  const user = JSON.parse(localStorage.getItem('user') || '{}');
+  let promoList = [];
+
+  if (token && user && user.makh) {
     try {
-      return !p.status || String(p.status).toLowerCase().trim() !== 'used';
+      // Try server endpoint that returns issued coupons + promotion info
+      const res = await fetch(`http://localhost:5000/api/coupons/my-coupons?makh=${user.makh}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const json = await res.json();
+      if (res.ok && Array.isArray(json.data)) {
+        promoList = json.data.map(row => ({
+          MaPhatHanh: row.MaPhatHanh || null,
+          MaPhieu: row.MaPhieu || row.MaPhieu || null,
+          code: row.MaPhieu || row.MaPhieu || null,
+          MaKM: row.promotion ? row.promotion.MaKM : (row.MaKM || null),
+          LoaiKM: row.promotion ? row.promotion.LoaiKM : null,
+          MoTa: row.MoTa || null,
+          NgayLay: row.NgayPhatHanh || row.Ngay_lay || null,
+          NgayHetHan: null,
+          trang_thai: row.Status === 'used' || row.NgaySuDung ? 'Da_su_dung' : (row.TrangThai === 0 ? 'Ngung' : 'Chua_su_dung'),
+          __source: 'server'
+        }));
+
+        // Persist to localStorage so other pages can use cached copy
+        try { localStorage.setItem('myPromos', JSON.stringify(promoList)); } catch(e) { /* ignore */ }
+      }
     } catch (e) {
-      return true;
+      console.warn('Failed to fetch my-coupons from server, falling back to localStorage', e);
     }
-  });
+  }
+
+  if (!promoList || promoList.length === 0) {
+    // Fallback to localStorage if server returned nothing or user not logged in
+    const promoListRaw = JSON.parse(localStorage.getItem('myPromos') || '[]');
+    promoList = (promoListRaw || []).filter(p => {
+      try { return !p.status || String(p.status).toLowerCase().trim() !== 'used'; } catch (e) { return true; }
+    });
+  }
   const container = document.getElementById('promo-codes-list');
   if (!container) return;
 
