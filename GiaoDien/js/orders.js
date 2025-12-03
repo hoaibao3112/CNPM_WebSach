@@ -401,6 +401,13 @@ async function renderOrders(customerId, statusFilter = 'all') {
             return;
         }
 
+        // ✅ SẮP XẾP THEO MÃ ĐƠN HÀNG GIẢM DẦN (mã lớn nhất hiện trên đầu)
+        orders.sort((a, b) => {
+            const idA = parseInt(a.id) || 0;
+            const idB = parseInt(b.id) || 0;
+            return idB - idA; // Mã lớn hơn (đơn mới hơn) hiện trước
+        });
+
         // ✅ MAPPING TRẠNG THÁI MỚI - BAO GỒM CẢ TRẠNG THÁI HỦY
         const statusDisplay = {
             'Chờ xử lý': { class: 'status-pending', text: 'Chờ xác nhận' },
