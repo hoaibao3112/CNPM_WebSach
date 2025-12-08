@@ -119,9 +119,38 @@ router.post('/compute/:year/:month', async (req, res) => {
       const luongTangCa = soGioTangCa * luongGio * 1.5;
       const phatNghiKhongPhep = soNgayNghiKhongPhep * luongNgay;
       const phatDiTre = soNgayDiTre * (luongNgay * 0.3);
+      
+      // Kiểm tra điều kiện được thưởng: làm đủ ngày, không nghỉ không phép, không đi trễ
+      const duDieuKienThuong = (soNgayNghiKhongPhep === 0 && soNgayDiTre === 0 && soNgayLam >= ngayLamChuan);
+      
+      // Đọc phụ cấp, thưởng và trạng thái đã lưu từ database (nếu có)
+      let phu_cap = 0;
       let thuong = 0;
-      if (soNgayLam === ngayLamChuan && soNgayNghiKhongPhep === 0 && soNgayDiTre === 0) thuong = 500000;
-      const phu_cap = 0;
+      let trang_thai_db = 'Chưa chi trả';
+      try {
+        const [savedSalary] = await pool.query(
+          'SELECT phu_cap, thuong, trang_thai FROM luong WHERE MaNV = ? AND thang = ? AND nam = ?',
+          [emp.MaNV, Number(month), Number(year)]
+        );
+        if (savedSalary.length > 0) {
+          if (savedSalary[0].phu_cap) {
+            phu_cap = Number(savedSalary[0].phu_cap) || 0;
+          }
+          // Chỉ lấy thưởng từ DB nếu đủ điều kiện, nếu không thì thưởng = 0
+          if (duDieuKienThuong && savedSalary[0].thuong) {
+            thuong = Number(savedSalary[0].thuong) || 0;
+          }
+          if (savedSalary[0].trang_thai) {
+            trang_thai_db = savedSalary[0].trang_thai;
+          }
+        }
+      } catch (e) { /* ignore */ }
+      
+      // Nếu không đủ điều kiện thưởng thì thưởng = 0
+      if (!duDieuKienThuong) {
+        thuong = 0;
+      }
+      
       const phat = phatNghiKhongPhep + phatDiTre;
       const tong_luong = Math.round((soNgayLam * luongNgay) + luongTangCa + phu_cap + thuong - phat);
 
@@ -137,7 +166,8 @@ router.post('/compute/:year/:month', async (req, res) => {
         thuong,
         phat,
         tong_luong,
-        trang_thai: 'Chưa chi trả'
+        trang_thai: trang_thai_db,
+        duDieuKienThuong // flag để frontend biết có cho nhập thưởng không
       });
     }
 
@@ -243,18 +273,36 @@ router.get('/monthly', async (req, res) => {
       const phatNghiKhongPhep = soNgayNghiKhongPhep * luongNgay;
       const phatDiTre = soNgayDiTre * (luongNgay * 0.3); // 30% lương ngày cho mỗi lần đi trễ
 
-      // Thưởng: Làm đủ 22 ngày, không nghỉ không phép, không đi trễ thì thưởng 500.000đ
-      let thuong = 0;
-      if (
-        soNgayLam === ngayLamChuan &&
-        soNgayNghiKhongPhep === 0 &&
-        soNgayDiTre === 0
-      ) {
-        thuong = 500000;
-      }
+      // Kiểm tra điều kiện được thưởng: làm đủ ngày, không nghỉ không phép, không đi trễ
+      const duDieuKienThuong = (soNgayNghiKhongPhep === 0 && soNgayDiTre === 0 && soNgayLam >= ngayLamChuan);
 
-      // Phụ cấp nhập thủ công, mặc định 0
-      const phu_cap = 0;
+      // Đọc phụ cấp, thưởng và trạng thái đã lưu từ database (nếu có)
+      let phu_cap = 0;
+      let thuong = 0;
+      let trang_thai_saved = 'Chưa chi trả';
+      try {
+        const [savedSalary] = await pool.query(
+          'SELECT phu_cap, thuong, trang_thai FROM luong WHERE MaNV = ? AND thang = ? AND nam = ?',
+          [emp.MaNV, parseInt(month), parseInt(year)]
+        );
+        if (savedSalary.length > 0) {
+          if (savedSalary[0].phu_cap) {
+            phu_cap = Number(savedSalary[0].phu_cap) || 0;
+          }
+          // Chỉ lấy thưởng từ DB nếu đủ điều kiện
+          if (duDieuKienThuong && savedSalary[0].thuong) {
+            thuong = Number(savedSalary[0].thuong) || 0;
+          }
+          if (savedSalary[0].trang_thai) {
+            trang_thai_saved = savedSalary[0].trang_thai;
+          }
+        }
+      } catch (e) { /* ignore */ }
+
+      // Nếu không đủ điều kiện thưởng thì thưởng = 0
+      if (!duDieuKienThuong) {
+        thuong = 0;
+      }
 
       // Tổng phạt
       const phat = phatNghiKhongPhep + phatDiTre;
@@ -274,7 +322,8 @@ router.get('/monthly', async (req, res) => {
         thuong,
         phat,
         tong_luong: Math.round(tongLuong),
-        trang_thai: 'Chưa chi trả',
+        trang_thai: trang_thai_saved,
+        duDieuKienThuong // flag để frontend biết có cho nhập thưởng không
       });
     }
 

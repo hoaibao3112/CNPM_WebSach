@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sequence Diagram - Chức năng Trả Hàng</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #f0f2f5;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #f5576c;
+            margin-bottom: 5px;
+            font-size: 28px;
+        }
+        h2 {
+            text-align: center;
+            color: #666;
+            font-weight: normal;
+            margin-bottom: 20px;
+            font-size: 16px;
+        }
+        .diagram-container {
+            background: #ffffff;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            padding: 30px;
+            margin: 20px 0;
+        }
+        .mermaid {
+            display: flex;
+            justify-content: center;
+        }
+        .mermaid svg {
+            max-width: 100%;
+            height: auto;
+        }
+        .toolbar {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(245, 87, 108, 0.4);
+        }
+        .btn-success {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            color: white;
+        }
+        .btn-success:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(17, 153, 142, 0.4);
+        }
+        .nav-links {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        .nav-links a {
+            padding: 10px 20px;
+            background: #e8eaed;
+            color: #333;
+            text-decoration: none;
+            border-radius: 25px;
+            transition: all 0.3s;
+            font-weight: 500;
+        }
+        .nav-links a:hover {
+            background: #f5576c;
+            color: white;
+        }
+        .nav-links a.active {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+        }
+        .legend {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+        }
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+        }
+        .description {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            border-left: 4px solid #f5576c;
+        }
+        .description h3 {
+            color: #333;
+            margin-top: 0;
+        }
+        .description ul {
+            color: #555;
+            line-height: 1.8;
+        }
+        .warning-box {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 20px;
+        }
+        .warning-box h4 {
+            color: #856404;
+            margin: 0 0 10px 0;
+        }
+        #export-area {
+            background: white;
+            padding: 20px;
+        }
+        @media print {
+            .toolbar, .nav-links { display: none; }
+            body { background: white; padding: 0; }
+            .container { box-shadow: none; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="nav-links">
+            <a href="sequence-mua-hang.html">📦 Mua Hàng</a>
+            <a href="sequence-tra-hang.html" class="active">🔄 Trả Hàng</a>
+            <a href="sequence-hoan-tien.html">💰 Hoàn Tiền</a>
+        </div>
+        
+        <div class="toolbar">
+            <button class="btn btn-primary" onclick="downloadPNG()">
+                📥 Tải PNG
+            </button>
+            <button class="btn btn-success" onclick="window.print()">
+                🖨️ In / PDF
+            </button>
+        </div>
+
+        <div id="export-area">
+            <h1>🔄 SEQUENCE DIAGRAM - CHỨC NĂNG TRẢ HÀNG (HỦY ĐƠN)</h1>
+            <h2>Quy trình hủy đơn hàng và yêu cầu hoàn tiền trên Website Bán Sách</h2>
+            
+            <div class="legend">
+                <div class="legend-item"><div class="legend-color" style="background: #fff8f0;"></div> Xem đơn hàng</div>
+                <div class="legend-item"><div class="legend-color" style="background: #f0f8ff;"></div> Chi tiết đơn</div>
+                <div class="legend-item"><div class="legend-color" style="background: #fff0f0;"></div> Yêu cầu hủy</div>
+                <div class="legend-item"><div class="legend-color" style="background: #f0fff0;"></div> Admin xử lý</div>
+                <div class="legend-item"><div class="legend-color" style="background: #f8f0ff;"></div> Kiểm tra</div>
+            </div>
+
+            <div class="diagram-container">
+                <div class="mermaid">
+sequenceDiagram
+    autonumber
+    participant KH as 👤 Khách Hàng
+    participant FE as 🖥️ Frontend (Browser)
+    participant BE as ⚙️ Backend (Server)
+    participant DB as 🗄️ Database
+    participant AD as 👨‍💼 Admin
+
+    rect rgb(255, 248, 240)
+        Note over KH,DB: 1. XEM DANH SÁCH ĐƠN HÀNG
+        KH->>FE: Vào trang "Đơn hàng của tôi"
+        FE->>BE: GET /api/orders/customer-orders/{MaKH}
+        BE->>DB: SELECT * FROM hoadon WHERE MaKH = ?
+        DB-->>BE: Danh sách đơn hàng
+        BE-->>FE: Response JSON (orders)
+        FE-->>KH: Hiển thị danh sách đơn hàng
+    end
+
+    rect rgb(240, 248, 255)
+        Note over KH,DB: 2. XEM CHI TIẾT ĐƠN HÀNG
+        KH->>FE: Click vào đơn hàng cần hủy
+        FE->>BE: GET /api/orders/customer-orders/detail/{MaHD}
+        BE->>DB: SELECT đơn hàng + chi tiết sản phẩm
+        DB-->>BE: Order details
+        BE-->>FE: Response JSON
+        FE-->>KH: Hiển thị chi tiết đơn hàng
+    end
+
+    rect rgb(255, 240, 240)
+        Note over KH,DB: 3. YÊU CẦU HỦY ĐƠN
+        KH->>FE: Click "Hủy đơn hàng"
+        FE-->>KH: Hiển thị form nhập lý do hủy
+        
+        alt Đơn hàng COD (Chưa thanh toán)
+            KH->>FE: Nhập lý do hủy
+            FE->>BE: PUT /api/orders/customer-orders/cancel/{MaHD}
+            BE->>DB: Kiểm tra trạng thái đơn hàng
+            DB-->>BE: Trạng thái hiện tại
+            
+            alt Trạng thái cho phép hủy (Chờ xử lý/Chờ xác nhận)
+                BE->>DB: UPDATE hoadon SET tinhtrang = 'Đã hủy'
+                BE->>DB: UPDATE sanpham (hoàn lại tồn kho)
+                DB-->>BE: Success
+                BE-->>FE: {success: true, message: "Đã hủy đơn"}
+                FE-->>KH: ✅ Thông báo hủy thành công
+            else Đang giao hàng - Không thể hủy
+                BE-->>FE: {error: "Đơn hàng đang giao, không thể hủy"}
+                FE-->>KH: ❌ Thông báo không thể hủy
+            end
+            
+        else Đơn hàng VNPay (Đã thanh toán) - Cần hoàn tiền
+            KH->>FE: Nhập lý do + thông tin ngân hàng
+            Note right of KH: - Số tài khoản<br/>- Tên ngân hàng<br/>- Chủ tài khoản
+            FE->>BE: PUT /api/orders/customer-orders/cancel/{MaHD}
+            BE->>DB: Kiểm tra trạng thái + thanh toán
+            DB-->>BE: Đã thanh toán VNPay
+            
+            BE->>DB: UPDATE tinhtrang = 'Đã hủy - chờ hoàn tiền'
+            BE->>DB: INSERT INTO yeucau_hoantien
+            DB-->>BE: Success
+            BE-->>FE: {success: true, refundPending: true}
+            FE-->>KH: ⏳ Thông báo chờ hoàn tiền
+        end
+    end
+
+    rect rgb(240, 255, 240)
+        Note over AD,DB: 4. ADMIN XỬ LÝ (nếu cần hoàn tiền)
+        AD->>BE: GET /api/orders/refund-requests/admin
+        BE->>DB: SELECT yêu cầu hoàn tiền pending
+        DB-->>BE: Danh sách yêu cầu
+        BE-->>AD: Response JSON
+        
+        AD->>AD: Xem xét yêu cầu hoàn tiền
+        AD->>BE: PUT /api/orders/refund-requests/{id}/process
+        Note right of AD: action: 'approve' hoặc 'reject'
+        BE->>DB: UPDATE trạng thái yêu cầu
+        BE->>DB: UPDATE hoadon
+        DB-->>BE: Success
+        BE-->>AD: ✅ Đã xử lý
+    end
+
+    rect rgb(248, 240, 255)
+        Note over KH,DB: 5. KHÁCH HÀNG KIỂM TRA TRẠNG THÁI
+        KH->>FE: Vào trang "Lịch sử hoàn tiền"
+        FE->>BE: GET /api/orders/customer-refunds/logs/{MaKH}
+        BE->>DB: SELECT lịch sử hoàn tiền
+        DB-->>BE: Refund history
+        BE-->>FE: Response JSON
+        FE-->>KH: Hiển thị trạng thái hoàn tiền
+    end
+                </div>
+            </div>
+        </div>
+
+        <div class="description">
+            <h3>📋 Mô tả quy trình hủy đơn:</h3>
+            <ul>
+                <li><strong>Bước 1:</strong> Khách hàng vào trang quản lý đơn hàng, xem danh sách đơn đã đặt</li>
+                <li><strong>Bước 2:</strong> Xem chi tiết đơn hàng muốn hủy</li>
+                <li><strong>Bước 3:</strong> Yêu cầu hủy đơn:
+                    <ul>
+                        <li><em>COD:</em> Hủy trực tiếp, hoàn lại tồn kho</li>
+                        <li><em>VNPay:</em> Tạo yêu cầu hoàn tiền, chờ Admin xử lý</li>
+                    </ul>
+                </li>
+                <li><strong>Bước 4:</strong> Admin xem xét và phê duyệt/từ chối yêu cầu hoàn tiền</li>
+                <li><strong>Bước 5:</strong> Khách hàng theo dõi trạng thái hoàn tiền</li>
+            </ul>
+            
+            <h3>⚠️ Điều kiện hủy đơn:</h3>
+            <ul>
+                <li>✅ Có thể hủy: Trạng thái <code>Chờ xử lý</code>, <code>Chờ xác nhận</code></li>
+                <li>⚠️ Cần xác nhận: Trạng thái <code>Đã xác nhận</code></li>
+                <li>❌ Không thể hủy: Trạng thái <code>Đang giao hàng</code>, <code>Đã giao hàng</code></li>
+            </ul>
+        </div>
+
+        <div class="warning-box">
+            <h4>⚠️ Lưu ý quan trọng:</h4>
+            <ul>
+                <li>Đơn hàng đã thanh toán VNPay cần nhập thông tin ngân hàng để nhận hoàn tiền</li>
+                <li>Thời gian xử lý hoàn tiền: 3-7 ngày làm việc</li>
+                <li>Số tiền hoàn có thể bị trừ phí nếu đơn hàng đã được xử lý một phần</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        mermaid.initialize({ 
+            startOnLoad: true,
+            theme: 'default',
+            sequence: {
+                diagramMarginX: 50,
+                diagramMarginY: 10,
+                actorMargin: 80,
+                width: 180,
+                height: 65,
+                boxMargin: 10,
+                boxTextMargin: 5,
+                noteMargin: 10,
+                messageMargin: 40,
+                mirrorActors: true,
+                useMaxWidth: false
+            }
+        });
+
+        async function downloadPNG() {
+            const element = document.getElementById('export-area');
+            const btn = event.target;
+            btn.disabled = true;
+            btn.innerHTML = '⏳ Đang xử lý...';
+            
+            try {
+                const canvas = await html2canvas(element, {
+                    scale: 2,
+                    backgroundColor: '#ffffff',
+                    useCORS: true,
+                    logging: false
+                });
+                
+                const link = document.createElement('a');
+                link.download = 'sequence-tra-hang.png';
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+            } catch (error) {
+                alert('Lỗi khi tạo hình ảnh: ' + error.message);
+            }
+            
+            btn.disabled = false;
+            btn.innerHTML = '📥 Tải PNG';
+        }
+    </script>
+</body>
+</html>

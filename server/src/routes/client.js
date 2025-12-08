@@ -487,7 +487,7 @@ router.put('/cart/update', authenticateToken, async (req, res) => {
 router.get('/', async (req, res) => {
   try {
     const q = (req.query.q || '').trim();
-    let sql = 'SELECT makh, tenkh, sdt, email, diachi, tinhtrang FROM khachhang';
+    let sql = 'SELECT makh, tenkh, sdt, email, diachi, tinhtrang, loyalty_points, loyalty_tier FROM khachhang';
     let params = [];
     if (q) {
       sql += ' WHERE tenkh LIKE ? OR sdt LIKE ? OR email LIKE ? OR makh LIKE ?';

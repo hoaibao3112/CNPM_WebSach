@@ -126,14 +126,17 @@ router.get('/:id', async (req, res) => {
 // Cập nhật nhóm quyền
 router.put('/:id', async (req, res) => {
   const { id } = req.params;
-  const { TenNQ, MoTa, TinhTrang = 1, chitietquyen } = req.body;
+  const { TenNQ, MoTa, chitietquyen } = req.body;
+  // Chuyển đổi TinhTrang thành số 0 hoặc 1
+  let TinhTrang = req.body.TinhTrang;
+  if (TinhTrang === undefined || TinhTrang === null) {
+    TinhTrang = 1;
+  } else {
+    TinhTrang = TinhTrang ? 1 : 0;
+  }
 
   if (!TenNQ || !Array.isArray(chitietquyen) || chitietquyen.length === 0) {
     return res.status(400).json({ error: 'Tên nhóm quyền và ít nhất một chi tiết quyền là bắt buộc' });
-  }
-
-  if (![0, 1].includes(TinhTrang)) {
-    return res.status(400).json({ error: 'Trạng thái không hợp lệ' });
   }
 
   const connection = await pool.getConnection();

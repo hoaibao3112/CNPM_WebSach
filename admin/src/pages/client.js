@@ -57,6 +57,7 @@ const CustomerManagement = () => {
   const [customers, setCustomers] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
+  const [tierFilter, setTierFilter] = useState(''); // Bộ lọc hạng thành viên
   const [loading, setLoading] = useState(false);
 
   // Promo modal
@@ -233,6 +234,7 @@ const CustomerManagement = () => {
 
   const filteredCustomers = customers.filter((c) => (
     (statusFilter === '' || c.tinhtrang === statusFilter) &&
+    (tierFilter === '' || c.loyalty_tier === tierFilter) &&
     (c.tenkh?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     c.makh?.toString().includes(searchTerm) ||
     c.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -244,8 +246,45 @@ const CustomerManagement = () => {
     { title: 'Tên khách hàng', dataIndex: 'tenkh', key: 'tenkh', width: 100 },
     { title: 'SĐT', dataIndex: 'sdt', key: 'sdt', width: 100 },
     { title: 'Email', dataIndex: 'email', key: 'email', render: (t) => t || 'N/A', width: 150 },
-    { title: 'Địa chỉ', dataIndex: 'diachi', key: 'diachi', render: (t) => t || 'N/A', width: 250 },
-    { title: 'Trạng thái', dataIndex: 'tinhtrang', key: 'tinhtrang', render: (s) => <Tag color={s === 'Hoạt động' ? 'green' : 'red'}>{s}</Tag>, width: 120 },
+    { title: 'Địa chỉ', dataIndex: 'diachi', key: 'diachi', render: (t) => t || 'N/A', width: 200 },
+    { 
+      title: 'Hạng TV', 
+      dataIndex: 'loyalty_tier', 
+      key: 'loyalty_tier', 
+      width: 100,
+      render: (tier) => {
+        const tierConfig = {
+          'dong': { color: '#cd7f32', label: 'Đồng', bg: '#fef3e2' },
+          'bac': { color: '#a8a8a8', label: 'Bạc', bg: '#f5f5f5' },
+          'vang': { color: '#ffd700', label: 'Vàng', bg: '#fffde7' },
+          'bachkim': { color: '#e5e4e2', label: 'Bạch Kim', bg: '#f3e5f5' }
+        };
+        const config = tierConfig[tier] || tierConfig['dong'];
+        return (
+          <Tag style={{ 
+            background: config.bg, 
+            color: config.color, 
+            border: `1px solid ${config.color}`,
+            fontWeight: 600 
+          }}>
+            {config.label}
+          </Tag>
+        );
+      }
+    },
+    { 
+      title: 'Điểm tích lũy', 
+      dataIndex: 'loyalty_points', 
+      key: 'loyalty_points', 
+      width: 110,
+      render: (points) => (
+        <span style={{ fontWeight: 600, color: '#1890ff' }}>
+          {(points || 0).toLocaleString()} điểm
+        </span>
+      ),
+      sorter: (a, b) => (a.loyalty_points || 0) - (b.loyalty_points || 0)
+    },
+    { title: 'Trạng thái', dataIndex: 'tinhtrang', key: 'tinhtrang', render: (s) => <Tag color={s === 'Hoạt động' ? 'green' : 'red'}>{s}</Tag>, width: 100 },
     {
       title: 'Thao tác', key: 'action', fixed: 'right', width: 180,
       render: (_, record) => (
@@ -296,6 +335,16 @@ const CustomerManagement = () => {
               <Select.Option value="">Tất cả</Select.Option>
               <Select.Option value="Hoạt động">Hoạt động</Select.Option>
               <Select.Option value="Ngừng hoạt động">Ngừng hoạt động</Select.Option>
+            </Select>
+          </div>
+          <div className="filter-group">
+            <label>Hạng TV:</label>
+            <Select value={tierFilter} onChange={(value) => setTierFilter(value)} style={{ width: 120 }}>
+              <Select.Option value="">Tất cả</Select.Option>
+              <Select.Option value="dong">Đồng</Select.Option>
+              <Select.Option value="bac">Bạc</Select.Option>
+              <Select.Option value="vang">Vàng</Select.Option>
+              <Select.Option value="bachkim">Bạch Kim</Select.Option>
             </Select>
           </div>
         </div>

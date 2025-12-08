@@ -1225,18 +1225,20 @@ const renderChart = () => {
           </div>
         )}
 
-        <button className={`btn-chart ${showChart ? 'active' : ''}`} onClick={() => setShowChart(!showChart)}>
-          <i className={`fas fa-chart-${showChart ? 'line' : 'bar'}`}></i> 
-          {showChart ? 'Ẩn biểu đồ' : 'Hiện biểu đồ'}
-        </button>
+        <div className="filter-actions">
+          <button className={`btn-chart ${showChart ? 'active' : ''}`} onClick={() => setShowChart(!showChart)}>
+            <i className={`fas fa-chart-${showChart ? 'line' : 'bar'}`}></i> 
+            {showChart ? 'Ẩn biểu đồ' : 'Hiện biểu đồ'}
+          </button>
 
-        <button className="btn-pdf" onClick={handleExportPDF}>
-          <i className="fas fa-file-pdf"></i> Xuất PDF
-        </button>
+          <button className="btn-pdf" onClick={handleExportPDF}>
+            <i className="fas fa-file-pdf"></i> Xuất PDF
+          </button>
 
-        <button className="btn-excel" onClick={handleExportExcel}>
-          <i className="fas fa-file-excel"></i> Xuất Excel
-        </button>
+          <button className="btn-excel" onClick={handleExportExcel}>
+            <i className="fas fa-file-excel"></i> Xuất Excel
+          </button>
+        </div>
       </div>
 
       {renderChart()}
@@ -1294,16 +1296,18 @@ const renderLuongTab = () => {
             {Array.from({length: 12}, (_, i) => i+1).map(m => <option key={m} value={m}>Tháng {m}</option>)}
           </select>
         </div>
-        <button className="btn-refresh" onClick={() => selectedSalaryMonth && fetchSalaryDetails(selectedSalaryMonth)}>
-          <i className="fas fa-sync-alt"></i> Tải lại
-        </button>
-        <button className="btn-pdf" onClick={handleExportPDF} style={{ marginLeft: 8 }}>
-          <i className="fas fa-file-pdf"></i> Xuất PDF
-        </button>
+        <div className="filter-actions">
+          <button className="btn-refresh" onClick={() => selectedSalaryMonth && fetchSalaryDetails(selectedSalaryMonth)}>
+            <i className="fas fa-sync-alt"></i> Tải lại
+          </button>
+          <button className="btn-pdf" onClick={handleExportPDF}>
+            <i className="fas fa-file-pdf"></i> Xuất PDF
+          </button>
 
-        <button className="btn-excel" onClick={handleExportExcel} style={{ marginLeft: 8 }}>
-          <i className="fas fa-file-excel"></i> Xuất Excel
-        </button>
+          <button className="btn-excel" onClick={handleExportExcel}>
+            <i className="fas fa-file-excel"></i> Xuất Excel
+          </button>
+        </div>
       </div>
 
       <div className="thongke-table">
@@ -1402,18 +1406,20 @@ const renderLuongTab = () => {
           </div>
         )}
 
-        <button className={`btn-chart ${showChart ? 'active' : ''}`} onClick={() => setShowChart(!showChart)}>
-          <i className={`fas fa-chart-${productTab === 'sanpham' ? 'bar' : 'pie'}`}></i> 
-          {showChart ? 'Ẩn biểu đồ' : 'Hiện biểu đồ'}
-        </button>
+        <div className="filter-actions">
+          <button className={`btn-chart ${showChart ? 'active' : ''}`} onClick={() => setShowChart(!showChart)}>
+            <i className={`fas fa-chart-${productTab === 'sanpham' ? 'bar' : 'pie'}`}></i> 
+            {showChart ? 'Ẩn biểu đồ' : 'Hiện biểu đồ'}
+          </button>
 
-        <button className="btn-pdf" onClick={handleExportPDF}>
-          <i className="fas fa-file-pdf"></i> Xuất PDF
-        </button>
+          <button className="btn-pdf" onClick={handleExportPDF}>
+            <i className="fas fa-file-pdf"></i> Xuất PDF
+          </button>
 
-        <button className="btn-excel" onClick={handleExportExcel}>
-          <i className="fas fa-file-excel"></i> Xuất Excel
-        </button>
+          <button className="btn-excel" onClick={handleExportExcel}>
+            <i className="fas fa-file-excel"></i> Xuất Excel
+          </button>
+        </div>
       </div>
 
       {renderChart()}
@@ -1503,18 +1509,20 @@ const renderLuongTab = () => {
           </div>
         )}
 
-        <button className={`btn-chart ${showChart ? 'active' : ''}`} onClick={() => setShowChart(!showChart)}>
-          <i className="fas fa-chart-bar"></i> 
-          {showChart ? 'Ẩn biểu đồ' : 'Hiện biểu đồ'}
-        </button>
+        <div className="filter-actions">
+          <button className={`btn-chart ${showChart ? 'active' : ''}`} onClick={() => setShowChart(!showChart)}>
+            <i className="fas fa-chart-bar"></i> 
+            {showChart ? 'Ẩn biểu đồ' : 'Hiện biểu đồ'}
+          </button>
 
-        <button className="btn-pdf" onClick={handleExportPDF}>
-          <i className="fas fa-file-pdf"></i> Xuất PDF
-        </button>
+          <button className="btn-pdf" onClick={handleExportPDF}>
+            <i className="fas fa-file-pdf"></i> Xuất PDF
+          </button>
 
-        <button className="btn-excel" onClick={handleExportExcel}>
-          <i className="fas fa-file-excel"></i> Xuất Excel
-        </button>
+          <button className="btn-excel" onClick={handleExportExcel}>
+            <i className="fas fa-file-excel"></i> Xuất Excel
+          </button>
+        </div>
       </div>
 
       {renderChart()}

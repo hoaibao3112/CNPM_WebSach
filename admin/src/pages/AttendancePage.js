@@ -167,10 +167,27 @@ const AttendancePage = () => {
 
   // Xử lý nhập phụ cấp
   const handlePhuCapChange = (e) => {
+    // Không cho sửa phụ cấp nếu đã chi trả
+    if (salaryInfo?.trang_thai === 'Da_tra') return;
     const value = Number(e.target.value) || 0;
     setSalaryInfo((prev) => ({
       ...prev,
       phu_cap: value
+    }));
+  };
+
+  // Kiểm tra nhân viên đã chi trả lương chưa
+  const isDaPaid = salaryInfo?.trang_thai === 'Da_tra';
+
+  // Xử lý nhập thưởng
+  const handleThuongChange = (e) => {
+    // Không cho sửa thưởng nếu đã chi trả hoặc không đủ điều kiện
+    if (salaryInfo?.trang_thai === 'Da_tra') return;
+    if (!salaryInfo?.duDieuKienThuong) return;
+    const value = Number(e.target.value) || 0;
+    setSalaryInfo((prev) => ({
+      ...prev,
+      thuong: value
     }));
   };
 
@@ -609,7 +626,24 @@ const AttendancePage = () => {
                         <td>{salaryInfo.phu_cap?.toLocaleString()} đ</td>
                       </tr>
                       <tr>
-                        <td>Thưởng</td>
+                        <td>
+                          Thưởng
+                          {salaryInfo.duDieuKienThuong && salaryInfo.trang_thai !== 'Da_tra' && (
+                            <input
+                              type="number"
+                              value={salaryInfo.thuong}
+                              min={0}
+                              style={{ width: 100, marginLeft: 8 }}
+                              onChange={handleThuongChange}
+                              placeholder="Nhập thưởng"
+                            />
+                          )}
+                          {!salaryInfo.duDieuKienThuong && (
+                            <span style={{ marginLeft: 8, color: '#f44336', fontSize: 12 }}>
+                              (Không đủ điều kiện - có nghỉ/trễ)
+                            </span>
+                          )}
+                        </td>
                         <td>{salaryInfo.thuong?.toLocaleString()} đ</td>
                       </tr>
                       <tr>

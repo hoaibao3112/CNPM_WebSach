@@ -29,6 +29,12 @@ const NhapHang = () => {
   const [lowStock, setLowStock] = useState([]);
   const [showLowStockBanner, setShowLowStockBanner] = useState(false);
   const [showLowStockDetails, setShowLowStockDetails] = useState(false);
+  
+  // Tỷ lệ lợi nhuận chung (%) - dùng để tính giá bán
+  const [tyLeLoi, setTyLeLoi] = useState(10); // Mặc định 10%
+  
+  // State để theo dõi items trong form (dùng để tính tổng tiền realtime)
+  const [formItems, setFormItems] = useState([]);
 
   // ----- Effects -----
   useEffect(() => {
@@ -94,13 +100,28 @@ const NhapHang = () => {
   };
 
   // ----- Helpers -----
-  const calculateTotal = (items) => {
+  // Tính tổng tiền NHẬP = Σ(Giá nhập × Số lượng)
+  const calculateTotalNhap = (items) => {
     return (items || []).reduce((total, item) => {
       if (!item) return total;
-      const profitPercentage = Number(item.ProfitPercentage || 0);
-      // DonGiaNhap trong form là "đã cộng lợi nhuận", ta quy ngược về giá gốc để tính tổng nhập
-      const originalPrice = item.DonGiaNhap ? item.DonGiaNhap / (1 + profitPercentage / 100) : 0;
-      return total + (Number(item.SoLuong || 0) * Number(originalPrice || 0));
+      const donGiaNhap = Number(item.DonGiaNhap || 0);
+      const soLuong = Number(item.SoLuong || 0);
+      return total + (donGiaNhap * soLuong);
+    }, 0);
+  };
+
+  // Tính giá bán dự kiến = Giá nhập × (1 + Tỷ lệ lợi nhuận / 100)
+  const calculateGiaBan = (donGiaNhap, tyLe) => {
+    return Math.round(Number(donGiaNhap || 0) * (1 + Number(tyLe || 0) / 100));
+  };
+
+  // Tính tổng tiền BÁN dự kiến = Σ(Giá bán × Số lượng)
+  const calculateTotalBan = (items, tyLe) => {
+    return (items || []).reduce((total, item) => {
+      if (!item) return total;
+      const giaBan = calculateGiaBan(item.DonGiaNhap, tyLe);
+      const soLuong = Number(item.SoLuong || 0);
+      return total + (giaBan * soLuong);
     }, 0);
   };
 
@@ -123,46 +144,63 @@ const NhapHang = () => {
       MaSP: sp.MaSP,
       TenSP: sp.TenSP,
       SoLuong: resolveSuggestedQty(sp),
-      DonGiaNhap: Number(sp.DonGia || 0),
-      ProfitPercentage: 0
+      DonGiaNhap: Number(sp.DonGia || 0) // Giá nhập gốc
     }));
 
     form.setFieldsValue({
-      items: itemsPrefill,
-      total: calculateTotal(itemsPrefill)
+      items: itemsPrefill
     });
+    setFormItems(itemsPrefill); // Cập nhật state để tính tổng tiền
+    setTyLeLoi(10); // Reset về 10%
     setModalVisible(true);
   };
 
-  const applyProfitPercentage = (percentage) => {
-    const items = form.getFieldValue('items') || [];
-    const p = Number(percentage || 0);
-
-    const updated = items.map(item => ({
-      ...item,
-      DonGiaNhap: item.DonGiaNhap ? (Number(item.DonGiaNhap) * (1 + p / 100)) : 0,
-      ProfitPercentage: p
-    }));
-    form.setFieldsValue({ items: updated, total: calculateTotal(updated) });
-  };
+  // Không cần applyProfitPercentage nữa - tỷ lệ lợi nhuận được áp dụng ở backend
+  // Frontend chỉ cần gửi TyLeLoi chung, backend sẽ tính Giá bán = Giá nhập × (1 + TyLeLoi/100)
 
   // ----- Actions -----
   const handleSubmit = async (values) => {
     try {
+      // Lọc và chuẩn hóa items
+      const validItems = (values.items || [])
+        .filter(it => it.MaSP && it.SoLuong > 0 && it.DonGiaNhap > 0)
+        .map(it => ({
+          MaSP: it.MaSP,
+          SoLuong: Number(it.SoLuong),
+          DonGiaNhap: Number(it.DonGiaNhap) // Giá nhập gốc
+        }));
+
+      if (validItems.length === 0) {
+        notification.warning({ message: 'Vui lòng thêm ít nhất 1 sản phẩm hợp lệ' });
+        return;
+      }
+
       const payload = {
-        ...values,
-        items: (values.items || []).filter(it => it.MaSP && it.SoLuong && it.DonGiaNhap)
+        MaNCC: values.MaNCC,
+        TenTK: values.TenTK,
+        TyLeLoi: tyLeLoi, // Tỷ lệ lợi nhuận chung (%)
+        items: validItems
       };
-      await axios.post('http://localhost:5000/api/receipt', payload);
-      notification.success({ message: 'Tạo phiếu nhập thành công' });
+
+      const response = await axios.post('http://localhost:5000/api/receipt', payload);
+      
+      // Hiển thị kết quả chi tiết
+      const { MaPN, TongTienNhap, items: processedItems } = response.data;
+      notification.success({ 
+        message: 'Tạo phiếu nhập thành công',
+        description: `Mã phiếu: ${MaPN} | Tổng tiền nhập: ${TongTienNhap?.toLocaleString()}đ | Tỷ lệ lời: ${tyLeLoi}%`
+      });
 
       setModalVisible(false);
       form.resetFields();
+      setFormItems([]); // Reset formItems
+      setTyLeLoi(10); // Reset về mặc định
       await fetchPhieuNhap();
-      await fetchLowStock(false); // cập nhật lại cảnh báo tồn
+      await fetchLowStock(false);
     } catch (error) {
-      console.error(error);
-      notification.error({ message: 'Lỗi khi tạo phiếu nhập' });
+      console.error('Lỗi tạo phiếu nhập:', error);
+      const errorMsg = error.response?.data?.details || error.response?.data?.error || 'Lỗi khi tạo phiếu nhập';
+      notification.error({ message: 'Lỗi', description: errorMsg });
     }
   };
 
@@ -351,20 +389,19 @@ const NhapHang = () => {
       <Modal
         title="Tạo phiếu nhập hàng"
         open={modalVisible}
-        onCancel={() => setModalVisible(false)}
+        onCancel={() => { setModalVisible(false); setTyLeLoi(10); setFormItems([]); }}
         footer={null}
-        width={900}
-          destroyOnClose
-  className="receipt-modal"
-    
+        width={1000}
+        destroyOnClose
+        className="receipt-modal"
       >
         <Form
           form={form}
           onFinish={handleSubmit}
           layout="vertical"
           onValuesChange={(_, allValues) => {
-            const total = calculateTotal(allValues.items || []);
-            form.setFieldsValue({ total });
+            // Cập nhật formItems để tính tổng tiền realtime
+            setFormItems(allValues.items || []);
           }}
         >
           <Form.Item
@@ -389,117 +426,169 @@ const NhapHang = () => {
             <Input placeholder="Người lập phiếu / tài khoản" />
           </Form.Item>
 
-          <Form.List name="items" initialValue={[{ ProfitPercentage: 0 }]}>
+          {/* Phần tỷ lệ lợi nhuận */}
+          <div className="profit-section" style={{ marginBottom: 16, padding: 12, background: '#f5f5f5', borderRadius: 8 }}>
+            <div style={{ marginBottom: 8 }}>
+              <strong>⚙️ Tỷ lệ lợi nhuận (%):</strong>
+              <span style={{ marginLeft: 8, color: '#666' }}>Giá bán = Giá nhập × (1 + %)</span>
+            </div>
+            <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+              {[5, 10, 15, 20, 25, 30].map(p => (
+                <Button
+                  key={p}
+                  type={tyLeLoi === p ? 'primary' : 'default'}
+                  onClick={() => setTyLeLoi(p)}
+                >
+                  {p}%
+                </Button>
+              ))}
+              <Input
+                type="number"
+                value={tyLeLoi}
+                onChange={(e) => setTyLeLoi(Number(e.target.value) || 0)}
+                style={{ width: 100 }}
+                min={0}
+                max={100}
+                addonAfter="%"
+              />
+            </div>
+          </div>
+
+          <Form.List name="items" initialValue={[{}]}>
             {(fields, { add, remove }) => (
               <>
-                {fields.map(({ key, name, ...restField }) => (
-                  <div key={key} className="form-item-row">
-                    <Form.Item
-                      {...restField}
-                      name={[name, 'MaSP']}
-                      label="ID Sản phẩm"
-                      rules={[{ required: true, message: 'Vui lòng chọn sản phẩm' }]}
-                    >
-                      <Select
-                        style={{ width: 180 }}
-                        showSearch
-                        optionFilterProp="children"
-                        placeholder="Chọn ID"
-                        onChange={(value) => {
-                          const product = sanPham.find(sp => sp.MaSP === value);
-                          const currentItems = form.getFieldValue('items') || [];
-                          const nextItems = currentItems.map((it, idx) =>
-                            idx === name
-                              ? {
-                                  ...it,
-                                  TenSP: product?.TenSP || '',
-                                  DonGiaNhap: Number(product?.DonGia || 0),
-                                  ProfitPercentage: 0
-                                }
-                              : it
-                          );
-                          form.setFieldsValue({ items: nextItems, total: calculateTotal(nextItems) });
-                        }}
+                <div style={{ marginBottom: 8 }}>
+                  <strong>📦 Danh sách sản phẩm nhập:</strong>
+                </div>
+                {fields.map(({ key, name, ...restField }) => {
+                  // Dùng formItems state để lấy giá trị realtime
+                  const currentItem = formItems[name] || {};
+                  const giaBanDuKien = calculateGiaBan(currentItem.DonGiaNhap, tyLeLoi);
+                  
+                  return (
+                    <div key={key} className="form-item-row" style={{ display: 'flex', gap: 8, alignItems: 'flex-end', flexWrap: 'wrap', marginBottom: 12, padding: 8, background: '#fafafa', borderRadius: 4 }}>
+                      <Form.Item
+                        {...restField}
+                        name={[name, 'MaSP']}
+                        label="Sản phẩm"
+                        rules={[{ required: true, message: 'Chọn SP' }]}
+                        style={{ marginBottom: 0 }}
                       >
-                        {sanPham.map(sp => (
-                          <Option key={sp.MaSP} value={sp.MaSP}>
-                            {sp.MaSP}
-                          </Option>
-                        ))}
-                      </Select>
-                    </Form.Item>
+                        <Select
+                          style={{ width: 200 }}
+                          showSearch
+                          optionFilterProp="children"
+                          placeholder="Chọn sản phẩm"
+                          onChange={(value) => {
+                            const product = sanPham.find(sp => sp.MaSP === value);
+                            const items = form.getFieldValue('items') || [];
+                            const nextItems = items.map((it, idx) =>
+                              idx === name
+                                ? {
+                                    ...it,
+                                    TenSP: product?.TenSP || '',
+                                    DonGiaNhap: Number(product?.DonGia || 0) // Lấy giá hiện tại làm giá nhập mặc định
+                                  }
+                                : it
+                            );
+                            form.setFieldsValue({ items: nextItems, totalNhap: calculateTotalNhap(nextItems) });
+                          }}
+                        >
+                          {sanPham.map(sp => (
+                            <Option key={sp.MaSP} value={sp.MaSP}>
+                              {sp.MaSP} - {sp.TenSP}
+                            </Option>
+                          ))}
+                        </Select>
+                      </Form.Item>
 
-                    <Form.Item {...restField} name={[name, 'TenSP']} label="Tên sản phẩm">
-                      <Input disabled style={{ width: 180 }} />
-                    </Form.Item>
+                      <Form.Item {...restField} name={[name, 'TenSP']} label="Tên SP" style={{ marginBottom: 0 }}>
+                        <Input disabled style={{ width: 150 }} />
+                      </Form.Item>
 
-                    <Form.Item
-                      {...restField}
-                      name={[name, 'SoLuong']}
-                      label="Số lượng"
-                      rules={[{ required: true, message: 'Vui lòng nhập số lượng' }]}
-                    >
-                      <Input type="number" style={{ width: 120 }} min={1} />
-                    </Form.Item>
+                      <Form.Item
+                        {...restField}
+                        name={[name, 'SoLuong']}
+                        label="Số lượng"
+                        rules={[{ required: true, message: 'Nhập SL' }]}
+                        style={{ marginBottom: 0 }}
+                      >
+                        <Input type="number" style={{ width: 80 }} min={1} />
+                      </Form.Item>
 
-                    <Form.Item
-                      {...restField}
-                      name={[name, 'DonGiaNhap']}
-                      label="Đơn giá nhập"
-                      rules={[{ required: true, message: 'Vui lòng nhập đơn giá' }]}
-                    >
-                      <Input type="number" style={{ width: 160 }} min={0} />
-                    </Form.Item>
+                      <Form.Item
+                        {...restField}
+                        name={[name, 'DonGiaNhap']}
+                        label="Giá nhập (đ)"
+                        rules={[{ required: true, message: 'Nhập giá' }]}
+                        style={{ marginBottom: 0 }}
+                      >
+                        <Input type="number" style={{ width: 120 }} min={0} />
+                      </Form.Item>
 
-                    <Form.Item {...restField} name={[name, 'ProfitPercentage']} noStyle>
-                      <Input type="hidden" />
-                    </Form.Item>
+                      {/* Hiển thị giá bán dự kiến */}
+                      <div style={{ display: 'flex', flexDirection: 'column', marginBottom: 0 }}>
+                        <span style={{ fontSize: 12, color: '#666' }}>Giá bán dự kiến</span>
+                        <span style={{ 
+                          padding: '4px 11px', 
+                          background: '#e6f7ff', 
+                          border: '1px solid #91d5ff',
+                          borderRadius: 4,
+                          fontWeight: 'bold',
+                          color: '#1890ff'
+                        }}>
+                          {giaBanDuKien.toLocaleString()}đ
+                        </span>
+                      </div>
 
-                    <Button danger onClick={() => remove(name)}>Xóa</Button>
-                  </div>
-                ))}
+                      <Button danger onClick={() => remove(name)} style={{ marginBottom: 0 }}>Xóa</Button>
+                    </div>
+                  );
+                })}
 
                 <Button
                   type="dashed"
-                  onClick={() => add({ ProfitPercentage: 0 })}
+                  onClick={() => add({})}
                   block
                   style={{ marginBottom: 16 }}
                 >
-                  Thêm sản phẩm
+                  + Thêm sản phẩm
                 </Button>
-
-                <div className="profit-buttons">
-                  <span>Áp dụng lợi nhuận:</span>
-                  <Button onClick={() => applyProfitPercentage(5)}>5%</Button>
-                  <Button onClick={() => applyProfitPercentage(10)}>10%</Button>
-                  <Button onClick={() => applyProfitPercentage(15)}>15%</Button>
-                  <Button onClick={() => applyProfitPercentage(20)}>20%</Button>
-                  <Input
-                    type="number"
-                    placeholder="Tùy chỉnh %"
-                    style={{ width: 120 }}
-                    min={0}
-                    onPressEnter={(e) => applyProfitPercentage(Number(e.target.value))}
-                    addonAfter="%"
-                  />
-                </div>
               </>
             )}
           </Form.List>
 
-          <Form.Item name="total" label="Tổng tiền">
-            <Input
-              className="total-display"
-              value={(form.getFieldValue('total') || 0).toLocaleString() + ' đ'}
-              disabled
-            />
+          {/* Hiển thị tổng tiền */}
+          <div style={{ marginTop: 16, padding: 12, background: '#f0f5ff', borderRadius: 8, border: '1px solid #adc6ff' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
+              <span><strong>💰 Tổng tiền NHẬP (giá gốc):</strong></span>
+              <span style={{ fontSize: 16, fontWeight: 'bold', color: '#fa541c' }}>
+                {calculateTotalNhap(formItems).toLocaleString()}đ
+              </span>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
+              <span><strong>📈 Tổng tiền BÁN dự kiến (+{tyLeLoi}%):</strong></span>
+              <span style={{ fontSize: 16, fontWeight: 'bold', color: '#52c41a' }}>
+                {calculateTotalBan(formItems, tyLeLoi).toLocaleString()}đ
+              </span>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+              <span><strong>📊 Lợi nhuận dự kiến:</strong></span>
+              <span style={{ fontSize: 16, fontWeight: 'bold', color: '#1890ff' }}>
+                {(calculateTotalBan(formItems, tyLeLoi) - calculateTotalNhap(formItems)).toLocaleString()}đ
+              </span>
+            </div>
+          </div>
+
+          <Form.Item name="totalNhap" hidden>
+            <Input />
           </Form.Item>
 
-          <div style={{ display: 'flex', gap: 8 }}>
-            <Button type="primary" htmlType="submit" style={{ marginTop: 16 }}>
-              Lưu phiếu nhập
+          <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
+            <Button type="primary" htmlType="submit" size="large">
+              ✅ Lưu phiếu nhập
             </Button>
-            <Button onClick={() => setModalVisible(false)} style={{ marginTop: 16 }}>
+            <Button onClick={() => { setModalVisible(false); setTyLeLoi(10); setFormItems([]); }} size="large">
               Hủy
             </Button>
           </div>

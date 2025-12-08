@@ -48,6 +48,19 @@ const SalaryPage = () => {
     { title: 'Phạt', dataIndex: 'phat', render: v => formatPrice(v), width: 100 },
     { title: 'Tổng lương', dataIndex: 'tong_luong', render: v => formatPrice(v), width: 120 },
     {
+      title: 'Trạng thái',
+      dataIndex: 'trang_thai',
+      width: 120,
+      render: v => (
+        <span style={{ 
+          color: v === 'Da_tra' ? '#52c41a' : '#fa8c16',
+          fontWeight: 600 
+        }}>
+          {v === 'Da_tra' ? '✓ Đã chi trả' : '○ Chưa chi trả'}
+        </span>
+      )
+    },
+    {
       title: 'Chi tiết',
       render: (_, record) => (
         <Button size="small" onClick={() => showDetail(record)}>

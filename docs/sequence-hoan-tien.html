@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sequence Diagram - Chức năng Hoàn Tiền</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #f0f2f5;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #11998e;
+            margin-bottom: 5px;
+            font-size: 28px;
+        }
+        h2 {
+            text-align: center;
+            color: #666;
+            font-weight: normal;
+            margin-bottom: 20px;
+            font-size: 16px;
+        }
+        .diagram-container {
+            background: #ffffff;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            padding: 30px;
+            margin: 20px 0;
+        }
+        .mermaid {
+            display: flex;
+            justify-content: center;
+        }
+        .mermaid svg {
+            max-width: 100%;
+            height: auto;
+        }
+        .toolbar {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            color: white;
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(17, 153, 142, 0.4);
+        }
+        .btn-success {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .btn-success:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+        .nav-links {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        .nav-links a {
+            padding: 10px 20px;
+            background: #e8eaed;
+            color: #333;
+            text-decoration: none;
+            border-radius: 25px;
+            transition: all 0.3s;
+            font-weight: 500;
+        }
+        .nav-links a:hover {
+            background: #11998e;
+            color: white;
+        }
+        .nav-links a.active {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            color: white;
+        }
+        .legend {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+        }
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+        }
+        .description {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            border-left: 4px solid #11998e;
+        }
+        .description h3 {
+            color: #333;
+            margin-top: 0;
+        }
+        .description ul {
+            color: #555;
+            line-height: 1.8;
+        }
+        .status-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        .status-table th, .status-table td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+        }
+        .status-table th {
+            background: #11998e;
+            color: white;
+        }
+        .status-table tr:nth-child(even) {
+            background: #f9f9f9;
+        }
+        .status-pending { color: #ffc107; font-weight: bold; }
+        .status-approved { color: #28a745; font-weight: bold; }
+        .status-rejected { color: #dc3545; font-weight: bold; }
+        .status-completed { color: #17a2b8; font-weight: bold; }
+        #export-area {
+            background: white;
+            padding: 20px;
+        }
+        @media print {
+            .toolbar, .nav-links { display: none; }
+            body { background: white; padding: 0; }
+            .container { box-shadow: none; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="nav-links">
+            <a href="sequence-mua-hang.html">📦 Mua Hàng</a>
+            <a href="sequence-tra-hang.html">🔄 Trả Hàng</a>
+            <a href="sequence-hoan-tien.html" class="active">💰 Hoàn Tiền</a>
+        </div>
+        
+        <div class="toolbar">
+            <button class="btn btn-primary" onclick="downloadPNG()">
+                📥 Tải PNG
+            </button>
+            <button class="btn btn-success" onclick="window.print()">
+                🖨️ In / PDF
+            </button>
+        </div>
+
+        <div id="export-area">
+            <h1>💰 SEQUENCE DIAGRAM - CHỨC NĂNG HOÀN TIỀN</h1>
+            <h2>Quy trình xử lý hoàn tiền cho đơn hàng đã thanh toán trên Website Bán Sách</h2>
+            
+            <div class="legend">
+                <div class="legend-item"><div class="legend-color" style="background: #fff8f0;"></div> Tạo yêu cầu</div>
+                <div class="legend-item"><div class="legend-color" style="background: #f0f8ff;"></div> Admin xem xét</div>
+                <div class="legend-item"><div class="legend-color" style="background: #f0fff0;"></div> Phê duyệt</div>
+                <div class="legend-item"><div class="legend-color" style="background: #f8f0ff;"></div> Theo dõi</div>
+                <div class="legend-item"><div class="legend-color" style="background: #fff5ee;"></div> Hủy yêu cầu</div>
+            </div>
+
+            <div class="diagram-container">
+                <div class="mermaid">
+sequenceDiagram
+    autonumber
+    participant KH as 👤 Khách Hàng
+    participant FE as 🖥️ Frontend
+    participant BE as ⚙️ Backend Server
+    participant DB as 🗄️ Database
+    participant AD as 👨‍💼 Admin
+    participant BANK as 🏦 Ngân Hàng
+
+    rect rgb(255, 248, 240)
+        Note over KH,DB: 1. TẠO YÊU CẦU HOÀN TIỀN
+        KH->>FE: Vào trang chi tiết đơn hàng đã hủy
+        FE->>BE: GET /api/orders/customer-orders/detail/{MaHD}
+        BE->>DB: SELECT đơn hàng
+        DB-->>BE: Order info (đã thanh toán VNPay)
+        BE-->>FE: Response JSON
+        FE-->>KH: Hiển thị form yêu cầu hoàn tiền
+        
+        KH->>FE: Điền thông tin hoàn tiền
+        Note right of KH: - Lý do hoàn tiền<br/>- Số tài khoản<br/>- Ngân hàng<br/>- Chủ tài khoản
+        FE->>BE: POST /api/orders/refund-requests
+        BE->>DB: Validate đơn hàng đủ điều kiện
+        DB-->>BE: OK - Đơn đã thanh toán
+        BE->>DB: INSERT INTO yeucau_hoantien
+        DB-->>BE: RefundRequest created
+        BE-->>FE: {success: true, refundId}
+        FE-->>KH: ✅ Yêu cầu hoàn tiền đã gửi
+    end
+
+    rect rgb(240, 248, 255)
+        Note over AD,DB: 2. ADMIN NHẬN & XEM XÉT YÊU CẦU
+        AD->>BE: GET /api/orders/refund-requests/admin
+        BE->>DB: SELECT * FROM yeucau_hoantien WHERE status = 'pending'
+        DB-->>BE: Danh sách yêu cầu hoàn tiền
+        BE-->>AD: Response JSON (pending refunds)
+        
+        AD->>AD: Xem xét yêu cầu hoàn tiền
+        Note right of AD: Kiểm tra:<br/>- Đơn hàng hợp lệ<br/>- Lý do chính đáng<br/>- Thông tin bank đúng
+    end
+
+    rect rgb(240, 255, 240)
+        Note over AD,BANK: 3. ADMIN PHÊ DUYỆT HOÀN TIỀN
+        alt Phê duyệt yêu cầu
+            AD->>BE: PUT /api/orders/refund-requests/{id}/process
+            Note right of AD: {action: 'approve', actualRefundAmount}
+            BE->>DB: UPDATE yeucau_hoantien SET status = 'approved'
+            BE->>DB: UPDATE hoadon SET tinhtrang = 'Đã hoàn tiền'
+            DB-->>BE: Success
+            BE-->>AD: ✅ Đã phê duyệt
+            
+            AD->>BANK: Chuyển khoản hoàn tiền
+            Note right of AD: Chuyển thủ công<br/>theo thông tin KH cung cấp
+            BANK-->>AD: Xác nhận chuyển tiền
+            
+            AD->>BE: PUT /api/orders/refund-requests/{id}/process
+            Note right of AD: {action: 'complete', transactionId}
+            BE->>DB: UPDATE status = 'completed'
+            BE->>DB: INSERT transaction log
+            DB-->>BE: Success
+            BE-->>AD: ✅ Hoàn tất
+            
+        else Từ chối yêu cầu
+            AD->>BE: PUT /api/orders/refund-requests/{id}/process
+            Note right of AD: {action: 'reject', adminReason}
+            BE->>DB: UPDATE status = 'rejected'
+            BE->>DB: Lưu lý do từ chối
+            DB-->>BE: Success
+            BE-->>AD: ❌ Đã từ chối
+        end
+    end
+
+    rect rgb(248, 240, 255)
+        Note over KH,DB: 4. KHÁCH HÀNG THEO DÕI TRẠNG THÁI
+        KH->>FE: Vào trang "Lịch sử hoàn tiền"
+        FE->>BE: GET /api/orders/customer-refunds/logs/{MaKH}
+        BE->>DB: SELECT lịch sử hoàn tiền của KH
+        DB-->>BE: Refund history with status
+        BE-->>FE: Response JSON
+        FE-->>KH: Hiển thị trạng thái hoàn tiền
+        
+        alt Hoàn tiền thành công
+            KH->>KH: ✅ Kiểm tra tài khoản ngân hàng
+            Note right of KH: Tiền đã về tài khoản!
+        else Hoàn tiền bị từ chối
+            KH->>KH: ❌ Xem lý do từ chối
+            KH->>FE: Có thể tạo yêu cầu mới (nếu hợp lệ)
+        end
+    end
+
+    rect rgb(255, 245, 238)
+        Note over KH,DB: 5. HỦY YÊU CẦU HOÀN TIỀN (Tùy chọn)
+        KH->>FE: Click "Hủy yêu cầu hoàn tiền"
+        FE->>BE: PUT /api/orders/refund-requests/{id}/cancel
+        BE->>DB: Kiểm tra status = 'pending'
+        DB-->>BE: OK - Có thể hủy
+        BE->>DB: UPDATE status = 'cancelled'
+        DB-->>BE: Success
+        BE-->>FE: {success: true}
+        FE-->>KH: ✅ Đã hủy yêu cầu hoàn tiền
+    end
+                </div>
+            </div>
+        </div>
+
+        <div class="description">
+            <h3>📋 Mô tả quy trình hoàn tiền:</h3>
+            <ul>
+                <li><strong>Bước 1:</strong> Khách hàng tạo yêu cầu hoàn tiền với thông tin ngân hàng</li>
+                <li><strong>Bước 2:</strong> Admin nhận và xem xét yêu cầu hoàn tiền</li>
+                <li><strong>Bước 3:</strong> Admin phê duyệt/từ chối và thực hiện chuyển khoản</li>
+                <li><strong>Bước 4:</strong> Khách hàng theo dõi trạng thái hoàn tiền</li>
+                <li><strong>Bước 5:</strong> Khách hàng có thể hủy yêu cầu nếu chưa được xử lý</li>
+            </ul>
+            
+            <h3>📊 Các trạng thái hoàn tiền:</h3>
+            <table class="status-table">
+                <thead>
+                    <tr>
+                        <th>Trạng thái</th>
+                        <th>Mô tả</th>
+                        <th>Hành động có thể</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="status-pending">⏳ Pending</td>
+                        <td>Yêu cầu đang chờ Admin xem xét</td>
+                        <td>KH có thể hủy yêu cầu</td>
+                    </tr>
+                    <tr>
+                        <td class="status-approved">✅ Approved</td>
+                        <td>Admin đã phê duyệt, đang chờ chuyển khoản</td>
+                        <td>Admin thực hiện chuyển tiền</td>
+                    </tr>
+                    <tr>
+                        <td class="status-completed">💰 Completed</td>
+                        <td>Hoàn tiền hoàn tất, tiền đã chuyển</td>
+                        <td>Không có - Hoàn tất</td>
+                    </tr>
+                    <tr>
+                        <td class="status-rejected">❌ Rejected</td>
+                        <td>Yêu cầu bị từ chối</td>
+                        <td>KH có thể tạo yêu cầu mới</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="description" style="border-left-color: #ffc107; background: #fff9e6;">
+            <h3>🗃️ Các bảng database liên quan:</h3>
+            <ul>
+                <li><code>hoadon</code> - Đơn hàng (tinhtrang, TrangThaiThanhToan)</li>
+                <li><code>yeucau_hoantien</code> - Yêu cầu hoàn tiền
+                    <ul>
+                        <li>MaYeuCau, MaHD, MaKH</li>
+                        <li>SoTien, LyDo, TrangThai</li>
+                        <li>SoTaiKhoan, TenNganHang, ChuTaiKhoan</li>
+                        <li>NgayTao, NgayXuLy, MaGiaoDich</li>
+                    </ul>
+                </li>
+                <li><code>khachhang</code> - Thông tin khách hàng</li>
+            </ul>
+            
+            <h3>⏱️ Thời gian xử lý:</h3>
+            <ul>
+                <li>Xem xét yêu cầu: 1-2 ngày làm việc</li>
+                <li>Chuyển khoản hoàn tiền: 1-3 ngày làm việc</li>
+                <li>Tiền về tài khoản KH: 1-3 ngày (tùy ngân hàng)</li>
+                <li><strong>Tổng cộng: 3-7 ngày làm việc</strong></li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        mermaid.initialize({ 
+            startOnLoad: true,
+            theme: 'default',
+            sequence: {
+                diagramMarginX: 50,
+                diagramMarginY: 10,
+                actorMargin: 80,
+                width: 180,
+                height: 65,
+                boxMargin: 10,
+                boxTextMargin: 5,
+                noteMargin: 10,
+                messageMargin: 40,
+                mirrorActors: true,
+                useMaxWidth: false
+            }
+        });
+
+        async function downloadPNG() {
+            const element = document.getElementById('export-area');
+            const btn = event.target;
+            btn.disabled = true;
+            btn.innerHTML = '⏳ Đang xử lý...';
+            
+            try {
+                const canvas = await html2canvas(element, {
+                    scale: 2,
+                    backgroundColor: '#ffffff',
+                    useCORS: true,
+                    logging: false
+                });
+                
+                const link = document.createElement('a');
+                link.download = 'sequence-hoan-tien.png';
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+            } catch (error) {
+                alert('Lỗi khi tạo hình ảnh: ' + error.message);
+            }
+            
+            btn.disabled = false;
+            btn.innerHTML = '📥 Tải PNG';
+        }
+    </script>
+</body>
+</html>

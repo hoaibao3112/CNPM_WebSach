@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sequence Diagram - Chức năng Mua Hàng</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #f0f2f5;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #1a73e8;
+            margin-bottom: 5px;
+            font-size: 28px;
+        }
+        h2 {
+            text-align: center;
+            color: #666;
+            font-weight: normal;
+            margin-bottom: 20px;
+            font-size: 16px;
+        }
+        .diagram-container {
+            background: #ffffff;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            padding: 30px;
+            margin: 20px 0;
+        }
+        .mermaid {
+            display: flex;
+            justify-content: center;
+        }
+        .mermaid svg {
+            max-width: 100%;
+            height: auto;
+        }
+        .toolbar {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+        .btn-success {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            color: white;
+        }
+        .btn-success:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(17, 153, 142, 0.4);
+        }
+        .nav-links {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        .nav-links a {
+            padding: 10px 20px;
+            background: #e8eaed;
+            color: #333;
+            text-decoration: none;
+            border-radius: 25px;
+            transition: all 0.3s;
+            font-weight: 500;
+        }
+        .nav-links a:hover {
+            background: #667eea;
+            color: white;
+        }
+        .nav-links a.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .legend {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+        }
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+        }
+        .description {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+        }
+        .description h3 {
+            color: #333;
+            margin-top: 0;
+        }
+        .description ul {
+            color: #555;
+            line-height: 1.8;
+        }
+        #export-area {
+            background: white;
+            padding: 20px;
+        }
+        @media print {
+            .toolbar, .nav-links { display: none; }
+            body { background: white; padding: 0; }
+            .container { box-shadow: none; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="nav-links">
+            <a href="sequence-mua-hang.html" class="active">📦 Mua Hàng</a>
+            <a href="sequence-tra-hang.html">🔄 Trả Hàng</a>
+            <a href="sequence-hoan-tien.html">💰 Hoàn Tiền</a>
+        </div>
+        
+        <div class="toolbar">
+            <button class="btn btn-primary" onclick="downloadPNG()">
+                📥 Tải PNG
+            </button>
+            <button class="btn btn-success" onclick="window.print()">
+                🖨️ In / PDF
+            </button>
+        </div>
+
+        <div id="export-area">
+            <h1>📦 SEQUENCE DIAGRAM - CHỨC NĂNG MUA HÀNG</h1>
+            <h2>Quy trình đặt hàng và thanh toán trên Website Bán Sách</h2>
+            
+            <div class="legend">
+                <div class="legend-item"><div class="legend-color" style="background: #f0f8ff;"></div> Xem sản phẩm</div>
+                <div class="legend-item"><div class="legend-color" style="background: #fff8f0;"></div> Thêm giỏ hàng</div>
+                <div class="legend-item"><div class="legend-color" style="background: #f0fff0;"></div> Áp dụng KM</div>
+                <div class="legend-item"><div class="legend-color" style="background: #fff0f5;"></div> Thanh toán</div>
+                <div class="legend-item"><div class="legend-color" style="background: #f0f0ff;"></div> Xác nhận</div>
+            </div>
+
+            <div class="diagram-container">
+                <div class="mermaid">
+sequenceDiagram
+    autonumber
+    participant KH as 👤 Khách Hàng
+    participant FE as 🖥️ Frontend (Browser)
+    participant BE as ⚙️ Backend (Server)
+    participant DB as 🗄️ Database
+    participant VNPAY as 💳 VNPay Gateway
+
+    rect rgb(240, 248, 255)
+        Note over KH,DB: 1. ĐĂNG NHẬP & XEM SẢN PHẨM
+        KH->>FE: Truy cập trang web
+        FE->>BE: GET /api/sanpham
+        BE->>DB: SELECT * FROM sanpham
+        DB-->>BE: Danh sách sản phẩm
+        BE-->>FE: Response JSON (products)
+        FE-->>KH: Hiển thị danh sách sản phẩm
+    end
+
+    rect rgb(255, 248, 240)
+        Note over KH,DB: 2. THÊM VÀO GIỎ HÀNG
+        KH->>FE: Click "Thêm vào giỏ"
+        FE->>BE: POST /api/giohang {MaSP, SoLuong}
+        BE->>DB: INSERT INTO giohang
+        DB-->>BE: Success
+        BE-->>FE: {success: true}
+        FE-->>KH: Thông báo "Đã thêm vào giỏ"
+    end
+
+    rect rgb(240, 255, 240)
+        Note over KH,DB: 3. XEM GIỎ HÀNG & ÁP DỤNG KHUYẾN MÃI
+        KH->>FE: Vào trang giỏ hàng
+        FE->>BE: GET /api/giohang/{MaKH}
+        BE->>DB: SELECT giỏ hàng + sản phẩm
+        DB-->>BE: Danh sách giỏ hàng
+        BE-->>FE: Response JSON (cart items)
+        FE-->>KH: Hiển thị giỏ hàng
+        
+        KH->>FE: Nhập mã khuyến mãi
+        FE->>BE: POST /api/khuyenmai/apply-to-cart
+        BE->>DB: Kiểm tra mã KM hợp lệ
+        DB-->>BE: Thông tin khuyến mãi
+        BE-->>FE: {discount, finalTotal}
+        FE-->>KH: Hiển thị giá sau giảm
+    end
+
+    rect rgb(255, 240, 245)
+        Note over KH,VNPAY: 4. THANH TOÁN
+        KH->>FE: Nhập địa chỉ + Chọn thanh toán
+        FE->>BE: POST /api/orders/place-order
+        BE->>DB: Kiểm tra tồn kho
+        DB-->>BE: OK - Đủ hàng
+        BE->>DB: INSERT hoadon + chitiethoadon
+        BE->>DB: UPDATE sanpham (trừ tồn kho)
+        BE->>DB: DELETE giohang (xóa giỏ)
+        DB-->>BE: Order created (MaHD)
+        
+        alt Thanh toán VNPay
+            BE->>VNPAY: Tạo URL thanh toán
+            VNPAY-->>BE: Payment URL
+            BE-->>FE: {paymentUrl}
+            FE->>KH: Redirect to VNPay
+            KH->>VNPAY: Nhập thông tin thẻ
+            VNPAY-->>KH: Xác nhận thanh toán
+            VNPAY->>BE: GET /vnpay_return (callback)
+            BE->>DB: UPDATE TrangThaiThanhToan
+            DB-->>BE: Success
+            BE-->>FE: Redirect to confirmation
+        else Thanh toán COD
+            BE-->>FE: {success: true, orderId}
+            FE-->>KH: Hiển thị trang xác nhận
+        end
+    end
+
+    rect rgb(240, 240, 255)
+        Note over KH,DB: 5. XÁC NHẬN ĐƠN HÀNG
+        FE->>BE: GET /api/orders/customer-orders/detail/{orderId}
+        BE->>DB: SELECT đơn hàng + chi tiết
+        DB-->>BE: Order details
+        BE-->>FE: Response JSON
+        FE-->>KH: Hiển thị chi tiết đơn hàng
+        KH->>KH: ✅ Hoàn tất đặt hàng!
+    end
+                </div>
+            </div>
+        </div>
+
+        <div class="description">
+            <h3>📋 Mô tả quy trình:</h3>
+            <ul>
+                <li><strong>Bước 1:</strong> Khách hàng truy cập website, xem danh sách sản phẩm từ database</li>
+                <li><strong>Bước 2:</strong> Thêm sản phẩm vào giỏ hàng, lưu vào bảng <code>giohang</code></li>
+                <li><strong>Bước 3:</strong> Xem giỏ hàng, có thể áp dụng mã khuyến mãi để được giảm giá</li>
+                <li><strong>Bước 4:</strong> Chọn phương thức thanh toán (VNPay hoặc COD), hệ thống tạo đơn hàng</li>
+                <li><strong>Bước 5:</strong> Xác nhận đơn hàng thành công, cập nhật tồn kho và xóa giỏ hàng</li>
+            </ul>
+            <h3>🗃️ Các bảng database liên quan:</h3>
+            <ul>
+                <li><code>khachhang</code> - Thông tin khách hàng</li>
+                <li><code>sanpham</code> - Thông tin sản phẩm và tồn kho</li>
+                <li><code>giohang</code> - Giỏ hàng của khách</li>
+                <li><code>hoadon</code> - Đơn hàng</li>
+                <li><code>chitiethoadon</code> - Chi tiết đơn hàng</li>
+                <li><code>diachi</code> - Địa chỉ giao hàng</li>
+                <li><code>khuyenmai</code> - Mã khuyến mãi</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        mermaid.initialize({ 
+            startOnLoad: true,
+            theme: 'default',
+            sequence: {
+                diagramMarginX: 50,
+                diagramMarginY: 10,
+                actorMargin: 80,
+                width: 180,
+                height: 65,
+                boxMargin: 10,
+                boxTextMargin: 5,
+                noteMargin: 10,
+                messageMargin: 40,
+                mirrorActors: true,
+                useMaxWidth: false
+            }
+        });
+
+        async function downloadPNG() {
+            const element = document.getElementById('export-area');
+            const btn = event.target;
+            btn.disabled = true;
+            btn.innerHTML = '⏳ Đang xử lý...';
+            
+            try {
+                const canvas = await html2canvas(element, {
+                    scale: 2,
+                    backgroundColor: '#ffffff',
+                    useCORS: true,
+                    logging: false
+                });
+                
+                const link = document.createElement('a');
+                link.download = 'sequence-mua-hang.png';
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+            } catch (error) {
+                alert('Lỗi khi tạo hình ảnh: ' + error.message);
+            }
+            
+            btn.disabled = false;
+            btn.innerHTML = '📥 Tải PNG';
+        }
+    </script>
+</body>
+</html>

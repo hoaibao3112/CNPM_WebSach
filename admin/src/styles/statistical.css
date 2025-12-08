@@ -152,6 +152,15 @@
   border: 1px solid #dee2e6;
 }
 
+/* Action Buttons Group */
+.filter-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin-left: auto;
+  flex-wrap: wrap;
+}
+
 .filter-group {
   display: flex;
   flex-direction: column;
