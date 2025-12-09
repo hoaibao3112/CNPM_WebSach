@@ -1,5 +1,6 @@
 import mysql from 'mysql2/promise';
 import dotenv from 'dotenv';
+import fs from 'fs';
 
 // Load biến môi trường
 dotenv.config();
@@ -18,6 +19,31 @@ const dbConfig = {
   keepAliveInitialDelay: 10000, // 10 giây
   timezone: '+07:00' // Múi giờ Việt Nam
 };
+
+// TLS/SSL: support raw PEM or base64-encoded PEM via env vars
+const sslCaRaw = process.env.DB_SSL_CA || null;
+const sslCaB64 = process.env.DB_SSL_CA_BASE64 || null;
+if (sslCaB64) {
+  try {
+    const caBuf = Buffer.from(sslCaB64, 'base64');
+    dbConfig.ssl = {
+      ca: caBuf,
+      rejectUnauthorized: process.env.DB_REJECT_UNAUTHORIZED !== 'false'
+    };
+    console.log('DB SSL: using DB_SSL_CA_BASE64');
+  } catch (err) {
+    console.warn('DB SSL: failed to parse DB_SSL_CA_BASE64, falling back', err.message);
+  }
+} else if (sslCaRaw) {
+  dbConfig.ssl = {
+    ca: sslCaRaw,
+    rejectUnauthorized: process.env.DB_REJECT_UNAUTHORIZED !== 'false'
+  };
+  console.log('DB SSL: using DB_SSL_CA (raw PEM)');
+} else if (process.env.DB_REQUIRE_SSL === 'true') {
+  dbConfig.ssl = { rejectUnauthorized: process.env.DB_REJECT_UNAUTHORIZED !== 'false' };
+  console.log('DB SSL: required but no CA provided (attempting TLS without CA)');
+}
 
 // Tạo pool kết nối với xử lý lỗi
 const pool = mysql.createPool(dbConfig);
