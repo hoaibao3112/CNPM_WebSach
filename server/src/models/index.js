@@ -28,12 +28,31 @@ if (hasEnvDb) {
   });
 
   // Dialect options for TLS/SSL. TiDB Cloud requires secure connections.
-  const sslCa = process.env.DB_SSL_CA || process.env.DB_SSL_CERT || null;
+  // Support two ways to provide CA:
+  //  - DB_SSL_CA: raw PEM text (may include newlines)
+  //  - DB_SSL_CA_BASE64: base64-encoded PEM (useful when platform strips newlines)
+  const sslCaRaw = process.env.DB_SSL_CA || process.env.DB_SSL_CERT || null;
+  const sslCaB64 = process.env.DB_SSL_CA_BASE64 || null;
   if (!sequelizeOptions.dialectOptions) sequelizeOptions.dialectOptions = {};
-  if (sslCa) {
+  if (sslCaB64) {
+    // Decode base64 into Buffer (safer across env var storage)
+    try {
+      const caBuf = Buffer.from(sslCaB64, 'base64');
+      sequelizeOptions.dialectOptions.ssl = {
+        ca: caBuf,
+        rejectUnauthorized: process.env.DB_REJECT_UNAUTHORIZED !== 'false'
+      };
+    } catch (err) {
+      // fall back to raw if decode fails
+      sequelizeOptions.dialectOptions.ssl = {
+        ca: sslCaRaw || undefined,
+        rejectUnauthorized: process.env.DB_REJECT_UNAUTHORIZED !== 'false'
+      };
+    }
+  } else if (sslCaRaw) {
     // If the CA is provided as an env var (PEM content), pass it to the driver
     sequelizeOptions.dialectOptions.ssl = {
-      ca: sslCa,
+      ca: sslCaRaw,
       rejectUnauthorized: process.env.DB_REJECT_UNAUTHORIZED !== 'false'
     };
   } else if (process.env.DB_REQUIRE_SSL === 'true') {
