@@ -1,4 +1,4 @@
-const API_URL = 'http://localhost:5000/api/author';
+const API_URL = window.API_CONFIG ? window.API_CONFIG.BASE_URL + '/api/author' : 'http://localhost:5000/api/author';
 const IMAGE_BASE_URL = 'img/author/';
 const PRODUCT_IMAGE_BASE_URL = 'img/product/';
 const ITEMS_PER_PAGE = 5;
@@ -135,7 +135,7 @@ async function showAuthorModal(author) {
   if (booksList.length < 5) {
     try {
       // Use the correct products endpoint registered on the server ('/api/product')
-      const prodRes = await fetch(`${API_URL.replace('/author','/product')}?MaTG=${author.MaTG}&limit=10`, { headers: { 'Accept': 'application/json' } });
+      const prodRes = await fetch(`${API_URL.replace('/author', '/product')}?MaTG=${author.MaTG}&limit=10`, { headers: { 'Accept': 'application/json' } });
       if (prodRes.ok) {
         const prodData = await prodRes.json();
         // productRoutes returns array of products for listing; ensure array

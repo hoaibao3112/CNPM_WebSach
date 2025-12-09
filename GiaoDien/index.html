@@ -1,8 +1,9 @@
 <!DOCTYPE html>
 <html lang="vi">
+
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Trang Chủ | Bookstore</title>
   <link rel="stylesheet" href="styles/index.css" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
@@ -13,28 +14,29 @@
   <link rel="stylesheet" href="styles/personalized-recommendations.css" />
   <link rel="icon" href="favicon.ico" type="image/x-icon" />
 </head>
+
 <body>
-<!-- Top bar -->
-<div id="load-header"></div>
+  <!-- Top bar -->
+  <div id="load-header"></div>
 
-<!-- Slideshow -->
-<div class="grid-slideshow">
-  <div class="slide-large">
-    <img src="img/anhnen/17d.jpg" alt="Slide lớn">
+  <!-- Slideshow -->
+  <div class="grid-slideshow">
+    <div class="slide-large">
+      <img src="img/anhnen/17d.jpg" alt="Slide lớn">
+    </div>
+    <div class="slide-small">
+      <img src="img/anhnen/18d.jpg" alt="Slide nhỏ 1">
+    </div>
+    <div class="slide-small">
+      <img src="img/anhnen/14d.jpg" alt="Slide nhỏ 2">
+    </div>
   </div>
-  <div class="slide-small">
-    <img src="img/anhnen/18d.jpg" alt="Slide nhỏ 1">
-  </div>
-  <div class="slide-small">
-    <img src="img/anhnen/14d.jpg" alt="Slide nhỏ 2">
-  </div>
-</div>
 
 
 
 
 
-<!-- <header class="slideshow-container">
+  <!-- <header class="slideshow-container">
   <div class="slideshow-column">
     <div class="mySlides fade">
       <img src="img/anhnen/17d.jpg" alt="Slide 1">
@@ -110,7 +112,7 @@
       <p>Truyện tranh</p>
     </div>
   </div>
- 
+
 
   <!-- Flash Sale component placed here (outside Sách Mới) -->
   <div id="flash-sale" class="flash-sale-container">
@@ -129,10 +131,10 @@
   <script src="js/products_sales.js" defer></script>
   <!-- Main content -->
   <div class="container">
-    
+
     <main class="main-content">
       <div id="recommend-widget-container"></div>
-      
+
       <!-- Component: Có thể bạn thích -->
       <div id="personalized-recommendations"></div>
 
@@ -181,17 +183,22 @@
 
   <!-- Footer will be loaded from components/footer.html -->
   <div id="load-footer"></div>
+
+  <!-- API Configuration - MUST load first! -->
+  <script src="js/config.js"></script>
+  <script src="js/api-patcher.js"></script>
+
   <script>
     // Load footer partial and inject into the page
-    (function(){
+    (function () {
       fetch('components/footer.html')
-        .then(function(res){ return res.text(); })
-        .then(function(html){
+        .then(function (res) { return res.text(); })
+        .then(function (html) {
           document.getElementById('load-footer').innerHTML = html;
-            // Notify other scripts that footer (and chat HTML) has been loaded
-            try { window.dispatchEvent(new Event('footerLoaded')); } catch (e) { /* old browsers */ }
+          // Notify other scripts that footer (and chat HTML) has been loaded
+          try { window.dispatchEvent(new Event('footerLoaded')); } catch (e) { /* old browsers */ }
         })
-        .catch(function(err){
+        .catch(function (err) {
           console.error('Failed to load footer:', err);
         });
     })();
@@ -206,4 +213,5 @@
   <script src="js/preference-widget.js"></script>
   <script src="js/personalized-recommendations.js"></script>
 </body>
+
 </html>

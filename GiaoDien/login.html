@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="vi">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -9,6 +10,7 @@
   <link rel="stylesheet" href="styles/login.css" />
 
 </head>
+
 <body>
   <div id="load-header"></div>
   <div class="login-container">
@@ -38,48 +40,52 @@
       <!-- Google Sign-in button -->
       <div id="googleSignIn" style="margin: 16px 0;"></div>
 
-  <!-- small page footer removed in favor of shared footer -->
+      <!-- small page footer removed in favor of shared footer -->
     </form>
   </div>
   <!-- Modal Quên Mật Khẩu -->
-<div id="forgotPasswordModal" class="modal">
-  <div class="modal-content">z
-    <span class="close-modal">&times;</span>
-    <h2>Quên Mật Khẩu</h2>
-    <div id="forgotPasswordMessage" class="message"></div>
-    
-    <!-- Bước 1: Nhập email -->
-    <div id="step1">
-      <div class="form-group">
-        <i class="fa fa-envelope"></i>
-        <input type="email" id="forgotEmail" placeholder="Nhập email đăng ký" required>
+  <div id="forgotPasswordModal" class="modal">
+    <div class="modal-content">z
+      <span class="close-modal">&times;</span>
+      <h2>Quên Mật Khẩu</h2>
+      <div id="forgotPasswordMessage" class="message"></div>
+
+      <!-- Bước 1: Nhập email -->
+      <div id="step1">
+        <div class="form-group">
+          <i class="fa fa-envelope"></i>
+          <input type="email" id="forgotEmail" placeholder="Nhập email đăng ký" required>
+        </div>
+        <button id="sendOtpBtn" class="login-btn">Gửi mã OTP</button>
       </div>
-      <button id="sendOtpBtn" class="login-btn">Gửi mã OTP</button>
-    </div>
-    
-    <!-- Bước 2: Nhập OTP -->
-    <div id="step2" style="display: none;">
-      <div class="form-group">
-        <i class="fa fa-key"></i>
-        <input type="text" id="otpCode" placeholder="Nhập mã OTP" required>
+
+      <!-- Bước 2: Nhập OTP -->
+      <div id="step2" style="display: none;">
+        <div class="form-group">
+          <i class="fa fa-key"></i>
+          <input type="text" id="otpCode" placeholder="Nhập mã OTP" required>
+        </div>
+        <button id="verifyOtpBtn" class="login-btn">Xác nhận OTP</button>
       </div>
-      <button id="verifyOtpBtn" class="login-btn">Xác nhận OTP</button>
-    </div>
-    
-    <!-- Bước 3: Đặt lại mật khẩu -->
-    <div id="step3" style="display: none;">
-      <div class="form-group">
-        <i class="fa fa-lock"></i>
-        <input type="password" id="newPassword" placeholder="Mật khẩu mới" required>
+
+      <!-- Bước 3: Đặt lại mật khẩu -->
+      <div id="step3" style="display: none;">
+        <div class="form-group">
+          <i class="fa fa-lock"></i>
+          <input type="password" id="newPassword" placeholder="Mật khẩu mới" required>
+        </div>
+        <div class="form-group">
+          <i class="fa fa-lock"></i>
+          <input type="password" id="confirmPassword" placeholder="Xác nhận mật khẩu" required>
+        </div>
+        <button id="resetPasswordBtn" class="login-btn">Đặt lại mật khẩu</button>
       </div>
-      <div class="form-group">
-        <i class="fa fa-lock"></i>
-        <input type="password" id="confirmPassword" placeholder="Xác nhận mật khẩu" required>
-      </div>
-      <button id="resetPasswordBtn" class="login-btn">Đặt lại mật khẩu</button>
     </div>
   </div>
-</div>
+  <!-- API Configuration - MUST load first! -->
+  <script src="js/config.js"></script>
+  <script src="js/api-patcher.js"></script>
+
   <!-- Google Identity Services -->
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <script src="js/google-auth.js"></script>
@@ -90,4 +96,5 @@
   <div id="load-footer"></div>
   <script src="js/loadFooter.js"></script>
 </body>
+
 </html>
