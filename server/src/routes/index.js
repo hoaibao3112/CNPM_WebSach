@@ -38,6 +38,27 @@ import couponRoutes from './couponRoutes.js';
 import recommendationRoutes from './recommendationRoutes.js';
 
 export const initRoutes = (app) => {
+  // Root path - Server status
+  app.get('/', (req, res) => {
+    res.json({
+      status: 'OK',
+      message: '🎉 CNPM WebSach API Server đang chạy!',
+      version: '1.0.0',
+      endpoints: {
+        auth: '/auth',
+        products: '/api/product',
+        categories: '/api/category',
+        users: '/api/users',
+        login: '/api/login',
+        orders: '/api/orders',
+        cart: '/api/cart',
+        chat: '/api/chat',
+        // ... thêm các endpoints quan trọng khác
+      },
+      documentation: 'Xem README.md để biết thêm chi tiết về API'
+    });
+  });
+
   app.use('/auth', authRoutes);
   app.use('/api/product', productRoutes); // Đăng ký API sản phẩm
   app.use('/api/category', categoryRoutes);
@@ -71,7 +92,7 @@ export const initRoutes = (app) => {
   app.use('/api/voucher', VoucherRoutes);
   app.use('/api/attendance_admin', AttendanceAdmin);
   app.use('/api/books', bookRoutes);
-  app.use('/api/orderreview',order_review);
+  app.use('/api/orderreview', order_review);
   app.use('/api/recommendations', recommendationsRoutes);
   app.use('/api/address', addressRoutes);
   app.use('/api/preferences', preferenceRoutes);
