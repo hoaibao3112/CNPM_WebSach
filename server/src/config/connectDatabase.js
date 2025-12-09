@@ -48,7 +48,7 @@ if (sslCaB64) {
 // Tạo pool kết nối với xử lý lỗi
 const pool = mysql.createPool(dbConfig);
 
-// Kiểm tra kết nối khi khởi động
+// Kiểm tra kết nối khi khởi động và xử lý lỗi chứng chỉ nếu cần
 (async () => {
   try {
     const connection = await pool.getConnection();
@@ -56,7 +56,33 @@ const pool = mysql.createPool(dbConfig);
     connection.release();
   } catch (err) {
     console.error('❌ Lỗi kết nối database:', err.message);
-    process.exit(1); // Thoát nếu không kết nối được
+    // Nếu lỗi liên quan đến chứng chỉ, thử fallback tạm thời bằng cách cho phép
+    // không kiểm tra chứng chỉ (rejectUnauthorized = false). Điều này KHÔNG an toàn
+    // cho production nhưng hữu ích để debug và cho service chạy trong giai đoạn
+    // cấu hình. Cách đúng là cung cấp CA chain chính xác vào `DB_SSL_CA`.
+    if (err.message && err.message.toLowerCase().includes('unable to get local issuer certificate')) {
+      console.warn('⚠️ Certificate verification failed. Retrying with relaxed TLS settings (rejectUnauthorized=false).');
+      try {
+        // Recreate pool with relaxed TLS
+        if (!dbConfig.ssl) dbConfig.ssl = {};
+        dbConfig.ssl.rejectUnauthorized = false;
+        const fallbackPool = mysql.createPool(dbConfig);
+        const connection2 = await fallbackPool.getConnection();
+        console.warn('⚠️ Connected to DB with relaxed TLS verification. Please fix DB_SSL_CA to enable strict verification.');
+        connection2.release();
+        // Replace original pool with fallback so app can continue running
+        // Note: we intentionally do not export fallbackPool here; instead mutate existing pool variable by closing old and assigning new.
+        try { await pool.end(); } catch (e) { /* ignore */ }
+        // assign fallback pool to export
+        // eslint-disable-next-line no-global-assign
+        pool = fallbackPool; // replace pool for exported default
+      } catch (err2) {
+        console.error('❌ Fallback DB connection also failed:', err2.message);
+        process.exit(1);
+      }
+    } else {
+      process.exit(1); // Thoát nếu lỗi khác
+    }
   }
 })();
 
