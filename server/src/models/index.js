@@ -33,6 +33,14 @@ if (hasEnvDb) {
   //  - DB_SSL_CA_BASE64: base64-encoded PEM (useful when platform strips newlines)
   const sslCaRaw = process.env.DB_SSL_CA || process.env.DB_SSL_CERT || null;
   const sslCaB64 = process.env.DB_SSL_CA_BASE64 || null;
+
+  // Debug logging for SSL configuration
+  console.log('🔐 SSL Configuration:');
+  console.log('  DB_REQUIRE_SSL:', process.env.DB_REQUIRE_SSL);
+  console.log('  DB_SSL_CA_BASE64 present:', !!sslCaB64);
+  console.log('  DB_SSL_CA present:', !!sslCaRaw);
+  console.log('  DB_REJECT_UNAUTHORIZED:', process.env.DB_REJECT_UNAUTHORIZED);
+
   if (!sequelizeOptions.dialectOptions) sequelizeOptions.dialectOptions = {};
   if (sslCaB64) {
     // Decode base64 into Buffer (safer across env var storage)
@@ -42,7 +50,9 @@ if (hasEnvDb) {
         ca: caBuf,
         rejectUnauthorized: process.env.DB_REJECT_UNAUTHORIZED !== 'false'
       };
+      console.log('✅ SSL enabled with Base64 CA certificate');
     } catch (err) {
+      console.error('❌ Failed to decode DB_SSL_CA_BASE64:', err.message);
       // fall back to raw if decode fails
       sequelizeOptions.dialectOptions.ssl = {
         ca: sslCaRaw || undefined,
@@ -55,9 +65,13 @@ if (hasEnvDb) {
       ca: sslCaRaw,
       rejectUnauthorized: process.env.DB_REJECT_UNAUTHORIZED !== 'false'
     };
+    console.log('✅ SSL enabled with raw CA certificate');
   } else if (process.env.DB_REQUIRE_SSL === 'true') {
     // If user explicitly requires SSL but didn't provide CA, still enable TLS
     sequelizeOptions.dialectOptions.ssl = { rejectUnauthorized: process.env.DB_REJECT_UNAUTHORIZED !== 'false' };
+    console.log('⚠️ SSL enabled WITHOUT CA certificate (DB_REQUIRE_SSL=true)');
+  } else {
+    console.log('⚠️ SSL NOT configured - connection may fail with TiDB Cloud');
   }
 
   sequelize = new Sequelize(dbName, dbUser, dbPass, sequelizeOptions);
