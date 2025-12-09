@@ -29,6 +29,18 @@ console.log('Environment loaded:', {
   JWT_SECRET: process.env.JWT_SECRET ? 'Loaded' : 'Not set',
 });
 
+// DEBUG: print presence (true/false) of DB and TLS env vars (do not print secrets)
+console.log('DB env presence:', {
+  DB_HOST: !!process.env.DB_HOST,
+  DB_USER: !!process.env.DB_USER,
+  DB_PASSWORD: !!process.env.DB_PASSWORD,
+  DB_NAME: !!process.env.DB_NAME,
+  DB_SSL_CA_present: !!process.env.DB_SSL_CA,
+  DB_SSL_CA_BASE64_present: !!process.env.DB_SSL_CA_BASE64,
+  DB_REQUIRE_SSL: process.env.DB_REQUIRE_SSL === 'true',
+  DB_REJECT_UNAUTHORIZED: process.env.DB_REJECT_UNAUTHORIZED === 'true'
+});
+
 // 2. CORS configuration
 const allowedOrigins = [
   process.env.CLIENT_ADMIN_URL || 'http://localhost:3000',
