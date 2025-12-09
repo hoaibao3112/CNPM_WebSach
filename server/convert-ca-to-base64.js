@@ -1,6 +1,10 @@
 // Helper script to convert CA certificate to Base64
-const fs = require('fs');
-const path = require('path');
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // Place your downloaded isrgrootx1.pem file in the same directory
 const certPath = path.join(__dirname, 'isrgrootx1.pem');
