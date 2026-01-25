@@ -1,605 +1,476 @@
-# Cây Cấu trúc 
+<div align="center">
 
-Generated on: 10/15/2025, 10:13:36 PM
-Root path: `c:\Users\PC\Desktop\CNPM`
+# 📚 WebSách - Hệ Thống Quản Lý Nhà Sách
+
+<img src="./GiaoDien/img/logo.png" alt="WebSách Logo" width="200"/>
+
+### *Giải pháp quản lý nhà sách hiện đại, toàn diện và chuyên nghiệp* ✨
+
+[![React](https://img.shields.io/badge/React-18.0+-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://reactjs.org/)
+[![Node.js](https://img.shields.io/badge/Node.js-18.0+-339933?style=for-the-badge&logo=node.js&logoColor=white)](https://nodejs.org/)
+[![MySQL](https://img.shields.io/badge/MySQL-8.0+-4479A1?style=for-the-badge&logo=mysql&logoColor=white)](https://www.mysql.com/)
+[![Express.js](https://img.shields.io/badge/Express.js-4.18+-000000?style=for-the-badge&logo=express&logoColor=white)](https://expressjs.com/)
+[![License](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](LICENSE)
+
+[Tính Năng](#-tính-năng) •
+[Demo](#-demo) •
+[Cài Đặt](#-cài-đặt) •
+[Tech Stack](#-công-nghệ-sử-dụng) •
+[API Docs](#-api-documentation) •
+[Đóng Góp](#-đóng-góp)
+
+---
+
+</div>
+
+## 🎯 Tổng Quan
+
+**WebSách** là hệ thống quản lý nhà sách offline toàn diện, được xây dựng với kiến trúc hiện đại và giao diện thân thiện với người dùng. Hệ thống cung cấp đầy đủ các tính năng quản lý từ điểm bán hàng (POS), kho hàng, nhân sự, tài chính đến báo cáo và phân tích dữ liệu.
+
+### 🎪 Điểm Nổi Bật
 
 ```
-├── 📁 .git/ 🚫 (auto-hidden)
-├── 📁 GiaoDien/
-│   ├── 📁 components/
-│   │   └── 🌐 header.html
-│   ├── 📁 img/
-│   │   ├── 📁 25_05/
-│   │   │   ├── 🖼️ anh1.jpg
-│   │   │   ├── 🖼️ anh2.jpg
-│   │   │   ├── 🖼️ anh3.jpg
-│   │   │   └── 🖼️ anh4.jpg
-│   │   ├── 📁 anhnen/
-│   │   │   ├── 🖼️ 10d.jpg
-│   │   │   ├── 🖼️ 11d.jpg
-│   │   │   ├── 🖼️ 12d.jpg
-│   │   │   ├── 🖼️ 13d.jpg
-│   │   │   ├── 🖼️ 14d.jpg
-│   │   │   ├── 🖼️ 15d.jpg
-│   │   │   ├── 🖼️ 16d.jpg
-│   │   │   ├── 🖼️ 17d.jpg
-│   │   │   ├── 🖼️ 18d.jpg
-│   │   │   ├── 🖼️ 3d.jpg
-│   │   │   ├── 🖼️ 4d.jpg
-│   │   │   ├── 🖼️ 5d.jpg
-│   │   │   ├── 🖼️ 6d.jpg
-│   │   │   ├── 🖼️ 7d.jpg
-│   │   │   ├── 🖼️ 8d.jpg
-│   │   │   └── 🖼️ 9d.jpg
-│   │   ├── 📁 anhnen1/
-│   │   │   └── 🖼️ anh1.jpg
-│   │   ├── 📁 anhnen2/
-│   │   │   ├── 🖼️ anh1.jpg
-│   │   │   ├── 🖼️ anh2.jpg
-│   │   │   ├── 🖼️ anh3.jpg
-│   │   │   ├── 🖼️ anh4.jpg
-│   │   │   └── 🖼️ anh5.jpg
-│   │   ├── 📁 anhnen3/
-│   │   │   ├── 🖼️ anh1.jpg
-│   │   │   └── 🖼️ anh2.jpg
-│   │   ├── 📁 author/
-│   │   │   ├── 🖼️ tg1.jpg
-│   │   │   ├── 🖼️ tg10.jpg
-│   │   │   ├── 🖼️ tg11.jpg
-│   │   │   ├── 🖼️ tg12.jpg
-│   │   │   ├── 🖼️ tg13.jpg
-│   │   │   ├── 🖼️ tg14.jpg
-│   │   │   ├── 🖼️ tg15.jpg
-│   │   │   ├── 🖼️ tg16.jpg
-│   │   │   ├── 🖼️ tg17.jpg
-│   │   │   ├── 🖼️ tg18.jpg
-│   │   │   ├── 🖼️ tg19.jpg
-│   │   │   ├── 🖼️ tg2.jpg
-│   │   │   ├── 🖼️ tg20.jpg
-│   │   │   ├── 🖼️ tg21.jpg
-│   │   │   ├── 🖼️ tg22.jpg
-│   │   │   ├── 🖼️ tg23.jpg
-│   │   │   ├── 🖼️ tg24.jpg
-│   │   │   ├── 🖼️ tg25.jpg
-│   │   │   ├── 🖼️ tg26.jpg
-│   │   │   ├── 🖼️ tg27.jpg
-│   │   │   ├── 🖼️ tg29.jpg
-│   │   │   ├── 🖼️ tg3.jpg
-│   │   │   ├── 🖼️ tg30.jpg
-│   │   │   ├── 🖼️ tg31.jpg
-│   │   │   ├── 🖼️ tg4.jpg
-│   │   │   ├── 🖼️ tg5.jpg
-│   │   │   ├── 🖼️ tg6.jpg
-│   │   │   ├── 🖼️ tg7.jpg
-│   │   │   ├── 🖼️ tg8.jpg
-│   │   │   └── 🖼️ tg9.jpg
-│   │   ├── 📁 giamgia/
-│   │   │   ├── 🖼️ anh1.jpg
-│   │   │   ├── 🖼️ anh2.jpg
-│   │   │   ├── 🖼️ anh3.jpg
-│   │   │   ├── 🖼️ anh4.jpg
-│   │   │   ├── 🖼️ anh5.jpg
-│   │   │   ├── 🖼️ anh6.jpg
-│   │   │   ├── 🖼️ anh7.jpg
-│   │   │   ├── 🖼️ anh8.jpg
-│   │   │   └── 🖼️ anh9.jpg
-│   │   ├── 📁 payment/
-│   │   │   ├── 🖼️ anh1.jpg
-│   │   │   ├── 🖼️ anh2.jpg
-│   │   │   ├── 🖼️ anh3.jpg
-│   │   │   ├── 🖼️ anh4.jpg
-│   │   │   ├── 🖼️ anh5.jpg
-│   │   │   ├── 🖼️ anh6.jpg
-│   │   │   ├── 🖼️ anh7.jpg
-│   │   │   ├── 🖼️ anh8.jpg
-│   │   │   └── 🖼️ anh9.jpg
-│   │   ├── 📁 product/
-│   │   │   ├── 🖼️ 20240912_144904_450840541_466107239469146_6552023124779470397_n.jpg
-│   │   │   ├── 🖼️ 20240913_154427_exia2.jpg
-│   │   │   ├── 🖼️ 20240914_154630_sach-hay-careerbuilder-1.webp
-│   │   │   ├── 🖼️ 20240915_081656_Đọc vụ bất kì ai.png
-│   │   │   ├── 🖼️ 20240915_081713_Jane Eyre_11zon.png
-│   │   │   ├── 🖼️ 20240915_081729_Đời thay đổi khi chúng ta thay đổi.png
-│   │   │   ├── 🖼️ 20240915_100907_1651123299190-mắt biếc.png
-│   │   │   ├── 🖼️ 20240915_101032_1651079508677-cho tôi 1 vé đi tuổi thơ.png
-│   │   │   ├── 🖼️ 20241022_183329_tải xuống (1).jpg
-│   │   │   ├── 🖼️ sp01.jpg
-│   │   │   ├── 🖼️ sp02.jpg
-│   │   │   ├── 🖼️ sp03.jpg
-│   │   │   ├── 🖼️ sp04.jpg
-│   │   │   ├── 🖼️ sp05.jpg
-│   │   │   ├── 🖼️ sp06.jpg
-│   │   │   ├── 🖼️ sp07.jpg
-│   │   │   ├── 🖼️ sp08.jpg
-│   │   │   ├── 🖼️ sp09.jpg
-│   │   │   ├── 🖼️ sp10.jpg
-│   │   │   ├── 🖼️ sp11.jpg
-│   │   │   ├── 🖼️ sp12.jpg
-│   │   │   ├── 🖼️ sp13.jpg
-│   │   │   ├── 🖼️ sp14.jpg
-│   │   │   ├── 🖼️ sp15.jpg
-│   │   │   ├── 🖼️ sp16.jpg
-│   │   │   ├── 🖼️ sp17.jpg
-│   │   │   ├── 🖼️ sp18.jpg
-│   │   │   ├── 🖼️ sp19.jpg
-│   │   │   ├── 🖼️ sp20.jpg
-│   │   │   ├── 🖼️ sp21.jpg
-│   │   │   ├── 🖼️ sp22.jpg
-│   │   │   ├── 🖼️ sp23.jpg
-│   │   │   ├── 🖼️ sp24.jpg
-│   │   │   ├── 🖼️ sp25.jpg
-│   │   │   ├── 🖼️ sp26.jpg
-│   │   │   ├── 🖼️ sp27.jpg
-│   │   │   ├── 🖼️ sp28.jpg
-│   │   │   ├── 🖼️ sp29.jpg
-│   │   │   ├── 🖼️ sp30.jpg
-│   │   │   ├── 🖼️ sp31.jpg
-│   │   │   ├── 🖼️ sp32.jpg
-│   │   │   ├── 🖼️ sp33.jpg
-│   │   │   ├── 🖼️ sp34.JPG
-│   │   │   ├── 🖼️ sp35.jpg
-│   │   │   ├── 🖼️ sp36.jpg
-│   │   │   ├── 🖼️ sp37.jpg
-│   │   │   ├── 🖼️ sp38.jpg
-│   │   │   ├── 🖼️ sp39.jpg
-│   │   │   ├── 🖼️ sp40.jpg
-│   │   │   ├── 🖼️ sp41.jpg
-│   │   │   ├── 🖼️ sp42.jpg
-│   │   │   ├── 🖼️ sp43.jpg
-│   │   │   ├── 🖼️ sp44.jpg
-│   │   │   ├── 🖼️ sp45.jpg
-│   │   │   ├── 🖼️ sp46.jpg
-│   │   │   ├── 🖼️ sp47.jpg
-│   │   │   ├── 🖼️ sp48.jpg
-│   │   │   ├── 🖼️ sp49.jpg
-│   │   │   ├── 🖼️ sp50.jpg
-│   │   │   ├── 🖼️ sp51.jpg
-│   │   │   ├── 🖼️ sp52.jpg
-│   │   │   ├── 🖼️ sp53.jpg
-│   │   │   ├── 🖼️ sp54.jpg
-│   │   │   ├── 🖼️ sp55.jpg
-│   │   │   ├── 🖼️ sp56.jpg
-│   │   │   ├── 🖼️ sp57.jpg
-│   │   │   ├── 🖼️ sp58.jpg
-│   │   │   ├── 🖼️ sp59.jpg
-│   │   │   ├── 🖼️ sp60.jpg
-│   │   │   ├── 🖼️ sp61.jpg
-│   │   │   ├── 🖼️ sp62.jpg
-│   │   │   ├── 🖼️ sp63.jpg
-│   │   │   ├── 🖼️ sp64.jpg
-│   │   │   ├── 🖼️ sp65.jpg
-│   │   │   ├── 🖼️ sp66.jpg
-│   │   │   ├── 🖼️ sp67.jpg
-│   │   │   ├── 🖼️ sp68.jpg
-│   │   │   ├── 🖼️ sp69.jpg
-│   │   │   ├── 🖼️ sp70.jpg
-│   │   │   ├── 🖼️ sp71.jpg
-│   │   │   ├── 🖼️ sp72.jpg
-│   │   │   ├── 🖼️ sp73.jpg
-│   │   │   ├── 🖼️ sp74.jpg
-│   │   │   ├── 🖼️ sp75.jpg
-│   │   │   ├── 🖼️ sp76.jpg
-│   │   │   ├── 🖼️ sp77.jpg
-│   │   │   ├── 🖼️ sp78.jpg
-│   │   │   ├── 🖼️ sp79.jpg
-│   │   │   ├── 🖼️ sp80.jpg
-│   │   │   ├── 🖼️ sp80.jph.webp
-│   │   │   ├── 🖼️ sp81.jpg
-│   │   │   ├── 🖼️ sp82.jpg
-│   │   │   ├── 🖼️ sp83.jpg
-│   │   │   ├── 🖼️ sp84.jpg
-│   │   │   ├── 🖼️ sp85.jpg
-│   │   │   ├── 🖼️ sp86.jpg
-│   │   │   ├── 🖼️ sp87.jpg
-│   │   │   └── 🖼️ sp88.jpg
-│   │   ├── 📁 profile/
-│   │   │   ├── 🖼️ anh1.jpg
-│   │   │   └── 🖼️ avater_Tam.jpg
-│   │   ├── 🖼️ logo.png
-│   │   └── 🖼️ logo1.png
-│   ├── 📁 js/
-│   │   ├── 📄 author.js
-│   │   ├── 📄 book.js
-│   │   ├── 📄 campany.js
-│   │   ├── 📄 cart.js
-│   │   ├── 📄 giamgia.js
-│   │   ├── 📄 giamgia1.js
-│   │   ├── 📄 giamgia2.js
-│   │   ├── 📄 giamgia3.js
-│   │   ├── 📄 header.js
-│   │   ├── 📄 index.js
-│   │   ├── 📄 khuyenmai.js
-│   │   ├── 📄 loadHeader.js
-│   │   ├── 📄 login.js
-│   │   ├── 📄 order-confirmation.js
-│   │   ├── 📄 orders.js
-│   │   ├── 📄 productSearch.js
-│   │   ├── 📄 product_detail.js
-│   │   ├── 📄 profile.js
-│   │   ├── 📄 proxy.js
-│   │   ├── 📄 refund-history.js
-│   │   └── 📄 register.js
-│   ├── 📁 styles/
-│   │   ├── 🎨 author.css
-│   │   ├── 🎨 book.css
-│   │   ├── 🎨 campany.css
-│   │   ├── 🎨 cart.css
-│   │   ├── 🎨 giamgia.css
-│   │   ├── 🎨 giamgia1.css
-│   │   ├── 🎨 giamgia2.css
-│   │   ├── 🎨 giamgia3.css
-│   │   ├── 🎨 header.css
-│   │   ├── 🎨 index.css
-│   │   ├── 🎨 khuyenmai.css
-│   │   ├── 🎨 login.css
-│   │   ├── 🎨 map.css
-│   │   ├── 🎨 membership.css
-│   │   ├── 🎨 order-confirmation.css
-│   │   ├── 🎨 orders.css
-│   │   ├── 🎨 product_detail.css
-│   │   ├── 🎨 profile.css
-│   │   ├── 🎨 refund-history.css
-│   │   └── 🎨 register.css
-│   ├── 🌐 author.html
-│   ├── 🌐 book.html
-│   ├── 🌐 campany.html
-│   ├── 🌐 cart.html
-│   ├── 🌐 giamgia.html
-│   ├── 🌐 giamgia1.html
-│   ├── 🌐 giamgia2.html
-│   ├── 🌐 giamgia3.html
-│   ├── 🌐 index.html
-│   ├── 🌐 khuyenmai.html
-│   ├── 🌐 login.html
-│   ├── 🌐 order-confirmation.html
-│   ├── 🌐 orders.html
-│   ├── 🌐 product_detail.html
-│   ├── 🌐 profile.html
-│   ├── 🌐 refund-history.html
-│   ├── 🌐 register.html
-│   └── 🌐 searchproduct.html
-├── 📁 admin/
-│   ├── 📁 node_modules/ 🚫 (auto-hidden)
-│   ├── 📁 public/
-│   │   ├── 📁 img/
-│   │   │   ├── 📁 author/
-│   │   │   │   ├── 🖼️ tg1.jpg
-│   │   │   │   ├── 🖼️ tg2.jpg
-│   │   │   │   ├── 🖼️ tg3.jpg
-│   │   │   │   ├── 🖼️ tg4.jpg
-│   │   │   │   ├── 🖼️ tg5.jpg
-│   │   │   │   └── 🖼️ tg6.jpg
-│   │   │   ├── 📁 logo/
-│   │   │   │   ├── 🖼️ ChaoMung.jpg
-│   │   │   │   ├── 🖼️ anhdong.gif
-│   │   │   │   └── 🖼️ logo.png
-│   │   │   └── 📁 products/
-│   │   │       ├── 🖼️ 20240912_144904_450840541_466107239469146_6552023124779470397_n.jpg
-│   │   │       ├── 🖼️ 20240913_154427_exia2.jpg
-│   │   │       ├── 🖼️ 20240914_154630_sach-hay-careerbuilder-1.webp
-│   │   │       ├── 🖼️ 20240915_081656_Đọc vụ bất kì ai.png
-│   │   │       ├── 🖼️ 20240915_081713_Jane Eyre_11zon.png
-│   │   │       ├── 🖼️ 20240915_081729_Đời thay đổi khi chúng ta thay đổi.png
-│   │   │       ├── 🖼️ 20240915_100907_1651123299190-mắt biếc.png
-│   │   │       ├── 🖼️ 20240915_101032_1651079508677-cho tôi 1 vé đi tuổi thơ.png
-│   │   │       ├── 🖼️ 20241022_183329_tải xuống (1).jpg
-│   │   │       ├── 🖼️ sp01.jpg
-│   │   │       ├── 🖼️ sp02.jpg
-│   │   │       ├── 🖼️ sp03.jpg
-│   │   │       ├── 🖼️ sp04.jpg
-│   │   │       ├── 🖼️ sp05.jpg
-│   │   │       ├── 🖼️ sp06.jpg
-│   │   │       ├── 🖼️ sp07.jpg
-│   │   │       ├── 🖼️ sp08.jpg
-│   │   │       ├── 🖼️ sp09.jpg
-│   │   │       ├── 🖼️ sp10.jpg
-│   │   │       ├── 🖼️ sp11.jpg
-│   │   │       ├── 🖼️ sp12.jpg
-│   │   │       ├── 🖼️ sp13.jpg
-│   │   │       ├── 🖼️ sp14.jpg
-│   │   │       ├── 🖼️ sp15.jpg
-│   │   │       ├── 🖼️ sp16.jpg
-│   │   │       ├── 🖼️ sp17.jpg
-│   │   │       ├── 🖼️ sp18.jpg
-│   │   │       ├── 🖼️ sp19.jpg
-│   │   │       ├── 🖼️ sp20.jpg
-│   │   │       ├── 🖼️ sp21.jpg
-│   │   │       ├── 🖼️ sp22.jpg
-│   │   │       ├── 🖼️ sp23.jpg
-│   │   │       ├── 🖼️ sp24.jpg
-│   │   │       ├── 🖼️ sp25.jpg
-│   │   │       ├── 🖼️ sp26.jpg
-│   │   │       ├── 🖼️ sp27.jpg
-│   │   │       ├── 🖼️ sp28.jpg
-│   │   │       ├── 🖼️ sp29.jpg
-│   │   │       ├── 🖼️ sp30.jpg
-│   │   │       ├── 🖼️ sp31.jpg
-│   │   │       ├── 🖼️ sp32.jpg
-│   │   │       ├── 🖼️ sp33.jpg
-│   │   │       ├── 🖼️ sp34.JPG
-│   │   │       ├── 🖼️ sp35.jpg
-│   │   │       ├── 🖼️ sp36.jpg
-│   │   │       ├── 🖼️ sp37.jpg
-│   │   │       ├── 🖼️ sp38.jpg
-│   │   │       ├── 🖼️ sp39.jpg
-│   │   │       ├── 🖼️ sp40.jpg
-│   │   │       ├── 🖼️ sp41.jpg
-│   │   │       ├── 🖼️ sp42.jpg
-│   │   │       ├── 🖼️ sp43.jpg
-│   │   │       ├── 🖼️ sp44.jpg
-│   │   │       ├── 🖼️ sp45.jpg
-│   │   │       ├── 🖼️ sp46.jpg
-│   │   │       ├── 🖼️ sp47.jpg
-│   │   │       ├── 🖼️ sp48.jpg
-│   │   │       ├── 🖼️ sp49.jpg
-│   │   │       ├── 🖼️ sp50.jpg
-│   │   │       ├── 🖼️ sp51.jpg
-│   │   │       ├── 🖼️ sp52.jpg
-│   │   │       ├── 🖼️ sp53.jpg
-│   │   │       ├── 🖼️ sp54.jpg
-│   │   │       ├── 🖼️ sp55.jpg
-│   │   │       ├── 🖼️ sp56.jpg
-│   │   │       ├── 🖼️ sp57.jpg
-│   │   │       ├── 🖼️ sp58.jpg
-│   │   │       ├── 🖼️ sp59.jpg
-│   │   │       ├── 🖼️ sp60.jpg
-│   │   │       ├── 🖼️ sp61.jpg
-│   │   │       ├── 🖼️ sp62.jpg
-│   │   │       ├── 🖼️ sp63.jpg
-│   │   │       ├── 🖼️ sp64.jpg
-│   │   │       ├── 🖼️ sp65.jpg
-│   │   │       ├── 🖼️ sp66.jpg
-│   │   │       ├── 🖼️ sp67.jpg
-│   │   │       ├── 🖼️ sp68.jpg
-│   │   │       ├── 🖼️ sp69.jpg
-│   │   │       ├── 🖼️ sp70.jpg
-│   │   │       ├── 🖼️ sp71.jpg
-│   │   │       ├── 🖼️ sp72.jpg
-│   │   │       ├── 🖼️ sp73.jpg
-│   │   │       ├── 🖼️ sp74.jpg
-│   │   │       ├── 🖼️ sp75.jpg
-│   │   │       ├── 🖼️ sp76.jpg
-│   │   │       ├── 🖼️ sp77.jpg
-│   │   │       ├── 🖼️ sp78.jpg
-│   │   │       ├── 🖼️ sp79.jpg
-│   │   │       ├── 🖼️ sp80.jpg
-│   │   │       ├── 🖼️ sp80.jph.webp
-│   │   │       ├── 🖼️ sp81.jpg
-│   │   │       ├── 🖼️ sp82.jpg
-│   │   │       ├── 🖼️ sp83.jpg
-│   │   │       ├── 🖼️ sp84.jpg
-│   │   │       ├── 🖼️ sp85.jpg
-│   │   │       ├── 🖼️ sp86.jpg
-│   │   │       ├── 🖼️ sp87.jpg
-│   │   │       └── 🖼️ sp88.jpg
-│   │   ├── 🖼️ favicon.ico
-│   │   ├── 🌐 index.html
-│   │   ├── 🖼️ logo192.png
-│   │   ├── 🖼️ logo512.png
-│   │   ├── 📄 manifest.json
-│   │   └── 📄 robots.txt
-│   ├── 📁 src/
-│   │   ├── 📁 assets/
-│   │   │   ├── 🖼️ logo.png
-│   │   │   └── 🖼️ welcome.svg
-│   │   ├── 📁 components/
-│   │   │   ├── 📄 AuthContext.js
-│   │   │   ├── 📄 Header.js
-│   │   │   ├── 📄 PermissionContext.js
-│   │   │   ├── 📄 ProtectedRoute.js
-│   │   │   ├── 📄 Sidebar.js
-│   │   │   ├── 📄 UserInfo.js
-│   │   │   └── 📄 useNavigate.js
-│   │   ├── 📁 config/
-│   │   ├── 📁 pages/
-│   │   │   ├── 📄 AccountManagement.js
-│   │   │   ├── 📄 AdminHome.js
-│   │   │   ├── 📄 AppAdmin.js
-│   │   │   ├── 📄 AttendancePage.js
-│   │   │   ├── 📄 AuthorManagement.js
-│   │   │   ├── 📄 CategoryManagement.js
-│   │   │   ├── 📄 Dashboard.js
-│   │   │   ├── 📄 DiscountManagement.js
-│   │   │   ├── 📄 ForgotPassword.js
-│   │   │   ├── 📄 InvoiceManagement.js
-│   │   │   ├── 📄 LeavePage.js
-│   │   │   ├── 📄 Login.js
-│   │   │   ├── 📄 ProductManagement.js
-│   │   │   ├── 📄 Profile.js
-│   │   │   ├── 📄 RefundManagement.js
-│   │   │   ├── 📄 ReturnManagement.js
-│   │   │   ├── 📄 RoleManagement.js
-│   │   │   ├── 📄 SalaryPage.js
-│   │   │   ├── 📄 UserManagement.js
-│   │   │   ├── 📄 authorities.js
-│   │   │   ├── 📄 campanyManagement.js
-│   │   │   ├── 📄 client.js
-│   │   │   ├── 📄 khuyenmai.js
-│   │   │   ├── 📄 orgotPassword.js
-│   │   │   ├── 📄 receipt.js
-│   │   │   └── 📄 statistical.js
-│   │   ├── 📁 route/
-│   │   │   ├── 📄 App.js
-│   │   │   └── 📄 ProtectedRoute.js
-│   │   ├── 📁 services/
-│   │   │   ├── 📄 UserManagement.js
-│   │   │   ├── 📄 accountServce.js
-│   │   │   ├── 📄 authService.js
-│   │   │   ├── 📄 categoryService.js
-│   │   │   ├── 📄 invoiceService.js
-│   │   │   ├── 📄 productService.js
-│   │   │   └── 📄 roleService.js
-│   │   ├── 📁 styles/
-│   │   │   ├── 🎨 AccountManagement.css
-│   │   │   ├── 🎨 AttendancePage.css
-│   │   │   ├── 🎨 DiscountManagement.css
-│   │   │   ├── 🎨 ForgotPassword.css
-│   │   │   ├── 🎨 Login.css
-│   │   │   ├── 🎨 PermissionManagement.css
-│   │   │   ├── 🎨 ProductManagement.css
-│   │   │   ├── 🎨 ReceiptManagement.css
-│   │   │   ├── 🎨 RefundManagement.css
-│   │   │   ├── 🎨 ReturnManagement.css
-│   │   │   ├── 🎨 adminHome.css
-│   │   │   ├── 🎨 appadmin.css
-│   │   │   ├── 🎨 campany.css
-│   │   │   ├── 🎨 header.css
-│   │   │   ├── 🎨 sidebar.css
-│   │   │   ├── 🎨 statistical.css
-│   │   │   └── 🎨 thongke.css
-│   │   ├── 🎨 App.css
-│   │   ├── 📄 App.js
-│   │   ├── 📄 index.js
-│   │   └── 📄 package.json
-│   ├── 📄 package-lock.json
-│   └── 📄 package.json
-├── 📁 server/
-│   ├── 📁 backend/
-│   │   └── 📁 product/
-│   │       ├── 🖼️ 1747022936564-739874381.jpg
-│   │       ├── 🖼️ 1759379045759-FarmOri.png
-│   │       ├── 🖼️ 1759413512725-Screenshot 2025-09-30 195620.png
-│   │       ├── 🖼️ sp01.jpg
-│   │       ├── 🖼️ sp02.jpg
-│   │       ├── 🖼️ sp03.jpg
-│   │       ├── 🖼️ sp04.jpg
-│   │       ├── 🖼️ sp05.jpg
-│   │       ├── 🖼️ sp06.jpg
-│   │       ├── 🖼️ sp07.jpg
-│   │       ├── 🖼️ sp08.jpg
-│   │       ├── 🖼️ sp09.jpg
-│   │       ├── 🖼️ sp10.jpg
-│   │       ├── 🖼️ sp11.jpg
-│   │       ├── 🖼️ sp12.jpg
-│   │       ├── 🖼️ sp13.jpg
-│   │       ├── 🖼️ sp14.jpg
-│   │       ├── 🖼️ sp15.jpg
-│   │       ├── 🖼️ sp16.jpg
-│   │       ├── 🖼️ sp17.jpg
-│   │       ├── 🖼️ sp18.jpg
-│   │       ├── 🖼️ sp19.jpg
-│   │       ├── 🖼️ sp20.jpg
-│   │       ├── 🖼️ sp21.jpg
-│   │       ├── 🖼️ sp22.jpg
-│   │       ├── 🖼️ sp23.jpg
-│   │       ├── 🖼️ sp24.jpg
-│   │       ├── 🖼️ sp25.jpg
-│   │       ├── 🖼️ sp26.jpg
-│   │       ├── 🖼️ sp27.jpg
-│   │       ├── 🖼️ sp28.jpg
-│   │       ├── 🖼️ sp29.jpg
-│   │       ├── 🖼️ sp30.jpg
-│   │       ├── 🖼️ sp31.jpg
-│   │       ├── 🖼️ sp32.jpg
-│   │       ├── 🖼️ sp33.jpg
-│   │       ├── 🖼️ sp34.JPG
-│   │       ├── 🖼️ sp35.jpg
-│   │       ├── 🖼️ sp36.jpg
-│   │       ├── 🖼️ sp37.jpg
-│   │       ├── 🖼️ sp38.jpg
-│   │       ├── 🖼️ sp39.jpg
-│   │       ├── 🖼️ sp40.jpg
-│   │       ├── 🖼️ sp41.jpg
-│   │       ├── 🖼️ sp42.jpg
-│   │       ├── 🖼️ sp43.jpg
-│   │       ├── 🖼️ sp44.jpg
-│   │       ├── 🖼️ sp45.jpg
-│   │       ├── 🖼️ sp46.jpg
-│   │       ├── 🖼️ sp47.jpg
-│   │       ├── 🖼️ sp48.jpg
-│   │       ├── 🖼️ sp49.jpg
-│   │       ├── 🖼️ sp50.jpg
-│   │       ├── 🖼️ sp51.jpg
-│   │       ├── 🖼️ sp52.jpg
-│   │       ├── 🖼️ sp53.jpg
-│   │       ├── 🖼️ sp54.jpg
-│   │       ├── 🖼️ sp55.jpg
-│   │       ├── 🖼️ sp56.jpg
-│   │       ├── 🖼️ sp57.jpg
-│   │       ├── 🖼️ sp58.jpg
-│   │       ├── 🖼️ sp59.jpg
-│   │       ├── 🖼️ sp60.jpg
-│   │       ├── 🖼️ sp61.jpg
-│   │       ├── 🖼️ sp62.jpg
-│   │       ├── 🖼️ sp63.jpg
-│   │       ├── 🖼️ sp64.jpg
-│   │       ├── 🖼️ sp65.jpg
-│   │       ├── 🖼️ sp66.jpg
-│   │       └── 🖼️ sp67.jpg
-│   ├── 📁 migrations/
-│   ├── 📁 node_modules/ 🚫 (auto-hidden)
-│   ├── 📁 src/
-│   │   ├── 📁 Server/
-│   │   │   ├── 📄 Products.js
-│   │   │   └── 📄 User.js
-│   │   ├── 📁 config/
-│   │   │   ├── 📄 config.json
-│   │   │   └── 📄 connectDatabase.js
-│   │   ├── 📁 controllers/
-│   │   │   └── 📄 auth.js
-│   │   ├── 📁 migrations/
-│   │   │   ├── 📄 create-atribute.js
-│   │   │   └── 📄 create-user.cjs
-│   │   ├── 📁 models/
-│   │   │   ├── 📄 attribute.js
-│   │   │   ├── 📄 category.js
-│   │   │   ├── 📄 image.js
-│   │   │   ├── 📄 index.js
-│   │   │   ├── 📄 lable.js
-│   │   │   ├── 📄 overiew.js
-│   │   │   ├── 📄 post.js
-│   │   │   └── 📄 user.js
-│   │   ├── 📁 routes/
-│   │   │   ├── 📄 AttendanceAdmin.js
-│   │   │   ├── 📄 LoginRoutes.js
-│   │   │   ├── 📄 MapRoute.js
-│   │   │   ├── 📄 Users.js
-│   │   │   ├── 📄 account.js
-│   │   │   ├── 📄 attendance.js
-│   │   │   ├── 📄 auth.js
-│   │   │   ├── 📄 authMiddleware.js
-│   │   │   ├── 📄 author.js
-│   │   │   ├── 📄 book.js
-│   │   │   ├── 📄 cart.js
-│   │   │   ├── 📄 category.js
-│   │   │   ├── 📄 chatRoute.js
-│   │   │   ├── 📄 chatRouteOpenAI.js
-│   │   │   ├── 📄 client.js
-│   │   │   ├── 📄 comment.js
-│   │   │   ├── 📄 company.js
-│   │   │   ├── 📄 emailService.js
-│   │   │   ├── 📄 faq.js
-│   │   │   ├── 📄 forgotPassword.js
-│   │   │   ├── 📄 index.js
-│   │   │   ├── 📄 khuyenmai.js
-│   │   │   ├── 📄 leave.js
-│   │   │   ├── 📄 orderRoutes.js
-│   │   │   ├── 📄 orderduphong.js
-│   │   │   ├── 📄 productRoutes.js
-│   │   │   ├── 📄 ratings.js
-│   │   │   ├── 📄 receipt.js
-│   │   │   ├── 📄 reportRoutes.js
-│   │   │   ├── 📄 returnRoutes.js
-│   │   │   ├── 📄 roleRoutes.js
-│   │   │   ├── 📄 salary.js
-│   │   │   └── 📄 voucher.js
-│   │   └── 📁 utils/
-│   │       ├── 📄 emailService.js
-│   │       ├── 📄 generateToken.js
-│   │       ├── 📄 generateTokenChatRoom.js
-│   │       ├── 📄 hashPassword.js
-│   │       ├── 📄 loyalty.js
-│   │       └── 📄 websocket.js
-│   ├── 📁 uploads/ 🚫 (auto-hidden)
-│   ├── 📄 .babelrc 🚫 (auto-hidden)
-│   ├── 🔒 .env 🚫 (auto-hidden)
-│   ├── 📄 package-lock.json
-│   ├── 📄 package.json
-│   └── 📄 server.js
-├── 🚫 .gitignore
-├── 🗄️ Dump20250912.sql
-└── 🗄️ qlbs.sql
+🔐 Phân quyền người dùng linh hoạt với RBAC
+💰 Quản lý điểm bán hàng (POS) chuyên nghiệp
+📦 Hệ thống quản lý kho hàng thông minh
+👥 Quản lý nhân sự & chấm công tự động
+📊 Dashboard thống kê & báo cáo chi tiết
+🎁 Chương trình khuyến mãi & tích điểm
+💳 Đa dạng phương thức thanh toán
+🔄 Quản lý trả hàng & hoàn tiền
 ```
 
 ---
-*Generated by FileTree Pro Extension*
+
+## ✨ Tính Năng
+
+### 🛒 **Module Bán Hàng**
+- ✅ **Point of Sale (POS)**: Giao diện bán hàng nhanh chóng, tiện lợi
+- ✅ **Quản lý hóa đơn**: Tạo, xem, in và xuất hóa đơn
+- ✅ **Quản lý khách hàng**: Lưu trữ thông tin, lịch sử mua hàng
+- ✅ **Chương trình khách hàng thân thiết**: Tích điểm và đổi quà
+- ✅ **Trả hàng & Hoàn tiền**: Xử lý đơn hàng trả về
+
+### 📦 **Module Kho Hàng**
+- ✅ **Quản lý sản phẩm**: CRUD sản phẩm, phân loại theo danh mục
+- ✅ **Quản lý tác giả & Nhà xuất bản**: Thông tin chi tiết
+- ✅ **Quản lý tồn kho**: Theo dõi số lượng, cảnh báo hết hàng
+- ✅ **Nhập hàng từ nhà cung cấp**: Phiếu nhập kho chi tiết
+- ✅ **Chuyển kho**: Di chuyển hàng giữa các chi nhánh
+
+### 👨‍💼 **Module Nhân Sự**
+- ✅ **Quản lý nhân viên**: Hồ sơ, chức vụ, phòng ban
+- ✅ **Chấm công**: Tracking giờ làm việc, ca làm việc
+- ✅ **Quản lý nghỉ phép**: Đăng ký, duyệt phép
+- ✅ **Tính lương**: Tự động tính lương theo công thức
+- ✅ **Đơn từ chức**: Quản lý quy trình nghỉ việc
+
+### 💼 **Module Tài Chính**
+- ✅ **Báo cáo doanh thu**: Theo ngày, tuần, tháng, năm
+- ✅ **Phân tích lợi nhuận**: Chi tiết theo sản phẩm, danh mục
+- ✅ **Quản lý chi phí**: Nhập liệu và theo dõi
+- ✅ **Dashboard tài chính**: Biểu đồ trực quan
+
+### 🔐 **Module Hệ Thống**
+- ✅ **Quản lý người dùng**: Tạo, sửa, xóa tài khoản
+- ✅ **Phân quyền RBAC**: Role-based Access Control linh hoạt
+- ✅ **Audit Log**: Ghi lại mọi thao tác quan trọng
+- ✅ **Cài đặt hệ thống**: Cấu hình tham số
+
+### 🌐 **Module Giao Diện Khách Hàng**
+- ✅ **Trang chủ**: Hiển thị sản phẩm nổi bật, khuyến mãi
+- ✅ **Tìm kiếm & Lọc**: Tìm sách theo nhiều tiêu chí
+- ✅ **Chi tiết sản phẩm**: Thông tin đầy đủ, đánh giá
+- ✅ **Giỏ hàng**: Quản lý sản phẩm muốn mua
+- ✅ **Đặt hàng**: Quy trình đặt hàng đơn giản
+- ✅ **Tài khoản cá nhân**: Quản lý thông tin, đơn hàng
+
+---
+
+## 🚀 Demo
+
+### 📸 Screenshots
+
+<div align="center">
+
+#### 🏠 Giao Diện Khách Hàng
+
+| Trang Chủ | Chi Tiết Sản Phẩm |
+|-----------|-------------------|
+| Hiển thị sản phẩm nổi bật, khuyến mãi | Thông tin chi tiết, đánh giá |
+
+#### 💼 Giao Diện Quản Trị
+
+| Dashboard | Quản Lý Sản Phẩm |
+|-----------|------------------|
+| Thống kê tổng quan | CRUD sản phẩm, kho hàng |
+
+</div>
+
+---
+
+## 🛠️ Công Nghệ Sử Dụng
+
+### **Frontend**
+
+```javascript
+{
+  "framework": "React 18+",
+  "styling": "CSS3 + Custom Components",
+  "state": "React Hooks + Context API",
+  "routing": "React Router v6",
+  "http": "Axios",
+  "auth": "JWT (JSON Web Tokens)"
+}
+```
+
+### **Backend**
+
+```javascript
+{
+  "runtime": "Node.js 18+",
+  "framework": "Express.js 4.18+",
+  "database": "MySQL 8.0+",
+  "orm": "Sequelize",
+  "authentication": "JWT + bcrypt",
+  "file_upload": "Multer",
+  "email": "Nodemailer"
+}
+```
+
+### **DevOps & Tools**
+
+```bash
+Git, npm, MySQL Workbench, Postman, VS Code
+```
+
+---
+
+## 📋 Yêu Cầu Hệ Thống
+
+Trước khi bắt đầu, hãy đảm bảo bạn đã cài đặt:
+
+- **Node.js** >= 18.0.0
+- **npm** >= 9.0.0
+- **MySQL** >= 8.0
+- **Git**
+
+---
+
+## 🔧 Cài Đặt
+
+### 1️⃣ Clone Repository
+
+```bash
+git clone https://github.com/hoaibao3112/CNPM_WebSach.git
+cd CNPM_WebSach
+```
+
+### 2️⃣ Cài Đặt Database
+
+```bash
+# Tạo database
+mysql -u root -p
+
+# Import database schema
+mysql -u root -p < Dump20250912.sql
+```
+
+### 3️⃣ Cấu Hình Backend
+
+```bash
+# Di chuyển đến thư mục server
+cd server
+
+# Cài đặt dependencies
+npm install
+
+# Tạo file .env
+cp .env.example .env
+
+# Cấu hình thông tin database trong file .env
+DB_HOST=localhost
+DB_USER=root
+DB_PASSWORD=your_password
+DB_NAME=qlbs
+JWT_SECRET=your_secret_key
+PORT=5000
+```
+
+### 4️⃣ Cấu Hình Frontend Admin
+
+```bash
+# Di chuyển đến thư mục admin
+cd ../admin
+
+# Cài đặt dependencies
+npm install
+
+# Tạo file .env (nếu cần)
+REACT_APP_API_URL=http://localhost:5000/api
+```
+
+### 5️⃣ Khởi Động Ứng Dụng
+
+**Terminal 1 - Backend:**
+```bash
+cd server
+npm start
+# Server running on http://localhost:5000
+```
+
+**Terminal 2 - Admin Panel:**
+```bash
+cd admin
+npm start
+# Admin panel running on http://localhost:3000
+```
+
+**Terminal 3 - Frontend (Optional):**
+```bash
+cd GiaoDien
+# Mở file index.html hoặc sử dụng live server
+```
+
+---
+
+## 📁 Cấu Trúc Dự Án
+
+```
+CNPM_WebSach/
+│
+├── 📂 GiaoDien/                  # Giao diện khách hàng (Vanilla JS)
+│   ├── components/               # Components tái sử dụng
+│   ├── img/                      # Hình ảnh, assets
+│   ├── js/                       # JavaScript files
+│   ├── styles/                   # CSS files
+│   └── *.html                    # HTML pages
+│
+├── 📂 admin/                     # Admin Panel (React)
+│   ├── public/                   # Static files
+│   ├── src/
+│   │   ├── components/           # React components
+│   │   ├── pages/                # Page components
+│   │   ├── services/             # API services
+│   │   ├── styles/               # CSS modules
+│   │   └── App.js                # Main app component
+│   └── package.json
+│
+├── 📂 server/                    # Backend (Node.js + Express)
+│   ├── src/
+│   │   ├── config/               # Database config
+│   │   ├── models/               # Sequelize models
+│   │   ├── routes/               # API routes
+│   │   ├── controllers/          # Business logic
+│   │   └── utils/                # Helper functions
+│   ├── backend/product/          # Uploaded files
+│   ├── .env                      # Environment variables
+│   ├── server.js                 # Entry point
+│   └── package.json
+│
+├── Dump20250912.sql              # Database schema
+├── qlbs.sql                      # Database backup
+└── README.md                     # This file
+```
+
+---
+
+## 🔌 API Documentation
+
+### Authentication
+
+```http
+POST /api/auth/login
+POST /api/auth/register
+POST /api/auth/forgot-password
+POST /api/auth/reset-password
+```
+
+### Products
+
+```http
+GET    /api/products           # Get all products
+GET    /api/products/:id       # Get product by ID
+POST   /api/products           # Create product
+PUT    /api/products/:id       # Update product
+DELETE /api/products/:id       # Delete product
+```
+
+### Orders
+
+```http
+GET    /api/orders             # Get all orders
+GET    /api/orders/:id         # Get order by ID
+POST   /api/orders             # Create order
+PUT    /api/orders/:id         # Update order status
+```
+
+### Users & Roles
+
+```http
+GET    /api/users              # Get all users
+POST   /api/users              # Create user
+PUT    /api/users/:id          # Update user
+DELETE /api/users/:id          # Delete user
+GET    /api/roles              # Get all roles
+```
+
+> 📖 **Chi tiết API**: Xem file `API_DOCUMENTATION.md` hoặc import Postman collection
+
+---
+
+## 👥 Đội Ngũ Phát Triển
+
+<div align="center">
+
+| Avatar | Tên | Vai Trò | GitHub |
+|--------|-----|---------|--------|
+| 👨‍💻 | **Hoài Bảo** | Team Lead & Backend | [@hoaibao3112](https://github.com/hoaibao3112) |
+| 👨‍💻 | **Contributor 1** | Frontend Developer | [@username](https://github.com) |
+| 👨‍💻 | **Contributor 2** | Fullstack Developer | [@username](https://github.com) |
+
+</div>
+
+---
+
+## 🤝 Đóng Góp
+
+Chúng tôi luôn chào đón mọi đóng góp! Nếu bạn muốn đóng góp vào dự án, vui lòng làm theo các bước sau:
+
+1. **Fork** repository này
+2. Tạo **branch** mới (`git checkout -b feature/AmazingFeature`)
+3. **Commit** thay đổi (`git commit -m 'Add some AmazingFeature'`)
+4. **Push** lên branch (`git push origin feature/AmazingFeature`)
+5. Tạo **Pull Request**
+
+### 📝 Code Style
+
+- Sử dụng ESLint cho JavaScript
+- Đặt tên biến rõ ràng, có ý nghĩa
+- Comment code khi cần thiết
+- Tuân thủ nguyên tắc DRY (Don't Repeat Yourself)
+
+---
+
+## 🐛 Báo Lỗi & Góp Ý
+
+Nếu bạn phát hiện lỗi hoặc có góp ý, vui lòng tạo [Issue](https://github.com/hoaibao3112/CNPM_WebSach/issues) mới.
+
+### Template Issue
+
+```markdown
+**Mô tả lỗi:**
+[Mô tả chi tiết lỗi]
+
+**Các bước tái hiện:**
+1. 
+2. 
+3. 
+
+**Kết quả mong đợi:**
+[Mô tả kết quả mong đợi]
+
+**Screenshots:**
+[Nếu có]
+
+**Môi trường:**
+- OS: [Windows/macOS/Linux]
+- Browser: [Chrome/Firefox/...]
+- Node version: [18.x]
+```
+
+---
+
+## 📄 License
+
+Dự án này được phân phối dưới giấy phép **MIT License**. Xem file [LICENSE](LICENSE) để biết thêm chi tiết.
+
+```
+MIT License
+
+Copyright (c) 2025 WebSách Team
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software")...
+```
+
+---
+
+## 📞 Liên Hệ
+
+### 📧 Email Support
+- **Technical Support**: support@websach.com
+- **Business Inquiry**: business@websach.com
+
+### 🌐 Social Media
+[![Facebook](https://img.shields.io/badge/Facebook-1877F2?style=for-the-badge&logo=facebook&logoColor=white)](https://facebook.com)
+[![GitHub](https://img.shields.io/badge/GitHub-100000?style=for-the-badge&logo=github&logoColor=white)](https://github.com/hoaibao3112/CNPM_WebSach)
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-0077B5?style=for-the-badge&logo=linkedin&logoColor=white)](https://linkedin.com)
+
+---
+
+## 🎓 Tài Liệu Tham Khảo
+
+- [React Documentation](https://react.dev/)
+- [Node.js Documentation](https://nodejs.org/docs/)
+- [Express.js Guide](https://expressjs.com/en/guide/routing.html)
+- [MySQL Documentation](https://dev.mysql.com/doc/)
+- [Sequelize Documentation](https://sequelize.org/docs/v6/)
+
+---
+
+## 🌟 Roadmap
+
+### ✅ Hoàn Thành
+- [x] Hệ thống đăng nhập/đăng ký
+- [x] Quản lý sản phẩm
+- [x] Quản lý đơn hàng
+- [x] Dashboard thống kê
+- [x] Phân quyền người dùng
+
+### 🚧 Đang Phát Triển
+- [ ] Tích hợp thanh toán online (VNPay, Momo)
+- [ ] AI Chatbot hỗ trợ khách hàng
+- [ ] Mobile App (React Native)
+- [ ] Hệ thống thông báo realtime
+
+### 💡 Kế Hoạch Tương Lai
+- [ ] Multi-language support
+- [ ] Dark mode
+- [ ] Progressive Web App (PWA)
+- [ ] Export báo cáo Excel/PDF
+- [ ] Tích hợp với hệ thống vận chuyển
+
+---
+
+## 📊 Thống Kê Dự Án
+
+![GitHub repo size](https://img.shields.io/github/repo-size/hoaibao3112/CNPM_WebSach?style=flat-square)
+![GitHub contributors](https://img.shields.io/github/contributors/hoaibao3112/CNPM_WebSach?style=flat-square)
+![GitHub stars](https://img.shields.io/github/stars/hoaibao3112/CNPM_WebSach?style=flat-square)
+![GitHub forks](https://img.shields.io/github/forks/hoaibao3112/CNPM_WebSach?style=flat-square)
+![GitHub issues](https://img.shields.io/github/issues/hoaibao3112/CNPM_WebSach?style=flat-square)
+![GitHub pull requests](https://img.shields.io/github/issues-pr/hoaibao3112/CNPM_WebSach?style=flat-square)
+![GitHub last commit](https://img.shields.io/github/last-commit/hoaibao3112/CNPM_WebSach?style=flat-square)
+
+---
+
+## 💖 Support Us
+
+Nếu bạn thấy dự án hữu ích, hãy cho chúng tôi một ⭐️!
+
+<div align="center">
+
+### ⭐️ Star History
+
+[![Star History Chart](https://api.star-history.com/svg?repos=hoaibao3112/CNPM_WebSach&type=Date)](https://star-history.com/#hoaibao3112/CNPM_WebSach&Date)
+
+---
+
+**Made with ❤️ by WebSách Team**
+
+*Cảm ơn bạn đã quan tâm đến dự án của chúng tôi!*
+
+[⬆ Về đầu trang](#-websách---hệ-thống-quản-lý-nhà-sách)
+
+</div>
