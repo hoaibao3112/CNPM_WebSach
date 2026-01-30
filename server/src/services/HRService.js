@@ -28,7 +28,12 @@ class HRService {
 
     // --- Leave (xin_nghi_phep) ---
     async getAllLeaves() {
-        const [rows] = await pool.query('SELECT * FROM xin_nghi_phep');
+        const [rows] = await pool.query(`
+            SELECT x.*, t.TenTK 
+            FROM xin_nghi_phep x
+            LEFT JOIN taikhoan t ON x.MaTK = t.MaTK
+            ORDER BY x.id DESC
+        `);
         return rows;
     }
 

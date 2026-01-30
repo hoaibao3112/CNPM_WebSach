@@ -153,7 +153,7 @@ class RefundService {
                 rr.bankAccount,
                 rr.bankName,
                 rr.accountHolder,
-                rr.adminNotes,
+                rr.adminReason,
                 rr.createdAt,
                 rr.processedAt,
                 hd.NgayTao AS orderDate,
@@ -222,8 +222,8 @@ class RefundService {
                 rr.bankAccount,
                 rr.bankName,
                 rr.accountHolder,
-                rr.adminNotes,
-                rr.processedBy,
+            rr.adminReason,
+            rr.processedBy,
                 rr.createdAt,
                 rr.processedAt,
                 hd.NgayTao AS orderDate,
@@ -329,7 +329,7 @@ class RefundService {
             // Update refund request
             await connection.query(
                 `UPDATE refund_requests 
-                 SET status = ?, adminNotes = ?, processedBy = ?, processedAt = NOW() 
+                 SET status = ?, adminReason = ?, processedBy = ?, processedAt = NOW() 
                  WHERE id = ?`,
                 [status, adminNotes, processedBy, refundId]
             );

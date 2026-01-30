@@ -49,11 +49,19 @@ const RefundManagement = () => {
         }
       });
 
-      if (response.data.success) {
-        setRefunds(response.data.data);
-        setSummary(response.data.summary);
+      if (response.data.success && response.data.data) {
+        setRefunds(response.data.data.refunds || []);
+        setSummary(response.data.data.summary || {
+          total: 0,
+          currentPage: 1,
+          totalPages: 1,
+          pending: 0,
+          processing: 0,
+          completed: 0,
+          rejected: 0
+        });
       } else {
-        console.error('API response error:', response.data.error);
+        console.error('API response error:', response.data?.error);
         setRefunds([]);
       }
     } catch (error) {
