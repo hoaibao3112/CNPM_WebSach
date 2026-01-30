@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback, useContext } from 'react';
-import axios from 'axios';
+import api from '../utils/api';
 import { Button, Input, message, Table, Modal, Space, DatePicker } from 'antd';
 import { EditOutlined, DeleteOutlined, ExclamationCircleFilled } from '@ant-design/icons';
 import { PermissionContext } from '../components/PermissionContext';
@@ -23,7 +23,7 @@ const AuthorManagement = () => {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const API_URL = 'http://localhost:5000/api/author';
+  const API_URL = '/author';
   const IMAGE_BASE_PATH = '/img/author/';
 
   const fetchAuthors = useCallback(async () => {
@@ -36,18 +36,16 @@ const AuthorManagement = () => {
 
     try {
       setLoading(true);
-      const token = localStorage.getItem('authToken');
-      console.log('[DEBUG] Auth Token:', token);
-      if (!token) throw new Error('Không tìm thấy token xác thực');
-
-      const response = await axios.get(API_URL, {
-        headers: { Authorization: `Bearer ${token}` },
+      const response = await api.get(API_URL, {
         params: { page: 1, limit: 100, search: searchTerm },
       });
       console.log('[DEBUG] API Response:', response.data);
 
-      if (Array.isArray(response.data.data)) {
-        const processedAuthors = response.data.data.map((author) => {
+      const resData = response.data.data;
+      const authorsData = Array.isArray(resData) ? resData : (resData?.data || []);
+
+      if (Array.isArray(authorsData)) {
+        const processedAuthors = authorsData.map((author) => {
           const imageUrl = author.AnhTG && author.AnhTG !== 'null'
             ? `${IMAGE_BASE_PATH}${author.AnhTG}`
             : 'https://via.placeholder.com/50';
@@ -133,10 +131,8 @@ const AuthorManagement = () => {
         formData.append('AnhTG', newAuthor.AnhTG.name);
       }
 
-      const token = localStorage.getItem('authToken');
-      const response = await axios.post(API_URL, formData, {
+      const response = await api.post(API_URL, formData, {
         headers: {
-          'Authorization': `Bearer ${token}`,
           'Content-Type': 'multipart/form-data',
         },
       });
@@ -193,10 +189,8 @@ const AuthorManagement = () => {
         formData.append('AnhTG', editingAuthor.AnhTG.replace(IMAGE_BASE_PATH, ''));
       }
 
-      const token = localStorage.getItem('authToken');
-      const response = await axios.put(`${API_URL}/${editingAuthor.MaTG}`, formData, {
+      const response = await api.put(`${API_URL}/${editingAuthor.MaTG}`, formData, {
         headers: {
-          'Authorization': `Bearer ${token}`,
           'Content-Type': 'multipart/form-data',
         },
       });
@@ -224,10 +218,7 @@ const AuthorManagement = () => {
       cancelText: 'Thoát',
       async onOk() {
         try {
-          const token = localStorage.getItem('authToken');
-          const response = await axios.delete(`${API_URL}/${MaTG}`, {
-            headers: { Authorization: `Bearer ${token}` },
-          });
+          const response = await api.delete(`${API_URL}/${MaTG}`);
           await fetchAuthors();
           message.success(response.data.message || 'Xóa tác giả thành công!');
         } catch (error) {
@@ -448,8 +439,8 @@ const AuthorManagement = () => {
                       ? moment(editingAuthor.NgaySinh)
                       : null
                     : newAuthor.NgaySinh
-                    ? moment(newAuthor.NgaySinh)
-                    : null
+                      ? moment(newAuthor.NgaySinh)
+                      : null
                 }
                 onChange={(date, dateString) =>
                   editingAuthor

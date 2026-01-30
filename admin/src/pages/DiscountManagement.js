@@ -1,15 +1,15 @@
 import React, { useEffect, useState } from 'react';
-import { 
-  Table, 
-  Button, 
-  Input, 
-  Modal, 
-  Form, 
-  Select, 
-  Tag, 
-  Space, 
-  message, 
-  DatePicker, 
+import {
+  Table,
+  Button,
+  Input,
+  Modal,
+  Form,
+  Select,
+  Tag,
+  Space,
+  message,
+  DatePicker,
   Card,
   Row,
   Col,
@@ -96,7 +96,7 @@ const DiscountManagement = () => {
   const [productOptions, setProductOptions] = useState([]);
   const [toggleStatusLoading, setToggleStatusLoading] = useState({});
   const [stats, setStats] = useState({ total: 0, active: 0, inactive: 0 });
-  
+
   // States for Coupon Management Tab
   const [coupons, setCoupons] = useState([]);
   const [couponLoading, setCouponLoading] = useState(false);
@@ -113,7 +113,7 @@ const DiscountManagement = () => {
   const [preferenceForm] = Form.useForm();
   const [editingPreferenceForm, setEditingPreferenceForm] = useState(null);
   const [selectedFormDetail, setSelectedFormDetail] = useState(null);
-  
+
   // States for Question Management
   const [showQuestionManager, setShowQuestionManager] = useState(false);
   const [currentFormForQuestions, setCurrentFormForQuestions] = useState(null);
@@ -124,7 +124,7 @@ const DiscountManagement = () => {
   const [showAddOption, setShowAddOption] = useState(null); // ID của câu hỏi đang thêm option
   const [categories, setCategories] = useState([]);
   const [authors, setAuthors] = useState([]);
-  
+
   // States for Customer Responses Tab
   const [customerResponses, setCustomerResponses] = useState([]);
   const [responsesLoading, setResponsesLoading] = useState(false);
@@ -135,7 +135,7 @@ const DiscountManagement = () => {
     withConsent: 0,
     uniqueCustomers: 0
   });
-  
+
   // Active tab state
   const [activeTab, setActiveTab] = useState('1');
 
@@ -155,21 +155,26 @@ const DiscountManagement = () => {
           },
         }
       );
-      
-      const data = response.data.data || [];
+
+      // Ensure data is always an array
+      let data = response.data.data || response.data;
+      if (!Array.isArray(data)) {
+        console.warn('⚠️ Promotions data is not an array:', data);
+        data = [];
+      }
       setPromotions(data);
-      
+
       // Tính thống kê
       const totalPromotions = data.length;
       const activePromotions = data.filter(p => Number(p.TrangThai) === 1).length;
       const inactivePromotions = totalPromotions - activePromotions;
-      
+
       setStats({
         total: totalPromotions,
         active: activePromotions,
         inactive: inactivePromotions
       });
-      
+
       setError('');
     } catch (err) {
       setError('Không thể tải danh sách khuyến mãi');
@@ -193,7 +198,7 @@ const DiscountManagement = () => {
           Authorization: `Bearer ${localStorage.getItem('authToken')}`,
         },
       });
-      
+
       setProductOptions(
         (response.data || []).map((sp) => ({
           label: `${sp.TenSP} (ID: ${sp.MaSP})`,
@@ -232,8 +237,8 @@ const DiscountManagement = () => {
   const handleEditCoupon = (coupon) => {
     setCouponFormType('edit');
     setEditingCoupon(coupon);
-    
-  // No longer map discount type - backend schema simplified
+
+    // No longer map discount type - backend schema simplified
     // Extract TenPhieu from MoTa (if format is "TenPhieu - MoTa")
     const moTaParts = coupon.MoTa?.split(' - ') || [];
     const tenPhieu = moTaParts.length > 1 ? moTaParts[0] : '';
@@ -493,9 +498,9 @@ const DiscountManagement = () => {
       const formsResponse = await axios.get('http://localhost:5000/api/preferences/admin/forms', {
         headers: { Authorization: `Bearer ${localStorage.getItem('authToken')}` }
       });
-      
+
       const forms = formsResponse.data.data || [];
-      
+
       // Lấy responses từ tất cả forms
       const allResponses = [];
       for (const form of forms) {
@@ -506,7 +511,7 @@ const DiscountManagement = () => {
               headers: { Authorization: `Bearer ${localStorage.getItem('authToken')}` }
             }
           );
-          
+
           const responses = responsesRes.data.data || [];
           responses.forEach(res => {
             allResponses.push({
@@ -519,20 +524,20 @@ const DiscountManagement = () => {
           console.error(`Error fetching responses for form ${form.MaForm}:`, err);
         }
       }
-      
+
       setCustomerResponses(allResponses);
-      
+
       // Tính stats
       const totalResponses = allResponses.length;
       const withConsent = allResponses.filter(r => r.DongYSuDung === 1).length;
       const uniqueCustomers = new Set(allResponses.map(r => r.makh)).size;
-      
+
       setResponseStats({
         totalResponses,
         withConsent,
         uniqueCustomers
       });
-      
+
     } catch (err) {
       message.error('Không thể tải danh sách phản hồi');
       console.error(err);
@@ -575,19 +580,19 @@ const DiscountManagement = () => {
       new Date(r.NgayPhanHoi).toLocaleDateString('vi-VN'),
       r.DongYSuDung === 1 ? 'Có' : 'Không'
     ]);
-    
+
     let csvContent = headers.join(',') + '\n';
     rows.forEach(row => {
       csvContent += row.join(',') + '\n';
     });
-    
+
     // Download
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
     link.href = URL.createObjectURL(blob);
     link.download = `customer_responses_${new Date().getTime()}.csv`;
     link.click();
-    
+
     message.success('Đã xuất file CSV thành công!');
   };
 
@@ -716,7 +721,7 @@ const DiscountManagement = () => {
   const handleShowForm = (type, data) => {
     setFormType(type);
     setFormError('');
-    
+
     if (type === 'edit' && data) {
       form.setFieldsValue({
         TenKM: data.TenKM,
@@ -745,7 +750,7 @@ const DiscountManagement = () => {
     try {
       const values = await form.validateFields();
       setFormError('');
-      
+
       // Chuyển ngày về string
       values.NgayBatDau = values.NgayBatDau ? values.NgayBatDau.format('YYYY-MM-DD') : '';
       values.NgayKetThuc = values.NgayKetThuc ? values.NgayKetThuc.format('YYYY-MM-DD') : '';
@@ -753,7 +758,7 @@ const DiscountManagement = () => {
       if (typeof values.IsClaimable !== 'undefined') {
         values.IsClaimable = values.IsClaimable ? 1 : 0;
       }
-      
+
       if (formType === 'add') {
         await axios.post('http://localhost:5000/api/khuyenmai', values, {
           headers: {
@@ -769,13 +774,13 @@ const DiscountManagement = () => {
         });
         message.success('Cập nhật khuyến mãi thành công!');
       }
-      
+
       setShowForm(false);
       setReload(r => !r);
     } catch (err) {
-      const errorMsg = err.response?.data?.errors?.[0] || 
-                      err.response?.data?.error || 
-                      'Lỗi khi lưu khuyến mãi';
+      const errorMsg = err.response?.data?.errors?.[0] ||
+        err.response?.data?.error ||
+        'Lỗi khi lưu khuyến mãi';
       setFormError(errorMsg);
       message.error(errorMsg);
     }
@@ -812,71 +817,71 @@ const DiscountManagement = () => {
     });
   };
 
- // Sửa function handleToggleStatus - ĐÃ SỬA LOGIC
-const handleToggleStatus = async (id, currentStatus) => {
-  // Logic đúng: 1 = hoạt động, 0 = ngừng hoạt động
-  const currentStatusNum = Number(currentStatus);
-  const newStatus = currentStatusNum === 1 ? 0 : 1;
-  
-  setToggleStatusLoading(prev => ({ ...prev, [id]: true }));
-  
-  try {
-    await axios.patch(`http://localhost:5000/api/khuyenmai/${id}/trangthai`, 
-      { trangThai: newStatus }, 
-      {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('authToken')}`,
-        },
-      }
-    );
-      
+  // Sửa function handleToggleStatus - ĐÃ SỬA LOGIC
+  const handleToggleStatus = async (id, currentStatus) => {
+    // Logic đúng: 1 = hoạt động, 0 = ngừng hoạt động
+    const currentStatusNum = Number(currentStatus);
+    const newStatus = currentStatusNum === 1 ? 0 : 1;
+
+    setToggleStatusLoading(prev => ({ ...prev, [id]: true }));
+
+    try {
+      await axios.patch(`http://localhost:5000/api/khuyenmai/${id}/trangthai`,
+        { trangThai: newStatus },
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('authToken')}`,
+          },
+        }
+      );
+
       // Cập nhật state ngay lập tức
-    setPromotions(prevPromotions => 
-      prevPromotions.map(promotion => 
-        promotion.MaKM === id 
-          ? { ...promotion, TrangThai: newStatus }
-          : promotion
-      )
-    );
-    
-    // Cập nhật detail nếu đang xem chi tiết
-    if (detail && detail.MaKM === id) {
-      setDetail(prev => ({ ...prev, TrangThai: newStatus }));
+      setPromotions(prevPromotions =>
+        prevPromotions.map(promotion =>
+          promotion.MaKM === id
+            ? { ...promotion, TrangThai: newStatus }
+            : promotion
+        )
+      );
+
+      // Cập nhật detail nếu đang xem chi tiết
+      if (detail && detail.MaKM === id) {
+        setDetail(prev => ({ ...prev, TrangThai: newStatus }));
+      }
+
+      // Cập nhật stats
+      setStats(prevStats => {
+        const diff = newStatus === 1 ? 1 : -1;
+        return {
+          ...prevStats,
+          active: prevStats.active + diff,
+          inactive: prevStats.inactive - diff
+        };
+      });
+
+      // Message đúng logic
+      message.success(`Đã ${newStatus === 1 ? 'kích hoạt' : 'tắt'} khuyến mãi thành công!`);
+    } catch (error) {
+      message.error('Lỗi khi đổi trạng thái khuyến mãi!');
+      console.error('Toggle status error:', error);
+    } finally {
+      setToggleStatusLoading(prev => ({ ...prev, [id]: false }));
     }
-    
-    // Cập nhật stats
-    setStats(prevStats => {
-      const diff = newStatus === 1 ? 1 : -1;
-      return {
-        ...prevStats,
-        active: prevStats.active + diff,
-        inactive: prevStats.inactive - diff
-      };
-    });
-    
-    // Message đúng logic
-    message.success(`Đã ${newStatus === 1 ? 'kích hoạt' : 'tắt'} khuyến mãi thành công!`);
-  } catch (error) {
-    message.error('Lỗi khi đổi trạng thái khuyến mãi!');
-    console.error('Toggle status error:', error);
-  } finally {
-    setToggleStatusLoading(prev => ({ ...prev, [id]: false }));
-  }
-};
+  };
 
   // Render status với logic đã sửa
   const renderStatus = (trangThai) => {
-  // Logic đúng: 1 = hoạt động, 0 = ngừng hoạt động
-  const isActive = Number(trangThai) === 1;
-  return (
-    <Tag 
-      color={isActive ? 'success' : 'default'} 
-      icon={isActive ? <SyncOutlined /> : null}
-    >
-      {isActive ? 'Hoạt động' : 'Ngừng hoạt động'}
-    </Tag>
-  );
-};
+    // Logic đúng: 1 = hoạt động, 0 = ngừng hoạt động
+    const isActive = Number(trangThai) === 1;
+    return (
+      <Tag
+        color={isActive ? 'success' : 'default'}
+        icon={isActive ? <SyncOutlined /> : null}
+      >
+        {isActive ? 'Hoạt động' : 'Ngừng hoạt động'}
+      </Tag>
+    );
+  };
 
   // Render loại khuyến mãi
   const renderPromotionType = (loaiKM) => {
@@ -903,20 +908,20 @@ const handleToggleStatus = async (id, currentStatus) => {
   };
 
   const columns = [
-    { 
-      title: '#', 
-      dataIndex: 'MaKM', 
-      key: 'MaKM', 
-      width: 60, 
+    {
+      title: '#',
+      dataIndex: 'MaKM',
+      key: 'MaKM',
+      width: 60,
       render: (_, __, idx) => (
         <Text strong style={{ color: '#1890ff' }}>
           {idx + 1}
         </Text>
       )
     },
-    { 
-      title: 'Tên khuyến mãi', 
-      dataIndex: 'TenKM', 
+    {
+      title: 'Tên khuyến mãi',
+      dataIndex: 'TenKM',
       key: 'TenKM',
       width: 200, // limit column width to avoid overlapping actions
       ellipsis: {
@@ -934,16 +939,16 @@ const handleToggleStatus = async (id, currentStatus) => {
         </Tooltip>
       ),
     },
-    { 
-      title: 'Loại KM', 
-      dataIndex: 'LoaiKM', 
+    {
+      title: 'Loại KM',
+      dataIndex: 'LoaiKM',
       key: 'LoaiKM',
       width: 100,
       render: renderPromotionType
     },
-    { 
-      title: 'Mã code', 
-      dataIndex: 'Code', 
+    {
+      title: 'Mã code',
+      dataIndex: 'Code',
       key: 'Code',
       width: 100,
       render: (code) => (
@@ -982,53 +987,53 @@ const handleToggleStatus = async (id, currentStatus) => {
     },
     {
       title: 'Thao tác',
-    key: 'action',
-    width: 150,
-    render: (_, record) => {
-      // Logic đúng: 1 = hoạt động, 0 = ngừng hoạt động
-      const isActive = Number(record.TrangThai) === 1;
-      return (
-        <Space size="small">
-          <Tooltip title="Xem chi tiết">
-            <Button 
-              icon={<EyeOutlined />} 
-              size="small" 
-              onClick={() => handleShowDetail(record.MaKM)}
-            />
-          </Tooltip>
-          <Tooltip title="Chỉnh sửa">
-            <Button 
-              icon={<EditOutlined />} 
-              size="small" 
-              type="primary"
-              onClick={() => handleShowForm('edit', record)}
-            />
-          </Tooltip>
-          <Tooltip title="Xóa">
-            <Button
-              icon={<DeleteOutlined />}
-              size="small"
-              danger
-              loading={deleteLoading && deleteId === record.MaKM}
-              onClick={() => handleDelete(record.MaKM)}
-            />
-          </Tooltip>
-          <Tooltip title={isActive ? 'Tắt khuyến mãi' : 'Bật khuyến mãi'}>
-            <Button
-              icon={<SyncOutlined />}
-              size="small"
-              type={isActive ? 'default' : 'primary'}
-              loading={toggleStatusLoading[record.MaKM] || false}
-              onClick={() => handleToggleStatus(record.MaKM, record.TrangThai)}
-            >
-              {isActive ? 'Tắt' : 'Bật'}
-            </Button>
-          </Tooltip>
-        </Space>
-      );
+      key: 'action',
+      width: 150,
+      render: (_, record) => {
+        // Logic đúng: 1 = hoạt động, 0 = ngừng hoạt động
+        const isActive = Number(record.TrangThai) === 1;
+        return (
+          <Space size="small">
+            <Tooltip title="Xem chi tiết">
+              <Button
+                icon={<EyeOutlined />}
+                size="small"
+                onClick={() => handleShowDetail(record.MaKM)}
+              />
+            </Tooltip>
+            <Tooltip title="Chỉnh sửa">
+              <Button
+                icon={<EditOutlined />}
+                size="small"
+                type="primary"
+                onClick={() => handleShowForm('edit', record)}
+              />
+            </Tooltip>
+            <Tooltip title="Xóa">
+              <Button
+                icon={<DeleteOutlined />}
+                size="small"
+                danger
+                loading={deleteLoading && deleteId === record.MaKM}
+                onClick={() => handleDelete(record.MaKM)}
+              />
+            </Tooltip>
+            <Tooltip title={isActive ? 'Tắt khuyến mãi' : 'Bật khuyến mãi'}>
+              <Button
+                icon={<SyncOutlined />}
+                size="small"
+                type={isActive ? 'default' : 'primary'}
+                loading={toggleStatusLoading[record.MaKM] || false}
+                onClick={() => handleToggleStatus(record.MaKM, record.TrangThai)}
+              >
+                {isActive ? 'Tắt' : 'Bật'}
+              </Button>
+            </Tooltip>
+          </Space>
+        );
+      },
     },
-  },
-];
+  ];
 
   return (
     <div className="discount-management-container">
@@ -1040,13 +1045,13 @@ const handleToggleStatus = async (id, currentStatus) => {
 
       <Tabs activeKey={activeTab} onChange={setActiveTab} type="card" size="large">
         {/* Tab 1: Khuyến mãi hiện tại */}
-        <TabPane 
+        <TabPane
           tab={
             <span>
               <TagOutlined />
               Khuyến mãi
             </span>
-          } 
+          }
           key="1"
         >
           {/* Statistics Cards */}
@@ -1113,13 +1118,13 @@ const handleToggleStatus = async (id, currentStatus) => {
         </TabPane>
 
         {/* Tab 2: Quản lý Coupon */}
-        <TabPane 
+        <TabPane
           tab={
             <span>
               <TagsOutlined />
               Phiếu giảm giá (Coupon)
             </span>
-          } 
+          }
           key="2"
         >
           <div className="controls-section" style={{ marginBottom: 16 }}>
@@ -1172,7 +1177,7 @@ const handleToggleStatus = async (id, currentStatus) => {
                 width: 120,
                 render: (_, record) => `${record.DaSuDung || 0}/${record.SoLanSuDungToiDa || 0}`
               },
-              
+
               {
                 title: 'Thao tác',
                 key: 'action',
@@ -1180,9 +1185,9 @@ const handleToggleStatus = async (id, currentStatus) => {
                 render: (_, record) => (
                   <Space>
                     <Tooltip title="Chỉnh sửa">
-                      <Button 
-                        icon={<EditOutlined />} 
-                        size="small" 
+                      <Button
+                        icon={<EditOutlined />}
+                        size="small"
                         type="primary"
                         onClick={() => handleEditCoupon(record)}
                       />
@@ -1203,13 +1208,13 @@ const handleToggleStatus = async (id, currentStatus) => {
         </TabPane>
 
         {/* Tab 3: Quản lý Form sở thích */}
-        <TabPane 
+        <TabPane
           tab={
             <span>
               <FormOutlined />
               Form sở thích khách hàng
             </span>
-          } 
+          }
           key="3"
         >
           <div className="controls-section" style={{ marginBottom: 16 }}>
@@ -1271,8 +1276,8 @@ const handleToggleStatus = async (id, currentStatus) => {
                 render: (_, record) => (
                   <Space>
                     <Tooltip title="Quản lý câu hỏi">
-                      <Button 
-                        icon={<BarChartOutlined />} 
+                      <Button
+                        icon={<BarChartOutlined />}
                         size="small"
                         type="default"
                         onClick={() => handleManageQuestions(record.MaForm)}
@@ -1281,9 +1286,9 @@ const handleToggleStatus = async (id, currentStatus) => {
                       </Button>
                     </Tooltip>
                     <Tooltip title="Chỉnh sửa">
-                      <Button 
-                        icon={<EditOutlined />} 
-                        size="small" 
+                      <Button
+                        icon={<EditOutlined />}
+                        size="small"
                         type="primary"
                         onClick={() => handleEditPreferenceForm(record)}
                       />
@@ -1304,13 +1309,13 @@ const handleToggleStatus = async (id, currentStatus) => {
         </TabPane>
 
         {/* Tab 4: Phản hồi khách hàng - MỚI */}
-        <TabPane 
+        <TabPane
           tab={
             <span>
               <UserOutlined />
               Phản hồi khách hàng
             </span>
-          } 
+          }
           key="4"
         >
           {/* Statistics Cards */}
@@ -1355,7 +1360,7 @@ const handleToggleStatus = async (id, currentStatus) => {
             loading={responsesLoading}
             dataSource={customerResponses}
             rowKey="MaPhanHoi"
-            pagination={{ 
+            pagination={{
               pageSize: 15,
               showTotal: (total) => `Tổng ${total} phản hồi`
             }}
@@ -1429,8 +1434,8 @@ const handleToggleStatus = async (id, currentStatus) => {
                 ],
                 onFilter: (value, record) => record.DongYSuDung === value,
                 render: (consent) => (
-                  consent === 1 ? 
-                    <Tag color="green" icon={<CheckCircleOutlined />}>Có</Tag> : 
+                  consent === 1 ?
+                    <Tag color="green" icon={<CheckCircleOutlined />}>Có</Tag> :
                     <Tag color="default" icon={<CloseCircleOutlined />}>Không</Tag>
                 )
               },
@@ -1484,7 +1489,7 @@ const handleToggleStatus = async (id, currentStatus) => {
             <Title level={4} style={{ color: '#1890ff', marginBottom: 16 }}>
               {detail.TenKM}
             </Title>
-            
+
             <Row gutter={[16, 8]}>
               <Col span={12}>
                 <Text strong>Mã code:</Text>
@@ -1583,7 +1588,7 @@ const handleToggleStatus = async (id, currentStatus) => {
             {formError}
           </div>
         )}
-        
+
         <Form
           form={form}
           layout="vertical"
@@ -1591,18 +1596,18 @@ const handleToggleStatus = async (id, currentStatus) => {
         >
           <Row gutter={16}>
             <Col span={12}>
-              <Form.Item 
-                label="Tên khuyến mãi" 
-                name="TenKM" 
+              <Form.Item
+                label="Tên khuyến mãi"
+                name="TenKM"
                 rules={[{ required: true, message: 'Vui lòng nhập tên khuyến mãi' }]}
               >
                 <Input placeholder="Nhập tên khuyến mãi" />
               </Form.Item>
             </Col>
             <Col span={12}>
-              <Form.Item 
-                label="Loại khuyến mãi" 
-                name="LoaiKM" 
+              <Form.Item
+                label="Loại khuyến mãi"
+                name="LoaiKM"
                 rules={[{ required: true, message: 'Vui lòng chọn loại khuyến mãi' }]}
               >
                 <Select placeholder="Chọn loại khuyến mãi">
@@ -1626,26 +1631,26 @@ const handleToggleStatus = async (id, currentStatus) => {
 
           <Row gutter={16}>
             <Col span={12}>
-              <Form.Item 
-                label="Ngày bắt đầu" 
-                name="NgayBatDau" 
+              <Form.Item
+                label="Ngày bắt đầu"
+                name="NgayBatDau"
                 rules={[{ required: true, message: 'Vui lòng chọn ngày bắt đầu' }]}
               >
-                <DatePicker 
-                  style={{ width: '100%' }} 
+                <DatePicker
+                  style={{ width: '100%' }}
                   placeholder="Chọn ngày bắt đầu"
                   format="DD/MM/YYYY"
                 />
               </Form.Item>
             </Col>
             <Col span={12}>
-              <Form.Item 
-                label="Ngày kết thúc" 
-                name="NgayKetThuc" 
+              <Form.Item
+                label="Ngày kết thúc"
+                name="NgayKetThuc"
                 rules={[{ required: true, message: 'Vui lòng chọn ngày kết thúc' }]}
               >
-                <DatePicker 
-                  style={{ width: '100%' }} 
+                <DatePicker
+                  style={{ width: '100%' }}
                   placeholder="Chọn ngày kết thúc"
                   format="DD/MM/YYYY"
                 />
@@ -1709,26 +1714,26 @@ const handleToggleStatus = async (id, currentStatus) => {
                   {!isFreeShip && (
                     <Row gutter={16}>
                       <Col span={12}>
-                        <Form.Item 
-                          label="Giá trị giảm" 
+                        <Form.Item
+                          label="Giá trị giảm"
                           name="GiaTriGiam"
                           tooltip="Nhập % (ví dụ: 10) hoặc số tiền (ví dụ: 50000)"
                         >
-                          <Input 
-                            type="number" 
+                          <Input
+                            type="number"
                             placeholder="Ví dụ: 10 hoặc 50000"
                             addonAfter={isPercent ? '%' : 'VND'}
                           />
                         </Form.Item>
                       </Col>
                       <Col span={12}>
-                        <Form.Item 
-                          label="Giá trị đơn tối thiểu" 
+                        <Form.Item
+                          label="Giá trị đơn tối thiểu"
                           name="GiaTriDonToiThieu"
                           tooltip="Đơn hàng phải có giá trị tối thiểu để áp dụng"
                         >
-                          <Input 
-                            type="number" 
+                          <Input
+                            type="number"
                             placeholder="Ví dụ: 100000"
                             addonAfter="VND"
                           />
@@ -1739,13 +1744,13 @@ const handleToggleStatus = async (id, currentStatus) => {
 
                   {/* Giá trị đơn tối thiểu cho Free Ship */}
                   {isFreeShip && (
-                    <Form.Item 
-                      label="Giá trị đơn tối thiểu" 
+                    <Form.Item
+                      label="Giá trị đơn tối thiểu"
                       name="GiaTriDonToiThieu"
                       tooltip="Đơn hàng phải có giá trị tối thiểu để được miễn phí ship"
                     >
-                      <Input 
-                        type="number" 
+                      <Input
+                        type="number"
                         placeholder="Ví dụ: 200000"
                         addonAfter="VND"
                       />
@@ -1757,13 +1762,13 @@ const handleToggleStatus = async (id, currentStatus) => {
                     <Row gutter={16}>
                       {isPercent && (
                         <Col span={12}>
-                          <Form.Item 
-                            label="Giảm tối đa" 
+                          <Form.Item
+                            label="Giảm tối đa"
                             name="GiamToiDa"
                             tooltip="Số tiền giảm tối đa cho khuyến mãi phần trăm"
                           >
-                            <Input 
-                              type="number" 
+                            <Input
+                              type="number"
                               placeholder="Ví dụ: 200000"
                               addonAfter="VND"
                             />
@@ -1772,13 +1777,13 @@ const handleToggleStatus = async (id, currentStatus) => {
                       )}
                       {isFixed && (
                         <Col span={12}>
-                          <Form.Item 
-                            label="Số lượng tối thiểu" 
+                          <Form.Item
+                            label="Số lượng tối thiểu"
                             name="SoLuongToiThieu"
                             tooltip="Áp dụng cho khuyến mãi giảm tiền"
                           >
-                            <Input 
-                              type="number" 
+                            <Input
+                              type="number"
                               placeholder="Ví dụ: 2"
                               addonAfter="sản phẩm"
                             />
@@ -1790,8 +1795,8 @@ const handleToggleStatus = async (id, currentStatus) => {
 
                   {/* Sản phẩm áp dụng - ẩn với Free Ship vì áp dụng toàn bộ đơn hàng */}
                   {!isFreeShip && (
-                    <Form.Item 
-                      label="Sản phẩm áp dụng" 
+                    <Form.Item
+                      label="Sản phẩm áp dụng"
                       name="SanPhamApDung"
                       tooltip="Để trống nếu áp dụng cho tất cả sản phẩm"
                     >
@@ -1824,16 +1829,16 @@ const handleToggleStatus = async (id, currentStatus) => {
         width={700}
       >
         <Form form={couponForm} layout="vertical">
-          <Form.Item 
-            label="Mã Phiếu" 
+          <Form.Item
+            label="Mã Phiếu"
             name="MaPhieu"
             rules={[{ required: true, message: 'Vui lòng nhập mã phiếu' }]}
           >
             <Input placeholder="Ví dụ: FREESHIP2025" />
           </Form.Item>
 
-          <Form.Item 
-            label="Tên Phiếu" 
+          <Form.Item
+            label="Tên Phiếu"
             name="TenPhieu"
             rules={[{ required: true, message: 'Vui lòng nhập tên phiếu' }]}
           >
@@ -1858,8 +1863,8 @@ const handleToggleStatus = async (id, currentStatus) => {
               return (
                 <Row gutter={16}>
                   <Col span={12}>
-                    <Form.Item 
-                      label="Loại giảm" 
+                    <Form.Item
+                      label="Loại giảm"
                       name="LoaiGiam"
                       rules={loaiRules}
                     >
@@ -1871,12 +1876,12 @@ const handleToggleStatus = async (id, currentStatus) => {
                     </Form.Item>
                   </Col>
                   <Col span={12}>
-                    <Form.Item 
-                      label="Giá trị giảm" 
+                    <Form.Item
+                      label="Giá trị giảm"
                       name="GiaTriGiam"
                       rules={giaTriRules}
                     >
-                      <InputNumber 
+                      <InputNumber
                         style={{ width: '100%' }}
                         min={0}
                         placeholder="Nhập giá trị"
@@ -1913,7 +1918,7 @@ const handleToggleStatus = async (id, currentStatus) => {
                   <Col span={12}>
                     {!(hasMaKM || isAdd) ? (
                       <Form.Item label="Đơn hàng tối thiểu" name="GiaTriDonToiThieu">
-                        <InputNumber 
+                        <InputNumber
                           style={{ width: '100%' }}
                           min={0}
                           placeholder="0 = không giới hạn"
@@ -1924,7 +1929,7 @@ const handleToggleStatus = async (id, currentStatus) => {
                   </Col>
                   <Col span={12}>
                     <Form.Item label="Số lượng phát hành" name="SoLuongPhatHanh">
-                      <InputNumber 
+                      <InputNumber
                         style={{ width: '100%' }}
                         min={1}
                         placeholder="Số lượng"
@@ -1951,24 +1956,24 @@ const handleToggleStatus = async (id, currentStatus) => {
         width={600}
       >
         <Form form={preferenceForm} layout="vertical">
-          <Form.Item 
-            label="Tên Form" 
+          <Form.Item
+            label="Tên Form"
             name="TenForm"
             rules={[{ required: true, message: 'Vui lòng nhập tên form' }]}
           >
             <Input placeholder="Ví dụ: Khảo sát sở thích đọc sách" />
           </Form.Item>
 
-          <Form.Item 
-            label="Mô tả" 
+          <Form.Item
+            label="Mô tả"
             name="MoTa"
             rules={[{ required: true, message: 'Vui lòng nhập mô tả' }]}
           >
             <Input.TextArea rows={4} placeholder="Mô tả mục đích của form" />
           </Form.Item>
 
-          <Form.Item 
-            label="Trạng thái" 
+          <Form.Item
+            label="Trạng thái"
             name="IsActive"
             valuePropName="checked"
             initialValue={true}
@@ -2018,7 +2023,7 @@ const handleToggleStatus = async (id, currentStatus) => {
       >
         <div style={{ maxHeight: '70vh', overflowY: 'auto' }}>
           {/* Danh sách câu hỏi hiện có */}
-          <Card 
+          <Card
             title={`📋 Danh sách câu hỏi (${questions.length})`}
             size="small"
             style={{ marginBottom: 24 }}
@@ -2031,7 +2036,7 @@ const handleToggleStatus = async (id, currentStatus) => {
             ) : (
               <Space direction="vertical" style={{ width: '100%' }} size="middle">
                 {questions.map((q, idx) => (
-                  <Card 
+                  <Card
                     key={q.MaCauHoi}
                     type="inner"
                     size="small"
@@ -2069,7 +2074,7 @@ const handleToggleStatus = async (id, currentStatus) => {
                         </Text>
                         <div style={{ marginTop: 8, display: 'flex', flexWrap: 'wrap', gap: 8 }}>
                           {q.options.map(opt => (
-                            <Tag 
+                            <Tag
                               key={opt.MaLuaChon}
                               closable
                               onClose={() => handleDeleteOption(opt.MaLuaChon)}
@@ -2091,21 +2096,21 @@ const handleToggleStatus = async (id, currentStatus) => {
 
                     {/* Form thêm option (hiện khi click) */}
                     {showAddOption === q.MaCauHoi && (
-                      <Card 
-                        size="small" 
+                      <Card
+                        size="small"
                         style={{ marginTop: 16, background: '#f5f5f5' }}
                         title="➕ Thêm lựa chọn mới"
                         extra={
-                          <Button 
-                            size="small" 
+                          <Button
+                            size="small"
                             onClick={() => setShowAddOption(null)}
                           >
                             Hủy
                           </Button>
                         }
                       >
-                        <Form 
-                          form={optionForm} 
+                        <Form
+                          form={optionForm}
                           layout="vertical"
                           onFinish={() => handleAddOption(q.MaCauHoi)}
                         >
@@ -2134,7 +2139,7 @@ const handleToggleStatus = async (id, currentStatus) => {
                           {/* Conditional fields based on question type */}
                           {q.LoaiCauHoi === 'entity_theloai' && (
                             <Form.Item label="Thể loại" name="MaTL">
-                              <Select 
+                              <Select
                                 placeholder="Chọn thể loại"
                                 showSearch
                                 filterOption={(input, option) =>
@@ -2152,7 +2157,7 @@ const handleToggleStatus = async (id, currentStatus) => {
 
                           {q.LoaiCauHoi === 'entity_tacgia' && (
                             <Form.Item label="Tác giả" name="MaTG">
-                              <Select 
+                              <Select
                                 placeholder="Chọn tác giả"
                                 showSearch
                                 filterOption={(input, option) =>
@@ -2244,7 +2249,7 @@ const handleToggleStatus = async (id, currentStatus) => {
           <Divider />
 
           {/* Form thêm câu hỏi mới */}
-          <Card 
+          <Card
             title="➕ Thêm câu hỏi mới"
             size="small"
           >
@@ -2254,7 +2259,7 @@ const handleToggleStatus = async (id, currentStatus) => {
                 name="NoiDungCauHoi"
                 rules={[{ required: true, message: 'Vui lòng nhập nội dung câu hỏi' }]}
               >
-                <Input.TextArea 
+                <Input.TextArea
                   rows={2}
                   placeholder="VD: Bạn thích đọc thể loại sách nào?"
                 />
@@ -2351,8 +2356,8 @@ const handleToggleStatus = async (id, currentStatus) => {
                 <Col span={8}>
                   <Text strong>Đồng ý sử dụng:</Text>
                   <div>
-                    {selectedResponse.DongYSuDung === 1 ? 
-                      <Tag color="green" icon={<CheckCircleOutlined />}>Có</Tag> : 
+                    {selectedResponse.DongYSuDung === 1 ?
+                      <Tag color="green" icon={<CheckCircleOutlined />}>Có</Tag> :
                       <Tag color="default">Không</Tag>
                     }
                   </div>
@@ -2367,7 +2372,7 @@ const handleToggleStatus = async (id, currentStatus) => {
             </Card>
 
             {/* Danh sách câu trả lời */}
-            <Card 
+            <Card
               title={
                 <span>
                   <FormOutlined style={{ marginRight: 8 }} />
@@ -2379,7 +2384,7 @@ const handleToggleStatus = async (id, currentStatus) => {
               {selectedResponse.answers && selectedResponse.answers.length > 0 ? (
                 <Space direction="vertical" style={{ width: '100%' }} size="middle">
                   {selectedResponse.answers.map((answer, idx) => (
-                    <Card 
+                    <Card
                       key={answer.MaTraLoi || idx}
                       type="inner"
                       size="small"
@@ -2412,10 +2417,10 @@ const handleToggleStatus = async (id, currentStatus) => {
                         {answer.VanBan && (
                           <div>
                             <Text type="secondary">Văn bản tự do: </Text>
-                            <div style={{ 
-                              marginTop: 8, 
-                              padding: 12, 
-                              background: 'white', 
+                            <div style={{
+                              marginTop: 8,
+                              padding: 12,
+                              background: 'white',
                               borderRadius: 4,
                               border: '1px solid #e8e8e8'
                             }}>
@@ -2436,7 +2441,7 @@ const handleToggleStatus = async (id, currentStatus) => {
                         {(answer.MaTL || answer.MaTG || answer.HinhThuc || answer.MaKhoangGia) && (
                           <div style={{ marginTop: 8 }}>
                             <Text type="secondary" style={{ fontSize: 11 }}>
-                              Metadata: 
+                              Metadata:
                               {answer.MaTL && ` Thể loại: ${answer.MaTL}`}
                               {answer.MaTG && ` | Tác giả: ${answer.MaTG}`}
                               {answer.HinhThuc && ` | Hình thức: ${answer.HinhThuc}`}
@@ -2459,7 +2464,7 @@ const handleToggleStatus = async (id, currentStatus) => {
 
             {/* Điểm sở thích (nếu có) */}
             {selectedResponse.preferences && selectedResponse.preferences.length > 0 && (
-              <Card 
+              <Card
                 title={
                   <span>
                     <BarChartOutlined style={{ marginRight: 8 }} />

@@ -1,20 +1,20 @@
 import React, { useState, useContext } from 'react';
-import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import { Modal as AntdModal, Form, Input, Button, message } from 'antd';
+import api from '../utils/api';
 // Import các icon
 import { MailOutlined, LockOutlined } from '@ant-design/icons';
 import '../styles/Login.css';
 import { PermissionContext } from '../components/PermissionContext';
-// Import các thành phần Antd
-import { Modal, Form, Input, Button, Card, message }from 'antd';
+
 
 // Icon laptop (dùng tạm SVG để giống hình minh họa)
 const LaptopIcon = () => (
   <svg width="100" height="100" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M4 17.01C4 17.56 4.44 18.01 5 18.01H19C19.56 18.01 20 17.56 20 17.01V6.01C20 5.46 19.56 5.01 19 5.01H5C4.44 5.01 4 5.46 4 6.01V17.01ZM6 7.01H18V16.01H6V7.01Z" fill="#555"/>
-    <path d="M12 11C13.1 11 14 10.1 14 9C14 7.9 13.1 7 12 7C10.9 7 10 7.9 10 9C10 10.1 10.9 11 12 11ZM12 8C12.55 8 13 8.45 13 9C13 9.55 12.55 10 12 10C11.45 10 11 9.55 11 9C11 8.45 11.45 8 12 8Z" fill="#555"/>
-    <path d="M10 14.5C10 13.67 10.67 13 11.5 13H12.5C13.33 13 14 13.67 14 14.5V15H10V14.5Z" fill="#555"/>
-    <path d="M2 19.01H22V20.01H2V19.01Z" fill="#555"/>
+    <path d="M4 17.01C4 17.56 4.44 18.01 5 18.01H19C19.56 18.01 20 17.56 20 17.01V6.01C20 5.46 19.56 5.01 19 5.01H5C4.44 5.01 4 5.46 4 6.01V17.01ZM6 7.01H18V16.01H6V7.01Z" fill="#555" />
+    <path d="M12 11C13.1 11 14 10.1 14 9C14 7.9 13.1 7 12 7C10.9 7 10 7.9 10 9C10 10.1 10.9 11 12 11ZM12 8C12.55 8 13 8.45 13 9C13 9.55 12.55 10 12 10C11.45 10 11 9.55 11 9C11 8.45 11.45 8 12 8Z" fill="#555" />
+    <path d="M10 14.5C10 13.67 10.67 13 11.5 13H12.5C13.33 13 14 13.67 14 14.5V15H10V14.5Z" fill="#555" />
+    <path d="M2 19.01H22V20.01H2V19.01Z" fill="#555" />
   </svg>
 );
 
@@ -41,20 +41,17 @@ const Login = () => {
     e.preventDefault();
     setErrorMsg('');
     try {
-      const res = await axios.post('http://localhost:5000/api/login', { 
-        TenTK, 
-        MatKhau 
+      const res = await api.post('/login', {
+        TenTK,
+        MatKhau
       });
 
-      if (res.data.token) {
-        localStorage.setItem('authToken', res.data.token);
-        localStorage.setItem('userInfo', JSON.stringify(res.data.user));
+      const responseData = res.data.data;
+      if (responseData && responseData.token) {
+        localStorage.setItem('authToken', responseData.token);
+        localStorage.setItem('userInfo', JSON.stringify(responseData.user));
 
-        const permissionRes = await axios.get('http://localhost:5000/api/roles/user/permissions', {
-          headers: {
-            Authorization: `Bearer ${res.data.token}`,
-          },
-        });
+        const permissionRes = await api.get('/roles/user/permissions');
 
         if (permissionRes.data.success) {
           setPermissions(permissionRes.data.data);
@@ -67,7 +64,7 @@ const Login = () => {
           navigate('/admin', { replace: true });
         }, 100);
       } else {
-        const errorMessage = 'Token không hợp lệ';
+        const errorMessage = 'Token không hợp lệ hoặc dữ liệu phản hồi sai cấu trúc';
         setErrorMsg(errorMessage);
         message.error(errorMessage);
       }
@@ -89,7 +86,7 @@ const Login = () => {
     setForgotLoading(true);
     setErrorMsg('');
     try {
-      const res = await axios.post('http://localhost:5000/api/forgot-password/send-otp', {
+      const res = await api.post('/forgot-password/send-otp', {
         email: values.email
       });
       if (res.status === 200) {
@@ -114,7 +111,7 @@ const Login = () => {
     setForgotLoading(true);
     setErrorMsg('');
     try {
-      const res = await axios.post('http://localhost:5000/api/forgot-password/verify-otp', {
+      const res = await api.post('/forgot-password/verify-otp', {
         email: forgotEmail,
         otp: values.otp
       });
@@ -144,7 +141,7 @@ const Login = () => {
     setForgotLoading(true);
     setErrorMsg('');
     try {
-      const res = await axios.post('http://localhost:5000/api/forgot-password/reset-password', {
+      const res = await api.post('/forgot-password/reset-password', {
         email: forgotEmail,
         resetToken: resetToken,
         newPassword: values.newPassword,
@@ -186,7 +183,7 @@ const Login = () => {
   return (
     <div className="login-page-container">
       <div className="login-box">
-        
+
         {/* Cột bên trái (Graphic) */}
         <div className="login-graphic-side">
           <div className="graphic-shape shape-1"></div>
@@ -201,13 +198,13 @@ const Login = () => {
         {/* Cột bên phải (Form) */}
         <div className="login-form-side">
           <h2>Trang Đăng Nhập</h2>
-          
+
           {errorMsg && (
             <div className="error-message">
               <span>{errorMsg}</span>
             </div>
           )}
-          
+
           <form onSubmit={handleLogin} className="login-form-wrapper">
             <Input
               className="login-input"
@@ -218,7 +215,7 @@ const Login = () => {
               onChange={(e) => setTenTK(e.target.value)}
               required
             />
-            
+
             <Input.Password
               className="login-input"
               prefix={<LockOutlined className="site-form-item-icon" />}
@@ -237,7 +234,7 @@ const Login = () => {
             >
               LOGIN
             </Button>
-            
+
             <button
               type="button"
               className="login-form-forgot-link"
@@ -245,23 +242,23 @@ const Login = () => {
             >
               Forgot Username / Password?
             </button>
-            
+
             <div className="login-form-create-account">
-            
+
             </div>
           </form>
         </div>
       </div>
 
       {/* Modal Quên mật khẩu (Đã cập nhật) */}
-      <Modal
+      <AntdModal
         open={forgotVisible}
         onCancel={handleCancelForgot}
         footer={null}
         title="Quên mật khẩu"
-        destroyOnClose
+        destroyOnHidden
         width={400}
-        className="forgot-password-modal" // <-- Đã thêm class
+        className="forgot-password-modal"
       >
         {/* Đã bỏ <Card> */}
         {forgotStep === 1 && (
@@ -336,7 +333,7 @@ const Login = () => {
             </Button>
           </Form>
         )}
-      </Modal>
+      </AntdModal>
     </div>
   );
 };

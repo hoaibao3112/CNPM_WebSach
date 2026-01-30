@@ -40,8 +40,8 @@ async function getCart() {
           price: item.price,
           image: item.image,
           quantity: item.quantity,
-          // Normalize Selected coming from DB (tinyint 0/1) into boolean
-          selected: Boolean(item.Selected)
+          // Default to true since giohang_chitiet table doesn't have Selected column
+          selected: item.Selected !== undefined ? Boolean(item.Selected) : true
         }));
       }
       console.error('Error fetching cart from server:', await response.json());
@@ -82,7 +82,7 @@ async function syncLocalCartToServer() {
       });
       if (!response.ok) {
         let err = null;
-        try { err = await response.json(); } catch(e) { err = { raw: await response.text() }; }
+        try { err = await response.json(); } catch (e) { err = { raw: await response.text() }; }
         console.error('Sync error for product:', item.id, response.status, err);
       }
     } catch (error) {
@@ -372,7 +372,7 @@ async function renderCart() {
     shippingFee = 0;
     shippingInfo = null;
   }
-  
+
   updateSummary(subtotal, appliedDiscountAmount, shippingFee, shippingInfo);
   attachEventListeners();
   updateCartCount();
@@ -433,14 +433,14 @@ window.addEventListener('cart:rendered', () => {
 function calculateShippingFee(province, totalWeight, customerTier = 'Đồng') {
   // Chuẩn hóa tên tỉnh/thành
   const provinceLower = (province || '').toLowerCase().trim();
-  
+
   // Kiểm tra nội thành TP.HCM - FREE SHIP
-  const isHCM = provinceLower.includes('hồ chí minh') || 
-                provinceLower.includes('ho chi minh') ||
-                provinceLower.includes('hcm') ||
-                provinceLower.includes('tp.hcm') ||
-                provinceLower.includes('tphcm') ||
-                provinceLower === '79'; // Mã tỉnh TP.HCM
+  const isHCM = provinceLower.includes('hồ chí minh') ||
+    provinceLower.includes('ho chi minh') ||
+    provinceLower.includes('hcm') ||
+    provinceLower.includes('tp.hcm') ||
+    provinceLower.includes('tphcm') ||
+    provinceLower === '79'; // Mã tỉnh TP.HCM
 
   if (isHCM) {
     console.log('📍 Nội thành TP.HCM -> FREE SHIP');
@@ -470,7 +470,7 @@ function calculateShippingFee(province, totalWeight, customerTier = 'Đồng') {
 
   let finalFee = originalFee;
   let discountAmount = 0;
-  
+
   if (tierDiscount > 0) {
     discountAmount = Math.round(originalFee * tierDiscount);
     finalFee = originalFee - discountAmount;
@@ -478,7 +478,7 @@ function calculateShippingFee(province, totalWeight, customerTier = 'Đồng') {
   }
 
   console.log(`✅ Phí ship cuối cùng: ${finalFee.toLocaleString('vi-VN')} VND`);
-  
+
   return {
     original: Math.round(originalFee),
     final: Math.round(finalFee),
@@ -491,13 +491,13 @@ function calculateShippingFee(province, totalWeight, customerTier = 'Đồng') {
 async function getTotalWeight() {
   const cart = await getCart();
   const selectedItems = cart.filter(item => item.selected);
-  
+
   // Mặc định nếu không có trọng lượng, giả định mỗi sản phẩm 300g
   const totalWeight = selectedItems.reduce((sum, item) => {
     const weight = item.weight || 300; // Default 300g nếu không có
     return sum + (weight * item.quantity);
   }, 0);
-  
+
   return totalWeight;
 }
 
@@ -518,10 +518,10 @@ function updateSummary(subtotal, discount = 0, shippingFee = 0, shippingInfo = n
     shippingFeeType: typeof shippingFee,
     shippingInfo: shippingInfo
   });
-  
+
   // ✅ DEBUG: In ra stack trace để biết ai gọi hàm này
   console.trace('📍 updateSummary called from:');
-  
+
   // ✅ GUARD: Nếu có appliedDiscountAmount > 0 nhưng discount parameter = 0, 
   // thì dùng appliedDiscountAmount thay vì 0
   if (appliedDiscountAmount > 0 && (!discount || discount === 0)) {
@@ -529,12 +529,12 @@ function updateSummary(subtotal, discount = 0, shippingFee = 0, shippingInfo = n
     console.warn('⚠️ Using appliedDiscountAmount instead!');
     discount = appliedDiscountAmount;
   }
-  
+
   // ✅ Convert to numbers to avoid NaN
   const cleanSubtotal = parseFloat(subtotal) || 0;
   const cleanDiscount = parseFloat(discount) || 0;
   const cleanShippingFee = parseFloat(shippingFee) || 0;
-  
+
   // ===== Membership discount when FreeShip is applied =====
   // If FreeShip is active, membership no longer discounts shipping;
   // instead it gives a percentage discount on subtotal when subtotal >= 300000
@@ -554,20 +554,20 @@ function updateSummary(subtotal, discount = 0, shippingFee = 0, shippingInfo = n
   }
 
   const total = Math.max(0, cleanSubtotal - cleanDiscount - memberDiscountAmount + cleanShippingFee);
-  
+
   console.log('🧮 Calculated values:', {
     cleanSubtotal,
     cleanDiscount,
     cleanShippingFee,
     total
   });
-  
+
   const subtotalElement = document.getElementById('subtotal');
   const discountRow = document.getElementById('discount-row');
   const discountElement = document.getElementById('discount');
   const shippingElement = document.getElementById('shipping');
   const totalElement = document.getElementById('total');
-  
+
   // Elements cho thông tin thẻ và giảm giá ship
   const memberTierRow = document.getElementById('member-tier-row');
   const memberTierLabel = document.getElementById('member-tier-label');
@@ -586,7 +586,7 @@ function updateSummary(subtotal, discount = 0, shippingFee = 0, shippingInfo = n
   subtotalElement.textContent = formatPrice(cleanSubtotal);
   discountRow.style.display = cleanDiscount > 0 ? 'flex' : 'none';
   discountElement.textContent = cleanDiscount > 0 ? `-${formatPrice(cleanDiscount)}` : '-0đ';
-  
+
   // Lấy thông tin tier của khách hàng
   const customerTier = getCustomerTier();
   const tierInfo = {
@@ -594,9 +594,9 @@ function updateSummary(subtotal, discount = 0, shippingFee = 0, shippingInfo = n
     'Bạc': { name: 'Thẻ Bạc', discount: 0.2, color: '#C0C0C0' },
     'Vàng': { name: 'Thẻ Vàng', discount: 0.5, color: '#FFD700' }
   };
-  
+
   const currentTier = tierInfo[customerTier] || tierInfo['Đồng'];
-  
+
   // Hiển thị thông tin thẻ hội viên và (nếu có) hiển thị số tiền giảm tương ứng
   const hasFreeShip = hasFreeShipGlobal;
 
@@ -643,7 +643,7 @@ function updateSummary(subtotal, discount = 0, shippingFee = 0, shippingInfo = n
     if (shippingOriginalRow) shippingOriginalRow.style.display = 'none';
     if (shippingDiscountRow) shippingDiscountRow.style.display = 'none';
   }
-  
+
   // Hiển thị phí ship sau giảm giá
   if (cleanShippingFee > 0) {
     shippingElement.textContent = formatPrice(cleanShippingFee);
@@ -652,7 +652,7 @@ function updateSummary(subtotal, discount = 0, shippingFee = 0, shippingInfo = n
     shippingElement.textContent = 'Miễn phí';
     shippingElement.style.color = '#27ae60';
   }
-  
+
   totalElement.textContent = formatPrice(total);
 
   // Optional: expose member discount for other scripts (checkout) via global
@@ -832,7 +832,7 @@ async function checkout() {
       shippingFee = shippingInfo.final;
     }
   }
-  
+
   // ====== TÍNH memberDiscount KHI FreeShip đang áp dụng ======
   let memberDiscountAmount = 0;
   let memberTier = getCustomerTier();
@@ -851,7 +851,7 @@ async function checkout() {
   // ✅ Lấy cả 2 mã (nếu có)
   const freeShipCode = appliedFreeShipCode ? appliedFreeShipCode.code : null;
   const discountCode = appliedDiscountCode ? appliedDiscountCode.code : null;
-  
+
   const orderData = {
     // ✅ GỬI ĐẦY ĐỦ THÔNG TIN: subtotal gốc, discount đã áp dụng, member discount và tổng cuối
     subtotal: subtotal,           // Tổng tiền hàng (chưa giảm)
@@ -886,7 +886,7 @@ async function checkout() {
 
   try {
     console.log('🔄 Sending request to API...');
-    
+
     const response = await fetch('http://localhost:5000/api/orders/place-order', {
       method: 'POST',
       headers: {
@@ -918,7 +918,7 @@ async function checkout() {
         // Refresh saved promos UI
         await loadSavedPromos();
       } catch (e) { console.warn('⚠️ Could not sync local myPromos after checkout:', e); }
-      
+
       if (formData.paymentMethod === 'VNPAY' && result.paymentUrl) {
         console.log('🔄 Redirecting to VNPay:', result.paymentUrl);
         window.location.href = result.paymentUrl;
@@ -941,7 +941,7 @@ async function checkout() {
           freeShipCode: freeShipCode || '',
           message: encodeURIComponent('Đặt hàng COD thành công')
         });
-        
+
         window.location.href = `order-confirmation.html?${params.toString()}`;
       } else {
         throw new Error('Phương thức thanh toán không được hỗ trợ');
@@ -953,7 +953,7 @@ async function checkout() {
   } catch (error) {
     console.error('❌ Checkout error:', error);
     showToast(`Lỗi khi đặt hàng: ${error.message}`);
-    
+
     // ✅ REDIRECT SANG TRANG LỖI VỚI THÔNG TIN CHI TIẾT
     window.location.href = `order-confirmation.html?status=error&message=${encodeURIComponent(error.message)}`;
   }
@@ -973,9 +973,9 @@ function clearFieldError(fieldId) {
 function showFieldError(fieldId, message) {
   const field = document.getElementById(fieldId);
   if (!field) return;
-  
+
   field.classList.add('error');
-  
+
   // Create or update error message
   let errorMsg = field.parentElement.querySelector('.error-message');
   if (!errorMsg) {
@@ -985,7 +985,7 @@ function showFieldError(fieldId, message) {
   }
   errorMsg.textContent = message;
   errorMsg.classList.add('show');
-  
+
   // Scroll to first error field
   if (!document.querySelector('.form-input.error:not(#' + fieldId + ')')) {
     field.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -996,17 +996,17 @@ function showFieldError(fieldId, message) {
 function validateForm(formData) {
   let isValid = true;
   let firstErrorField = null;
-  
+
   // Clear all previous errors
   ['name', 'phone', 'email', 'tinhthanh', 'quanhuyen', 'phuongxa', 'diachichitiet', 'payment-method'].forEach(clearFieldError);
-  
+
   // Validate name
   if (!formData.tenkh.trim()) {
     showFieldError('name', 'Vui lòng nhập họ tên!');
     if (!firstErrorField) firstErrorField = 'name';
     isValid = false;
   }
-  
+
   // Validate phone
   if (!formData.sdt.trim()) {
     showFieldError('phone', 'Vui lòng nhập số điện thoại!');
@@ -1017,7 +1017,7 @@ function validateForm(formData) {
     if (!firstErrorField) firstErrorField = 'phone';
     isValid = false;
   }
-  
+
   // Validate email
   if (!formData.email.trim()) {
     showFieldError('email', 'Vui lòng nhập email!');
@@ -1028,42 +1028,42 @@ function validateForm(formData) {
     if (!firstErrorField) firstErrorField = 'email';
     isValid = false;
   }
-  
+
   // Validate province
   if (!formData.tinhthanh) {
     showFieldError('tinhthanh', 'Vui lòng chọn Tỉnh/Thành phố!');
     if (!firstErrorField) firstErrorField = 'tinhthanh';
     isValid = false;
   }
-  
+
   // Validate district
   if (!formData.quanhuyen) {
     showFieldError('quanhuyen', 'Vui lòng chọn Quận/Huyện!');
     if (!firstErrorField) firstErrorField = 'quanhuyen';
     isValid = false;
   }
-  
+
   // Validate ward
   if (!formData.phuongxa) {
     showFieldError('phuongxa', 'Vui lòng chọn Phường/Xã!');
     if (!firstErrorField) firstErrorField = 'phuongxa';
     isValid = false;
   }
-  
+
   // Validate detailed address
   if (!formData.diachi.trim()) {
     showFieldError('diachichitiet', 'Vui lòng nhập địa chỉ chi tiết!');
     if (!firstErrorField) firstErrorField = 'diachichitiet';
     isValid = false;
   }
-  
+
   // Validate payment method
   if (!formData.paymentMethod) {
     showFieldError('payment-method', 'Vui lòng chọn phương thức thanh toán!');
     if (!firstErrorField) firstErrorField = 'payment-method';
     isValid = false;
   }
-  
+
   // Show toast for first error and scroll to it
   if (!isValid) {
     showToast('Vui lòng điền đầy đủ thông tin các trường bắt buộc!');
@@ -1077,7 +1077,7 @@ function validateForm(formData) {
       }
     }
   }
-  
+
   return isValid;
 }
 
@@ -1093,7 +1093,7 @@ function setupRealtimeValidation() {
     { id: 'diachichitiet', validator: (val) => val.trim() !== '', message: 'Địa chỉ chi tiết không được để trống' },
     { id: 'payment-method', validator: (val) => val !== '', message: 'Vui lòng chọn phương thức thanh toán' }
   ];
-  
+
   fields.forEach(({ id, validator, message }) => {
     const field = document.getElementById(id);
     if (field) {
@@ -1105,7 +1105,7 @@ function setupRealtimeValidation() {
           clearFieldError(id);
         }
       });
-      
+
       field.addEventListener('input', () => {
         // Clear error as user types
         if (field.classList.contains('error')) {
@@ -1115,7 +1115,7 @@ function setupRealtimeValidation() {
           }
         }
       });
-      
+
       field.addEventListener('change', () => {
         // Validate on change (for selects)
         const value = field.value;
@@ -1185,9 +1185,9 @@ function showProductSuggestionModal(data, promoCode) {
         </p>
         <div class="suggested-products-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px; max-height: 400px; overflow-y: auto;">
           ${data.suggestedProducts.slice(0, 6).map(product => {
-            // ✅ FIX: Xử lý đường dẫn ảnh - thêm onerror handler
-            const imgPath = product.HinhAnh || 'img/product/default.jpg';
-            return `
+      // ✅ FIX: Xử lý đường dẫn ảnh - thêm onerror handler
+      const imgPath = product.HinhAnh || 'img/product/default.jpg';
+      return `
             <div class="suggested-product-card" style="border: 1px solid #ddd; border-radius: 8px; padding: 10px; text-align: center; background: #fff;">
               <img src="${imgPath}" 
                    alt="${product.TenSP}" 
@@ -1200,7 +1200,7 @@ function showProductSuggestionModal(data, promoCode) {
               </button>
             </div>
             `;
-          }).join('')}
+    }).join('')}
         </div>
       </div>
     `;
@@ -1209,7 +1209,7 @@ function showProductSuggestionModal(data, promoCode) {
   // Trường hợp 2: Có sản phẩm nhưng không đủ điều kiện (status 403)
   if (data.requirements && data.suggestions) {
     const { currentStatus, requirements, suggestions } = data;
-    
+
     requirementsHTML = `
       <div class="requirements-info" style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
         <h4 style="margin-top: 0;"><i class="fas fa-info-circle"></i> Điều kiện áp dụng:</h4>
@@ -1245,9 +1245,9 @@ function showProductSuggestionModal(data, promoCode) {
           </p>
           <div class="suggested-products-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px; max-height: 400px; overflow-y: auto;">
             ${suggestions.availableProducts.slice(0, 6).map(product => {
-              // ✅ FIX: Xử lý đường dẫn ảnh - thêm onerror handler
-              const imgPath = product.HinhAnh || 'img/product/default.jpg';
-              return `
+        // ✅ FIX: Xử lý đường dẫn ảnh - thêm onerror handler
+        const imgPath = product.HinhAnh || 'img/product/default.jpg';
+        return `
               <div class="suggested-product-card" style="border: 1px solid #ddd; border-radius: 8px; padding: 10px; text-align: center; background: #fff;">
                 <img src="${imgPath}" 
                      alt="${product.TenSP}" 
@@ -1260,7 +1260,7 @@ function showProductSuggestionModal(data, promoCode) {
                 </button>
               </div>
               `;
-            }).join('')}
+      }).join('')}
           </div>
         </div>
       `;
@@ -1291,58 +1291,58 @@ function showProductSuggestionModal(data, promoCode) {
       const productId = e.currentTarget.dataset.productId;
       btn.disabled = true;
       btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang thêm...';
-      
+
       try {
         // Tìm thông tin sản phẩm từ data
         const allProducts = [
           ...(data.suggestedProducts || []),
           ...(data.suggestions?.availableProducts || [])
         ];
-        
+
         console.log('🔍 [DEBUG] productId:', productId, typeof productId);
         console.log('🔍 [DEBUG] allProducts:', allProducts);
         console.log('🔍 [DEBUG] allProducts[0]?.MaSP:', allProducts[0]?.MaSP, typeof allProducts[0]?.MaSP);
-        
+
         const product = allProducts.find(p => String(p.MaSP) === String(productId));
-        
+
         if (product) {
           console.log('🛒 Đang thêm sản phẩm:', product.TenSP);
-          
+
           // ✅ Thêm timeout 10 giây để tránh treo
           const addPromise = addToCart(productId, 1, product.TenSP, product.DonGia, product.HinhAnh);
-          const timeoutPromise = new Promise((_, reject) => 
+          const timeoutPromise = new Promise((_, reject) =>
             setTimeout(() => reject(new Error('Timeout')), 10000)
           );
-          
+
           const success = await Promise.race([addPromise, timeoutPromise]);
-          
+
           if (success !== false) {
             console.log('✅ Đã thêm thành công');
             await renderCart();
             showToast(`✅ Đã thêm "${product.TenSP}" vào giỏ hàng`);
             btn.innerHTML = '<i class="fas fa-check"></i> Đã thêm';
             btn.style.background = '#27ae60';
-            
+
             // Đóng modal
             setTimeout(() => modal.remove(), 500);
-            
+
             // ✅ Tự động áp mã sau 1 giây
             setTimeout(async () => {
               try {
                 console.log('🔄 Tự động áp mã khuyến mãi:', promoCode);
                 showToast('🔄 Đang kiểm tra điều kiện và áp mã...');
-                
+
                 // Tìm nút "ÁP DỤNG NGAY" của mã này
                 const promoButtons = document.querySelectorAll('.use-promo-btn');
                 let targetButton = null;
-                
+
                 promoButtons.forEach(promoBtn => {
                   const btnCode = promoBtn.dataset.promoCode || promoBtn.getAttribute('data-promo-code');
                   if (btnCode === promoCode) {
                     targetButton = promoBtn;
                   }
                 });
-                
+
                 if (targetButton) {
                   console.log('✅ Tìm thấy nút áp dụng, đang áp mã...');
                   const fakeEvent = { target: targetButton };
@@ -1403,7 +1403,7 @@ async function loadProvinces() {
       option.dataset.provinceName = city.city_name; // Lưu tên tỉnh để tính phí ship
       provinceSelect.appendChild(option);
     });
-    
+
     // Thêm event listener để tính phí ship khi chọn tỉnh
     provinceSelect.addEventListener('change', async () => {
       await updateShippingFee();
@@ -1436,7 +1436,7 @@ async function updateShippingFee() {
       shippingElement.style.color = '#27ae60';
     }
     window.currentShippingFee = 0;
-    
+
     // Cập nhật lại tổng tiền
     const cart = await getCart();
     const selectedItems = cart.filter(item => item.selected);
@@ -1463,16 +1463,16 @@ async function updateShippingFee() {
   const cart = await getCart();
   const selectedItems = cart.filter(item => item.selected);
   const subtotal = selectedItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
-  
+
   // ✅ FIX: Lấy discount từ biến global thay vì parse DOM
   const currentDiscount = appliedDiscountAmount || 0;
   console.log('💰 Using saved discount amount:', currentDiscount);
-  
+
   updateSummary(subtotal, currentDiscount, shippingInfo.final, shippingInfo);
-  
+
   // Lưu phí ship vào biến global để dùng khi checkout
   window.currentShippingFee = shippingInfo.final;
-  
+
   console.log(`🚢 Đã cập nhật phí ship: ${shippingInfo.final.toLocaleString('vi-VN')} VND`);
 }
 
@@ -1686,7 +1686,7 @@ async function applyPromo() {
       showToast("Bạn đã áp dụng mã giảm giá rồi. Vui lòng xóa mã cũ trước!");
       return;
     }
-    
+
     const otherData = {
       makh: getUserId(),
       code: code,
@@ -1710,26 +1710,26 @@ async function applyPromo() {
 
     if (res.ok) {
       console.log("Kết quả sau tính toán:", data);
-      
+
       // ✅ Lưu mã giảm giá đã áp dụng
       appliedDiscountCode = {
         code: code,
         details: data.discountDetails
       };
-      
+
       // ✅ LƯU GIÁ TRỊ GIẢM GIÁ TRƯỚC KHI LƯU VÀO LOCALSTORAGE
       appliedDiscountAmount = parseFloat(data.discountDetails?.discountAmount) || 0;
       console.log('💾 Set appliedDiscountAmount BEFORE save:', appliedDiscountAmount);
-      
+
       // ✅ LƯU VÀO LOCALSTORAGE
       saveAppliedCodes();
-      
+
       // Hiển thị thông tin mã đã áp dụng
       await displayAppliedPromo(code, 'discount', data.discountDetails);
-      
+
       // ✅ XÓA Ô INPUT SAU KHI ÁP DỤNG THÀNH CÔNG
       document.getElementById('coupon-code').value = '';
-      
+
       showToast("Áp dụng mã khuyến mãi thành công!");
       return data.discountDetails;
     } else {
@@ -1747,38 +1747,38 @@ async function applyPromo() {
 // Hiển thị mã khuyến mãi đã áp dụng (tự động nhận diện loại)
 async function displayAppliedPromo(code, type, details = null) {
   console.log('🎯 displayAppliedPromo called:', { code, type, details });
-  
+
   if (type === 'free_ship') {
     console.log('🚚 Processing Free Ship display...');
-    
+
     // Hiển thị mã Free Ship
     const freeShipRow = document.getElementById('free-ship-code-row');
     const freeShipValue = document.getElementById('free-ship-code-value');
-    
-    console.log('📦 Elements found:', { 
-      freeShipRow: !!freeShipRow, 
+
+    console.log('📦 Elements found:', {
+      freeShipRow: !!freeShipRow,
       freeShipValue: !!freeShipValue,
       currentDisplay: freeShipRow ? freeShipRow.style.display : 'N/A'
     });
-    
+
     if (!freeShipRow || !freeShipValue) {
       console.error('❌ Missing Free Ship elements in HTML!');
       console.error('Please check if #free-ship-code-row and #free-ship-code-value exist');
       showToast('❌ Lỗi: Không tìm thấy phần tử hiển thị mã Free Ship. Vui lòng reload trang!');
       return;
     }
-    
+
     // Set mã code
     freeShipValue.textContent = code;
     freeShipRow.style.display = 'flex';
     freeShipRow.style.visibility = 'visible';
     freeShipRow.style.opacity = '1';
-    
+
     console.log('✅ Free Ship box displayed with code:', code);
     console.log('✅ Box display:', freeShipRow.style.display);
-    
+
     // ✅ KHÔNG ẨN box giảm giá nữa - Cho phép hiển thị đồng thời
-    
+
     // Cập nhật phí ship = 0 và hiển thị rõ ràng
     const shippingElement = document.getElementById('shipping');
     if (shippingElement) {
@@ -1789,12 +1789,12 @@ async function displayAppliedPromo(code, type, details = null) {
     } else {
       console.error('❌ #shipping element not found!');
     }
-    
+
     // ✅ Hiển thị phí ship gốc (nếu có) bị gạch ngang
     const shippingOriginalRow = document.getElementById('shipping-original-row');
     const shippingOriginalElement = document.getElementById('shipping-original');
     const provinceSelect = document.getElementById('tinhthanh');
-    
+
     if (provinceSelect && provinceSelect.value && shippingOriginalRow && shippingOriginalElement) {
       // Tính phí ship gốc nếu đã chọn địa chỉ
       const selectedOption = provinceSelect.options[provinceSelect.selectedIndex];
@@ -1802,14 +1802,14 @@ async function displayAppliedPromo(code, type, details = null) {
       const totalWeight = await getTotalWeight();
       const customerTier = getCustomerTier();
       const originalShippingFee = calculateShippingFee(provinceName, totalWeight, customerTier);
-      
+
       console.log('📊 Original shipping calculation:', {
         provinceName,
         totalWeight,
         customerTier,
         originalShippingFee
       });
-      
+
       if (originalShippingFee > 0) {
         shippingOriginalRow.style.display = 'flex';
         shippingOriginalElement.textContent = formatPrice(originalShippingFee);
@@ -1820,46 +1820,46 @@ async function displayAppliedPromo(code, type, details = null) {
     } else {
       console.log('ℹ️ Address not selected or elements missing, skipping original fee display');
     }
-    
+
     // ✅ Cập nhật lại tổng tiền với phí ship = 0
     const cart = await getCart();
     const selectedItems = cart.filter(item => item.selected);
     const subtotal = selectedItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
-    
+
     // ✅ FIX: Sử dụng biến global appliedDiscountAmount thay vì đọc từ DOM
     console.log('🔍 DEBUG appliedDiscountAmount before using:', appliedDiscountAmount);
     console.log('🔍 DEBUG appliedDiscountCode:', appliedDiscountCode);
     const currentDiscount = appliedDiscountAmount || 0;
-    
-    console.log('💰 Updating summary:', { 
-      subtotal, 
-      currentDiscount, 
+
+    console.log('💰 Updating summary:', {
+      subtotal,
+      currentDiscount,
       shippingFee: 0,
       total: subtotal - currentDiscount
     });
-    
+
     // ✅ FIX: Truyền shippingInfo = null để ẨN giảm ship hội viên
     updateSummary(subtotal, currentDiscount, 0, null); // Phí ship = 0, ẨN tier info
     window.currentShippingFee = 0;
-    
+
     console.log('✅✅✅ Free Ship applied successfully! ✅✅✅');
     console.log('Box should be visible now. Check #free-ship-code-row');
   } else if (type === 'discount') {
     console.log('💰 Processing Discount Code display...');
     console.log('💰 Details received:', details);
-    
+
     // Hiển thị mã giảm giá
     const promoRow = document.getElementById('promo-code-row');
     const promoValue = document.getElementById('promo-code-value');
-    
+
     if (promoRow && promoValue) {
       promoValue.textContent = code;
       promoRow.style.display = 'flex';
-      
+
       console.log('✅ Promo code box displayed');
-      
+
       // ✅ KHÔNG ẨN box Free Ship nữa - Cho phép hiển thị đồng thời
-      
+
       // Cập nhật giá trị giảm
       console.log('💵 Checking discount amount:', details?.discountAmount);
       if (details && details.discountAmount > 0) {
@@ -1873,16 +1873,16 @@ async function displayAppliedPromo(code, type, details = null) {
           console.log('💵 Discount displayed:', discountValue);
         }
       }
-      
+
       // ✅ Cập nhật lại tổng tiền (KHÔNG gọi updateShippingFee để giữ nguyên phí ship)
       const cart = await getCart();
       const selectedItems = cart.filter(item => item.selected);
       const subtotal = selectedItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
-      
+
       // ✅ FIX: Tính lại shippingInfo đầy đủ khi áp mã giảm giá
       let currentShippingFee = 0;
       let shippingInfo = null;
-      
+
       if (appliedFreeShipCode) {
         // Đã có Free Ship -> phí = 0, không hiển thị tier
         currentShippingFee = 0;
@@ -1902,11 +1902,11 @@ async function displayAppliedPromo(code, type, details = null) {
           currentShippingFee = window.currentShippingFee || 0;
         }
       }
-      
+
       // ✅ FIX: Convert discountAmount to number before passing to updateSummary
       const discountAmount = parseFloat(details?.discountAmount) || 0;
       console.log('📊 Final calculation:', { subtotal, discountAmount, currentShippingFee });
-      
+
       // ✅ LƯU GIÁ TRỊ GIẢM GIÁ VÀO BIẾN GLOBAL (nếu chưa được set từ applyPromo)
       if (appliedDiscountAmount === 0 && discountAmount > 0) {
         appliedDiscountAmount = discountAmount;
@@ -1914,7 +1914,7 @@ async function displayAppliedPromo(code, type, details = null) {
         // Lưu lại vào localStorage nếu được set từ đây
         saveAppliedCodes();
       }
-      
+
       // ✅ FIX: Truyền đầy đủ shippingInfo
       updateSummary(subtotal, discountAmount, currentShippingFee, shippingInfo);
     }
@@ -1925,25 +1925,25 @@ async function displayAppliedPromo(code, type, details = null) {
 async function removeDiscountCode() {
   appliedDiscountCode = null;
   appliedDiscountAmount = 0; // ✅ Reset biến global
-  
+
   // ✅ CẬP NHẬT LOCALSTORAGE
   saveAppliedCodes();
-  
+
   const promoRow = document.getElementById('promo-code-row');
   const discountRow = document.getElementById('discount-row');
-  
+
   if (promoRow) promoRow.style.display = 'none';
   if (discountRow) discountRow.style.display = 'none';
-  
+
   // ✅ FIX: Không gọi renderCart() để tránh reset toàn bộ - chỉ cập nhật summary
   const cart = await getCart();
   const selectedItems = cart.filter(item => item.selected);
   const subtotal = selectedItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
-  
+
   // Lấy phí ship hiện tại
   let currentShippingFee = 0;
   let shippingInfo = null;
-  
+
   if (appliedFreeShipCode) {
     // Đã có Free Ship -> phí = 0
     currentShippingFee = 0;
@@ -1962,37 +1962,37 @@ async function removeDiscountCode() {
       currentShippingFee = window.currentShippingFee || 0;
     }
   }
-  
+
   updateSummary(subtotal, 0, currentShippingFee, shippingInfo);
-  
+
   // ✅ RELOAD DANH SÁCH MÃ ĐÃ LƯU để nút quay về "ÁP DỤNG NGAY"
   await loadSavedPromos();
-  
+
   showToast('Đã xóa mã giảm giá');
 }
 
 // ✅ Xóa mã Free Ship (chỉ xóa Free Ship, giữ lại mã giảm giá nếu có)
 async function removeFreeShipCode() {
   appliedFreeShipCode = null;
-  
+
   // ✅ CẬP NHẬT LOCALSTORAGE
   saveAppliedCodes();
-  
+
   const freeShipRow = document.getElementById('free-ship-code-row');
   if (freeShipRow) freeShipRow.style.display = 'none';
-  
+
   const shippingOriginalRow = document.getElementById('shipping-original-row');
   if (shippingOriginalRow) shippingOriginalRow.style.display = 'none';
-  
+
   // ✅ FIX: Không gọi renderCart() để tránh reset toàn bộ - chỉ cập nhật summary
   const cart = await getCart();
   const selectedItems = cart.filter(item => item.selected);
   const subtotal = selectedItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
-  
+
   // Tính lại phí ship (về mức bình thường)
   let shippingFee = 0;
   let shippingInfo = null;
-  
+
   const provinceSelect = document.getElementById('tinhthanh');
   if (provinceSelect && provinceSelect.value) {
     const selectedOption = provinceSelect.options[provinceSelect.selectedIndex];
@@ -2003,13 +2003,13 @@ async function removeFreeShipCode() {
     shippingFee = shippingInfo.final;
     window.currentShippingFee = shippingFee;
   }
-  
+
   // ✅ GIỮ LẠI GIÁ TRỊ GIẢM GIÁ
   updateSummary(subtotal, appliedDiscountAmount, shippingFee, shippingInfo);
-  
+
   // ✅ RELOAD DANH SÁCH MÃ ĐÃ LƯU để nút quay về "ÁP DỤNG NGAY"
   await loadSavedPromos();
-  
+
   showToast('Đã xóa mã Free Ship');
 }
 
@@ -2017,13 +2017,13 @@ async function removeFreeShipCode() {
 document.addEventListener('DOMContentLoaded', async () => {
   // Chỉ chạy logic cart đầy đủ nếu đang ở trang cart.html
   const isCartPage = window.location.pathname.includes('cart.html');
-  
+
   if (!isCartPage) {
     // Nếu không phải trang cart, chỉ cập nhật cart count
     updateCartCount();
     return;
   }
-  
+
   // Always load provinces first so selects are ready
   const tinhthanh = document.getElementById('tinhthanh');
   if (tinhthanh) {
@@ -2073,7 +2073,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   await renderCart();
-  
+
   // ✅ HIỂN THỊ LẠI CÁC BOX MÃ KHUYẾN MÃI SAU KHI RENDER
   if (hasRestoredCodes) {
     if (appliedFreeShipCode) {
@@ -2083,24 +2083,24 @@ document.addEventListener('DOMContentLoaded', async () => {
       await displayAppliedPromo(appliedDiscountCode.code, 'discount', appliedDiscountCode.details);
     }
   }
-  
+
   // Setup real-time validation
   setupRealtimeValidation();
-  
+
   // Gắn event listeners
   const removePromoBtn = document.getElementById('remove-promo');
   if (removePromoBtn) {
     removePromoBtn.addEventListener('click', async () => await removeDiscountCode()); // ✅ Xóa mã giảm giá
   }
-  
+
   const removeFreeShipBtn = document.getElementById('remove-free-ship');
   if (removeFreeShipBtn) {
     removeFreeShipBtn.addEventListener('click', async () => await removeFreeShipCode()); // ✅ Xóa mã Free Ship
   }
-  
+
   // Load saved promo codes display
   await loadSavedPromos();
-  
+
   // If user arrived here after a reorder and we have a backup, show restore banner
   try {
     const backupRaw = localStorage.getItem('cart_backup_before_reorder');
@@ -2114,25 +2114,25 @@ document.addEventListener('DOMContentLoaded', async () => {
 // Load saved promo codes from API
 async function loadSavedPromos() {
   console.log('🎯 loadSavedPromos called');
-  
+
   const savedPromosSection = document.getElementById('saved-promos-section');
   const savedPromosList = document.getElementById('saved-promos-list');
   const toggleBtn = document.getElementById('toggle-promos-btn');
-  
+
   if (!savedPromosSection || !savedPromosList) {
     // Không phải trang cart, bỏ qua
     return;
   }
-  
+
   // Nếu chưa đăng nhập, ẩn section
   if (!isLoggedIn()) {
     savedPromosSection.style.display = 'none';
     console.log('ℹ️ User not logged in, hiding promo section');
     return;
   }
-  
+
   console.log('✅ User logged in, loading promos...');
-  
+
   try {
     // Load tất cả mã khuyến mãi (bao gồm cả Free Ship và giảm giá)
     // NOTE: Some coupons (issued via preference form) are stored in coupons endpoint
@@ -2197,7 +2197,7 @@ async function loadSavedPromos() {
             if (ngx) {
               const d2 = new Date(ngx);
               if (!isNaN(d2)) {
-                const ageDays = (now - d2) / (1000*60*60*24);
+                const ageDays = (now - d2) / (1000 * 60 * 60 * 24);
                 if (ageDays > 365) return false; // very old
               }
             }
@@ -2213,7 +2213,7 @@ async function loadSavedPromos() {
     } catch (e) {
       console.warn('Không thể tải coupons từ /api/coupons/my-coupons:', e);
     }
-    
+
     // Lọc bỏ các mã đã sử dụng (Da_su_dung) trước khi hiển thị
     promoList = promoList.filter(p => !(p.trang_thai && String(p.trang_thai).toLowerCase() === 'da_su_dung'));
 
@@ -2245,29 +2245,29 @@ async function loadSavedPromos() {
 
     // Hiển thị section
     savedPromosSection.style.display = 'block';
-    
+
     // Mở rộng danh sách mặc định
     savedPromosList.classList.add('show');
     if (toggleBtn) toggleBtn.classList.add('active');
-    
+
     // Toggle expand/collapse
     const headerClickHandler = () => {
       savedPromosList.classList.toggle('show');
       if (toggleBtn) toggleBtn.classList.toggle('active');
     };
-    
+
     if (toggleBtn) {
       toggleBtn.addEventListener('click', (e) => {
         e.stopPropagation();
         headerClickHandler();
       });
     }
-    
+
     const header = savedPromosSection.querySelector('.saved-promos-header');
     if (header) {
       header.addEventListener('click', headerClickHandler);
     }
-    
+
     // Render promo cards with pagination (show 6 per page) and add prev/next controls
     console.log('📋 Rendering promo cards (paginated), total:', promoList.length);
 
@@ -2365,7 +2365,7 @@ async function loadSavedPromos() {
         const buttons = savedPromosList.querySelectorAll('.use-promo-btn:not([disabled])');
         buttons.forEach((btn) => {
           const code = btn.getAttribute('data-promo-code');
-          btn.onclick = function(e) {
+          btn.onclick = function (e) {
             e.preventDefault();
             e.stopPropagation();
             if (typeof window.applyPromoFromSaved === 'function') {
@@ -2390,7 +2390,7 @@ async function loadSavedPromos() {
       prevBtn.addEventListener('click', (e) => { e.preventDefault(); renderPage(currentPage - 1); });
       nextBtn.addEventListener('click', (e) => { e.preventDefault(); renderPage(currentPage + 1); });
     }
-    
+
   } catch (error) {
     console.error('Lỗi load danh sách mã khuyến mãi:', error);
     savedPromosSection.style.display = 'none';
@@ -2469,27 +2469,27 @@ async function verifyAppliedCodesAgainstServer() {
 }
 
 // Apply promo code from saved list (trực tiếp, không cần input box)
-window.applyPromoFromSaved = async function(code, event) {
+window.applyPromoFromSaved = async function (code, event) {
   console.log('🚀🚀🚀 === applyPromoFromSaved START === 🚀🚀🚀');
   console.log('Code:', code);
   console.log('Event:', event);
   console.log('Event target:', event?.target);
-  
+
   // ✅ Thay alert bằng toast notification
   // showToast(`🎫 Áp dụng mã: ${code}...`);
-  
+
   const clickedBtn = event?.target;
   const originalText = clickedBtn ? clickedBtn.textContent : '';
-  
+
   console.log('Button found:', clickedBtn);
   console.log('Original button text:', originalText);
-  
+
   if (clickedBtn) {
     clickedBtn.disabled = true;
     clickedBtn.textContent = '⏳ Đang áp dụng...';
     console.log('✅ Button set to loading state');
   }
-  
+
   try {
     if (!code) {
       showToast("Mã không hợp lệ");
@@ -2524,7 +2524,7 @@ window.applyPromoFromSaved = async function(code, event) {
     const clickedCard = clickedBtn ? clickedBtn.closest('.saved-promo-card') : null;
     const domIsFreeShip = clickedCard ? clickedCard.classList.contains('free-ship') : false;
     const isFreeShipFinal = Boolean(isFreeShip || domIsFreeShip);
-    
+
     // ✅ KIỂM TRA GIỎ HÀNG SAU KHI XÁC ĐỊNH LOẠI MÃ
     const cart = await getCart();
     const selectedItems = cart.filter(item => item.selected);
@@ -2534,7 +2534,7 @@ window.applyPromoFromSaved = async function(code, event) {
       showToast("Vui lòng chọn sản phẩm trước khi áp dụng mã Free Ship!");
       throw new Error("No items selected for free ship");
     }
-    
+
     if (isFreeShipFinal) {
       // ============= MÃ FREE SHIP =============
       // Prevent applying a second different Free Ship
@@ -2559,12 +2559,12 @@ window.applyPromoFromSaved = async function(code, event) {
           return;
         }
       }
-      
+
       appliedFreeShipCode = { code };
-      
+
       // ✅ ÁP DỤNG FREE SHIP: Set phí ship = 0
       await displayAppliedPromo(code, 'free_ship');
-      
+
       // Cập nhật shipping fee về 0
       window.currentShippingFee = 0;
       const shippingElement = document.getElementById('shipping');
@@ -2572,12 +2572,12 @@ window.applyPromoFromSaved = async function(code, event) {
         shippingElement.textContent = 'Miễn phí';
         shippingElement.style.color = '#27ae60';
       }
-      
+
       // Hiển thị thẻ hội viên vẫn đang hoạt động nhưng ghi chú rõ rằng lợi ích
       // phí ship của thẻ bị ghi đè bởi mã Free Ship. Ẩn chỉ phần giảm ship (số tiền)
-  const memberTierRow = document.getElementById('member-tier-row');
-  const memberTierLabel = document.getElementById('member-tier-label');
-  const memberTierValue = document.getElementById('member-tier-value');
+      const memberTierRow = document.getElementById('member-tier-row');
+      const memberTierLabel = document.getElementById('member-tier-label');
+      const memberTierValue = document.getElementById('member-tier-value');
       const shippingOriginalRow = document.getElementById('shipping-original-row');
       const shippingDiscountRow = document.getElementById('shipping-discount-row');
 
@@ -2602,11 +2602,11 @@ window.applyPromoFromSaved = async function(code, event) {
       // Hiển thị phí ship gốc (nếu có) – displayAppliedPromo đã xử lý phần này.
       // Ẩn dòng "giảm ship" vì khi Free Ship được áp dụng thì không có số tiền giảm thực tế
       if (shippingDiscountRow) shippingDiscountRow.style.display = 'none';
-      
+
       // Tính lại tổng
       let subtotal = selectedItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
       let discount = 0;
-      
+
       if (appliedDiscountCode) {
         // Nếu có mã giảm giá đã áp dụng, tính lại
         const discountRes = await fetch(`http://localhost:5000/api/khuyenmai/apply-to-cart`, {
@@ -2626,14 +2626,14 @@ window.applyPromoFromSaved = async function(code, event) {
           discount = discountData.discountDetails.totalDiscount;
         }
       }
-      
+
       // ✅ FIX: Truyền shippingInfo = null để ẨN giảm ship hội viên
       updateSummary(subtotal, discount, 0, null); // shipping = 0, shippingInfo = null
-      
+
       showToast(`✅ Đã áp dụng mã Free Ship: ${code}`);
       // Remove used issued coupon from local cache if present
-      try { removePromoFromLocal(code); await loadSavedPromos(); } catch(e){/* ignore */}
-      
+      try { removePromoFromLocal(code); await loadSavedPromos(); } catch (e) {/* ignore */ }
+
     } else {
       // ============= MÃ GIẢM GIÁ =============
       if (appliedDiscountCode) {
@@ -2655,7 +2655,7 @@ window.applyPromoFromSaved = async function(code, event) {
         }
         return;
       }
-      
+
       // ✅ CHO PHÉP GỌI API NGAY CẢ KHI GIỎ TRỐNG (backend sẽ trả về gợi ý)
       const res = await fetch(`http://localhost:5000/api/khuyenmai/apply-to-cart`, {
         method: 'POST',
@@ -2673,11 +2673,11 @@ window.applyPromoFromSaved = async function(code, event) {
           makh: getUserId()
         })
       });
-      
+
       // ✅ DEBUG: Log status và response
       console.log('API Response Status:', res.status);
       console.log('API Response OK:', res.ok);
-      
+
       // ✅ FIX: Xử lý trường hợp response không phải JSON
       let data;
       try {
@@ -2693,9 +2693,9 @@ window.applyPromoFromSaved = async function(code, event) {
         }
         return;
       }
-      
+
       console.log('API Response Data:', data);
-      
+
       // ✅ XỬ LÝ LỖI: Kiểm tra status code để hiển thị modal gợi ý
       if (!res.ok || !data.success) {
         // Status 402: Không có sản phẩm khuyến mãi trong giỏ
@@ -2710,24 +2710,24 @@ window.applyPromoFromSaved = async function(code, event) {
           }
           return; // Dừng lại, không throw error
         }
-        
+
         showToast(data.error || "Không thể áp dụng mã");
         throw new Error(data.error);
       }
-      
+
       const discountDetails = data.discountDetails;
       appliedDiscountCode = { code, details: discountDetails };
-      
+
       // ÁP DỤNG GIẢM GIÁ
       const totalDiscount = discountDetails.totalDiscount || 0;
       totalAmountDiscouted = discountDetails.totalFinal || discountDetails.total;
-      
+
       await displayAppliedPromo(code, 'discount', discountDetails);
-      
+
       // ✅ FIX: Tính lại ĐÚNG shippingInfo khi áp mã giảm giá
       let currentShipping = 0;
       let shippingInfo = null;
-      
+
       const provinceSelect = document.getElementById('tinhthanh');
       if (provinceSelect && provinceSelect.value && !appliedFreeShipCode) {
         // Chỉ tính ship nếu đã chọn địa chỉ VÀ chưa có Free Ship
@@ -2735,7 +2735,7 @@ window.applyPromoFromSaved = async function(code, event) {
         const provinceName = selectedOption.dataset.provinceName || selectedOption.textContent;
         const totalWeight = await getTotalWeight();
         const customerTier = getCustomerTier();
-        
+
         // Tính phí ship (trả về object với original, final, discount, tierDiscount)
         shippingInfo = calculateShippingFee(provinceName, totalWeight, customerTier);
         currentShipping = shippingInfo.final;
@@ -2749,21 +2749,21 @@ window.applyPromoFromSaved = async function(code, event) {
         // Chưa chọn địa chỉ
         currentShipping = window.currentShippingFee || 0;
       }
-      
+
       // ✅ FIX: Truyền đủ 4 tham số, bao gồm shippingInfo
       updateSummary(discountDetails.subtotal, totalDiscount, currentShipping, shippingInfo);
-      
+
       showToast(`✅ Đã áp dụng mã giảm giá: ${code} (-${formatPrice(totalDiscount)})`);
       // If this code was an issued coupon in local cache, remove it so UI stays in sync
-      try { removePromoFromLocal(code); await loadSavedPromos(); } catch(e){/* ignore */}
+      try { removePromoFromLocal(code); await loadSavedPromos(); } catch (e) {/* ignore */ }
     }
-    
+
     if (clickedBtn) {
       clickedBtn.textContent = '✓ Đã áp dụng';
       clickedBtn.style.background = '#27ae60';
       clickedBtn.disabled = true;
     }
-    
+
   } catch (error) {
     console.error('Lỗi áp dụng mã:', error);
     if (clickedBtn && originalText) {
@@ -2957,7 +2957,7 @@ async function loadSavedAddresses() {
     // Process each address
     for (const addr of list) {
       const option = document.createElement('option');
-      
+
       // Get raw values (could be IDs or names)
       const provinceVal = addr.TinhThanh || addr.province || addr.provinceCode || addr.provinceName || '';
       const districtVal = addr.QuanHuyen || addr.district || addr.districtCode || addr.districtName || '';
@@ -2974,7 +2974,7 @@ async function loadSavedAddresses() {
       // Check if province and district are numeric IDs
       const isProvinceNumeric = /^\d+$/.test(String(provinceVal));
       const isDistrictNumeric = /^\d+$/.test(String(districtVal));
-      
+
       // Ward might be numeric or already a name
       const isWardNumeric = /^\d+$/.test(String(wardVal));
 
@@ -3008,7 +3008,7 @@ async function loadSavedAddresses() {
         districtName: districtName,
         wardName: wardName
       };
-      
+
       option.value = JSON.stringify(payload);
       // Display with names instead of IDs
       const displayText = `${detailVal || ''}${wardName ? ', ' + wardName : ''}${districtName ? ', ' + districtName : ''}${provinceName ? ', ' + provinceName : ''}`;
@@ -3132,11 +3132,11 @@ async function loadSavedAddresses() {
       }
       const routeGeo = data.routes[0].geometry;
       const line = L.geoJSON(routeGeo, { style: { color: '#007bff', weight: 4 } });
-  routeLayer.addLayer(line);
-  map.fitBounds(line.getBounds(), { padding: [20, 20] });
+      routeLayer.addLayer(line);
+      map.fitBounds(line.getBounds(), { padding: [20, 20] });
 
-  // Ensure tiles redraw after fitting bounds
-  try { setTimeout(() => map.invalidateSize(), 100); } catch (e) {}
+      // Ensure tiles redraw after fitting bounds
+      try { setTimeout(() => map.invalidateSize(), 100); } catch (e) { }
 
       // update distance/duration
       const distKm = (data.routes[0].distance / 1000).toFixed(2);
@@ -3205,9 +3205,9 @@ async function loadSavedAddresses() {
   }
 
   function stopVehicleAnimation() {
-    try { if (vehicleAnim) cancelAnimationFrame(vehicleAnim); } catch (e) {}
+    try { if (vehicleAnim) cancelAnimationFrame(vehicleAnim); } catch (e) { }
     vehicleAnim = null;
-    if (vehicleMarker) { try { map.removeLayer(vehicleMarker); } catch (e) {} vehicleMarker = null; }
+    if (vehicleMarker) { try { map.removeLayer(vehicleMarker); } catch (e) { } vehicleMarker = null; }
   }
 
   // Haversine distance (km)
@@ -3271,7 +3271,7 @@ async function loadSavedAddresses() {
     // Chỉ khởi tạo map nếu ở trang cart
     const isCartPage = window.location.pathname.includes('cart.html');
     if (!isCartPage) return;
-    
+
     // if Leaflet already present, init immediately; otherwise wait a short time
     if (window.L) initLeaflet();
     else {
@@ -3286,8 +3286,8 @@ async function loadSavedAddresses() {
     // Remove manual Find/Delete buttons from UI - we'll auto-run find when a saved address is selected
     const findBtn = document.getElementById('input_button');
     const delBtn = document.getElementById('delete_button');
-    try { if (findBtn) findBtn.remove(); } catch (e) {}
-    try { if (delBtn) delBtn.remove(); } catch (e) {}
+    try { if (findBtn) findBtn.remove(); } catch (e) { }
+    try { if (delBtn) delBtn.remove(); } catch (e) { }
 
     // helper for waiting for options population
     function waitForOptions(selectEl, minOptions = 2, timeout = 3000) {

@@ -36,10 +36,10 @@ router.get('/districts/:city_id', async (req, res) => {
   try {
     const { city_id } = req.params;
     const allDistricts = await readJSONFile('district.json');
-    
+
     // Filter districts by city_id (convert to string for comparison)
     const districts = allDistricts.filter(d => String(d.city_id) === String(city_id));
-    
+
     res.json(districts);
   } catch (error) {
     res.status(500).json({ error: 'Failed to load districts', message: error.message });
@@ -51,17 +51,17 @@ router.get('/wards/:district_id', async (req, res) => {
   try {
     const { district_id } = req.params;
     const allWards = await readJSONFile('wards.json');
-    
+
     // Filter wards by district_id (convert to string for comparison)
     const wards = allWards.filter(w => String(w.district_id) === String(district_id));
-    
+
     // Add sequential ward_id for each ward if not present
     const wardsWithIds = wards.map((ward, index) => ({
       ward_id: ward.ward_id || `${district_id}_${index}`,
       ward_name: ward.ward_name,
       district_id: ward.district_id
     }));
-    
+
     res.json(wardsWithIds);
   } catch (error) {
     res.status(500).json({ error: 'Failed to load wards', message: error.message });
@@ -72,65 +72,80 @@ router.get('/wards/:district_id', async (req, res) => {
 router.get('/full/:city_id/:district_id/:ward_identifier', async (req, res) => {
   try {
     const { city_id, district_id, ward_identifier } = req.params;
-    
+
     const cities = await readJSONFile('city.json');
     const districts = await readJSONFile('district.json');
     const wards = await readJSONFile('wards.json');
-    
+
     // Convert to string for comparison
     const city = cities.find(c => String(c.city_id) === String(city_id));
     const district = districts.find(d => String(d.district_id) === String(district_id));
-    
-    // Try to find ward by ward_name or generated ward_id
+
+    // Try to find ward - NOTE: wards.json has NO ward_id field, only ward_name and district_id
     let ward = null;
-    
+
     // First, filter wards by district_id
     const districtWards = wards.filter(w => String(w.district_id) === String(district_id));
-    
-    // Try to find by ward_name (case-insensitive)
-    ward = districtWards.find(w => String(w.ward_name).toLowerCase() === String(ward_identifier).toLowerCase());
-    
-    // If not found by name, try by generated ID format (district_id_index)
-    if (!ward && ward_identifier.includes('_')) {
-      const parts = ward_identifier.split('_');
-      const index = parseInt(parts[parts.length - 1]);
-      if (!isNaN(index) && districtWards[index]) {
-        ward = districtWards[index];
+
+    // PRIORITY 1: Try to find by ward_name (case-insensitive and normalized)
+    if (ward_identifier) {
+      const normalizedIdentifier = String(ward_identifier).toLowerCase().trim()
+        .replace(/phường/gi, '').replace(/xã/gi, '').replace(/thị trấn/gi, '').trim();
+
+      ward = districtWards.find(w => {
+        const normalizedWardName = String(w.ward_name).toLowerCase().trim()
+          .replace(/phường/gi, '').replace(/xã/gi, '').replace(/thị trấn/gi, '').trim();
+        return normalizedWardName === normalizedIdentifier ||
+          normalizedWardName.includes(normalizedIdentifier) ||
+          normalizedIdentifier.includes(normalizedWardName);
+      });
+
+      if (ward) {
+        console.log(`✅ Found ward by name: ${ward.ward_name}`);
       }
     }
-    
-    // If still not found, try numeric index
+
+    // PRIORITY 2: If numeric, treat as index in the filtered array
     if (!ward && /^\d+$/.test(ward_identifier)) {
       const index = parseInt(ward_identifier);
-      if (!isNaN(index) && districtWards[index]) {
+      // Check if it's a reasonable index (0 to array length)
+      if (!isNaN(index) && index >= 0 && index < districtWards.length) {
         ward = districtWards[index];
+        console.log(`✅ Found ward by index ${index}: ${ward.ward_name}`);
+      } else {
+        // If index is out of bounds, try to find by matching the number in ward_name
+        ward = districtWards.find(w => w.ward_name && w.ward_name.includes(ward_identifier));
+        if (ward) {
+          console.log(`✅ Found ward by number in name: ${ward.ward_name}`);
+        }
       }
     }
-    
+
     if (!city || !district || !ward) {
-      console.log('Address not found:', { 
-        city_id, 
-        district_id, 
+      console.log('⚠️ Address not found:', {
+        city_id,
+        district_id,
         ward_identifier,
         found: { city: !!city, district: !!district, ward: !!ward },
-        availableWards: districtWards.length
+        availableWards: districtWards.length,
+        sampleWards: districtWards.slice(0, 3).map(w => ({ name: w.ward_name }))
       });
-      
-      // If we have city and district but no ward, return partial result
-      if (city && district && districtWards.length > 0) {
+
+      // If we have city and district but no ward, return partial result with the ward identifier
+      if (city && district) {
         return res.json({
           city: city.city_name,
           district: district.district_name,
           ward: ward_identifier // Return the identifier as-is if ward not found
         });
       }
-      
-      return res.status(404).json({ 
-        error: 'Address not found', 
-        details: { city_id, district_id, ward_identifier } 
+
+      return res.status(404).json({
+        error: 'Address not found',
+        details: { city_id, district_id, ward_identifier }
       });
     }
-    
+
     res.json({
       city: city.city_name,
       district: district.district_name,

@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useContext } from 'react';
-import axios from 'axios';
+import api from '../utils/api';
 import '../styles/AccountManagement.css';
 import { Button, Input, message, Table, Modal, Space, Select, Tabs, Form } from 'antd';
 import {
@@ -41,26 +41,26 @@ const AccountManagement = () => {
 
   const { accounts, newAccount, editingAccount, searchTerm, isModalVisible, loading, error, quyenList, permissions, features, newPermission } = state;
 
-  const API_URL = 'http://localhost:5000/api/accounts';
-  const PERMISSION_API = 'http://localhost:5000/api/permissions';
+  const API_URL = '/accounts';
+  const PERMISSION_API = '/permissions';
 
   const fetchData = async () => {
     try {
       setState(prev => ({ ...prev, loading: true, error: null }));
-      const token = localStorage.getItem('authToken');
-      if (!token) {
-        throw new Error('Không tìm thấy token xác thực');
-      }
 
       const [accountsResp, rolesResp, featuresResp] = await Promise.all([
-        axios.get(API_URL, { headers: { Authorization: `Bearer ${token}` } }),
-        axios.get('http://localhost:5000/api/roles/list/active', { headers: { Authorization: `Bearer ${token}` } }),
-        axios.get(`${PERMISSION_API}/features`, { headers: { Authorization: `Bearer ${token}` } }),
+        api.get(API_URL),
+        api.get('/roles/list/active'),
+        api.get(`${PERMISSION_API}/features`),
       ]);
+
+      const accountsData = accountsResp.data.data || [];
+      const rolesData = rolesResp.data.data || [];
+      const featuresData = featuresResp.data.data || [];
 
       setState(prev => ({
         ...prev,
-        accounts: accountsResp.data.map(account => {
+        accounts: (Array.isArray(accountsData) ? accountsData : []).map(account => {
           const tinhTrangValue = Number(account.TinhTrang);
           return {
             ...account,
@@ -68,8 +68,8 @@ const AccountManagement = () => {
             TinhTrangValue: tinhTrangValue,
           };
         }),
-        quyenList: rolesResp.data.data || [],
-        features: featuresResp.data || [],
+        quyenList: rolesData,
+        features: featuresData,
       }));
     } catch (error) {
       setState(prev => ({ ...prev, error: error.message }));
@@ -78,7 +78,7 @@ const AccountManagement = () => {
       setState(prev => ({ ...prev, loading: false }));
     }
   };
-  
+
 
   useEffect(() => {
     if (hasPermission('Tài khoản', 'Đọc')) {
@@ -92,11 +92,8 @@ const AccountManagement = () => {
   // Fetch quyền khi mở modal edit
   const fetchPermissions = async (maQuyen) => {
     try {
-      const token = localStorage.getItem('authToken');
-      const resp = await axios.get(`${PERMISSION_API}/roles/${maQuyen}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setState(prev => ({ ...prev, permissions: resp.data }));
+      const resp = await api.get(`${PERMISSION_API}/roles/${maQuyen}`);
+      setState(prev => ({ ...prev, permissions: resp.data.data || [] }));
     } catch (error) {
       message.error(`Lỗi khi tải quyền: ${error.response?.data?.error || error.message}`);
     }
@@ -147,10 +144,7 @@ const AccountManagement = () => {
       TinhTrang: parseInt(newAccount.TinhTrang),
     };
     try {
-      const token = localStorage.getItem('authToken');
-      await axios.post(API_URL, payload, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      await api.post(API_URL, payload);
       await fetchData();
       setState(prev => ({
         ...prev,
@@ -158,7 +152,7 @@ const AccountManagement = () => {
           TenTK: '',
           MatKhau: '',
           MaQuyen: undefined,
-          NgayTao: new Date().toISOString().split('T')[0],
+          NgayTao: new Date().toISOString().slice(0, 10), // Fix date format
           TinhTrang: '1',
         },
         isModalVisible: false,
@@ -183,10 +177,7 @@ const AccountManagement = () => {
       TinhTrang: parseInt(editingAccount.TinhTrang),
     };
     try {
-      const token = localStorage.getItem('authToken');
-      await axios.put(`${API_URL}/${editingAccount.MaTK}`, payload, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      await api.put(`${API_URL}/${editingAccount.MaTK}`, payload);
       await fetchData();
       setState(prev => ({
         ...prev,
@@ -213,10 +204,7 @@ const AccountManagement = () => {
       cancelText: 'Thoát',
       async onOk() {
         try {
-          const token = localStorage.getItem('authToken');
-          await axios.delete(`${API_URL}/${MaTK}`, {
-            headers: { Authorization: `Bearer ${token}` },
-          });
+          await api.delete(`${API_URL}/${MaTK}`);
           await fetchData();
           message.success('Xóa tài khoản thành công!');
         } catch (error) {
@@ -238,11 +226,8 @@ const AccountManagement = () => {
       cancelText: 'Hủy',
       async onOk() {
         try {
-          const token = localStorage.getItem('authToken');
           const newStatus = account.TinhTrangValue === 1 ? 0 : 1;
-          await axios.put(`${API_URL}/${account.MaTK}`, { TinhTrang: newStatus }, {
-            headers: { Authorization: `Bearer ${token}` },
-          });
+          await api.put(`${API_URL}/${account.MaTK}`, { TinhTrang: newStatus });
           await fetchData();
           message.success(`Đã ${newStatus === 1 ? 'kích hoạt' : 'tạm ẩn'} tài khoản!`);
         } catch (error) {
@@ -265,15 +250,14 @@ const AccountManagement = () => {
     }
 
     try {
-      const token = localStorage.getItem('authToken');
       // Gửi nhiều request (mỗi hành động 1 bản ghi)
       const requests = newPermission.HanhDong.map((hd) =>
-        axios.post(PERMISSION_API, {
+        api.post(PERMISSION_API, {
           MaQuyen: editingAccount.MaQuyen,
           MaCN: newPermission.MaCN,
           HanhDong: hd,
           TinhTrang: parseInt(newPermission.TinhTrang),
-        }, { headers: { Authorization: `Bearer ${token}` } })
+        })
       );
       await Promise.all(requests);
       await fetchPermissions(editingAccount.MaQuyen);
@@ -298,8 +282,7 @@ const AccountManagement = () => {
       cancelText: 'Hủy',
       async onOk() {
         try {
-          const token = localStorage.getItem('authToken');
-          await axios.delete(`${PERMISSION_API}/${maCTQ}`, { headers: { Authorization: `Bearer ${token}` } });
+          await api.delete(`${PERMISSION_API}/${maCTQ}`);
           await fetchPermissions(editingAccount.MaQuyen);
           message.success('Xóa quyền thành công!');
         } catch (error) {
@@ -324,13 +307,12 @@ const AccountManagement = () => {
     if (!editingPermission) return;
 
     try {
-      const token = localStorage.getItem('authToken');
-      await axios.put(`${PERMISSION_API}/${editingPermission.MaCTQ}`, {
+      await api.put(`${PERMISSION_API}/${editingPermission.MaCTQ}`, {
         MaQuyen: editingAccount.MaQuyen, // Giữ nguyên nhóm
         MaCN: editingPermission.MaCN,
         HanhDong: editingPermission.HanhDong,
         TinhTrang: editingPermission.TinhTrang,
-      }, { headers: { Authorization: `Bearer ${token}` } });
+      });
       await fetchPermissions(editingAccount.MaQuyen);
       setEditingPermission(null);
       message.success('Cập nhật quyền thành công!');
@@ -366,9 +348,8 @@ const AccountManagement = () => {
       width: 120,
       render: (status) => (
         <span
-          className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-            status === 'Hoạt động' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-          }`}
+          className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${status === 'Hoạt động' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+            }`}
         >
           {status}
         </span>
@@ -510,7 +491,7 @@ const AccountManagement = () => {
         onCancel={() => setState(prev => ({ ...prev, isModalVisible: false, editingAccount: null, permissions: [] }))}
         footer={null}
         width={800}
-        bodyStyle={{ padding: '16px' }}
+        styles={{ body: { padding: '16px' } }}
       >
         <Tabs defaultActiveKey="1">
           <TabPane tab="Thông tin tài khoản" key="1">

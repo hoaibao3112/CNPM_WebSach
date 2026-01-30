@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
+import api from '../utils/api';
 import { Button, Input, message, Table, Modal, Space, Select, Form, Tag } from 'antd';
 import { EditOutlined, DeleteOutlined, ExclamationCircleFilled } from '@ant-design/icons';
 
@@ -27,21 +27,22 @@ const RoleManagement = () => {
     total: 0,
   });
 
-  const API_URL = 'http://localhost:5000/api/roles';
+  const API_URL = '/roles';
 
   // Fetch roles
   const fetchRoles = async (page = 1, pageSize = 10, search = '') => {
     try {
       setLoading(true);
-      const response = await axios.get(API_URL, {
+      const response = await api.get(API_URL, {
         params: { page, pageSize, search },
       });
-      if (response.data.success) {
-        setRoles(response.data.data.items);
+      const resData = response.data;
+      if (resData.success) {
+        setRoles(resData.data.items);
         setPagination({
-          current: response.data.data.pagination.page,
-          pageSize: response.data.data.pagination.pageSize,
-          total: response.data.data.pagination.total,
+          current: resData.data.pagination.page,
+          pageSize: resData.data.pagination.pageSize,
+          total: resData.data.pagination.total,
         });
       } else {
         throw new Error('Dữ liệu nhóm quyền không hợp lệ');
@@ -57,9 +58,10 @@ const RoleManagement = () => {
   // Fetch functions (chucnang)
   const fetchFunctions = async () => {
     try {
-      const response = await axios.get(`${API_URL}/functions`);
-      if (Array.isArray(response.data)) {
-        setFunctions(response.data);
+      const response = await api.get(`${API_URL}/functions`);
+      const resData = response.data.data || response.data;
+      if (Array.isArray(resData)) {
+        setFunctions(resData);
       } else {
         throw new Error('Dữ liệu chức năng không hợp lệ');
       }
@@ -100,8 +102,9 @@ const RoleManagement = () => {
         chitietquyen: newRole.chiTietQuyen.filter((p) => p.MaCN && p.HanhDong),
       };
 
-      const response = await axios.post(API_URL, roleToAdd);
-      if (response.data.success) {
+      const response = await api.post(API_URL, roleToAdd);
+      const resData = response.data;
+      if (resData.success) {
         await fetchRoles(pagination.current, pagination.pageSize, searchTerm);
         setNewRole({
           TenNQ: '',
@@ -112,7 +115,7 @@ const RoleManagement = () => {
         setIsModalVisible(false);
         message.success('Thêm nhóm quyền thành công!');
       } else {
-        throw new Error(response.data.error);
+        throw new Error(resData.error);
       }
     } catch (error) {
       console.error('Lỗi khi thêm nhóm quyền:', error.response || error);
@@ -135,14 +138,15 @@ const RoleManagement = () => {
         chitietquyen: editingRole.chiTietQuyen.filter((p) => p.MaCN && p.HanhDong),
       };
 
-      const response = await axios.put(`${API_URL}/${editingRole.MaNQ}`, roleToUpdate);
-      if (response.data.success) {
+      const response = await api.put(`${API_URL}/${editingRole.MaNQ}`, roleToUpdate);
+      const resData = response.data;
+      if (resData.success) {
         await fetchRoles(pagination.current, pagination.pageSize, searchTerm);
         setEditingRole(null);
         setIsModalVisible(false);
         message.success('Cập nhật nhóm quyền thành công!');
       } else {
-        throw new Error(response.data.error);
+        throw new Error(resData.error);
       }
     } catch (error) {
       console.error('Lỗi khi cập nhật nhóm quyền:', error.response || error);
@@ -161,12 +165,13 @@ const RoleManagement = () => {
       cancelText: 'Thoát',
       async onOk() {
         try {
-          const response = await axios.delete(`${API_URL}/${MaNQ}`);
-          if (response.data.success) {
+          const response = await api.delete(`${API_URL}/${MaNQ}`);
+          const resData = response.data;
+          if (resData.success) {
             await fetchRoles(pagination.current, pagination.pageSize, searchTerm);
             message.success('Xóa nhóm quyền thành công!');
           } else {
-            throw new Error(response.data.error);
+            throw new Error(resData.error);
           }
         } catch (error) {
           console.error('Lỗi khi xóa nhóm quyền:', error.response || error);
@@ -256,18 +261,19 @@ const RoleManagement = () => {
             icon={<EditOutlined />}
             onClick={async () => {
               try {
-                const response = await axios.get(`${API_URL}/${record.MaNQ}`);
-                if (response.data.success) {
+                const response = await api.get(`${API_URL}/${record.MaNQ}`);
+                const resData = response.data;
+                if (resData.success) {
                   setEditingRole({
-                    ...response.data.data,
-                    TinhTrang: response.data.data.TinhTrang,
-                    chiTietQuyen: response.data.data.chiTietQuyen.length > 0
-                      ? response.data.data.chiTietQuyen
+                    ...resData.data,
+                    TinhTrang: resData.data.TinhTrang,
+                    chiTietQuyen: resData.data.chiTietQuyen.length > 0
+                      ? resData.data.chiTietQuyen
                       : [{ MaCN: '', HanhDong: '' }],
                   });
                   setIsModalVisible(true);
                 } else {
-                  throw new Error(response.data.error);
+                  throw new Error(resData.error);
                 }
               } catch (error) {
                 message.error('Lỗi khi tải thông tin nhóm quyền!');
@@ -347,7 +353,7 @@ const RoleManagement = () => {
       {/* Add/Edit Role Modal */}
       <Modal
         title={editingRole ? 'Chỉnh sửa nhóm quyền' : 'Thêm nhóm quyền mới'}
-  open={isModalVisible}
+        open={isModalVisible}
         onCancel={() => {
           setIsModalVisible(false);
           setEditingRole(null);
@@ -371,7 +377,7 @@ const RoleManagement = () => {
           </Button>,
         ]}
         width={800}
-  styles={{ body: { padding: '16px' } }}
+        styles={{ body: { padding: '16px' } }}
       >
         <Form layout="vertical">
           <div className="info-section">

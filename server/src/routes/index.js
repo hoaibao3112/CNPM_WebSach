@@ -13,7 +13,7 @@ import orderRoutes from './orderRoutes.js';
 import Receipt from './receipt.js';
 import KhuyenMai from './khuyenmai.js';
 import reportRoutes from './reportRoutes.js';
-import ChatRoutes from './chatRoute.js';
+import ChatRoutes from './chatRoutes.js';
 import returnRoutes from './returnRoutes.js';
 import permissionRoutes from './authMiddleware.js';
 import Author from './author.js';
@@ -36,6 +36,7 @@ import preferenceRoutes from './preferenceRoutes.js';
 import favoritesRoutes from './favoritesRoutes.js';
 import couponRoutes from './couponRoutes.js';
 import recommendationRoutes from './recommendationRoutes.js';
+import refundRoutes from './refundRoutes.js';
 
 export const initRoutes = (app) => {
   // Root path - Server status
@@ -59,18 +60,24 @@ export const initRoutes = (app) => {
     });
   });
 
+  // Mount auth routes
   app.use('/auth', authRoutes);
+
+  // Add logout route specifically at /api/logout for Sidebar compatibility
+  app.use('/api/logout', authRoutes); // Only the logout endpoint
+
   app.use('/api/product', productRoutes); // Đăng ký API sản phẩm
   app.use('/api/category', categoryRoutes);
   app.use('/api/company', company);
   app.use('/api/accounts', accountRoutes);
   app.use('/api/users', userRoutes);
-  app.use('/api/login', LoginRoutes);
+  app.use('/api/login', LoginRoutes); // This should be reached first for login
   app.use('/api/forgot-password', forgotPasswordRoutes);
   app.use('/api/roles', roleRoutes);
   console.log('Attached /api/roles with roleRoutes');
   app.use('/api/client', Client);
   app.use('/api/orders', orderRoutes);
+  app.use('/api/refunds', refundRoutes);
   app.use('/api/receipt', Receipt);
   app.use('/api/khuyenmai', KhuyenMai);
   app.use('/api/reports', reportRoutes);

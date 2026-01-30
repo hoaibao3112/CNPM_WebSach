@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useContext } from 'react';
 import { Table, Button, Modal, Form, Input, DatePicker, message, Tag, Space, Select } from 'antd';
-import axios from 'axios';
+import api from '../utils/api';
 import moment from 'moment';
 import { CheckCircleOutlined, CloseCircleOutlined, PlusOutlined, CalendarOutlined, FilterOutlined, ClockCircleOutlined } from '@ant-design/icons';
 import { PermissionContext } from '../components/PermissionContext';
@@ -22,9 +22,11 @@ const LeavePage = () => {
   const fetchLeave = async () => {
     setLoading(true);
     try {
-      const res = await axios.get('http://localhost:5000/api/leave');
+      const res = await api.get('/leave');
+      const resData = res.data.data || res.data;
+      const leaveList = Array.isArray(resData) ? resData : (resData?.data || []);
       // Sắp xếp theo id giảm dần (mới nhất trên cùng)
-      const sortedData = res.data.sort((a, b) => b.id - a.id);
+      const sortedData = leaveList.sort((a, b) => b.id - a.id);
       setData(sortedData);
     } catch {
       message.error('Lỗi khi tải dữ liệu nghỉ phép');
@@ -33,7 +35,7 @@ const LeavePage = () => {
     }
   };
 
-  useEffect(() => { 
+  useEffect(() => {
     if (hasPermission('Nghĩ Phép', 'Đọc')) {
       fetchLeave();
     } else {
@@ -50,7 +52,7 @@ const LeavePage = () => {
     setProcessingId(id);
     try {
       const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
-      await axios.put(`http://localhost:5000/api/leave/${id}/approve`, {
+      await api.put(`/leave/${id}/approve`, {
         nguoi_duyet: userInfo.TenTK || 'admin'
       });
       message.success('Đã duyệt đơn nghỉ phép');
@@ -71,7 +73,7 @@ const LeavePage = () => {
     setProcessingId(id);
     try {
       const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
-      await axios.put(`http://localhost:5000/api/leave/${id}/reject`, {
+      await api.put(`/leave/${id}/reject`, {
         nguoi_duyet: userInfo.TenTK || 'admin'
       });
       message.success('Đã từ chối đơn nghỉ phép');
@@ -85,43 +87,43 @@ const LeavePage = () => {
 
   // Cột bảng
   const columns = [
-    { 
-      title: 'Mã TK', 
-      dataIndex: 'MaTK', 
-      width: 90, 
+    {
+      title: 'Mã TK',
+      dataIndex: 'MaTK',
+      width: 90,
       fixed: 'left',
       render: (text) => <span className="font-semibold text-indigo-600">{text}</span>
     },
-    { 
-      title: 'Tên tài khoản', 
-      dataIndex: 'TenTK', 
+    {
+      title: 'Tên tài khoản',
+      dataIndex: 'TenTK',
       width: 150,
       render: (text) => <span className="font-medium">{text}</span>
     },
-    { 
-      title: 'Từ ngày', 
-      dataIndex: 'ngay_bat_dau', 
+    {
+      title: 'Từ ngày',
+      dataIndex: 'ngay_bat_dau',
       render: d => (
         <span className="flex items-center gap-1">
           <CalendarOutlined className="text-blue-500" />
           {moment(d).format('DD/MM/YYYY')}
         </span>
       ),
-      width: 120 
+      width: 120
     },
-    { 
-      title: 'Đến ngày', 
-      dataIndex: 'ngay_ket_thuc', 
+    {
+      title: 'Đến ngày',
+      dataIndex: 'ngay_ket_thuc',
       render: d => (
         <span className="flex items-center gap-1">
           <CalendarOutlined className="text-blue-500" />
           {moment(d).format('DD/MM/YYYY')}
         </span>
       ),
-      width: 120 
+      width: 120
     },
-    { 
-      title: 'Số ngày', 
+    {
+      title: 'Số ngày',
       key: 'so_ngay',
       render: (_, record) => {
         const days = moment(record.ngay_ket_thuc).diff(moment(record.ngay_bat_dau), 'days') + 1;
@@ -129,14 +131,14 @@ const LeavePage = () => {
       },
       width: 90
     },
-    { 
-      title: 'Lý do', 
-      dataIndex: 'ly_do', 
+    {
+      title: 'Lý do',
+      dataIndex: 'ly_do',
       width: 200,
       ellipsis: true,
     },
-    { 
-      title: 'Trạng thái', 
+    {
+      title: 'Trạng thái',
       dataIndex: 'trang_thai',
       render: v => {
         if (v === 'Da_duyet') return <Tag color="success" icon={<CheckCircleOutlined />}>Đã duyệt</Tag>;
@@ -145,17 +147,17 @@ const LeavePage = () => {
       },
       width: 120
     },
-    { 
-      title: 'Người duyệt', 
-      dataIndex: 'nguoi_duyet', 
+    {
+      title: 'Người duyệt',
+      dataIndex: 'nguoi_duyet',
       width: 120,
       render: (text) => text || <span className="text-gray-400">-</span>
     },
-    { 
-      title: 'Ngày duyệt', 
-      dataIndex: 'ngay_duyet', 
+    {
+      title: 'Ngày duyệt',
+      dataIndex: 'ngay_duyet',
       render: d => d ? moment(d).format('DD/MM/YYYY HH:mm') : <span className="text-gray-400">-</span>,
-      width: 150 
+      width: 150
     },
     {
       title: 'Thao tác',
@@ -201,7 +203,7 @@ const LeavePage = () => {
         message.error('Không tìm thấy mã tài khoản!');
         return;
       }
-      await axios.post('http://localhost:5000/api/leave', {
+      await api.post('/leave', {
         MaTK,
         ngay_bat_dau: values.date_range[0].format('YYYY-MM-DD'),
         ngay_ket_thuc: values.date_range[1].format('YYYY-MM-DD'),
@@ -217,7 +219,7 @@ const LeavePage = () => {
   };
 
   // Filter data
-  const filteredData = filterStatus 
+  const filteredData = filterStatus
     ? data.filter(item => item.trang_thai === filterStatus)
     : data;
 
@@ -273,8 +275,8 @@ const LeavePage = () => {
             rowKey="id"
             loading={loading}
             scroll={{ x: 1200 }}
-            pagination={{ 
-              pageSize: 10, 
+            pagination={{
+              pageSize: 10,
               showSizeChanger: true,
               showTotal: (total) => `Tổng ${total} đơn`,
               pageSizeOptions: ['10', '20', '50']
@@ -284,44 +286,44 @@ const LeavePage = () => {
         </div>
       </div>
 
-      <Modal 
-        open={open} 
+      <Modal
+        open={open}
         onCancel={() => {
           setOpen(false);
           form.resetFields();
-        }} 
-        footer={null} 
+        }}
+        footer={null}
         title={
           <div className="modal-title">
             <CalendarOutlined /> Gửi đơn xin nghỉ phép
           </div>
         }
         width={600}
-        destroyOnClose
+        destroyOnHidden
       >
-        <Form 
+        <Form
           form={form}
-          layout="vertical" 
+          layout="vertical"
           onFinish={onFinish}
           className="leave-form"
         >
-          <Form.Item 
-            name="date_range" 
-            label="Thời gian nghỉ" 
+          <Form.Item
+            name="date_range"
+            label="Thời gian nghỉ"
             rules={[{ required: true, message: 'Vui lòng chọn thời gian nghỉ!' }]}
           >
-            <RangePicker 
+            <RangePicker
               style={{ width: '100%' }}
               format="DD/MM/YYYY"
               placeholder={['Từ ngày', 'Đến ngày']}
             />
           </Form.Item>
-          <Form.Item 
-            name="ly_do" 
-            label="Lý do nghỉ" 
+          <Form.Item
+            name="ly_do"
+            label="Lý do nghỉ"
             rules={[{ required: true, message: 'Vui lòng nhập lý do nghỉ!' }]}
           >
-            <TextArea 
+            <TextArea
               rows={4}
               placeholder="Nhập lý do xin nghỉ phép..."
               maxLength={500}

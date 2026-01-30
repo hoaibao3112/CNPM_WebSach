@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Table, Button, Modal, Select, message } from 'antd';
-import axios from 'axios';
+import api from '../utils/api';
 
 const SalaryPage = () => {
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
@@ -14,20 +14,22 @@ const SalaryPage = () => {
 
   const fetchSalary = async () => {
     try {
-      const res = await axios.post(`http://localhost:5000/api/salary/compute/${selectedYear}/${selectedMonth}`);
-      setSalaryData(res.data.data);
+      const res = await api.post(`/salary/compute/${selectedYear}/${selectedMonth}`);
+      const resData = res.data.data || res.data;
+      setSalaryData(Array.isArray(resData) ? resData : (resData?.data || []));
     } catch (error) {
       message.error('Lỗi khi tính lương');
     }
   };
 
-  useEffect(() => { fetchSalary(); }, [selectedMonth, selectedYear]);
+  useEffect(() => { fetchSalary(); }, [selectedMonth, selectedYear, fetchSalary]);
 
   const showDetail = async (record) => {
     setSelectedEmployee(record);
     try {
-      const res = await axios.get(`http://localhost:5000/api/attendance/detail/${record.MaNV}/${selectedMonth}/${selectedYear}`);
-      setDetailData(res.data);
+      const res = await api.get(`/attendance/detail/${record.MaNV}/${selectedMonth}/${selectedYear}`);
+      const resData = res.data.data || res.data;
+      setDetailData(Array.isArray(resData) ? resData : (resData?.data || []));
       setDetailModal(true);
     } catch {
       message.error('Lỗi khi lấy chi tiết ngày công');
@@ -52,9 +54,9 @@ const SalaryPage = () => {
       dataIndex: 'trang_thai',
       width: 120,
       render: v => (
-        <span style={{ 
+        <span style={{
           color: v === 'Da_tra' ? '#52c41a' : '#fa8c16',
-          fontWeight: 600 
+          fontWeight: 600
         }}>
           {v === 'Da_tra' ? '✓ Đã chi trả' : '○ Chưa chi trả'}
         </span>
@@ -116,11 +118,11 @@ const SalaryPage = () => {
         <Table
           columns={[
             { title: 'Ngày', dataIndex: 'ngay', render: d => new Date(d).toLocaleDateString('vi-VN'), width: 120 },
-            { 
-              title: 'Trạng thái', 
+            {
+              title: 'Trạng thái',
               dataIndex: 'trang_thai',
               render: v => {
-                switch(v) {
+                switch (v) {
                   case 'Di_lam': return <span style={{ color: 'green' }}>Đi làm</span>;
                   case 'Lam_them': return <span style={{ color: 'blue' }}>Làm thêm</span>;
                   case 'Nghi_phep': return <span style={{ color: 'orange' }}>Nghỉ phép</span>;

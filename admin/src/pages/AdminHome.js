@@ -1,15 +1,16 @@
-// ...existing code...
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import '../styles/adminHome.css';
 
 const ROLE_LABEL = {
-  1: 'Quản trị viên',
-  2: 'Nhân viên thủ kho',
-  3: 'Nhân viên xử lý đơn hàng'
+  6: 'Quản trị viên',
+  7: 'Quản lý kho',
+  8: 'Nhân viên bán hàng',
+  9: 'Quản lý nhân sự',
+  10: 'Hỗ trợ kỹ thuật'
 };
 
 const getRoleLabel = (code) => {
-  const n = typeof code === 'string' && /^\d+$/.test(code) ? Number(code) : code;
+  const n = typeof code === 'string' || typeof code === 'number' ? Number(code) : code;
   return ROLE_LABEL[n] || 'Nhân viên';
 };
 
@@ -26,7 +27,7 @@ const tryParseJSON = (raw) => {
   const s = raw.trim();
   try {
     if (s.startsWith('{') || s.startsWith('[')) return JSON.parse(s);
-  } catch {}
+  } catch { }
   try {
     const parsedOnce = JSON.parse(raw);
     if (typeof parsedOnce === 'string' && parsedOnce.trim().startsWith('{')) {
@@ -69,7 +70,7 @@ const AdminHome = () => {
 
   // logo states
   const PUBLIC = process.env.PUBLIC_URL || '';
-  const logoCandidates = [
+  const logoCandidates = useMemo(() => [
     '/img/logo/anhdong.gif',
     `${PUBLIC}/img/logo/anhdong.gif`,
     '/img/logo/animated.gif',
@@ -80,7 +81,8 @@ const AdminHome = () => {
     `${PUBLIC}/img/logo.png`,
     '/img/logo.svg',
     `${PUBLIC}/img/logo.svg`
-  ];
+  ], [PUBLIC]);
+
   const [logoSrc, setLogoSrc] = useState(logoCandidates[0]);
   const [showLogo, setShowLogo] = useState(true);
 
@@ -111,7 +113,7 @@ const AdminHome = () => {
       if (mounted) setShowLogo(false);
     })();
     return () => { mounted = false; };
-  }, []); // run once
+  }, [logoCandidates]); // run once plus when candidates change
 
   const handleLogoError = () => {
     const idx = logoCandidates.indexOf(logoSrc);

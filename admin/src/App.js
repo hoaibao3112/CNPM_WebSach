@@ -1,4 +1,5 @@
 import React from 'react';
+import axios from 'axios';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import Sidebar from './components/Sidebar';
 import Login from './pages/Login';
@@ -23,6 +24,27 @@ import { PermissionContext } from './components/PermissionContext';
 import DiscountManagement from './pages/DiscountManagement.js';
 import RefundManagement from './pages/RefundManagement.js';
 import AdminHome from './pages/AdminHome';
+
+// Global Axios Configuration
+axios.defaults.baseURL = 'http://localhost:5000/api';
+axios.interceptors.request.use((config) => {
+  const token = localStorage.getItem('authToken');
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+}, (error) => Promise.reject(error));
+
+axios.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      localStorage.removeItem('authToken');
+      // window.location.href = '/admin/login';
+    }
+    return Promise.reject(error);
+  }
+);
 
 const PrivateRoute = ({ component: Component }) => {
   const isAuthenticated = !!localStorage.getItem('authToken');
@@ -154,18 +176,18 @@ const App = () => {
           />
         }
       />
-     
+
       {/* Thêm route cho trang tạo khuyến mãi */}
-     <Route
-  path="/admin/khuyenmai"
-  element={
-    <PrivateRoute
-      component={() => (
-        <RestrictedRoute component={DiscountManagement} permission="Khuyến mãi" />
-      )}
-    />
-  }
-/>
+      <Route
+        path="/admin/khuyenmai"
+        element={
+          <PrivateRoute
+            component={() => (
+              <RestrictedRoute component={DiscountManagement} permission="Khuyến mãi" />
+            )}
+          />
+        }
+      />
       <Route
         path="/admin/statistical"
         element={
@@ -220,7 +242,7 @@ const App = () => {
           />
         }
       />
-             <Route
+      <Route
         path="/admin/refunds"
         element={
           <PrivateRoute
@@ -230,7 +252,7 @@ const App = () => {
           />
         }
       />
-              <Route
+      <Route
         path="/admin/Returns"
         element={
           <PrivateRoute

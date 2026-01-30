@@ -12,7 +12,7 @@ router.get('/', async (req, res) => {
       LEFT JOIN nhomquyen nq ON ctq.MaQuyen = nq.MaNQ
       LEFT JOIN chucnang cn ON ctq.MaCN = cn.MaCN
     `);
-    res.json(permissions);
+    res.json({ success: true, data: permissions });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Lỗi server khi lấy tất cả quyền' });
@@ -37,10 +37,10 @@ router.get('/roles/:maQuyen', async (req, res) => {
     }));
 
     if (formattedPermissions.length === 0) {
-      return res.status(404).json({ error: 'Không tìm thấy quyền cho nhóm này' });
+      return res.status(404).json({ success: false, error: 'Không tìm thấy quyền cho nhóm này' });
     }
 
-    res.json(formattedPermissions);
+    res.json({ success: true, data: formattedPermissions });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Lỗi server khi lấy quyền theo nhóm' });
@@ -70,7 +70,7 @@ router.get('/search', async (req, res) => {
     }
 
     const [permissions] = await pool.query(query, params);
-    res.json(permissions);
+    res.json({ success: true, data: permissions });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Lỗi server khi tìm kiếm quyền' });
@@ -147,7 +147,7 @@ router.delete('/:maCTQ', async (req, res) => {
 router.get('/roles', async (req, res) => {
   try {
     const [roles] = await pool.query('SELECT * FROM nhomquyen');
-    res.json(roles);
+    res.json({ success: true, data: roles });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Lỗi server khi lấy danh sách nhóm quyền' });
@@ -158,7 +158,7 @@ router.get('/roles', async (req, res) => {
 router.get('/features', async (req, res) => {
   try {
     const [features] = await pool.query('SELECT * FROM chucnang');
-    res.json(features);
+    res.json({ success: true, data: features });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Lỗi server khi lấy danh sách chức năng' });

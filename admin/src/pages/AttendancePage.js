@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Select from 'react-select';
-import axios from 'axios';
+import api from '../utils/api';
 import { jsPDF } from 'jspdf';
 import '../styles/AttendancePage.css';
 
@@ -73,11 +73,12 @@ const AttendancePage = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const res = await axios.get(
-          `http://localhost:5000/api/attendance_admin/monthly?month=${month}&year=${year}`
+        const res = await api.get(
+          `/attendance_admin/monthly?month=${month}&year=${year}`
         );
-        setEmployees(res.data);
-        if (res.data.length > 0) setSelectedEmployee(res.data[0]);
+        const resData = res.data.data || res.data;
+        setEmployees(Array.isArray(resData) ? resData : (resData?.data || []));
+        if (Array.isArray(resData) && resData.length > 0) setSelectedEmployee(resData[0]);
         setPendingChanges({});
       } catch (err) {
         setEmployees([]);
@@ -130,16 +131,17 @@ const AttendancePage = () => {
 
       await Promise.all(
         updates.map((update) =>
-          axios.put('http://localhost:5000/api/attendance_admin/update', update)
+          api.put('/attendance_admin/update', update)
         )
       );
 
       // Reload dữ liệu sau khi lưu
-      const res = await axios.get(
-        `http://localhost:5000/api/attendance_admin/monthly?month=${month}&year=${year}`
+      const res = await api.get(
+        `/attendance_admin/monthly?month=${month}&year=${year}`
       );
-      setEmployees(res.data);
-      const found = res.data.find((nv) => nv.MaNV === selectedEmployee.MaNV);
+      const resData = res.data.data || res.data;
+      setEmployees(Array.isArray(resData) ? resData : (resData?.data || []));
+      const found = Array.isArray(resData) ? resData.find((nv) => nv.MaNV === selectedEmployee.MaNV) : null;
       if (found) setSelectedEmployee(found);
       setPendingChanges({});
       alert('Lưu chấm công thành công!');
@@ -154,10 +156,12 @@ const AttendancePage = () => {
     setLoadingSalary(true);
     setSalaryInfo(null);
     try {
-      const res = await axios.get(
-        `http://localhost:5000/api/salary/monthly?month=${month}&year=${year}`
+      const res = await api.get(
+        `/salary/monthly?month=${month}&year=${year}`
       );
-      const info = res.data.find((s) => s.MaNV === selectedEmployee.MaNV);
+      const resData = res.data.data || res.data;
+      const salaryList = Array.isArray(resData) ? resData : (resData?.data || []);
+      const info = salaryList.find((s) => s.MaNV === selectedEmployee.MaNV);
       setSalaryInfo(info || null);
     } catch (err) {
       setSalaryInfo(null);
@@ -177,7 +181,7 @@ const AttendancePage = () => {
   };
 
   // Kiểm tra nhân viên đã chi trả lương chưa
-  const isDaPaid = salaryInfo?.trang_thai === 'Da_tra';
+  // const isDaPaid = salaryInfo?.trang_thai === 'Da_tra'; // Unused for now
 
   // Xử lý nhập thưởng
   const handleThuongChange = (e) => {
@@ -206,7 +210,7 @@ const AttendancePage = () => {
   const handlePaySalary = async () => {
     try {
       const tong_luong = getTongLuong();
-      await axios.put('http://localhost:5000/api/salary/update', {
+      await api.put('/salary/update', {
         MaNV: salaryInfo.MaNV,
         thang: month,
         nam: year,
@@ -327,7 +331,7 @@ const AttendancePage = () => {
       console.error('Failed to generate PDF (html2canvas/jsPDF)', err);
       alert('Tạo PDF thất bại. Hãy thử lại hoặc cài `html2canvas` (npm i html2canvas) nếu cần.');
     } finally {
-      try { if (container) document.body.removeChild(container); } catch (e) {}
+      try { if (container) document.body.removeChild(container); } catch (e) { }
     }
   };
 
@@ -348,7 +352,7 @@ const AttendancePage = () => {
               value={months.find((m) => m.value === month)}
               onChange={(v) => setMonth(v.value)}
               placeholder="Chọn tháng"
-              styles={{ 
+              styles={{
                 control: (base) => ({ ...base, minHeight: 32 }),
                 menu: (base) => ({ ...base, zIndex: 9999 })
               }}
@@ -359,7 +363,7 @@ const AttendancePage = () => {
               value={years.find((y) => y.value === year)}
               onChange={(v) => setYear(v.value)}
               placeholder="Chọn năm"
-              styles={{ 
+              styles={{
                 control: (base) => ({ ...base, minHeight: 32 }),
                 menu: (base) => ({ ...base, zIndex: 9999 })
               }}

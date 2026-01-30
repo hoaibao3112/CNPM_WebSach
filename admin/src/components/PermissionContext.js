@@ -36,9 +36,9 @@ export const PermissionProvider = ({ children }) => {
   };
 
   useEffect(() => {
-  fetchPermissions();
-  // eslint-disable-next-line
-}, []);
+    fetchPermissions();
+    // eslint-disable-next-line
+  }, []);
 
   // Normalize strings: remove diacritics, lowercase, trim
   const normalize = (s) => {
@@ -59,19 +59,25 @@ export const PermissionProvider = ({ children }) => {
     }
   };
 
-  const hasPermission = (functionName, action) => {
-    const fnNorm = normalize(functionName);
+  const hasPermission = (permissionKeyOrFunctionName, action = null) => {
+    // New check style: hasPermission('PRODUCT_READ')
+    if (!action) {
+      const result = permissions.some((perm) => perm.Key === permissionKeyOrFunctionName);
+      console.log(`Checking permission (Key): ${permissionKeyOrFunctionName} => ${result}`);
+      return result;
+    }
+
+    // Legacy check style: hasPermission('Sản phẩm', 'Xem')
+    const fnNorm = normalize(permissionKeyOrFunctionName);
     const actNorm = normalize(action);
 
     const result = permissions.some((perm) => {
       const ten = normalize(perm.TenCN);
       const hanh = normalize(perm.HanhDong);
-      // Strict match for action to avoid false positives (use exact equality)
-      const actionMatches = hanh === actNorm;
-      return ten === fnNorm && actionMatches;
+      return ten === fnNorm && hanh === actNorm;
     });
 
-    console.log(`Checking permission: ${functionName} - ${action} => ${result}`);
+    console.log(`Checking permission (Legacy): ${permissionKeyOrFunctionName} - ${action} => ${result}`);
     return result;
   };
 

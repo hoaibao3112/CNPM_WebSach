@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import api from '../utils/api';
 import '../styles/RefundManagement.css';
 
 const RefundManagement = () => {
@@ -40,17 +41,14 @@ const RefundManagement = () => {
   const fetchRefunds = async () => {
     try {
       setLoading(true);
-      const response = await axios.get('http://localhost:5000/api/orders/refund-requests/admin', {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('authToken')}`,
-        },
+      const response = await api.get('/refunds/admin/list', {
         params: {
           status: statusFilter,
           page: currentPage,
           limit: refundsPerPage
         }
       });
-      
+
       if (response.data.success) {
         setRefunds(response.data.data);
         setSummary(response.data.summary);
@@ -61,7 +59,7 @@ const RefundManagement = () => {
     } catch (error) {
       console.error('Lỗi khi tải danh sách hoàn tiền:', error);
       setRefunds([]);
-      
+
       // Hiển thị thông báo lỗi chi tiết hơn
       if (error.response?.status === 403) {
         alert('Bạn không có quyền truy cập trang này!');
@@ -196,30 +194,30 @@ const RefundManagement = () => {
   // Filter và sort logic - CẬP NHẬT
   const filteredAndSortedRefunds = () => {
     let filtered = refunds.filter(refund => {
-      const matchesSearch = searchTerm === '' || 
+      const matchesSearch = searchTerm === '' ||
         refund.orderId?.toString().includes(searchTerm) ||
         refund.refundRequestId?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         refund.customerName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         refund.customerPhone?.includes(searchTerm);
-      
+
       const matchesStatus = statusFilter === 'all' || refund.status === statusFilter;
-      
+
       const matchesTime = timeFilter === 'all' || (() => {
         const createdDate = new Date(refund.createdAt);
         const now = new Date();
         const diffDays = Math.floor((now - createdDate) / (1000 * 60 * 60 * 24));
-        
-        switch(timeFilter) {
+
+        switch (timeFilter) {
           case '7d': return diffDays <= 7;
           case '30d': return diffDays <= 30;
           case '3m': return diffDays <= 90;
           default: return true;
         }
       })();
-      
+
       const matchesAmount = amountFilter === 'all' || (() => {
         const amount = parseFloat(refund.refundAmount);
-        switch(amountFilter) {
+        switch (amountFilter) {
           case '0-100k': return amount < 100000;
           case '100k-500k': return amount >= 100000 && amount < 500000;
           case '500k-1m': return amount >= 500000 && amount < 1000000;
@@ -233,7 +231,7 @@ const RefundManagement = () => {
 
     // Sort
     filtered.sort((a, b) => {
-      switch(sortBy) {
+      switch (sortBy) {
         case 'date-desc':
           return new Date(b.createdAt) - new Date(a.createdAt);
         case 'date-asc':
@@ -267,7 +265,7 @@ const RefundManagement = () => {
       'REJECTED': { text: 'Từ chối', class: 'status-rejected' },
       'CANCELLED': { text: 'Đã hủy', class: 'status-cancelled' }
     };
-    
+
     const config = statusConfig[status] || { text: status, class: 'status-default' };
     return <span className={`status-badge ${config.class}`}>{config.text}</span>;
   };
@@ -286,7 +284,7 @@ const RefundManagement = () => {
     });
   };
 
-// ...existing code...
+  // ...existing code...
 
   if (loading) {
     return (
@@ -430,8 +428,8 @@ const RefundManagement = () => {
 
             <div className="search-group">
               <div className="search-box">
-                <input 
-                  type="text" 
+                <input
+                  type="text"
                   placeholder="Tìm theo mã đơn hàng, mã giao dịch hoặc khách hàng..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
@@ -454,13 +452,13 @@ const RefundManagement = () => {
             <h2>Danh sách yêu cầu hoàn tiền ({filteredAndSortedRefunds().length})</h2>
             <div className="list-controls">
               <div className="view-toggle">
-                <button 
+                <button
                   className={`view-btn ${viewMode === 'card' ? 'active' : ''}`}
                   onClick={() => setViewMode('card')}
                 >
                   <i className="fas fa-th-large"></i>
                 </button>
-                <button 
+                <button
                   className={`view-btn ${viewMode === 'table' ? 'active' : ''}`}
                   onClick={() => setViewMode('table')}
                 >
@@ -499,7 +497,7 @@ const RefundManagement = () => {
                       </div>
                       <div className="refund-date">{formatDate(refund.createdAt)}</div>
                     </div>
-                    
+
                     <div className="refund-amount-section">
                       <div className="refund-amount">{formatCurrency(refund.refundAmount)}</div>
                       {refund.refundType && (
@@ -508,7 +506,7 @@ const RefundManagement = () => {
                         </span>
                       )}
                     </div>
-                    
+
                     <div className="customer-info">
                       <p><strong>Khách hàng:</strong> {refund.customerName}</p>
                       <p><strong>SĐT:</strong> {refund.customerPhone}</p>
@@ -522,33 +520,33 @@ const RefundManagement = () => {
                       <p><strong>Chủ TK:</strong> {refund.accountHolder}</p>
                       <p><strong>Số TK:</strong> ****{refund.bankAccount?.slice(-4)}</p>
                     </div>
-                    
+
                     <div className="refund-reason">
                       <strong>Lý do:</strong> {refund.refundReason}
                     </div>
-                    
+
                     <div className="refund-card-footer">
                       {getStatusBadge(refund.status)}
                       <div className="refund-actions">
-                        <button 
-                          className="action-btn view-btn" 
+                        <button
+                          className="action-btn view-btn"
                           onClick={() => openModal(refund)}
                           title="Xem chi tiết"
                         >
                           <i className="fas fa-eye"></i>
                         </button>
-                        
+
                         {refund.status === 'PENDING' && (
                           <>
-                            <button 
-                              className="action-btn approve-btn" 
+                            <button
+                              className="action-btn approve-btn"
                               onClick={() => openProcessModal(refund, 'approve')}
                               title="Duyệt hoàn tiền"
                             >
                               <i className="fas fa-check"></i>
                             </button>
-                            <button 
-                              className="action-btn reject-btn" 
+                            <button
+                              className="action-btn reject-btn"
                               onClick={() => openProcessModal(refund, 'reject')}
                               title="Từ chối hoàn tiền"
                             >
@@ -556,10 +554,10 @@ const RefundManagement = () => {
                             </button>
                           </>
                         )}
-                        
+
                         {refund.status === 'PROCESSING' && (
-                          <button 
-                            className="action-btn complete-btn" 
+                          <button
+                            className="action-btn complete-btn"
                             onClick={() => openProcessModal(refund, 'complete')}
                             title="Hoàn thành chuyển tiền"
                           >
@@ -614,25 +612,25 @@ const RefundManagement = () => {
                       <td>{getStatusBadge(refund.status)}</td>
                       <td>
                         <div className="table-actions">
-                          <button 
-                            className="action-btn view-btn" 
+                          <button
+                            className="action-btn view-btn"
                             onClick={() => openModal(refund)}
                             title="Xem chi tiết"
                           >
                             <i className="fas fa-eye"></i>
                           </button>
-                          
+
                           {refund.status === 'PENDING' && (
                             <>
-                              <button 
-                                className="action-btn approve-btn" 
+                              <button
+                                className="action-btn approve-btn"
                                 onClick={() => openProcessModal(refund, 'approve')}
                                 title="Duyệt"
                               >
                                 <i className="fas fa-check"></i>
                               </button>
-                              <button 
-                                className="action-btn reject-btn" 
+                              <button
+                                className="action-btn reject-btn"
                                 onClick={() => openProcessModal(refund, 'reject')}
                                 title="Từ chối"
                               >
@@ -640,10 +638,10 @@ const RefundManagement = () => {
                               </button>
                             </>
                           )}
-                          
+
                           {refund.status === 'PROCESSING' && (
-                            <button 
-                              className="action-btn complete-btn" 
+                            <button
+                              className="action-btn complete-btn"
                               onClick={() => openProcessModal(refund, 'complete')}
                               title="Hoàn thành"
                             >
@@ -669,14 +667,14 @@ const RefundManagement = () => {
               </span>
             </div>
             <div className="pagination-controls">
-              <button 
-                className="pagination-btn" 
+              <button
+                className="pagination-btn"
                 onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
                 disabled={currentPage === 1}
               >
                 <i className="fas fa-chevron-left"></i>
               </button>
-              
+
               <div className="pagination-numbers">
                 {[...Array(Math.min(5, totalPages))].map((_, i) => {
                   const page = Math.max(1, Math.min(currentPage - 2 + i, totalPages - 4 + i));
@@ -691,8 +689,8 @@ const RefundManagement = () => {
                   );
                 })}
               </div>
-              
-              <button 
+
+              <button
                 className="pagination-btn"
                 onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
                 disabled={currentPage === totalPages}
@@ -846,10 +844,10 @@ const RefundManagement = () => {
                 <button className="btn btn-outline" onClick={closeModal}>
                   <i className="fas fa-times"></i> Đóng
                 </button>
-                
+
                 {selectedRefund.status === 'PENDING' && (
                   <>
-                    <button 
+                    <button
                       className="btn btn-success"
                       onClick={() => {
                         closeModal();
@@ -858,7 +856,7 @@ const RefundManagement = () => {
                     >
                       <i className="fas fa-check"></i> Duyệt hoàn tiền
                     </button>
-                    <button 
+                    <button
                       className="btn btn-danger"
                       onClick={() => {
                         closeModal();
@@ -869,9 +867,9 @@ const RefundManagement = () => {
                     </button>
                   </>
                 )}
-                
+
                 {selectedRefund.status === 'PROCESSING' && (
-                  <button 
+                  <button
                     className="btn btn-primary"
                     onClick={() => {
                       closeModal();
@@ -899,14 +897,13 @@ const RefundManagement = () => {
             <div className="modal-content process-modal-content">
               <div className="modal-header">
                 <h2>
-                  <i className={`fas ${
-                    processForm.action === 'approve' ? 'fa-check-circle' :
+                  <i className={`fas ${processForm.action === 'approve' ? 'fa-check-circle' :
                     processForm.action === 'reject' ? 'fa-times-circle' :
-                    'fa-money-bill-wave'
-                  }`}></i>
+                      'fa-money-bill-wave'
+                    }`}></i>
                   {processForm.action === 'approve' ? 'Duyệt yêu cầu hoàn tiền' :
-                   processForm.action === 'reject' ? 'Từ chối yêu cầu hoàn tiền' :
-                   'Hoàn thành chuyển tiền'}
+                    processForm.action === 'reject' ? 'Từ chối yêu cầu hoàn tiền' :
+                      'Hoàn thành chuyển tiền'}
                 </h2>
                 <button className="close-btn" onClick={closeProcessModal}>
                   <i className="fas fa-times"></i>
@@ -941,7 +938,7 @@ const RefundManagement = () => {
                         <input
                           type="number"
                           value={processForm.actualRefundAmount}
-                          onChange={(e) => setProcessForm({...processForm, actualRefundAmount: e.target.value})}
+                          onChange={(e) => setProcessForm({ ...processForm, actualRefundAmount: e.target.value })}
                           placeholder="Nhập số tiền thực tế đã chuyển"
                           min="0"
                           max={selectedRefund.refundAmount}
@@ -952,7 +949,7 @@ const RefundManagement = () => {
                         <input
                           type="text"
                           value={processForm.transactionId}
-                          onChange={(e) => setProcessForm({...processForm, transactionId: e.target.value})}
+                          onChange={(e) => setProcessForm({ ...processForm, transactionId: e.target.value })}
                           placeholder="Nhập mã giao dịch từ ngân hàng"
                         />
                       </div>
@@ -963,11 +960,11 @@ const RefundManagement = () => {
                     <label>Ghi chú {processForm.action === 'complete' ? '(tùy chọn)' : ''}</label>
                     <textarea
                       value={processForm.adminReason}
-                      onChange={(e) => setProcessForm({...processForm, adminReason: e.target.value})}
+                      onChange={(e) => setProcessForm({ ...processForm, adminReason: e.target.value })}
                       placeholder={
                         processForm.action === 'approve' ? 'Nhập lý do duyệt (tùy chọn)' :
-                        processForm.action === 'reject' ? 'Nhập lý do từ chối' :
-                        'Nhập ghi chú về việc chuyển tiền (tùy chọn)'
+                          processForm.action === 'reject' ? 'Nhập lý do từ chối' :
+                            'Nhập ghi chú về việc chuyển tiền (tùy chọn)'
                       }
                       rows="4"
                     />
@@ -979,12 +976,11 @@ const RefundManagement = () => {
                 <button className="btn btn-outline" onClick={closeProcessModal} disabled={processing}>
                   <i className="fas fa-times"></i> Hủy
                 </button>
-                <button 
-                  className={`btn ${
-                    processForm.action === 'approve' ? 'btn-success' :
+                <button
+                  className={`btn ${processForm.action === 'approve' ? 'btn-success' :
                     processForm.action === 'reject' ? 'btn-danger' :
-                    'btn-primary'
-                  }`}
+                      'btn-primary'
+                    }`}
                   onClick={handleProcessRefund}
                   disabled={processing}
                 >
@@ -992,14 +988,13 @@ const RefundManagement = () => {
                     <><i className="fas fa-spinner fa-spin"></i> Đang xử lý...</>
                   ) : (
                     <>
-                      <i className={`fas ${
-                        processForm.action === 'approve' ? 'fa-check' :
+                      <i className={`fas ${processForm.action === 'approve' ? 'fa-check' :
                         processForm.action === 'reject' ? 'fa-times' :
-                        'fa-money-bill-wave'
-                      }`}></i>
+                          'fa-money-bill-wave'
+                        }`}></i>
                       {processForm.action === 'approve' ? 'Duyệt yêu cầu' :
-                       processForm.action === 'reject' ? 'Từ chối yêu cầu' :
-                       'Hoàn thành chuyển tiền'}
+                        processForm.action === 'reject' ? 'Từ chối yêu cầu' :
+                          'Hoàn thành chuyển tiền'}
                     </>
                   )}
                 </button>

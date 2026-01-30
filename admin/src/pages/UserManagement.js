@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
+import api from '../utils/api';
 import { Button, Input, message, Table, Modal, Space, Select } from 'antd';
 import { EditOutlined, DeleteOutlined, ExclamationCircleFilled, LockOutlined, UnlockOutlined } from '@ant-design/icons';
 
-const { Search } = Input;
+// const { Search } = Input; // Unused for now
 const { confirm } = Modal;
 const { Option } = Select;
 
@@ -29,15 +29,18 @@ const UserManagement = () => {
   });
 
   const { users, newUser, editingUser, searchTerm, statusFilter, genderFilter, isModalVisible, loading } = state;
-  const API_URL = 'http://localhost:5000/api/users';
+  const API_URL = '/users';
 
   const fetchUsers = async () => {
     try {
       setState(prev => ({ ...prev, loading: true, error: null }));
-      const response = await axios.get(API_URL);
-      
-      if (Array.isArray(response.data)) {
-        setState(prev => ({ ...prev, users: response.data }));
+      const response = await api.get(API_URL);
+
+      const resData = response.data.data || response.data;
+      const usersData = Array.isArray(resData) ? resData : (resData?.data || []);
+
+      if (Array.isArray(usersData)) {
+        setState(prev => ({ ...prev, users: usersData }));
       } else {
         throw new Error('Dữ liệu người dùng không hợp lệ');
       }
@@ -93,7 +96,7 @@ const UserManagement = () => {
     if (!validateUserData(newUser)) return;
 
     try {
-      await axios.post(API_URL, newUser);
+      await api.post(API_URL, newUser);
       await fetchUsers();
       setState(prev => ({
         ...prev,
@@ -118,7 +121,7 @@ const UserManagement = () => {
     if (!validateUserData(editingUser)) return;
 
     try {
-      await axios.put(`${API_URL}/${editingUser.MaNV}`, editingUser);
+      await api.put(`${API_URL}/${editingUser.MaNV}`, editingUser);
       await fetchUsers();
       setState(prev => ({
         ...prev,
@@ -141,7 +144,7 @@ const UserManagement = () => {
       cancelText: 'Thoát',
       async onOk() {
         try {
-          await axios.delete(`${API_URL}/${MaNV}`);
+          await api.delete(`${API_URL}/${MaNV}`);
           await fetchUsers();
           message.success('Xóa người dùng thành công!');
         } catch (error) {
@@ -159,7 +162,7 @@ const UserManagement = () => {
       cancelText: 'Hủy',
       async onOk() {
         try {
-          await axios.put(`${API_URL}/${user.MaNV}`, {
+          await api.put(`${API_URL}/${user.MaNV}`, {
             ...user,
             TinhTrang: user.TinhTrang === 'Active' ? 'Inactive' : 'Active',
           });
@@ -177,9 +180,9 @@ const UserManagement = () => {
       (statusFilter === '' || user.TinhTrang === statusFilter) &&
       (genderFilter === '' || user.GioiTinh === genderFilter) &&
       ((user.MaNV || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (user.TenNV || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (user.SDT || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (user.Email || '').toLowerCase().includes(searchTerm.toLowerCase()))
+        (user.TenNV || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (user.SDT || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (user.Email || '').toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
   const columns = [
@@ -221,9 +224,8 @@ const UserManagement = () => {
       width: 120,
       render: (status) => (
         <span
-          className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
-            status === 'Active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-          }`}
+          className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${status === 'Active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+            }`}
         >
           {status === 'Active' ? 'Hoạt động' : 'Không hoạt động'}
         </span>

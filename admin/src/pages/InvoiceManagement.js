@@ -17,7 +17,7 @@ const addressCache = {
 // Lấy tên tỉnh/thành phố từ mã
 async function getProvinceName(provinceCode) {
   if (!provinceCode) return '';
-  
+
   if (addressCache.provinces.has(provinceCode)) {
     return addressCache.provinces.get(provinceCode);
   }
@@ -25,7 +25,7 @@ async function getProvinceName(provinceCode) {
   try {
     const response = await fetch('https://provinces.open-api.vn/api/p/');
     const provinces = await response.json();
-    
+
     provinces.forEach(province => {
       addressCache.provinces.set(province.code.toString(), province.name);
     });
@@ -40,7 +40,7 @@ async function getProvinceName(provinceCode) {
 // Lấy tên quận/huyện từ mã
 async function getDistrictName(districtCode, provinceCode) {
   if (!districtCode) return '';
-  
+
   if (addressCache.districts.has(districtCode)) {
     return addressCache.districts.get(districtCode);
   }
@@ -48,7 +48,7 @@ async function getDistrictName(districtCode, provinceCode) {
   try {
     const response = await fetch(`https://provinces.open-api.vn/api/p/${provinceCode}?depth=2`);
     const data = await response.json();
-    
+
     if (data.districts) {
       data.districts.forEach(district => {
         addressCache.districts.set(district.code.toString(), district.name);
@@ -65,7 +65,7 @@ async function getDistrictName(districtCode, provinceCode) {
 // Lấy tên phường/xã từ mã
 async function getWardName(wardCode, districtCode) {
   if (!wardCode) return '';
-  
+
   if (addressCache.wards.has(wardCode)) {
     return addressCache.wards.get(wardCode);
   }
@@ -73,7 +73,7 @@ async function getWardName(wardCode, districtCode) {
   try {
     const response = await fetch(`https://provinces.open-api.vn/api/d/${districtCode}?depth=2`);
     const data = await response.json();
-    
+
     if (data.wards) {
       data.wards.forEach(ward => {
         addressCache.wards.set(ward.code.toString(), ward.name);
@@ -91,7 +91,7 @@ async function getWardName(wardCode, districtCode) {
 async function formatFullAddress(invoice) {
   try {
     console.log('🏠 Formatting address for invoice:', invoice);
-    
+
     const [provinceName, districtName, wardName] = await Promise.all([
       getProvinceName(invoice.province),
       getDistrictName(invoice.district, invoice.province),
@@ -106,7 +106,7 @@ async function formatFullAddress(invoice) {
     ].filter(part => part && part.trim() && part !== 'null' && part !== 'undefined');
 
     const fullAddress = addressParts.length > 0 ? addressParts.join(', ') : 'Chưa có địa chỉ';
-    
+
     console.log('✅ Formatted address:', fullAddress);
     return fullAddress;
   } catch (error) {
@@ -132,13 +132,13 @@ const InvoiceManagement = () => {
   const [reviewModalVisible, setReviewModalVisible] = useState(false);
   const [reviewData, setReviewData] = useState(null);
   const [reviewLoading, setReviewLoading] = useState(false);
-  
+
   // ✨ THÊM CÁC STATE CHO THÔNG BÁO
   const [unreadCount, setUnreadCount] = useState(0);
   const [unreadRooms, setUnreadRooms] = useState([]);
   const [notificationVisible, setNotificationVisible] = useState(false);
   const [notificationPolling, setNotificationPolling] = useState(null);
-  
+
   // Ref cho auto scroll
   const messagesEndRef = useRef(null);
   const messagesContainerRef = useRef(null);
@@ -150,6 +150,39 @@ const InvoiceManagement = () => {
     { value: 'Đã giao hàng', color: 'green' },
     { value: 'Đã hủy', color: 'red' }
   ];
+
+  // ✅ Fetch invoices from API
+  const fetchInvoices = async () => {
+    setLoading(true);
+    try {
+      const token = localStorage.getItem('authToken');
+      const response = await axios.get('http://localhost:5000/api/orders/hoadon', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      console.log('📦 Invoices API response:', response.data);
+
+      // Handle different response structures
+      const invoicesData = response.data.data || response.data.invoices || response.data;
+
+      if (Array.isArray(invoicesData)) {
+        setInvoices(invoicesData);
+      } else if (typeof invoicesData === 'object' && invoicesData !== null) {
+        // If it's an object, convert to array or extract the array
+        const invoiceArray = Object.values(invoicesData);
+        setInvoices(Array.isArray(invoiceArray) ? invoiceArray : []);
+      } else {
+        console.error('❌ Invalid invoices data:', invoicesData);
+        setInvoices([]);
+      }
+    } catch (error) {
+      console.error('❌ Fetch invoices error:', error);
+      message.error('Không thể tải danh sách hóa đơn');
+      setInvoices([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // ✨ THÊM CÁC FUNCTION CHO THÔNG BÁO
   const loadUnreadNotifications = useCallback(async () => {
@@ -168,12 +201,12 @@ const InvoiceManagement = () => {
 
       if (countRes.data.success) {
         const newCount = countRes.data.unread_count;
-        
+
         // Phát âm thanh khi có tin nhắn mới
         if (newCount > unreadCount && unreadCount > 0) {
           playNotificationSound();
         }
-        
+
         setUnreadCount(newCount);
       }
 
@@ -186,39 +219,40 @@ const InvoiceManagement = () => {
     }
   }, [unreadCount]);
 
- const playNotificationSound = () => {
-  try {
-    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-    
-    // Tạo 3 tiếng beep liên tục CỰC TO
-    for(let i = 0; i < 3; i++) {
-      const oscillator = audioContext.createOscillator();
-      const gainNode = audioContext.createGain();
-      
-      oscillator.connect(gainNode);
-      gainNode.connect(audioContext.destination);
-      
-      oscillator.frequency.value = 7000 + (i * 500); // 7000, 7500, 8000Hz
-    oscillator.type = 'sawtooth'; // Âm thanh răng cưa, rất sắc
-      
-      const startTime = audioContext.currentTime + (i * 0.4);
-      
-      gainNode.gain.setValueAtTime(0, startTime);
-      gainNode.gain.linearRampToValueAtTime(0.8, startTime + 0.02);
-      gainNode.gain.exponentialRampToValueAtTime(0.001, startTime + 0.35);
-      
-      oscillator.start(startTime);
-      oscillator.stop(startTime + 0.35);
+  const playNotificationSound = () => {
+    try {
+      const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+
+      // Tạo 3 tiếng beep liên tục CỰC TO
+      for (let i = 0; i < 3; i++) {
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+
+        oscillator.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+
+        oscillator.frequency.value = 7000 + (i * 500); // 7000, 7500, 8000Hz
+        oscillator.type = 'sawtooth'; // Âm thanh răng cưa, rất sắc
+
+        const startTime = audioContext.currentTime + (i * 0.4);
+
+        gainNode.gain.setValueAtTime(0, startTime);
+        gainNode.gain.linearRampToValueAtTime(0.8, startTime + 0.02);
+        gainNode.gain.exponentialRampToValueAtTime(0.001, startTime + 0.35);
+
+        oscillator.start(startTime);
+        oscillator.stop(startTime + 0.35);
+      }
+
+      console.log('🚨🚨🚨 TRIPLE ALARM SIREN ACTIVATED!');
+    } catch (error) {
+      console.log('❌ Could not play alarm:', error);
     }
-    
-    console.log('🚨🚨🚨 TRIPLE ALARM SIREN ACTIVATED!');
-  } catch (error) {
-    console.log('❌ Could not play alarm:', error);
-  }
-};
+  };
+
+  // ✅ START NOTIFICATION POLLING - Re-enabled after backend implementation
   const startNotificationPolling = useCallback(() => {
     if (notificationPolling) return;
-
     const interval = setInterval(loadUnreadNotifications, 5000);
     setNotificationPolling(interval);
     loadUnreadNotifications();
@@ -237,7 +271,7 @@ const InvoiceManagement = () => {
       await axios.patch(`http://localhost:5000/api/chat/admin/mark-read/${roomId}`, {}, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      
+
       loadUnreadNotifications();
     } catch (error) {
       console.error('❌ Mark read error:', error);
@@ -247,7 +281,7 @@ const InvoiceManagement = () => {
   // Auto scroll to bottom khi có tin nhắn mới
   const scrollToBottom = useCallback(() => {
     if (messagesEndRef.current) {
-      messagesEndRef.current.scrollIntoView({ 
+      messagesEndRef.current.scrollIntoView({
         behavior: 'smooth',
         block: 'end'
       });
@@ -261,7 +295,7 @@ const InvoiceManagement = () => {
     }
   }, [messages, scrollToBottom]);
 
-  // ✨ START NOTIFICATION POLLING KHI COMPONENT MOUNT
+  // ✨ START NOTIFICATION POLLING KHI COMPONENT MOUNT - Re-enabled
   useEffect(() => {
     startNotificationPolling();
     return () => stopNotificationPolling();
@@ -271,17 +305,17 @@ const InvoiceManagement = () => {
   const loadMessages = useCallback(async (roomId, token) => {
     try {
       console.log('📨 Loading messages for room:', roomId);
-      
+
       const msgRes = await axios.get(
         `http://localhost:5000/api/chat/rooms/${roomId}/messages`,
         { headers: { Authorization: `Bearer ${token || localStorage.getItem('authToken')}` } }
       );
-      
+
       console.log('📨 Messages API response:', msgRes.data);
-      
+
       if (msgRes.data.success && Array.isArray(msgRes.data.messages)) {
         // Filter duplicates by ID
-        const uniqueMessages = msgRes.data.messages.filter((msg, index, self) => 
+        const uniqueMessages = msgRes.data.messages.filter((msg, index, self) =>
           index === self.findIndex(m => m.id === msg.id)
         );
 
@@ -290,13 +324,13 @@ const InvoiceManagement = () => {
           content: msg.message || msg.content || '',
           sender_name: msg.sender_name || (msg.sender_type === 'staff' ? 'Admin' : 'Khách hàng')
         }));
-        
+
         // Sort by time
         formattedMessages.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
-        
+
         console.log('✅ Formatted messages:', formattedMessages.length);
         setMessages(formattedMessages);
-        
+
         // Update displayed IDs
         const messageIds = new Set(formattedMessages.map(m => m.id));
         setDisplayedMessageIds(messageIds);
@@ -316,24 +350,24 @@ const InvoiceManagement = () => {
   // ✅ Refresh messages function
   const refreshMessages = useCallback(async () => {
     if (!currentRoom) return;
-    
+
     try {
       const token = localStorage.getItem('authToken');
-      
+
       const msgRes = await axios.get(
         `http://localhost:5000/api/chat/rooms/${currentRoom.room_id}/messages`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      
+
       if (msgRes.data.success && Array.isArray(msgRes.data.messages)) {
         // Tìm messages mới
-        const newMessages = msgRes.data.messages.filter(msg => 
+        const newMessages = msgRes.data.messages.filter(msg =>
           !displayedMessageIds.has(msg.id)
         );
 
         if (newMessages.length > 0) {
           console.log('🆕 New messages found:', newMessages.length);
-          
+
           const formattedNewMessages = newMessages.map(msg => ({
             ...msg,
             content: msg.message || msg.content || '',
@@ -344,7 +378,7 @@ const InvoiceManagement = () => {
           setMessages(prevMessages => {
             const allMessages = [...prevMessages, ...formattedNewMessages];
             // Remove duplicates và sort
-            const uniqueMessages = allMessages.filter((msg, index, self) => 
+            const uniqueMessages = allMessages.filter((msg, index, self) =>
               index === self.findIndex(m => m.id === msg.id)
             );
             return uniqueMessages.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
@@ -372,49 +406,33 @@ const InvoiceManagement = () => {
     return () => clearInterval(interval);
   }, [chatVisible, currentRoom, refreshMessages]);
 
-  // ✅ Fetch invoices
-  const fetchInvoices = async () => {
-    setLoading(true);
-    try {
-      console.log('📡 Gọi API /hoadon');
-      const res = await axios.get('http://localhost:5000/api/orders/hoadon');
-      console.log('✅ API Success - Data:', res.data);
-      setInvoices(res.data);
-    } catch (error) {
-      console.error('❌ Fetch invoices error:', error.response?.data || error.message);
-      message.error('Lỗi khi tải danh sách hóa đơn');
-    } finally {
-      setLoading(false);
-    }
-  };
-
   // THAY THẾ HÀM handleViewInvoice (khoảng dòng 350) BẰNG:
 
-const handleViewInvoice = async (id) => {
-  try {
-    const res = await axios.get(`http://localhost:5000/api/orders/hoadon/${id}`);
-    
-    // ✅ FORMAT ĐỊA CHỈ TRƯỚC KHI SET STATE
-    const formattedAddress = await formatFullAddress(res.data);
-    
-    setSelectedInvoice({
-      ...res.data,
-      items: res.data.items.map(item => ({
-        ...item,
-        unitPrice: item.price,
-        productImage: item.productImage || 'https://via.placeholder.com/50'
-      })),
-      note: res.data.GhiChu || '',
-      status: res.data.tinhtrang,
-      // ✅ THÊM TRƯỜNG ĐỊA CHỈ ĐÃ FORMAT
-      formattedAddress: formattedAddress
-    });
-    setIsModalVisible(true);
-  } catch (error) {
-    console.error('❌ View invoice error:', error);
-    message.error('Lỗi khi tải chi tiết hóa đơn');
-  }
-};
+  const handleViewInvoice = async (id) => {
+    try {
+      const res = await axios.get(`http://localhost:5000/api/orders/hoadon/${id}`);
+
+      // ✅ FORMAT ĐỊA CHỈ TRƯỚC KHI SET STATE
+      const formattedAddress = await formatFullAddress(res.data);
+
+      setSelectedInvoice({
+        ...res.data,
+        items: res.data.items.map(item => ({
+          ...item,
+          unitPrice: item.price,
+          productImage: item.productImage || 'https://via.placeholder.com/50'
+        })),
+        note: res.data.GhiChu || '',
+        status: res.data.tinhtrang,
+        // ✅ THÊM TRƯỜNG ĐỊA CHỈ ĐÃ FORMAT
+        formattedAddress: formattedAddress
+      });
+      setIsModalVisible(true);
+    } catch (error) {
+      console.error('❌ View invoice error:', error);
+      message.error('Lỗi khi tải chi tiết hóa đơn');
+    }
+  };
 
   // View review for an order (admin can view any order's review because server allows admin)
   const handleViewReview = async (orderId) => {
@@ -443,7 +461,7 @@ const handleViewInvoice = async (id) => {
   // ✅ Start chat with customer - CẬP NHẬT ĐỂ ĐÁNH DẤU ĐÃ ĐỌC
   const handleChatWithCustomer = async (customerId) => {
     console.log('🚀 Starting chat with customer:', customerId);
-    
+
     if (!customerId) {
       message.error('Mã khách hàng không hợp lệ');
       return;
@@ -459,7 +477,7 @@ const handleViewInvoice = async (id) => {
     setChatLoading(true);
     try {
       const token = localStorage.getItem('authToken');
-      
+
       if (!token) {
         message.error('Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại.');
         return;
@@ -471,7 +489,7 @@ const handleViewInvoice = async (id) => {
       console.log('👤 Fetching customer info...');
       try {
         const customerRes = await axios.get(
-          `http://localhost:5000/api/client/khachhang/${customerId}`, 
+          `http://localhost:5000/api/client/khachhang/${customerId}`,
           { headers: { Authorization: `Bearer ${token}` } }
         );
         console.log('✅ Customer info:', customerRes.data);
@@ -486,33 +504,33 @@ const handleViewInvoice = async (id) => {
       const roomRes = await axios.post(
         'http://localhost:5000/api/chat/rooms',
         { customer_id: customerId },
-        { 
-          headers: { 
+        {
+          headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'
-          } 
+          }
         }
       );
 
       console.log('✅ Room response:', roomRes.data);
-      
+
       if (roomRes.data.success && roomRes.data.room) {
         setCurrentRoom(roomRes.data.room);
-        
+
         // 3. Đánh dấu tin nhắn đã đọc
         await markRoomAsRead(roomRes.data.room.room_id);
-        
+
         // 4. Load messages với delay
         await new Promise(resolve => setTimeout(resolve, 300));
         await loadMessages(roomRes.data.room.room_id, token);
-        
+
         // 5. Open chat
         setChatVisible(true);
         console.log('✅ Chat opened successfully');
       } else {
         throw new Error('Invalid room response');
       }
-      
+
     } catch (error) {
       console.error('❌ Chat initiation error:', error);
       const errorMsg = error.response?.data?.error || error.message || 'Lỗi kết nối chat';
@@ -529,16 +547,16 @@ const handleViewInvoice = async (id) => {
       message.warning('Vui lòng nhập tin nhắn');
       return;
     }
-    
+
     if (!currentRoom) {
       message.error('Không tìm thấy phòng chat');
       return;
     }
 
     if (sendingMessage) return; // Prevent double send
-    
+
     setSendingMessage(true);
-    
+
     try {
       const token = localStorage.getItem('authToken');
       if (!token) {
@@ -566,15 +584,15 @@ const handleViewInvoice = async (id) => {
 
       const response = await axios.post(
         'http://localhost:5000/api/chat/messages',
-        { 
-          room_id: currentRoom.room_id, 
-          message: messageText 
+        {
+          room_id: currentRoom.room_id,
+          message: messageText
         },
-        { 
-          headers: { 
+        {
+          headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'
-          } 
+          }
         }
       );
 
@@ -592,17 +610,17 @@ const handleViewInvoice = async (id) => {
       setTimeout(() => {
         loadMessages(currentRoom.room_id, token);
       }, 500);
-      
+
     } catch (error) {
       console.error('❌ Send message error:', error.response?.data || error.message);
-      
+
       // Remove temporary message on error
       setMessages(prev => prev.filter(msg => !msg.isTemporary));
       setDisplayedMessageIds(prev => {
         const newSet = new Set([...prev].filter(id => !id.toString().startsWith('temp-')));
         return newSet;
       });
-      
+
       const errorMsg = error.response?.data?.error || error.message || 'Gửi tin nhắn thất bại';
       message.error(errorMsg);
     } finally {
@@ -643,7 +661,7 @@ const handleViewInvoice = async (id) => {
   const handleStatusChange = async (id, newStatus, ghichu = null, force = false) => {
     try {
       const token = localStorage.getItem('authToken');
-      await axios.put(`http://localhost:5000/api/orders/hoadon/${id}/trangthai`, { 
+      await axios.put(`http://localhost:5000/api/orders/hoadon/${id}/trangthai`, {
         trangthai: newStatus,
         ghichu: ghichu,
         force: force
@@ -698,7 +716,7 @@ const handleViewInvoice = async (id) => {
 
   // ✅ Render unique messages
   const renderMessages = () => {
-    const uniqueMessages = messages.filter((msg, index, self) => 
+    const uniqueMessages = messages.filter((msg, index, self) =>
       index === self.findIndex(m => m.id === msg.id)
     );
 
@@ -727,9 +745,9 @@ const handleViewInvoice = async (id) => {
   };
 
   const formatDate = (dateString) => {
-    const options = { 
-      year: 'numeric', 
-      month: '2-digit', 
+    const options = {
+      year: 'numeric',
+      month: '2-digit',
       day: '2-digit',
       hour: '2-digit',
       minute: '2-digit'
@@ -744,7 +762,7 @@ const handleViewInvoice = async (id) => {
     });
   };
 
-  const filteredInvoices = invoices.filter(invoice => 
+  const filteredInvoices = invoices.filter(invoice =>
     invoice.id.toString().includes(searchTerm) ||
     invoice.customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
     invoice.customerPhone.includes(searchTerm)
@@ -767,7 +785,7 @@ const handleViewInvoice = async (id) => {
         </Menu.Item>
       ) : (
         unreadRooms.map((room) => (
-          <Menu.Item 
+          <Menu.Item
             key={room.room_id}
             onClick={() => {
               handleChatWithCustomer(room.customer_id);
@@ -873,9 +891,9 @@ const handleViewInvoice = async (id) => {
       key: 'action',
       render: (_, record) => (
         <Space size="small">
-          <Button 
+          <Button
             size="small"
-            icon={<EyeOutlined />} 
+            icon={<EyeOutlined />}
             onClick={() => handleViewInvoice(record.id)}
             title="Xem chi tiết"
           />
@@ -886,7 +904,7 @@ const handleViewInvoice = async (id) => {
             loading={reviewLoading}
             title="Xem đánh giá"
           />
-          <Button 
+          <Button
             size="small"
             type="primary"
             icon={<MessageOutlined />}
@@ -898,10 +916,10 @@ const handleViewInvoice = async (id) => {
             title="Chat với khách hàng"
           />
           {record.status !== 'Đã hủy' && (
-            <Button 
+            <Button
               size="small"
               danger
-              icon={<DeleteOutlined />} 
+              icon={<DeleteOutlined />}
               onClick={() => handleCancelInvoice(record.id)}
               title="Hủy đơn hàng"
             />
@@ -954,8 +972,8 @@ const handleViewInvoice = async (id) => {
                 placement="bottomRight"
                 overlayClassName="notification-dropdown"
               >
-                <Button 
-                  type="text" 
+                <Button
+                  type="text"
                   className="notification-bell"
                   icon={
                     <Badge count={unreadCount} size="small" offset={[0, 0]}>
@@ -1023,7 +1041,7 @@ const handleViewInvoice = async (id) => {
                 </div>
               </div>
             </div>
-            
+
             <div className="info-section">
               <h3 className="section-title">Thông tin hóa đơn</h3>
               <div className="info-grid">
@@ -1034,8 +1052,8 @@ const handleViewInvoice = async (id) => {
                 <div className="info-item">
                   <p className="text-gray-600 text-sm">Tổng tiền:</p>
                   <p className="font-medium">
-                    {selectedInvoice?.TongTien !== undefined 
-                      ? formatCurrency(selectedInvoice.TongTien) 
+                    {selectedInvoice?.TongTien !== undefined
+                      ? formatCurrency(selectedInvoice.TongTien)
                       : 'Chưa có dữ liệu'}
                   </p>
                 </div>
@@ -1055,7 +1073,7 @@ const handleViewInvoice = async (id) => {
                 </div>
               </div>
             </div>
-            
+
             <div className="products-section">
               <h3 className="section-title">Danh sách sản phẩm</h3>
               <Table
@@ -1066,7 +1084,7 @@ const handleViewInvoice = async (id) => {
                     key: 'productName',
                     render: (text, record) => (
                       <div style={{ display: 'flex', alignItems: 'center' }}>
-                        <img 
+                        <img
                           src={`/img/products/${record.productImage}`}
                           alt={text}
                           style={{
@@ -1144,8 +1162,8 @@ const handleViewInvoice = async (id) => {
 
             <div className="review-modal-body">
               <div className="review-top">
-                <Avatar size={56} style={{ backgroundColor: '#7265e6', marginRight: 12 }} icon={<UserOutlined />}> 
-                  {reviewData.customerName ? reviewData.customerName.split(' ').map(n => n[0]).slice(0,2).join('').toUpperCase() : ''}
+                <Avatar size={56} style={{ backgroundColor: '#7265e6', marginRight: 12 }} icon={<UserOutlined />}>
+                  {reviewData.customerName ? reviewData.customerName.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase() : ''}
                 </Avatar>
 
                 <div style={{ flex: 1, minWidth: 0 }}>
@@ -1190,9 +1208,9 @@ const handleViewInvoice = async (id) => {
           {/* Chat Header */}
           <div className="chat-header">
             <div className="chat-header-info">
-              <Avatar 
-                size={44} 
-                icon={<UserOutlined />} 
+              <Avatar
+                size={44}
+                icon={<UserOutlined />}
                 style={{ backgroundColor: '#1890ff' }}
               />
               <div className="chat-customer-info">
@@ -1203,16 +1221,16 @@ const handleViewInvoice = async (id) => {
                 </span>
               </div>
             </div>
-            <Button 
-              type="text" 
-              icon={<CloseOutlined />} 
+            <Button
+              type="text"
+              icon={<CloseOutlined />}
               onClick={handleCloseChat}
               className="chat-close-btn"
             />
           </div>
 
           {/* Messages Area với Custom Scrollbar */}
-          <div 
+          <div
             className="messages-container"
             ref={messagesContainerRef}
           >
@@ -1249,8 +1267,8 @@ const handleViewInvoice = async (id) => {
                 disabled={sendingMessage}
                 className="chat-input"
               />
-              <Button 
-                type="primary" 
+              <Button
+                type="primary"
                 icon={<SendOutlined />}
                 onClick={handleSendMessage}
                 disabled={!newMessage.trim() || sendingMessage}

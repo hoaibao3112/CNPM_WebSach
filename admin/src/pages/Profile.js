@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
 import {
   Card, Spin, message, Button, Modal, Form, Input, Row, Col, Avatar, Typography, Table, Upload
 } from 'antd';
+import api from '../utils/api';
 import {
   UserOutlined, LockOutlined, CheckCircleOutlined, LogoutOutlined, DollarCircleOutlined, EyeOutlined
 } from '@ant-design/icons';
@@ -56,9 +56,7 @@ const Profile = () => {
           return;
         }
         const { MaTK } = JSON.parse(userInfoStr);
-        const res = await axios.get(`http://localhost:5000/api/users/by-matk/${MaTK}`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
+        const res = await api.get(`/users/by-matk/${MaTK}`);
         setUserInfo(res.data);
         // compute avatar src if present
         const anh = res.data?.Anh;
@@ -70,7 +68,7 @@ const Profile = () => {
       }
     };
     fetchProfile();
-  }, []);
+  }, [buildAvatarSrc]);
 
   // update avatarSrc whenever userInfo changes (helps when refreshed after upload)
   useEffect(() => {
@@ -78,7 +76,7 @@ const Profile = () => {
     console.log('Profile loaded:', userInfo);
     const anh = userInfo?.Anh;
     setAvatarSrc(buildAvatarSrc(anh));
-  }, [userInfo]);
+  }, [userInfo, buildAvatarSrc]);
 
   const fetchSalary = async () => {
     setSalaryLoading(true);
@@ -90,8 +88,8 @@ const Profile = () => {
         return;
       }
       const { MaTK } = JSON.parse(userInfoStr);
-      const salaryRes = await axios.get(`http://localhost:5000/api/salary/history/${MaTK}`);
-      setSalaryList(salaryRes.data);
+      const salaryRes = await api.get(`/salary/history/${MaTK}`);
+      setSalaryList(salaryRes.data.data || salaryRes.data);
       setShowSalaryModal(true);
     } catch (error) {
       message.error('Lỗi khi tải thông tin lương!');
@@ -103,11 +101,9 @@ const Profile = () => {
   const handlePwdChange = async (values) => {
     setPwdLoading(true);
     try {
-      const token = localStorage.getItem('authToken');
-      await axios.put(
-        `http://localhost:5000/api/users/change-password`,
-        { oldPassword: values.oldPassword, newPassword: values.newPassword },
-        { headers: { Authorization: `Bearer ${token}` } }
+      await api.put(
+        `/users/change-password`,
+        { oldPassword: values.oldPassword, newPassword: values.newPassword }
       );
       message.success('Đổi mật khẩu thành công!');
       setShowPwdModal(false);
@@ -136,7 +132,7 @@ const Profile = () => {
       const now = new Date();
       const today = now.toISOString().slice(0, 10);
       const gioVao = now.toTimeString().slice(0, 8);
-      await axios.post('http://localhost:5000/api/attendance', {
+      await api.post('/attendance', {
         MaTK,
         ngay: today,
         gio_vao: gioVao,
@@ -175,7 +171,7 @@ const Profile = () => {
         setResignLoading(false);
         return;
       }
-      await axios.post('http://localhost:5000/api/leave', {
+      await api.post('/leave', {
         MaTK,
         ngay_bat_dau: dayjs().format('YYYY-MM-DD'),
         ngay_ket_thuc: dayjs().format('YYYY-MM-DD'),
@@ -195,10 +191,17 @@ const Profile = () => {
     setDetailLoading(true);
     setDetailModal(true);
     try {
-      const userInfoStr = localStorage.getItem('userInfo');
-      const { MaTK } = JSON.parse(userInfoStr);
-      const res = await axios.get(`http://localhost:5000/api/attendance/detail/${MaTK}/${thang}/${nam}`);
-      setAttendanceDetail(res.data);
+      // get MaTK from in-memory userInfo if available, otherwise from localStorage
+      let MaTK;
+      if (userInfo && userInfo.MaTK) {
+        MaTK = userInfo.MaTK;
+      } else {
+        const userInfoStr = localStorage.getItem('userInfo');
+        if (!userInfoStr) throw new Error('Không tìm thấy thông tin người dùng');
+        MaTK = JSON.parse(userInfoStr).MaTK;
+      }
+      const res = await api.get(`/attendance/detail/${MaTK}/${thang}/${nam}`);
+      setAttendanceDetail(res.data.data || res.data);
       setDetailMonth(thang);
       setDetailYear(nam);
     } catch (error) {
@@ -395,7 +398,6 @@ const Profile = () => {
                       if (!avatarFile) return message.warning('Vui lòng chọn ảnh trước khi tải lên');
                       setAvatarUploading(true);
                       try {
-                        const token = localStorage.getItem('authToken');
                         const form = new FormData();
                         // Backend requires TenNV, SDT, Email - include existing values so validation passes
                         form.append('TenNV', userInfo.TenNV || '');
@@ -406,16 +408,15 @@ const Profile = () => {
                         form.append('TinhTrang', userInfo.TinhTrang ? '1' : '0');
                         form.append('Anh', avatarFile);
 
-                        const res = await axios.put(
-                          `http://localhost:5000/api/users/${userInfo.MaNV}`,
+                        const res = await api.put(
+                          `/users/${userInfo.MaNV}`,
                           form,
-                          { headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'multipart/form-data' } }
+                          { headers: { 'Content-Type': 'multipart/form-data' } }
                         );
                         message.success(res.data?.message || 'Cập nhật ảnh thành công');
                         // refresh profile info
-                        const tokenStored = localStorage.getItem('authToken');
                         const { MaTK } = JSON.parse(localStorage.getItem('userInfo') || '{}');
-                        const profileRes = await axios.get(`http://localhost:5000/api/users/by-matk/${MaTK}`, { headers: { Authorization: `Bearer ${tokenStored}` } });
+                        const profileRes = await api.get(`/users/by-matk/${MaTK}`);
                         setUserInfo(profileRes.data);
                         setShowAvatarModal(false);
                         setAvatarFile(null);
@@ -439,7 +440,7 @@ const Profile = () => {
               onCancel={() => setShowSalaryModal(false)}
               footer={null}
               width={800}
-    styles={{ body: { borderRadius: 16, padding: 0, overflow: 'hidden' } }}
+              styles={{ body: { borderRadius: 16, padding: 0, overflow: 'hidden' } }}
             >
               <Table
                 columns={salaryColumns}
@@ -458,7 +459,7 @@ const Profile = () => {
               onCancel={() => setDetailModal(false)}
               footer={null}
               width={500}
-    styles={{ body: { borderRadius: 16, padding: 0, overflow: 'hidden' } }}
+              styles={{ body: { borderRadius: 16, padding: 0, overflow: 'hidden' } }}
             >
               <Spin spinning={detailLoading}>
                 <Table
@@ -492,8 +493,8 @@ const Profile = () => {
               open={showPwdModal}
               onCancel={() => setShowPwdModal(false)}
               footer={null}
-    destroyOnHidden
-    styles={{ body: { padding: 24, borderRadius: 12 } }}
+              destroyOnHidden
+              styles={{ body: { padding: 24, borderRadius: 12 } }}
             >
               <Form
                 layout="vertical"
@@ -547,8 +548,8 @@ const Profile = () => {
               open={showResignModal}
               onCancel={() => setShowResignModal(false)}
               footer={null}
-    destroyOnHidden
-    styles={{ body: { padding: 24, borderRadius: 12 } }}
+              destroyOnHidden
+              styles={{ body: { padding: 24, borderRadius: 12 } }}
             >
               <Form
                 layout="vertical"

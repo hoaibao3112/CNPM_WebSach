@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
+import api from '../utils/api';
 import { Button, Input, message, Table, Modal, Space, Select } from 'antd';
 import { EditOutlined, DeleteOutlined, ExclamationCircleFilled, LockOutlined, UnlockOutlined } from '@ant-design/icons';
 const { confirm } = Modal;
@@ -18,15 +18,16 @@ const CategoryManagement = () => {
   });
 
   const { categories, newCategory, editingCategory, searchTerm, statusFilter, isModalVisible, loading } = state;
-  const API_URL = 'http://localhost:5000/api/category';
+  const API_URL = '/category';
 
   const fetchCategories = async () => {
     try {
       setState(prev => ({ ...prev, loading: true, error: null }));
-      const response = await axios.get(API_URL);
-      
-      if (Array.isArray(response.data)) {
-        const processedCategories = response.data.map(item => ({
+      const response = await api.get(API_URL);
+
+      const categoriesData = response.data.data;
+      if (Array.isArray(categoriesData)) {
+        const processedCategories = categoriesData.map(item => ({
           ...item,
           TinhTrang: item.TinhTrang === 1 ? 'Hoạt động' : 'Không hoạt động',
           TinhTrangValue: item.TinhTrang,
@@ -79,7 +80,7 @@ const CategoryManagement = () => {
     if (!validateCategoryData(newCategory)) return;
 
     try {
-      await axios.post(API_URL, newCategory);
+      await api.post(API_URL, newCategory);
       await fetchCategories();
       setState(prev => ({
         ...prev,
@@ -96,7 +97,7 @@ const CategoryManagement = () => {
     if (!validateCategoryData(editingCategory)) return;
 
     try {
-      await axios.put(`${API_URL}/${editingCategory.MaTL}`, {
+      await api.put(`${API_URL}/${editingCategory.MaTL}`, {
         TenTL: editingCategory.TenTL,
         TinhTrang: editingCategory.TinhTrang,
       });
@@ -122,7 +123,7 @@ const CategoryManagement = () => {
       cancelText: 'Thoát',
       async onOk() {
         try {
-          await axios.delete(`${API_URL}/${MaTL}`);
+          await api.delete(`${API_URL}/${MaTL}`);
           await fetchCategories();
           message.success('Xóa thể loại thành công!');
         } catch (error) {
@@ -141,7 +142,7 @@ const CategoryManagement = () => {
       async onOk() {
         try {
           const newStatus = category.TinhTrangValue === 1 ? 0 : 1;
-          await axios.put(`${API_URL}/${category.MaTL}`, {
+          await api.put(`${API_URL}/${category.MaTL}`, {
             TenTL: category.TenTL,
             TinhTrang: newStatus,
           });
@@ -158,7 +159,7 @@ const CategoryManagement = () => {
     cat =>
       (statusFilter === '' || cat.TinhTrangValue === parseInt(statusFilter)) &&
       (cat.TenTL.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      cat.MaTL?.toString().toLowerCase().includes(searchTerm.toLowerCase()))
+        cat.MaTL?.toString().toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
   const columns = [
@@ -182,9 +183,8 @@ const CategoryManagement = () => {
       width: 280,
       render: (status) => (
         <span
-          className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
-            status === 'Hoạt động' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-          }`}
+          className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${status === 'Hoạt động' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+            }`}
         >
           {status}
         </span>
@@ -289,7 +289,7 @@ const CategoryManagement = () => {
 
       <Modal
         title={editingCategory ? 'Chỉnh sửa thể loại' : 'Thêm thể loại mới'}
-  open={isModalVisible}
+        open={isModalVisible}
         onCancel={() => {
           setState(prev => ({
             ...prev,
@@ -319,7 +319,7 @@ const CategoryManagement = () => {
           </Button>,
         ]}
         width={600}
-  styles={{ body: { padding: '16px' } }}
+        styles={{ body: { padding: '16px' } }}
       >
         <div className="info-section">
           <div className="info-grid">

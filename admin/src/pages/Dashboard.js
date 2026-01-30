@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../utils/api';
 //import '../styles/dashboard.css';
 
 const Dashboard = () => {
@@ -20,18 +20,9 @@ const Dashboard = () => {
           throw new Error('Mã tài khoản không hợp lệ');
         }
 
-        const token = localStorage.getItem('authToken');
-        if (!token) {
-          throw new Error('Không tìm thấy token đăng nhập');
-        }
+        const response = await api.get(`/users/by-matk/${MaTK}`);
 
-        const response = await axios.get(`http://localhost:5000/api/users/by-matk/${MaTK}`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-
-        setUserInfo(response.data);
+        setUserInfo(response.data.data);
         setLoading(false);
       } catch (err) {
         setError(err.response?.data?.error || err.message || 'Lỗi khi tải thông tin người dùng');
@@ -41,6 +32,7 @@ const Dashboard = () => {
 
     fetchUserInfo();
   }, []);
+  Lively
 
   if (loading) {
     return (

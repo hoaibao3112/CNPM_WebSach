@@ -48,7 +48,7 @@ async function loadHeader() {
       if (typeof renderHistory === 'function') renderHistory();
 
       loadAuthorNationalities();
-      
+
       if (typeof loadListProductSearch === "function") {
         const currentPath = window.location.pathname;
         if (currentPath.endsWith("/GiaoDien/book.html")) {
@@ -99,41 +99,41 @@ function handleSearch() {
 
 
 const handleSearchHistory = () => {
-    const form = document.getElementById("search-form");
-    const searchInput = document.getElementById("search-input");
+  const form = document.getElementById("search-form");
+  const searchInput = document.getElementById("search-input");
 
-    if (!form || !searchInput) {
-        return;
-    }
+  if (!form || !searchInput) {
+    return;
+  }
 
-    form.addEventListener("submit", async (e) => {
-        e.preventDefault(); 
-        const value = searchInput.value.trim();
-        if (value) {
-            let customerId = null;
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const value = searchInput.value.trim();
+    if (value) {
+      let customerId = null;
 
-            try {
-                const userString = localStorage.getItem('user');
-                if (userString) {
-                    const userObject = JSON.parse(userString);
-                    if (userObject && userObject.makh) {
-                        customerId = userObject.makh;
-                    }
-                }
-            } catch (error) {
-                console.error("Lỗi khi đọc 'user' từ localStorage:", error);
-            }
-            try {             
-                await productSearchActivity(value, customerId); 
-            } catch (apiError) {
-                console.error("Lỗi API khi log search:", apiError);
-            }
-            addSearchHistory(value); 
-            searchInput.value = "";
-            
-            window.location.href = `/GiaoDien/book.html?search=` + encodeURIComponent(value);
+      try {
+        const userString = localStorage.getItem('user');
+        if (userString) {
+          const userObject = JSON.parse(userString);
+          if (userObject && userObject.makh) {
+            customerId = userObject.makh;
+          }
         }
-    });
+      } catch (error) {
+        console.error("Lỗi khi đọc 'user' từ localStorage:", error);
+      }
+      try {
+        await productSearchActivity(value, customerId);
+      } catch (apiError) {
+        console.error("Lỗi API khi log search:", apiError);
+      }
+      addSearchHistory(value);
+      searchInput.value = "";
+
+      window.location.href = `/GiaoDien/book.html?search=` + encodeURIComponent(value);
+    }
+  });
 };
 
 // Hàm fetch và hiển thị quốc tịch
@@ -146,12 +146,13 @@ async function loadAuthorNationalities() {
     if (!response.ok) throw new Error(`HTTP lỗi: ${response.status}`);
 
     const data = await response.json();
-    console.log('Dữ liệu quốc tịch:', data.data); // log ra console
+    console.log('Dữ liệu quốc tịch:', data); // data is now the array because of api-patcher.js
 
     dropdown.innerHTML = ''; // Xóa nội dung hiện tại
-    (data.data || []).forEach(nation => {
+    const nationalities = Array.isArray(data) ? data : (data.data || []);
+    nationalities.forEach(nation => {
       const a = document.createElement('a');
-      a.href = `/GiaoDien/author.html?nationality=${encodeURIComponent(nation)}`;
+      a.href = `/GiaoDien/book.html?nationality=${encodeURIComponent(nation)}`;
       a.textContent = nation;
       dropdown.appendChild(a);
     });

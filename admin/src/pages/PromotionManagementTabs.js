@@ -1,16 +1,16 @@
 import React, { useEffect, useState } from 'react';
-import { 
+import {
   Tabs,
-  Table, 
-  Button, 
-  Input, 
-  Modal, 
-  Form, 
-  Select, 
-  Tag, 
-  Space, 
-  message, 
-  DatePicker, 
+  Table,
+  Button,
+  Input,
+  Modal,
+  Form,
+  Select,
+  Tag,
+  Space,
+  message,
+  DatePicker,
   Card,
   Row,
   Col,
@@ -37,7 +37,7 @@ import {
   QuestionCircleOutlined,
   BarChartOutlined
 } from '@ant-design/icons';
-import axios from 'axios';
+import api from '../utils/api';
 import dayjs from 'dayjs';
 import '../styles/DiscountManagement.css';
 
@@ -68,9 +68,7 @@ const CouponManagement = () => {
   const fetchCoupons = async () => {
     setLoading(true);
     try {
-      const response = await axios.get('http://localhost:5000/api/coupons/admin/all', {
-        headers: { Authorization: `Bearer ${localStorage.getItem('authToken')}` }
-      });
+      const response = await api.get('/coupons/admin/all');
       setCoupons(response.data.data || []);
     } catch (error) {
       message.error('Lỗi khi tải danh sách coupon');
@@ -81,9 +79,7 @@ const CouponManagement = () => {
 
   const fetchCustomers = async () => {
     try {
-      const response = await axios.get('http://localhost:5000/api/client/customers', {
-        headers: { Authorization: `Bearer ${localStorage.getItem('authToken')}` }
-      });
+      const response = await api.get('/client/customers');
       setCustomers(response.data || []);
     } catch (error) {
       console.error('Error fetching customers:', error);
@@ -109,7 +105,7 @@ const CouponManagement = () => {
       values.NgayHetHan = values.NgayHetHan ? values.NgayHetHan.format('YYYY-MM-DD HH:mm:ss') : null;
 
       if (formType === 'add') {
-        await axios.post('http://localhost:5000/api/coupons/admin/create', {
+        await api.post('/coupons/admin/create', {
           maPhieu: values.MaPhieu,
           moTa: values.MoTa,
           loaiGiamGia: values.LoaiGiamGia,
@@ -117,20 +113,16 @@ const CouponManagement = () => {
           ngayHetHan: values.NgayHetHan,
           soLanSuDungToiDa: values.SoLanSuDungToiDa,
           trangThai: values.TrangThai
-        }, {
-          headers: { Authorization: `Bearer ${localStorage.getItem('authToken')}` }
         });
         message.success('Tạo coupon thành công!');
       } else {
-        await axios.put(`http://localhost:5000/api/coupons/admin/${values.MaPhieu}`, {
+        await api.put(`/coupons/admin/${values.MaPhieu}`, {
           moTa: values.MoTa,
           loaiGiamGia: values.LoaiGiamGia,
           giaTriGiam: values.GiaTriGiam,
           ngayHetHan: values.NgayHetHan,
           soLanSuDungToiDa: values.SoLanSuDungToiDa,
           trangThai: values.TrangThai
-        }, {
-          headers: { Authorization: `Bearer ${localStorage.getItem('authToken')}` }
         });
         message.success('Cập nhật coupon thành công!');
       }
@@ -151,9 +143,7 @@ const CouponManagement = () => {
       cancelText: 'Hủy',
       onOk: async () => {
         try {
-          await axios.delete(`http://localhost:5000/api/coupons/admin/${code}`, {
-            headers: { Authorization: `Bearer ${localStorage.getItem('authToken')}` }
-          });
+          await api.delete(`/coupons/admin/${code}`);
           message.success('Xóa coupon thành công!');
           fetchCoupons();
         } catch (error) {
@@ -170,14 +160,13 @@ const CouponManagement = () => {
 
   const handleIssueCoupon = async (values) => {
     try {
-      const payload = values.issueToAll 
+      const payload = values.issueToAll
         ? { issueToAll: true }
         : { makhList: values.makhList };
 
-      await axios.post(
-        `http://localhost:5000/api/coupons/admin/${selectedCoupon.MaPhieu}/issue`,
-        payload,
-        { headers: { Authorization: `Bearer ${localStorage.getItem('authToken')}` } }
+      await api.post(
+        `/coupons/admin/${selectedCoupon.MaPhieu}/issue`,
+        payload
       );
 
       message.success('Phát coupon thành công!');
@@ -190,15 +179,15 @@ const CouponManagement = () => {
 
   const couponColumns = [
     { title: 'Mã Phiếu', dataIndex: 'MaPhieu', key: 'MaPhieu', width: 120 },
-    { 
-      title: 'Mô tả', 
-      dataIndex: 'MoTa', 
+    {
+      title: 'Mô tả',
+      dataIndex: 'MoTa',
       key: 'MoTa',
       ellipsis: true
     },
-    { 
-      title: 'Loại', 
-      dataIndex: 'LoaiGiamGia', 
+    {
+      title: 'Loại',
+      dataIndex: 'LoaiGiamGia',
       key: 'LoaiGiamGia',
       width: 120,
       render: (type) => {
@@ -210,9 +199,9 @@ const CouponManagement = () => {
         return <Tag color={colors[type]}>{type}</Tag>;
       }
     },
-    { 
-      title: 'Giá trị', 
-      dataIndex: 'GiaTriGiam', 
+    {
+      title: 'Giá trị',
+      dataIndex: 'GiaTriGiam',
       key: 'GiaTriGiam',
       width: 100,
       render: (val, record) => {
@@ -232,9 +221,9 @@ const CouponManagement = () => {
         </div>
       )
     },
-    { 
-      title: 'Hết hạn', 
-      dataIndex: 'NgayHetHan', 
+    {
+      title: 'Hết hạn',
+      dataIndex: 'NgayHetHan',
       key: 'NgayHetHan',
       width: 120,
       render: (date) => date ? dayjs(date).format('DD/MM/YYYY') : 'Không giới hạn'
@@ -257,24 +246,24 @@ const CouponManagement = () => {
       render: (_, record) => (
         <Space size="small">
           <Tooltip title="Phát coupon">
-            <Button 
-              icon={<SendOutlined />} 
-              size="small" 
+            <Button
+              icon={<SendOutlined />}
+              size="small"
               type="primary"
               onClick={() => handleShowIssueModal(record)}
             />
           </Tooltip>
           <Tooltip title="Sửa">
-            <Button 
-              icon={<EditOutlined />} 
+            <Button
+              icon={<EditOutlined />}
               size="small"
               onClick={() => handleShowForm('edit', record)}
             />
           </Tooltip>
           <Tooltip title="Xóa">
-            <Button 
-              icon={<DeleteOutlined />} 
-              size="small" 
+            <Button
+              icon={<DeleteOutlined />}
+              size="small"
               danger
               onClick={() => handleDelete(record.MaPhieu)}
             />
@@ -289,17 +278,17 @@ const CouponManagement = () => {
       <Row gutter={16} style={{ marginBottom: 16 }}>
         <Col span={8}>
           <Card>
-            <Statistic 
-              title="Tổng Coupon" 
-              value={coupons.length} 
+            <Statistic
+              title="Tổng Coupon"
+              value={coupons.length}
               prefix={<TagsOutlined />}
             />
           </Card>
         </Col>
         <Col span={8}>
           <Card>
-            <Statistic 
-              title="Đang hoạt động" 
+            <Statistic
+              title="Đang hoạt động"
               value={coupons.filter(c => c.TrangThai === 1).length}
               valueStyle={{ color: '#3f8600' }}
             />
@@ -307,8 +296,8 @@ const CouponManagement = () => {
         </Col>
         <Col span={8}>
           <Card>
-            <Statistic 
-              title="Đã phát hành" 
+            <Statistic
+              title="Đã phát hành"
               value={coupons.reduce((sum, c) => sum + (c.TongPhatHanh || 0), 0)}
               prefix={<SendOutlined />}
             />
@@ -317,8 +306,8 @@ const CouponManagement = () => {
       </Row>
 
       <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'flex-end' }}>
-        <Button 
-          type="primary" 
+        <Button
+          type="primary"
           icon={<PlusOutlined />}
           onClick={() => handleShowForm('add')}
         >
@@ -375,7 +364,7 @@ const CouponManagement = () => {
                 name="GiaTriGiam"
                 rules={[{ required: true }]}
               >
-                <InputNumber 
+                <InputNumber
                   style={{ width: '100%' }}
                   placeholder="VD: 10 hoặc 50000"
                   min={0}
@@ -387,7 +376,7 @@ const CouponManagement = () => {
           <Row gutter={16}>
             <Col span={12}>
               <Form.Item label="Ngày hết hạn" name="NgayHetHan">
-                <DatePicker 
+                <DatePicker
                   style={{ width: '100%' }}
                   showTime
                   format="DD/MM/YYYY HH:mm"
@@ -406,9 +395,9 @@ const CouponManagement = () => {
             </Col>
           </Row>
 
-          <Form.Item 
-            label="Trạng thái" 
-            name="TrangThai" 
+          <Form.Item
+            label="Trạng thái"
+            name="TrangThai"
             valuePropName="checked"
             initialValue={true}
           >
@@ -427,8 +416,8 @@ const CouponManagement = () => {
       >
         <Form onFinish={handleIssueCoupon} layout="vertical">
           <Form.Item label="Chọn khách hàng" name="issueToAll" valuePropName="checked">
-            <Switch 
-              checkedChildren="Tất cả" 
+            <Switch
+              checkedChildren="Tất cả"
               unCheckedChildren="Chọn cụ thể"
               onChange={(checked) => {
                 if (checked) {
@@ -442,8 +431,8 @@ const CouponManagement = () => {
             {({ getFieldValue }) => {
               const issueToAll = getFieldValue('issueToAll');
               return !issueToAll ? (
-                <Form.Item 
-                  label="Khách hàng" 
+                <Form.Item
+                  label="Khách hàng"
                   name="makhList"
                   rules={[{ required: true, message: 'Chọn ít nhất 1 khách hàng' }]}
                 >
@@ -492,9 +481,7 @@ const PreferenceFormManagement = () => {
   const fetchForms = async () => {
     setLoading(true);
     try {
-      const response = await axios.get('http://localhost:5000/api/preferences/admin/forms', {
-        headers: { Authorization: `Bearer ${localStorage.getItem('authToken')}` }
-      });
+      const response = await api.get('/preferences/admin/forms');
       setForms(response.data.data || []);
     } catch (error) {
       message.error('Lỗi khi tải danh sách form');
@@ -505,9 +492,8 @@ const PreferenceFormManagement = () => {
 
   const fetchResponses = async (formId) => {
     try {
-      const response = await axios.get(
-        `http://localhost:5000/api/preferences/admin/forms/${formId}/responses`,
-        { headers: { Authorization: `Bearer ${localStorage.getItem('authToken')}` } }
+      const response = await api.get(
+        `/preferences/admin/forms/${formId}/responses`
       );
       setResponses(response.data.data || []);
     } catch (error) {
@@ -523,10 +509,9 @@ const PreferenceFormManagement = () => {
 
   const handleToggleStatus = async (formId, currentStatus) => {
     try {
-      await axios.put(
-        `http://localhost:5000/api/preferences/admin/forms/${formId}`,
-        { trangThai: currentStatus === 1 ? 0 : 1 },
-        { headers: { Authorization: `Bearer ${localStorage.getItem('authToken')}` } }
+      await api.put(
+        `/preferences/admin/forms/${formId}`,
+        { trangThai: currentStatus === 1 ? 0 : 1 }
       );
       message.success('Cập nhật trạng thái thành công!');
       fetchForms();
@@ -537,22 +522,22 @@ const PreferenceFormManagement = () => {
 
   const formColumns = [
     { title: 'ID', dataIndex: 'MaForm', key: 'MaForm', width: 60 },
-    { 
-      title: 'Tên Form', 
-      dataIndex: 'TenForm', 
+    {
+      title: 'Tên Form',
+      dataIndex: 'TenForm',
       key: 'TenForm',
       ellipsis: true
     },
-    { 
-      title: 'Số câu hỏi', 
-      dataIndex: 'SoCauHoi', 
+    {
+      title: 'Số câu hỏi',
+      dataIndex: 'SoCauHoi',
       key: 'SoCauHoi',
       width: 120,
       render: (num) => <Badge count={num || 0} showZero />
     },
-    { 
-      title: 'Phản hồi', 
-      dataIndex: 'SoPhanHoi', 
+    {
+      title: 'Phản hồi',
+      dataIndex: 'SoPhanHoi',
       key: 'SoPhanHoi',
       width: 100,
       render: (num) => <Text type="success">{num || 0}</Text>
@@ -568,9 +553,9 @@ const PreferenceFormManagement = () => {
         </Tag>
       )
     },
-    { 
-      title: 'Ngày tạo', 
-      dataIndex: 'NgayTao', 
+    {
+      title: 'Ngày tạo',
+      dataIndex: 'NgayTao',
       key: 'NgayTao',
       width: 120,
       render: (date) => dayjs(date).format('DD/MM/YYYY')
@@ -582,15 +567,15 @@ const PreferenceFormManagement = () => {
       render: (_, record) => (
         <Space size="small">
           <Tooltip title="Xem chi tiết">
-            <Button 
-              icon={<EyeOutlined />} 
+            <Button
+              icon={<EyeOutlined />}
               size="small"
               onClick={() => handleShowDetail(record)}
             />
           </Tooltip>
           <Tooltip title={record.TrangThai ? 'Tắt' : 'Bật'}>
-            <Button 
-              icon={<EditOutlined />} 
+            <Button
+              icon={<EditOutlined />}
               size="small"
               type={record.TrangThai ? 'default' : 'primary'}
               onClick={() => handleToggleStatus(record.MaForm, record.TrangThai)}
@@ -604,19 +589,19 @@ const PreferenceFormManagement = () => {
   ];
 
   const responseColumns = [
-    { 
-      title: 'Khách hàng', 
-      dataIndex: 'tenkh', 
+    {
+      title: 'Khách hàng',
+      dataIndex: 'tenkh',
       key: 'tenkh'
     },
-    { 
-      title: 'Email', 
-      dataIndex: 'email', 
+    {
+      title: 'Email',
+      dataIndex: 'email',
       key: 'email'
     },
-    { 
-      title: 'Ngày phản hồi', 
-      dataIndex: 'NgayPhanHoi', 
+    {
+      title: 'Ngày phản hồi',
+      dataIndex: 'NgayPhanHoi',
       key: 'NgayPhanHoi',
       render: (date) => dayjs(date).format('DD/MM/YYYY HH:mm')
     }
@@ -627,17 +612,17 @@ const PreferenceFormManagement = () => {
       <Row gutter={16} style={{ marginBottom: 16 }}>
         <Col span={8}>
           <Card>
-            <Statistic 
-              title="Tổng Form" 
-              value={forms.length} 
+            <Statistic
+              title="Tổng Form"
+              value={forms.length}
               prefix={<FormOutlined />}
             />
           </Card>
         </Col>
         <Col span={8}>
           <Card>
-            <Statistic 
-              title="Form hoạt động" 
+            <Statistic
+              title="Form hoạt động"
               value={forms.filter(f => f.TrangThai === 1).length}
               valueStyle={{ color: '#3f8600' }}
             />
@@ -645,8 +630,8 @@ const PreferenceFormManagement = () => {
         </Col>
         <Col span={8}>
           <Card>
-            <Statistic 
-              title="Tổng phản hồi" 
+            <Statistic
+              title="Tổng phản hồi"
               value={forms.reduce((sum, f) => sum + (f.SoPhanHoi || 0), 0)}
               prefix={<BarChartOutlined />}
             />

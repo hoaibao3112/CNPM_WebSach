@@ -1,0 +1,17 @@
+Tables: binhluan, binhluan_like, cauhinh_chamcong, cauhoi_sothich, cham_cong, cham_cong_history, chat_messages, chat_rooms, chitiethoadon, chitietphieunhap, chitietquyen, chucnang, ct_khuyen_mai, danhgia, danhgia_donhang, diachi, diem_sothich_history, diem_sothich_khachhang, faqs, form_sothich, giohang, giohang_chitiet, hanh_dong_user, hoadon, khachhang, khachhang_khuyenmai, khuyen_mai, lich_su_tra_hang, luachon_cauhoi, luong, nhacungcap, nhanvien, nhomquyen, otp_requests, otp_verifications, password_reset_tokens, password_resets_admin, pending_danhgia, phanhoi_sothich, phieugiamgia, phieugiamgia_phathanh, phieunhap, product, refund_requests, sanpham, sanpham_anh, sanpham_yeuthich, sp_khuyen_mai, tacgia, taikhoan, theloai, tra_hang, traloi_sothich, xin_nghi_phep
+
+--- giohang ---
+MaGH | int | NO | PRI
+MaKH | int | NO | MUL
+MaSP | int | NO | MUL
+SoLuong | int | NO | 
+Selected | tinyint(1) | YES | 
+NgayThem | datetime | YES | 
+
+--- giohang_chitiet ---
+MaCTGH | int | NO | PRI
+MaKH | int | NO | MUL
+MaSP | int | NO | MUL
+SoLuong | int | NO | 
+NgayThem | datetime | YES | 
+

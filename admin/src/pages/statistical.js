@@ -1,6 +1,6 @@
-import { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { message, DatePicker } from 'antd';
-import axios from 'axios';
+import api from '../utils/api';
 import dayjs from 'dayjs';
 import * as XLSX from 'xlsx';
 
@@ -22,7 +22,6 @@ import {
 } from 'chart.js';
 import { Line, Bar, Pie } from 'react-chartjs-2';
 import '../styles/statistical.css';
-// ...existing code...
 
 // Đăng ký các components của Chart.js
 ChartJS.register(
@@ -50,15 +49,15 @@ const ThongKe = () => {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [showChart, setShowChart] = useState(true);
-const [salaryMonthly, setSalaryMonthly] = useState([]); // tổng theo tháng (api trả)
-const [salaryDetails, setSalaryDetails] = useState([]);
-const [selectedSalaryMonth, setSelectedSalaryMonth] = useState(null);
+  const [salaryMonthly, setSalaryMonthly] = useState([]); // tổng theo tháng (api trả)
+  const [salaryDetails, setSalaryDetails] = useState([]);
+  const [selectedSalaryMonth, setSelectedSalaryMonth] = useState(null);
   const [productTab, setProductTab] = useState('sanpham');
   const [productFilter, setProductFilter] = useState('today');
   const [productDateRange, setProductDateRange] = useState([null, null]);
   const [sortBy, setSortBy] = useState('bestseller');
-const [salaryData, setSalaryData] = useState([]);
-const [salaryYear, setSalaryYear] = useState(new Date().getFullYear());
+  const [salaryData, setSalaryData] = useState([]);
+  const [salaryYear, setSalaryYear] = useState(new Date().getFullYear());
   const [customerFilter, setCustomerFilter] = useState('today');
   const [customerDateRange, setCustomerDateRange] = useState([null, null]);
 
@@ -70,19 +69,19 @@ const [salaryYear, setSalaryYear] = useState(new Date().getFullYear());
       // ...existing code...
 
       if (subTab === 'nam') {
-        url = 'http://localhost:5000/api/reports/doanhthu/nam';
+        url = '/reports/doanhthu/nam';
       } else if (subTab === 'thang') {
-        url = `http://localhost:5000/api/reports/doanhthu/thang/${selectedYear}`;
+        url = `/reports/doanhthu/thang/${selectedYear}`;
       } else if (subTab === 'ngay') {
-        url = `http://localhost:5000/api/reports/doanhthu/ngay/${selectedYear}/${selectedMonth}`;
+        url = `/reports/doanhthu/ngay/${selectedYear}/${selectedMonth}`;
       } else if (subTab === 'khoangtg') {
         if (!dateRange[0] || !dateRange[1]) {
           message.warning('Vui lòng chọn khoảng thời gian');
           setLoading(false);
           return;
         }
-        url = 'http://localhost:5000/api/reports/doanhthu/khoangtg';
-        const response = await axios.post(url, {
+        url = '/reports/doanhthu/khoangtg';
+        const response = await api.post(url, {
           tuNgay: dateRange[0].format('YYYY-MM-DD'),
           denNgay: dateRange[1].format('YYYY-MM-DD')
         });
@@ -91,7 +90,7 @@ const [salaryYear, setSalaryYear] = useState(new Date().getFullYear());
         return;
       }
 
-      const response = await axios.get(url);
+      const response = await api.get(url);
       setData(response.data.data || []);
     } catch (error) {
       console.error('Lỗi fetch doanh thu:', error);
@@ -100,80 +99,80 @@ const [salaryYear, setSalaryYear] = useState(new Date().getFullYear());
       setLoading(false);
     }
   }, [subTab, selectedYear, selectedMonth, dateRange]);
-// ...existing code continues
+  // ...existing code continues
 
-// ...existing code...
+  // ...existing code...
 
-// Cập nhật fetchSalaryDetails (giữ nguyên, chỉ thêm log nếu cần)
-const fetchSalaryDetails = useCallback(async (month) => {
-  if (!month) return;
-  setLoading(true);
-  try {
-    console.log('🔍 Fetching salary for year:', salaryYear, 'month:', month);
-    const res = await axios.get(`http://localhost:5000/api/salary/per-month/${salaryYear}/${month}`);
-    let payload = res.data && res.data.data ? res.data.data : (res.data || []);
-    console.log('📥 Raw API response:', payload);
+  // Cập nhật fetchSalaryDetails (giữ nguyên, chỉ thêm log nếu cần)
+  const fetchSalaryDetails = useCallback(async (month) => {
+    if (!month) return;
+    setLoading(true);
+    try {
+      console.log('🔍 Fetching salary for year:', salaryYear, 'month:', month);
+      const res = await api.get(`/salary/per-month/${salaryYear}/${month}`);
+      let payload = res.data && res.data.data ? res.data.data : (res.data || []);
+      console.log('📥 Raw API response:', payload);
 
-    // Fallback compute nếu empty
-    if (!payload || (Array.isArray(payload) && payload.length === 0)) {
-      console.log('⚠️ Per-month empty, trying compute...');
-      const comp = await axios.post(`http://localhost:5000/api/salary/compute/${salaryYear}/${month}`);
-      payload = comp.data && comp.data.data ? comp.data.data : comp.data || [];
-      console.log('📥 Compute fallback response:', payload);
+      // Fallback compute nếu empty
+      if (!payload || (Array.isArray(payload) && payload.length === 0)) {
+        console.log('⚠️ Per-month empty, trying compute...');
+        const comp = await api.post(`/salary/compute/${salaryYear}/${month}`);
+        payload = comp.data.data || [];
+        console.log('📥 Compute fallback response:', payload);
+      }
+
+      // Normalize: Force array và map fields
+      let records = Array.isArray(payload) ? payload : [payload];
+      const normalized = records.map(r => ({
+        id: r.id || r.Id || 0,
+        MaNV: r.MaNV ?? r.MaNhanVien ?? r.ma_nv ?? '',
+        TenNV: r.TenNV ?? r.ten ?? r.name ?? 'N/A',
+        month: Number(r.thang ?? r.month ?? month),
+        year: Number(r.nam ?? r.year ?? salaryYear),
+        luong_co_ban: Number(r.luong_co_ban ?? r.luong_cb ?? 0),
+        phu_cap: Number(r.phu_cap ?? 0),
+        tang_ca: Number(r.tang_ca ?? 0), // Nếu API có field tăng ca
+        thuong: Number(r.thuong ?? 0),
+        phat: Number(r.phat ?? r.khau_tru ?? 0),
+        tong_luong: Number((r.tong_luong ?? r.tong_nhan) ?? 0),
+        trang_thai: r.trang_thai ?? r.trangthai ?? 'Chưa tra'
+      })).filter(item => item.MaNV && item.TenNV); // Filter valid rows
+
+      console.log('🔄 Normalized salaryDetails (length:', normalized.length, '):', normalized);
+      setSalaryDetails(normalized);
+      setSelectedSalaryMonth(month);
+    } catch (error) {
+      console.error('❌ Lỗi fetch chi tiết lương:', error.response?.data || error.message);
+      message.error('Không thể tải chi tiết lương');
+      setSalaryDetails([]);
+    } finally {
+      setLoading(false);
     }
+  }, [salaryYear]);
 
-    // Normalize: Force array và map fields
-    let records = Array.isArray(payload) ? payload : [payload];
-    const normalized = records.map(r => ({
-      id: r.id || r.Id || 0,
-      MaNV: r.MaNV ?? r.MaNhanVien ?? r.ma_nv ?? '',
-      TenNV: r.TenNV ?? r.ten ?? r.name ?? 'N/A',
-      month: Number(r.thang ?? r.month ?? month),
-      year: Number(r.nam ?? r.year ?? salaryYear),
-      luong_co_ban: Number(r.luong_co_ban ?? r.luong_cb ?? 0),
-      phu_cap: Number(r.phu_cap ?? 0),
-      tang_ca: Number(r.tang_ca ?? 0), // Nếu API có field tăng ca
-      thuong: Number(r.thuong ?? 0),
-      phat: Number(r.phat ?? r.khau_tru ?? 0),
-  tong_luong: Number((r.tong_luong ?? r.tong_nhan) ?? 0),
-      trang_thai: r.trang_thai ?? r.trangthai ?? 'Chưa tra'
-    })).filter(item => item.MaNV && item.TenNV); // Filter valid rows
+  // Auto-load chi tiết khi user chọn tháng (hoặc khi monthly được load lần đầu)
+  useEffect(() => {
+    if (selectedSalaryMonth) {
+      fetchSalaryDetails(selectedSalaryMonth);
+    }
+  }, [selectedSalaryMonth, fetchSalaryDetails]);
 
-    console.log('🔄 Normalized salaryDetails (length:', normalized.length, '):', normalized);
-    setSalaryDetails(normalized);
-    setSelectedSalaryMonth(month);
-  } catch (error) {
-    console.error('❌ Lỗi fetch chi tiết lương:', error.response?.data || error.message);
-    message.error('Không thể tải chi tiết lương');
-    setSalaryDetails([]);
-  } finally {
-    setLoading(false);
-  }
-}, [salaryYear]);
-
-// Auto-load chi tiết khi user chọn tháng (hoặc khi monthly được load lần đầu)
-useEffect(() => {
-  if (selectedSalaryMonth) {
-    fetchSalaryDetails(selectedSalaryMonth);
-  }
-}, [selectedSalaryMonth, fetchSalaryDetails]);
-
-// Nếu sau fetch tổng theo tháng bạn muốn auto chọn tháng có dữ liệu:
-useEffect(() => {
-  if ((!selectedSalaryMonth || selectedSalaryMonth === null) && Array.isArray(salaryMonthly) && salaryMonthly.length) {
-    // chọn tháng đầu tiên có TongLuong > 0, nếu không thì tháng hiện tại
-    const m = (salaryMonthly.find(x => Number(x.Thang ?? x.month) && Number(x.TongLuong ?? x.total) > 0) || {}).Thang
-      ?? (salaryMonthly[0].Thang ?? salaryMonthly[0].month)
-      ?? (new Date().getMonth() + 1);
-    setSelectedSalaryMonth(Number(m));
-  }
-}, [salaryMonthly]);
+  // Nếu sau fetch tổng theo tháng bạn muốn auto chọn tháng có dữ liệu:
+  useEffect(() => {
+    if ((!selectedSalaryMonth || selectedSalaryMonth === null) && Array.isArray(salaryMonthly) && salaryMonthly.length) {
+      // chọn tháng đầu tiên có TongLuong > 0, nếu không thì tháng hiện tại
+      const m = (salaryMonthly.find(x => Number(x.Thang ?? x.month) && Number(x.TongLuong ?? x.total) > 0) || {}).Thang
+        ?? (salaryMonthly[0].Thang ?? salaryMonthly[0].month)
+        ?? (new Date().getMonth() + 1);
+      setSelectedSalaryMonth(Number(m));
+    }
+  }, [salaryMonthly, selectedSalaryMonth]);
   const fetchBanHangData = useCallback(async () => {
     setLoading(true);
     try {
-      const url = productTab === 'sanpham' 
-        ? 'http://localhost:5000/api/reports/banhang/sanpham'
-        : 'http://localhost:5000/api/reports/banhang/theloai';
+      const url = productTab === 'sanpham'
+        ? '/reports/banhang/sanpham'
+        : '/reports/banhang/theloai';
 
       const payload = {
         timePeriod: productFilter
@@ -184,7 +183,7 @@ useEffect(() => {
         payload.denNgay = productDateRange[1].format('YYYY-MM-DD');
       }
 
-      const response = await axios.post(url, payload);
+      const response = await api.post(url, payload);
       setData(response.data.data || []);
     } catch (error) {
       console.error('Lỗi fetch bán hàng:', error);
@@ -206,7 +205,7 @@ useEffect(() => {
         payload.denNgay = customerDateRange[1].format('YYYY-MM-DD');
       }
 
-      const response = await axios.post('http://localhost:5000/api/reports/khachhang/khoangtg', payload);
+      const response = await api.post('/reports/khachhang/khoangtg', payload);
       setData(response.data.data || []);
     } catch (error) {
       console.error('Lỗi fetch khách hàng:', error);
@@ -237,133 +236,133 @@ useEffect(() => {
 
 
 
-// ...existing code...
+  // ...existing code...
 
-// ==================== API CALLS (LƯƠNG) ====================
-const fetchLuongData = useCallback(async () => {
-  setLoading(true);
-  try {
-    const res = await axios.get(`http://localhost:5000/api/salary/monthly/${salaryYear}`);
-    let payload = res.data;
-    if (payload && payload.success && payload.data) payload = payload.data;
-    if (payload && payload.data && Array.isArray(payload.data)) payload = payload.data;
+  // ==================== API CALLS (LƯƠNG) ====================
+  const fetchLuongData = useCallback(async () => {
+    setLoading(true);
+    try {
+      const res = await api.get(`/salary/monthly/${salaryYear}`);
+      let payload = res.data;
+      if (payload && payload.success && payload.data) payload = payload.data;
+      if (payload && payload.data && Array.isArray(payload.data)) payload = payload.data;
 
-    let normalized = [];
-    if (Array.isArray(payload)) {
-      normalized = payload;
-    } else if (payload && typeof payload === 'object') {
-      const monthKeys = Object.keys(payload).filter(k => !isNaN(k)).sort((a,b)=>a-b);
-      if (monthKeys.length) {
-        normalized = monthKeys.map(k => {
-          const v = payload[k];
-          if (typeof v === 'number') return { month: Number(k), total: Number(v) };
-          if (v && typeof v === 'object') return { month: Number(k), ...v };
-          return { month: Number(k), total: 0 };
-        });
-      } else {
-        normalized = Object.values(payload).map(v => (typeof v === 'object' ? v : { value: v }));
-      }
-    }
-
-    normalized = normalized.map(item => {
-      if (!item) return null;
-      const obj = { ...(typeof item === 'object' ? item : { value: item }) };
-      if (obj.month === undefined && obj.Thang !== undefined) obj.month = Number(obj.Thang);
-      if (obj.total === undefined && (obj.TongLuong !== undefined)) obj.total = Number(obj.TongLuong);
-      if (obj.total === undefined && (obj.tong_luong !== undefined)) obj.total = Number(obj.tong_luong);
-      return obj;
-    }).filter(Boolean);
-
-    // set both monthly summary and salaryData used by chart/table
-    setSalaryMonthly(normalized);
-    setSalaryData(normalized);
-    console.debug('salary monthly data:', normalized);
-  } catch (error) {
-    console.error('Lỗi fetch lương:', error);
-    message.error('Không thể tải dữ liệu lương');
-    setSalaryMonthly([]);
-    setSalaryData([]);
-  } finally {
-    setLoading(false);
-  }
-}, [salaryYear]);
-
-// gọi fetch khi chuyển sang tab Lương hoặc khi đổi năm
-useEffect(() => {
-  if (activeTab === 'luong') {
-    fetchLuongData();
-  }
-}, [activeTab, salaryYear, fetchLuongData]);
-
-
-
-const getLuongChartData = () => {
-  if (!salaryData) return null;
-
-  // If salaryData is a simple array of 12 numbers
-  if (Array.isArray(salaryData) && salaryData.length === 12 && salaryData.every(v => typeof v === 'number')) {
-    return {
-      labels: Array.from({ length: 12 }, (_, i) => `Tháng ${i + 1}`),
-      datasets: [{ label: 'Tổng lương (VND)', data: salaryData, backgroundColor: 'rgba(54,162,235,0.7)', borderColor: 'rgb(54,162,235)', borderWidth: 1 }]
-    };
-  }
-
-  // Aggregate totals by month (1..12)
-  const months = Array.from({ length: 12 }, (_, i) => i + 1);
-  const totals = Array(12).fill(0);
-
-  if (Array.isArray(salaryData)) {
-    salaryData.forEach(row => {
-      if (row == null) return;
-
-      // If row is number, skip (no month info)
-      if (typeof row === 'number') return;
-
-      // If row contains nested entries (per-employee), sum their tong_nhan
-      if (Array.isArray(row.entries) && (row.month || row.Thang)) {
-        const m = Number(row.month ?? row.Thang);
-        if (isFinite(m) && m >= 1 && m <= 12) {
-          const sumEntries = row.entries.reduce((s, e) => s + Number(e.tong_nhan ?? e.tongLuong ?? e.tong_luong ?? 0), 0);
-          totals[m - 1] += isFinite(sumEntries) ? sumEntries : 0;
-          return;
+      let normalized = [];
+      if (Array.isArray(payload)) {
+        normalized = payload;
+      } else if (payload && typeof payload === 'object') {
+        const monthKeys = Object.keys(payload).filter(k => !isNaN(k)).sort((a, b) => a - b);
+        if (monthKeys.length) {
+          normalized = monthKeys.map(k => {
+            const v = payload[k];
+            if (typeof v === 'number') return { month: Number(k), total: Number(v) };
+            if (v && typeof v === 'object') return { month: Number(k), ...v };
+            return { month: Number(k), total: 0 };
+          });
+        } else {
+          normalized = Object.values(payload).map(v => (typeof v === 'object' ? v : { value: v }));
         }
       }
 
-      // Determine month
-      const m = Number(row.month ?? row.Thang ?? row.monthNumber ?? row.m);
-      const monthIndex = (isFinite(m) && m >= 1 && m <= 12) ? (m - 1) : null;
+      normalized = normalized.map(item => {
+        if (!item) return null;
+        const obj = { ...(typeof item === 'object' ? item : { value: item }) };
+        if (obj.month === undefined && obj.Thang !== undefined) obj.month = Number(obj.Thang);
+        if (obj.total === undefined && (obj.TongLuong !== undefined)) obj.total = Number(obj.TongLuong);
+        if (obj.total === undefined && (obj.tong_luong !== undefined)) obj.total = Number(obj.tong_luong);
+        return obj;
+      }).filter(Boolean);
 
-      // Determine value
-      let value = 0;
-      if (row.total !== undefined) value = Number(row.total);
-      else if (row.TongLuong !== undefined) value = Number(row.TongLuong);
-      else if (row.tong_luong !== undefined) value = Number(row.tong_luong);
-      else if (row.tong !== undefined) value = Number(row.tong);
-      else if (row.totalAmount !== undefined) value = Number(row.totalAmount);
-      else if (row.value !== undefined) value = Number(row.value);
-      else if (row.tong_nhan !== undefined) value = Number(row.tong_nhan);
+      // set both monthly summary and salaryData used by chart/table
+      setSalaryMonthly(normalized);
+      setSalaryData(normalized);
+      console.debug('salary monthly data:', normalized);
+    } catch (error) {
+      console.error('Lỗi fetch lương:', error);
+      message.error('Không thể tải dữ liệu lương');
+      setSalaryMonthly([]);
+      setSalaryData([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [salaryYear]);
 
-      if (monthIndex !== null) {
-        totals[monthIndex] += isFinite(value) ? value : 0;
-      } else {
-        // if no month, try to infer by position (not reliable) - ignore
-      }
-    });
-  } else if (typeof salaryData === 'object') {
-    // object keyed by month
-    months.forEach((m, i) => {
-      const v = salaryData[m] ?? salaryData[String(m)];
-      if (v == null) { totals[i] += 0; return; }
-      if (typeof v === 'number') totals[i] += v;
-      else if (typeof v === 'object') totals[i] += Number(v.total ?? v.TongLuong ?? v.tong_luong ?? v.tong ?? 0);
-    });
-  }
+  // gọi fetch khi chuyển sang tab Lương hoặc khi đổi năm
+  useEffect(() => {
+    if (activeTab === 'luong') {
+      fetchLuongData();
+    }
+  }, [activeTab, salaryYear, fetchLuongData]);
 
-  return {
-    labels: months.map(m => `Tháng ${m}`),
-    datasets: [{ label: 'Tổng lương (VND)', data: totals, backgroundColor: 'rgba(54,162,235,0.7)', borderColor: 'rgb(54,162,235)', borderWidth: 1 }]
+
+
+  const getLuongChartData = () => {
+    if (!salaryData) return null;
+
+    // If salaryData is a simple array of 12 numbers
+    if (Array.isArray(salaryData) && salaryData.length === 12 && salaryData.every(v => typeof v === 'number')) {
+      return {
+        labels: Array.from({ length: 12 }, (_, i) => `Tháng ${i + 1}`),
+        datasets: [{ label: 'Tổng lương (VND)', data: salaryData, backgroundColor: 'rgba(54,162,235,0.7)', borderColor: 'rgb(54,162,235)', borderWidth: 1 }]
+      };
+    }
+
+    // Aggregate totals by month (1..12)
+    const months = Array.from({ length: 12 }, (_, i) => i + 1);
+    const totals = Array(12).fill(0);
+
+    if (Array.isArray(salaryData)) {
+      salaryData.forEach(row => {
+        if (row == null) return;
+
+        // If row is number, skip (no month info)
+        if (typeof row === 'number') return;
+
+        // If row contains nested entries (per-employee), sum their tong_nhan
+        if (Array.isArray(row.entries) && (row.month || row.Thang)) {
+          const m = Number(row.month ?? row.Thang);
+          if (isFinite(m) && m >= 1 && m <= 12) {
+            const sumEntries = row.entries.reduce((s, e) => s + Number(e.tong_nhan ?? e.tongLuong ?? e.tong_luong ?? 0), 0);
+            totals[m - 1] += isFinite(sumEntries) ? sumEntries : 0;
+            return;
+          }
+        }
+
+        // Determine month
+        const m = Number(row.month ?? row.Thang ?? row.monthNumber ?? row.m);
+        const monthIndex = (isFinite(m) && m >= 1 && m <= 12) ? (m - 1) : null;
+
+        // Determine value
+        let value = 0;
+        if (row.total !== undefined) value = Number(row.total);
+        else if (row.TongLuong !== undefined) value = Number(row.TongLuong);
+        else if (row.tong_luong !== undefined) value = Number(row.tong_luong);
+        else if (row.tong !== undefined) value = Number(row.tong);
+        else if (row.totalAmount !== undefined) value = Number(row.totalAmount);
+        else if (row.value !== undefined) value = Number(row.value);
+        else if (row.tong_nhan !== undefined) value = Number(row.tong_nhan);
+
+        if (monthIndex !== null) {
+          totals[monthIndex] += isFinite(value) ? value : 0;
+        } else {
+          // if no month, try to infer by position (not reliable) - ignore
+        }
+      });
+    } else if (typeof salaryData === 'object') {
+      // object keyed by month
+      months.forEach((m, i) => {
+        const v = salaryData[m] ?? salaryData[String(m)];
+        if (v == null) { totals[i] += 0; return; }
+        if (typeof v === 'number') totals[i] += v;
+        else if (typeof v === 'object') totals[i] += Number(v.total ?? v.TongLuong ?? v.tong_luong ?? v.tong ?? 0);
+      });
+    }
+
+    return {
+      labels: months.map(m => `Tháng ${m}`),
+      datasets: [{ label: 'Tổng lương (VND)', data: totals, backgroundColor: 'rgba(54,162,235,0.7)', borderColor: 'rgb(54,162,235)', borderWidth: 1 }]
+    };
   };
-};
 
   // ==================== CHART DATA ====================
   const getDoanhThuChartData = () => {
@@ -490,7 +489,7 @@ const getLuongChartData = () => {
       },
       tooltip: {
         callbacks: {
-          label: function(context) {
+          label: function (context) {
             let label = context.dataset.label || '';
             if (label) {
               label += ': ';
@@ -512,7 +511,7 @@ const getLuongChartData = () => {
       y: {
         beginAtZero: true,
         ticks: {
-          callback: function(value) {
+          callback: function (value) {
             if (activeTab === 'doanhthu') {
               return new Intl.NumberFormat('vi-VN', {
                 style: 'currency',
@@ -555,7 +554,7 @@ const getLuongChartData = () => {
 
   // ...existing code...
 
-const handleExportPDF = async () => {
+  const handleExportPDF = async () => {
     // For non-salary tabs require `data`. For salary tab allow export when salaryDetails or salaryMonthly exist.
     if (activeTab === 'luong') {
       if ((!salaryDetails || salaryDetails.length === 0) && (!salaryMonthly || salaryMonthly.length === 0)) {
@@ -602,24 +601,23 @@ const handleExportPDF = async () => {
       const doc = new jsPDF('p', 'mm', 'a4');
       const pageWidth = doc.internal.pageSize.getWidth();
       const pageHeight = doc.internal.pageSize.getHeight();
-      
+
       let titleText = '';
       let tableHeaders = [];
       let tableData = [];
 
       // === XÁC ĐỊNH TIÊU ĐỀ VÀ DỮ LIỆU ===
-  if (activeTab === 'doanhthu') {
-        titleText = `THONG KE DOANH THU ${
-          subTab === 'nam' ? 'THEO NAM' : 
-          subTab === 'thang' ? `TUNG THANG NAM ${selectedYear}` : 
-          subTab === 'ngay' ? `TUNG NGAY THANG ${selectedMonth}/${selectedYear}` : 
-          'THEO KHOANG THOI GIAN'
-        }`;
-        
+      if (activeTab === 'doanhthu') {
+        titleText = `THONG KE DOANH THU ${subTab === 'nam' ? 'THEO NAM' :
+          subTab === 'thang' ? `TUNG THANG NAM ${selectedYear}` :
+            subTab === 'ngay' ? `TUNG NGAY THANG ${selectedMonth}/${selectedYear}` :
+              'THEO KHOANG THOI GIAN'
+          }`;
+
         tableHeaders = [
           ['STT', subTab === 'nam' ? 'Nam' : subTab === 'thang' ? 'Thang' : subTab === 'ngay' ? 'Ngay' : 'Thoi gian', 'Von (VND)', 'Doanh thu (VND)']
         ];
-        
+
         tableData = data.map((item, index) => [
           index + 1,
           item.Nam || item.Thang || item.Ngay || dayjs(item.Ngay).format('DD/MM/YYYY'),
@@ -628,7 +626,7 @@ const handleExportPDF = async () => {
         ]);
       } else if (activeTab === 'banhang') {
         titleText = `THONG KE BAN HANG THEO ${productTab === 'sanpham' ? 'SAN PHAM' : 'THE LOAI'}`;
-        
+
         if (productTab === 'sanpham') {
           tableHeaders = [['STT', 'Ma SP', 'Ten SP', 'SL ban', 'SL don']];
           tableData = data.map((item, index) => [
@@ -650,7 +648,7 @@ const handleExportPDF = async () => {
         }
       } else if (activeTab === 'khachhang') {
         titleText = 'THONG KE KHACH MUA HANG THEO THOI GIAN';
-        
+
         tableHeaders = [['STT', 'Thoi gian', 'So luong KH', 'So luong don', 'So loai SP']];
         tableData = data.map((item, index) => [
           index + 1,
@@ -715,15 +713,15 @@ const handleExportPDF = async () => {
       doc.rect(0, 0, pageWidth, 40, 'F');
 
       // === TIÊU ĐỀ CHÍNH ===
-  doc.setFontSize(20);
-  doc.setTextColor(255, 255, 255);
-  if (unicodeFontName) doc.setFont(unicodeFontName, 'normal'); else doc.setFont('helvetica', 'bold');
-  // note: jsPDF font weight support depends on added font variants; use normal for safety
-  doc.text(titleText, pageWidth / 2, 20, { align: 'center' });
+      doc.setFontSize(20);
+      doc.setTextColor(255, 255, 255);
+      if (unicodeFontName) doc.setFont(unicodeFontName, 'normal'); else doc.setFont('helvetica', 'bold');
+      // note: jsPDF font weight support depends on added font variants; use normal for safety
+      doc.text(titleText, pageWidth / 2, 20, { align: 'center' });
 
       // === THÔNG TIN PHỤ ===
-  doc.setFontSize(10);
-  if (unicodeFontName) doc.setFont(unicodeFontName, 'normal'); else doc.setFont('helvetica', 'italic');
+      doc.setFontSize(10);
+      if (unicodeFontName) doc.setFont(unicodeFontName, 'normal'); else doc.setFont('helvetica', 'italic');
       const dateText = `Ngay xuat: ${dayjs().format('DD/MM/YYYY HH:mm:ss')}`;
       doc.text(dateText, pageWidth / 2, 30, { align: 'center' });
 
@@ -763,7 +761,7 @@ const handleExportPDF = async () => {
           3: { cellWidth: 'auto' },
           4: { cellWidth: 'auto' },
         },
-        didParseCell: function(data) {
+        didParseCell: function (data) {
           if (activeTab === 'doanhthu') {
             if (data.column.index === 2) {
               data.cell.styles.textColor = [255, 107, 107];
@@ -774,8 +772,8 @@ const handleExportPDF = async () => {
               data.cell.styles.fontStyle = 'bold';
             }
           } else if (activeTab === 'banhang') {
-            if ((productTab === 'sanpham' && data.column.index === 3) || 
-                (productTab === 'theloai' && data.column.index === 2)) {
+            if ((productTab === 'sanpham' && data.column.index === 3) ||
+              (productTab === 'theloai' && data.column.index === 2)) {
               data.cell.styles.textColor = [24, 144, 255];
               data.cell.styles.fontStyle = 'bold';
             }
@@ -784,10 +782,10 @@ const handleExportPDF = async () => {
             data.cell.styles.fontStyle = 'bold';
           }
         },
-        didDrawPage: function(data) {
+        didDrawPage: function (data) {
           const pageCount = doc.internal.getNumberOfPages();
           const currentPage = doc.internal.getCurrentPageInfo().pageNumber;
-          
+
           doc.setFontSize(9);
           doc.setTextColor(128, 128, 128);
           doc.text(
@@ -796,7 +794,7 @@ const handleExportPDF = async () => {
             pageHeight - 10,
             { align: 'center' }
           );
-          
+
           doc.setFontSize(8);
           doc.text('Admin System - Your Company', 10, pageHeight - 10);
         },
@@ -806,21 +804,21 @@ const handleExportPDF = async () => {
       // === THÊM TỔNG KẾT (NẾU LÀ DOANH THU) ===
       if (activeTab === 'doanhthu' && data.length > 0) {
         const finalY = doc.lastAutoTable.finalY || 50;
-        
+
         const tongVon = data.reduce((sum, item) => sum + (item.Von || 0), 0);
         const tongDoanhThu = data.reduce((sum, item) => sum + (item.DoanhThu || 0), 0);
         const loiNhuan = tongDoanhThu - tongVon;
-        
+
         doc.setFillColor(230, 247, 255);
         doc.roundedRect(10, finalY + 5, pageWidth - 20, 30, 3, 3, 'F');
-        
-  doc.setFontSize(11);
-  if (unicodeFontName) doc.setFont(unicodeFontName, 'normal'); else doc.setFont('helvetica', 'bold');
+
+        doc.setFontSize(11);
+        if (unicodeFontName) doc.setFont(unicodeFontName, 'normal'); else doc.setFont('helvetica', 'bold');
         doc.setTextColor(0, 0, 0);
-        
+
         const summaryX = 15;
         let summaryY = finalY + 15;
-        
+
         doc.text(`Tong von: ${new Intl.NumberFormat('vi-VN').format(tongVon)} VND`, summaryX, summaryY);
         summaryY += 7;
         doc.text(`Tong doanh thu: ${new Intl.NumberFormat('vi-VN').format(tongDoanhThu)} VND`, summaryX, summaryY);
@@ -837,8 +835,8 @@ const handleExportPDF = async () => {
         doc.setFillColor(230, 247, 255);
         doc.roundedRect(10, finalY + 5, pageWidth - 20, 20, 3, 3, 'F');
 
-  doc.setFontSize(11);
-  if (unicodeFontName) doc.setFont(unicodeFontName, 'normal'); else doc.setFont('helvetica', 'bold');
+        doc.setFontSize(11);
+        if (unicodeFontName) doc.setFont(unicodeFontName, 'normal'); else doc.setFont('helvetica', 'bold');
         doc.setTextColor(0, 0, 0);
 
         const summaryX = 15;
@@ -848,7 +846,7 @@ const handleExportPDF = async () => {
 
       const filename = `${activeTab}_${Date.now()}.pdf`;
       doc.save(filename);
-      
+
       message.success('Xuất PDF thành công!');
     } catch (error) {
       console.error('Lỗi xuất PDF:', error);
@@ -870,16 +868,15 @@ const handleExportPDF = async () => {
       if (activeTab === 'doanhthu') {
         filename = `DoanhThu_${subTab}_${Date.now()}.xlsx`;
         sheetName = 'Doanh Thu';
-        titleText = `THỐNG KÊ DOANH THU ${
-          subTab === 'nam' ? 'THEO NĂM' : 
-          subTab === 'thang' ? `TỪNG THÁNG NĂM ${selectedYear}` : 
-          subTab === 'ngay' ? `TỪNG NGÀY THÁNG ${selectedMonth}/${selectedYear}` : 
-          'THEO KHOẢNG THỜI GIAN'
-        }`;
-        
+        titleText = `THỐNG KÊ DOANH THU ${subTab === 'nam' ? 'THEO NĂM' :
+          subTab === 'thang' ? `TỪNG THÁNG NĂM ${selectedYear}` :
+            subTab === 'ngay' ? `TỪNG NGÀY THÁNG ${selectedMonth}/${selectedYear}` :
+              'THEO KHOẢNG THỜI GIAN'
+          }`;
+
         exportData = data.map((item, index) => ({
           'STT': index + 1,
-          [subTab === 'nam' ? 'Năm' : subTab === 'thang' ? 'Tháng' : subTab === 'ngay' ? 'Ngày' : 'Thời gian']: 
+          [subTab === 'nam' ? 'Năm' : subTab === 'thang' ? 'Tháng' : subTab === 'ngay' ? 'Ngày' : 'Thời gian']:
             item.Nam || item.Thang || item.Ngay || dayjs(item.Ngay).format('DD/MM/YYYY'),
           'Vốn': item.Von,
           'Doanh thu': item.DoanhThu
@@ -888,7 +885,7 @@ const handleExportPDF = async () => {
         filename = `BanHang_${productTab}_${Date.now()}.xlsx`;
         sheetName = productTab === 'sanpham' ? 'Sản Phẩm' : 'Thể Loại';
         titleText = `THỐNG KÊ BÁN HÀNG THEO ${productTab === 'sanpham' ? 'SẢN PHẨM' : 'THỂ LOẠI'}`;
-        
+
         if (productTab === 'sanpham') {
           exportData = data.map((item, index) => ({
             'STT': index + 1,
@@ -910,7 +907,7 @@ const handleExportPDF = async () => {
         filename = `KhachHang_${Date.now()}.xlsx`;
         sheetName = 'Khách Hàng';
         titleText = 'THỐNG KÊ KHÁCH MUA HÀNG THEO THỜI GIAN';
-        
+
         exportData = data.map((item, index) => ({
           'STT': index + 1,
           'Thời gian': dayjs(item.ThoiGian).format('DD/MM/YYYY'),
@@ -949,14 +946,14 @@ const handleExportPDF = async () => {
       }
 
       const ws = XLSX.utils.aoa_to_sheet([]);
-      
+
       XLSX.utils.sheet_add_aoa(ws, [[titleText]], { origin: 'A1' });
-      
+
       const dateText = `Ngày xuất: ${dayjs().format('DD/MM/YYYY HH:mm:ss')}`;
       XLSX.utils.sheet_add_aoa(ws, [[dateText]], { origin: 'A2' });
-      
+
       XLSX.utils.sheet_add_aoa(ws, [['']], { origin: 'A3' });
-      
+
       XLSX.utils.sheet_add_json(ws, exportData, { origin: 'A4', skipHeader: false });
 
       // If salary export, append total summary row after data
@@ -973,15 +970,15 @@ const handleExportPDF = async () => {
         XLSX.utils.sheet_add_aoa(ws, [['']], { origin: `A${afterRow}` });
         XLSX.utils.sheet_add_aoa(ws, [[`Tong tien luong da chi tra:`, new Intl.NumberFormat('vi-VN').format(totalPaid)]], { origin: `A${afterRow + 1}` });
       }
-      
+
       const range = XLSX.utils.decode_range(ws['!ref']);
       const numCols = range.e.c + 1;
-      
+
       ws['!merges'] = [
         { s: { r: 0, c: 0 }, e: { r: 0, c: numCols - 1 } },
         { s: { r: 1, c: 0 }, e: { r: 1, c: numCols - 1 } }
       ];
-      
+
       ws['A1'].s = {
         fill: { fgColor: { rgb: "667EEA" } },
         font: { name: "Arial", sz: 18, bold: true, color: { rgb: "FFFFFF" } },
@@ -993,18 +990,18 @@ const handleExportPDF = async () => {
           right: { style: "medium", color: { rgb: "000000" } }
         }
       };
-      
+
       ws['A2'].s = {
         fill: { fgColor: { rgb: "E6F7FF" } },
         font: { name: "Arial", sz: 11, italic: true, color: { rgb: "1890FF" } },
         alignment: { horizontal: "center", vertical: "center" },
         border: { bottom: { style: "thin", color: { rgb: "91D5FF" } } }
       };
-      
+
       for (let C = 0; C < numCols; ++C) {
         const address = XLSX.utils.encode_col(C) + "4";
         if (!ws[address]) continue;
-        
+
         ws[address].s = {
           fill: { fgColor: { rgb: "764BA2" } },
           font: { name: "Arial", sz: 12, bold: true, color: { rgb: "FFFFFF" } },
@@ -1017,14 +1014,14 @@ const handleExportPDF = async () => {
           }
         };
       }
-      
+
       for (let R = 4; R <= range.e.r; ++R) {
         for (let C = 0; C < numCols; ++C) {
           const address = XLSX.utils.encode_col(C) + (R + 1);
           if (!ws[address]) continue;
-          
+
           const fillColor = (R - 4) % 2 === 0 ? "F8F9FA" : "FFFFFF";
-          
+
           ws[address].s = {
             fill: { fgColor: { rgb: fillColor } },
             font: { name: "Arial", sz: 11, color: { rgb: "212529" } },
@@ -1036,7 +1033,7 @@ const handleExportPDF = async () => {
               right: { style: "thin", color: { rgb: "E9ECEF" } }
             }
           };
-          
+
           if (activeTab === 'doanhthu') {
             if (C === 2 || C === 3) {
               ws[address].z = '#,##0" ₫"';
@@ -1045,7 +1042,7 @@ const handleExportPDF = async () => {
               ws[address].s.font.sz = 12;
             }
           }
-          
+
           if (activeTab === 'banhang') {
             if (productTab === 'sanpham' && C === 3) {
               ws[address].s.font.color = { rgb: "1890FF" };
@@ -1057,7 +1054,7 @@ const handleExportPDF = async () => {
               ws[address].s.font.sz = 12;
             }
           }
-          
+
           if (activeTab === 'khachhang' && C === 3) {
             ws[address].s.font.color = { rgb: "1890FF" };
             ws[address].s.font.bold = true;
@@ -1065,7 +1062,7 @@ const handleExportPDF = async () => {
           }
         }
       }
-      
+
       const colWidths = [];
       for (let C = 0; C < numCols; ++C) {
         let maxWidth = 12;
@@ -1079,21 +1076,21 @@ const handleExportPDF = async () => {
         colWidths.push({ wch: Math.min(maxWidth + 3, 40) });
       }
       ws['!cols'] = colWidths;
-      
+
       const rowHeights = [];
       rowHeights.push({ hpt: 35 });
       rowHeights.push({ hpt: 22 });
       rowHeights.push({ hpt: 10 });
       rowHeights.push({ hpt: 28 });
-      
+
       for (let R = 4; R <= range.e.r; ++R) {
         rowHeights.push({ hpt: 22 });
       }
       ws['!rows'] = rowHeights;
-      
+
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, sheetName);
-      
+
       wb.Props = {
         Title: titleText,
         Subject: "Thống kê dữ liệu",
@@ -1101,14 +1098,14 @@ const handleExportPDF = async () => {
         Company: "Your Company",
         CreatedDate: new Date()
       };
-      
-      XLSX.writeFile(wb, filename, { 
+
+      XLSX.writeFile(wb, filename, {
         bookType: 'xlsx',
         bookSST: false,
         type: 'binary',
         cellStyles: true
       });
-      
+
       message.success('Xuất Excel thành công!');
     } catch (error) {
       console.error('Lỗi xuất Excel:', error);
@@ -1117,52 +1114,52 @@ const handleExportPDF = async () => {
   };
 
   // ==================== RENDER CHART ====================
- // ...existing code...
-const renderChart = () => {
-  if (!showChart || loading) return null;
+  // ...existing code...
+  const renderChart = () => {
+    if (!showChart || loading) return null;
 
-  let chartData = null;
-  let ChartComponent = null;
+    let chartData = null;
+    let ChartComponent = null;
 
-  if (activeTab === 'doanhthu') {
-    if (!data || data.length === 0) return null;
-    chartData = getDoanhThuChartData();
-    ChartComponent = Line;
-  } else if (activeTab === 'banhang') {
-    if (!data || data.length === 0) return null;
-    chartData = getBanHangChartData();
-    ChartComponent = productTab === 'sanpham' ? Bar : Pie;
-  } else if (activeTab === 'khachhang') {
-    if (!data || data.length === 0) return null;
-    chartData = getKhachHangChartData();
-    ChartComponent = Bar;
-  } else if (activeTab === 'luong') {
-    // đảm bảo salaryData đã load
-    if (!salaryData || (Array.isArray(salaryData) && salaryData.length === 0)) {
-      console.debug('Luong: salaryData empty', salaryData);
+    if (activeTab === 'doanhthu') {
+      if (!data || data.length === 0) return null;
+      chartData = getDoanhThuChartData();
+      ChartComponent = Line;
+    } else if (activeTab === 'banhang') {
+      if (!data || data.length === 0) return null;
+      chartData = getBanHangChartData();
+      ChartComponent = productTab === 'sanpham' ? Bar : Pie;
+    } else if (activeTab === 'khachhang') {
+      if (!data || data.length === 0) return null;
+      chartData = getKhachHangChartData();
+      ChartComponent = Bar;
+    } else if (activeTab === 'luong') {
+      // đảm bảo salaryData đã load
+      if (!salaryData || (Array.isArray(salaryData) && salaryData.length === 0)) {
+        console.debug('Luong: salaryData empty', salaryData);
+        return null;
+      }
+      chartData = getLuongChartData();
+      ChartComponent = Bar;
+    }
+
+    if (!chartData || !ChartComponent) {
+      console.debug('No chartData or ChartComponent', { activeTab, chartData, salaryData });
       return null;
     }
-    chartData = getLuongChartData();
-    ChartComponent = Bar;
-  }
 
-  if (!chartData || !ChartComponent) {
-    console.debug('No chartData or ChartComponent', { activeTab, chartData, salaryData });
-    return null;
-  }
+    // debug: in ra dữ liệu chart để kiểm tra
+    console.debug('Render chart', { activeTab, chartData });
 
-  // debug: in ra dữ liệu chart để kiểm tra
-  console.debug('Render chart', { activeTab, chartData });
-
-  return (
-    <div className="chart-container" style={{ width: '100%', marginTop: 12 }}>
-      <div className="chart-wrapper" style={{ height: 360 }}>
-        <ChartComponent data={chartData} options={chartOptions} />
+    return (
+      <div className="chart-container" style={{ width: '100%', marginTop: 12 }}>
+        <div className="chart-wrapper" style={{ height: 360 }}>
+          <ChartComponent data={chartData} options={chartOptions} />
+        </div>
       </div>
-    </div>
-  );
-};
-// ...existing code...
+    );
+  };
+  // ...existing code...
   // ==================== RENDER TABS ====================
   const renderDoanhThuTab = () => (
     <div className="thongke-content">
@@ -1227,7 +1224,7 @@ const renderChart = () => {
 
         <div className="filter-actions">
           <button className={`btn-chart ${showChart ? 'active' : ''}`} onClick={() => setShowChart(!showChart)}>
-            <i className={`fas fa-chart-${showChart ? 'line' : 'bar'}`}></i> 
+            <i className={`fas fa-chart-${showChart ? 'line' : 'bar'}`}></i>
             {showChart ? 'Ẩn biểu đồ' : 'Hiện biểu đồ'}
           </button>
 
@@ -1278,93 +1275,93 @@ const renderChart = () => {
     </div>
   );
   // ...existing code inside renderLuongTab ...
-const renderLuongTab = () => {
-  console.log('🎨 Rendering Luong Tab - salaryDetails length:', salaryDetails.length); // Debug render
-  return (
-    <div id="luong-export-area" className="thongke-content">
-      <div className="thongke-filters">
-        <div className="filter-group">
-          <label>Năm:</label>
-          <select value={salaryYear} onChange={(e) => setSalaryYear(Number(e.target.value))}>
-            {[2023, 2024, 2025].map(y => <option key={y} value={y}>{y}</option>)}
-          </select>
-        </div>
-        <div className="filter-group">
-          <label>Tháng:</label>
-          <select value={selectedSalaryMonth || ''} onChange={(e) => setSelectedSalaryMonth(Number(e.target.value))}>
-            <option value="">Chọn tháng</option>
-            {Array.from({length: 12}, (_, i) => i+1).map(m => <option key={m} value={m}>Tháng {m}</option>)}
-          </select>
-        </div>
-        <div className="filter-actions">
-          <button className="btn-refresh" onClick={() => selectedSalaryMonth && fetchSalaryDetails(selectedSalaryMonth)}>
-            <i className="fas fa-sync-alt"></i> Tải lại
-          </button>
-          <button className="btn-pdf" onClick={handleExportPDF}>
-            <i className="fas fa-file-pdf"></i> Xuất PDF
-          </button>
+  const renderLuongTab = () => {
+    console.log('🎨 Rendering Luong Tab - salaryDetails length:', salaryDetails.length); // Debug render
+    return (
+      <div id="luong-export-area" className="thongke-content">
+        <div className="thongke-filters">
+          <div className="filter-group">
+            <label>Năm:</label>
+            <select value={salaryYear} onChange={(e) => setSalaryYear(Number(e.target.value))}>
+              {[2023, 2024, 2025].map(y => <option key={y} value={y}>{y}</option>)}
+            </select>
+          </div>
+          <div className="filter-group">
+            <label>Tháng:</label>
+            <select value={selectedSalaryMonth || ''} onChange={(e) => setSelectedSalaryMonth(Number(e.target.value))}>
+              <option value="">Chọn tháng</option>
+              {Array.from({ length: 12 }, (_, i) => i + 1).map(m => <option key={m} value={m}>Tháng {m}</option>)}
+            </select>
+          </div>
+          <div className="filter-actions">
+            <button className="btn-refresh" onClick={() => selectedSalaryMonth && fetchSalaryDetails(selectedSalaryMonth)}>
+              <i className="fas fa-sync-alt"></i> Tải lại
+            </button>
+            <button className="btn-pdf" onClick={handleExportPDF}>
+              <i className="fas fa-file-pdf"></i> Xuất PDF
+            </button>
 
-          <button className="btn-excel" onClick={handleExportExcel}>
-            <i className="fas fa-file-excel"></i> Xuất Excel
-          </button>
+            <button className="btn-excel" onClick={handleExportExcel}>
+              <i className="fas fa-file-excel"></i> Xuất Excel
+            </button>
+          </div>
+        </div>
+
+        <div className="thongke-table">
+          <table>
+            <thead>
+              <tr>
+                <th>STT</th>
+                <th>MÃ NV</th>
+                <th>TÊN NV</th>
+                <th>LƯƠNG CƠ BẢN</th>
+                <th>PHỤ CẤP</th>
+                <th>TĂNG CA</th>
+                <th>THƯỞNG</th>
+                <th>PHẠT</th>
+                <th>TỔNG NHẬN</th>
+                <th>TRẠNG THÁI</th>
+              </tr>
+            </thead>
+            <tbody>
+              {loading ? (
+                <tr>
+                  <td colSpan="10" style={{ textAlign: 'center', padding: '30px' }}>
+                    <i className="fas fa-spinner fa-spin"></i> Đang tải dữ liệu lương...
+                  </td>
+                </tr>
+              ) : salaryDetails.length > 0 ? (
+                salaryDetails.map((item, index) => {
+                  console.log('📊 Mapping row:', index + 1, item); // Debug từng row
+                  return (
+                    <tr key={item.id || index}>
+                      <td>{index + 1}</td>
+                      <td>{item.MaNV}</td>
+                      <td>{item.TenNV}</td>
+                      <td>{formatCurrency(item.luong_co_ban)}</td>
+                      <td>{formatCurrency(item.phu_cap)}</td>
+                      <td>{formatCurrency(item.tang_ca)}</td>
+                      <td style={{ color: 'green' }}>{formatCurrency(item.thuong)}</td>
+                      <td style={{ color: 'red' }}>{formatCurrency(item.phat)}</td>
+                      <td style={{ color: '#1890ff', fontWeight: 'bold' }}>{formatCurrency(item.tong_luong)}</td>
+                      <td>{item.trang_thai}</td>
+                    </tr>
+                  );
+                })
+              ) : (
+                <tr>
+                  <td colSpan="10" style={{ textAlign: 'center', padding: '30px' }}>
+                    Không có dữ liệu lương cho tháng {selectedSalaryMonth}/{salaryYear}.<br />
+                    <button onClick={() => fetchSalaryDetails(selectedSalaryMonth)}>Thử tải lại</button>
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
         </div>
       </div>
-
-      <div className="thongke-table">
-        <table>
-          <thead>
-            <tr>
-              <th>STT</th>
-              <th>MÃ NV</th>
-              <th>TÊN NV</th>
-              <th>LƯƠNG CƠ BẢN</th>
-              <th>PHỤ CẤP</th>
-              <th>TĂNG CA</th>
-              <th>THƯỞNG</th>
-              <th>PHẠT</th>
-              <th>TỔNG NHẬN</th>
-              <th>TRẠNG THÁI</th>
-            </tr>
-          </thead>
-          <tbody>
-            {loading ? (
-              <tr>
-                <td colSpan="10" style={{ textAlign: 'center', padding: '30px' }}>
-                  <i className="fas fa-spinner fa-spin"></i> Đang tải dữ liệu lương...
-                </td>
-              </tr>
-            ) : salaryDetails.length > 0 ? (
-              salaryDetails.map((item, index) => {
-                console.log('📊 Mapping row:', index + 1, item); // Debug từng row
-                return (
-                  <tr key={item.id || index}>
-                    <td>{index + 1}</td>
-                    <td>{item.MaNV}</td>
-                    <td>{item.TenNV}</td>
-                    <td>{formatCurrency(item.luong_co_ban)}</td>
-                    <td>{formatCurrency(item.phu_cap)}</td>
-                    <td>{formatCurrency(item.tang_ca)}</td>
-                    <td style={{ color: 'green' }}>{formatCurrency(item.thuong)}</td>
-                    <td style={{ color: 'red' }}>{formatCurrency(item.phat)}</td>
-                    <td style={{ color: '#1890ff', fontWeight: 'bold' }}>{formatCurrency(item.tong_luong)}</td>
-                    <td>{item.trang_thai}</td>
-                  </tr>
-                );
-              })
-            ) : (
-              <tr>
-                <td colSpan="10" style={{ textAlign: 'center', padding: '30px' }}>
-                  Không có dữ liệu lương cho tháng {selectedSalaryMonth}/{salaryYear}.<br />
-                  <button onClick={() => fetchSalaryDetails(selectedSalaryMonth)}>Thử tải lại</button>
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  );
-};
+    );
+  };
   const renderBanHangTab = () => (
     <div className="thongke-content">
       <div className="thongke-subtabs">
@@ -1408,7 +1405,7 @@ const renderLuongTab = () => {
 
         <div className="filter-actions">
           <button className={`btn-chart ${showChart ? 'active' : ''}`} onClick={() => setShowChart(!showChart)}>
-            <i className={`fas fa-chart-${productTab === 'sanpham' ? 'bar' : 'pie'}`}></i> 
+            <i className={`fas fa-chart-${productTab === 'sanpham' ? 'bar' : 'pie'}`}></i>
             {showChart ? 'Ẩn biểu đồ' : 'Hiện biểu đồ'}
           </button>
 
@@ -1511,7 +1508,7 @@ const renderLuongTab = () => {
 
         <div className="filter-actions">
           <button className={`btn-chart ${showChart ? 'active' : ''}`} onClick={() => setShowChart(!showChart)}>
-            <i className="fas fa-chart-bar"></i> 
+            <i className="fas fa-chart-bar"></i>
             {showChart ? 'Ẩn biểu đồ' : 'Hiện biểu đồ'}
           </button>
 
@@ -1578,15 +1575,15 @@ const renderLuongTab = () => {
       </div>
 
       <div className="thongke-tabs">
-  <button className={activeTab === 'doanhthu' ? 'active' : ''} onClick={() => setActiveTab('doanhthu')}>Doanh thu</button>
-  <button className={activeTab === 'banhang' ? 'active' : ''} onClick={() => setActiveTab('banhang')}>Bán hàng</button>
-  <button className={activeTab === 'khachhang' ? 'active' : ''} onClick={() => setActiveTab('khachhang')}>Khách mua hàng theo thời gian</button>
-  <button className={activeTab === 'luong' ? 'active' : ''} onClick={() => setActiveTab('luong')}>Lương nhân viên</button>
-</div>
-{activeTab === 'doanhthu' && renderDoanhThuTab()}
-{activeTab === 'banhang' && renderBanHangTab()}
-{activeTab === 'khachhang' && renderKhachHangTab()}
-{activeTab === 'luong' && renderLuongTab()}
+        <button className={activeTab === 'doanhthu' ? 'active' : ''} onClick={() => setActiveTab('doanhthu')}>Doanh thu</button>
+        <button className={activeTab === 'banhang' ? 'active' : ''} onClick={() => setActiveTab('banhang')}>Bán hàng</button>
+        <button className={activeTab === 'khachhang' ? 'active' : ''} onClick={() => setActiveTab('khachhang')}>Khách mua hàng theo thời gian</button>
+        <button className={activeTab === 'luong' ? 'active' : ''} onClick={() => setActiveTab('luong')}>Lương nhân viên</button>
+      </div>
+      {activeTab === 'doanhthu' && renderDoanhThuTab()}
+      {activeTab === 'banhang' && renderBanHangTab()}
+      {activeTab === 'khachhang' && renderKhachHangTab()}
+      {activeTab === 'luong' && renderLuongTab()}
     </div>
   );
 };

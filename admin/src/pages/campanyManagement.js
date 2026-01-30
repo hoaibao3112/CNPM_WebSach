@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef, useCallback } from 'react';
-import axios from 'axios';
+import api from '../utils/api';
 import { Button, Input, message, Table, Modal, Space, Select } from 'antd';
 import { EditOutlined, DeleteOutlined, ExclamationCircleFilled, LockOutlined, UnlockOutlined } from '@ant-design/icons';
 
@@ -25,7 +25,7 @@ const CompanyManagement = () => {
   });
 
   const { companies, newCompany, editingCompany, searchTerm, isModalVisible, loading } = state;
-  const API_URL = 'http://localhost:5000/api/company';
+  const API_URL = '/company';
   const debounceRef = useRef(null); // Để debounce search
 
   // Helper để convert Buffer to string nếu cần (fallback)
@@ -44,10 +44,13 @@ const CompanyManagement = () => {
       if (keyword) {
         url = `${API_URL}/search?keyword=${encodeURIComponent(keyword)}`;
       }
-      const response = await axios.get(url);
-      
-      if (Array.isArray(response.data)) {
-        const processedCompanies = response.data.map(company => {
+      const response = await api.get(url);
+
+      const resData = response.data.data || response.data;
+      const companiesData = Array.isArray(resData) ? resData : (resData?.data || []);
+
+      if (Array.isArray(companiesData)) {
+        const processedCompanies = companiesData.map(company => {
           const statusValue = convertStatusIfBuffer(company);
           return {
             ...company,
@@ -157,7 +160,7 @@ const CompanyManagement = () => {
         TinhTrang: newCompany.TinhTrang, // Đảm bảo là string '1' or '0'
       };
 
-      await axios.post(API_URL, payload);
+      await api.post(API_URL, payload);
       await fetchCompanies(searchTerm); // Giữ nguyên search term sau khi thêm
       setState(prev => ({
         ...prev,
@@ -187,7 +190,7 @@ const CompanyManagement = () => {
         TinhTrang: editingCompany.TinhTrang, // Đảm bảo là string '1' or '0'
       };
 
-      await axios.put(`${API_URL}/${editingCompany.MaNCC}`, payload);
+      await api.put(`${API_URL}/${editingCompany.MaNCC}`, payload);
       await fetchCompanies(searchTerm); // Giữ nguyên search term sau khi cập nhật
       setState(prev => ({
         ...prev,
@@ -212,7 +215,7 @@ const CompanyManagement = () => {
       cancelText: 'Thoát',
       async onOk() {
         try {
-          await axios.delete(`${API_URL}/${MaNCC}`);
+          await api.delete(`${API_URL}/${MaNCC}`);
           await fetchCompanies(searchTerm); // Giữ nguyên search term sau khi xóa
           message.success('Xóa nhà cung cấp thành công!');
         } catch (error) {
@@ -233,7 +236,7 @@ const CompanyManagement = () => {
       async onOk() {
         try {
           const newStatus = company.TinhTrangValue === '1' ? '0' : '1';
-          await axios.put(`${API_URL}/${company.MaNCC}`, {
+          await api.put(`${API_URL}/${company.MaNCC}`, {
             ...company,
             TinhTrang: newStatus,
           });
@@ -281,9 +284,8 @@ const CompanyManagement = () => {
       width: 150,
       render: (status) => (
         <span
-          className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
-            status === 'Hoạt động' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-          }`}
+          className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${status === 'Hoạt động' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+            }`}
         >
           {status}
         </span>

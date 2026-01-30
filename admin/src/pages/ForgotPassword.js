@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import axios from 'axios';
+import api from '../utils/api';
 import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -18,7 +18,7 @@ const ForgotPassword = () => {
     e.preventDefault();
     setLoading(true);
     try {
-      const response = await axios.post('http://localhost:5000/api/forgot-password/send-otp', { email });
+      const response = await api.post('/forgot-password/send-otp', { email });
       toast.success(response.data.message);
       setStep(2);
     } catch (error) {
@@ -32,7 +32,7 @@ const ForgotPassword = () => {
     e.preventDefault();
     setLoading(true);
     try {
-      const response = await axios.post('http://localhost:5000/api/forgot-password/verify-otp', { email, otp });
+      const response = await api.post('/forgot-password/verify-otp', { email, otp });
       toast.success(response.data.message);
       setResetToken(response.data.resetToken);
       setStep(3);
@@ -45,15 +45,15 @@ const ForgotPassword = () => {
 
   const handleResetPassword = async (e) => {
     e.preventDefault();
-    
+
     if (newPassword !== confirmPassword) {
       toast.error('Mật khẩu mới và xác nhận mật khẩu không khớp');
       return;
     }
-    
+
     setLoading(true);
     try {
-      const response = await axios.post('http://localhost:5000/api/forgot-password/reset-password', {
+      const response = await api.post('/forgot-password/reset-password', {
         email,
         resetToken,
         newPassword
@@ -82,8 +82,8 @@ const ForgotPassword = () => {
           <div className={`step ${step >= 2 ? 'active' : ''} ${step > 2 ? 'completed' : ''}`}>2</div>
           <div className={`step ${step >= 3 ? 'active' : ''}`}>3</div>
           <div className="step-line">
-            <div 
-              className="step-line-progress" 
+            <div
+              className="step-line-progress"
               style={{ width: step === 1 ? '0%' : step === 2 ? '50%' : '100%' }}
             ></div>
           </div>
@@ -114,7 +114,7 @@ const ForgotPassword = () => {
         {step === 2 && (
           <form className="forgot-password-form" onSubmit={handleVerifyOtp}>
             <div className="otp-instructions">
-              Chúng tôi đã gửi mã OTP đến email <strong>{email}</strong>. 
+              Chúng tôi đã gửi mã OTP đến email <strong>{email}</strong>.
               Vui lòng kiểm tra và nhập mã bên dưới.
             </div>
 
@@ -168,18 +168,18 @@ const ForgotPassword = () => {
               />
               <div className="password-strength">
                 <div className="password-strength-bar" style={{
-                  width: newPassword.length === 0 ? '0%' : 
-                         newPassword.length < 6 ? '30%' :
-                         newPassword.length < 8 ? '60%' : '100%',
-                  backgroundColor: newPassword.length === 0 ? '#e74c3c' : 
-                                   newPassword.length < 6 ? '#e74c3c' :
-                                   newPassword.length < 8 ? '#f39c12' : '#2ecc71'
+                  width: newPassword.length === 0 ? '0%' :
+                    newPassword.length < 6 ? '30%' :
+                      newPassword.length < 8 ? '60%' : '100%',
+                  backgroundColor: newPassword.length === 0 ? '#e74c3c' :
+                    newPassword.length < 6 ? '#e74c3c' :
+                      newPassword.length < 8 ? '#f39c12' : '#2ecc71'
                 }}></div>
               </div>
               <div className="password-strength-text">
-                {newPassword.length === 0 ? 'Vui lòng nhập mật khẩu' : 
-                 newPassword.length < 6 ? 'Mật khẩu yếu' :
-                 newPassword.length < 8 ? 'Mật khẩu trung bình' : 'Mật khẩu mạnh'}
+                {newPassword.length === 0 ? 'Vui lòng nhập mật khẩu' :
+                  newPassword.length < 6 ? 'Mật khẩu yếu' :
+                    newPassword.length < 8 ? 'Mật khẩu trung bình' : 'Mật khẩu mạnh'}
               </div>
             </div>
 

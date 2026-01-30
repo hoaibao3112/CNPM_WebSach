@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useContext } from 'react';
-import axios from 'axios';
+import api from '../utils/api';
 import { PermissionContext } from '../components/PermissionContext';
 import { Button, Input, message, Table, Modal, Space, Select, Form, Checkbox } from 'antd';
 import { EditOutlined, DeleteOutlined, ExclamationCircleFilled, PlusOutlined } from '@ant-design/icons';
@@ -27,30 +27,34 @@ const PermissionManagement = () => {
     total: 0,
   });
 
-  const API_URL = 'http://localhost:5000/api/roles';
-
   const { refreshPermissions } = useContext(PermissionContext);
 
   // Fetch roles (nhóm quyền)
   const fetchRoles = async (page = 1, pageSize = 10, search = '') => {
     try {
       setLoading(true);
-      const response = await axios.get(API_URL, {
+      const response = await api.get('/roles', {
         params: { page, pageSize, search },
       });
-      if (response.data.success) {
-        setRoles(response.data.data.items);
-        setPagination({
-          current: response.data.data.pagination.page,
-          pageSize: response.data.data.pagination.pageSize,
-          total: response.data.data.pagination.total,
-        });
-      } else {
-        throw new Error('Dữ liệu nhóm quyền không hợp lệ');
+
+      // Handle response - backend returns simple array in response.data.data
+      let rolesData = [];
+      if (response.data.success && response.data.data) {
+        rolesData = Array.isArray(response.data.data) ? response.data.data : [];
+      } else if (Array.isArray(response.data)) {
+        rolesData = response.data;
       }
+
+      setRoles(rolesData);
+      setPagination({
+        current: page,
+        pageSize: pageSize,
+        total: rolesData.length,
+      });
     } catch (error) {
       console.error('Lỗi khi lấy danh sách nhóm quyền:', error);
       message.error('Lỗi khi tải danh sách nhóm quyền');
+      setRoles([]); // Set empty array on error
     } finally {
       setLoading(false);
     }
@@ -59,7 +63,7 @@ const PermissionManagement = () => {
   // Fetch functions (chức năng)
   const fetchFunctions = async () => {
     try {
-      const response = await axios.get(`${API_URL}/functions`);
+      const response = await api.get('/roles/functions');
       if (Array.isArray(response.data)) {
         setFunctions(response.data);
       } else {
@@ -117,7 +121,7 @@ const PermissionManagement = () => {
         chitietquyen: expandedPermissions,
       };
 
-      const response = await axios.post(API_URL, roleToAdd);
+      const response = await api.post('/roles', roleToAdd);
       if (response.data.success) {
         await fetchRoles(pagination.current, pagination.pageSize, searchTerm);
         try {
@@ -172,7 +176,7 @@ const PermissionManagement = () => {
 
       console.log('Sending update:', roleToUpdate);
 
-      const response = await axios.put(`${API_URL}/${editingRole.MaNQ}`, roleToUpdate);
+      const response = await api.put(`/roles/${editingRole.MaNQ}`, roleToUpdate);
       if (response.data.success) {
         await fetchRoles(pagination.current, pagination.pageSize, searchTerm);
         try {
@@ -203,7 +207,7 @@ const PermissionManagement = () => {
       cancelText: 'Thoát',
       async onOk() {
         try {
-          const response = await axios.delete(`${API_URL}/${MaNQ}`);
+          const response = await api.delete(`/roles/${MaNQ}`);
           if (response.data.success) {
             await fetchRoles(pagination.current, pagination.pageSize, searchTerm);
             try {
@@ -301,7 +305,7 @@ const PermissionManagement = () => {
             icon={<EditOutlined />}
             onClick={async () => {
               try {
-                const response = await axios.get(`${API_URL}/${record.MaNQ}`);
+                const response = await api.get(`/roles/${record.MaNQ}`);
                 if (response.data.success) {
                   // Group permissions by MaCN and combine actions
                   const groupedPermissions = {};
@@ -314,7 +318,7 @@ const PermissionManagement = () => {
                     }
                   });
                   const combinedPermissions = Object.values(groupedPermissions);
-                  
+
                   setEditingRole({
                     ...response.data.data,
                     TinhTrang: response.data.data.TinhTrang,

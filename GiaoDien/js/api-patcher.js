@@ -1,6 +1,6 @@
 /**
- * Simple URL Replacer để cập nhật tất cả fetch/axios calls
- * Add script này VÀO ĐẦU các pages để auto-replace localhost URLs
+ * Simple URL Replacer và Response Patcher để cập nhật tất cả fetch calls
+ * Thêm script này VÀO ĐẦU các pages để auto-handle response format mới
  */
 
 (function () {
@@ -12,24 +12,42 @@
 
     const API_BASE = window.API_CONFIG.BASE_URL;
 
-    // Nếu đang ở localhost thì không cần replace gì cả
-    if (API_BASE.includes('localhost')) {
-        console.log('🔧 Development mode - using localhost');
-        return;
-    }
+    console.log('🚀 API Patcher Active - Base:', API_BASE);
 
-    console.log('🚀 Production mode - patching API calls with:', API_BASE);
-
-    // Patch window.fetch để tự động replace URLs
+    // Patch window.fetch
     const originalFetch = window.fetch;
-    window.fetch = function (url, options) {
-        // Nếu URL là string và chứa localhost:5000, thay thế nó
-        if (typeof url === 'string' && url.includes('localhost:5000')) {
+    window.fetch = async function (url, options) {
+        // 1. Replace localhost URLs nếu cần
+        if (typeof url === 'string' && url.includes('localhost:5000') && !API_BASE.includes('localhost')) {
             url = url.replace('http://localhost:5000', API_BASE);
-            console.log('📡 Fetching:', url);
+            console.log('📡 Fetch Patched URL:', url);
         }
-        return originalFetch.call(this, url, options);
+
+        // 2. Thực hiện request
+        const response = await originalFetch.call(this, url, options);
+
+        // 3. Clone response để có thể đọc JSON mà không làm hỏng stream gốc
+        const contentType = response.headers.get('content-type');
+        if (contentType && contentType.includes('application/json')) {
+            const clone = response.clone();
+
+            // Patch phương thức .json() của response trả về
+            const originalJson = response.json;
+            response.json = async function () {
+                const result = await originalJson.call(this);
+
+                // Nếu result có định dạng { success: true, data: ... }, trả về data
+                if (result && typeof result === 'object' && result.success === true && result.data !== undefined) {
+                    console.log('📦 Auto-unwrapped standardized response from:', url);
+                    return result.data;
+                }
+
+                return result;
+            };
+        }
+
+        return response;
     };
 
-    console.log('✅ Fetch patched successfully!');
+    console.log('✅ Global API Response Patcher initialized!');
 })();

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../utils/api';
 import { Table, Button, Modal, Form, Select, Input, notification, DatePicker, Alert } from 'antd';
 import { PlusOutlined, EyeOutlined, SyncOutlined, SearchOutlined } from '@ant-design/icons';
 import '../styles/ReceiptManagement.css';
@@ -29,10 +29,10 @@ const NhapHang = () => {
   const [lowStock, setLowStock] = useState([]);
   const [showLowStockBanner, setShowLowStockBanner] = useState(false);
   const [showLowStockDetails, setShowLowStockDetails] = useState(false);
-  
+
   // Tỷ lệ lợi nhuận chung (%) - dùng để tính giá bán
   const [tyLeLoi, setTyLeLoi] = useState(10); // Mặc định 10%
-  
+
   // State để theo dõi items trong form (dùng để tính tổng tiền realtime)
   const [formItems, setFormItems] = useState([]);
 
@@ -42,13 +42,14 @@ const NhapHang = () => {
     fetchNhaCungCap();
     fetchSanPham();
     fetchLowStock(true); // hỏi auto tạo phiếu nếu có thiếu hàng
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // ----- Fetchers -----
   const fetchPhieuNhap = async () => {
     try {
-      const res = await axios.get('http://localhost:5000/api/receipt');
-      setPhieuNhap(res.data);
+      const res = await api.get('/receipt');
+      setPhieuNhap(res.data.data || []);
     } catch (error) {
       notification.error({ message: 'Lỗi tải dữ liệu phiếu nhập' });
     }
@@ -56,8 +57,10 @@ const NhapHang = () => {
 
   const fetchNhaCungCap = async () => {
     try {
-      const res = await axios.get('http://localhost:5000/api/company');
-      setNhaCungCap(res.data);
+      const res = await api.get('/company');
+      // company API currently returns [...] directly.
+      const resData = res.data.data || res.data;
+      setNhaCungCap(Array.isArray(resData) ? resData : (resData?.data || []));
     } catch (error) {
       notification.error({ message: 'Lỗi tải danh sách nhà cung cấp' });
     }
@@ -65,8 +68,9 @@ const NhapHang = () => {
 
   const fetchSanPham = async () => {
     try {
-      const res = await axios.get('http://localhost:5000/api/product');
-      setSanPham(res.data);
+      const res = await api.get('/product');
+      const resData = res.data.data || res.data;
+      setSanPham(Array.isArray(resData) ? resData : (resData?.data || []));
     } catch (error) {
       console.error('Lỗi khi lấy danh sách sản phẩm:', error);
       notification.error({ message: 'Không thể tải danh sách sản phẩm. Vui lòng kiểm tra server.' });
@@ -77,10 +81,10 @@ const NhapHang = () => {
   // Gọi API low-stock; nếu askConfirm=true sẽ confirm tạo phiếu luôn khi có thiếu hàng
   const fetchLowStock = async (askConfirm = false) => {
     try {
-      const res = await axios.get('http://localhost:5000/api/product/low-stock', {
+      const res = await api.get('/product/low-stock', {
         params: { defaultThreshold: 5, buffer: 5, limit: 200 }
       });
-      const items = Array.isArray(res.data) ? res.data : [];
+      const items = Array.isArray(res.data.data) ? res.data.data : [];
       setLowStock(items);
       const hasLow = items.length > 0;
       setShowLowStockBanner(hasLow);
@@ -182,11 +186,11 @@ const NhapHang = () => {
         items: validItems
       };
 
-      const response = await axios.post('http://localhost:5000/api/receipt', payload);
-      
+      const response = await api.post('/receipt', payload);
+
       // Hiển thị kết quả chi tiết
-      const { MaPN, TongTienNhap, items: processedItems } = response.data;
-      notification.success({ 
+      const { MaPN, TongTienNhap } = response.data.data;
+      notification.success({
         message: 'Tạo phiếu nhập thành công',
         description: `Mã phiếu: ${MaPN} | Tổng tiền nhập: ${TongTienNhap?.toLocaleString()}đ | Tỷ lệ lời: ${tyLeLoi}%`
       });
@@ -206,8 +210,8 @@ const NhapHang = () => {
 
   const xemChiTiet = async (id) => {
     try {
-      const res = await axios.get(`http://localhost:5000/api/receipt/${id}`);
-      setSelectedPhieu(res.data);
+      const res = await api.get(`/receipt/${id}`);
+      setSelectedPhieu(res.data.data);
       setChiTietVisible(true);
     } catch (error) {
       notification.error({ message: 'Lỗi khi lấy chi tiết phiếu nhập' });
@@ -229,8 +233,8 @@ const NhapHang = () => {
       if (searchParams.fromDate) params.append('fromDate', searchParams.fromDate);
       if (searchParams.toDate) params.append('toDate', searchParams.toDate);
 
-      const res = await axios.get(`http://localhost:5000/api/receipt/search?${params.toString()}`);
-      setPhieuNhap(res.data);
+      const res = await api.get(`/receipt/search?${params.toString()}`);
+      setPhieuNhap(res.data.data || []);
     } catch (error) {
       notification.error({ message: 'Lỗi khi tìm kiếm phiếu nhập' });
     }
@@ -392,7 +396,7 @@ const NhapHang = () => {
         onCancel={() => { setModalVisible(false); setTyLeLoi(10); setFormItems([]); }}
         footer={null}
         width={1000}
-        destroyOnClose
+        destroyOnHidden
         className="receipt-modal"
       >
         <Form
@@ -464,7 +468,7 @@ const NhapHang = () => {
                   // Dùng formItems state để lấy giá trị realtime
                   const currentItem = formItems[name] || {};
                   const giaBanDuKien = calculateGiaBan(currentItem.DonGiaNhap, tyLeLoi);
-                  
+
                   return (
                     <div key={key} className="form-item-row" style={{ display: 'flex', gap: 8, alignItems: 'flex-end', flexWrap: 'wrap', marginBottom: 12, padding: 8, background: '#fafafa', borderRadius: 4 }}>
                       <Form.Item
@@ -485,10 +489,10 @@ const NhapHang = () => {
                             const nextItems = items.map((it, idx) =>
                               idx === name
                                 ? {
-                                    ...it,
-                                    TenSP: product?.TenSP || '',
-                                    DonGiaNhap: Number(product?.DonGia || 0) // Lấy giá hiện tại làm giá nhập mặc định
-                                  }
+                                  ...it,
+                                  TenSP: product?.TenSP || '',
+                                  DonGiaNhap: Number(product?.DonGia || 0) // Lấy giá hiện tại làm giá nhập mặc định
+                                }
                                 : it
                             );
                             form.setFieldsValue({ items: nextItems, totalNhap: calculateTotalNhap(nextItems) });
@@ -529,9 +533,9 @@ const NhapHang = () => {
                       {/* Hiển thị giá bán dự kiến */}
                       <div style={{ display: 'flex', flexDirection: 'column', marginBottom: 0 }}>
                         <span style={{ fontSize: 12, color: '#666' }}>Giá bán dự kiến</span>
-                        <span style={{ 
-                          padding: '4px 11px', 
-                          background: '#e6f7ff', 
+                        <span style={{
+                          padding: '4px 11px',
+                          background: '#e6f7ff',
                           border: '1px solid #91d5ff',
                           borderRadius: 4,
                           fontWeight: 'bold',
