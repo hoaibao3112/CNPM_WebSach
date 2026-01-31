@@ -76,14 +76,43 @@ const authService = {
         }
     },
 
-    // Logout (if needed for API call)
+    // Logout
     logout: async () => {
         try {
             const response = await api.post('/api/client/logout');
             return response.data;
         } catch (error) {
-            // Even if logout fails on server, we should clear local data
             return { success: true };
+        }
+    },
+
+    // Get user profile
+    getProfile: async () => {
+        try {
+            const response = await api.get('/api/client/profile');
+            return response.data;
+        } catch (error) {
+            throw error.response?.data || error;
+        }
+    },
+
+    // Update profile
+    updateProfile: async (profileData) => {
+        try {
+            const response = await api.put('/api/client/profile', profileData);
+            return response.data;
+        } catch (error) {
+            throw error.response?.data || error;
+        }
+    },
+
+    // Change password
+    changePassword: async (passwordData) => {
+        try {
+            const response = await api.put('/api/client/profile/change-password', passwordData);
+            return response.data;
+        } catch (error) {
+            throw error.response?.data || error;
         }
     },
 };

@@ -4,7 +4,7 @@ const orderService = {
     // Create new order
     createOrder: async (orderData) => {
         try {
-            const response = await api.post('/api/client/order/create', orderData);
+            const response = await api.post('/api/orders/place-order', orderData);
             return response.data;
         } catch (error) {
             throw error.response?.data || error;
@@ -12,12 +12,9 @@ const orderService = {
     },
 
     // Get user's orders
-    getOrders: async (status = null, page = 1, limit = 10) => {
+    getOrders: async (customerId) => {
         try {
-            const params = { page, limit };
-            if (status) params.status = status;
-
-            const response = await api.get('/api/client/orders', { params });
+            const response = await api.get(`/api/orders/customer-orders/${customerId}`);
             return response.data;
         } catch (error) {
             throw error.response?.data || error;
@@ -27,7 +24,7 @@ const orderService = {
     // Get order by ID
     getOrderById: async (orderId) => {
         try {
-            const response = await api.get(`/api/client/order/${orderId}`);
+            const response = await api.get(`/api/orders/customer-orders/detail/${orderId}`);
             return response.data;
         } catch (error) {
             throw error.response?.data || error;
@@ -37,7 +34,7 @@ const orderService = {
     // Cancel order
     cancelOrder: async (orderId, reason = '') => {
         try {
-            const response = await api.put(`/api/client/order/${orderId}/cancel`, {
+            const response = await api.put(`/api/orders/customer-orders/cancel/${orderId}`, {
                 reason,
             });
             return response.data;
@@ -46,22 +43,33 @@ const orderService = {
         }
     },
 
-    // Request refund
-    requestRefund: async (orderId, refundData) => {
+    // Reorder
+    reorder: async (orderId) => {
         try {
-            const response = await api.post(`/api/client/order/${orderId}/refund`, refundData);
+            const response = await api.post(`/api/cart/reorder/${orderId}`);
             return response.data;
         } catch (error) {
             throw error.response?.data || error;
         }
     },
 
-    // Get refund history
-    getRefundHistory: async (page = 1, limit = 10) => {
+    // Submit review
+    submitReview: async (orderId, rating, comment) => {
         try {
-            const response = await api.get('/api/client/refunds', {
-                params: { page, limit },
+            const response = await api.post(`/api/orderreview/${orderId}`, {
+                rating,
+                comment,
             });
+            return response.data;
+        } catch (error) {
+            throw error.response?.data || error;
+        }
+    },
+
+    // Get review
+    getReview: async (orderId) => {
+        try {
+            const response = await api.get(`/api/orderreview/${orderId}`);
             return response.data;
         } catch (error) {
             throw error.response?.data || error;

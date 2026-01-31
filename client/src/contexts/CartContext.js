@@ -46,7 +46,7 @@ export const CartProvider = ({ children }) => {
                 );
             } else {
                 // Add new item
-                return [...prevItems, { ...product, quantity }];
+                return [...prevItems, { ...product, quantity, selected: true }];
             }
         });
         toast.success('Đã thêm sản phẩm vào giỏ hàng!');
@@ -74,16 +74,30 @@ export const CartProvider = ({ children }) => {
         );
     };
 
+    const toggleSelection = (productId) => {
+        setCartItems((prevItems) =>
+            prevItems.map(item =>
+                (item.masp === productId || item.MaSP === productId)
+                    ? { ...item, selected: !item.selected }
+                    : item
+            )
+        );
+    };
+
     const clearCart = () => {
         setCartItems([]);
         clearStoredCart();
     };
 
     const getCartTotal = () => {
-        return cartItems.reduce((total, item) => {
-            const price = item.giaban || item.GiaBan || 0;
-            return total + (price * item.quantity);
-        }, 0);
+        return cartItems
+            .filter(item => item.selected !== false)
+            .reduce((total, item) => {
+                const price = item.giaban || item.GiaBan || item.DonGia || 0;
+                const discount = item.PhanTramGiam || item.GiamGia || 0;
+                const finalPrice = discount > 0 ? price * (1 - discount / 100) : price;
+                return total + (finalPrice * item.quantity);
+            }, 0);
     };
 
     const getCartCount = () => {
@@ -105,6 +119,7 @@ export const CartProvider = ({ children }) => {
         addToCart,
         removeFromCart,
         updateQuantity,
+        toggleSelection,
         clearCart,
         getCartTotal,
         getCartCount,

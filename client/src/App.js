@@ -12,10 +12,11 @@ import HomePage from './pages/Home/HomePage';
 import LoginPage from './pages/Auth/LoginPage';
 import RegisterPage from './pages/Auth/RegisterPage';
 import ProductListPage from './pages/Products/ProductListPage';
-// import ProductDetailPage from './pages/Products/ProductDetailPage';
-// import CartPage from './pages/Cart/CartPage';
-// import OrdersPage from './pages/Orders/OrdersPage';
-// import ProfilePage from './pages/Profile/ProfilePage';
+import ProductDetailPage from './pages/Products/ProductDetailPage';
+import CartPage from './pages/Cart/CartPage';
+import OrdersPage from './pages/Orders/OrdersPage';
+import OrderConfirmationPage from './pages/Orders/OrderConfirmationPage';
+import ProfilePage from './pages/Profile/ProfilePage';
 
 import './App.css';
 
@@ -35,16 +36,17 @@ function App() {
 
                 {/* Product routes */}
                 <Route path="products" element={<ProductListPage />} />
-                {/* <Route path="product/:id" element={<ProductDetailPage />} /> */}
+                <Route path="product/:id" element={<ProductDetailPage />} />
 
-                {/* <Route path="cart" element={<CartPage />} /> */}
+                <Route path="cart" element={<CartPage />} />
 
                 {/* Protected routes */}
-                {/* <Route element={<ProtectedRoute />}> */}
-                {/*     <Route path="profile" element={<ProfilePage />} /> */}
-                {/*     <Route path="orders" element={<OrdersPage />} /> */}
-                {/*     <Route path="refund-history" element={<RefundHistoryPage />} /> */}
-                {/* </Route> */}
+                <Route element={<ProtectedRoute />}>
+                  <Route path="profile" element={<ProfilePage />} />
+                  <Route path="orders" element={<OrdersPage />} />
+                  <Route path="order-confirmation" element={<OrderConfirmationPage />} />
+                  {/*     <Route path="refund-history" element={<RefundHistoryPage />} /> */}
+                </Route>
 
                 {/* 404 fallback */}
                 <Route path="*" element={<div style={{ padding: '40px', textAlign: 'center' }}>

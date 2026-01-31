@@ -1,20 +1,17 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import productService from '../../services/productService';
-
 import { useCart } from '../../contexts/CartContext';
-import { formatCurrency } from '../../utils/formatters';
 import { toast } from 'react-toastify';
 import Loading from '../../components/Common/Loading';
+import ProductCard from '../../components/Products/ProductCard';
 import './ProductListPage.css';
 
 const ProductListPage = () => {
     const [products, setProducts] = useState([]);
-    const [categories, setCategories] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchParams] = useSearchParams();
     const navigate = useNavigate();
-    const { addToCart } = useCart();
 
     // Filter states
     const [selectedCategory, setSelectedCategory] = useState('');
@@ -68,83 +65,6 @@ const ProductListPage = () => {
             search: searchQuery,
             priceRange
         });
-    };
-
-    const handleProductClick = (productId) => {
-        navigate(`/product/${productId}`);
-    };
-
-    const handleAddToCart = (e, product) => {
-        e.stopPropagation();
-        addToCart(product, 1);
-    };
-
-    const renderProduct = (product) => {
-        const productId = product.MaSP || product.masp;
-        const productName = product.TenSP || product.tensp;
-        const productImage = product.HinhAnh || product.hinhanh;
-        const productPrice = product.GiaBan || product.DonGia || product.giaban;
-        const productDiscount = product.PhanTramGiam || product.GiamGia || product.giamgia || 0;
-        const productStock = product.SoLuong || product.soluong || 0;
-        const isOutOfStock = productStock === 0;
-
-        return (
-            <div
-                key={productId}
-                className="product-card"
-                onClick={() => handleProductClick(productId)}
-            >
-                <div className="product-image">
-                    <img
-                        src={`/img/product/${productImage}`}
-                        alt={productName}
-                        onError={(e) => { e.target.src = '/img/default-book.jpg'; }}
-                    />
-                    {productDiscount > 0 && (
-                        <span className="discount-badge">-{productDiscount}%</span>
-                    )}
-                    {isOutOfStock && (
-                        <span className="stock-status">HẾT HÀNG</span>
-                    )}
-                </div>
-                <div className="product-info">
-                    <h3 className="product-title">{productName}</h3>
-                    <div className="product-price">
-                        {productDiscount > 0 ? (
-                            <>
-                                <span className="current-price">
-                                    {formatCurrency(productPrice * (1 - productDiscount / 100))}
-                                </span>
-                                <span className="original-price">
-                                    {formatCurrency(productPrice)}
-                                </span>
-                            </>
-                        ) : (
-                            <span className="current-price">{formatCurrency(productPrice)}</span>
-                        )}
-                    </div>
-                    <small className="product-stock">Còn {productStock} cuốn sách</small>
-                    <div className="product-actions">
-                        <button
-                            className="btn-add-cart"
-                            disabled={isOutOfStock}
-                            onClick={(e) => handleAddToCart(e, product)}
-                        >
-                            <i className="fas fa-cart-plus"></i> Thêm giỏ hàng
-                        </button>
-                        <button
-                            className="btn-detail"
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                handleProductClick(productId);
-                            }}
-                        >
-                            <i className="fas fa-info-circle"></i> Chi tiết
-                        </button>
-                    </div>
-                </div>
-            </div>
-        );
     };
 
     if (loading) {
@@ -247,7 +167,9 @@ const ProductListPage = () => {
                         </h2>
                         <div className="product-grid">
                             {products.length > 0 ? (
-                                products.map((product) => renderProduct(product))
+                                products.map((product) => (
+                                    <ProductCard key={product.MaSP || product.masp} product={product} />
+                                ))
                             ) : (
                                 <div className="no-products">
                                     <i className="fas fa-book"></i>
