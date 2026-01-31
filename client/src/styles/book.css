@@ -1,0 +1,1175 @@
+book-list* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Arial', sans-serif;
+}
+
+body {
+  background-color: #f5f5f5;
+  color: #333;
+  margin: 0;
+  padding: 0;
+  padding-top: 60px;
+}
+/* Container chứa toàn bộ sản phẩm */
+#book-list,
+#textbook-list {
+  display: grid;
+  grid-template-columns: repeat(5, 18%);
+  gap: 20px;
+  padding: 10px 0;
+  justify-content: center;
+}
+
+/* Container cho sách khuyến mãi */
+#promotion-book-list {
+  display: grid;
+  grid-template-columns: repeat(5, 210px); /* Cố định 5 cột, mỗi cột 210px */
+  gap: 15px;
+  padding: 10px 0;
+  justify-content: center; /* Căn giữa các cột */
+}
+
+/* Một sản phẩm đơn lẻ */
+.product-item {
+  background: #fff;
+  border: 1px solid #eaeaea;
+  border-radius: 8px;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.product-item:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+  border-color: #d32f2f;
+}
+
+/* Hình ảnh sản phẩm */
+.product-image {
+  width: 100%;
+  padding-top: 140%;
+  position: relative;
+  overflow: hidden;
+  background: #f9f9f9;
+}
+
+/* Hình ảnh sản phẩm trong phần khuyến mãi */
+#promotion-book-list .product-image {
+  padding-top: 120%; /* Tăng tỷ lệ khung ảnh để ảnh lớn hơn một chút */
+}
+
+/* Hình ảnh sản phẩm trong phần sách giáo khoa */
+#textbook-list .product-image {
+  padding-top: 140%; /* Giữ tỷ lệ giống #book-list */
+}
+
+.product-image img {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  padding: 15px;
+  transition: transform 0.3s;
+}
+
+/* Ảnh trong phần khuyến mãi */
+#promotion-book-list .product-image img {
+  padding: 8px; /* Giữ padding để ảnh gọn gàng */
+}
+
+/* Ảnh trong phần sách giáo khoa */
+#textbook-list .product-image img {
+  padding: 15px; /* Giữ padding giống #book-list */
+}
+
+.product-item:hover .product-image img {
+  transform: scale(1.03);
+}
+
+/* Thông tin sản phẩm */
+.product-info {
+  padding: 15px;
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.product-title {
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 6px;
+  color: #333;
+  line-height: 1.3;
+  height: 40px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.product-author {
+  font-size: 13px;
+  color: #666;
+  margin-bottom: 8px;
+  font-style: italic;
+}
+
+.product-year {
+  font-size: 12px;
+  color: #888;
+  margin-bottom: 8px;
+}
+
+/* Giá tiền và số lượng */
+.product-price {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  margin-top: auto;
+}
+
+.price {
+  color: #d32f2f;
+  font-weight: bold;
+  font-size: 16px;
+}
+
+.quantity {
+  font-size: 12px;
+  color: #666;
+}
+
+/* Nút hành động */
+.product-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.btn-detail, .btn-add-cart {
+  flex: 1;
+  padding: 8px 0;
+  font-size: 13px;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: all 0.2s;
+  text-align: center;
+  text-decoration: none;
+}
+
+.btn-detail {
+  background: #f5f5f5;
+  color: #333;
+  border: 1px solid #ddd;
+}
+
+.btn-detail:hover {
+  background: #e0e0e0;
+}
+
+.btn-add-cart {
+  background: #d32f2f;
+  color: white;
+  border: none;
+}
+
+.btn-add-cart:hover {
+  background: #b71c1c;
+}
+
+.btn-add-cart:disabled {
+  background: #e0e0e0;
+  color: #9e9e9e;
+  cursor: not-allowed;
+}
+
+/* Badge mã sản phẩm */
+.product-badge {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  background: rgba(0, 0, 0, 0.7);
+  color: white;
+  padding: 3px 8px;
+  font-size: 11px;
+  font-weight: bold;
+  border-radius: 4px;
+  z-index: 1;
+}
+
+/* Hiệu ứng khi hết hàng */
+.stock-status {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: #c62828;
+  color: white;
+  padding: 3px 8px;
+  font-size: 11px;
+  font-weight: bold;
+  border-radius: 4px;
+  z-index: 1;
+}
+
+/* Product Section */
+.product-section {
+  margin-bottom: 40px;
+}
+
+.product-section h2 {
+  font-size: 24px;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 15px;
+  display: inline-block;
+}
+
+.product-section .view-all {
+  float: right;
+  margin-top: 5px;
+  margin-right: 15px;
+}
+
+.product-section .view-all a {
+  color: #d32f2f;
+  text-decoration: none;
+  font-size: 14px;
+}
+
+/* Promotion Section */
+.promotion-section {
+  margin-bottom: 40px;
+}
+
+.promotion-section h2 {
+  font-size: 24px;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 15px;
+  display: inline-block;
+}
+
+.promotion-section .view-all {
+  float: right;
+  margin-top: 5px;
+}
+
+.promotion-section .view-all a {
+  color: #d32f2f;
+  text-decoration: none;
+  font-size: 14px;
+}
+
+.promotion-section .view-all a:hover {
+  text-decoration: underline;
+}
+
+/* Textbook Section */
+.textbook-section {
+  margin-bottom: 40px;
+}
+
+.textbook-section h2 {
+  font-size: 24px;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 15px;
+  display: inline-block;
+}
+
+.textbook-section .view-all {
+  float: right;
+  margin-top: 5px;
+}
+
+.textbook-section .view-all a {
+  color: #d32f2f;
+  text-decoration: none;
+  font-size: 14px;
+}
+
+.textbook-section .view-all a:hover {
+  text-decoration: underline;
+}
+
+/* Badge khuyến mãi cho sản phẩm trong #promotion-book-list */
+#promotion-book-list .product-item .product-image::after {
+  content: 'KHUYẾN MÃI';
+  position: absolute;
+  bottom: 8px;
+  left: 8px;
+  background: #ff9800;
+  color: white;
+  padding: 3px 8px;
+  font-size: 11px;
+  font-weight: bold;
+  border-radius: 4px;
+  z-index: 1;
+}
+
+/* Badge cho sản phẩm trong #textbook-list */
+#textbook-list .product-item .product-image::after {
+  content: 'GIÁO KHOA';
+  position: absolute;
+  bottom: 8px;
+  left: 8px;
+  background: #0288d1; /* Màu xanh dương để phân biệt */
+  color: white;
+  padding: 3px 8px;
+  font-size: 11px;
+  font-weight: bold;
+  border-radius: 4px;
+  z-index: 1;
+}
+
+/* View More Button */
+.view-more-container {
+  text-align: center;
+  margin: 20px 0;
+}
+
+.view-more-btn {
+  padding: 10px 20px;
+  font-size: 14px;
+  background: #d32f2f;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.view-more-btn:hover {
+  background: #b71c1c;
+}
+
+/* Small variant for sidebar toggle (author expand/collapse) */
+#authorToggleBtn {
+  background: transparent;
+  color: #d32f2f;
+  border: 1px solid rgba(0,0,0,0.06);
+  box-shadow: none;
+  border-radius: 18px;
+}
+#authorToggleBtn:hover {
+  background: rgba(211,47,47,0.06);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  #book-list,
+  #promotion-book-list,
+  #textbook-list {
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  }
+
+  .product-title {
+    font-size: 14px;
+    height: 36px;
+  }
+
+  .product-author,
+  .product-year {
+    font-size: 11px;
+  }
+
+  .price {
+    font-size: 14px;
+  }
+
+  .btn-detail,
+  .btn-add-cart {
+    font-size: 11px;
+    padding: 6px 0;
+  }
+
+  #promotion-book-list .product-item .product-image::after,
+  #textbook-list .product-item .product-image::after {
+    font-size: 10px;
+    padding: 2px 6px;
+  }
+
+  #promotion-book-list .product-image {
+    padding-top: 100%; /* Giữ tỷ lệ khung ảnh cho thiết bị nhỏ */
+  }
+
+  #textbook-list .product-image {
+    padding-top: 100%; /* Giữ tỷ lệ khung ảnh cho thiết bị nhỏ */
+  }
+
+  #promotion-book-list .product-image img,
+  #textbook-list .product-image img {
+    padding: 10px; /* Giảm padding thêm cho thiết bị nhỏ */
+  }
+}
+
+/* Filter chips (top) */
+.active-filter-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: transparent;
+  margin: 12px 0;
+  flex-wrap: wrap;
+}
+
+.filter-chips {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.filter-chip {
+  display: inline-flex;
+  align-items: center;
+  background: #fff7f2;
+  border: 1px solid #ffd6bf;
+  color: #d9734b;
+  padding: 8px 10px;
+  border-radius: 6px;
+  font-size: 14px;
+}
+
+.filter-chip .chip-label { margin-right: 8px; }
+.filter-chip .chip-remove {
+  background: transparent;
+  border: none;
+  color: #d9734b;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 0 4px;
+}
+
+.clear-filters-btn {
+  margin-left: auto;
+  background: transparent;
+  border: 1px solid #f39c12;
+  color: #f39c12;
+  padding: 8px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.clear-filters-btn:hover { background: rgba(243,156,18,0.06); }
+
+.filter-btn.active { background-color: #e74c3c !important; color: #fff !important; }
+/* --- Sách chính trị (politics-section) --- */
+.politics-section {
+  margin-bottom: 40px;
+}
+
+.politics-section h2 {
+  font-size: 24px;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 15px;
+  display: inline-block;
+}
+
+#politics-book-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, 18%);
+  gap: 20px;
+  padding: 10px 0;
+}
+
+/* Badge cho sản phẩm trong #politics-book-list */
+#politics-book-list .product-item .product-image::after {
+  content: 'CHÍNH TRỊ';
+  position: absolute;
+  bottom: 8px;
+  left: 8px;
+  background: #388e3c; /* Màu xanh lá đậm để phân biệt */
+  color: white;
+  padding: 3px 8px;
+  font-size: 11px;
+  font-weight: bold;
+  border-radius: 4px;
+  z-index: 1;
+}
+
+/* Responsive cho phần chính trị */
+@media (max-width: 768px) {
+  #politics-book-list {
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  }
+  #politics-book-list .product-item .product-image::after {
+    font-size: 10px;
+    padding: 2px 6px;
+  }
+}
+
+
+/* --- Sách khoa học (science-section) --- */
+.science-section {
+  margin-bottom: 40px;
+}
+
+.science-section h2 {
+  font-size: 24px;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 15px;
+  display: inline-block;
+}
+#search-book-list,
+#science-book-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, 18%);
+  gap: 20px;
+  padding: 10px 0;
+}
+
+/* Badge cho sản phẩm trong #science-book-list */
+#search-book-list .product-item .product-image::after,
+#science-book-list .product-item .product-image::after {
+  content: 'KHOA HỌC';
+  position: absolute;
+  bottom: 8px;
+  left: 8px;
+  background: #7b1fa2; /* Màu tím đậm để phân biệt */
+  color: white;
+  padding: 3px 8px;
+  font-size: 11px;
+  font-weight: bold;
+  border-radius: 4px;
+  z-index: 1;
+}
+
+/* Responsive cho phần khoa học */
+@media (max-width: 768px) {
+  #search-book-list,
+  #science-book-list {
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  }
+  #search-book-list .product-item .product-image::after
+  #science-book-list .product-item .product-image::after {
+    font-size: 10px;
+    padding: 2px 6px;
+  }
+}
+/* Toast Notification */
+.toast-notification {
+  position: fixed;
+  top: 60px;
+  right: 20px;
+  background: #e6f4ea; /* Đổi từ #fff0e0 sang xanh lá cây nhạt */
+  color: #15881b; /* Đổi từ #d32f2f sang xanh lá cây đậm */
+  padding: 12px 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: 'Arial', sans-serif;
+  font-size: 1rem;
+  z-index: 1000;
+  opacity: 0;
+  transform: translateY(-10px);
+  animation: fadeIn 0.3s forwards;
+}
+
+.toast-notification.hide {
+  animation: fadeOut 0.3s forwards;
+}
+
+.toast-notification span {
+  flex-grow: 1;
+}
+
+.toast-close {
+  background: none;
+  border: none;
+  color: #00fc0d; /* Đổi từ #d32f2f sang xanh lá cây đậm */
+  font-size: 1.2rem;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+}
+
+@keyframes fadeIn {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeOut {
+  to {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+}
+
+@media (max-width: 900px) {
+  .toast-notification {
+    top: auto;
+    bottom: 20px;
+    right: 20px;
+    left: 20px;
+    font-size: 0.9rem;
+  }
+}
+
+/* Start Sidebar */
+.container {
+  max-width: 1500px;
+  margin: 20px auto;
+  padding: 0 20px 0 20px;
+  display: flex;
+  gap: 20px;
+}
+.sidebar {
+  width: 200px;
+  min-width: 200px;
+  background: white;
+  padding: 15px;
+  border-radius: 5px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.sidebar h3 {
+  color: #d32f2f;
+  margin-bottom: 15px;
+  font-size: 16px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #eee;
+}
+
+.sidebar ul {
+  list-style: none;
+}
+
+.sidebar ul li {
+  margin-bottom: 8px;
+}
+
+.sidebar ul li a {
+  text-decoration: none;
+  color: #333;
+  font-size: 13px;
+  transition: color 0.3s;
+  display: block;
+  padding: 3px 0;
+}
+
+.sidebar ul li a:hover {
+  color: #d32f2f;
+}
+
+/* Divider */
+.divider {
+  border-top: 1px solid #eee;
+  margin: 15px 0;
+}
+
+/* Price filter section */
+.price-filter-section {
+  margin: 15px 0;
+}
+
+.price-filter-section h3 {
+  color: #d32f2f;
+  margin-bottom: 10px;
+  font-size: 16px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #eee;
+}
+
+.price-filter select {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+  cursor: pointer;
+  background-color: #fff;
+  transition: border-color 0.3s;
+}
+
+.price-filter select:focus {
+  outline: none;
+  border-color: #d32f2f;
+}
+
+.price-filter select option {
+  padding: 8px;
+}
+
+/* Filter buttons (supplier / hinh thuc) */
+.supplier-buttons,
+.format-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.price-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.discount-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+/* Better visual for promotion buttons */
+.discount-buttons .filter-btn {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 14px 16px;
+  border-radius: 28px;
+  border: 1px solid rgba(0,0,0,0.06);
+  background: #fff;
+  color: rgba(0,0,0,0.65);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.04);
+  font-weight: 500;
+  line-height: 1.1;
+}
+
+.discount-buttons .filter-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 18px rgba(0,0,0,0.08);
+}
+
+.discount-buttons .filter-btn.active {
+  background: #d32f2f;
+  color: #fff;
+  border-color: #b71c1c;
+  box-shadow: 0 8px 18px rgba(211,47,47,0.12);
+}
+
+/* Promotions list on the left (text links) */
+#promotions-list {
+  margin-top: 12px;
+  padding-left: 0;
+}
+
+#promotions-list li {
+  list-style: none;
+  margin-bottom: 10px;
+}
+
+#promotions-list li a {
+  display: block;
+  padding: 10px 12px;
+  border-radius: 14px;
+  background: #fff;
+  border: 1px solid rgba(0,0,0,0.04);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.03);
+  color: rgba(0,0,0,0.6);
+  text-decoration: none;
+  font-weight: 500;
+}
+
+#promotions-list li a small {
+  display: block;
+  font-weight: 400;
+  color: #666;
+  margin-top: 6px;
+  font-size: 13px;
+}
+
+/* Make deal-hot container cards align visually */
+#deal-hot-list .product-item {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  padding: 10px;
+  border-radius: 8px;
+  background: #fff;
+  border: 1px solid rgba(0,0,0,0.04);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.03);
+}
+
+#deal-hot-list .product-item img {
+  width: 72px;
+  height: 72px;
+  object-fit: cover;
+  border-radius: 6px;
+}
+
+.filter-btn {
+  padding: 8px 10px;
+  border-radius: 20px;
+  border: 1px solid #e0e0e0;
+  background: #fff;
+  color: #333;
+  cursor: pointer;
+  font-size: 13px;
+  transition: all 0.12s ease;
+}
+
+.filter-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(0,0,0,0.06);
+}
+
+.filter-btn.active {
+  background: #d32f2f;
+  color: #fff;
+  border-color: #b71c1c;
+}
+
+/* Stronger rule for sidebar filter buttons to avoid overrides */
+.sidebar .filter-btn.active,
+.supplier-buttons .filter-btn.active,
+.author-buttons .filter-btn.active,
+.price-buttons .filter-btn.active,
+.format-buttons .filter-btn.active,
+.discount-buttons .filter-btn.active {
+  background: #d32f2f !important;
+  color: #fff !important;
+  border-color: #b71c1c !important;
+}
+
+/* --- Make all filter groups (supplier, author, price, format, discount) consistent --- */
+.supplier-buttons,
+.author-buttons,
+.price-buttons,
+.format-buttons,
+.discount-buttons {
+  display: block;
+  margin-top: 10px;
+}
+
+/* Discount buttons should behave like pill buttons (not full-width cards) */
+.discount-buttons {
+  flex-direction: row;
+}
+
+.discount-buttons .filter-btn {
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid #e0e0e0;
+  background: #fff;
+  color: #333;
+  box-shadow: none;
+  font-size: 14px;
+  display: block;
+  width: 100%;
+  text-align: left;
+  margin: 6px 0;
+}
+
+.discount-buttons .filter-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(0,0,0,0.06);
+}
+
+.discount-buttons .filter-btn.active {
+  background: #d32f2f;
+  color: #fff;
+  border-color: #b71c1c;
+}
+
+/* Ensure author buttons use the same visual as supplier */
+.author-buttons .filter-btn {
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid #e0e0e0;
+  background: #fff;
+  color: #333;
+  cursor: pointer;
+  font-size: 14px;
+  display: block;
+  width: 100%;
+  text-align: left;
+  margin: 6px 0;
+}
+
+.supplier-buttons .filter-btn,
+.price-buttons .filter-btn,
+.format-buttons .filter-btn {
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid #e0e0e0;
+  background: #fff;
+  color: #333;
+  display: block;
+  width: 100%;
+  text-align: left;
+  margin: 6px 0;
+}
+
+
+/* Discount filter section */
+.text-discount-section {
+  padding: 15px 0;
+}
+
+.text-discount-section h4 {
+  color: #d70018;
+  font-size: 16px;
+  margin-bottom: 10px;
+  font-weight: 600;
+}
+
+/* custom select đẹp hơn */
+.discount-filter {
+  position: relative;
+  display: block;
+  width: 100%;
+  margin-bottom: 8px;
+}
+
+/* chọn style cho select: */
+.discount-filter select {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  width: 100%;
+  padding: 10px 40px 10px 14px; /* chừa chỗ cho mũi tên */
+  border-radius: 8px;
+  border: 1px solid #e6e6e6;
+  background: linear-gradient(180deg, #ffffff 0%, #fafafa 100%);
+  box-shadow: 0 2px 6px rgba(15,15,15,0.04);
+  font-size: 14px;
+  color: #333;
+  cursor: pointer;
+  transition: border-color .18s ease, box-shadow .18s ease, transform .08s ease;
+  line-height: 1.3;
+}
+
+/* custom arrow (SVG data URI) */
+.discount-filter select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23333' stroke-width='1.6' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 12px 8px;
+  padding-right: 44px;
+}
+
+/* focus state */
+.discount-filter select:focus {
+  outline: none;
+  border-color: #d32f2f;
+  box-shadow: 0 6px 18px rgba(211,47,47,0.12);
+  transform: translateY(-1px);
+}
+
+/* option: (browser-dependent; limited control) */
+.discount-filter select option {
+  padding: 8px;
+  font-size: 14px;
+}
+
+/* phần mô tả hiển thị text đầy đủ */
+.promo-description {
+  margin-top: 8px;
+  font-size: 13px;
+  color: #444;
+  background: #fff;
+  border: 1px solid #f0f0f0;
+  padding: 10px;
+  border-radius: 8px;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.03);
+  min-height: 44px;
+  display: none; /* hiển thị khi có nội dung */
+  white-space: pre-wrap;
+}
+
+
+#deal-hot-list {
+  display: none; /* Ẩn mặc định */
+}
+
+.text-view-more {
+  display: block;
+  text-align: center;
+  color: #288ad6;
+  font-size: 14px;
+  margin-top: 10px;
+  text-decoration: none;
+}
+
+.text-view-more:hover {
+  text-decoration: underline;
+}
+
+/* Hotline */
+.hotline {
+  color: #d32f2f;
+  font-weight: bold;
+  margin-top: 10px;
+  font-size: 14px;
+}
+
+
+/* Main content area */
+.main-content {
+  flex: 1;
+  min-width: 0;
+  background: white;
+  padding: 20px 0 20px 20px;
+  border-radius: 5px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+/* End Sidebar */
+
+
+/* ========== Responsive ========== */
+
+/* Tablet */
+@media (max-width: 768px) {
+  /* Chỉnh sidebar xuống dưới, giảm padding main-content */
+  .container {
+    flex-direction: column;
+    padding: 0 10px;
+  }
+
+  .sidebar {
+    width: 100%;
+    min-width: unset;
+    margin-bottom: 20px;
+  }
+
+  .main-content {
+    padding: 10px;
+  }
+
+  /* Header cho tablet */
+  .top-bar-container {
+    display: flex;
+    flex-direction: column; /* xếp logo + search + menu xuống */
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .logo {
+    max-width: 150px; /* thu nhỏ logo */
+  }
+
+  .search-container {
+    width: 100%;
+  }
+
+  .top-links {
+    flex-wrap: wrap;
+    width: 100%;
+    font-size: 14px;
+    gap: 6px;
+  }
+
+  /* Luôn 4 cột trên tablet */
+  #book-list,
+  #promotion-book-list,
+  #textbook-list,
+  #politics-book-list,
+  #science-book-list,
+  #search-book-list {
+    display: grid !important;
+    grid-template-columns: repeat(4, 1fr) !important;
+    gap: 10px !important;
+  }
+
+  .sidebar {
+    width: 100%;
+    min-width: 0;
+    margin: 0 0 10px 0; /* chỉ margin-bottom */
+    box-sizing: border-box;
+  }
+/* 
+  .main-content {
+    width: 100%;
+    padding: 0 5px; 
+    box-sizing: border-box;
+  } */
+}
+
+/* Mobile lớn - danh sách sách */
+@media (max-width: 430.98px) {
+  /* Grid 2 cột */
+  #book-list,
+  #promotion-book-list,
+  #textbook-list,
+  #politics-book-list,
+  #science-book-list,
+  #search-book-list {
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 6px !important;
+  }
+
+  /* Item nhỏ hơn */
+  .product-item {
+    font-size: 12px;
+  }
+
+  /* Logo thu nhỏ */
+  .logo {
+    max-width: 120px;
+    margin: 0 auto;
+  }
+
+  /* Input tìm kiếm */
+  .search-container input {
+    font-size: 14px;
+    padding: 6px;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  /* Top-bar nếu có trên trang này */
+  .top-bar {
+    position: static;
+  }
+
+}
+
+
+/* Mobile nhỏ */
+@media (max-width: 375px) {
+  /* 3 cột */
+  #book-list,
+  #promotion-book-list,
+  #textbook-list,
+  #politics-book-list,
+  #science-book-list,
+  #search-book-list {
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 4px !important;
+  }
+
+  /* Giảm font, padding */
+  .btn-detail,
+  .btn-add-cart {
+    font-size: 10px;
+    padding: 5px 0;
+  }
+
+  .logo {
+    max-width: 100px;
+  }
+
+  .search-container input {
+    font-size: 12px;
+    padding: 4px;
+  }
+
+  .top-links {
+    display: block; /* xếp dọc */
+    font-size: 11px;
+    text-align: center;
+  }
+}

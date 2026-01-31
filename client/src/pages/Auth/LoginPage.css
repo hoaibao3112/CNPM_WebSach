@@ -1,0 +1,268 @@
+/* styles/login.css */
+:root {
+  /* Adjust this if your header height changes */
+  --top-bar-height: 72px; /* estimated header height (logo 40px + paddings). Tweak if needed */
+}
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body {
+  background: #ffebee; /* Màu đỏ pastel nhạt */
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  /* allow vertical positioning from the top so we can push the login card below the fixed header */
+  align-items: flex-start;
+  padding: 20px;
+}
+
+.login-container {
+  width: 100%;
+  max-width: 450px;
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 15px;
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  /* push login below the fixed header without affecting header layout */
+  margin-top: calc(var(--top-bar-height) + 20px);
+}
+
+/* When header is injected into #load-header on this page, make its container span the full viewport width */
+#load-header .top-bar-container {
+  max-width: 100% !important;
+  margin: 0 !important;
+  padding: 0 20px !important;
+}
+.login-form {
+  padding: 40px;
+}
+
+.login-form h1 {
+  color: #d32f2f; /* Màu đỏ đậm cho tiêu đề */
+  text-align: center;
+  margin-bottom: 30px;
+  font-weight: 600;
+  font-size: 28px;
+}
+
+.form-group {
+  position: relative;
+  margin-bottom: 25px;
+  border-bottom: 1px solid #ffcdd2; /* Màu đỏ nhạt cho đường gạch dưới */
+  padding-bottom: 8px;
+}
+
+.form-group i {
+  color: #d32f2f; /* Màu đỏ đậm cho icon */
+  font-size: 18px;
+  margin-right: 10px;
+}
+
+.form-group input {
+  width: calc(100% - 30px);
+  border: none;
+  outline: none;
+  background: transparent;
+  padding: 10px 0;
+  font-size: 16px;
+  color: #333;
+}
+
+.form-group input::placeholder {
+  color: #999;
+}
+
+.options {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 25px;
+  font-size: 14px;
+}
+
+.options label {
+  color: #666;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+}
+
+.options label input {
+  margin-right: 5px;
+}
+
+.options a {
+  color: #d32f2f; /* Màu đỏ đậm cho link */
+  text-decoration: none;
+  transition: color 0.3s;
+}
+
+.options a:hover {
+  color: #f44336; /* Màu đỏ tươi khi hover */
+  text-decoration: underline;
+}
+
+.login-btn {
+  width: 100%;
+  padding: 12px;
+  border: none;
+  border-radius: 30px;
+  background: linear-gradient(to right, #d32f2f, #f44336); /* Gradient đỏ */
+  color: white;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+  margin-bottom: 20px;
+}
+
+.login-btn:hover {
+  background: linear-gradient(to right, #f44336, #d32f2f);
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(212, 47, 47, 0.2); /* Bóng màu đỏ nhạt */
+}
+
+.or-separator {
+  position: relative;
+  text-align: center;
+  margin: 20px 0;
+  color: #999;
+}
+
+.or-separator::before,
+.or-separator::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  width: calc(50% - 25px);
+  height: 1px;
+  background: #ffcdd2; /* Màu đỏ nhạt */
+}
+
+.or-separator::before {
+  left: 0;
+}
+
+.or-separator::after {
+  right: 0;
+}
+
+.social-login {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 25px;
+}
+
+.social-login button {
+  flex: 1;
+  padding: 10px;
+  border: none;
+  border-radius: 30px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.social-login button i {
+  margin-right: 8px;
+  font-size: 16px;
+}
+
+.social-login button.facebook {
+  background: #3b5998;
+  color: white;
+  margin-right: 10px;
+}
+
+.social-login button.twitter {
+  background: #1da1f2;
+  color: white;
+  margin-left: 10px;
+}
+
+.social-login button:hover {
+  opacity: 0.9;
+  transform: translateY(-2px);
+}
+
+footer {
+  text-align: center;
+  color: #999;
+  font-size: 12px;
+  margin-top: 20px;
+}
+
+/* Responsive design */
+@media (max-width: 480px) {
+  .login-form {
+    padding: 30px 20px;
+  }
+  
+  .social-login {
+    flex-direction: column;
+  }
+  
+  .social-login button {
+    width: 100%;
+    margin: 5px 0 !important;
+  }
+}
+/* Modal Quên Mật Khẩu */
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 1000;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+}
+
+.modal-content {
+  background-color: #fefefe;
+  margin: 10% auto;
+  padding: 20px;
+  border-radius: 8px;
+  width: 400px;
+  max-width: 90%;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.close-modal {
+  float: right;
+  font-size: 24px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.close-modal:hover {
+  color: #ff0000;
+}
+
+.message {
+  margin: 10px 0;
+  padding: 10px;
+  border-radius: 4px;
+  display: none;
+}
+
+.message.error {
+  background-color: #ffdddd;
+  color: #ff0000;
+  display: block;
+}
+
+.message.success {
+  background-color: #ddffdd;
+  color: #009900;
+  display: block;
+}
