@@ -5,7 +5,7 @@ const productService = {
     getProducts: async (params = {}) => {
         try {
             const response = await api.get('/api/product', { params });
-            return response.data;
+            return response.data.data || response.data || [];
         } catch (error) {
             throw error.response?.data || error;
         }
@@ -15,7 +15,7 @@ const productService = {
     getProductById: async (productId) => {
         try {
             const response = await api.get(`/api/product/${productId}`);
-            return response.data;
+            return response.data.data || response.data;
         } catch (error) {
             throw error.response?.data || error;
         }
@@ -27,7 +27,7 @@ const productService = {
             const response = await api.get('/api/product/search-product', {
                 params: { search: searchQuery },
             });
-            return response.data;
+            return response.data.data || response.data || [];
         } catch (error) {
             throw error.response?.data || error;
         }
@@ -37,7 +37,7 @@ const productService = {
     getProductsByCategory: async (categoryId, params = {}) => {
         try {
             const response = await api.get(`/api/product/category/${categoryId}`, { params });
-            return response.data;
+            return response.data.data || response.data || [];
         } catch (error) {
             throw error.response?.data || error;
         }
@@ -49,7 +49,8 @@ const productService = {
             const response = await api.get('/api/product/new', {
                 params: { limit },
             });
-            return response.data;
+            // Extract data from baseController response {success, message, data}
+            return response.data.data || response.data || [];
         } catch (error) {
             throw error.response?.data || error;
         }
@@ -61,7 +62,8 @@ const productService = {
             const response = await api.get('/api/product/promotion', {
                 params: { limit },
             });
-            return response.data;
+            // Extract data from baseController response {success, message, data}
+            return response.data.data || response.data || [];
         } catch (error) {
             throw error.response?.data || error;
         }

@@ -91,6 +91,30 @@ class ProductController {
         }
     }
 
+    // Get new products (for customer frontend)
+    async getNew(req, res) {
+        try {
+            const limit = parseInt(req.query.limit) || 12;
+            const products = await ProductService.getSortedProducts('new');
+            const limitedProducts = products.slice(0, limit);
+            return baseController.sendSuccess(res, limitedProducts);
+        } catch (error) {
+            return baseController.sendError(res, 'Lỗi khi lấy sản phẩm mới', 500, error.message);
+        }
+    }
+
+    // Get promotion products (for customer frontend)
+    async getPromotionProducts(req, res) {
+        try {
+            const limit = parseInt(req.query.limit) || 12;
+            const products = await ProductService.getSortedProducts('promotion');
+            const limitedProducts = products.slice(0, limit);
+            return baseController.sendSuccess(res, limitedProducts);
+        } catch (error) {
+            return baseController.sendError(res, 'Lỗi khi lấy sản phẩm khuyến mãi', 500, error.message);
+        }
+    }
+
     async updateMinStock(req, res) {
         try {
             const { id } = req.params;

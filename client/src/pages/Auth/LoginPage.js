@@ -39,7 +39,10 @@ const LoginPage = () => {
 
         setLoading(true);
         try {
-            const data = await authService.login(email, password);
+            const response = await authService.login(email, password);
+
+            // baseController wraps in {success, message, data}
+            const data = response.data || response;
 
             // Save to context and localStorage
             login(data.user, data.token);
@@ -178,9 +181,13 @@ const LoginPage = () => {
                             />
                             Remember me
                         </label>
-                        <a href="#" onClick={(e) => { e.preventDefault(); setShowForgotPassword(true); }}>
+                        <button
+                            type="button"
+                            className="link-button"
+                            onClick={() => setShowForgotPassword(true)}
+                        >
                             Forgot Password?
-                        </a>
+                        </button>
                     </div>
 
                     <button type="submit" className="login-btn" disabled={loading}>

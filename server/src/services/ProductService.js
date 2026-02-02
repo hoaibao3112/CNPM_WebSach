@@ -94,6 +94,62 @@ class ProductService {
         return products;
     }
 
+    async getSortedProducts(type) {
+        let orderBy = 'sp.MaSP DESC'; // Default: newest first (higher ID = newer)
+
+        switch (type) {
+            case 'new':
+                orderBy = 'sp.MaSP DESC';
+                break;
+            case 'price-asc':
+                orderBy = 'sp.DonGia ASC';
+                break;
+            case 'price-desc':
+                orderBy = 'sp.DonGia DESC';
+                break;
+            case 'name-asc':
+                orderBy = 'sp.TenSP ASC';
+                break;
+            case 'name-desc':
+                orderBy = 'sp.TenSP DESC';
+                break;
+            case 'promotion':
+                // For now, just return newest products
+                // TODO: Join with khuyenmai table to get actual promotions
+                orderBy = 'sp.MaSP DESC';
+                break;
+            case 'year':
+                orderBy = 'sp.NamXB DESC';
+                break;
+            default:
+                orderBy = 'sp.MaSP DESC';
+        }
+
+        const query = `
+            SELECT sp.*, ncc.TenNCC, tl.TenTL, sp.DonGia as GiaBan
+            FROM sanpham sp
+            LEFT JOIN nhacungcap ncc ON sp.MaNCC = ncc.MaNCC
+            LEFT JOIN theloai tl ON sp.MaTL = tl.MaTL
+            WHERE sp.TinhTrang = 1
+            ORDER BY ${orderBy}
+        `;
+
+        const [products] = await pool.query(query);
+        return products;
+    }
+
+    async getProductsByCategory(categoryId) {
+        const [products] = await pool.query(`
+            SELECT sp.*, ncc.TenNCC, tl.TenTL, sp.DonGia as GiaBan
+            FROM sanpham sp
+            LEFT JOIN nhacungcap ncc ON sp.MaNCC = ncc.MaNCC
+            LEFT JOIN theloai tl ON sp.MaTL = tl.MaTL
+            WHERE sp.MaTL = ? AND sp.TinhTrang = 1
+            ORDER BY sp.MaSP DESC
+        `, [categoryId]);
+        return products;
+    }
+
     async getRecommendations(filters = {}) {
         // Return latest products as recommendations for now
         return this.getSortedProducts('year');

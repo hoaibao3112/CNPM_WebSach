@@ -17,6 +17,8 @@ import CartPage from './pages/Cart/CartPage';
 import OrdersPage from './pages/Orders/OrdersPage';
 import OrderConfirmationPage from './pages/Orders/OrderConfirmationPage';
 import ProfilePage from './pages/Profile/ProfilePage';
+import RefundHistoryPage from './pages/Refunds/RefundHistoryPage';
+import AuthorPage from './pages/Author/AuthorPage';
 
 import './App.css';
 
@@ -37,7 +39,7 @@ function App() {
                 {/* Product routes */}
                 <Route path="products" element={<ProductListPage />} />
                 <Route path="product/:id" element={<ProductDetailPage />} />
-
+                <Route path="author/:id" element={<AuthorPage />} />
                 <Route path="cart" element={<CartPage />} />
 
                 {/* Protected routes */}
@@ -45,7 +47,7 @@ function App() {
                   <Route path="profile" element={<ProfilePage />} />
                   <Route path="orders" element={<OrdersPage />} />
                   <Route path="order-confirmation" element={<OrderConfirmationPage />} />
-                  {/*     <Route path="refund-history" element={<RefundHistoryPage />} /> */}
+                  <Route path="refund-history" element={<RefundHistoryPage />} />
                 </Route>
 
                 {/* 404 fallback */}

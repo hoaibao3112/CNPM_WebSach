@@ -32,13 +32,17 @@ export const AuthProvider = ({ children }) => {
     }, []);
 
     const login = (userData, authToken) => {
-        setUser(userData);
-        setToken(authToken);
-        setCustomerId(userData.makh || userData.MaKH);
+        // Handle if userData is wrapped in response structure
+        const user = userData?.user || userData;
+        const token = authToken || userData?.token;
 
-        saveUser(userData);
-        saveToken(authToken);
-        saveCustomerId(userData.makh || userData.MaKH);
+        setUser(user);
+        setToken(token);
+        setCustomerId(user?.makh || user?.MaKH);
+
+        saveUser(user);
+        saveToken(token);
+        saveCustomerId(user?.makh || user?.MaKH);
     };
 
     const logout = () => {

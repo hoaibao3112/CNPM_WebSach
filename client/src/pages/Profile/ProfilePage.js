@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import authService from '../../services/authService';
+import wishlistService from '../../services/wishlistService';
 import { toast } from 'react-toastify';
+import { formatCurrency } from '../../utils/formatters';
 import Loading from '../../components/Common/Loading';
 import './ProfilePage.css';
 
@@ -23,9 +25,13 @@ const ProfilePage = () => {
         confirmPassword: ''
     });
 
+    const [wishlist, setWishlist] = useState([]);
+    const [loadingWishlist, setLoadingWishlist] = useState(false);
+
     useEffect(() => {
         if (user) {
             fetchProfile();
+            fetchWishlist();
         }
     }, [user]);
 
@@ -47,6 +53,29 @@ const ProfilePage = () => {
             toast.error('Không thể tải thông tin hồ sơ');
         } finally {
             setLoading(false);
+        }
+    };
+
+    const fetchWishlist = async () => {
+        try {
+            setLoadingWishlist(true);
+            const data = await wishlistService.getWishlist();
+            setWishlist(Array.isArray(data) ? data : data.data || []);
+        } catch (error) {
+            console.error('Error fetching wishlist:', error);
+            setWishlist([]);
+        } finally {
+            setLoadingWishlist(false);
+        }
+    };
+
+    const handleRemoveFromWishlist = async (productId) => {
+        try {
+            await wishlistService.removeFromWishlist(productId);
+            toast.success('Đã xóa khỏi danh sách yêu thích');
+            fetchWishlist();
+        } catch (error) {
+            toast.error('Lỗi khi xóa khỏi danh sách yêu thích');
         }
     };
 
@@ -133,6 +162,12 @@ const ProfilePage = () => {
                                 onClick={() => setActiveSection('membership')}
                             >
                                 <i className="fas fa-id-card"></i> Thẻ thành viên
+                            </button>
+                            <button
+                                className={activeSection === 'wishlist' ? 'active' : ''}
+                                onClick={() => setActiveSection('wishlist')}
+                            >
+                                <i className="fas fa-heart"></i> Sản phẩm yêu thích
                             </button>
                         </nav>
                     </aside>
@@ -279,6 +314,46 @@ const ProfilePage = () => {
                                         <li><i className="fas fa-check-circle"></i> Tích điểm hoàn tiền gấp 1.2 lần</li>
                                     </ul>
                                 </div>
+                            </div>
+                        )}
+
+                        {activeSection === 'wishlist' && (
+                            <div className="section">
+                                <h2>Sản phẩm yêu thích</h2>
+                                {loadingWishlist ? (
+                                    <div className="loading-small">Đang tải...</div>
+                                ) : wishlist.length === 0 ? (
+                                    <div className="empty-wishlist">
+                                        <i className="fas fa-heart fa-3x" style={{ color: '#ccc', marginBottom: '1rem' }}></i>
+                                        <p>Bạn chưa có sản phẩm yêu thích nào</p>
+                                    </div>
+                                ) : (
+                                    <div className="wishlist-grid">
+                                        {wishlist.map(item => {
+                                            const product = item.product || item;
+                                            const id = product.MaSP || product.id;
+                                            const name = product.TenSP || product.name;
+                                            const price = product.GiaBan || product.price;
+                                            const image = product.HinhAnh || product.image;
+
+                                            return (
+                                                <div key={id} className="wishlist-item">
+                                                    <img src={`/ img / product / ${image} `} alt={name} onError={e => e.target.src = '/img/default-book.jpg'} />
+                                                    <h4>{name}</h4>
+                                                    <p className="price">{formatCurrency(price)}</p>
+                                                    <div className="wishlist-actions">
+                                                        <button className="btn-view" onClick={() => window.location.href = `/ product / ${id} `}>
+                                                            Xem chi tiết
+                                                        </button>
+                                                        <button className="btn-remove" onClick={() => handleRemoveFromWishlist(id)}>
+                                                            <i className="fas fa-trash"></i>
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                )}
                             </div>
                         )}
                     </main>

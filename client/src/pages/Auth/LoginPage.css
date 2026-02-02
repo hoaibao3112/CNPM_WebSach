@@ -1,8 +1,10 @@
 /* styles/login.css */
 :root {
   /* Adjust this if your header height changes */
-  --top-bar-height: 72px; /* estimated header height (logo 40px + paddings). Tweak if needed */
+  --top-bar-height: 72px;
+  /* estimated header height (logo 40px + paddings). Tweak if needed */
 }
+
 * {
   margin: 0;
   padding: 0;
@@ -11,7 +13,8 @@
 }
 
 body {
-  background: #ffebee; /* Màu đỏ pastel nhạt */
+  background: #ffebee;
+  /* Màu đỏ pastel nhạt */
   min-height: 100vh;
   display: flex;
   justify-content: center;
@@ -37,12 +40,14 @@ body {
   margin: 0 !important;
   padding: 0 20px !important;
 }
+
 .login-form {
   padding: 40px;
 }
 
 .login-form h1 {
-  color: #d32f2f; /* Màu đỏ đậm cho tiêu đề */
+  color: #d32f2f;
+  /* Màu đỏ đậm cho tiêu đề */
   text-align: center;
   margin-bottom: 30px;
   font-weight: 600;
@@ -52,12 +57,14 @@ body {
 .form-group {
   position: relative;
   margin-bottom: 25px;
-  border-bottom: 1px solid #ffcdd2; /* Màu đỏ nhạt cho đường gạch dưới */
+  border-bottom: 1px solid #ffcdd2;
+  /* Màu đỏ nhạt cho đường gạch dưới */
   padding-bottom: 8px;
 }
 
 .form-group i {
-  color: #d32f2f; /* Màu đỏ đậm cho icon */
+  color: #d32f2f;
+  /* Màu đỏ đậm cho icon */
   font-size: 18px;
   margin-right: 10px;
 }
@@ -96,13 +103,32 @@ body {
 }
 
 .options a {
-  color: #d32f2f; /* Màu đỏ đậm cho link */
+  color: #d32f2f;
+  /* Màu đỏ đậm cho link */
   text-decoration: none;
   transition: color 0.3s;
 }
 
 .options a:hover {
-  color: #f44336; /* Màu đỏ tươi khi hover */
+  color: #f44336;
+  /* Màu đỏ tươi khi hover */
+  text-decoration: underline;
+}
+
+/* Button styled as link */
+.options .link-button {
+  background: none;
+  border: none;
+  color: #d32f2f;
+  text-decoration: none;
+  cursor: pointer;
+  font-size: 14px;
+  padding: 0;
+  transition: color 0.3s;
+}
+
+.options .link-button:hover {
+  color: #f44336;
   text-decoration: underline;
 }
 
@@ -111,7 +137,8 @@ body {
   padding: 12px;
   border: none;
   border-radius: 30px;
-  background: linear-gradient(to right, #d32f2f, #f44336); /* Gradient đỏ */
+  background: linear-gradient(to right, #d32f2f, #f44336);
+  /* Gradient đỏ */
   color: white;
   font-size: 16px;
   font-weight: 600;
@@ -123,7 +150,8 @@ body {
 .login-btn:hover {
   background: linear-gradient(to right, #f44336, #d32f2f);
   transform: translateY(-2px);
-  box-shadow: 0 5px 15px rgba(212, 47, 47, 0.2); /* Bóng màu đỏ nhạt */
+  box-shadow: 0 5px 15px rgba(212, 47, 47, 0.2);
+  /* Bóng màu đỏ nhạt */
 }
 
 .or-separator {
@@ -140,7 +168,8 @@ body {
   top: 50%;
   width: calc(50% - 25px);
   height: 1px;
-  background: #ffcdd2; /* Màu đỏ nhạt */
+  background: #ffcdd2;
+  /* Màu đỏ nhạt */
 }
 
 .or-separator::before {
@@ -205,16 +234,17 @@ footer {
   .login-form {
     padding: 30px 20px;
   }
-  
+
   .social-login {
     flex-direction: column;
   }
-  
+
   .social-login button {
     width: 100%;
     margin: 5px 0 !important;
   }
 }
+
 /* Modal Quên Mật Khẩu */
 .modal {
   display: none;

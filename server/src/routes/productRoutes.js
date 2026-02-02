@@ -10,6 +10,8 @@ const router = express.Router();
 
 // Public routes
 router.get('/', ProductController.getAll);
+router.get('/new', ProductController.getNew); // Get new products
+router.get('/promotion', ProductController.getPromotionProducts); // Get promotion products
 
 // Aliases for Product Management
 router.get('/authors', AuthorController.getAll);
