@@ -28,6 +28,17 @@ const API_CONFIG = {
         return 'ws://localhost:5000';
     })(),
 
+    // Chatbot service URL (direct Python service for local development)
+    CHATBOT_URL: (() => {
+        const hostname = window.location.hostname;
+
+        if (hostname !== 'localhost' && hostname !== '127.0.0.1') {
+            return 'https://cnpm-websach.onrender.com/api/chatbot';
+        }
+
+        return 'http://127.0.0.1:8002';
+    })(),
+
     // Helper method to build full URL
     buildUrl: function (endpoint) {
         // Remove leading slash if present to avoid double slashes
@@ -42,6 +53,7 @@ window.API_CONFIG = API_CONFIG;
 // Log current configuration (for debugging)
 console.log('🔧 API Configuration:', {
     BASE_URL: API_CONFIG.BASE_URL,
+    CHATBOT_URL: API_CONFIG.CHATBOT_URL,
     WS_URL: API_CONFIG.WS_URL,
     Environment: API_CONFIG.BASE_URL.includes('localhost') ? 'Development' : 'Production'
 });

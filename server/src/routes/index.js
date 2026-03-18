@@ -37,6 +37,7 @@ import favoritesRoutes from './favoritesRoutes.js';
 import couponRoutes from './couponRoutes.js';
 import recommendationRoutes from './recommendationRoutes.js';
 import refundRoutes from './refundRoutes.js';
+import chatbotProxy from './chatbotProxy.js';
 
 export const initRoutes = (app) => {
   // Root path - Server status
@@ -106,4 +107,5 @@ export const initRoutes = (app) => {
   app.use('/api/favorites', favoritesRoutes);
   app.use('/api/coupons', couponRoutes);
   app.use('/api/recommendation', recommendationRoutes);
+  app.use('/api/chatbot', chatbotProxy);
 };

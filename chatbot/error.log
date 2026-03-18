@@ -1,0 +1,56 @@
+Traceback (most recent call last):
+  File "C:\Users\PC\Desktop\CNPM\chatbot\main.py", line 206, in chat
+    reply = await generate_response(request.message.strip(), session_id)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\PC\Desktop\CNPM\chatbot\main.py", line 158, in generate_response
+    response = await chain.ainvoke({
+               ^^^^^^^^^^^^^^^^^^^^^
+    ...<3 lines>...
+    })
+    ^^
+  File "C:\Users\PC\AppData\Local\Programs\Python\Python313\Lib\site-packages\langchain_core\runnables\base.py", line 3197, in ainvoke
+    input_ = await coro_with_context(part(), context, create_task=True)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\PC\AppData\Local\Programs\Python\Python313\Lib\site-packages\langchain_core\language_models\chat_models.py", line 425, in ainvoke
+    llm_result = await self.agenerate_prompt(
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<8 lines>...
+    )
+    ^
+  File "C:\Users\PC\AppData\Local\Programs\Python\Python313\Lib\site-packages\langchain_core\language_models\chat_models.py", line 1134, in agenerate_prompt
+    return await self.agenerate(
+           ^^^^^^^^^^^^^^^^^^^^^
+        prompt_messages, stop=stop, callbacks=callbacks, **kwargs
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\PC\AppData\Local\Programs\Python\Python313\Lib\site-packages\langchain_core\language_models\chat_models.py", line 1092, in agenerate
+    raise exceptions[0]
+  File "C:\Users\PC\AppData\Local\Programs\Python\Python313\Lib\site-packages\langchain_core\language_models\chat_models.py", line 1361, in _agenerate_with_cache
+    result = await self._agenerate(
+             ^^^^^^^^^^^^^^^^^^^^^^
+        messages, stop=stop, run_manager=run_manager, **kwargs
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\PC\AppData\Local\Programs\Python\Python313\Lib\site-packages\langchain_ollama\chat_models.py", line 1208, in _agenerate
+    final_chunk = await self._achat_stream_with_aggregation(
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        messages, stop, run_manager, verbose=self.verbose, **kwargs
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\PC\AppData\Local\Programs\Python\Python313\Lib\site-packages\langchain_ollama\chat_models.py", line 991, in _achat_stream_with_aggregation
+    async for chunk in self._aiterate_over_stream(messages, stop, **kwargs):
+    ...<9 lines>...
+            )
+  File "C:\Users\PC\AppData\Local\Programs\Python\Python313\Lib\site-packages\langchain_ollama\chat_models.py", line 1131, in _aiterate_over_stream
+    async for stream_resp in self._acreate_chat_stream(messages, stop, **kwargs):
+    ...<52 lines>...
+            yield chunk
+  File "C:\Users\PC\AppData\Local\Programs\Python\Python313\Lib\site-packages\langchain_ollama\chat_models.py", line 937, in _acreate_chat_stream
+    async for part in await self._async_client.chat(**chat_params):
+        yield part
+  File "C:\Users\PC\AppData\Local\Programs\Python\Python313\Lib\site-packages\ollama\_client.py", line 757, in inner
+    raise ResponseError(e.response.text, e.response.status_code) from None
+ollama._types.ResponseError: model 'llama3.2:latest' not found (status code: 404)
