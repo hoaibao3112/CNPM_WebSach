@@ -15,7 +15,7 @@ import KhuyenMai from './khuyenmai.js';
 import reportRoutes from './reportRoutes.js';
 import ChatRoutes from './chatRoutes.js';
 import returnRoutes from './returnRoutes.js';
-import permissionRoutes from './authMiddleware.js';
+import permissionRoutes from './permissionRoutes.js';
 import Author from './author.js';
 import ratingsRoutes from './ratings.js';
 import Comment from './comment.js';
@@ -75,7 +75,6 @@ export const initRoutes = (app) => {
   app.use('/api/login', LoginRoutes); // This should be reached first for login
   app.use('/api/forgot-password', forgotPasswordRoutes);
   app.use('/api/roles', roleRoutes);
-  console.log('Attached /api/roles with roleRoutes');
   app.use('/api/client', Client);
   app.use('/api/orders', orderRoutes);
   app.use('/api/refunds', refundRoutes);

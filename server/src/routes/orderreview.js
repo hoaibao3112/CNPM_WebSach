@@ -1,6 +1,6 @@
 import express from 'express';
 import pool from '../config/connectDatabase.js';
-import { authenticateToken } from '../utils/generateToken.js';
+import { authenticateToken } from '../middlewares/auth.js';
 import jwt from 'jsonwebtoken';
 
 const router = express.Router();
@@ -49,7 +49,7 @@ router.get('/:orderId', async (req, res) => {
     let optionalUser = null;
     if (token) {
       try {
-        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your_default_secret_key');
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
         optionalUser = decoded;
         console.log('Optional token verified for orderreview GET:', { user: optionalUser });
       } catch (e) {

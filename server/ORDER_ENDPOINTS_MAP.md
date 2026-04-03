@@ -1,5 +1,11 @@
 # Complete Order Module Rewrite
 
+## Canonical Flow (Locked)
+- Canonical route module: `src/routes/orderRoutes.js`
+- Canonical controller/service: `src/controllers/OrderController.js` + `src/services/OrderService.js`
+- Legacy duplicate route `src/routes/orderduphong.js` has been removed.
+- Rule: Keep all order logic only in the canonical modules above.
+
 Based on the old `orderRoutes.js` (3590 lines), here are ALL the endpoints that need to be implemented:
 
 ## Order Operations

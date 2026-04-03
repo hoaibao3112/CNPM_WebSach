@@ -1,7 +1,48 @@
 node_modules/
+**/node_modules/
+
 .cache/
+coverage/
+dist/
+build/
+
+# Environment files
 .env
-client/
-# Ignore uploaded files but keep the uploads directory and a .gitkeep file
+.env.*
+
+# Python virtual environments and caches
+.venv/
+venv/
+__pycache__/
+**/__pycache__/
+*.pyc
+*.pyo
+
+# Logs and temp files
+*.log
+*.tmp
+
+# Local editor settings
+.vscode/*
+!.vscode/extensions.json
+
+# Certificates and local keys
+*.pem
+
+# Database dumps / local snapshots
+Dump_TiDB_Compatible.sql
+server/db_dump.json
+
+# AI/vector store generated artifacts
+chatbot/chroma_db/
+chatbot/faiss_index/
+chatbot/error.log
+chatbot/pip_error.txt
+
+# Upload/generated media
 /server/uploads/*
 !/server/uploads/.gitkeep
+server/backend/product/
+
+# Existing project-specific ignore
+client/

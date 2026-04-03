@@ -599,6 +599,206 @@ class OrderService {
         });
     }
 
+    async rollbackOrderForVnpayError(orderId) {
+        await pool.query(
+            'UPDATE hoadon SET tinhtrang = "Đã hủy", GhiChu = "Lỗi VNPay" WHERE MaHD = ?',
+            [orderId],
+        );
+    }
+
+    async addLoyaltyPointsForCodOrder(customerId, amount) {
+        const connection = await pool.getConnection();
+        try {
+            await addLoyaltyPoints(connection, customerId, amount);
+        } finally {
+            connection.release();
+        }
+    }
+
+    async updateOrderStatus(orderId, status) {
+        const [result] = await pool.query('UPDATE hoadon SET tinhtrang = ? WHERE MaHD = ?', [status, orderId]);
+        if (result.affectedRows === 0) {
+            throw new Error('ORDER_NOT_FOUND');
+        }
+        return { id: Number(orderId), status };
+    }
+
+    async deleteOrder(orderId) {
+        const connection = await pool.getConnection();
+        try {
+            await connection.beginTransaction();
+            await connection.query('DELETE FROM chitiethoadon WHERE MaHD = ?', [orderId]);
+            const [result] = await connection.query('DELETE FROM hoadon WHERE MaHD = ?', [orderId]);
+            if (result.affectedRows === 0) {
+                throw new Error('ORDER_NOT_FOUND');
+            }
+            await connection.commit();
+            return { id: Number(orderId) };
+        } catch (error) {
+            await connection.rollback();
+            throw error;
+        } finally {
+            connection.release();
+        }
+    }
+
+    async getAllOrders() {
+        const [orders] = await pool.query(
+            `SELECT
+                hd.MaHD AS id,
+                hd.makh,
+                hd.NgayTao AS createdAt,
+                hd.TongTien AS totalAmount,
+                hd.tinhtrang AS status,
+                kh.tenkh AS customerName,
+                kh.sdt AS customerPhone,
+                dc.DiaChiChiTiet AS shippingAddress,
+                dc.TinhThanh AS province,
+                dc.QuanHuyen AS district,
+                hd.PhuongThucThanhToan AS paymentMethod,
+                hd.TrangThaiThanhToan AS paymentStatus
+             FROM hoadon hd
+             LEFT JOIN khachhang kh ON hd.makh = kh.makh
+             LEFT JOIN diachi dc ON hd.MaDiaChi = dc.MaDiaChi
+             ORDER BY hd.NgayTao DESC`,
+        );
+        return orders;
+    }
+
+    async processVNPayReturn(vnpParams) {
+        const orderId = vnpParams.vnp_TxnRef;
+        const rspCode = vnpParams.vnp_ResponseCode;
+        const amount = Number.parseInt(vnpParams.vnp_Amount || '0', 10) / 100;
+
+        if (!orderId) {
+            throw new Error('Thiếu mã đơn hàng từ VNPay callback');
+        }
+
+        if (rspCode === '00') {
+            await pool.query(
+                `UPDATE hoadon SET TrangThaiThanhToan = 'Đã thanh toán', tinhtrang = 'Đã xác nhận' WHERE MaHD = ?`,
+                [orderId],
+            );
+
+            try {
+                const [[order]] = await pool.query('SELECT makh, TongTien FROM hoadon WHERE MaHD = ?', [orderId]);
+                if (order) {
+                    const connection = await pool.getConnection();
+                    try {
+                        await addLoyaltyPoints(connection, order.makh, order.TongTien);
+                    } finally {
+                        connection.release();
+                    }
+                }
+            } catch (error) {
+                // Non-blocking: payment success should not fail because loyalty points failed
+                console.warn('Loyalty after VNPay failed:', error.message);
+            }
+
+            return { orderId, amount, rspCode, status: 'success' };
+        }
+
+        await pool.query(
+            `UPDATE hoadon SET TrangThaiThanhToan = 'Thất bại', tinhtrang = 'Đã hủy' WHERE MaHD = ?`,
+            [orderId],
+        );
+
+        const [items] = await pool.query('SELECT MaSP, Soluong FROM chitiethoadon WHERE MaHD = ?', [orderId]);
+        for (const item of items) {
+            await pool.query('UPDATE sanpham SET SoLuong = SoLuong + ? WHERE MaSP = ?', [item.Soluong, item.MaSP]);
+        }
+
+        return { orderId, amount, rspCode, status: 'failed' };
+    }
+
+    async sendOrderEmail(orderResult, paymentUrl = null) {
+        if (!orderResult.customerEmail) {
+            return;
+        }
+
+        const emailShippingAddress = {
+            detail: orderResult.shippingAddress.detail,
+            province: orderResult.shippingAddress.province,
+            district: orderResult.shippingAddress.district,
+            ward: orderResult.shippingAddress.ward,
+        };
+
+        const orderPayload = {
+            id: orderResult.orderId,
+            total: orderResult.finalTotalAmount,
+            subtotal: orderResult.amountAfterDiscount,
+            shippingFee: orderResult.shippingFee,
+            paymentMethod: orderResult.paymentMethod || 'VNPAY',
+            paymentUrl,
+            customerName: orderResult.customer.name,
+            shippingAddress: emailShippingAddress,
+            items: orderResult.cartItems,
+        };
+
+        await sendOrderConfirmationEmail(orderResult.customerEmail, orderPayload);
+    }
+
+    async finalizeCheckout(orderResult, paymentMethod, clientIp) {
+        if (paymentMethod === 'VNPAY') {
+            try {
+                const paymentUrl = await this.generateVNPayUrl(
+                    orderResult.orderId,
+                    orderResult.finalTotalAmount,
+                    clientIp,
+                );
+
+                return {
+                    responseType: 'raw',
+                    statusCode: 200,
+                    payload: {
+                        success: true,
+                        orderId: orderResult.orderId,
+                        paymentUrl,
+                        message: 'Đơn hàng đã tạo, chuyển hướng thanh toán VNPay',
+                        appliedTier: orderResult.userTier,
+                        discountAmount: orderResult.discountAmount,
+                        memberDiscountAmount: orderResult.memberDiscountAmount,
+                        shippingFee: orderResult.shippingFee,
+                        finalTotalAmount: orderResult.finalTotalAmount,
+                    },
+                };
+            } catch (error) {
+                await this.rollbackOrderForVnpayError(orderResult.orderId);
+                throw new Error(error instanceof Error ? error.message : 'Lỗi tạo URL thanh toán VNPay');
+            }
+        }
+
+        if (paymentMethod === 'COD') {
+            try {
+                await this.addLoyaltyPointsForCodOrder(orderResult.customer.makh, orderResult.finalTotalAmount);
+            } catch (error) {
+                // Non-blocking: COD success should not fail because loyalty failed
+                console.warn('Loyalty add failed (non-blocking):', error.message);
+            }
+
+            this.sendOrderEmail(orderResult).catch((error) => {
+                // Non-blocking: order response should not fail if email provider has issues
+                console.error('Email failed (non-blocking):', error.message);
+            });
+
+            return {
+                responseType: 'success',
+                payload: {
+                    orderId: orderResult.orderId,
+                    message: 'Đặt hàng COD thành công',
+                    paymentMethod: 'COD',
+                    appliedTier: orderResult.userTier,
+                    discountAmount: orderResult.discountAmount,
+                    memberDiscountAmount: orderResult.memberDiscountAmount,
+                    shippingFee: orderResult.shippingFee,
+                    finalTotalAmount: orderResult.finalTotalAmount,
+                },
+            };
+        }
+
+        throw new Error('Phương thức thanh toán không hợp lệ');
+    }
+
     // ===== GET CUSTOMER ORDERS =====
     async getCustomerOrders(customerId) {
         const [orders] = await pool.query(
@@ -706,7 +906,7 @@ class OrderService {
             for (const item of items) {
                 await connection.query(
                     `UPDATE sanpham SET SoLuong = SoLuong + ? WHERE MaSP = ?`,
-                    [item.Soluaong, item.MaSP]
+                    [item.Soluong, item.MaSP]
                 );
             }
 

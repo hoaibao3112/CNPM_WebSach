@@ -9,6 +9,7 @@
   "dev": "NODE_ENV=development nodemon --exec babel-node server.js",
   "prod": "NODE_ENV=production node server.js",
   "backfill:preferences": "node ./src/scripts/backfill_preferences.js",
+  "seed:role-permissions": "node ./src/scripts/seedRolePermissionCrud.js",
   "hash-taikhoan": "node ./src/utils/hashTaikhoanPasswords.js",
   "test": "jest --detectOpenHandles --runInBand"
   },

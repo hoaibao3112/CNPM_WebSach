@@ -1,10 +1,12 @@
 import express from 'express';
 import pool from '../config/connectDatabase.js';
+import { authenticateToken } from '../middlewares/auth.js';
+import { authorize } from '../middlewares/rbacMiddleware.js';
 
 const router = express.Router();
 
 // Lấy tất cả quyền (permissions) - bao gồm join với nhomquyen và chucnang
-router.get('/', async (req, res) => {
+router.get('/', authenticateToken, authorize('ROLE_READ'), async (req, res) => {
   try {
     const [permissions] = await pool.query(`
       SELECT ctq.*, nq.TenNQ, cn.TenCN
@@ -14,26 +16,27 @@ router.get('/', async (req, res) => {
     `);
     res.json({ success: true, data: permissions });
   } catch (error) {
-    console.error(error);
     res.status(500).json({ error: 'Lỗi server khi lấy tất cả quyền' });
   }
 });
 
-router.get('/roles/:maQuyen', async (req, res) => {
+router.get('/roles/:maQuyen', authenticateToken, authorize('ROLE_READ'), async (req, res) => {
   try {
     const { maQuyen } = req.params;
-    const [permissions] = await pool.query(`
+    const [permissions] = await pool.query(
+      `
       SELECT ctq.*, nq.TenNQ, cn.TenCN
       FROM chitietquyen ctq
       LEFT JOIN nhomquyen nq ON ctq.MaQuyen = nq.MaNQ
       LEFT JOIN chucnang cn ON ctq.MaCN = cn.MaCN
       WHERE ctq.MaQuyen = ?
-    `, [maQuyen]);
+    `,
+      [maQuyen],
+    );
 
-    // Xử lý TinhTrang: Nếu null, gán mặc định là 1
-    const formattedPermissions = permissions.map(permission => ({
+    const formattedPermissions = permissions.map((permission) => ({
       ...permission,
-      TinhTrang: permission.TinhTrang === null ? 1 : Number(permission.TinhTrang)
+      TinhTrang: permission.TinhTrang === null ? 1 : Number(permission.TinhTrang),
     }));
 
     if (formattedPermissions.length === 0) {
@@ -42,13 +45,12 @@ router.get('/roles/:maQuyen', async (req, res) => {
 
     res.json({ success: true, data: formattedPermissions });
   } catch (error) {
-    console.error(error);
     res.status(500).json({ error: 'Lỗi server khi lấy quyền theo nhóm' });
   }
 });
 
 // Tìm kiếm quyền (theo keyword, có thể lọc theo MaQuyen nếu cần)
-router.get('/search', async (req, res) => {
+router.get('/search', authenticateToken, authorize('ROLE_READ'), async (req, res) => {
   try {
     const { keyword, maQuyen } = req.query;
     let query = `
@@ -61,24 +63,23 @@ router.get('/search', async (req, res) => {
     const params = [];
 
     if (maQuyen) {
-      query += ` AND ctq.MaQuyen = ?`;
+      query += ' AND ctq.MaQuyen = ?';
       params.push(maQuyen);
     }
     if (keyword) {
-      query += ` AND (ctq.HanhDong LIKE ? OR nq.TenNQ LIKE ? OR cn.TenCN LIKE ?)`;
+      query += ' AND (ctq.HanhDong LIKE ? OR nq.TenNQ LIKE ? OR cn.TenCN LIKE ?)';
       params.push(`%${keyword}%`, `%${keyword}%`, `%${keyword}%`);
     }
 
     const [permissions] = await pool.query(query, params);
     res.json({ success: true, data: permissions });
   } catch (error) {
-    console.error(error);
     res.status(500).json({ error: 'Lỗi server khi tìm kiếm quyền' });
   }
 });
 
 // Thêm quyền mới (cho một nhóm quyền cụ thể)
-router.post('/', async (req, res) => {
+router.post('/', authenticateToken, authorize('ROLE_CREATE'), async (req, res) => {
   try {
     const { MaQuyen, MaCN, HanhDong, TinhTrang } = req.body;
     if (!MaQuyen || !MaCN || !HanhDong) {
@@ -86,29 +87,28 @@ router.post('/', async (req, res) => {
     }
 
     const [result] = await pool.query(
-      `INSERT INTO chitietquyen (MaQuyen, MaCN, HanhDong, TinhTrang) 
+      `INSERT INTO chitietquyen (MaQuyen, MaCN, HanhDong, TinhTrang)
        VALUES (?, ?, ?, ?)`,
-      [MaQuyen, MaCN, HanhDong, TinhTrang || 1]
+      [MaQuyen, MaCN, HanhDong, TinhTrang || 1],
     );
 
     res.status(201).json({ message: 'Thêm quyền thành công', MaCTQ: result.insertId });
   } catch (error) {
-    console.error(error);
     res.status(500).json({ error: 'Lỗi server khi thêm quyền' });
   }
 });
 
 // Sửa quyền
-router.put('/:maCTQ', async (req, res) => {
+router.put('/:maCTQ', authenticateToken, authorize('ROLE_UPDATE'), async (req, res) => {
   try {
     const { maCTQ } = req.params;
     const { MaQuyen, MaCN, HanhDong, TinhTrang } = req.body;
 
     const [result] = await pool.query(
-      `UPDATE chitietquyen 
+      `UPDATE chitietquyen
        SET MaQuyen = ?, MaCN = ?, HanhDong = ?, TinhTrang = ?
        WHERE MaCTQ = ?`,
-      [MaQuyen, MaCN, HanhDong, TinhTrang, maCTQ]
+      [MaQuyen, MaCN, HanhDong, TinhTrang, maCTQ],
     );
 
     if (result.affectedRows === 0) {
@@ -117,20 +117,16 @@ router.put('/:maCTQ', async (req, res) => {
 
     res.json({ message: 'Cập nhật quyền thành công' });
   } catch (error) {
-    console.error(error);
     res.status(500).json({ error: 'Lỗi server khi sửa quyền' });
   }
 });
 
 // Xóa quyền
-router.delete('/:maCTQ', async (req, res) => {
+router.delete('/:maCTQ', authenticateToken, authorize('ROLE_DELETE'), async (req, res) => {
   try {
     const { maCTQ } = req.params;
 
-    const [result] = await pool.query(
-      `DELETE FROM chitietquyen WHERE MaCTQ = ?`,
-      [maCTQ]
-    );
+    const [result] = await pool.query('DELETE FROM chitietquyen WHERE MaCTQ = ?', [maCTQ]);
 
     if (result.affectedRows === 0) {
       return res.status(404).json({ error: 'Không tìm thấy quyền để xóa' });
@@ -138,29 +134,26 @@ router.delete('/:maCTQ', async (req, res) => {
 
     res.json({ message: 'Xóa quyền thành công' });
   } catch (error) {
-    console.error(error);
     res.status(500).json({ error: 'Lỗi server khi xóa quyền' });
   }
 });
 
 // Lấy danh sách nhóm quyền (roles)
-router.get('/roles', async (req, res) => {
+router.get('/roles', authenticateToken, authorize('ROLE_READ'), async (req, res) => {
   try {
     const [roles] = await pool.query('SELECT * FROM nhomquyen');
     res.json({ success: true, data: roles });
   } catch (error) {
-    console.error(error);
     res.status(500).json({ error: 'Lỗi server khi lấy danh sách nhóm quyền' });
   }
 });
 
 // Lấy danh sách chức năng (features)
-router.get('/features', async (req, res) => {
+router.get('/features', authenticateToken, authorize('ROLE_READ'), async (req, res) => {
   try {
     const [features] = await pool.query('SELECT * FROM chucnang');
     res.json({ success: true, data: features });
   } catch (error) {
-    console.error(error);
     res.status(500).json({ error: 'Lỗi server khi lấy danh sách chức năng' });
   }
 });

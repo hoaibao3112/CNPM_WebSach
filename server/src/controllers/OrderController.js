@@ -1,8 +1,5 @@
 import OrderService from '../services/OrderService.js';
 import baseController from './baseController.js';
-import { addLoyaltyPoints } from '../utils/loyalty.js';
-import { sendOrderConfirmationEmail } from '../utils/emailService.js';
-import pool from '../config/connectDatabase.js';
 
 class OrderController {
     // ===== PLACE ORDER =====
@@ -10,106 +7,20 @@ class OrderController {
         try {
             const orderResult = await OrderService.placeOrder(req.body, req.user);
 
-            // Handle payment methods
-            if (req.body.paymentMethod === 'VNPAY') {
-                try {
-                    const paymentUrl = await OrderService.generateVNPayUrl(
-                        orderResult.orderId,
-                        orderResult.finalTotalAmount,
-                        req.ip
-                    );
+            const checkoutResult = await OrderService.finalizeCheckout(
+                orderResult,
+                req.body.paymentMethod,
+                req.ip,
+            );
 
-                    console.log('✅ VNPay URL generated:', paymentUrl);
-
-                    // Return flat response format expected by frontend
-                    return res.status(200).json({
-                        success: true,
-                        orderId: orderResult.orderId,
-                        paymentUrl,
-                        message: 'Đơn hàng đã tạo, chuyển hướng thanh toán VNPay',
-                        appliedTier: orderResult.userTier,
-                        discountAmount: orderResult.discountAmount,
-                        memberDiscountAmount: orderResult.memberDiscountAmount,
-                        shippingFee: orderResult.shippingFee,
-                        finalTotalAmount: orderResult.finalTotalAmount
-                    });
-
-                } catch (vnpayError) {
-                    console.error('❌ VNPay error:', vnpayError);
-                    // Rollback order
-                    await pool.query(
-                        'UPDATE hoadon SET tinhtrang = "Đã hủy", GhiChu = "Lỗi VNPay" WHERE MaHD = ?',
-                        [orderResult.orderId]
-                    );
-                    return baseController.sendError(res, 'Lỗi tạo URL thanh toán VNPay', 500, vnpayError.message);
-                }
-
-            } else if (req.body.paymentMethod === 'COD') {
-                // Add loyalty points for COD (non-blocking)
-                try {
-                    const connection = await pool.getConnection();
-                    await addLoyaltyPoints(connection, orderResult.customer.makh, orderResult.finalTotalAmount);
-                    connection.release();
-                    console.log(`Loyalty points added for COD order ${orderResult.orderId}`);
-                } catch (e) {
-                    console.warn('Loyalty add failed (non-blocking):', e.message);
-                }
-
-                // Send email non-blocking
-                this.sendOrderEmail(orderResult).catch(e =>
-                    console.error('Email failed (non-blocking):', e.message)
-                );
-
-                return baseController.sendSuccess(res, {
-                    orderId: orderResult.orderId,
-                    message: 'Đặt hàng COD thành công',
-                    paymentMethod: 'COD',
-                    appliedTier: orderResult.userTier,
-                    discountAmount: orderResult.discountAmount,
-                    memberDiscountAmount: orderResult.memberDiscountAmount,
-                    shippingFee: orderResult.shippingFee,
-                    finalTotalAmount: orderResult.finalTotalAmount
-                });
-
-            } else {
-                return baseController.sendError(res, 'Phương thức thanh toán không hợp lệ', 400);
+            if (checkoutResult.responseType === 'raw') {
+                return res.status(checkoutResult.statusCode || 200).json(checkoutResult.payload);
             }
 
+            return baseController.sendSuccess(res, checkoutResult.payload);
+
         } catch (error) {
-            console.error('❌ Place order error:', error);
             return baseController.sendError(res, error.message || 'Lỗi khi đặt hàng', 500, error.message);
-        }
-    }
-
-    // ===== HELPER: SEND ORDER EMAIL =====
-    async sendOrderEmail(orderResult, paymentUrl = null) {
-        try {
-            if (!orderResult.customerEmail) return;
-
-            // Use raw address values (resolve methods don't exist yet)
-            const emailShippingAddress = {
-                detail: orderResult.shippingAddress.detail,
-                province: orderResult.shippingAddress.province,
-                district: orderResult.shippingAddress.district,
-                ward: orderResult.shippingAddress.ward
-            };
-
-            const orderPayload = {
-                id: orderResult.orderId,
-                total: orderResult.finalTotalAmount,
-                subtotal: orderResult.amountAfterDiscount,
-                shippingFee: orderResult.shippingFee,
-                paymentMethod: orderResult.paymentMethod || 'VNPAY',
-                paymentUrl,
-                customerName: orderResult.customer.name,
-                shippingAddress: emailShippingAddress,
-                items: orderResult.cartItems
-            };
-
-            await sendOrderConfirmationEmail(orderResult.customerEmail, orderPayload);
-            console.log(`✅ Email sent to ${orderResult.customerEmail}`);
-        } catch (e) {
-            console.error('Email send failed:', e.message);
         }
     }
 
@@ -134,7 +45,7 @@ class OrderController {
     // ===== GET ORDER DETAILS =====
     async getOrderDetails(req, res) {
         try {
-            const { orderId } = req.params;
+            const orderId = req.params.orderId || req.params.id;
             const order = await OrderService.getOrderById(orderId);
 
             // Check authorization
@@ -182,18 +93,13 @@ class OrderController {
                 return baseController.sendError(res, 'Thiếu trạng thái đơn hàng (status hoặc trangthai)', 400);
             }
 
-            const [result] = await pool.query(
-                'UPDATE hoadon SET tinhtrang = ? WHERE MaHD = ?',
-                [status, id]
-            );
-
-            if (result.affectedRows === 0) {
-                return baseController.sendError(res, 'Không tìm thấy đơn hàng', 404);
-            }
-
-            return baseController.sendSuccess(res, { id, status }, 'Cập nhật trạng thái thành công');
+            const result = await OrderService.updateOrderStatus(id, status);
+            return baseController.sendSuccess(res, result, 'Cập nhật trạng thái thành công');
 
         } catch (error) {
+            if (error.message === 'ORDER_NOT_FOUND') {
+                return baseController.sendError(res, 'Không tìm thấy đơn hàng', 404);
+            }
             return baseController.sendError(res, 'Lỗi khi cập nhật trạng thái', 500, error.message);
         }
     }
@@ -202,20 +108,13 @@ class OrderController {
     async deleteOrder(req, res) {
         try {
             const { id } = req.params;
-
-            // Delete order items first
-            await pool.query('DELETE FROM chitiethoadon WHERE MaHD = ?', [id]);
-
-            // Delete order
-            const [result] = await pool.query('DELETE FROM hoadon WHERE MaHD = ?', [id]);
-
-            if (result.affectedRows === 0) {
-                return baseController.sendError(res, 'Không tìm thấy đơn hàng', 404);
-            }
-
-            return baseController.sendSuccess(res, { id }, 'Xóa đơn hàng thành công');
+            const result = await OrderService.deleteOrder(id);
+            return baseController.sendSuccess(res, result, 'Xóa đơn hàng thành công');
 
         } catch (error) {
+            if (error.message === 'ORDER_NOT_FOUND') {
+                return baseController.sendError(res, 'Không tìm thấy đơn hàng', 404);
+            }
             return baseController.sendError(res, 'Lỗi khi xóa đơn hàng', 500, error.message);
         }
     }
@@ -223,25 +122,7 @@ class OrderController {
     // ===== GET ALL ORDERS (ADMIN) =====
     async getAllOrders(req, res) {
         try {
-            const [orders] = await pool.query(`
-                SELECT 
-                    hd.MaHD AS id,
-                    hd.makh,
-                    hd.NgayTao AS createdAt,
-                    hd.TongTien AS totalAmount,
-                    hd.tinhtrang AS status,
-                    kh.tenkh AS customerName,
-                    kh.sdt AS customerPhone,
-                    dc.DiaChiChiTiet AS shippingAddress,
-                    dc.TinhThanh AS province,
-                    dc.QuanHuyen AS district,
-                    hd.PhuongThucThanhToan AS paymentMethod,
-                    hd.TrangThaiThanhToan AS paymentStatus
-                FROM hoadon hd
-                LEFT JOIN khachhang kh ON hd.makh = kh.makh
-                LEFT JOIN diachi dc ON hd.MaDiaChi = dc.MaDiaChi
-                ORDER BY hd.NgayTao DESC
-            `);
+            const orders = await OrderService.getAllOrders();
 
             return baseController.sendSuccess(res, orders);
 
@@ -373,58 +254,18 @@ class OrderController {
     // ===== VNPAY CALLBACK =====
     async vnpayReturn(req, res) {
         try {
-            const vnpParams = req.query;
-            const orderId = vnpParams.vnp_TxnRef;
-            const rspCode = vnpParams.vnp_ResponseCode;
-            const amount = parseInt(vnpParams.vnp_Amount) / 100;
-
-            console.log('🔍 VNPay callback:', { orderId, rspCode, amount });
-
-            if (rspCode === '00') {
-                // Payment successful
-                await pool.query(
-                    `UPDATE hoadon SET TrangThaiThanhToan = 'Đã thanh toán', tinhtrang = 'Đã xác nhận' WHERE MaHD = ?`,
-                    [orderId]
-                );
-
-                // Add loyalty points (non-blocking)
-                try {
-                    const [[order]] = await pool.query('SELECT makh, TongTien FROM hoadon WHERE MaHD = ?', [orderId]);
-                    if (order) {
-                        const connection = await pool.getConnection();
-                        await addLoyaltyPoints(connection, order.makh, order.TongTien);
-                        connection.release();
-                        console.log(`Loyalty: added points after VNPay success for order ${orderId}`);
-                    }
-                } catch (e) {
-                    console.warn('Loyalty after VNPay failed:', e.message);
-                }
-
+            const result = await OrderService.processVNPayReturn(req.query);
+            if (result.status === 'success') {
                 return res.redirect(
-                    `${process.env.CLIENT_CUSTOMER_URL}/GiaoDien/order-confirmation.html?orderId=${orderId}&amount=${amount}&status=success`
-                );
-
-            } else {
-                // Payment failed
-                await pool.query(
-                    `UPDATE hoadon SET TrangThaiThanhToan = 'Thất bại', tinhtrang = 'Đã hủy' WHERE MaHD = ?`,
-                    [orderId]
-                );
-
-                // Restore stock
-                const [items] = await pool.query('SELECT MaSP, Soluong FROM chitiethoadon WHERE MaHD = ?', [orderId]);
-                for (const item of items) {
-                    await pool.query('UPDATE sanpham SET SoLuong = SoLuong + ? WHERE MaSP = ?', [item.Soluong, item.MaSP]);
-                }
-
-                console.log(`❌ Payment failed for order ${orderId}, code: ${rspCode}`);
-                return res.redirect(
-                    `${process.env.CLIENT_CUSTOMER_URL}/GiaoDien/order-confirmation.html?orderId=${orderId}&amount=${amount}&status=failed&code=${rspCode}`
+                    `${process.env.CLIENT_CUSTOMER_URL}/GiaoDien/order-confirmation.html?orderId=${result.orderId}&amount=${result.amount}&status=success`
                 );
             }
 
+            return res.redirect(
+                `${process.env.CLIENT_CUSTOMER_URL}/GiaoDien/order-confirmation.html?orderId=${result.orderId}&amount=${result.amount}&status=failed&code=${result.rspCode}`
+            );
+
         } catch (error) {
-            console.error('🔥 VNPay return error:', error);
             return res.redirect(
                 `${process.env.CLIENT_CUSTOMER_URL}/GiaoDien/order-confirmation.html?status=error`
             );
