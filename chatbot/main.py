@@ -5,9 +5,10 @@ Uses LangChain + Ollama + FAISS for RAG-based responses.
 
 import os
 import uuid
+import time
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from langchain_ollama import ChatOllama
 from langchain_community.vectorstores import FAISS
 from langchain_huggingface import HuggingFaceEmbeddings
@@ -36,16 +37,21 @@ app.add_middleware(
 class ChatRequest(BaseModel):
     message: str
     session_id: str | None = None
+    top_k: int = Field(default=5, ge=1, le=10)
+    return_sources: bool = False
 
 class ChatResponse(BaseModel):
     reply: str
     session_id: str
+    sources: list[str] | None = None
 
 # ─── Global State ───────────────────────────────────────────────
 
 # In-memory conversation history per session (limited to last N messages)
 conversation_history: dict[str, list] = {}
+session_last_seen: dict[str, float] = {}
 MAX_HISTORY = 10
+SESSION_TTL_MINUTES = int(os.getenv("SESSION_TTL_MINUTES", "180"))
 
 # LLM and vector store (lazy-initialized)
 llm = None
@@ -70,6 +76,8 @@ Quy tắc:
 5. Sử dụng thông tin từ ngữ cảnh được cung cấp để trả lời chính xác
 6. Khi gợi ý sách, luôn kèm giá và tác giả nếu có
 7. KHÔNG bịa ra thông tin không có trong ngữ cảnh
+8. Nếu câu hỏi liên quan mua hàng, hãy kết thúc bằng một gợi ý hành động ngắn
+9. Nếu có nhiều lựa chọn, trình bày dạng danh sách gạch đầu dòng
 
 Thông tin ngữ cảnh từ cơ sở dữ liệu:
 {context}
@@ -114,34 +122,62 @@ def init_components():
 
 # ─── Chat Logic ─────────────────────────────────────────────────
 
-def get_context(query: str) -> str:
-    """Retrieve relevant context from ChromaDB."""
-    if retriever is None:
-        return "Không có dữ liệu ngữ cảnh. Hãy trả lời dựa trên kiến thức chung."
+def prune_expired_sessions() -> None:
+    """Delete stale sessions to avoid memory growth."""
+    now = time.time()
+    ttl_seconds = SESSION_TTL_MINUTES * 60
+    expired_session_ids = [
+        sid for sid, last_seen in session_last_seen.items()
+        if now - last_seen > ttl_seconds
+    ]
+
+    for sid in expired_session_ids:
+        conversation_history.pop(sid, None)
+        session_last_seen.pop(sid, None)
+
+
+def get_context(query: str, top_k: int = 5) -> tuple[str, list[str]]:
+    """Retrieve relevant context snippets from FAISS."""
+    if vectorstore is None:
+        return (
+            "Không có dữ liệu ngữ cảnh. Hãy trả lời dựa trên kiến thức chung.",
+            []
+        )
     
     try:
-        docs = retriever.invoke(query)
+        docs = vectorstore.similarity_search(query, k=top_k)
         if docs:
-            return "\n\n---\n\n".join([doc.page_content for doc in docs])
-        return "Không tìm thấy thông tin liên quan trong cơ sở dữ liệu."
+            snippets = [doc.page_content[:500] for doc in docs]
+            return "\n\n---\n\n".join([doc.page_content for doc in docs]), snippets
+        return "Không tìm thấy thông tin liên quan trong cơ sở dữ liệu.", []
     except Exception as e:
         print(f"Retrieval error: {e}")
-        return "Lỗi khi truy xuất dữ liệu."
+        return "Lỗi khi truy xuất dữ liệu.", []
 
 
 def get_or_create_session(session_id: str | None) -> str:
     """Get existing session or create new one."""
+    prune_expired_sessions()
+
     if session_id and session_id in conversation_history:
+        session_last_seen[session_id] = time.time()
         return session_id
+
     new_id = session_id or str(uuid.uuid4())
     conversation_history[new_id] = []
+    session_last_seen[new_id] = time.time()
     return new_id
 
 
-async def generate_response(message: str, session_id: str) -> str:
+def normalize_reply(text: str) -> str:
+    """Normalize model output for cleaner UI display."""
+    return "\n".join(line.rstrip() for line in text.strip().splitlines())
+
+
+async def generate_response(message: str, session_id: str, top_k: int = 5) -> tuple[str, list[str]]:
     """Generate a response using RAG + LLM."""
     # 1. Retrieve context
-    context = get_context(message)
+    context, snippets = get_context(message, top_k=top_k)
 
     # 2. Build prompt with history
     history = conversation_history.get(session_id, [])
@@ -161,16 +197,19 @@ async def generate_response(message: str, session_id: str) -> str:
         "input": message
     })
 
+    cleaned_response = normalize_reply(response)
+
     # 4. Update history
     history.append(HumanMessage(content=message))
-    history.append(AIMessage(content=response))
+    history.append(AIMessage(content=cleaned_response))
 
     # Keep only last N messages
     if len(history) > MAX_HISTORY * 2:
         history = history[-(MAX_HISTORY * 2):]
     conversation_history[session_id] = history
+    session_last_seen[session_id] = time.time()
 
-    return response
+    return cleaned_response, snippets
 
 
 # ─── API Endpoints ──────────────────────────────────────────────
@@ -190,6 +229,29 @@ async def root():
     }
 
 
+@app.get("/health")
+async def health():
+    prune_expired_sessions()
+    return {
+        "status": "healthy",
+        "model": OLLAMA_MODEL,
+        "llm_ready": llm is not None,
+        "vectorstore_ready": vectorstore is not None,
+        "active_sessions": len(conversation_history),
+        "session_ttl_minutes": SESSION_TTL_MINUTES,
+    }
+
+
+@app.get("/sessions/stats")
+async def session_stats():
+    prune_expired_sessions()
+    return {
+        "active_sessions": len(conversation_history),
+        "max_history_messages": MAX_HISTORY * 2,
+        "session_ttl_minutes": SESSION_TTL_MINUTES,
+    }
+
+
 @app.post("/chat", response_model=ChatResponse)
 async def chat(request: ChatRequest):
     if not request.message or not request.message.strip():
@@ -203,8 +265,16 @@ async def chat(request: ChatRequest):
 
     try:
         session_id = get_or_create_session(request.session_id)
-        reply = await generate_response(request.message.strip(), session_id)
-        return ChatResponse(reply=reply, session_id=session_id)
+        reply, sources = await generate_response(
+            request.message.strip(),
+            session_id,
+            top_k=request.top_k,
+        )
+        return ChatResponse(
+            reply=reply,
+            session_id=session_id,
+            sources=sources if request.return_sources else None,
+        )
     except Exception as e:
         import traceback
         with open("error.log", "w", encoding="utf-8") as f:
@@ -221,6 +291,7 @@ async def clear_session(session_id: str):
     """Clear conversation history for a session."""
     if session_id in conversation_history:
         del conversation_history[session_id]
+        session_last_seen.pop(session_id, None)
         return {"message": "Session cleared"}
     return {"message": "Session not found"}
 
