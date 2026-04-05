@@ -9,7 +9,7 @@ const router = express.Router();
 router.post('/place-order', authenticateToken, OrderController.placeOrder);
 
 // Get all orders (admin only - should add role check middleware)
-router.get('/hoadon', OrderController.getAllOrders);
+router.get('/hoadon', authenticateToken, OrderController.getAllOrders);
 
 // Get single order details
 router.get('/:id', authenticateToken, OrderController.getOrderDetails);

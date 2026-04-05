@@ -1,4 +1,5 @@
 import nodemailer from 'nodemailer';
+import logger from '../utils/logger.js';
 import crypto from 'crypto';
 
 const transporter = nodemailer.createTransport({
@@ -58,7 +59,7 @@ export const sendOTPEmail = async (email, otp) => {
     await transporter.sendMail(mailOptions);
     return true;
   } catch (error) {
-    console.error('Error sending email:', error);
+    logger.error('Error sending email:', error);
     return false;
   }
 };

@@ -1,4 +1,5 @@
 import express from 'express';
+import logger from '../utils/logger.js';
 import fs from 'fs/promises';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -16,7 +17,7 @@ const readJSONFile = async (filename) => {
     const data = await fs.readFile(filePath, 'utf-8');
     return JSON.parse(data);
   } catch (error) {
-    console.error(`Error reading ${filename}:`, error);
+    logger.error(`Error reading ${filename}:`, error);
     throw error;
   }
 };
@@ -101,7 +102,7 @@ router.get('/full/:city_id/:district_id/:ward_identifier', async (req, res) => {
       });
 
       if (ward) {
-        console.log(`✅ Found ward by name: ${ward.ward_name}`);
+        logger.info(`✅ Found ward by name: ${ward.ward_name}`);
       }
     }
 
@@ -111,18 +112,18 @@ router.get('/full/:city_id/:district_id/:ward_identifier', async (req, res) => {
       // Check if it's a reasonable index (0 to array length)
       if (!isNaN(index) && index >= 0 && index < districtWards.length) {
         ward = districtWards[index];
-        console.log(`✅ Found ward by index ${index}: ${ward.ward_name}`);
+        logger.info(`✅ Found ward by index ${index}: ${ward.ward_name}`);
       } else {
         // If index is out of bounds, try to find by matching the number in ward_name
         ward = districtWards.find(w => w.ward_name && w.ward_name.includes(ward_identifier));
         if (ward) {
-          console.log(`✅ Found ward by number in name: ${ward.ward_name}`);
+          logger.info(`✅ Found ward by number in name: ${ward.ward_name}`);
         }
       }
     }
 
     if (!city || !district || !ward) {
-      console.log('⚠️ Address not found:', {
+      logger.info('⚠️ Address not found:', {
         city_id,
         district_id,
         ward_identifier,

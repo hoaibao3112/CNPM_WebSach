@@ -1,4 +1,6 @@
 import pool from '../config/connectDatabase.js';
+import logger from '../utils/logger.js';
+import AppError from '../utils/AppError.js';
 
 class RefundService {
     // ===== GENERATE REFUND REQUEST ID =====
@@ -80,7 +82,7 @@ class RefundService {
 
             await connection.commit();
 
-            console.log(`✅ Refund request created: ${refundRequestId}`);
+            logger.info(`Refund request created: ${refundRequestId}`);
 
             return {
                 id: result.insertId,
@@ -94,7 +96,7 @@ class RefundService {
 
         } catch (error) {
             await connection.rollback();
-            console.error('❌ Create refund request error:', error);
+            logger.error('Create refund request error', { error: error.message });
             throw error;
         } finally {
             connection.release();
@@ -350,13 +352,13 @@ class RefundService {
 
             await connection.commit();
 
-            console.log(`✅ Refund ${refund.refundRequestId} updated to ${status}`);
+            logger.info(`Refund ${refund.refundRequestId} updated to ${status}`);
 
             return { success: true, refundRequestId: refund.refundRequestId, status };
 
         } catch (error) {
             await connection.rollback();
-            console.error('❌ Update refund status error:', error);
+            logger.error('Update refund status error', { error: error.message });
             throw error;
         } finally {
             connection.release();
@@ -398,7 +400,7 @@ class RefundService {
             );
 
             // Simulate VNPay refund API call (in real implementation, call actual VNPay API)
-            console.log('🔄 Simulating VNPay refund API call...');
+            logger.info('Simulating VNPay refund API call...');
             const vnpaySuccess = true; // Simulate success
             const vnpayTransactionId = `VNPREF${Date.now()}`;
 
@@ -442,7 +444,7 @@ class RefundService {
 
                 await connection.commit();
 
-                console.log(`✅ VNPay refund processed: ${refund.refundRequestId}`);
+                logger.info(`VNPay refund processed: ${refund.refundRequestId}`);
 
                 return {
                     success: true,
@@ -468,7 +470,7 @@ class RefundService {
 
         } catch (error) {
             await connection.rollback();
-            console.error('❌ Process VNPay refund error:', error);
+            logger.error('Process VNPay refund error', { error: error.message });
             throw error;
         } finally {
             connection.release();

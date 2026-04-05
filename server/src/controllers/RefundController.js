@@ -1,3 +1,4 @@
+import logger from '../utils/logger.js';
 import RefundService from '../services/RefundService.js';
 import baseController from './baseController.js';
 
@@ -25,7 +26,7 @@ class RefundController {
             );
 
         } catch (error) {
-            console.error('Create refund request error:', error);
+            logger.error('Create refund request error:', error);
             return baseController.sendError(
                 res,
                 error.message || 'Lỗi khi tạo yêu cầu hoàn tiền',
@@ -49,7 +50,7 @@ class RefundController {
             return baseController.sendSuccess(res, result);
 
         } catch (error) {
-            console.error('Get customer refunds error:', error);
+            logger.error('Get customer refunds error:', error);
             return baseController.sendError(
                 res,
                 'Lỗi khi lấy danh sách hoàn tiền',
@@ -73,7 +74,7 @@ class RefundController {
             return baseController.sendSuccess(res, result);
 
         } catch (error) {
-            console.error('Get admin refunds error:', error);
+            logger.error('Get admin refunds error:', error);
             return baseController.sendError(
                 res,
                 'Lỗi khi lấy danh sách hoàn tiền',
@@ -97,7 +98,7 @@ class RefundController {
             return baseController.sendSuccess(res, refund);
 
         } catch (error) {
-            console.error('Get refund error:', error);
+            logger.error('Get refund error:', error);
             if (error.message.includes('Không tìm thấy')) {
                 return baseController.sendError(res, error.message, 404);
             }
@@ -136,7 +137,7 @@ class RefundController {
             return baseController.sendSuccess(res, result, 'Cập nhật trạng thái thành công');
 
         } catch (error) {
-            console.error('Update refund status error:', error);
+            logger.error('Update refund status error:', error);
             return baseController.sendError(
                 res,
                 error.message || 'Lỗi khi cập nhật trạng thái',
@@ -159,7 +160,7 @@ class RefundController {
             );
 
         } catch (error) {
-            console.error('Process VNPay refund error:', error);
+            logger.error('Process VNPay refund error:', error);
             return baseController.sendError(
                 res,
                 error.message || 'Lỗi khi xử lý hoàn tiền VNPay',
@@ -188,7 +189,7 @@ class RefundController {
             return baseController.sendSuccess(res, result);
 
         } catch (error) {
-            console.error('Get VNPay refund logs error:', error);
+            logger.error('Get VNPay refund logs error:', error);
             return baseController.sendError(
                 res,
                 'Lỗi khi lấy lịch sử hoàn tiền VNPay',
@@ -233,7 +234,7 @@ class RefundController {
             return baseController.sendSuccess(res, result, 'Hủy yêu cầu hoàn tiền thành công');
 
         } catch (error) {
-            console.error('Cancel refund request error:', error);
+            logger.error('Cancel refund request error:', error);
             return baseController.sendError(
                 res,
                 error.message || 'Lỗi khi hủy yêu cầu hoàn tiền',

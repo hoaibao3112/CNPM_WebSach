@@ -1,4 +1,5 @@
 import express from 'express';
+import logger from '../utils/logger.js';
 import axios from 'axios';
 
 const router = express.Router();
@@ -27,7 +28,7 @@ router.post('/chat', async (req, res) => {
 
     return res.json(response.data);
   } catch (error) {
-    console.error('Chatbot proxy error:', error.message);
+    logger.error('Chatbot proxy error:', error.message);
 
     if (error.code === 'ECONNREFUSED') {
       return res.status(503).json({

@@ -14,7 +14,11 @@ export function generateToken(makh, userType = 'customer') {
   // SỬA: Tăng default từ '2h' lên '4h'
   const expiresIn = process.env.JWT_EXPIRES_IN || '4h';
   
-  const token = jwt.sign(payload, process.env.JWT_SECRET || 'your_default_secret_key', {
+  if (!process.env.JWT_SECRET) {
+    throw new Error('FATAL: JWT_SECRET chưa được cấu hình trong .env');
+  }
+
+  const token = jwt.sign(payload, process.env.JWT_SECRET, {
     expiresIn
   });
   
@@ -42,7 +46,11 @@ export function generateRefreshToken(makh, userType = 'customer') {
   // SỬA: Tăng default từ '7d' lên '14d'
   const expiresIn = process.env.REFRESH_TOKEN_EXPIRES_IN || '14d';
 
-  const refreshToken = jwt.sign(payload, process.env.REFRESH_TOKEN_SECRET || 'your_default_refresh_secret_key', {
+  if (!process.env.REFRESH_TOKEN_SECRET) {
+    throw new Error('FATAL: REFRESH_TOKEN_SECRET chưa được cấu hình trong .env');
+  }
+
+  const refreshToken = jwt.sign(payload, process.env.REFRESH_TOKEN_SECRET, {
     expiresIn
   });
   

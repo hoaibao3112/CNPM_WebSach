@@ -1,3 +1,4 @@
+import logger from '../utils/logger.js';
 import pool from '../config/connectDatabase.js';
 
 /**
@@ -112,7 +113,7 @@ export async function recomputePreferencesForCustomer(makh, externalConnection =
             [makh, LoaiThucThe, KhoaThucThe, oldScore, newScore, 'recompute_full', 'recomputed from all responses']
           );
         } catch (e) {
-          console.warn('Could not insert history in recompute:', e.message);
+          logger.warn('Could not insert history in recompute:', e.message);
         }
 
         updated.push({ LoaiThucThe, KhoaThucThe, oldScore, newScore });
@@ -134,7 +135,7 @@ export async function recomputePreferencesForCustomer(makh, externalConnection =
             [makh, LoaiThucThe, KhoaThucThe, oldScore, 0, 'recompute_full_delete', 'deleted after recompute']
           );
         } catch (e) {
-          console.warn('Could not insert history for deletion in recompute:', e.message);
+          logger.warn('Could not insert history for deletion in recompute:', e.message);
         }
         updated.push({ LoaiThucThe, KhoaThucThe, oldScore, newScore: 0 });
       }
@@ -147,7 +148,7 @@ export async function recomputePreferencesForCustomer(makh, externalConnection =
     return { success: true, message: 'Recomputed preferences', updatedCount: updated.length, updated };
   } catch (error) {
     if (createdConn && connection) await connection.rollback();
-    console.error('Error recomputePreferencesForCustomer:', error);
+    logger.error('Error recomputePreferencesForCustomer:', error);
     throw error;
   } finally {
     if (createdConn && connection) connection.release();

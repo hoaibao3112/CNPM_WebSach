@@ -1,103 +1,219 @@
-'use strict';
+/**
+ * Sequelize Models Index - ESM version
+ * Load tất cả models và setup associations
+ */
+import { Sequelize } from 'sequelize';
+import dotenv from 'dotenv';
+dotenv.config();
 
-const fs = require('fs');
-const path = require('path');
-const Sequelize = require('sequelize');
-const basename = path.basename(__filename);
-const env = process.env.NODE_ENV || 'development';
-const config = require(__dirname + '/../config/config.json')[env];
-const db = {};
-
-let sequelize;
-
-// If environment variables for DB are provided (e.g. on Render), prefer them and
-// allow passing TLS CA via `DB_SSL_CA` for secure connections to TiDB Cloud.
-const hasEnvDb = !!process.env.DB_HOST || !!process.env.DATABASE_URL || !!config.use_env_variable;
-if (hasEnvDb) {
-  // Build options from environment variables when available
-  const dbName = process.env.DB_NAME || process.env.DATABASE || config.database;
-  const dbUser = process.env.DB_USER || process.env.DATABASE_USER || config.username;
-  const dbPass = process.env.DB_PASSWORD || process.env.DATABASE_PASSWORD || config.password;
-  const dbHost = process.env.DB_HOST || config.host;
-  const dbPort = process.env.DB_PORT ? Number(process.env.DB_PORT) : (config.port || undefined);
-
-  const sequelizeOptions = Object.assign({}, config, {
-    host: dbHost,
-    port: dbPort,
-    dialect: config.dialect || 'mysql'
-  });
-
-  // Dialect options for TLS/SSL. TiDB Cloud requires secure connections.
-  // Support two ways to provide CA:
-  //  - DB_SSL_CA: raw PEM text (may include newlines)
-  //  - DB_SSL_CA_BASE64: base64-encoded PEM (useful when platform strips newlines)
-  const sslCaRaw = process.env.DB_SSL_CA || process.env.DB_SSL_CERT || null;
-  const sslCaB64 = process.env.DB_SSL_CA_BASE64 || null;
-
-  // Debug logging for SSL configuration
-  console.log('🔐 SSL Configuration:');
-  console.log('  DB_REQUIRE_SSL:', process.env.DB_REQUIRE_SSL);
-  console.log('  DB_SSL_CA_BASE64 present:', !!sslCaB64);
-  console.log('  DB_SSL_CA present:', !!sslCaRaw);
-  console.log('  DB_REJECT_UNAUTHORIZED:', process.env.DB_REJECT_UNAUTHORIZED);
-
-  if (!sequelizeOptions.dialectOptions) sequelizeOptions.dialectOptions = {};
-  if (sslCaB64) {
-    // Decode base64 into Buffer (safer across env var storage)
-    try {
-      const caBuf = Buffer.from(sslCaB64, 'base64');
-      sequelizeOptions.dialectOptions.ssl = {
-        ca: caBuf,
-        rejectUnauthorized: process.env.DB_REJECT_UNAUTHORIZED !== 'false'
-      };
-      console.log('✅ SSL enabled with Base64 CA certificate');
-    } catch (err) {
-      console.error('❌ Failed to decode DB_SSL_CA_BASE64:', err.message);
-      // fall back to raw if decode fails
-      sequelizeOptions.dialectOptions.ssl = {
-        ca: sslCaRaw || undefined,
-        rejectUnauthorized: process.env.DB_REJECT_UNAUTHORIZED !== 'false'
-      };
+// --- Sequelize instance ---
+const sequelize = new Sequelize(
+  process.env.DB_NAME || 'qlbs',
+  process.env.DB_USER || 'root',
+  process.env.DB_PASSWORD || '',
+  {
+    host: process.env.DB_HOST || '127.0.0.1',
+    port: parseInt(process.env.DB_PORT) || 3306,
+    dialect: 'mysql',
+    logging: process.env.NODE_ENV === 'development' ? console.log : false,
+    timezone: '+07:00',
+    pool: {
+      max: 10,
+      min: 0,
+      acquire: 30000,
+      idle: 10000
+    },
+    define: {
+      timestamps: false,    // DB không đồng nhất timestamp columns
+      freezeTableName: true  // Không tự thêm 's' vào tên bảng
     }
-  } else if (sslCaRaw) {
-    // If the CA is provided as an env var (PEM content), pass it to the driver
-    sequelizeOptions.dialectOptions.ssl = {
-      ca: sslCaRaw,
-      rejectUnauthorized: process.env.DB_REJECT_UNAUTHORIZED !== 'false'
-    };
-    console.log('✅ SSL enabled with raw CA certificate');
-  } else if (process.env.DB_REQUIRE_SSL === 'true') {
-    // If user explicitly requires SSL but didn't provide CA, still enable TLS
-    sequelizeOptions.dialectOptions.ssl = { rejectUnauthorized: process.env.DB_REJECT_UNAUTHORIZED !== 'false' };
-    console.log('⚠️ SSL enabled WITHOUT CA certificate (DB_REQUIRE_SSL=true)');
-  } else {
-    console.log('⚠️ SSL NOT configured - connection may fail with TiDB Cloud');
   }
+);
 
-  sequelize = new Sequelize(dbName, dbUser, dbPass, sequelizeOptions);
-} else if (config.use_env_variable) {
-  sequelize = new Sequelize(process.env[config.use_env_variable], config);
-} else {
-  sequelize = new Sequelize(config.database, config.username, config.password, config);
-}
+// --- Import Models ---
+import SanPhamModel from './SanPham.model.js';
+import TheLoaiModel from './TheLoai.model.js';
+import TacGiaModel from './TacGia.model.js';
+import KhachHangModel from './KhachHang.model.js';
+import TaiKhoanModel from './TaiKhoan.model.js';
+import NhanVienModel from './NhanVien.model.js';
+import NhaCungCapModel from './NhaCungCap.model.js';
+import HoaDonModel from './HoaDon.model.js';
+import ChiTietHoaDonModel from './ChiTietHoaDon.model.js';
+import GioHangChiTietModel from './GioHangChiTiet.model.js';
+import PhieuNhapModel from './PhieuNhap.model.js';
+import ChiTietPhieuNhapModel from './ChiTietPhieuNhap.model.js';
+import NhomQuyenModel from './NhomQuyen.model.js';
+import ChucNangModel from './ChucNang.model.js';
+import ChiTietQuyenModel from './ChiTietQuyen.model.js';
+import KhuyenMaiModel from './KhuyenMai.model.js';
+import CtKhuyenMaiModel from './CtKhuyenMai.model.js';
+import PhieuGiamGiaModel from './PhieuGiamGia.model.js';
+import PhieuGiamGiaPhathanhModel from './PhieuGiamGiaPhathanh.model.js';
+import DiaChiModel from './DiaChi.model.js';
+import BinhLuanModel from './BinhLuan.model.js';
+import DanhGiaModel from './DanhGia.model.js';
+import DanhGiaDonHangModel from './DanhGiaDonHang.model.js';
+import ChatRoomModel from './ChatRoom.model.js';
+import ChatMessageModel from './ChatMessage.model.js';
+import ChamCongModel from './ChamCong.model.js';
+import OtpRequestModel from './OtpRequest.model.js';
+import FaqModel from './Faq.model.js';
 
-fs
-  .readdirSync(__dirname)
-  .filter(file => {
-    return (file.indexOf('.') !== 0) && (file !== basename) && (file.slice(-3) === '.js');
-  })
-  .forEach(file => {
-    const model = require(path.join(__dirname, file))(sequelize, Sequelize.DataTypes);
-    db[model.name] = model;
-  });
+// --- Init Models ---
+const SanPham = SanPhamModel(sequelize);
+const TheLoai = TheLoaiModel(sequelize);
+const TacGia = TacGiaModel(sequelize);
+const KhachHang = KhachHangModel(sequelize);
+const TaiKhoan = TaiKhoanModel(sequelize);
+const NhanVien = NhanVienModel(sequelize);
+const NhaCungCap = NhaCungCapModel(sequelize);
+const HoaDon = HoaDonModel(sequelize);
+const ChiTietHoaDon = ChiTietHoaDonModel(sequelize);
+const GioHangChiTiet = GioHangChiTietModel(sequelize);
+const PhieuNhap = PhieuNhapModel(sequelize);
+const ChiTietPhieuNhap = ChiTietPhieuNhapModel(sequelize);
+const NhomQuyen = NhomQuyenModel(sequelize);
+const ChucNang = ChucNangModel(sequelize);
+const ChiTietQuyen = ChiTietQuyenModel(sequelize);
+const KhuyenMai = KhuyenMaiModel(sequelize);
+const CtKhuyenMai = CtKhuyenMaiModel(sequelize);
+const PhieuGiamGia = PhieuGiamGiaModel(sequelize);
+const PhieuGiamGiaPhathanh = PhieuGiamGiaPhathanhModel(sequelize);
+const DiaChi = DiaChiModel(sequelize);
+const BinhLuan = BinhLuanModel(sequelize);
+const DanhGia = DanhGiaModel(sequelize);
+const DanhGiaDonHang = DanhGiaDonHangModel(sequelize);
+const ChatRoom = ChatRoomModel(sequelize);
+const ChatMessage = ChatMessageModel(sequelize);
+const ChamCong = ChamCongModel(sequelize);
+const OtpRequest = OtpRequestModel(sequelize);
+const Faq = FaqModel(sequelize);
 
-Object.keys(db).forEach(modelName => {
-  if (db[modelName].associate) {
-    db[modelName].associate(db);
-  }
-});
+// --- Associations ---
 
-db.sequelize = sequelize;
-db.Sequelize = Sequelize;
+// SanPham <-> TheLoai, TacGia
+SanPham.belongsTo(TheLoai, { foreignKey: 'MaTL', as: 'theLoai' });
+SanPham.belongsTo(TacGia, { foreignKey: 'MaTG', as: 'tacGia' });
+TheLoai.hasMany(SanPham, { foreignKey: 'MaTL', as: 'sanPhams' });
+TacGia.hasMany(SanPham, { foreignKey: 'MaTG', as: 'sanPhams' });
 
-module.exports = db;
+// HoaDon <-> KhachHang, ChiTietHoaDon
+HoaDon.belongsTo(KhachHang, { foreignKey: 'makh', as: 'khachHang' });
+KhachHang.hasMany(HoaDon, { foreignKey: 'makh', as: 'hoaDons' });
+HoaDon.hasMany(ChiTietHoaDon, { foreignKey: 'MaHD', as: 'chiTiets' });
+ChiTietHoaDon.belongsTo(HoaDon, { foreignKey: 'MaHD', as: 'hoaDon' });
+ChiTietHoaDon.belongsTo(SanPham, { foreignKey: 'MaSP', as: 'sanPham' });
+
+// GioHang
+GioHangChiTiet.belongsTo(KhachHang, { foreignKey: 'MaKH', as: 'khachHang' });
+GioHangChiTiet.belongsTo(SanPham, { foreignKey: 'MaSP', as: 'sanPham' });
+KhachHang.hasMany(GioHangChiTiet, { foreignKey: 'MaKH', as: 'gioHang' });
+
+// PhieuNhap
+PhieuNhap.hasMany(ChiTietPhieuNhap, { foreignKey: 'MaPN', as: 'chiTiets' });
+ChiTietPhieuNhap.belongsTo(PhieuNhap, { foreignKey: 'MaPN', as: 'phieuNhap' });
+ChiTietPhieuNhap.belongsTo(SanPham, { foreignKey: 'MaSP', as: 'sanPham' });
+
+// Phân quyền
+NhomQuyen.hasMany(ChiTietQuyen, { foreignKey: 'MaQuyen', as: 'chiTietQuyens' });
+ChiTietQuyen.belongsTo(NhomQuyen, { foreignKey: 'MaQuyen', as: 'nhomQuyen' });
+ChiTietQuyen.belongsTo(ChucNang, { foreignKey: 'MaCN', as: 'chucNang' });
+TaiKhoan.belongsTo(NhomQuyen, { foreignKey: 'MaQuyen', as: 'nhomQuyen' });
+
+// Khuyến mãi
+KhuyenMai.hasMany(CtKhuyenMai, { foreignKey: 'MaKM', as: 'chiTiets' });
+CtKhuyenMai.belongsTo(KhuyenMai, { foreignKey: 'MaKM', as: 'khuyenMai' });
+PhieuGiamGia.belongsTo(KhuyenMai, { foreignKey: 'MaKM', as: 'khuyenMai' });
+PhieuGiamGiaPhathanh.belongsTo(PhieuGiamGia, { foreignKey: 'MaPhieu', as: 'phieuGiamGia' });
+PhieuGiamGiaPhathanh.belongsTo(KhachHang, { foreignKey: 'makh', as: 'khachHang' });
+
+// Địa chỉ
+DiaChi.belongsTo(KhachHang, { foreignKey: 'MakH', as: 'khachHang' });
+KhachHang.hasMany(DiaChi, { foreignKey: 'MakH', as: 'diaChis' });
+
+// Bình luận, Đánh giá
+BinhLuan.belongsTo(KhachHang, { foreignKey: 'makh', as: 'khachHang' });
+BinhLuan.belongsTo(SanPham, { foreignKey: 'masp', as: 'sanPham' });
+BinhLuan.hasMany(BinhLuan, { foreignKey: 'mabl_cha', as: 'replies' });
+
+DanhGia.belongsTo(SanPham, { foreignKey: 'MaSP', as: 'sanPham' });
+DanhGia.belongsTo(KhachHang, { foreignKey: 'MaKH', as: 'khachHang' });
+
+DanhGiaDonHang.belongsTo(HoaDon, { foreignKey: 'MaHD', as: 'hoaDon' });
+DanhGiaDonHang.belongsTo(KhachHang, { foreignKey: 'MaKH', as: 'khachHang' });
+
+// Chat
+ChatRoom.belongsTo(KhachHang, { foreignKey: 'customer_id', as: 'khachHang' });
+ChatRoom.hasMany(ChatMessage, { foreignKey: 'room_id', as: 'messages' });
+ChatMessage.belongsTo(ChatRoom, { foreignKey: 'room_id', as: 'room' });
+
+// Chấm công
+ChamCong.belongsTo(TaiKhoan, { foreignKey: 'MaTK', as: 'taiKhoan' });
+
+// --- Export ---
+const db = {
+  sequelize,
+  Sequelize,
+  SanPham,
+  TheLoai,
+  TacGia,
+  KhachHang,
+  TaiKhoan,
+  NhanVien,
+  NhaCungCap,
+  HoaDon,
+  ChiTietHoaDon,
+  GioHangChiTiet,
+  PhieuNhap,
+  ChiTietPhieuNhap,
+  NhomQuyen,
+  ChucNang,
+  ChiTietQuyen,
+  KhuyenMai,
+  CtKhuyenMai,
+  PhieuGiamGia,
+  PhieuGiamGiaPhathanh,
+  DiaChi,
+  BinhLuan,
+  DanhGia,
+  DanhGiaDonHang,
+  ChatRoom,
+  ChatMessage,
+  ChamCong,
+  OtpRequest,
+  Faq
+};
+
+export default db;
+export {
+  sequelize,
+  SanPham,
+  TheLoai,
+  TacGia,
+  KhachHang,
+  TaiKhoan,
+  NhanVien,
+  NhaCungCap,
+  HoaDon,
+  ChiTietHoaDon,
+  GioHangChiTiet,
+  PhieuNhap,
+  ChiTietPhieuNhap,
+  NhomQuyen,
+  ChucNang,
+  ChiTietQuyen,
+  KhuyenMai,
+  CtKhuyenMai,
+  PhieuGiamGia,
+  PhieuGiamGiaPhathanh,
+  DiaChi,
+  BinhLuan,
+  DanhGia,
+  DanhGiaDonHang,
+  ChatRoom,
+  ChatMessage,
+  ChamCong,
+  OtpRequest,
+  Faq
+};

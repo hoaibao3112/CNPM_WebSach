@@ -1,3 +1,4 @@
+import logger from '../utils/logger.js';
 const express = require('express');
 const bodyParser = require('body-parser');
 //const { registerService, loginService } = require('../'); // Giả sử bạn đã tạo các hàm này trong file auth_service.js
@@ -40,5 +41,5 @@ app.post('/login', async (req, res) => {
 // Khởi động server
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
+    logger.info(`Server is running on port ${PORT}`);
 });

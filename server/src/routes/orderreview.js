@@ -1,4 +1,5 @@
 import express from 'express';
+import logger from '../utils/logger.js';
 import pool from '../config/connectDatabase.js';
 import { authenticateToken } from '../middlewares/auth.js';
 import jwt from 'jsonwebtoken';
@@ -32,7 +33,7 @@ router.get("/order-count", async(req, res) => {
     const [result] = await pool.query(sql);
     return res.status(200).json({success: true, data: result})
   } catch (error) {
-    console.log(error);
+    logger.info(error);
     return res.status(500).json({error:"lỗi server" })
   }
 })
@@ -51,9 +52,9 @@ router.get('/:orderId', async (req, res) => {
       try {
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
         optionalUser = decoded;
-        console.log('Optional token verified for orderreview GET:', { user: optionalUser });
+        logger.info('Optional token verified for orderreview GET:', { user: optionalUser });
       } catch (e) {
-        console.warn('Optional token invalid or expired for orderreview GET:', e.message);
+        logger.warn('Optional token invalid or expired for orderreview GET:', e.message);
         // proceed without user
       }
     }
@@ -62,7 +63,7 @@ router.get('/:orderId', async (req, res) => {
 
     // If requester is admin/staff, allow fetching review for the order regardless of owner
     if (optionalUser && (optionalUser.userType === 'admin' || optionalUser.userType === 'staff' || optionalUser.userType === 'superadmin')) {
-      console.log('Admin/staff fetch by user:', optionalUser);
+      logger.info('Admin/staff fetch by user:', optionalUser);
       const [rows] = await pool.query(
         `SELECT d.*, kh.tenkh AS customerName
          FROM danhgia_donhang d
@@ -90,7 +91,7 @@ router.get('/:orderId', async (req, res) => {
     );
     return res.status(200).json({ review: rows[0] || null });
   } catch (err) {
-    console.error('GET /api/orderreview/:orderId error', err);
+    logger.error('GET /api/orderreview/:orderId error', err);
     res.status(500).json({ error: 'Lỗi server', details: err.message });
   }
 });
@@ -99,7 +100,7 @@ router.get('/:orderId', async (req, res) => {
 router.post('/:orderId', authenticateToken, async (req, res) => {
   try {
     const { orderId } = req.params;
-    console.log('POST /api/orderreview/:orderId called', { orderId, user: req.user && req.user.makh, body: req.body });
+    logger.info('POST /api/orderreview/:orderId called', { orderId, user: req.user && req.user.makh, body: req.body });
     const customerId = req.user && (req.user.makh || req.user.id || req.user.MaKH);
     const { rating, comment } = req.body;
 
@@ -125,7 +126,7 @@ router.post('/:orderId', authenticateToken, async (req, res) => {
     const message = result.affectedRows && result.affectedRows > 1 ? 'Cập nhật đánh giá thành công' : 'Đã lưu đánh giá';
     return res.status(200).json({ message });
   } catch (err) {
-    console.error('POST /api/orderreview/:orderId error', err);
+    logger.error('POST /api/orderreview/:orderId error', err);
     res.status(500).json({ error: 'Lỗi server', details: err.message });
   }
 });

@@ -1,4 +1,5 @@
 import pool from '../config/connectDatabase.js';
+import logger from '../utils/logger.js';
 import { VNPay, ignoreLogger, ProductCode, VnpLocale, dateFormat } from 'vnpay';
 import { pointsFromOrderAmount, addLoyaltyPoints, subtractLoyaltyPoints, computeTier } from '../utils/loyalty.js';
 import { sendOrderConfirmationEmail } from '../utils/emailService.js';
@@ -29,15 +30,15 @@ class OrderService {
     }
 
     // ===== SHIPPING FEE CALCULATION =====
-    calculateShippingFee(province, totalWeight, customerTier = 'Đồng') {
+    calculateShippingFee(province, totalWeight, customerTier = 'Äá»“ng') {
         const provinceLower = String(province || '').toLowerCase().trim();
 
         // Check if HCM -> Free ship
-        const isHCM = provinceLower.includes('hồ chí minh') || provinceLower.includes('hcm') ||
+        const isHCM = provinceLower.includes('há»“ chÃ­ minh') || provinceLower.includes('hcm') ||
             provinceLower === '79' || provinceLower === '50';
 
         if (isHCM) {
-            console.log('📍 Nội thành TP.HCM -> FREE SHIP');
+            logger.info('ðŸ“ Ná»™i thÃ nh TP.HCM -> FREE SHIP');
             return 0;
         }
 
@@ -45,35 +46,35 @@ class OrderService {
         const weight500gUnits = Math.ceil((totalWeight || 0) / 500);
         let shippingFee = weight500gUnits * 15000;
 
-        console.log(`📦 Trọng lượng: ${totalWeight}g -> Phí gốc: ${shippingFee.toLocaleString('vi-VN')} VND`);
+        logger.info(`ðŸ“¦ Trá»ng lÆ°á»£ng: ${totalWeight}g -> PhÃ­ gá»‘c: ${shippingFee.toLocaleString('vi-VN')} VND`);
 
         // Apply tier discount
-        const tierDiscount = { 'Bạc': 0.2, 'Vàng': 0.5 };
+        const tierDiscount = { 'Báº¡c': 0.2, 'VÃ ng': 0.5 };
         const discount = tierDiscount[customerTier] || 0;
 
         if (discount > 0) {
             const discountAmount = Math.round(shippingFee * discount);
             shippingFee -= discountAmount;
-            console.log(`🎁 Tier ${customerTier} gi giảm ${discount * 100}%: -${discountAmount.toLocaleString('vi-VN')} VND`);
+            logger.info(`ðŸŽ Tier ${customerTier} gi giáº£m ${discount * 100}%: -${discountAmount.toLocaleString('vi-VN')} VND`);
         }
 
-        console.log(`✅ Phí ship cuối: ${shippingFee.toLocaleString('vi-VN')} VND`);
+        logger.info(`âœ… PhÃ­ ship cuá»‘i: ${shippingFee.toLocaleString('vi-VN')} VND`);
         return Math.round(shippingFee);
     }
 
     // ===== NORMALIZE TIER =====
     normalizeTier(tier) {
-        if (!tier && tier !== 0) return 'Đồng';
+        if (!tier && tier !== 0) return 'Äá»“ng';
         const t = String(tier).trim();
-        if (/vang|v[aàảãáạ]ng/i.test(t)) return 'Vàng';
-        if (/bac|b[aàảãáạ]c/i.test(t)) return 'Bạc';
-        if (/đồng|dong/i.test(t)) return 'Đồng';
-        // Numeric: 2 -> Vàng, 1 -> Bạc, 0 -> Đồng
+        if (/vang|v[aÃ áº£Ã£Ã¡áº¡]ng/i.test(t)) return 'VÃ ng';
+        if (/bac|b[aÃ áº£Ã£Ã¡áº¡]c/i.test(t)) return 'Báº¡c';
+        if (/Ä‘á»“ng|dong/i.test(t)) return 'Äá»“ng';
+        // Numeric: 2 -> VÃ ng, 1 -> Báº¡c, 0 -> Äá»“ng
         if (!isNaN(Number(t))) {
             const n = Number(t);
-            if (n >= 2) return 'Vàng';
-            if (n === 1) return 'Bạc';
-            return 'Đồng';
+            if (n >= 2) return 'VÃ ng';
+            if (n === 1) return 'Báº¡c';
+            return 'Äá»“ng';
         }
         return t;
     }
@@ -102,27 +103,27 @@ class OrderService {
             const customerName = user.tenkh || user.name || '';
             const customerPhone = user.sdt || user.phone || '';
 
-            if (!customerId) throw new Error('Không xác thực được khách hàng');
+            if (!customerId) throw new Error('KhÃ´ng xÃ¡c thá»±c Ä‘Æ°á»£c khÃ¡ch hÃ ng');
 
             const customer = { makh: customerId, name: customerName, phone: customerPhone };
 
-            console.log('🔍 [ORDER] Data:', { clientSubtotal, clientDiscount, clientFinalTotal, freeShipCode, discountCode });
-            console.log('🔍 [ORDER] Customer:', customer);
-            console.log('🔍 [ORDER] Shipping Address:', shippingAddress);
+            logger.info('ðŸ” [ORDER] Data:', { clientSubtotal, clientDiscount, clientFinalTotal, freeShipCode, discountCode });
+            logger.info('ðŸ” [ORDER] Customer:', customer);
+            logger.info('ðŸ” [ORDER] Shipping Address:', shippingAddress);
 
             // Validate input
             if (!items || !shippingAddress || !paymentMethod) {
-                throw new Error('Thiếu thông tin bắt buộc');
+                throw new Error('Thiáº¿u thÃ´ng tin báº¯t buá»™c');
             }
 
             // Use fallback for empty name
             if (!customer.name) {
-                customer.name = 'Khách hàng';
+                customer.name = 'KhÃ¡ch hÃ ng';
             }
 
             if (!customer.makh || !shippingAddress.detail ||
                 !shippingAddress.province || !shippingAddress.district || !shippingAddress.ward) {
-                console.error('❌ Validation failed:', {
+                logger.error('âŒ Validation failed:', {
                     hasMakh: !!customer.makh,
                     hasName: !!customer.name,
                     hasPhone: !!customer.phone,
@@ -132,7 +133,7 @@ class OrderService {
                     hasWard: !!shippingAddress.ward,
                     shippingAddress
                 });
-                throw new Error('Thông tin khách hàng hoặc địa chỉ không đầy đủ');
+                throw new Error('ThÃ´ng tin khÃ¡ch hÃ ng hoáº·c Ä‘á»‹a chá»‰ khÃ´ng Ä‘áº§y Ä‘á»§');
             }
 
             // Check customer exists
@@ -141,11 +142,11 @@ class OrderService {
                 [customer.makh]
             );
 
-            if (!existingCustomer) throw new Error('Khách hàng không tồn tại');
+            if (!existingCustomer) throw new Error('KhÃ¡ch hÃ ng khÃ´ng tá»“n táº¡i');
 
             // Validate items
             if (!Array.isArray(items) || items.length === 0) {
-                throw new Error('Không có sản phẩm được chọn');
+                throw new Error('KhÃ´ng cÃ³ sáº£n pháº©m Ä‘Æ°á»£c chá»n');
             }
 
             // Validate products, check stock, calculate weight
@@ -154,7 +155,7 @@ class OrderService {
 
             for (const item of items) {
                 if (!item.MaSP || !item.SoLuong || item.SoLuong < 1) {
-                    throw new Error(`Sản phẩm ${item.MaSP} không hợp lệ`);
+                    throw new Error(`Sáº£n pháº©m ${item.MaSP} khÃ´ng há»£p lá»‡`);
                 }
 
                 const [[product]] = await connection.query(
@@ -162,9 +163,9 @@ class OrderService {
                     [item.MaSP]
                 );
 
-                if (!product) throw new Error(`Sản phẩm ${item.MaSP} không tồn tại`);
+                if (!product) throw new Error(`Sáº£n pháº©m ${item.MaSP} khÃ´ng tá»“n táº¡i`);
                 if (product.SoLuong < item.SoLuong) {
-                    throw new Error(`Sản phẩm ${item.MaSP} không đủ tồn kho (${product.SoLuong} < ${item.SoLuong})`);
+                    throw new Error(`Sáº£n pháº©m ${item.MaSP} khÃ´ng Ä‘á»§ tá»“n kho (${product.SoLuong} < ${item.SoLuong})`);
                 }
 
                 const productWeight = product.TrongLuong || 0;
@@ -180,7 +181,7 @@ class OrderService {
                 });
             }
 
-            console.log(`📦 Tổng trọng lượng: ${totalWeight}g`);
+            logger.info(`ðŸ“¦ Tá»•ng trá»ng lÆ°á»£ng: ${totalWeight}g`);
 
             // Calculate subtotal
             let subtotal = clientSubtotal || cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
@@ -190,7 +191,7 @@ class OrderService {
             const customerRow = existingCustomer;
             const tokenTier = user.loyalty_tier || user.loyalty_tier === 0 ? user.loyalty_tier : null;
             const userTier = tokenTier || customerRow.loyalty_tier || computeTier(customerRow.loyalty_points || 0);
-            console.log('🔍 [LOYALTY] userTier:', userTier);
+            logger.info('ðŸ” [LOYALTY] userTier:', userTier);
 
             // ===== SERVER-SIDE PROMOTION VALIDATION =====
             let promoToMark = null;
@@ -220,25 +221,25 @@ class OrderService {
                 }
             }
 
-            console.log(`🚢 Phí ship cuối: ${shippingFee.toLocaleString('vi-VN')} VND (Free: ${isFreeShip})`);
+            logger.info(`ðŸš¢ PhÃ­ ship cuá»‘i: ${shippingFee.toLocaleString('vi-VN')} VND (Free: ${isFreeShip})`);
 
             // Member discount when free ship
             const userTierNormalized = this.normalizeTier(userTier);
             let memberDiscountAmount = 0;
             if (isFreeShip) {
-                const memberPctMap = { 'Bạc': 0.03, 'Vàng': 0.05 };
+                const memberPctMap = { 'Báº¡c': 0.03, 'VÃ ng': 0.05 };
                 const pct = memberPctMap[userTierNormalized] || 0;
                 if (pct > 0 && subtotal >= 300000) {
                     memberDiscountAmount = Math.round(subtotal * pct);
-                    console.log(`🎖️ Member ${userTierNormalized} discount: -${memberDiscountAmount.toLocaleString('vi-VN')} (${pct * 100}%)`);
+                    logger.info(`ðŸŽ–ï¸ Member ${userTierNormalized} discount: -${memberDiscountAmount.toLocaleString('vi-VN')} (${pct * 100}%)`);
                 }
             }
 
-            console.log('🔍 [SUMMARY] subtotal:', subtotal, 'discount:', discountAmount, 'memberDiscount:', memberDiscountAmount, 'shipping:', shippingFee);
+            logger.info('ðŸ” [SUMMARY] subtotal:', subtotal, 'discount:', discountAmount, 'memberDiscount:', memberDiscountAmount, 'shipping:', shippingFee);
 
             // Calculate final total
             const finalTotalAmount = Math.max(0, amountAfterDiscount - memberDiscountAmount + shippingFee);
-            console.log(`💵 Tổng cuối: ${finalTotalAmount.toLocaleString('vi-VN')} VND`);
+            logger.info(`ðŸ’µ Tá»•ng cuá»‘i: ${finalTotalAmount.toLocaleString('vi-VN')} VND`);
 
             // BEGIN TRANSACTION
             await connection.beginTransaction();
@@ -252,35 +253,35 @@ class OrderService {
                 const cityObj = citiesData.find(c => c.city_id === provinceName);
                 if (cityObj) {
                     provinceName = cityObj.city_name;
-                    console.log(`📍 Resolved province ${shippingAddress.province} → ${provinceName}`);
+                    logger.info(`ðŸ“ Resolved province ${shippingAddress.province} â†’ ${provinceName}`);
                 }
             }
 
             // Create order notes
             const shipNote = isFreeShip
-                ? `Phí ship: 0đ (FREE SHIP - Mã: ${freeShipCode})`
-                : `Phí ship: ${shippingFee.toLocaleString()}đ (${provinceName}, ${totalWeight}g)`;
+                ? `PhÃ­ ship: 0Ä‘ (FREE SHIP - MÃ£: ${freeShipCode})`
+                : `PhÃ­ ship: ${shippingFee.toLocaleString()}Ä‘ (${provinceName}, ${totalWeight}g)`;
 
             let promoNote = '';
             if (discountCode && discountAmount > 0) {
-                promoNote = `[PROMO] Mã: ${discountCode}; Giảm: ${discountAmount.toLocaleString()}đ\n`;
+                promoNote = `[PROMO] MÃ£: ${discountCode}; Giáº£m: ${discountAmount.toLocaleString()}Ä‘\n`;
             }
             if (!promoNote && promoToMark && promoToMark.type === 'phieugiamgia_phathanh' && promoToMark.code) {
-                promoNote = `[PROMO] Phiếu: ${promoToMark.code}\n`;
+                promoNote = `[PROMO] Phiáº¿u: ${promoToMark.code}\n`;
             }
 
             let memberNote = '';
             if (memberDiscountAmount && memberDiscountAmount > 0) {
-                memberNote = `[MEMBER] Giảm theo hạng ${userTier}: ${memberDiscountAmount.toLocaleString()}đ\n`;
+                memberNote = `[MEMBER] Giáº£m theo háº¡ng ${userTier}: ${memberDiscountAmount.toLocaleString()}Ä‘\n`;
             }
 
-            const noteWithDetails = `${notes || ''}\n${promoNote}${memberNote}[LOYALTY] Hạng: ${userTier}\n[SHIPPING] ${shipNote}`;
+            const noteWithDetails = `${notes || ''}\n${promoNote}${memberNote}[LOYALTY] Háº¡ng: ${userTier}\n[SHIPPING] ${shipNote}`;
 
             // Create order
             const [orderResult] = await connection.query(
                 `INSERT INTO hoadon (makh, MaDiaChi, NgayTao, TongTien, PhuongThucThanhToan, GhiChu, tinhtrang, TrangThaiThanhToan, PhiShip) 
                  VALUES (?, ?, NOW(), ?, ?, ?, ?, ?, ?)`,
-                [customer.makh, addressId, finalTotalAmount, paymentMethod, noteWithDetails, 'Chờ xử lý', 'Chưa thanh toán', shippingFee]
+                [customer.makh, addressId, finalTotalAmount, paymentMethod, noteWithDetails, 'Chá» xá»­ lÃ½', 'ChÆ°a thanh toÃ¡n', shippingFee]
             );
             const orderId = orderResult.insertId;
 
@@ -313,7 +314,7 @@ class OrderService {
 
             // COMMIT before payment processing
             await connection.commit();
-            console.log('✅ Database operations completed');
+            logger.info('âœ… Database operations completed');
 
             // Return order info for payment processing
             return {
@@ -335,7 +336,7 @@ class OrderService {
 
         } catch (error) {
             await connection.rollback();
-            console.error('❌ Place order error:', error);
+            logger.error('âŒ Place order error:', error);
             throw error;
         } finally {
             connection.release();
@@ -353,7 +354,7 @@ class OrderService {
         );
 
         if (matchingAddr) {
-            console.log(`Reusing address ${matchingAddr.MaDiaChi}`);
+            logger.info(`Reusing address ${matchingAddr.MaDiaChi}`);
             return matchingAddr.MaDiaChi;
         }
 
@@ -362,7 +363,7 @@ class OrderService {
             [customer.makh, customer.name, customer.phone, shippingAddress.detail,
             shippingAddress.province, shippingAddress.district, shippingAddress.ward]
         );
-        console.log(`Created new address ${addressResult.insertId}`);
+        logger.info(`Created new address ${addressResult.insertId}`);
         return addressResult.insertId;
     }
 
@@ -408,11 +409,11 @@ class OrderService {
             }
 
             if (!promotion) {
-                console.log(`⚠️ Promotion not found: ${code}`);
+                logger.info(`âš ï¸ Promotion not found: ${code}`);
                 return { discountAmount: null, promoToMark: null };
             }
 
-            console.log('🔍 [PROMO FOUND]', promotion);
+            logger.info('ðŸ” [PROMO FOUND]', promotion);
 
             const promoType = String(promotion.LoaiKM || '').toLowerCase();
 
@@ -453,7 +454,7 @@ class OrderService {
             const subtotalEligible = eligibleItems.reduce((s, it) => s + (it.price || 0) * (it.quantity || 0), 0);
             const totalQtyEligible = eligibleItems.reduce((s, it) => s + (it.quantity || 0), 0);
 
-            console.log('🔍 [ELIGIBLE]', eligibleItems.map(i => i.productId), 'subtotal:', subtotalEligible, 'qty:', totalQtyEligible);
+            logger.info('ðŸ” [ELIGIBLE]', eligibleItems.map(i => i.productId), 'subtotal:', subtotalEligible, 'qty:', totalQtyEligible);
 
             const minAmount = promotion.GiaTriDonToiThieu || 0;
             const minQty = promotion.SoLuongToiThieu || 0;
@@ -473,7 +474,7 @@ class OrderService {
                 }
             }
 
-            console.log('🔍 [COMPUTED DISCOUNT]', computedDiscount);
+            logger.info('ðŸ” [COMPUTED DISCOUNT]', computedDiscount);
 
             let promoToMark = null;
             if (promotion.MaKM) {
@@ -485,7 +486,7 @@ class OrderService {
             return { discountAmount: computedDiscount, promoToMark };
 
         } catch (e) {
-            console.error('❌ Error validating promotion:', e);
+            logger.error('âŒ Error validating promotion:', e);
             return { discountAmount: null, promoToMark: null };
         }
     }
@@ -512,7 +513,7 @@ class OrderService {
 
                 if (claim) {
                     if (subtotal >= (freeShipPromo.GiaTriDonToiThieu || 0)) {
-                        console.log(`🎉 Free ship applied: ${code}`);
+                        logger.info(`ðŸŽ‰ Free ship applied: ${code}`);
                         // Mark as used
                         await connection.query(
                             `UPDATE khachhang_khuyenmai SET trang_thai = 'Da_su_dung' WHERE makh = ? AND makm = ?`,
@@ -520,7 +521,7 @@ class OrderService {
                         );
                         return { success: true, promoToMark: { type: 'khachhang_khuyenmai', MaKM: freeShipPromo.MaKM } };
                     } else {
-                        console.log(`⚠️ Minimum not met: ${freeShipPromo.GiaTriDonToiThieu}`);
+                        logger.info(`âš ï¸ Minimum not met: ${freeShipPromo.GiaTriDonToiThieu}`);
                     }
                 }
             } else {
@@ -538,7 +539,7 @@ class OrderService {
                 if (issued && !issued.NgaySuDung) {
                     const promoType = String(issued.LoaiKM || '').toLowerCase();
                     if (promoType === 'free_ship' && subtotal >= (issued.GiaTriDonToiThieu || 0)) {
-                        console.log(`🎉 Free ship (issued) applied: ${issued.MaPhieu}`);
+                        logger.info(`ðŸŽ‰ Free ship (issued) applied: ${issued.MaPhieu}`);
                         return { success: true, promoToMark: { type: 'phieugiamgia_phathanh', code: issued.MaPhieu } };
                     }
                 }
@@ -547,7 +548,7 @@ class OrderService {
             return { success: false, promoToMark: null };
 
         } catch (e) {
-            console.error('❌ Error checking free ship:', e);
+            logger.error('âŒ Error checking free ship:', e);
             return { success: false, promoToMark: null };
         }
     }
@@ -555,7 +556,7 @@ class OrderService {
     // ===== HELPER: MARK PROMO AS USED =====
     async markPromoAsUsed(connection, promoToMark, customerId, discountAmount, isFreeShip) {
         try {
-            console.log('🔍 [MARK PROMO]', promoToMark);
+            logger.info('ðŸ” [MARK PROMO]', promoToMark);
 
             if (promoToMark.type === 'khachhang_khuyenmai' && promoToMark.MaKM) {
                 if (discountAmount > 0 || isFreeShip) {
@@ -564,7 +565,7 @@ class OrderService {
                          WHERE makh = ? AND makm = ? AND UPPER(REPLACE(trang_thai, ' ', '_')) = 'CHUA_SU_DUNG' LIMIT 1`,
                         [customerId, promoToMark.MaKM]
                     );
-                    console.log('✅ Marked khuyenmai:', updateRes.affectedRows);
+                    logger.info('âœ… Marked khuyenmai:', updateRes.affectedRows);
                 }
             } else if (promoToMark.type === 'phieugiamgia_phathanh' && promoToMark.code) {
                 if (discountAmount > 0 || isFreeShip) {
@@ -573,11 +574,11 @@ class OrderService {
                          WHERE makh = ? AND MaPhieu = ? AND NgaySuDung IS NULL LIMIT 1`,
                         [customerId, promoToMark.code]
                     );
-                    console.log('✅ Marked coupon:', updateRes.affectedRows);
+                    logger.info('âœ… Marked coupon:', updateRes.affectedRows);
                 }
             }
         } catch (e) {
-            console.error('❌ Error marking promo:', e);
+            logger.error('âŒ Error marking promo:', e);
         }
     }
 
@@ -601,7 +602,7 @@ class OrderService {
 
     async rollbackOrderForVnpayError(orderId) {
         await pool.query(
-            'UPDATE hoadon SET tinhtrang = "Đã hủy", GhiChu = "Lỗi VNPay" WHERE MaHD = ?',
+            'UPDATE hoadon SET tinhtrang = "ÄÃ£ há»§y", GhiChu = "Lá»—i VNPay" WHERE MaHD = ?',
             [orderId],
         );
     }
@@ -671,12 +672,12 @@ class OrderService {
         const amount = Number.parseInt(vnpParams.vnp_Amount || '0', 10) / 100;
 
         if (!orderId) {
-            throw new Error('Thiếu mã đơn hàng từ VNPay callback');
+            throw new Error('Thiáº¿u mÃ£ Ä‘Æ¡n hÃ ng tá»« VNPay callback');
         }
 
         if (rspCode === '00') {
             await pool.query(
-                `UPDATE hoadon SET TrangThaiThanhToan = 'Đã thanh toán', tinhtrang = 'Đã xác nhận' WHERE MaHD = ?`,
+                `UPDATE hoadon SET TrangThaiThanhToan = 'ÄÃ£ thanh toÃ¡n', tinhtrang = 'ÄÃ£ xÃ¡c nháº­n' WHERE MaHD = ?`,
                 [orderId],
             );
 
@@ -692,14 +693,14 @@ class OrderService {
                 }
             } catch (error) {
                 // Non-blocking: payment success should not fail because loyalty points failed
-                console.warn('Loyalty after VNPay failed:', error.message);
+                logger.warn('Loyalty after VNPay failed:', error.message);
             }
 
             return { orderId, amount, rspCode, status: 'success' };
         }
 
         await pool.query(
-            `UPDATE hoadon SET TrangThaiThanhToan = 'Thất bại', tinhtrang = 'Đã hủy' WHERE MaHD = ?`,
+            `UPDATE hoadon SET TrangThaiThanhToan = 'Tháº¥t báº¡i', tinhtrang = 'ÄÃ£ há»§y' WHERE MaHD = ?`,
             [orderId],
         );
 
@@ -754,7 +755,7 @@ class OrderService {
                         success: true,
                         orderId: orderResult.orderId,
                         paymentUrl,
-                        message: 'Đơn hàng đã tạo, chuyển hướng thanh toán VNPay',
+                        message: 'ÄÆ¡n hÃ ng Ä‘Ã£ táº¡o, chuyá»ƒn hÆ°á»›ng thanh toÃ¡n VNPay',
                         appliedTier: orderResult.userTier,
                         discountAmount: orderResult.discountAmount,
                         memberDiscountAmount: orderResult.memberDiscountAmount,
@@ -764,7 +765,7 @@ class OrderService {
                 };
             } catch (error) {
                 await this.rollbackOrderForVnpayError(orderResult.orderId);
-                throw new Error(error instanceof Error ? error.message : 'Lỗi tạo URL thanh toán VNPay');
+                throw new Error(error instanceof Error ? error.message : 'Lá»—i táº¡o URL thanh toÃ¡n VNPay');
             }
         }
 
@@ -773,19 +774,19 @@ class OrderService {
                 await this.addLoyaltyPointsForCodOrder(orderResult.customer.makh, orderResult.finalTotalAmount);
             } catch (error) {
                 // Non-blocking: COD success should not fail because loyalty failed
-                console.warn('Loyalty add failed (non-blocking):', error.message);
+                logger.warn('Loyalty add failed (non-blocking):', error.message);
             }
 
             this.sendOrderEmail(orderResult).catch((error) => {
                 // Non-blocking: order response should not fail if email provider has issues
-                console.error('Email failed (non-blocking):', error.message);
+                logger.error('Email failed (non-blocking):', error.message);
             });
 
             return {
                 responseType: 'success',
                 payload: {
                     orderId: orderResult.orderId,
-                    message: 'Đặt hàng COD thành công',
+                    message: 'Äáº·t hÃ ng COD thÃ nh cÃ´ng',
                     paymentMethod: 'COD',
                     appliedTier: orderResult.userTier,
                     discountAmount: orderResult.discountAmount,
@@ -796,7 +797,7 @@ class OrderService {
             };
         }
 
-        throw new Error('Phương thức thanh toán không hợp lệ');
+        throw new Error('PhÆ°Æ¡ng thá»©c thanh toÃ¡n khÃ´ng há»£p lá»‡');
     }
 
     // ===== GET CUSTOMER ORDERS =====
@@ -854,7 +855,7 @@ class OrderService {
             [orderId]
         );
 
-        if (!order) throw new Error('Không tìm thấy đơn hàng');
+        if (!order) throw new Error('KhÃ´ng tÃ¬m tháº¥y Ä‘Æ¡n hÃ ng');
 
         const [items] = await pool.query(
             `SELECT 
@@ -884,17 +885,17 @@ class OrderService {
                 [orderId, customerId]
             );
 
-            if (!order) throw new Error('Không tìm thấy đơn hàng hoặc không có quyền');
+            if (!order) throw new Error('KhÃ´ng tÃ¬m tháº¥y Ä‘Æ¡n hÃ ng hoáº·c khÃ´ng cÃ³ quyá»n');
 
             // Check if can cancel
-            if (!['Chờ xử lý', 'Đã xác nhận'].includes(order.tinhtrang)) {
-                throw new Error('Không thể hủy đơn hàng ở trạng thái hiện tại');
+            if (!['Chá» xá»­ lÃ½', 'ÄÃ£ xÃ¡c nháº­n'].includes(order.tinhtrang)) {
+                throw new Error('KhÃ´ng thá»ƒ há»§y Ä‘Æ¡n hÃ ng á»Ÿ tráº¡ng thÃ¡i hiá»‡n táº¡i');
             }
 
             // Update order status
             await connection.query(
-                `UPDATE hoadon SET tinhtrang = 'Đã hủy', GhiChu = CONCAT(IFNULL(GhiChu, ''), ?) WHERE MaHD = ?`,
-                [`\nLý do hủy: ${reason || 'Không có lý do'}`, orderId]
+                `UPDATE hoadon SET tinhtrang = 'ÄÃ£ há»§y', GhiChu = CONCAT(IFNULL(GhiChu, ''), ?) WHERE MaHD = ?`,
+                [`\nLÃ½ do há»§y: ${reason || 'KhÃ´ng cÃ³ lÃ½ do'}`, orderId]
             );
 
             // Restore stock
@@ -913,13 +914,13 @@ class OrderService {
             // Subtract loyalty points (non-blocking)
             try {
                 await subtractLoyaltyPoints(connection, customerId, order.TongTien || 0);
-                console.log(`Loyalty: subtracted for customer ${customerId} due to cancel ${orderId}`);
+                logger.info(`Loyalty: subtracted for customer ${customerId} due to cancel ${orderId}`);
             } catch (e) {
-                console.warn('Loyalty subtraction failed (non-blocking):', e.message);
+                logger.warn('Loyalty subtraction failed (non-blocking):', e.message);
             }
 
             await connection.commit();
-            return { success: true, orderId, message: 'Hủy đơn thành công' };
+            return { success: true, orderId, message: 'Há»§y Ä‘Æ¡n thÃ nh cÃ´ng' };
 
         } catch (error) {
             await connection.rollback();
@@ -960,7 +961,7 @@ class OrderService {
              WHERE MaDiaChi = ? AND MaKH = ?`,
             [name, phone, detail, province, district, ward, addressId, customerId]
         );
-        if (result.affectedRows === 0) throw new Error('Địa chỉ không tồn tại');
+        if (result.affectedRows === 0) throw new Error('Äá»‹a chá»‰ khÃ´ng tá»“n táº¡i');
         return true;
     }
 
@@ -969,7 +970,7 @@ class OrderService {
             `DELETE FROM diachi WHERE MaDiaChi = ? AND MaKH = ?`,
             [addressId, customerId]
         );
-        if (result.affectedRows === 0) throw new Error('Địa chỉ không tồn tại');
+        if (result.affectedRows === 0) throw new Error('Äá»‹a chá»‰ khÃ´ng tá»“n táº¡i');
         return true;
     }
 
@@ -981,7 +982,7 @@ class OrderService {
         );
 
         if (!address) {
-            throw new Error('Địa chỉ không tồn tại hoặc không thuộc về khách hàng này');
+            throw new Error('Äá»‹a chá»‰ khÃ´ng tá»“n táº¡i hoáº·c khÃ´ng thuá»™c vá» khÃ¡ch hÃ ng nÃ y');
         }
 
         // Note: This is a placeholder implementation
@@ -995,7 +996,7 @@ class OrderService {
         // await pool.query('UPDATE diachi SET MacDinh = 0 WHERE MaKH = ?', [customerId]);
         // await pool.query('UPDATE diachi SET MacDinh = 1 WHERE MaDiaChi = ? AND MaKH = ?', [addressId, customerId]);
 
-        console.log(`⚠️ setDefaultAddress called for address ${addressId} - MacDinh column not yet in DB`);
+        logger.info(`âš ï¸ setDefaultAddress called for address ${addressId} - MacDinh column not yet in DB`);
         return true;
     }
 
@@ -1017,3 +1018,4 @@ class OrderService {
 }
 
 export default new OrderService();
+

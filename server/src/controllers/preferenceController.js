@@ -1,4 +1,5 @@
 import pool from '../config/connectDatabase.js';
+import logger from '../utils/logger.js';
 
 /**
  * =====================================================
@@ -50,7 +51,7 @@ export const getActiveForm = async (req, res) => {
       data: form
     });
   } catch (error) {
-    console.error('Error getActiveForm:', error);
+    logger.error('Error getActiveForm:', error);
     return res.status(500).json({
       success: false,
       message: 'Lỗi server khi lấy form sở thích',
@@ -95,7 +96,7 @@ export const submitPreferences = async (req, res) => {
       try {
         await applyResponseScores(connection, makh, responseId, -1, formId);
       } catch (e) {
-        console.warn('Could not subtract old response scores:', e.message);
+        logger.warn('Could not subtract old response scores:', e.message);
       }
 
       // Xóa câu trả lời cũ (chúng ta đã trừ điểm bên trên)
@@ -145,7 +146,7 @@ export const submitPreferences = async (req, res) => {
       try {
         await applyResponseScores(connection, makh, responseId, +1, formId);
       } catch (e) {
-        console.warn('Could not apply response scores:', e.message);
+        logger.warn('Could not apply response scores:', e.message);
         // fallback to previous function
         await calculatePreferenceScores(connection, makh, responseId);
       }
@@ -232,7 +233,7 @@ export const submitPreferences = async (req, res) => {
           } catch (err) {
             // If preferredCode insertion fails (duplicate race or constraint), fall back to search/create by MaKM
             // We'll continue to the fallback logic below
-            console.warn('Preferred code insert failed, falling back to MaKM search/create:', err.message);
+            logger.warn('Preferred code insert failed, falling back to MaKM search/create:', err.message);
           }
         }
       }
@@ -340,7 +341,7 @@ export const submitPreferences = async (req, res) => {
     });
   } catch (error) {
     await connection.rollback();
-    console.error('Error submitPreferences:', error);
+    logger.error('Error submitPreferences:', error);
     return res.status(500).json({
       success: false,
       message: 'Lỗi khi lưu sở thích',
@@ -511,7 +512,7 @@ async function applyResponseScores(connection, makh, responseId, multiplier = 1,
       );
     } catch (e) {
       // history insert should not block main flow
-      console.warn('Could not insert history for applyResponseScores:', e.message);
+      logger.warn('Could not insert history for applyResponseScores:', e.message);
     }
   }
 }
@@ -650,7 +651,8 @@ export const getRecommendations = async (req, res) => {
     // Nếu không đủ sản phẩm phù hợp, bổ sung sản phẩm mới
     if (products.length < limit) {
       const needed = limit - products.length;
-      const excludeIds = products.map(p => p.MaSP).join(',') || '0';
+      const excludeIds = products.map(p => p.MaSP);
+      const placeholders = excludeIds.length > 0 ? excludeIds.map(() => '?').join(',') : '0';
 
       const [moreProducts] = await pool.query(
         `SELECT sp.*, tl.TenTL, tg.TenTG, 0 AS TongDiem
@@ -658,10 +660,10 @@ export const getRecommendations = async (req, res) => {
          LEFT JOIN theloai tl ON sp.MaTL = tl.MaTL
          LEFT JOIN tacgia tg ON sp.MaTG = tg.MaTG
          WHERE sp.TinhTrang = b'1' AND sp.SoLuong > 0 
-           AND sp.MaSP NOT IN (${excludeIds})
+           AND sp.MaSP NOT IN (${placeholders})
          ORDER BY sp.NamXB DESC
          LIMIT ?`,
-        [needed]
+        [...excludeIds, needed]
       );
 
       products.push(...moreProducts);
@@ -674,7 +676,7 @@ export const getRecommendations = async (req, res) => {
       total: products.length
     });
   } catch (error) {
-    console.error('Error getRecommendations:', error);
+    logger.error('Error getRecommendations:', error);
     return res.status(500).json({
       success: false,
       message: 'Lỗi khi lấy gợi ý sản phẩm',
@@ -717,7 +719,7 @@ export const checkPreferences = async (req, res) => {
       }
     });
   } catch (error) {
-    console.error('Error checkPreferences:', error);
+    logger.error('Error checkPreferences:', error);
     return res.status(500).json({
       success: false,
       message: 'Lỗi khi kiểm tra sở thích',
@@ -943,12 +945,12 @@ export const mergePreferenceForm = async (req, res) => {
       return res.json({ success: true, message: 'Cập nhật sở thích thành công', updates, recommendations: recs });
     } catch (err) {
       // If recommendation computation fails, still return success for updates
-      console.warn('Could not compute immediate recommendations:', err.message);
+      logger.warn('Could not compute immediate recommendations:', err.message);
       return res.json({ success: true, message: 'Cập nhật sở thích thành công', updates });
     }
   } catch (error) {
     await connection.rollback();
-    console.error('Error mergePreferenceForm:', error);
+    logger.error('Error mergePreferenceForm:', error);
     return res.status(500).json({ success: false, message: 'Lỗi khi hợp nhất sở thích', error: error.message });
   } finally {
     connection.release();
@@ -976,7 +978,7 @@ export const getAllForms = async (req, res) => {
       data: forms
     });
   } catch (error) {
-    console.error('Error getAllForms:', error);
+    logger.error('Error getAllForms:', error);
     return res.status(500).json({
       success: false,
       message: 'Lỗi khi lấy danh sách forms',
@@ -1023,7 +1025,7 @@ export const createForm = async (req, res) => {
       data: { formId: result.insertId }
     });
   } catch (error) {
-    console.error('Error createForm:', error);
+    logger.error('Error createForm:', error);
     return res.status(500).json({
       success: false,
       message: 'Lỗi khi tạo form',
@@ -1076,7 +1078,7 @@ export const getFormDetail = async (req, res) => {
       data: form
     });
   } catch (error) {
-    console.error('Error getFormDetail:', error);
+    logger.error('Error getFormDetail:', error);
     return res.status(500).json({
       success: false,
       message: 'Lỗi khi lấy chi tiết form',
@@ -1116,7 +1118,7 @@ export const updateForm = async (req, res) => {
       message: 'Cập nhật form thành công'
     });
   } catch (error) {
-    console.error('Error updateForm:', error);
+    logger.error('Error updateForm:', error);
     return res.status(500).json({
       success: false,
       message: 'Lỗi khi cập nhật form',
@@ -1140,7 +1142,7 @@ export const deleteForm = async (req, res) => {
       message: 'Xóa form thành công'
     });
   } catch (error) {
-    console.error('Error deleteForm:', error);
+    logger.error('Error deleteForm:', error);
     return res.status(500).json({
       success: false,
       message: 'Lỗi khi xóa form',
@@ -1185,7 +1187,7 @@ export const getFormResponses = async (req, res) => {
       }
     });
   } catch (error) {
-    console.error('Error getFormResponses:', error);
+    logger.error('Error getFormResponses:', error);
     return res.status(500).json({
       success: false,
       message: 'Lỗi khi lấy danh sách phản hồi',
@@ -1222,7 +1224,7 @@ export const getResponseDetail = async (req, res) => {
 
     return res.json({ success: true, data: { answers, count } });
   } catch (error) {
-    console.error('Error getResponseDetail:', error);
+    logger.error('Error getResponseDetail:', error);
     return res.status(500).json({ success: false, message: 'Lỗi khi lấy chi tiết phản hồi', error: error.message });
   }
 };
@@ -1266,7 +1268,7 @@ export const createQuestion = async (req, res) => {
       data: { questionId: result.insertId }
     });
   } catch (error) {
-    console.error('Error createQuestion:', error);
+    logger.error('Error createQuestion:', error);
     return res.status(500).json({
       success: false,
       message: 'Lỗi khi tạo câu hỏi',
@@ -1294,7 +1296,7 @@ export const deleteQuestion = async (req, res) => {
       message: 'Xóa câu hỏi thành công'
     });
   } catch (error) {
-    console.error('Error deleteQuestion:', error);
+    logger.error('Error deleteQuestion:', error);
     return res.status(500).json({
       success: false,
       message: 'Lỗi khi xóa câu hỏi',
@@ -1375,7 +1377,7 @@ export const createOption = async (req, res) => {
       data: { optionId: result.insertId }
     });
   } catch (error) {
-    console.error('Error createOption:', error);
+    logger.error('Error createOption:', error);
     return res.status(500).json({
       success: false,
       message: 'Lỗi khi tạo lựa chọn',
@@ -1465,7 +1467,7 @@ export const updateOption = async (req, res) => {
 
     return res.json({ success: true, message: 'Cập nhật lựa chọn thành công' });
   } catch (error) {
-    console.error('Error updateOption:', error);
+    logger.error('Error updateOption:', error);
     return res.status(500).json({ success: false, message: 'Lỗi khi cập nhật lựa chọn', error: error.message });
   }
 };
@@ -1485,7 +1487,7 @@ export const deleteOption = async (req, res) => {
       message: 'Xóa lựa chọn thành công'
     });
   } catch (error) {
-    console.error('Error deleteOption:', error);
+    logger.error('Error deleteOption:', error);
     return res.status(500).json({
       success: false,
       message: 'Lỗi khi xóa lựa chọn',

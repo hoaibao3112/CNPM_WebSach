@@ -1,4 +1,5 @@
 import express from 'express';
+import logger from '../utils/logger.js';
 import axios from 'axios';
 import dotenv from 'dotenv';
 
@@ -11,7 +12,7 @@ async function fetchProductContext() {
     const response = await axios.get('http://localhost:5000/api/product');
     return response.data.slice(0, 10);
   } catch (error) {
-    console.error('Lỗi khi lấy thông tin sản phẩm:', error);
+    logger.error('Lỗi khi lấy thông tin sản phẩm:', error);
     return [];
   }
 }
@@ -136,7 +137,7 @@ router.post('/chat', async (req, res) => {
       res.json({ reply: result });
     }
   } catch (error) {
-    console.error('Chat error:', error.message);
+    logger.error('Chat error:', error.message);
     res.status(500).json({ error: 'Lỗi hệ thống. Vui lòng thử lại sau.' });
   }
 });

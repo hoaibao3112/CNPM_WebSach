@@ -1,4 +1,5 @@
 // server.js - Full rewrite with integrated WebSocket for real-time chat
+import './src/config/app.config.js'; // Validate env vars on startup
 import express from 'express';
 import dotenv from 'dotenv';
 import cors from 'cors';
@@ -7,8 +8,9 @@ import { createServer } from 'http';
 import { WebSocketServer } from 'ws';
 import jwt from 'jsonwebtoken';
 import path from 'path';
-import pool from './src/config/connectDatabase.js'; // Assuming db is exported as pool
+import pool from './src/config/connectDatabase.js';
 import { initRoutes } from './src/routes/index.js';
+import errorHandler from './src/middlewares/errorHandler.js';
 // Import the scheduled sync function from attendance admin route
 import { syncMissedAttendancesForDate } from './src/routes/AttendanceAdmin.js';
 import { createProxyMiddleware } from 'http-proxy-middleware';
@@ -123,6 +125,9 @@ app.use('/vnpay', createProxyMiddleware({
 }));
 // 4. Initialize routes
 initRoutes(app);
+
+// 4.5 Global error handler (must be AFTER routes)
+app.use(errorHandler);
 
 // 5. Create HTTP server
 const httpServer = createServer(app);

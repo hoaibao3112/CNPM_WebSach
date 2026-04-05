@@ -1,4 +1,5 @@
 // book.js
+import logger from '../utils/logger.js';
 import express from 'express';
 import pool from '../config/connectDatabase.js'; 
 
@@ -26,7 +27,7 @@ router.get('/promotions', async (req, res) => {
 
     res.json(rows);
   } catch (err) {
-    console.error(err);
+    logger.error(err);
     res.status(500).json({ message: 'Server error' });
   }
 });
@@ -54,7 +55,7 @@ get('/promotions/:promoId/products', async (req, res) => {
 
     res.json(rows);
   } catch (err) {
-    console.error(err);
+    logger.error(err);
     res.status(500).json({ message: 'Server error' });
   }
 });

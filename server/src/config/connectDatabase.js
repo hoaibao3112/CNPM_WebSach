@@ -46,7 +46,7 @@ if (sslCaB64) {
 }
 
 // Tạo pool kết nối với xử lý lỗi
-const pool = mysql.createPool(dbConfig);
+let pool = mysql.createPool(dbConfig);
 
 // Kiểm tra kết nối khi khởi động và xử lý lỗi chứng chỉ nếu cần
 (async () => {

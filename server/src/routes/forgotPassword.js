@@ -1,4 +1,5 @@
 import express from 'express';
+import logger from '../utils/logger.js';
 import pool from '../config/connectDatabase.js';
 import bcrypt from 'bcryptjs';
 import { generateOTP, sendOTPEmail } from '../utils/emailService.js';
@@ -11,7 +12,7 @@ const saltRounds = 10;
 router.post('/send-otp', async (req, res) => {
   try {
     const { email } = req.body;
-    console.log('Gửi OTP quên mật khẩu cho admin:', { email });
+    logger.info('Gửi OTP quên mật khẩu cho admin:', { email });
 
     if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       return res.status(400).json({ error: 'Email không hợp lệ' });
@@ -40,14 +41,14 @@ router.post('/send-otp', async (req, res) => {
 
     const emailSent = await sendOTPEmail(email, otp);
     if (!emailSent) {
-      console.error('Gửi email thất bại cho:', email);
+      logger.error('Gửi email thất bại cho:', email);
       return res.status(500).json({ error: 'Không thể gửi email OTP. Vui lòng thử lại.' });
     }
 
-    console.log('OTP gửi thành công cho admin:', { email, otp: '***', resetToken: '***' });
+    logger.info('OTP gửi thành công cho admin:', { email, otp: '***', resetToken: '***' });
     res.status(200).json({ message: 'Mã OTP đã được gửi đến email của bạn. OTP hết hạn sau 5 phút.' });
   } catch (error) {
-    console.error('Lỗi gửi OTP quên mật khẩu cho admin:', { error: error.message, stack: error.stack });
+    logger.error('Lỗi gửi OTP quên mật khẩu cho admin:', { error: error.message, stack: error.stack });
     res.status(500).json({ error: 'Lỗi server khi gửi OTP', details: error.message });
   }
 });
@@ -56,7 +57,7 @@ router.post('/send-otp', async (req, res) => {
 router.post('/verify-otp', async (req, res) => {
   try {
     const { email, otp } = req.body;
-    console.log('Xác thực OTP cho admin:', { email, otp: '***' });
+    logger.info('Xác thực OTP cho admin:', { email, otp: '***' });
 
     if (!email || !otp) {
       return res.status(400).json({ error: 'Thiếu email hoặc OTP' });
@@ -83,14 +84,14 @@ router.post('/verify-otp', async (req, res) => {
 
     await pool.query('DELETE FROM otp_requests WHERE id = ?', [request.id]);
 
-    console.log('OTP xác thực thành công cho admin:', { email, resetToken: '***' });
+    logger.info('OTP xác thực thành công cho admin:', { email, resetToken: '***' });
     res.status(200).json({
       message: 'Xác thực OTP thành công. Bạn có 30 phút để đặt lại mật khẩu.',
       resetToken,
       email
     });
   } catch (error) {
-    console.error('Lỗi xác thực OTP cho admin:', { error: error.message, stack: error.stack, email: req.body.email || 'undefined', otp: '***' });
+    logger.error('Lỗi xác thực OTP cho admin:', { error: error.message, stack: error.stack, email: req.body.email || 'undefined', otp: '***' });
     res.status(500).json({ error: 'Lỗi server khi xác thực OTP', details: error.message });
   }
 });
@@ -102,7 +103,7 @@ router.post('/reset-password', async (req, res) => {
     }
 
     const { email, resetToken, newPassword, confirmPassword } = req.body;
-    console.log('Reset mật khẩu cho admin:', { email, resetToken: '***', newPassword: '***', confirmPassword: '***' });
+    logger.info('Reset mật khẩu cho admin:', { email, resetToken: '***', newPassword: '***', confirmPassword: '***' });
 
     if (!email || !resetToken || !newPassword || !confirmPassword) {
       return res.status(400).json({ error: 'Thiếu thông tin yêu cầu (email, resetToken, newPassword, confirmPassword)' });
@@ -161,10 +162,10 @@ router.post('/reset-password', async (req, res) => {
 
     await pool.query('UPDATE password_resets_admin SET used = TRUE WHERE id = ?', [resetRecord.id]);
 
-    console.log('Reset mật khẩu thành công cho admin:', { email });
+    logger.info('Reset mật khẩu thành công cho admin:', { email });
     res.status(200).json({ message: 'Đặt lại mật khẩu thành công. Vui lòng đăng nhập lại.' });
   } catch (error) {
-    console.error('Lỗi reset mật khẩu cho admin:', {
+    logger.error('Lỗi reset mật khẩu cho admin:', {
       error: error.message,
       stack: error.stack,
       email: req.body.email || 'undefined',

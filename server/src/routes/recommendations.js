@@ -1,4 +1,5 @@
 // recommendations.js - Smart Product Recommendations (FIXED TABLE NAMES)
+import logger from '../utils/logger.js';
 import express from 'express';
 import pool from '../config/connectDatabase.js';
 
@@ -43,7 +44,7 @@ router.get('/based-on-views/:customerId', async (req, res) => {
       data: recommendations
     });
   } catch (err) {
-    console.error('Error in based-on-views:', err);
+    logger.error('Error in based-on-views:', err);
     res.status(500).json({ success: false, message: 'Server error' });
   }
 });
@@ -80,7 +81,7 @@ router.get('/bought-together/:productId', async (req, res) => {
       data: recommendations
     });
   } catch (err) {
-    console.error('Error in bought-together:', err);
+    logger.error('Error in bought-together:', err);
     res.status(500).json({ success: false, message: 'Server error' });
   }
 });
@@ -112,7 +113,7 @@ router.get('/same-author/:productId', async (req, res) => {
       data: recommendations
     });
   } catch (err) {
-    console.error('Error in same-author:', err);
+    logger.error('Error in same-author:', err);
     res.status(500).json({ success: false, message: 'Server error' });
   }
 });
@@ -145,7 +146,7 @@ router.get('/trending', async (req, res) => {
       data: recommendations
     });
   } catch (err) {
-    console.error('Error in trending:', err);
+    logger.error('Error in trending:', err);
     res.status(500).json({ success: false, message: 'Server error' });
   }
 });
@@ -190,7 +191,7 @@ router.get('/collaborative/:customerId', async (req, res) => {
       data: recommendations
     });
   } catch (err) {
-    console.error('Error in collaborative:', err);
+    logger.error('Error in collaborative:', err);
     res.status(500).json({ success: false, message: 'Server error' });
   }
 });
@@ -272,7 +273,7 @@ router.get('/smart/:customerId', async (req, res) => {
       data: finalRecommendations
     });
   } catch (err) {
-    console.error('Error in smart recommendations:', err);
+    logger.error('Error in smart recommendations:', err);
     res.status(500).json({ success: false, message: 'Server error' });
   }
 });
@@ -299,7 +300,7 @@ router.get('/new-releases', async (req, res) => {
       data: recommendations
     });
   } catch (err) {
-    console.error('Error in new-releases:', err);
+    logger.error('Error in new-releases:', err);
     res.status(500).json({ success: false, message: 'Server error' });
   }
 });

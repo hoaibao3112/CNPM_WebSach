@@ -1,187 +1,180 @@
-import pool from '../config/connectDatabase.js';
+/**
+ * Cart Service - Business logic cho giỏ hàng
+ * Sử dụng Sequelize ORM thay vì raw SQL
+ */
+import { GioHangChiTiet, SanPham, HoaDon, ChiTietHoaDon, sequelize } from '../models/index.js';
+import AppError from '../utils/AppError.js';
+import logger from '../utils/logger.js';
 
 class CartService {
-    async getCart(userId) {
-        const [cartItems] = await pool.query(`
-      SELECT 
-        gh.MaSP AS id,
-        gh.MaSP,
-        sp.TenSP AS name,
-        sp.DonGia AS price,
-        sp.HinhAnh AS image,
-        gh.SoLuong AS quantity
-      FROM giohang_chitiet gh
-      JOIN sanpham sp ON gh.MaSP = sp.MaSP
-      WHERE gh.MaKH = ?
-    `, [userId]);
-        return cartItems;
+  /**
+   * Lấy giỏ hàng của khách hàng
+   */
+  async getCart(userId) {
+    const cartItems = await GioHangChiTiet.findAll({
+      where: { MaKH: userId },
+      include: [{
+        model: SanPham,
+        as: 'sanPham',
+        attributes: ['MaSP', 'TenSP', 'DonGia', 'HinhAnh', 'SoLuong']
+      }]
+    });
+
+    // Map to format frontend expects
+    return cartItems.map(item => ({
+      id: item.MaSP,
+      MaSP: item.MaSP,
+      name: item.sanPham?.TenSP,
+      price: item.sanPham?.DonGia,
+      image: item.sanPham?.HinhAnh,
+      quantity: item.SoLuong
+    }));
+  }
+
+  /**
+   * Thêm sản phẩm vào giỏ hàng
+   */
+  async addToCart(userId, productId, quantity) {
+    // Check stock
+    const product = await SanPham.findByPk(productId, {
+      attributes: ['MaSP', 'SoLuong']
+    });
+    if (!product) throw new AppError('Sản phẩm không tồn tại', 400);
+    if (product.SoLuong < quantity) throw new AppError('Sản phẩm đã hết hàng hoặc không đủ số lượng', 400);
+
+    // Upsert: add or increment quantity
+    const existing = await GioHangChiTiet.findOne({
+      where: { MaKH: userId, MaSP: productId }
+    });
+
+    if (existing) {
+      await existing.update({ SoLuong: existing.SoLuong + quantity });
+    } else {
+      await GioHangChiTiet.create({ MaKH: userId, MaSP: productId, SoLuong: quantity });
     }
 
-    async addToCart(userId, productId, quantity) {
-        // Check stock
-        const [[product]] = await pool.query('SELECT SoLuong FROM sanpham WHERE MaSP = ?', [productId]);
-        if (!product) throw new Error('Sản phẩm không tồn tại');
-        if (product.SoLuong < quantity) throw new Error('Sản phẩm đã hết hàng hoặc không đủ số lượng');
+    return true;
+  }
 
-        await pool.query(`
-      INSERT INTO giohang_chitiet (MaKH, MaSP, SoLuong) 
-      VALUES (?, ?, ?)
-      ON DUPLICATE KEY UPDATE SoLuong = SoLuong + VALUES(SoLuong)
-    `, [userId, productId, quantity]);
+  /**
+   * Cập nhật số lượng sản phẩm trong giỏ
+   */
+  async updateQuantity(userId, productId, quantity) {
+    const [affectedRows] = await GioHangChiTiet.update(
+      { SoLuong: quantity },
+      { where: { MaKH: userId, MaSP: productId } }
+    );
 
-        return true;
-    }
+    if (affectedRows === 0) throw new AppError('Sản phẩm không tồn tại trong giỏ hàng', 400);
+    return true;
+  }
 
-    async updateQuantity(userId, productId, quantity) {
-        const [result] = await pool.query(`
-      UPDATE giohang_chitiet SET SoLuong = ? 
-      WHERE MaKH = ? AND MaSP = ?
-    `, [quantity, userId, productId]);
+  /**
+   * Toggle selection (placeholder - frontend manages state)
+   */
+  async toggleSelection(userId, productId, selected) {
+    logger.warn('toggleSelection called but giohang_chitiet has no Selected column');
+    return true;
+  }
 
-        if (result.affectedRows === 0) throw new Error('Sản phẩm không tồn tại trong giỏ hàng');
-        return true;
-    }
+  /**
+   * Xóa sản phẩm khỏi giỏ
+   */
+  async removeFromCart(userId, productId) {
+    const deleted = await GioHangChiTiet.destroy({
+      where: { MaKH: userId, MaSP: productId }
+    });
+    if (deleted === 0) throw new AppError('Sản phẩm không có trong giỏ hàng', 400);
+    return true;
+  }
 
-    async toggleSelection(userId, productId, selected) {
-        // Note: giohang_chitiet table does not have Selected column
-        // This is a placeholder - frontend should manage selection state
-        console.log('⚠️ toggleSelection called but giohang_chitiet has no Selected column');
-        return true;
-    }
+  /**
+   * Xóa toàn bộ giỏ hàng
+   */
+  async clearCart(userId) {
+    await GioHangChiTiet.destroy({ where: { MaKH: userId } });
+    return true;
+  }
 
-    async removeFromCart(userId, productId) {
-        const [result] = await pool.query('DELETE FROM giohang_chitiet WHERE MaKH = ? AND MaSP = ?', [userId, productId]);
-        if (result.affectedRows === 0) throw new Error('Sản phẩm không có trong giỏ hàng');
-        return true;
-    }
+  /**
+   * Mua lại đơn hàng (re-order) - có kiểm tra tồn kho
+   */
+  async reorderFromOrder(customerId, orderId) {
+    const t = await sequelize.transaction();
 
-    async clearCart(userId) {
-        await pool.query('DELETE FROM giohang_chitiet WHERE MaKH = ?', [userId]);
-        return true;
-    }
+    try {
+      // Verify order belongs to customer
+      const order = await HoaDon.findOne({
+        where: { MaHD: orderId, makh: customerId },
+        transaction: t
+      });
+      if (!order) throw new AppError('Không tìm thấy đơn hàng hoặc không có quyền', 404);
 
-    async reorder(userId, orderId) {
-        const connection = await pool.getConnection();
-        try {
-            await connection.beginTransaction();
+      // Get order items with stock info
+      const items = await ChiTietHoaDon.findAll({
+        where: { MaHD: orderId },
+        include: [{ model: SanPham, as: 'sanPham', attributes: ['MaSP', 'SoLuong', 'TenSP'] }],
+        transaction: t
+      });
 
-            const [rows] = await connection.query(`
-        SELECT ct.MaSP, ct.SoLuong
-        FROM chitiethoadon ct
-        JOIN hoadon hd ON ct.MaHD = hd.MaHD
-        WHERE ct.MaHD = ? AND hd.makh = ?
-      `, [orderId, userId]);
+      if (items.length === 0) throw new AppError('Đơn hàng không có sản phẩm', 400);
 
-            if (!rows || rows.length === 0) {
-                throw new Error('Không tìm thấy đơn hàng hoặc bạn không có quyền mua lại đơn hàng này');
-            }
+      let addedCount = 0;
+      const skippedItems = [];
 
-            for (const item of rows) {
-                await connection.query(`
-          INSERT INTO giohang_chitiet (MaKH, MaSP, SoLuong)
-          VALUES (?, ?, ?)
-          ON DUPLICATE KEY UPDATE SoLuong = SoLuong + VALUES(SoLuong)
-        `, [userId, item.MaSP, item.SoLuong]);
-            }
+      for (const item of items) {
+        const stock = item.sanPham?.SoLuong || 0;
 
-            await connection.commit();
-            return rows.length;
-        } catch (error) {
-            await connection.rollback();
-            throw error;
-        } finally {
-            connection.release();
+        if (stock < item.SoLuong) {
+          skippedItems.push({
+            productId: item.MaSP,
+            productName: item.sanPham?.TenSP,
+            reason: 'Không đủ hàng'
+          });
+          continue;
         }
-    }
 
-    // ===== REORDER FROM PREVIOUS ORDER (with stock checking) =====
-    async reorderFromOrder(customerId, orderId) {
-        const connection = await pool.getConnection();
+        // Check existing cart item
+        const existing = await GioHangChiTiet.findOne({
+          where: { MaKH: customerId, MaSP: item.MaSP },
+          transaction: t
+        });
 
-        try {
-            // Verify order belongs to customer
-            const [[order]] = await connection.query(
-                'SELECT * FROM hoadon WHERE MaHD = ? AND makh = ?',
-                [orderId, customerId]
-            );
-
-            if (!order) {
-                throw new Error('Không tìm thấy đơn hàng hoặc không có quyền');
-            }
-
-            // Get order items
-            const [items] = await connection.query(
-                `SELECT ct.MaSP, ct.Soluong, sp.SoLuong as stock, sp.TenSP
-                 FROM chitiethoadon ct
-                 JOIN sanpham sp ON ct.MaSP = sp.MaSP
-                 WHERE ct.MaHD = ?`,
-                [orderId]
-            );
-
-            if (items.length === 0) {
-                throw new Error('Đơn hàng không có sản phẩm');
-            }
-
-            let addedCount = 0;
-            let skippedItems = [];
-
-            for (const item of items) {
-                // Check stock availability
-                if (item.stock < item.Soluong) {
-                    skippedItems.push({
-                        productId: item.MaSP,
-                        productName: item.TenSP,
-                        reason: 'Không đủ hàng'
-                    });
-                    continue;
-                }
-
-                // Add to cart or update quantity
-                const [[existing]] = await connection.query(
-                    'SELECT * FROM giohang_chitiet WHERE MaKH = ? AND MaSP = ?',
-                    [customerId, item.MaSP]
-                );
-
-                if (existing) {
-                    const newQty = existing.SoLuong + item.Soluong;
-                    if (newQty > item.stock) {
-                        skippedItems.push({
-                            productId: item.MaSP,
-                            productName: item.TenSP,
-                            reason: `Vượt quá tồn kho (${item.stock})`
-                        });
-                        continue;
-                    }
-
-                    await connection.query(
-                        'UPDATE giohang_chitiet SET SoLuong = ? WHERE MaKH = ? AND MaSP = ?',
-                        [newQty, customerId, item.MaSP]
-                    );
-                } else {
-                    await connection.query(
-                        'INSERT INTO giohang_chitiet (MaKH, MaSP, SoLuong) VALUES (?, ?, ?)',
-                        [customerId, item.MaSP, item.Soluong]
-                    );
-                }
-                addedCount++;
-            }
-
-            console.log(`✅ Reorder: Added ${addedCount} items, skipped ${skippedItems.length}`);
-
-            return {
-                success: true,
-                addedCount,
-                skippedCount: skippedItems.length,
-                skippedItems
-            };
-
-        } catch (error) {
-            console.error('❌ Reorder error:', error);
-            throw error;
-        } finally {
-            connection.release();
+        if (existing) {
+          const newQty = existing.SoLuong + item.SoLuong;
+          if (newQty > stock) {
+            skippedItems.push({
+              productId: item.MaSP,
+              productName: item.sanPham?.TenSP,
+              reason: `Vượt quá tồn kho (${stock})`
+            });
+            continue;
+          }
+          await existing.update({ SoLuong: newQty }, { transaction: t });
+        } else {
+          await GioHangChiTiet.create(
+            { MaKH: customerId, MaSP: item.MaSP, SoLuong: item.SoLuong },
+            { transaction: t }
+          );
         }
+        addedCount++;
+      }
+
+      await t.commit();
+
+      logger.info(`Reorder: Added ${addedCount} items, skipped ${skippedItems.length}`);
+
+      return {
+        success: true,
+        addedCount,
+        skippedCount: skippedItems.length,
+        skippedItems
+      };
+    } catch (error) {
+      await t.rollback();
+      throw error;
     }
+  }
 }
 
 export default new CartService();

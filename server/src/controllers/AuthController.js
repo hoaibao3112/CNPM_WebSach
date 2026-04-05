@@ -1,3 +1,4 @@
+import logger from '../utils/logger.js';
 import AuthService from '../services/AuthService.js';
 import baseController from './baseController.js';
 
@@ -105,7 +106,7 @@ class AuthController {
             return baseController.sendSuccess(res, result, 'Đăng nhập Google thành công');
 
         } catch (error) {
-            console.error('Google Auth error:', error);
+            logger.error('Google Auth error:', error);
             return baseController.sendError(res, error.message || 'Lỗi xác thực Google', 500);
         }
     }

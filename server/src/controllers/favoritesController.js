@@ -1,3 +1,4 @@
+import logger from '../utils/logger.js';
 import pool from '../config/connectDatabase.js';
 
 /**
@@ -46,7 +47,7 @@ export const addFavorite = async (req, res) => {
       message: 'Đã thêm vào danh sách yêu thích'
     });
   } catch (error) {
-    console.error('Error addFavorite:', error);
+    logger.error('Error addFavorite:', error);
     return res.status(500).json({
       success: false,
       message: 'Lỗi khi thêm sản phẩm yêu thích',
@@ -82,7 +83,7 @@ export const removeFavorite = async (req, res) => {
       message: 'Đã xóa khỏi danh sách yêu thích'
     });
   } catch (error) {
-    console.error('Error removeFavorite:', error);
+    logger.error('Error removeFavorite:', error);
     return res.status(500).json({
       success: false,
       message: 'Lỗi khi xóa sản phẩm yêu thích',
@@ -147,7 +148,7 @@ export const getFavorites = async (req, res) => {
       }
     });
   } catch (error) {
-    console.error('Error getFavorites:', error);
+    logger.error('Error getFavorites:', error);
     return res.status(500).json({
       success: false,
       message: 'Lỗi khi lấy danh sách yêu thích',
@@ -183,7 +184,7 @@ export const checkFavorite = async (req, res) => {
       data: { isFavorite }
     });
   } catch (error) {
-    console.error('Error checkFavorite:', error);
+    logger.error('Error checkFavorite:', error);
     return res.status(500).json({
       success: false,
       message: 'Lỗi khi kiểm tra yêu thích',
@@ -217,7 +218,7 @@ export const getFavoritesCount = async (req, res) => {
       data: { count }
     });
   } catch (error) {
-    console.error('Error getFavoritesCount:', error);
+    logger.error('Error getFavoritesCount:', error);
     return res.status(500).json({
       success: false,
       message: 'Lỗi khi đếm yêu thích',
@@ -307,7 +308,7 @@ export const getSimilarToFavorites = async (req, res) => {
       data: similar
     });
   } catch (error) {
-    console.error('Error getSimilarToFavorites:', error);
+    logger.error('Error getSimilarToFavorites:', error);
     return res.status(500).json({
       success: false,
       message: 'Lỗi khi lấy sản phẩm tương tự',

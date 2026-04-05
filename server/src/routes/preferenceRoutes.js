@@ -1,4 +1,5 @@
 import express from 'express';
+import logger from '../utils/logger.js';
 import {
   getActiveForm,
   submitPreferences,
@@ -113,7 +114,7 @@ router.post('/admin/recompute/:makh', async (req, res) => {
     const result = await recomputePreferencesForCustomer(makh);
     return res.json({ success: true, data: result });
   } catch (err) {
-    console.error('Error admin recompute:', err);
+    logger.error('Error admin recompute:', err);
     return res.status(500).json({ success: false, message: 'Lỗi khi tái tính sở thích', error: err.message });
   }
 });
