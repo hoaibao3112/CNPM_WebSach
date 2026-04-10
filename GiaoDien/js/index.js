@@ -899,7 +899,7 @@ async function renderPromotionsInChat() {
         const id = e.currentTarget.getAttribute('data-id');
         const code = e.currentTarget.getAttribute('data-code');
         if (id) {
-          const targetUrl = `${window.location.origin}/GiaoDien/giamgia.html?id=${encodeURIComponent(id)}`;
+          const targetUrl = `giamgia.html?id=${encodeURIComponent(id)}`;
           window.location.href = targetUrl;
           return;
         }
@@ -924,7 +924,7 @@ async function renderPromotionsInChat() {
       btn.addEventListener('click', (e) => {
         const id = e.currentTarget.getAttribute('data-id');
         if (id) {
-          const targetUrl = `${window.location.origin}/GiaoDien/giamgia.html?id=${encodeURIComponent(id)}`;
+          const targetUrl = `giamgia.html?id=${encodeURIComponent(id)}`;
           window.location.href = targetUrl;
         }
       });

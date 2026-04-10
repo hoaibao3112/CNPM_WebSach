@@ -19,7 +19,7 @@
     // Don't inject footer on the login page(s)
     try {
       var path = window.location.pathname || '';
-      if (path.endsWith('/GiaoDien/login.html') || path.endsWith('login.html')) {
+      if (path.endsWith('login.html')) {
         // ensure placeholder is empty if present
         placeholder.innerHTML = '';
         return;

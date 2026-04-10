@@ -51,10 +51,10 @@ async function loadHeader() {
 
       if (typeof loadListProductSearch === "function") {
         const currentPath = window.location.pathname;
-        if (currentPath.endsWith("/GiaoDien/book.html")) {
+        if (currentPath.endsWith("book.html")) {
           loadListProductSearch();
         }
-        if (currentPath.endsWith("/GiaoDien/book.html")) {
+        if (currentPath.endsWith("book.html")) {
           loadListProductSearch().then(() => {
             const searchParams = new URLSearchParams(window.location.search);
             if (searchParams.has("category")) {
@@ -131,7 +131,7 @@ const handleSearchHistory = () => {
       addSearchHistory(value);
       searchInput.value = "";
 
-      window.location.href = `/GiaoDien/book.html?search=` + encodeURIComponent(value);
+      window.location.href = `book.html?search=` + encodeURIComponent(value);
     }
   });
 };
@@ -152,7 +152,7 @@ async function loadAuthorNationalities() {
     const nationalities = Array.isArray(data) ? data : (data.data || []);
     nationalities.forEach(nation => {
       const a = document.createElement('a');
-      a.href = `/GiaoDien/book.html?nationality=${encodeURIComponent(nation)}`;
+      a.href = `book.html?nationality=${encodeURIComponent(nation)}`;
       a.textContent = nation;
       dropdown.appendChild(a);
     });

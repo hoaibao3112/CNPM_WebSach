@@ -235,7 +235,7 @@ function displayProducts(products, containerId = 'book-list', limit = null) {
 function ensureFilterBar() {
   // Only show the filter bar on the book page
   const path = window.location.pathname || '';
-  const isBookPage = path.endsWith('/GiaoDien/book.html') || path.endsWith('book.html');
+  const isBookPage = path.endsWith('book.html');
 
   // If there's an existing bar but we're not on the book page, remove it
   const existingBar = document.getElementById('active-filter-bar');
@@ -265,7 +265,7 @@ function ensureFilterBar() {
 // Helper to know if we are on the book page
 function isBookPage() {
   const path = window.location.pathname || '';
-  return path.endsWith('/GiaoDien/book.html') || path.endsWith('book.html');
+  return path.endsWith('book.html');
 }
 // Return a consistent container id to use for storage keys for book page filters
 function getStorageContainerId() {
@@ -1277,10 +1277,10 @@ if (typeof window !== 'undefined' && isBookPage()) {
 const removeKeyWordSearch = () => {
   const currentPath = window.location.pathname;
   const searchParams = new URLSearchParams(window.location.search);
-  if (currentPath.endsWith("/GiaoDien/book.html") && (searchParams.has("search") || searchParams.has("category"))) {
+  if (currentPath.endsWith("book.html") && (searchParams.has("search") || searchParams.has("category"))) {
     document.getElementById('name-products-list').textContent = "Danh Sách tìm kiếm";
     if (performance.getEntriesByType("navigation")[0].type === "reload") {
-      window.location.href = "/GiaoDien/book.html";
+      window.location.href = "book.html";
     }
   }
 }
@@ -1346,7 +1346,7 @@ document.addEventListener('DOMContentLoaded', () => {
   removeKeyWordSearch();
 
   // chỉ gọi các hàm này khi ở tràng index
-  if (currentPath.endsWith("/GiaoDien/index.html")) {
+  if (currentPath.endsWith("index.html") || currentPath === "/") {
     fetchAndDisplayProducts();
     fetchAndDisplayPromotions();
     fetchAndDisplayTextbooks();
@@ -1355,7 +1355,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // chỉ gọi hàm này khi ở trang book.html
-  if (currentPath.endsWith("/GiaoDien/book.html")) {
+  if (currentPath.endsWith("book.html")) {
     // loadPromotions();
     setupCategoryDropdown()
     filterProductsByCategoryOnHeader()

@@ -226,5 +226,5 @@ loadProductDetailOnHeader = async function (productId) {
     console.error("Lỗi khi ghi log view:", apiError);
   }
   localStorage.setItem('selectedProductId', productId);
-  window.location.href = `/GiaoDien/product_detail.html?MaSP=${productId}`;
+  window.location.href = `product_detail.html?MaSP=${productId}`;
 }
