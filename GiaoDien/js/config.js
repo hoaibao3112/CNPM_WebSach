@@ -10,7 +10,7 @@ const API_CONFIG = {
 
         // Production (Render or other hosting)
         if (hostname !== 'localhost' && hostname !== '127.0.0.1') {
-            return 'https://cnpm-websach.onrender.com';
+            return 'https://cnpm-customer.onrender.com';
         }
 
         // Local development
@@ -22,7 +22,7 @@ const API_CONFIG = {
         const hostname = window.location.hostname;
 
         if (hostname !== 'localhost' && hostname !== '127.0.0.1') {
-            return 'wss://cnpm-websach.onrender.com';
+            return 'wss://cnpm-customer.onrender.com';
         }
 
         return 'ws://localhost:5000';
@@ -33,7 +33,7 @@ const API_CONFIG = {
         const hostname = window.location.hostname;
 
         if (hostname !== 'localhost' && hostname !== '127.0.0.1') {
-            return 'https://cnpm-websach.onrender.com/api/chatbot';
+            return 'https://cnpm-customer.onrender.com/api/chatbot';
         }
 
         return 'http://127.0.0.1:8002';
