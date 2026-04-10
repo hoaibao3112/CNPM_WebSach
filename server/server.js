@@ -50,7 +50,12 @@ const allowedOrigins = [
   'http://localhost:5000',
   'http://127.0.0.1',
   'https://empty-words-pump.loca.lt',
+  // Production domains
+  'https://cnpm-web-sach.vercel.app',
+  'https://cnpm-customer.onrender.com',
+  'https://cnpm-websach.onrender.com',
 ];
+
 
 app.use(cors({
   origin: (origin, callback) => {
