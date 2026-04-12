@@ -30,8 +30,8 @@
 
     // Try common relative locations in case pages are nested or opened differently
     tryFetch([
-      'components/footer.html', // usual path for pages in GiaoDien/
-      './components/footer.html' // alternative relative path
+      'components/footer', // usual path for pages in GiaoDien/ (no .html for Vercel cleanUrls)
+      './components/footer' // alternative relative path
     ])
       .then(function (html) {
         // If Shadow DOM is available, use it to isolate footer styles
@@ -76,7 +76,7 @@
         placeholder.innerHTML = html;
       })
       .catch(function (err) {
-        console.error('Failed to load footer from components/footer.html:', err);
+        console.error('Failed to load footer from components/footer:', err);
         // graceful fallback: show a minimal footer so page isn't blank
         placeholder.innerHTML = '<footer class="site-footer"><div style="padding:16px;text-align:center;background:#333;color:#fff;">Footer failed to load. Serve the site via a static server for best results.</div></footer>';
       });

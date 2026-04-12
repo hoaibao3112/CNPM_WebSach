@@ -1,6 +1,6 @@
 async function loadHeader() {
   try {
-    const response = await fetch("components/header.html");
+    const response = await fetch("components/header");
     if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
 
     const data = await response.text();
