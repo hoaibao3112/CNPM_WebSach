@@ -1,4 +1,5 @@
-const API_URL = window.API_CONFIG ? window.API_CONFIG.BASE_URL + '/api/author' : 'http://localhost:5000/api/author';
+const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'http://localhost:5000';
+const API_URL = `${_apiBase}/api/author`;
 const IMAGE_BASE_URL = 'img/author/';
 const PRODUCT_IMAGE_BASE_URL = 'img/product/';
 const ITEMS_PER_PAGE = 5;

@@ -48,7 +48,8 @@ function setupLogout() {
       const token = localStorage.getItem('token');
       if (token) {
         try {
-          await fetch('http://localhost:5000/api/client/cart/clear', {
+          const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'http://localhost:5000';
+          await fetch(`${_apiBase}/api/client/cart/clear`, {
             method: 'DELETE',
             headers: { 'Authorization': `Bearer ${token}` }
           });
@@ -72,8 +73,9 @@ async function updateCartCount() {
 
   if (user && (user.makh || user.tenkh)) {
     try {
+      const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'http://localhost:5000';
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:5000/api/client/cart', {
+      const response = await fetch(`${_apiBase}/api/client/cart`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json; charset=utf-8'
@@ -98,8 +100,9 @@ async function updateCartCount() {
 
 async function searchProduct(value) {
   try {
+    const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'http://localhost:5000';
     const response = await fetch(
-      `http://localhost:5000/api/product/search-product?search=${value}`
+      `${_apiBase}/api/product/search-product?search=${value}`
     );
     if (response.ok) {
       const result = await response.json();

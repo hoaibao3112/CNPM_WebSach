@@ -142,7 +142,8 @@ async function loadAuthorNationalities() {
   if (!dropdown) return;
 
   try {
-    const response = await fetch('http://localhost:5000/api/author/nationalities/list');
+    const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'http://localhost:5000';
+    const response = await fetch(`${_apiBase}/api/author/nationalities/list`);
     if (!response.ok) throw new Error(`HTTP lỗi: ${response.status}`);
 
     const data = await response.json();

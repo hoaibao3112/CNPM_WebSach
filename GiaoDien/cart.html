@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="vi">
 
 <head>
@@ -10,6 +10,10 @@
   <link rel="stylesheet" href="styles/cart.css">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
   <link rel="stylesheet" href="styles/map.css">
+  
+  <!-- API Configuration - LOAD EARLY -->
+  <script src="js/config.js"></script>
+  <script src="js/api-patcher.js"></script>
 </head>
 
 <body>
@@ -272,9 +276,6 @@
     </div>
   </div>
   
-  <!-- API Configuration - MUST load first! -->
-  <script src="js/config.js"></script>
-  <script src="js/api-patcher.js"></script>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>

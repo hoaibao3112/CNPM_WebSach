@@ -14,6 +14,10 @@
   <link rel="stylesheet" href="styles/preference-widget.css" />
   <link rel="stylesheet" href="styles/personalized-recommendations.css" />
   <link rel="icon" href="favicon.ico" type="image/x-icon" />
+  
+  <!-- API Configuration - LOAD EARLY -->
+  <script src="js/config.js"></script>
+  <script src="js/api-patcher.js"></script>
 </head>
 
 <body>
@@ -129,7 +133,6 @@
       <div class="loading">Đang tải khuyến mãi...</div>
     </div>
   </div>
-  <script src="js/products_sales.js" defer></script>
   <!-- Main content -->
   <div class="container">
 
@@ -185,9 +188,6 @@
   <!-- Footer will be loaded from components/footer.html -->
   <div id="load-footer"></div>
 
-  <!-- API Configuration - MUST load first! -->
-  <script src="js/config.js"></script>
-  <script src="js/api-patcher.js"></script>
 
   <script>
     // Load footer partial and inject into the page

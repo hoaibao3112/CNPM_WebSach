@@ -7,53 +7,57 @@ const API_CONFIG = {
     // Detect environment based on hostname
     BASE_URL: (() => {
         const hostname = window.location.hostname;
-
-        // Production (Render or other hosting)
-        if (hostname !== 'localhost' && hostname !== '127.0.0.1') {
+        const searchParams = new URLSearchParams(window.location.search);
+        
+        // Priority 1: Force production via URL param or localStorage
+        const forceProd = searchParams.get('env') === 'prod' || localStorage.getItem('FORCE_PROD') === 'true';
+        if (forceProd) {
+            console.log('🚀 Forced Production Mode API');
             return 'https://cnpm-websach-2.onrender.com';
         }
 
-        // Local development
+        // Priority 2: Vercel or other production hosting
+        if (hostname !== 'localhost' && hostname !== '127.0.0.1' && !hostname.startsWith('192.168.')) {
+            return 'https://cnpm-websach-2.onrender.com';
+        }
+
+        // Priority 3: Local development (default)
         return 'http://localhost:5000';
     })(),
 
-    // WebSocket URL
+    // WebSocket URL - Derived from BASE_URL
     WS_URL: (() => {
         const hostname = window.location.hostname;
-
         if (hostname !== 'localhost' && hostname !== '127.0.0.1') {
             return 'wss://cnpm-websach-2.onrender.com';
         }
-
         return 'ws://localhost:5000';
     })(),
 
-    // Chatbot service URL (direct Python service for local development)
+    // Chatbot service URL
     CHATBOT_URL: (() => {
         const hostname = window.location.hostname;
-
         if (hostname !== 'localhost' && hostname !== '127.0.0.1') {
             return 'https://cnpm-websach-2.onrender.com/api/chatbot';
         }
-
         return 'http://127.0.0.1:8002';
     })(),
 
     // Helper method to build full URL
     buildUrl: function (endpoint) {
-        // Remove leading slash if present to avoid double slashes
         const cleanEndpoint = endpoint.startsWith('/') ? endpoint.slice(1) : endpoint;
         return `${this.BASE_URL}/${cleanEndpoint}`;
     }
 };
 
-// Make it globally available
+// Make it globally available immediately
 window.API_CONFIG = API_CONFIG;
 
-// Log current configuration (for debugging)
-console.log('🔧 API Configuration:', {
-    BASE_URL: API_CONFIG.BASE_URL,
-    CHATBOT_URL: API_CONFIG.CHATBOT_URL,
-    WS_URL: API_CONFIG.WS_URL,
-    Environment: API_CONFIG.BASE_URL.includes('localhost') ? 'Development' : 'Production'
-});
+// Log current configuration with helpful instructions
+console.group('🔧 API Configuration');
+console.log('BASE_URL:', API_CONFIG.BASE_URL);
+console.log('Environment:', API_CONFIG.BASE_URL.includes('onrender.com') ? 'Production' : 'Development');
+if (window.location.hostname === 'localhost') {
+    console.info('💡 To test with production API locally, add ?env=prod to the URL or run: localStorage.setItem("FORCE_PROD", "true"); location.reload();');
+}
+console.groupEnd();

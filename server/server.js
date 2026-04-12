@@ -46,25 +46,31 @@ console.log('DB env presence:', {
 // 2. CORS configuration
 const allowedOrigins = [
   process.env.CLIENT_ADMIN_URL || 'http://localhost:3000',
-  process.env.CLIENT_CUSTOMER_URL || 'http://localhost:5501',
+  process.env.CLIENT_CUSTOMER_URL || 'http://localhost:5500',
+  'http://localhost:5501',
   'http://localhost:5000',
   'http://127.0.0.1',
   'https://empty-words-pump.loca.lt',
-  // Production domains
-  'https://cnpm-web-sach.vercel.app',
-  'https://cnpm-customer.onrender.com',
-  'https://cnpm-websach.onrender.com',
 ];
 
 // Helper to check if origin is allowed (including subdomains for Vercel/Render)
 const isOriginAllowed = (origin) => {
-  if (!origin) return true;
+  if (!origin) return true; // Allow non-CORS requests (like postman or server-to-server)
+  
+  // Direct matches
   if (allowedOrigins.includes(origin)) return true;
+  
+  // Local development matches
   if (origin.startsWith('http://localhost') || origin.startsWith('http://127.0.0.1')) return true;
   
   try {
     const url = new URL(origin);
-    return url.hostname.endsWith('.vercel.app') || url.hostname.endsWith('.onrender.com');
+    // Allow ALL subdomains of Vercel and Render for convenience in production
+    return (
+      url.hostname.endsWith('.vercel.app') || 
+      url.hostname.endsWith('.onrender.com') ||
+      url.hostname === 'cnpm-web-sach.vercel.app'
+    );
   } catch (err) {
     return false;
   }
@@ -76,13 +82,22 @@ app.use(cors({
       return callback(null, true);
     }
     console.warn(`⚠️ CORS blocked: Origin ${origin} not allowed`);
-    return callback(new Error('Not allowed by CORS'));
+    return callback(new Error(`Not allowed by CORS: ${origin}`));
   },
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   credentials: true,
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Auth-Key', 'X-Requested-With', 'Accept', 'Origin'],
   optionsSuccessStatus: 204,
 }));
+
+// 2.5 Health check endpoint
+app.get('/api/ping', (req, res) => {
+  res.json({ 
+    status: 'ok', 
+    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV || 'development'
+  });
+});
 
 // 3. Middleware
 app.use(cookieParser());

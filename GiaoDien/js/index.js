@@ -149,7 +149,8 @@ async function handleFAQInChat(message, chatMessages) {
     const keywordToSend = words.find(word => FAQ_KEYWORDS.includes(word.toLowerCase())) || message;
     console.log('Gửi từ khóa FAQ:', keywordToSend);
 
-    const response = await fetch(`http://localhost:5000/api/support/faq?keyword=${encodeURIComponent(keywordToSend)}`, {
+    const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'http://localhost:5000';
+    const response = await fetch(`${_apiBase}/api/support/faq?keyword=${encodeURIComponent(keywordToSend)}`, {
       headers: {
         'Content-Type': 'application/json; charset=utf-8'
       }
@@ -308,8 +309,9 @@ function setupChat() {
     const typingId = showTypingIndicator();
 
     try {
+      const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'http://localhost:5000';
       // Gửi yêu cầu đến API
-      const response = await fetch('http://localhost:5000/api/openai/chat', {
+      const response = await fetch(`${_apiBase}/api/openai/chat`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json; charset=utf-8'
@@ -521,7 +523,8 @@ function setupChat() {
           return;
       }
 
-      const response = await fetch(`http://localhost:5000${endpoint}`, {
+      const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'http://localhost:5000';
+      const response = await fetch(`${_apiBase}${endpoint}`, {
         headers: { 'Content-Type': 'application/json; charset=utf-8' }
       });
 
@@ -679,14 +682,13 @@ async function showProductSuggestionWithDelay(productInfo) {
 
 
   // Tìm sản phẩm
-  async function searchProduct(productInfo) {
-    let response;
+    const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'http://localhost:5000';
     if (productInfo.type === 'id') {
-      response = await fetch(`http://localhost:5000/api/product/${productInfo.value}`, {
+      response = await fetch(`${_apiBase}/api/product/${productInfo.value}`, {
         headers: { 'Content-Type': 'application/json; charset=utf-8' }
       });
     } else {
-      response = await fetch(`http://localhost:5000/api/product/search?name=${encodeURIComponent(productInfo.name)}`, {
+      response = await fetch(`${_apiBase}/api/product/search?name=${encodeURIComponent(productInfo.name)}`, {
         headers: { 'Content-Type': 'application/json; charset=utf-8' }
       });
     }
@@ -809,9 +811,9 @@ async function renderPromotionsInChat() {
   scrollToBottom(chatMessages);
 
   try {
-  // Use backend absolute URL so frontend served from a different origin can reach the API
-  const backendBase = window.__BACKEND_URL__ || 'http://localhost:5000';
-  const res = await fetch(`${backendBase}/api/khuyenmai?activeOnly=true&limit=10`, { headers: { 'Content-Type': 'application/json; charset=utf-8' } });
+    // Use backend absolute URL so frontend served from a different origin can reach the API
+    const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'http://localhost:5000';
+    const res = await fetch(`${_apiBase}/api/khuyenmai?activeOnly=true&limit=10`, { headers: { 'Content-Type': 'application/json; charset=utf-8' } });
     if (!res.ok) throw new Error('Failed to load promotions');
     const data = await res.json();
     // data.data is expected to be an array of promotions
@@ -953,15 +955,15 @@ async function searchAndShowProductSuggestion(productInfo) {
   if (!suggestionDiv) return;
 
   try {
-    let response;
+    const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'http://localhost:5000';
     if (productInfo.type === 'id') {
-      response = await fetch(`http://localhost:5000/api/product/${productInfo.value}`, {
+      response = await fetch(`${_apiBase}/api/product/${productInfo.value}`, {
         headers: {
           'Content-Type': 'application/json; charset=utf-8'
         }
       });
     } else {
-      response = await fetch(`http://localhost:5000/api/product?search=${encodeURIComponent(productInfo.name)}`, {
+      response = await fetch(`${_apiBase}/api/product?search=${encodeURIComponent(productInfo.name)}`, {
         headers: {
           'Content-Type': 'application/json; charset=utf-8'
         }

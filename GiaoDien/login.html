@@ -8,7 +8,10 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="stylesheet" href="styles/header.css" />
   <link rel="stylesheet" href="styles/login.css" />
-
+  
+  <!-- API Configuration - LOAD EARLY -->
+  <script src="js/config.js"></script>
+  <script src="js/api-patcher.js"></script>
 </head>
 
 <body>
@@ -82,9 +85,6 @@
       </div>
     </div>
   </div>
-  <!-- API Configuration - MUST load first! -->
-  <script src="js/config.js"></script>
-  <script src="js/api-patcher.js"></script>
 
   <!-- Google Identity Services -->
   <script src="https://accounts.google.com/gsi/client" async defer></script>

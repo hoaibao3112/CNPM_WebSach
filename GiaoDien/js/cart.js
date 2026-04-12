@@ -26,7 +26,8 @@ function getUserId() {
 async function getCart() {
   if (isLoggedIn()) {
     try {
-      const response = await fetch('http://localhost:5000/api/client/cart', {
+      const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'http://localhost:5000';
+      const response = await fetch(`${_apiBase}/api/client/cart`, {
         headers: {
           'Authorization': `Bearer ${getToken()}`,
           'Content-Type': 'application/json'
@@ -72,7 +73,8 @@ async function syncLocalCartToServer() {
 
   for (const item of localCart) {
     try {
-      const response = await fetch('http://localhost:5000/api/client/cart/add', {
+      const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'http://localhost:5000';
+      const response = await fetch(`${_apiBase}/api/client/cart/add`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${getToken()}`,
@@ -96,7 +98,8 @@ async function syncLocalCartToServer() {
 async function addToCart(productId, quantity = 1, productName, price, image) {
   if (isLoggedIn()) {
     try {
-      const response = await fetch('http://localhost:5000/api/client/cart/add', {
+      const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'http://localhost:5000';
+      const response = await fetch(`${_apiBase}/api/client/cart/add`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${getToken()}`,
@@ -144,7 +147,8 @@ async function updateQuantity(index, newQuantity) {
 
   if (isLoggedIn()) {
     try {
-      const response = await fetch('http://localhost:5000/api/client/cart/update', {
+      const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'http://localhost:5000';
+      const response = await fetch(`${_apiBase}/api/client/cart/update`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${getToken()}`,
@@ -180,7 +184,8 @@ async function removeFromCart(index) {
 
   if (isLoggedIn()) {
     try {
-      const response = await fetch(`http://localhost:5000/api/client/cart/remove/${item.id}`, {
+      const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'http://localhost:5000';
+      const response = await fetch(`${_apiBase}/api/client/cart/remove/${item.id}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${getToken()}`
@@ -214,7 +219,8 @@ async function toggleSelection(index, selected) {
   const cart = await getCart();
   if (isLoggedIn()) {
     try {
-      const response = await fetch('http://localhost:5000/api/client/cart/select', {
+      const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'http://localhost:5000';
+      const response = await fetch(`${_apiBase}/api/client/cart/select`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${getToken()}`,
@@ -245,7 +251,8 @@ async function toggleSelection(index, selected) {
 async function clearCart() {
   if (isLoggedIn()) {
     try {
-      const response = await fetch('http://localhost:5000/api/client/cart/clear', {
+      const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'http://localhost:5000';
+      const response = await fetch(`${_apiBase}/api/client/cart/clear`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${getToken()}`

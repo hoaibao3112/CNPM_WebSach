@@ -16,8 +16,8 @@ async function getProvinceName(provinceCode) {
     }
 
     try {
-        // ✅ Sử dụng backend proxy với đúng port 5000
-        const response = await fetch(`http://localhost:5000/api/orders/resolve/province/${provinceCode}`);
+        const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'http://localhost:5000';
+        const response = await fetch(`${_apiBase}/api/orders/resolve/province/${provinceCode}`);
         if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
         const data = await response.json();
         const provinceName = data.name || provinceCode;
@@ -101,8 +101,8 @@ async function getDistrictName(districtCode, provinceCode) {
     }
 
     try {
-        // ✅ Sử dụng backend proxy với đúng port 5000
-        const response = await fetch(`http://localhost:5000/api/orders/resolve/district/${districtCode}`);
+        const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'http://localhost:5000';
+        const response = await fetch(`${_apiBase}/api/orders/resolve/district/${districtCode}`);
         if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
         const data = await response.json();
         const districtName = data.name || districtCode;
@@ -135,8 +135,8 @@ async function getWardName(wardCode, districtCode) {
     }
 
     try {
-        // ✅ Sử dụng backend proxy với đúng port 5000
-        const response = await fetch(`http://localhost:5000/api/orders/resolve/ward/${wardCode}`);
+        const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'http://localhost:5000';
+        const response = await fetch(`${_apiBase}/api/orders/resolve/ward/${wardCode}`);
         if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
         const data = await response.json();
         const wardName = data.name || wardCode;
@@ -294,7 +294,8 @@ async function fetchOrders(customerId, statusFilter = 'all') {
     if (!checkAuth()) return [];
 
     try {
-        const response = await fetch(`http://localhost:5000/api/orders/customer-orders/${customerId}`, {
+        const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'http://localhost:5000';
+        const response = await fetch(`${_apiBase}/api/orders/customer-orders/${customerId}`, {
             headers: {
                 'Authorization': `Bearer ${getToken()}`
             }
@@ -345,7 +346,8 @@ async function fetchOrderDetail(orderId) {
     if (!checkAuth()) return null;
 
     try {
-        const response = await fetch(`http://localhost:5000/api/orders/customer-orders/detail/${orderId}`, {
+        const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'http://localhost:5000';
+        const response = await fetch(`${_apiBase}/api/orders/customer-orders/detail/${orderId}`, {
             headers: {
                 'Authorization': `Bearer ${getToken()}`
             }
@@ -584,8 +586,8 @@ async function renderOrders(customerId, statusFilter = 'all') {
 async function fetchReview(orderId) {
     if (!checkAuth()) return null;
     try {
-        const resp = await fetch(`http://localhost:5000/api/orderreview/${orderId}`, {
-            headers: { 'Authorization': `Bearer ${getToken()}` }
+        const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'http://localhost:5000';
+        const resp = await fetch(`${_apiBase}/api/orderreview/${orderId}`, {
         });
         if (!resp.ok) {
             console.warn('Fetch review failed', resp.status);
@@ -645,8 +647,9 @@ async function submitReview(orderId) {
     const rating = Number(document.getElementById('review-rating').value || 5);
     const comment = document.getElementById('review-comment').value || '';
     try {
+        const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'http://localhost:5000';
         console.log('Submitting review', { orderId, rating, hasToken: !!getToken() });
-        const resp = await fetch(`http://localhost:5000/api/orderreview/${orderId}`, {
+        const resp = await fetch(`${_apiBase}/api/orderreview/${orderId}`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -722,7 +725,8 @@ async function reorderOrder(orderId) {
     }
 
     try {
-        const response = await fetch(`http://localhost:5000/api/cart/reorder/${orderId}`, {
+        const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'http://localhost:5000';
+        const response = await fetch(`${_apiBase}/api/cart/reorder/${orderId}`, {
             method: 'POST',
             headers: {
                 'Authorization': `Bearer ${getToken()}`,

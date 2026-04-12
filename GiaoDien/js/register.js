@@ -51,7 +51,8 @@ async function handleSendOTP(e) {
         const payload = { tenkh: username, email };
         console.log('Payload gửi:', payload);
 
-        const response = await fetch('http://localhost:5000/api/client/register/send-otp', {
+        const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'http://localhost:5000';
+        const response = await fetch(`${_apiBase}/api/client/register/send-otp`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -107,7 +108,8 @@ async function handleVerifyOTP(e) {
         verifyOtpBtn.disabled = true;
         verifyOtpBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang xác nhận...';
 
-        const response = await fetch('http://localhost:5000/api/client/register/verify-otp', {
+        const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'http://localhost:5000';
+        const response = await fetch(`${_apiBase}/api/client/register/verify-otp`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -164,7 +166,8 @@ async function handleSetPassword(e) {
         setPasswordBtn.disabled = true;
         setPasswordBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang xử lý...';
 
-        const response = await fetch('http://localhost:5000/api/client/register/set-password', {
+        const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'http://localhost:5000';
+        const response = await fetch(`${_apiBase}/api/client/register/set-password`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'

@@ -34,7 +34,8 @@ async function handleLogin(e) {
         btnSubmit.disabled = true;
         btnSubmit.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang xử lý...';
         
-        const response = await fetch('http://localhost:5000/api/client/login', {
+        const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'http://localhost:5000';
+        const response = await fetch(`${_apiBase}/api/client/login`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -123,7 +124,8 @@ async function handleSendOTP() {
         sendOtpBtn.disabled = true;
         sendOtpBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang gửi...';
 
-        const response = await fetch('http://localhost:5000/api/client/forgot-password/send-otp', {
+        const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'http://localhost:5000';
+        const response = await fetch(`${_apiBase}/api/client/forgot-password/send-otp`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -175,7 +177,8 @@ async function handleVerifyOTP() {
         verifyOtpBtn.disabled = true;
         verifyOtpBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang xác nhận...';
 
-        const response = await fetch('http://localhost:5000/api/client/forgot-password/verify-otp', {
+        const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'http://localhost:5000';
+        const response = await fetch(`${_apiBase}/api/client/forgot-password/verify-otp`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -241,7 +244,8 @@ async function handleResetPassword() {
             resetToken
         };
 
-        const response = await fetch('http://localhost:5000/api/client/forgot-password/reset', {
+        const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'http://localhost:5000';
+        const response = await fetch(`${_apiBase}/api/client/forgot-password/reset`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'

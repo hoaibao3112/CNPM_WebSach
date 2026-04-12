@@ -78,7 +78,8 @@ async function addToCart(productId, productName, price, image) {
   if (user && (user.makh || user.tenkh) && token) {
     // Nếu đã đăng nhập, sử dụng API
     try {
-      const response = await fetch('http://localhost:5000/api/client/cart/add', {
+      const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'http://localhost:5000';
+      const response = await fetch(`${_apiBase}/api/client/cart/add`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -599,7 +600,8 @@ async function fetchAndDisplayProducts() {
 
   try {
     productList.innerHTML = '<div class="loading">Đang tải sản phẩm...</div>';
-    let url = 'http://localhost:5000/api/product/sorted/year';
+    const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'http://localhost:5000';
+    let url = `${_apiBase}/api/product/sorted/year`;
     // Only honor saved filters when we are on the book page itself.
     const categoryKey = storageKeyForGroup('category');
     const priceKey = storageKeyForGroup('priceButtons');
@@ -641,7 +643,8 @@ async function fetchAndDisplayPromotions() {
     productList.innerHTML = '<div class="loading">Đang tải sách khuyến mãi...</div>';
 
     // Gọi API để lấy sản phẩm khuyến mãi
-    const response = await fetch('http://localhost:5000/api/product/sorted/stock', {
+    const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'http://localhost:5000';
+    const response = await fetch(`${_apiBase}/api/product/sorted/stock`, {
       headers: { 'Accept': 'application/json' },
     });
     if (!response.ok) throw new Error(`Lỗi HTTP: ${response.status}`);
@@ -683,7 +686,8 @@ function selectPromotion(promotionId) {
   const dealHotContainer = document.getElementById('deal-hot-list');
   dealHotContainer.innerHTML = '<div class="loading">Đang tải sản phẩm khuyến mãi...</div>';
 
-  fetch(`http://localhost:5000/api/khuyenmai/${promotionId}/products`, {
+  const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'http://localhost:5000';
+  fetch(`${_apiBase}/api/khuyenmai/${promotionId}/products`, {
     headers: {
       'Content-Type': 'application/json; charset=utf-8'
     }
@@ -744,8 +748,8 @@ async function fetchAndDisplayTextbooks() {
   try {
     productList.innerHTML = '<div class="loading">Đang tải sách giáo khoa...</div>';
 
-    const response = await fetch('http://localhost:5000/api/product/category/6');
-    if (!response.ok) throw new Error(`Lỗi HTTP: ${response.status}`);
+    const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'http://localhost:5000';
+    const response = await fetch(`${_apiBase}/api/product/category/6`);
 
     const products = await response.json();
     if (!Array.isArray(products)) throw new Error('Dữ liệu trả về không hợp lệ');
@@ -773,7 +777,8 @@ async function fetchAndDisplayPoliticsBooks() {
   try {
     productList.innerHTML = '<div class="loading">Đang tải sách chính trị...</div>';
 
-    const response = await fetch('http://localhost:5000/api/product/category/2', {
+    const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'http://localhost:5000';
+    const response = await fetch(`${_apiBase}/api/product/category/2`, {
       headers: { 'Accept': 'application/json' },
     });
 
@@ -823,7 +828,8 @@ async function fetchAndDisplayScienceBooks() {
   try {
     productList.innerHTML = '<div class="loading">Đang tải sách khoa học...</div>';
 
-    const response = await fetch('http://localhost:5000/api/product/category/4');
+    const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'http://localhost:5000';
+    const response = await fetch(`${_apiBase}/api/product/category/4`);
     if (!response.ok) throw new Error(`Lỗi HTTP: ${response.status}`);
 
     const products = await response.json();
@@ -843,7 +849,8 @@ async function fetchAndDisplayScienceBooks() {
 
 async function fetchCategoreisbyInvoice() {
   try {
-    const response = await fetch('http://localhost:5000/api/orderreview/order-count');
+    const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'http://localhost:5000';
+    const response = await fetch(`${_apiBase}/api/orderreview/order-count`);
     const category = await response.json();
     console.log(category)
     if(category.success) {
@@ -953,7 +960,8 @@ async function populateSuppliers() {
   const container = document.getElementById('supplierButtons');
   if (!container) return;
   try {
-    const res = await fetch('http://localhost:5000/api/product/suppliers');
+    const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'http://localhost:5000';
+    const res = await fetch(`${_apiBase}/api/product/suppliers`);
     if (!res.ok) throw new Error('Không tải được danh sách nhà cung cấp');
     const suppliers = await res.json();
     // Clear except the 'Tất cả' button (first child)
@@ -997,7 +1005,8 @@ async function populateHinhThuc() {
   try {
     let values = [];
     try {
-      const res = await fetch('http://localhost:5000/api/product');
+      const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'http://localhost:5000';
+      const res = await fetch(`${_apiBase}/api/product`);
       if (!res.ok) throw new Error('Không lấy được sản phẩm để xác định HìnhThức');
       const products = await res.json();
       const set = new Set();
@@ -1043,7 +1052,8 @@ async function populateAuthors() {
   const container = document.getElementById('authorButtons');
   if (!container) return;
   try {
-    const res = await fetch('http://localhost:5000/api/product/authors');
+    const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'http://localhost:5000';
+    const res = await fetch(`${_apiBase}/api/product/authors`);
     if (!res.ok) throw new Error('Không tải được danh sách tác giả');
     const authors = await res.json();
     // Clear existing buttons and add 'Tất cả'
@@ -1136,7 +1146,8 @@ function buildProductQuery({ MaTL, priceRange, MaNCC, HinhThuc, MaTG, search }) 
   if (MaTG) params.append('MaTG', Array.isArray(MaTG) ? MaTG.join(',') : MaTG);
   if (HinhThuc) params.append('HinhThuc', Array.isArray(HinhThuc) ? HinhThuc.join(',') : HinhThuc);
   if (search) params.append('search', search);
-  return 'http://localhost:5000/api/product?' + params.toString();
+  const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'http://localhost:5000';
+  return `${_apiBase}/api/product?` + params.toString();
 }
 
 function getMainProductContainerId() {
@@ -1385,7 +1396,8 @@ async function loadPromotionsFromAPI() {
   dealHotContainer.innerHTML = '';
 
   try {
-    const res = await fetch('http://localhost:5000/api/books/promotions', { headers: { 'Accept': 'application/json' } });
+    const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'http://localhost:5000';
+    const res = await fetch(`${_apiBase}/api/books/promotions`, { headers: { 'Accept': 'application/json' } });
     if (!res.ok) throw new Error('Lỗi khi tải khuyến mãi');
     const data = await res.json();
 
@@ -1448,7 +1460,8 @@ async function loadAllProductsToMain() {
 
   try {
     console.log('[products] fetching /api/product');
-    const res = await fetch('http://localhost:5000/api/product', {
+    const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'http://localhost:5000';
+    const res = await fetch(`${_apiBase}/api/product`, {
       headers: { 'Accept': 'application/json' }
     });
 
@@ -1476,7 +1489,8 @@ async function loadProductsByPromotion(promoId) {
 
   try {
     console.log(`[promotions] fetching /api/books/promotions/${promoId}/products`);
-    const res = await fetch(`http://localhost:5000/api/books/promotions/${promoId}/products`, {
+    const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'http://localhost:5000';
+    const res = await fetch(`${_apiBase}/api/books/promotions/${promoId}/products`, {
       headers: { 'Accept': 'application/json' }
     });
 

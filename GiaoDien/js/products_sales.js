@@ -56,7 +56,7 @@
 		if (user && (user.makh || user.tenkh) && token) {
 			// Nếu đã đăng nhập, sử dụng API
 			try {
-				const response = await fetch('http://localhost:5000/api/client/cart/add', {
+				const response = await fetch(`${_apiBase}/api/client/cart/add`, {
 					method: 'POST',
 					headers: {
 						'Authorization': `Bearer ${token}`,
