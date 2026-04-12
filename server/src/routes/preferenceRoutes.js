@@ -16,8 +16,8 @@ import {
   deleteQuestion,
   createOption,
   deleteOption
-} from '../controllers/preferenceController.js';
-import { recomputePreferencesForCustomer } from '../controllers/recomputeController.js';
+} from '../controllers/PreferenceController.js';
+import { recomputePreferencesForCustomer } from '../controllers/RecomputeController.js';
 
 const router = express.Router();
 
