@@ -1,6 +1,7 @@
 import mysql from 'mysql2/promise';
 import dotenv from 'dotenv';
 import fs from 'fs';
+import path from 'path';
 
 // Load biến môi trường
 dotenv.config();
@@ -20,15 +21,17 @@ const dbConfig = {
   timezone: '+07:00' // Múi giờ Việt Nam
 };
 
-// TLS/SSL: support raw PEM or base64-encoded PEM via env vars
+// TLS/SSL: support raw PEM, base64-encoded PEM, or auto-detection for TiDB Cloud
 const sslCaRaw = process.env.DB_SSL_CA || null;
 const sslCaB64 = process.env.DB_SSL_CA_BASE64 || null;
+
 if (sslCaB64) {
   try {
     const caBuf = Buffer.from(sslCaB64, 'base64');
     dbConfig.ssl = {
       ca: caBuf,
-      rejectUnauthorized: process.env.DB_REJECT_UNAUTHORIZED !== 'false'
+      rejectUnauthorized: process.env.DB_REJECT_UNAUTHORIZED !== 'false',
+      minVersion: 'TLSv1.2'
     };
     console.log('DB SSL: using DB_SSL_CA_BASE64');
   } catch (err) {
@@ -37,12 +40,32 @@ if (sslCaB64) {
 } else if (sslCaRaw) {
   dbConfig.ssl = {
     ca: sslCaRaw,
-    rejectUnauthorized: process.env.DB_REJECT_UNAUTHORIZED !== 'false'
+    rejectUnauthorized: process.env.DB_REJECT_UNAUTHORIZED !== 'false',
+    minVersion: 'TLSv1.2'
   };
   console.log('DB SSL: using DB_SSL_CA (raw PEM)');
-} else if (process.env.DB_REQUIRE_SSL === 'true') {
-  dbConfig.ssl = { rejectUnauthorized: process.env.DB_REJECT_UNAUTHORIZED !== 'false' };
-  console.log('DB SSL: required but no CA provided (attempting TLS without CA)');
+} else if (dbConfig.host.includes('tidbcloud.com') || process.env.DB_REQUIRE_SSL === 'true') {
+  // TiDB Cloud Serverless REQUIRE TLS. If no CA is provided, try to load local ones or use default TLS settings.
+  const caFiles = ['isrgrootx1.pem', 'tidb-ca.pem'];
+  let loadedCa = null;
+
+  for (const f of caFiles) {
+    try {
+      const p = path.join(process.cwd(), f);
+      if (fs.existsSync(p)) {
+        loadedCa = fs.readFileSync(p);
+        console.log(`DB SSL: auto-loaded local CA from ${f}`);
+        break;
+      }
+    } catch (e) { /* continue */ }
+  }
+
+  dbConfig.ssl = {
+    ca: loadedCa,
+    rejectUnauthorized: process.env.DB_REJECT_UNAUTHORIZED !== 'false',
+    minVersion: 'TLSv1.2'
+  };
+  console.log('DB SSL: enabled for TiDB Cloud / SSL Required mode');
 }
 
 // Tạo pool kết nối với xử lý lỗi
