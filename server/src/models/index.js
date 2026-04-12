@@ -41,7 +41,7 @@ if (sslCaB64) {
   }
   sslOptions = {
     ca: loadedCa,
-    rejectUnauthorized: process.env.DB_REJECT_UNAUTHORIZED !== 'false'
+    rejectUnauthorized: process.env.DB_REJECT_UNAUTHORIZED === 'true'
   };
 }
 

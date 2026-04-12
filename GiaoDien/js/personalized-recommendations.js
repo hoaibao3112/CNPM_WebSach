@@ -6,7 +6,7 @@
 const PersonalizedRecommendations = {
   // Configuration
   config: {
-    apiBaseUrl: 'http://localhost:5000/api',
+    apiBaseUrl: '${window.API_CONFIG.BASE_URL}/api',
   defaultLimit: 8,
     storageKeys: {
       customerInfo: 'customerInfo',
@@ -701,3 +701,4 @@ if (document.readyState === 'loading') {
 
 // Export for use in other scripts
 window.PersonalizedRecommendations = PersonalizedRecommendations;
+

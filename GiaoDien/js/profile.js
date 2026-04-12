@@ -21,7 +21,7 @@ async function loadUserProfile() {
   }
 
   try {
-    const response = await fetch('http://localhost:5000/api/client/profile', {
+    const response = await fetch('${window.API_CONFIG.BASE_URL}/api/client/profile', {
       method: 'GET',
       headers: {
         'Authorization': `Bearer ${token}`
@@ -132,7 +132,7 @@ async function loadPromoCodes() {
   if (token && user && user.makh) {
     try {
       // Try server endpoint that returns issued coupons + promotion info
-      const res = await fetch(`http://localhost:5000/api/coupons/my-coupons?makh=${user.makh}`, {
+      const res = await fetch(`${window.API_CONFIG.BASE_URL}/api/coupons/my-coupons?makh=${user.makh}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       const json = await res.json();
@@ -344,7 +344,7 @@ async function fetchOrderReview(orderId) {
   const token = localStorage.getItem('token');
   if (!token) return null;
   try {
-    const resp = await fetch(`http://localhost:5000/api/orderreview/${orderId}`, {
+    const resp = await fetch(`${window.API_CONFIG.BASE_URL}/api/orderreview/${orderId}`, {
       headers: { 'Authorization': `Bearer ${token}` }
     });
     if (!resp.ok) return null;
@@ -372,7 +372,7 @@ async function loadReviewedOrders() {
   }
 
   try {
-    const resp = await fetch(`http://localhost:5000/api/orders/customer-orders/${customerId}`, {
+    const resp = await fetch(`${window.API_CONFIG.BASE_URL}/api/orders/customer-orders/${customerId}`, {
       headers: { 'Authorization': `Bearer ${token}` }
     });
     if (!resp.ok) throw new Error('Không thể lấy đơn hàng');
@@ -445,7 +445,7 @@ window.openOrderDetailFromProfile = async function(orderId) {
         try {
           const token = localStorage.getItem('token');
           const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
-          const resp = await fetch(`http://localhost:5000/api/orders/${orderId}`, { headers });
+          const resp = await fetch(`${window.API_CONFIG.BASE_URL}/api/orders/${orderId}`, { headers });
           if (resp.ok) orderObj = await resp.json();
         } catch (e) {
           console.warn('Direct order fetch failed', e);
@@ -504,7 +504,7 @@ async function submitProfileReview() {
   const token = localStorage.getItem('token');
   if (!token) { alert('Vui lòng đăng nhập'); return; }
   try {
-    const resp = await fetch(`http://localhost:5000/api/orderreview/${orderId}`, {
+    const resp = await fetch(`${window.API_CONFIG.BASE_URL}/api/orderreview/${orderId}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -649,7 +649,7 @@ async function renderMembershipCard() {
   const token = localStorage.getItem('token');
   if (token) {
     try {
-      const res = await fetch('http://localhost:5000/api/client/profile', {
+      const res = await fetch('${window.API_CONFIG.BASE_URL}/api/client/profile', {
         method: 'GET',
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -794,7 +794,7 @@ function setupUpdateButton() {
 
       const token = localStorage.getItem('token');
 
-      const response = await fetch(`http://localhost:5000/api/client/profile`, {
+      const response = await fetch(`${window.API_CONFIG.BASE_URL}/api/client/profile`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -895,7 +895,7 @@ function setupChangePasswordButton() {
       changePasswordBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang xử lý...';
 
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:5000/api/client/profile/change-password`, {
+      const response = await fetch(`${window.API_CONFIG.BASE_URL}/api/client/profile/change-password`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -994,7 +994,7 @@ function setupPromoDetailEvents() {
       makm = makm.toString().trim();
       if (!makm) return;
       try {
-        const res = await fetch(`http://localhost:5000/api/khuyenmai/${encodeURIComponent(makm)}`);
+        const res = await fetch(`${window.API_CONFIG.BASE_URL}/api/khuyenmai/${encodeURIComponent(makm)}`);
         const data = await res.json();
         if (data && !data.error) {
           let html = `<h3>${data.TenKM}</h3>
@@ -1160,7 +1160,7 @@ sidebarItems.forEach(item => {
   // location helpers: fetch lists from local JSON files via backend API
   async function loadProvinces() {
     try {
-      const res = await fetch('http://localhost:5000/api/address/cities');
+      const res = await fetch('${window.API_CONFIG.BASE_URL}/api/address/cities');
       const cities = await res.json();
       // Transform to match expected format: { code: city_id, name: city_name }
       return cities.map(city => ({
@@ -1176,7 +1176,7 @@ sidebarItems.forEach(item => {
     if (!provinceCodeOrName) return [];
     try {
       // Use city_id to fetch districts
-      const res = await fetch(`http://localhost:5000/api/address/districts/${encodeURIComponent(provinceCodeOrName)}`);
+      const res = await fetch(`${window.API_CONFIG.BASE_URL}/api/address/districts/${encodeURIComponent(provinceCodeOrName)}`);
       const districts = await res.json();
       // Transform to match expected format: { code: district_id, name: district_name }
       return districts.map(district => ({
@@ -1191,7 +1191,7 @@ sidebarItems.forEach(item => {
   async function loadWards(districtCodeOrName) {
     if (!districtCodeOrName) return [];
     try {
-      const res = await fetch(`http://localhost:5000/api/address/wards/${encodeURIComponent(districtCodeOrName)}`);
+      const res = await fetch(`${window.API_CONFIG.BASE_URL}/api/address/wards/${encodeURIComponent(districtCodeOrName)}`);
       const wards = await res.json();
       // Transform to match expected format: { code: ward_name (use name as code), name: ward_name }
       return wards.map(ward => ({
@@ -1207,7 +1207,7 @@ sidebarItems.forEach(item => {
     const cid = customerId();
     if (!cid || !token()) return;
     try {
-      const res = await fetch(`http://localhost:5000/api/orders/customer-addresses/${cid}`, {
+      const res = await fetch(`${window.API_CONFIG.BASE_URL}/api/orders/customer-addresses/${cid}`, {
         headers: { Authorization: `Bearer ${token()}` }
       });
       const json = await res.json();
@@ -1230,7 +1230,7 @@ sidebarItems.forEach(item => {
     // Helper function to get address names from IDs
     async function getAddressNames(provinceId, districtId, wardIdentifier) {
       try {
-        const response = await fetch(`http://localhost:5000/api/address/full/${provinceId}/${districtId}/${encodeURIComponent(wardIdentifier)}`);
+        const response = await fetch(`${window.API_CONFIG.BASE_URL}/api/address/full/${provinceId}/${districtId}/${encodeURIComponent(wardIdentifier)}`);
         if (!response.ok) return null;
         const data = await response.json();
         return data; // { city: "...", district: "...", ward: "..." }
@@ -1301,7 +1301,7 @@ sidebarItems.forEach(item => {
 
   async function createAddress(payload) {
     try {
-      const res = await fetch('http://localhost:5000/api/orders/customer-addresses', {
+      const res = await fetch('${window.API_CONFIG.BASE_URL}/api/orders/customer-addresses', {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${token()}`,
@@ -1321,7 +1321,7 @@ sidebarItems.forEach(item => {
 
   async function updateAddress(id, payload) {
     try {
-      const res = await fetch(`http://localhost:5000/api/orders/customer-addresses/${id}`, {
+      const res = await fetch(`${window.API_CONFIG.BASE_URL}/api/orders/customer-addresses/${id}`, {
         method: 'PUT',
         headers: {
           Authorization: `Bearer ${token()}`,
@@ -1342,7 +1342,7 @@ sidebarItems.forEach(item => {
   async function deleteAddress(id) {
     if (!confirm('Bạn có chắc muốn xóa địa chỉ này?')) return;
     try {
-      const res = await fetch(`http://localhost:5000/api/orders/customer-addresses/${id}`, {
+      const res = await fetch(`${window.API_CONFIG.BASE_URL}/api/orders/customer-addresses/${id}`, {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token()}` }
       });
@@ -1550,7 +1550,7 @@ sidebarItems.forEach(item => {
         const id = setDefaultEl.dataset.id;
         try {
           // Try dedicated endpoint to set default address
-          let res = await fetch(`http://localhost:5000/api/orders/customer-addresses/${id}/set-default`, {
+          let res = await fetch(`${window.API_CONFIG.BASE_URL}/api/orders/customer-addresses/${id}/set-default`, {
             method: 'POST',
             headers: { Authorization: `Bearer ${token()}` }
           });
@@ -1605,7 +1605,7 @@ sidebarItems.forEach(item => {
       e.preventDefault();
       try {
         const cid = customerId();
-        const res = await fetch(`http://localhost:5000/api/orders/customer-addresses/${cid}`, {
+        const res = await fetch(`${window.API_CONFIG.BASE_URL}/api/orders/customer-addresses/${cid}`, {
           headers: { Authorization: `Bearer ${token()}` }
         });
         const j = await res.json();
@@ -1628,3 +1628,4 @@ sidebarItems.forEach(item => {
   // initial load (delay nhỏ để đảm bảo customerId đã được set khi loadUserProfile trước đó)
   setTimeout(fetchAddresses, 300);
 })();
+

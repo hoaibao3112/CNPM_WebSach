@@ -1,6 +1,6 @@
 async function productSearchActivity(searchText, customerId) {
     try {
-        await fetch('http://localhost:5000/api/client/activity/search', {
+        await fetch('${window.API_CONFIG.BASE_URL}/api/client/activity/search', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -16,7 +16,7 @@ async function productSearchActivity(searchText, customerId) {
 
 async function productViewActivity(maSanPham, customerId) {
     try {
-        await fetch('http://localhost:5000/api/client/activity/view', {
+        await fetch('${window.API_CONFIG.BASE_URL}/api/client/activity/view', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -29,3 +29,4 @@ async function productViewActivity(maSanPham, customerId) {
         console.error('Lỗi mạng khi log view:', error);
     }
 }
+

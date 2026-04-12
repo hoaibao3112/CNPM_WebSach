@@ -5,10 +5,10 @@ async function loadThamGiaVouchers() {
 
   // Try multiple endpoints / shapes to be resilient during development
   const endpoints = [
-    "http://localhost:5000/api/khuyenmai/public?limit=10",
+    "${window.API_CONFIG.BASE_URL}/api/khuyenmai/public?limit=10",
     "http://localhost:5501/api/khuyenmai/public?limit=10",
     "/api/khuyenmai/public?limit=10",
-    "http://localhost:5000/api/voucher/",
+    "${window.API_CONFIG.BASE_URL}/api/voucher/",
     "http://localhost:5501/api/voucher/",
     "/api/voucher/",
   ];
@@ -124,7 +124,7 @@ async function loadTopSellingProducts() {
   if (!container) return;
 
   const endpoints = [
-    'http://localhost:5000/api/product/top-selling?limit=6',
+    '${window.API_CONFIG.BASE_URL}/api/product/top-selling?limit=6',
     'http://localhost:5501/api/product/top-selling?limit=6',
     '/api/product/top-selling?limit=6',
     '/api/products/top-selling?limit=6',
@@ -250,3 +250,4 @@ document.addEventListener('DOMContentLoaded', () => {
   loadThamGiaVouchers();
   loadTopSellingProducts();
 });
+

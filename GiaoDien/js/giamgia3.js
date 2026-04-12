@@ -8,7 +8,7 @@ function isLoggedIn() {
 // Lấy danh sách khuyến mãi từ API
 async function fetchVouchers() {
   try {
-    const response = await fetch('http://localhost:5000/api/khuyenmai');
+    const response = await fetch('${window.API_CONFIG.BASE_URL}/api/khuyenmai');
     const data = await response.json();
     return data.data || [];
   } catch (error) {
@@ -112,7 +112,7 @@ function setupClaimEvents() {
       console.log('- MaKH:', user.makh);
       
       try {
-        const response = await fetch(`http://localhost:5000/api/khuyenmai/claim/${maKM}`, {
+        const response = await fetch(`${window.API_CONFIG.BASE_URL}/api/khuyenmai/claim/${maKM}`, {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -176,7 +176,7 @@ function setupDetailEvents() {
       const maKM = this.getAttribute('data-makm');
       
       try {
-        const response = await fetch(`http://localhost:5000/api/khuyenmai/${maKM}`);
+        const response = await fetch(`${window.API_CONFIG.BASE_URL}/api/khuyenmai/${maKM}`);
         const data = await response.json();
         
         if (data && !data.error) {
@@ -421,7 +421,7 @@ function displayPromoCodes() {
       const makm = this.getAttribute('data-makm');
       
       try {
-        const response = await fetch(`http://localhost:5000/api/khuyenmai/${makm}`);
+        const response = await fetch(`${window.API_CONFIG.BASE_URL}/api/khuyenmai/${makm}`);
         const data = await response.json();
         
         if (data && !data.error) {
@@ -604,3 +604,4 @@ window.voucherFunctions = {
   isLoggedIn,
   initTwoBannerSlider
 };
+

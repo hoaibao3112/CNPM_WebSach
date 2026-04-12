@@ -140,7 +140,7 @@ function initChatbot() {
     let messageCount = 0;
     
     // API URLs: prefer direct chatbot URL, then backend proxy, then local direct fallback
-    const API_BASE = window.API_CONFIG ? window.API_CONFIG.BASE_URL : 'http://localhost:5000';
+    const API_BASE = window.API_CONFIG ? window.API_CONFIG.BASE_URL : window.API_CONFIG.BASE_URL;
     const configuredChatbotUrl = window.API_CONFIG ? window.API_CONFIG.CHATBOT_URL : '';
     const chatEndpoints = [
         configuredChatbotUrl ? `${configuredChatbotUrl.replace(/\/$/, '')}/chat` : '',
@@ -367,3 +367,4 @@ function initChatbot() {
 
     return true;
 }
+

@@ -6,7 +6,7 @@
 (function () {
     // --- CÀI ĐẶT ---
     const MOUNT_POINT_ID = 'recommend-widget-container';
-    const API_URL = 'http://localhost:5000/api/product/recommendations';
+    const API_URL = '${window.API_CONFIG.BASE_URL}/api/product/recommendations';
     // const IMAGE_PATH_PREFIX = 'images/'; // Không cần nữa, vì đường dẫn đã có trong <img>
     const PRODUCTS_PER_PAGE = 5;
     // --- KẾT THÚC CÀI ĐẶT ---

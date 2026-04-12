@@ -11,6 +11,7 @@ import path from 'path';
 import pool from './src/config/connectDatabase.js';
 import { initRoutes } from './src/routes/index.js';
 import errorHandler from './src/middlewares/errorHandler.js';
+import db from './src/models/index.js';
 // Import the scheduled sync function from attendance admin route
 import { syncMissedAttendancesForDate } from './src/routes/AttendanceAdmin.js';
 import { createProxyMiddleware } from 'http-proxy-middleware';
@@ -47,6 +48,7 @@ console.log('DB env presence:', {
 const allowedOrigins = [
   process.env.CLIENT_ADMIN_URL || 'http://localhost:3000',
   process.env.CLIENT_CUSTOMER_URL || 'http://localhost:5500',
+  'https://cnpm-web-sach.vercel.app',
   'http://localhost:5501',
   'http://localhost:5000',
   'http://127.0.0.1',
@@ -136,6 +138,16 @@ app.get('/api/diag/schema', async (req, res) => {
         const connection = await pool.getConnection();
         const tablesToInspect = ['hoadon', 'chitiethoadon', 'khachhang', 'diachi', 'sanpham', 'giohang_chitiet', 'khuyen_mai'];
         const schema = {};
+        
+        // Test Sequelize
+        let sequelizeStatus = 'not_tested';
+        try {
+            await db.sequelize.authenticate();
+            const count = await db.KhachHang.count();
+            sequelizeStatus = `ok (KhachHang count: ${count})`;
+        } catch (e) {
+            sequelizeStatus = `error: ${e.message}`;
+        }
 
         for (const table of tablesToInspect) {
             try {
@@ -155,6 +167,7 @@ app.get('/api/diag/schema', async (req, res) => {
         connection.release();
         res.json({
             timestamp: new Date().toISOString(),
+            sequelizeStatus,
             schema
         });
     } catch (err) {

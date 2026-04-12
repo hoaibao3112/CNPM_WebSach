@@ -19,7 +19,7 @@
     window.fetch = async function (url, options) {
         // 1. Replace localhost URLs nếu cần
         if (typeof url === 'string' && url.includes('localhost:5000') && !API_BASE.includes('localhost')) {
-            url = url.replace('http://localhost:5000', API_BASE);
+            url = url.replace(window.API_CONFIG.BASE_URL, API_BASE);
             console.log('📡 Fetch Patched URL:', url);
         }
 
@@ -51,3 +51,4 @@
 
     console.log('✅ Global API Response Patcher initialized!');
 })();
+

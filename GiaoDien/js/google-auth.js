@@ -9,7 +9,7 @@
   // Use API_CONFIG if available, otherwise fallback to local
   const SERVER_GOOGLE_AUTH_URL = window.API_CONFIG 
     ? window.API_CONFIG.buildUrl('/api/client/auth/google')
-    : 'http://localhost:5000/api/client/auth/google';
+    : '${window.API_CONFIG.BASE_URL}/api/client/auth/google';
 
   function handleCredentialResponse(response) {
     const id_token = response && response.credential;
@@ -81,3 +81,4 @@
     // google.accounts.id.prompt();
   });
 })();
+

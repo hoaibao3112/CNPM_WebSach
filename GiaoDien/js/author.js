@@ -1,4 +1,4 @@
-const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'http://localhost:5000';
+const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || window.API_CONFIG.BASE_URL;
 const API_URL = `${_apiBase}/api/author`;
 const IMAGE_BASE_URL = 'img/author/';
 const PRODUCT_IMAGE_BASE_URL = 'img/product/';
@@ -249,3 +249,4 @@ window.loadProductDetail = function (productId) {
   localStorage.setItem('selectedProductId', productId);
   window.location.href = 'product_detail.html';
 };
+

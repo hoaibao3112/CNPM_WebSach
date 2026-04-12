@@ -3,7 +3,7 @@
 // No hard-coded sample data. If the API can't be reached the UI shows a retry button and (optionally) uses a cached response from localStorage.
 
 (function () {
-	const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'http://localhost:5000';
+	const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || window.API_CONFIG.BASE_URL;
 	const API_URL = `${_apiBase}/api/khuyenmai/active-products`;
 		const container = document.getElementById('flash-products');
 	const countdownEl = document.getElementById('flash-countdown');
@@ -514,4 +514,5 @@
 	}
 
 })();
+
 

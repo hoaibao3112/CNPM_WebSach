@@ -41,7 +41,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // ===== Lấy danh sách category và gán sự kiện =====
-    fetch('http://localhost:5000/api/product/categories')
+    fetch('${window.API_CONFIG.BASE_URL}/api/product/categories')
         .then(res => res.json())
         .then(categories => {
             // Clear existing list first
@@ -69,7 +69,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Load products for a given category. Render only up to 5 items.
             function loadProducts(categoryId) {
-                const url = `http://localhost:5000/api/product/category-current-year/${categoryId === 'all' ? 'all' : categoryId}`;
+                const url = `${window.API_CONFIG.BASE_URL}/api/product/category-current-year/${categoryId === 'all' ? 'all' : categoryId}`;
                 fetch(url)
                     .then(res => res.json())
                     .then(products => renderProducts(products, 5))
@@ -112,3 +112,4 @@ document.addEventListener('DOMContentLoaded', () => {
 
     slider.addEventListener('dragstart', e => e.preventDefault());
 });
+

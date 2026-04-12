@@ -26,7 +26,7 @@ function getUserId() {
 async function getCart() {
   if (isLoggedIn()) {
     try {
-      const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'http://localhost:5000';
+      const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'https://cnpm-websach-2.onrender.com';
       const response = await fetch(`${_apiBase}/api/client/cart`, {
         headers: {
           'Authorization': `Bearer ${getToken()}`,
@@ -73,7 +73,7 @@ async function syncLocalCartToServer() {
 
   for (const item of localCart) {
     try {
-      const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'http://localhost:5000';
+      const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'https://cnpm-websach-2.onrender.com';
       const response = await fetch(`${_apiBase}/api/client/cart/add`, {
         method: 'POST',
         headers: {
@@ -98,7 +98,7 @@ async function syncLocalCartToServer() {
 async function addToCart(productId, quantity = 1, productName, price, image) {
   if (isLoggedIn()) {
     try {
-      const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'http://localhost:5000';
+      const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'https://cnpm-websach-2.onrender.com';
       const response = await fetch(`${_apiBase}/api/client/cart/add`, {
         method: 'POST',
         headers: {
@@ -147,7 +147,7 @@ async function updateQuantity(index, newQuantity) {
 
   if (isLoggedIn()) {
     try {
-      const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'http://localhost:5000';
+      const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'https://cnpm-websach-2.onrender.com';
       const response = await fetch(`${_apiBase}/api/client/cart/update`, {
         method: 'PUT',
         headers: {
@@ -184,7 +184,7 @@ async function removeFromCart(index) {
 
   if (isLoggedIn()) {
     try {
-      const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'http://localhost:5000';
+      const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'https://cnpm-websach-2.onrender.com';
       const response = await fetch(`${_apiBase}/api/client/cart/remove/${item.id}`, {
         method: 'DELETE',
         headers: {
@@ -219,7 +219,7 @@ async function toggleSelection(index, selected) {
   const cart = await getCart();
   if (isLoggedIn()) {
     try {
-      const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'http://localhost:5000';
+      const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'https://cnpm-websach-2.onrender.com';
       const response = await fetch(`${_apiBase}/api/client/cart/select`, {
         method: 'PUT',
         headers: {
@@ -251,7 +251,7 @@ async function toggleSelection(index, selected) {
 async function clearCart() {
   if (isLoggedIn()) {
     try {
-      const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'http://localhost:5000';
+      const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'https://cnpm-websach-2.onrender.com';
       const response = await fetch(`${_apiBase}/api/client/cart/clear`, {
         method: 'DELETE',
         headers: {
@@ -894,7 +894,7 @@ async function checkout() {
   try {
     console.log('🔄 Sending request to API...');
 
-    const response = await fetch('http://localhost:5000/api/orders/place-order', {
+    const response = await fetch('${window.API_CONFIG.BASE_URL}/api/orders/place-order', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${getToken()}`,
@@ -1400,7 +1400,7 @@ async function loadProvinces() {
 
   try {
     // Load from local JSON file instead of API
-    const response = await fetch('http://localhost:5000/api/address/cities');
+    const response = await fetch('${window.API_CONFIG.BASE_URL}/api/address/cities');
     const cities = await response.json();
     provinceSelect.innerHTML = '<option value="">-- Chọn Tỉnh/TP --</option>';
     cities.forEach(city => {
@@ -1501,7 +1501,7 @@ async function loadDistricts() {
 
   try {
     // Load from local JSON file instead of API
-    const response = await fetch(`http://localhost:5000/api/address/districts/${provinceSelect.value}`);
+    const response = await fetch(`${window.API_CONFIG.BASE_URL}/api/address/districts/${provinceSelect.value}`);
     const districts = await response.json();
     districts.forEach(district => {
       const option = document.createElement('option');
@@ -1530,7 +1530,7 @@ async function loadWards() {
 
   try {
     // Load from local JSON file instead of API
-    const response = await fetch(`http://localhost:5000/api/address/wards/${districtSelect.value}`);
+    const response = await fetch(`${window.API_CONFIG.BASE_URL}/api/address/wards/${districtSelect.value}`);
     const wards = await response.json();
     wards.forEach(ward => {
       const option = document.createElement('option');
@@ -1633,7 +1633,7 @@ async function applyPromo() {
       // first try my-promotions (issued to customer)
       let validFreeShip = null;
       try {
-        const freeShipRes = await fetch(`http://localhost:5000/api/khuyenmai/my-promotions?loaiKM=free_ship&activeOnly=true`, {
+        const freeShipRes = await fetch(`${window.API_CONFIG.BASE_URL}/api/khuyenmai/my-promotions?loaiKM=free_ship&activeOnly=true`, {
           headers: { "Authorization": `Bearer ${getToken()}` }
         });
         const freeShipData = await freeShipRes.json();
@@ -1647,7 +1647,7 @@ async function applyPromo() {
       // if not found, try public promotions (admin-created public free_ship)
       if (!validFreeShip) {
         try {
-          const publicRes = await fetch(`http://localhost:5000/api/khuyenmai?search=${encodeURIComponent(code)}&loaiKM=free_ship&activeOnly=true&limit=50`);
+          const publicRes = await fetch(`${window.API_CONFIG.BASE_URL}/api/khuyenmai?search=${encodeURIComponent(code)}&loaiKM=free_ship&activeOnly=true&limit=50`);
           const publicData = await publicRes.json();
           if (publicRes.ok && publicData.data) {
             validFreeShip = publicData.data.find(p => String(p.Code || '').toUpperCase() === code.toUpperCase());
@@ -1704,7 +1704,7 @@ async function applyPromo() {
       }))
     };
 
-    const res = await fetch("http://localhost:5000/api/khuyenmai/apply-to-cart", {
+    const res = await fetch("${window.API_CONFIG.BASE_URL}/api/khuyenmai/apply-to-cart", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -2064,7 +2064,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     try {
       const token = getToken();
       if (token) {
-        const resp = await fetch('http://localhost:5000/api/client/profile', {
+        const resp = await fetch('${window.API_CONFIG.BASE_URL}/api/client/profile', {
           method: 'GET',
           headers: { 'Authorization': `Bearer ${token}` }
         });
@@ -2145,7 +2145,7 @@ async function loadSavedPromos() {
     // NOTE: Some coupons (issued via preference form) are stored in coupons endpoint
     // (phieugiamgia_phathanh). We fetch both sources and merge so all user's coupons
     // appear in the saved promos panel.
-    const res = await fetch(`http://localhost:5000/api/khuyenmai/my-promotions?activeOnly=true`, {
+    const res = await fetch(`${window.API_CONFIG.BASE_URL}/api/khuyenmai/my-promotions?activeOnly=true`, {
       headers: {
         "Authorization": `Bearer ${getToken()}`,
       }
@@ -2157,7 +2157,7 @@ async function loadSavedPromos() {
 
     // ALSO fetch issued coupons (e.g., freeship issued by preference form)
     try {
-      const couponsRes = await fetch(`http://localhost:5000/api/coupons/my-coupons?makh=${getUserId()}`, {
+      const couponsRes = await fetch(`${window.API_CONFIG.BASE_URL}/api/coupons/my-coupons?makh=${getUserId()}`, {
         headers: {
           Authorization: `Bearer ${getToken()}`
         }
@@ -2415,7 +2415,7 @@ async function verifyAppliedCodesAgainstServer() {
       const code = appliedDiscountCode.code;
       // Check user's claimed promos
       try {
-        const res = await fetch(`http://localhost:5000/api/khuyenmai/my-promotions`, {
+        const res = await fetch(`${window.API_CONFIG.BASE_URL}/api/khuyenmai/my-promotions`, {
           headers: { Authorization: `Bearer ${getToken()}` }
         });
         const j = await res.json().catch(() => ({}));
@@ -2434,7 +2434,7 @@ async function verifyAppliedCodesAgainstServer() {
 
       // Also check issued coupons endpoint as fallback
       try {
-        const couponsRes = await fetch(`http://localhost:5000/api/coupons/my-coupons?makh=${makh}`, {
+        const couponsRes = await fetch(`${window.API_CONFIG.BASE_URL}/api/coupons/my-coupons?makh=${makh}`, {
           headers: { Authorization: `Bearer ${getToken()}` }
         });
         const couponsJson = await couponsRes.json().catch(() => ({}));
@@ -2455,7 +2455,7 @@ async function verifyAppliedCodesAgainstServer() {
     if (appliedFreeShipCode && appliedFreeShipCode.code) {
       const code = appliedFreeShipCode.code;
       try {
-        const res = await fetch(`http://localhost:5000/api/khuyenmai/my-promotions?loaiKM=free_ship`, {
+        const res = await fetch(`${window.API_CONFIG.BASE_URL}/api/khuyenmai/my-promotions?loaiKM=free_ship`, {
           headers: { Authorization: `Bearer ${getToken()}` }
         });
         const j = await res.json().catch(() => ({}));
@@ -2506,7 +2506,7 @@ window.applyPromoFromSaved = async function (code, event) {
     // Kiểm tra loại mã (thử my-promotions trước, sau đó lookup public promotions)
     let isFreeShip = false;
     try {
-      const freeShipRes = await fetch(`http://localhost:5000/api/khuyenmai/my-promotions?loaiKM=free_ship&activeOnly=true`, {
+      const freeShipRes = await fetch(`${window.API_CONFIG.BASE_URL}/api/khuyenmai/my-promotions?loaiKM=free_ship&activeOnly=true`, {
         headers: { "Authorization": `Bearer ${getToken()}` }
       });
       const freeShipData = await freeShipRes.json();
@@ -2517,7 +2517,7 @@ window.applyPromoFromSaved = async function (code, event) {
 
     if (!isFreeShip) {
       try {
-        const publicRes = await fetch(`http://localhost:5000/api/khuyenmai?search=${encodeURIComponent(code)}&loaiKM=free_ship&activeOnly=true&limit=50`);
+        const publicRes = await fetch(`${window.API_CONFIG.BASE_URL}/api/khuyenmai?search=${encodeURIComponent(code)}&loaiKM=free_ship&activeOnly=true&limit=50`);
         const publicData = await publicRes.json();
         if (publicRes.ok && publicData.data) {
           isFreeShip = publicData.data.some(p => String(p.Code || '').toUpperCase() === code.toUpperCase());
@@ -2616,7 +2616,7 @@ window.applyPromoFromSaved = async function (code, event) {
 
       if (appliedDiscountCode) {
         // Nếu có mã giảm giá đã áp dụng, tính lại
-        const discountRes = await fetch(`http://localhost:5000/api/khuyenmai/apply-to-cart`, {
+        const discountRes = await fetch(`${window.API_CONFIG.BASE_URL}/api/khuyenmai/apply-to-cart`, {
           method: 'POST',
           headers: {
             "Content-Type": "application/json",
@@ -2664,7 +2664,7 @@ window.applyPromoFromSaved = async function (code, event) {
       }
 
       // ✅ CHO PHÉP GỌI API NGAY CẢ KHI GIỎ TRỐNG (backend sẽ trả về gợi ý)
-      const res = await fetch(`http://localhost:5000/api/khuyenmai/apply-to-cart`, {
+      const res = await fetch(`${window.API_CONFIG.BASE_URL}/api/khuyenmai/apply-to-cart`, {
         method: 'POST',
         headers: {
           "Content-Type": "application/json",
@@ -2834,14 +2834,14 @@ async function restoreCartFromBackup() {
       // send restore to server: delete current cart and insert backup items
       try {
         // Clear server cart first
-        await fetch('http://localhost:5000/api/cart/clear', {
+        await fetch('${window.API_CONFIG.BASE_URL}/api/cart/clear', {
           method: 'DELETE',
           headers: { 'Authorization': `Bearer ${getToken()}` }
         });
 
         // Add each backup item
         for (const it of backup) {
-          await fetch('http://localhost:5000/api/cart/add', {
+          await fetch('${window.API_CONFIG.BASE_URL}/api/cart/add', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${getToken()}` },
             body: JSON.stringify({ productId: it.id, quantity: it.quantity })
@@ -2878,7 +2878,7 @@ window.addEventListener('pagehide', () => {
     // attempt sendBeacon to server to persist backup restore request
     if (navigator.sendBeacon) {
       const payload = JSON.stringify({ backup: JSON.parse(backup) });
-      const url = 'http://localhost:5000/api/cart/restore-beacon';
+      const url = '${window.API_CONFIG.BASE_URL}/api/cart/restore-beacon';
       navigator.sendBeacon(url, new Blob([payload], { type: 'application/json' }));
     }
   } catch (e) { /* ignore */ }
@@ -2926,7 +2926,7 @@ async function loadSavedAddresses() {
   if (!customerId) return;
 
   try {
-    const res = await fetch(`http://localhost:5000/api/orders/customer-addresses/${customerId}`, {
+    const res = await fetch(`${window.API_CONFIG.BASE_URL}/api/orders/customer-addresses/${customerId}`, {
       headers: { 'Authorization': `Bearer ${getToken()}` }
     });
     const data = await res.json();
@@ -2948,7 +2948,7 @@ async function loadSavedAddresses() {
     // Helper function to get address names from IDs
     async function getAddressNames(provinceId, districtId, wardIdentifier) {
       try {
-        const response = await fetch(`http://localhost:5000/api/address/full/${provinceId}/${districtId}/${encodeURIComponent(wardIdentifier)}`);
+        const response = await fetch(`${window.API_CONFIG.BASE_URL}/api/address/full/${provinceId}/${districtId}/${encodeURIComponent(wardIdentifier)}`);
         if (!response.ok) {
           console.warn('API response not ok:', response.status);
           return null;
@@ -3419,3 +3419,4 @@ async function loadSavedAddresses() {
 
   });
 })();
+

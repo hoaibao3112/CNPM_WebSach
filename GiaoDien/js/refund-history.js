@@ -245,7 +245,7 @@ async function loadRefundHistory() {
     showLoadingState();
     
     try {
-        const response = await fetch(`http://localhost:5000/api/orders/customer-refunds/${customerId}`, {
+        const response = await fetch(`${window.API_CONFIG.BASE_URL}/api/orders/customer-refunds/${customerId}`, {
             headers: {
                 'Authorization': `Bearer ${getToken()}`
             }

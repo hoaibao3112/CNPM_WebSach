@@ -8,7 +8,7 @@ app.use(cors()); // Cho phép tất cả origins (chỉ dùng cho development)
 
 app.get('/api/products', async (req, res) => {
   try {
-    const response = await axios.get('http://localhost:5000/api/product');
+    const response = await axios.get('${window.API_CONFIG.BASE_URL}/api/product');
     res.json(response.data);
   } catch (error) {
     res.status(500).json({ error: error.message });

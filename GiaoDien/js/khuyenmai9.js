@@ -9,7 +9,7 @@ function escapeHtml(unsafe) {
   }[c]));
 }
 // ====== PHẦN VOUCHER ======
-const VOUCHER_API = "http://localhost:5000/api/khuyenmai";
+const VOUCHER_API = "${window.API_CONFIG.BASE_URL}/api/khuyenmai";
 
 function isLoggedIn() {
   return !!(localStorage.getItem("token") && localStorage.getItem("customerId"));
@@ -77,7 +77,7 @@ function setupSaveEvents() {
 
       try {
         const token = localStorage.getItem("token");
-        const res = await fetch(`http://localhost:5000/api/khuyenmai/claim/${maKM}`, {
+        const res = await fetch(`${window.API_CONFIG.BASE_URL}/api/khuyenmai/claim/${maKM}`, {
           method: "POST",
           headers: { "Authorization": `Bearer ${token}`, "Content-Type": "application/json" }
         });
@@ -121,7 +121,7 @@ function loadProductDetail(MaSP) {
     window.location.href = "product_detail.html";
   }
 }
-async function fetchAndDisplayHoatHinh(apiUrl = "http://localhost:5000/api/product/theloai/1", containerId = "multi-category-list") {
+async function fetchAndDisplayHoatHinh(apiUrl = "${window.API_CONFIG.BASE_URL}/api/product/theloai/1", containerId = "multi-category-list") {
   const container = document.getElementById(containerId);
   container.innerHTML = `<p class="loading">⏳ Đang tải sản phẩm...</p>`;
   try {
@@ -134,7 +134,7 @@ async function fetchAndDisplayHoatHinh(apiUrl = "http://localhost:5000/api/produ
 }
 function displayProducts(products, id) {
   const container = document.getElementById(id);
-  const IMAGE_BASE = "http://localhost:5000/product-images";
+  const IMAGE_BASE = "${window.API_CONFIG.BASE_URL}/product-images";
   if (!products?.length) {
     container.innerHTML = `<p>Không có sản phẩm nào.</p>`;
     return;
@@ -166,7 +166,7 @@ function loadProductDetail(MaSP) {
  * @param {string} apiUrl - Đường dẫn API (mặc định: /api/product/hoathinh)
  * @param {string} containerId - ID của container để render
  */
-async function fetchAndDisplayHoatHinh(apiUrl = 'http://localhost:5000/api/product/theloai/1', containerId = 'multi-category-list') {
+async function fetchAndDisplayHoatHinh(apiUrl = '${window.API_CONFIG.BASE_URL}/api/product/theloai/1', containerId = 'multi-category-list') {
   const container = document.getElementById(containerId);
   if (!container) return;
   container.innerHTML = `<p class="loading">⏳ Đang tải sản phẩm thể loại Hoạt hình...</p>`;
@@ -196,7 +196,7 @@ function displayProducts(products, containerId = 'multi-category-list') {
   const container = document.getElementById(containerId);
   if (!container) return;
 
-  const IMAGE_BASE = 'http://localhost:5000/product-images'; 
+  const IMAGE_BASE = '${window.API_CONFIG.BASE_URL}/product-images'; 
 
   container.innerHTML = '';
 

@@ -57,7 +57,7 @@ document.addEventListener('DOMContentLoaded', function() {
     promotionList.innerHTML = '<div class="loading">Đang tải khuyến mãi...</div>';
     
     try {
-      const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'http://localhost:5000';
+      const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || window.API_CONFIG.BASE_URL;
       let url = `${_apiBase}/api/khuyenmai`;
       if (activeOnly) {
         url += '?activeOnly=true';
@@ -96,7 +96,7 @@ document.addEventListener('DOMContentLoaded', function() {
       let discountInfo = '';
       let productList = '';
       
-      const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'http://localhost:5000';
+      const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || window.API_CONFIG.BASE_URL;
       fetch(`${_apiBase}/api/khuyenmai/${promotion.MaKM}`)
         .then(response => response.json())
         .then(details => {

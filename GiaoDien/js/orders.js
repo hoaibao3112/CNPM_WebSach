@@ -16,7 +16,7 @@ async function getProvinceName(provinceCode) {
     }
 
     try {
-        const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'http://localhost:5000';
+        const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || window.API_CONFIG.BASE_URL;
         const response = await fetch(`${_apiBase}/api/orders/resolve/province/${provinceCode}`);
         if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
         const data = await response.json();
@@ -101,7 +101,7 @@ async function getDistrictName(districtCode, provinceCode) {
     }
 
     try {
-        const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'http://localhost:5000';
+        const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || window.API_CONFIG.BASE_URL;
         const response = await fetch(`${_apiBase}/api/orders/resolve/district/${districtCode}`);
         if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
         const data = await response.json();
@@ -135,7 +135,7 @@ async function getWardName(wardCode, districtCode) {
     }
 
     try {
-        const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'http://localhost:5000';
+        const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || window.API_CONFIG.BASE_URL;
         const response = await fetch(`${_apiBase}/api/orders/resolve/ward/${wardCode}`);
         if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
         const data = await response.json();
@@ -294,7 +294,7 @@ async function fetchOrders(customerId, statusFilter = 'all') {
     if (!checkAuth()) return [];
 
     try {
-        const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'http://localhost:5000';
+        const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || window.API_CONFIG.BASE_URL;
         const response = await fetch(`${_apiBase}/api/orders/customer-orders/${customerId}`, {
             headers: {
                 'Authorization': `Bearer ${getToken()}`
@@ -346,7 +346,7 @@ async function fetchOrderDetail(orderId) {
     if (!checkAuth()) return null;
 
     try {
-        const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'http://localhost:5000';
+        const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || window.API_CONFIG.BASE_URL;
         const response = await fetch(`${_apiBase}/api/orders/customer-orders/detail/${orderId}`, {
             headers: {
                 'Authorization': `Bearer ${getToken()}`
@@ -586,7 +586,7 @@ async function renderOrders(customerId, statusFilter = 'all') {
 async function fetchReview(orderId) {
     if (!checkAuth()) return null;
     try {
-        const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'http://localhost:5000';
+        const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || window.API_CONFIG.BASE_URL;
         const resp = await fetch(`${_apiBase}/api/orderreview/${orderId}`, {
         });
         if (!resp.ok) {
@@ -647,7 +647,7 @@ async function submitReview(orderId) {
     const rating = Number(document.getElementById('review-rating').value || 5);
     const comment = document.getElementById('review-comment').value || '';
     try {
-        const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'http://localhost:5000';
+        const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || window.API_CONFIG.BASE_URL;
         console.log('Submitting review', { orderId, rating, hasToken: !!getToken() });
         const resp = await fetch(`${_apiBase}/api/orderreview/${orderId}`, {
             method: 'POST',
@@ -725,7 +725,7 @@ async function reorderOrder(orderId) {
     }
 
     try {
-        const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'http://localhost:5000';
+        const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || window.API_CONFIG.BASE_URL;
         const response = await fetch(`${_apiBase}/api/cart/reorder/${orderId}`, {
             method: 'POST',
             headers: {
@@ -875,7 +875,7 @@ async function submitReturnRequest(order) {
   const ly_do = document.getElementById('return-reason')?.value?.trim() || 'Khách báo lỗi khi nhận hàng';
   // First create tra_hang record (without files)
   try {
-    const resp = await fetch('http://localhost:5000/api/tra-hang', {
+    const resp = await fetch('${window.API_CONFIG.BASE_URL}/api/tra-hang', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -899,7 +899,7 @@ async function submitReturnRequest(order) {
     if (fileInput && fileInput.files.length) {
       const form = new FormData();
       for (const f of fileInput.files) form.append('files', f);
-      const upResp = await fetch(`http://localhost:5000/api/tra-hang/${returnId}/files`, {
+      const upResp = await fetch(`${window.API_CONFIG.BASE_URL}/api/tra-hang/${returnId}/files`, {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${getToken()}` },
         body: form
@@ -1032,7 +1032,7 @@ async function submitReturnRequest(order) {
             // Fetch saved addresses for this customer
             try {
                 const customerId = getCustomerId();
-                const resp = await fetch(`http://localhost:5000/api/orders/customer-addresses/${customerId}`, {
+                const resp = await fetch(`${window.API_CONFIG.BASE_URL}/api/orders/customer-addresses/${customerId}`, {
                     headers: { 'Authorization': `Bearer ${getToken()}` }
                 });
                 const payload = await resp.json();
@@ -1131,7 +1131,7 @@ async function fetchReturnForOrder(orderId) {
     if (!orderId) return null;
     try {
         const token = getToken();
-            const res = await fetch(`http://localhost:5000/api/tra-hang?ma_don_hang=${encodeURIComponent(orderId)}`, {
+            const res = await fetch(`${window.API_CONFIG.BASE_URL}/api/tra-hang?ma_don_hang=${encodeURIComponent(orderId)}`, {
             headers: token ? { 'Authorization': `Bearer ${token}` } : {}
         });
         if (!res.ok) {
@@ -1400,7 +1400,7 @@ async function confirmAddressChange() {
     if (loadingModal) loadingModal.style.display = 'flex';
 
     try {
-        const resp = await fetch(`http://localhost:5000/api/orders/hoadon/${orderId}/address`, {
+        const resp = await fetch(`${window.API_CONFIG.BASE_URL}/api/orders/hoadon/${orderId}/address`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
@@ -1633,7 +1633,7 @@ async function openReturnDetailModal(returnReqOrId) {
         }
 
         if (id) {
-            const resp = await fetch(`http://localhost:5000/api/tra-hang/${id}`, {
+            const resp = await fetch(`${window.API_CONFIG.BASE_URL}/api/tra-hang/${id}`, {
                 headers: getToken() ? { 'Authorization': `Bearer ${getToken()}` } : {}
             });
             if (resp.ok) {
@@ -1710,7 +1710,7 @@ async function openReturnDetailModal(returnReqOrId) {
     document.getElementById('return-reason-text').textContent = returnReq.ly_do || returnReq.reason || returnReq.note || 'Không có';
     document.getElementById('return-state-text').textContent = returnReq.trang_thai || returnReq.status || 'N/A';
 
-    const base = 'http://localhost:5000';
+    const base = window.API_CONFIG.BASE_URL;
 
     const itemsListEl = document.getElementById('return-items-list');
     itemsListEl.innerHTML = '';
@@ -2025,7 +2025,7 @@ async function cancelOrder() {
             }
 
             try {
-                const response = await fetch(`http://localhost:5000/api/orders/customer-orders/cancel/${orderId}`, {
+                const response = await fetch(`${window.API_CONFIG.BASE_URL}/api/orders/customer-orders/cancel/${orderId}`, {
                     method: 'PUT',
                     headers: {
                         'Content-Type': 'application/json',
@@ -2247,7 +2247,7 @@ async function createChatRoom() {
     }
 
     try {
-        const response = await fetch('http://localhost:5000/api/chat/rooms', {
+        const response = await fetch('${window.API_CONFIG.BASE_URL}/api/chat/rooms', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -2283,7 +2283,7 @@ async function fetchChatRooms() {
     if (!checkAuth()) return [];
 
     try {
-        const response = await fetch('http://localhost:5000/api/chat/rooms', {
+        const response = await fetch('${window.API_CONFIG.BASE_URL}/api/chat/rooms', {
             headers: { 
                 'Authorization': `Bearer ${getToken()}` 
             }
@@ -2405,7 +2405,7 @@ async function loadChatHistory() {
     console.log('📚 Loading chat history for room:', currentChatRoom.room_id);
 
     try {
-        const response = await fetch(`http://localhost:5000/api/chat/rooms/${currentChatRoom.room_id}/messages`, {
+        const response = await fetch(`${window.API_CONFIG.BASE_URL}/api/chat/rooms/${currentChatRoom.room_id}/messages`, {
             headers: { 
                 'Authorization': `Bearer ${getToken()}` 
             }
@@ -2559,7 +2559,7 @@ async function sendMessage() {
     }
 
     try {
-        const response = await fetch('http://localhost:5000/api/chat/messages', {
+        const response = await fetch('${window.API_CONFIG.BASE_URL}/api/chat/messages', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -2639,7 +2639,7 @@ async function checkForNewMessages() {
     if (!currentChatRoom || !checkAuth()) return;
 
     try {
-        const response = await fetch(`http://localhost:5000/api/chat/rooms/${currentChatRoom.room_id}/messages`, {
+        const response = await fetch(`${window.API_CONFIG.BASE_URL}/api/chat/rooms/${currentChatRoom.room_id}/messages`, {
             headers: { 
                 'Authorization': `Bearer ${getToken()}` 
             }
@@ -2707,7 +2707,7 @@ async function updateUnreadCount() {
     if (!currentChatRoom) return;
 
     try {
-        const response = await fetch(`http://localhost:5000/api/chat/rooms/${currentChatRoom.room_id}/messages`, {
+        const response = await fetch(`${window.API_CONFIG.BASE_URL}/api/chat/rooms/${currentChatRoom.room_id}/messages`, {
             headers: { 
                 'Authorization': `Bearer ${getToken()}` 
             }
@@ -4072,7 +4072,7 @@ async function processRefundCancellation() {
         };
         console.log('🔔 Refund cancel payload:', payload);
 
-        const response = await fetch(`http://localhost:5000/api/orders/customer-orders/cancel/${orderId}`, {
+        const response = await fetch(`${window.API_CONFIG.BASE_URL}/api/orders/customer-orders/cancel/${orderId}`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
@@ -4255,7 +4255,7 @@ async function processCODCancellation(orderId, paymentMethod, paymentStatus) {
   }
 
   try {
-    const response = await fetch(`http://localhost:5000/api/orders/customer-orders/cancel/${orderId}`, {
+    const response = await fetch(`${window.API_CONFIG.BASE_URL}/api/orders/customer-orders/cancel/${orderId}`, {
       method: 'PUT',
       headers: {
         'Authorization': `Bearer ${getToken()}`,
@@ -4400,7 +4400,7 @@ async function markOrderCancelled(orderId, reason = 'Hủy bởi khách') {
     if (!checkAuth()) return { success: false, error: 'Not authenticated' };
     try {
         console.log('markOrderCancelled -> request:', { orderId, reason });
-        const resp = await fetch(`http://localhost:5000/api/orders/customer-orders/cancel/${orderId}`, {
+        const resp = await fetch(`${window.API_CONFIG.BASE_URL}/api/orders/customer-orders/cancel/${orderId}`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
@@ -4442,7 +4442,7 @@ async function changeOrderStatus(orderId, newStatus, note = '') {
     if (!orderId) return { success: false, error: 'No orderId' };
     if (!newStatus) return { success: false, error: 'No status provided' };
     try {
-        const url = `http://localhost:5000/api/orders/hoadon/${orderId}/trangthai`;
+        const url = `${window.API_CONFIG.BASE_URL}/api/orders/hoadon/${orderId}/trangthai`;
         const resp = await fetch(url, {
             method: 'PUT',
             headers: {

@@ -41,7 +41,7 @@ async function loadOrderDetails(orderId) {
     if (!orderId) return null;
     
     try {
-        const response = await fetch(`http://localhost:5000/api/orders/hoadon/${orderId}`);
+        const response = await fetch(`${window.API_CONFIG.BASE_URL}/api/orders/hoadon/${orderId}`);
         
         if (response.ok) {
             const result = await response.json();
@@ -51,7 +51,7 @@ async function loadOrderDetails(orderId) {
         
         if (isLoggedIn()) {
             const token = localStorage.getItem('token');
-            const authResponse = await fetch(`http://localhost:5000/api/orders/customer-orders/detail/${orderId}`, {
+            const authResponse = await fetch(`${window.API_CONFIG.BASE_URL}/api/orders/customer-orders/detail/${orderId}`, {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }

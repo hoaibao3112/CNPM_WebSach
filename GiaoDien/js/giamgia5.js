@@ -1,5 +1,5 @@
 // Biến dùng chung
-const API_BASE = 'http://localhost:5000'; // Điều chỉnh nếu backend của bạn chạy ở cổng khác
+const API_BASE = window.API_CONFIG.BASE_URL; // Điều chỉnh nếu backend của bạn chạy ở cổng khác
 const gap = 0; // Gap giờ được xử lý bằng padding/border trong CSS
 
 // =================================================================

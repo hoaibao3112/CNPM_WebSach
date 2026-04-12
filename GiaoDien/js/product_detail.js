@@ -167,7 +167,7 @@ function setupRatingSection(productId) {
             return;
         }
 
-        const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'http://localhost:5000';
+        const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || window.API_CONFIG.BASE_URL;
         const method = isEditing ? 'PUT' : 'POST';
         const url = isEditing ? `${_apiBase}/api/ratings/${editingRatingId}` : `${_apiBase}/api/ratings`;
         const body = {
@@ -215,7 +215,7 @@ function setupRatingSection(productId) {
  */
 async function fetchRatings(productId) {
     try {
-        const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'http://localhost:5000';
+        const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || window.API_CONFIG.BASE_URL;
         const response = await fetch(`${_apiBase}/api/ratings/${productId}`);
         if (response.ok) {
             const result = await response.json();
@@ -304,7 +304,7 @@ function displayRatings(ratings, averageRating, totalRatings, productId) {
 
             const ratingId = btn.dataset.id;
             try {
-                const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'http://localhost:5000';
+                const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || window.API_CONFIG.BASE_URL;
                 const response = await fetch(`${_apiBase}/api/ratings/${ratingId}`, {
                     method: 'DELETE',
                     headers: {
@@ -364,7 +364,7 @@ function generateStarDisplay(rating) {
 async function fetchProductDetail(productId) {
     try {
         showLoadingState();
-        const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'http://localhost:5000';
+        const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || window.API_CONFIG.BASE_URL;
         const response = await fetch(`${_apiBase}/api/product/${productId}`);
         
         if (!response.ok) throw new Error(`Lỗi HTTP: ${response.status}`);
@@ -394,7 +394,7 @@ async function fetchProductDetail(productId) {
 async function fetchRelatedAuthor(authorId) {
     try {
         console.log(`Fetching author with MaTG: ${authorId}`);
-        const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'http://localhost:5000';
+        const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || window.API_CONFIG.BASE_URL;
         const response = await fetch(`${_apiBase}/api/author/${authorId}`);
         if (!response.ok) throw new Error(`Lỗi API: ${response.status}`);
         
@@ -679,7 +679,7 @@ async function checkAndDisplayPromotions(productId) {
     console.log('🔍 Checking promotions for product:', productId);
     
     try {
-        const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'http://localhost:5000';
+        const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || window.API_CONFIG.BASE_URL;
         const response = await fetch(`${_apiBase}/api/khuyenmai?activeOnly=true`);
         console.log('📡 Promotions API response status:', response.status);
         
@@ -706,7 +706,7 @@ async function checkAndDisplayPromotions(productId) {
             console.log('🔎 Checking promotion:', promotion.TenKM, 'ID:', promotion.MaKM);
             
             try {
-                const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'http://localhost:5000';
+                const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || window.API_CONFIG.BASE_URL;
                 const detailResponse = await fetch(`${_apiBase}/api/khuyenmai/${promotion.MaKM}`);
                 
                 if (!detailResponse.ok) {
@@ -917,7 +917,7 @@ function copyPromotionCode(code) {
  */
 async function showPromotionDetail(promotionId) {
     try {
-        const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'http://localhost:5000';
+        const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || window.API_CONFIG.BASE_URL;
         const response = await fetch(`${_apiBase}/api/khuyenmai/${promotionId}`);
         if (!response.ok) throw new Error('Không thể tải chi tiết khuyến mãi');
         
@@ -1098,7 +1098,7 @@ function savePromotion(code, promotionId) {
     if (token) {
         (async () => {
             try {
-                const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'http://localhost:5000';
+                const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || window.API_CONFIG.BASE_URL;
                 const res = await fetch(`${_apiBase}/api/khuyenmai/claim/${promotionId}`, {
                     method: 'POST',
                     headers: {
@@ -1164,7 +1164,7 @@ window.savePromotion = savePromotion;
  */
 async function fetchRelatedProducts(currentProductId) {
     try {
-        const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'http://localhost:5000';
+        const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || window.API_CONFIG.BASE_URL;
         const response = await fetch(`${_apiBase}/api/product`);
         if (!response.ok) throw new Error(`Lỗi API: ${response.status}`);
         
@@ -1386,7 +1386,7 @@ function escapeHtml(unsafe) {
  */
 async function fetchProductInfo(productId) {
     if (!productId) return null;
-    const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'http://localhost:5000';
+    const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || window.API_CONFIG.BASE_URL;
     const endpoints = [`${_apiBase}/api/product/${productId}/info` ];
     // We remove the hardcoded relative path /api/... because it fails on Vercel without proxy
 

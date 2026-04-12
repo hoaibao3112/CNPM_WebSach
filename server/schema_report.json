@@ -1,0 +1,40 @@
+{
+  "tacgia": [
+    "MaTG",
+    "TenTG",
+    "NgaySinh",
+    "QuocTich",
+    "TieuSu",
+    "AnhTG"
+  ],
+  "sanpham": [
+    "MaSP",
+    "MaTL",
+    "TenSP",
+    "MoTa",
+    "HinhAnh",
+    "DonGia",
+    "SoLuong",
+    "NamXB",
+    "TinhTrang",
+    "MaTG",
+    "MinSoLuong",
+    "MaNCC",
+    "TrongLuong",
+    "KichThuoc",
+    "SoTrang",
+    "HinhThuc"
+  ],
+  "theloai": [
+    "MaTL",
+    "TenTL",
+    "TinhTrang"
+  ],
+  "nhacungcap": [
+    "MaNCC",
+    "TenNCC",
+    "SDT",
+    "DiaChi",
+    "TinhTrang"
+  ]
+}

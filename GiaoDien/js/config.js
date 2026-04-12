@@ -22,7 +22,7 @@ const API_CONFIG = {
         }
 
         // Priority 3: Local development (default)
-        return 'http://localhost:5000';
+        return window.API_CONFIG.BASE_URL;
     })(),
 
     // WebSocket URL - Derived from BASE_URL
@@ -61,3 +61,4 @@ if (window.location.hostname === 'localhost') {
     console.info('💡 To test with production API locally, add ?env=prod to the URL or run: localStorage.setItem("FORCE_PROD", "true"); location.reload();');
 }
 console.groupEnd();
+

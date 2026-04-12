@@ -78,7 +78,7 @@ async function addToCart(productId, productName, price, image) {
   if (user && (user.makh || user.tenkh) && token) {
     // Nếu đã đăng nhập, sử dụng API
     try {
-      const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'http://localhost:5000';
+      const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || window.API_CONFIG.BASE_URL;
       const response = await fetch(`${_apiBase}/api/client/cart/add`, {
         method: 'POST',
         headers: {
@@ -529,8 +529,8 @@ async function viewDetail(productId) {
 //     productList.innerHTML = '<div class="loading">Đang tải sản phẩm...</div>';
 
 //     let url = containerId === 'deal-hot-list'
-//       ? 'http://localhost:5000/api/product/deal-hot'
-//       : 'http://localhost:5000/api/product';
+//       ? '${window.API_CONFIG.BASE_URL}/api/product/deal-hot'
+//       : '${window.API_CONFIG.BASE_URL}/api/product';
 //     const params = new URLSearchParams();
 //     if (categoryId) params.append('MaTL', categoryId);
 //     if (containerId === 'deal-hot-list') {
@@ -566,7 +566,7 @@ async function viewDetail(productId) {
 //     if (!productList) throw new Error(`Không tìm thấy phần tử #${containerId}`);
 //     productList.innerHTML = '<div class="loading">Đang tải sản phẩm...</div>';
 
-//     let url = 'http://localhost:5000/api/product';
+//     let url = '${window.API_CONFIG.BASE_URL}/api/product';
 //     const categoryId = localStorage.getItem(`currentCategory_${containerId}`);
 //     const params = new URLSearchParams();
 //     if (categoryId) params.append('MaTL', categoryId);
@@ -600,7 +600,7 @@ async function fetchAndDisplayProducts() {
 
   try {
     productList.innerHTML = '<div class="loading">Đang tải sản phẩm...</div>';
-    const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'http://localhost:5000';
+    const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || window.API_CONFIG.BASE_URL;
     let url = `${_apiBase}/api/product/sorted/year`;
     // Only honor saved filters when we are on the book page itself.
     const categoryKey = storageKeyForGroup('category');
@@ -643,7 +643,7 @@ async function fetchAndDisplayPromotions() {
     productList.innerHTML = '<div class="loading">Đang tải sách khuyến mãi...</div>';
 
     // Gọi API để lấy sản phẩm khuyến mãi
-    const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'http://localhost:5000';
+    const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || window.API_CONFIG.BASE_URL;
     const response = await fetch(`${_apiBase}/api/product/sorted/stock`, {
       headers: { 'Accept': 'application/json' },
     });
@@ -686,7 +686,7 @@ function selectPromotion(promotionId) {
   const dealHotContainer = document.getElementById('deal-hot-list');
   dealHotContainer.innerHTML = '<div class="loading">Đang tải sản phẩm khuyến mãi...</div>';
 
-  const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'http://localhost:5000';
+  const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || window.API_CONFIG.BASE_URL;
   fetch(`${_apiBase}/api/khuyenmai/${promotionId}/products`, {
     headers: {
       'Content-Type': 'application/json; charset=utf-8'
@@ -748,7 +748,7 @@ async function fetchAndDisplayTextbooks() {
   try {
     productList.innerHTML = '<div class="loading">Đang tải sách giáo khoa...</div>';
 
-    const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'http://localhost:5000';
+    const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || window.API_CONFIG.BASE_URL;
     const response = await fetch(`${_apiBase}/api/product/category/6`);
 
     const products = await response.json();
@@ -777,7 +777,7 @@ async function fetchAndDisplayPoliticsBooks() {
   try {
     productList.innerHTML = '<div class="loading">Đang tải sách chính trị...</div>';
 
-    const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'http://localhost:5000';
+    const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || window.API_CONFIG.BASE_URL;
     const response = await fetch(`${_apiBase}/api/product/category/2`, {
       headers: { 'Accept': 'application/json' },
     });
@@ -828,7 +828,7 @@ async function fetchAndDisplayScienceBooks() {
   try {
     productList.innerHTML = '<div class="loading">Đang tải sách khoa học...</div>';
 
-    const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'http://localhost:5000';
+    const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || window.API_CONFIG.BASE_URL;
     const response = await fetch(`${_apiBase}/api/product/category/4`);
     if (!response.ok) throw new Error(`Lỗi HTTP: ${response.status}`);
 
@@ -849,7 +849,7 @@ async function fetchAndDisplayScienceBooks() {
 
 async function fetchCategoreisbyInvoice() {
   try {
-    const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'http://localhost:5000';
+    const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || window.API_CONFIG.BASE_URL;
     const response = await fetch(`${_apiBase}/api/orderreview/order-count`);
     const category = await response.json();
     console.log(category)
@@ -891,7 +891,7 @@ async function renderCategoryToFil() {
 //   dealHotContainer.innerHTML = '<div class="loading">Đang tải sản phẩm khuyến mãi...</div>';
 //   dealHotContainer.style.display = 'grid';
 
-//   fetch('http://localhost:5000/api/khuyenmai?activeOnly=true', {
+//   fetch('${window.API_CONFIG.BASE_URL}/api/khuyenmai?activeOnly=true', {
 //     headers: {
 //       'Content-Type': 'application/json; charset=utf-8'
 //     }
@@ -960,7 +960,7 @@ async function populateSuppliers() {
   const container = document.getElementById('supplierButtons');
   if (!container) return;
   try {
-    const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'http://localhost:5000';
+    const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || window.API_CONFIG.BASE_URL;
     const res = await fetch(`${_apiBase}/api/product/suppliers`);
     if (!res.ok) throw new Error('Không tải được danh sách nhà cung cấp');
     const suppliers = await res.json();
@@ -1005,7 +1005,7 @@ async function populateHinhThuc() {
   try {
     let values = [];
     try {
-      const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'http://localhost:5000';
+      const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || window.API_CONFIG.BASE_URL;
       const res = await fetch(`${_apiBase}/api/product`);
       if (!res.ok) throw new Error('Không lấy được sản phẩm để xác định HìnhThức');
       const products = await res.json();
@@ -1052,7 +1052,7 @@ async function populateAuthors() {
   const container = document.getElementById('authorButtons');
   if (!container) return;
   try {
-    const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'http://localhost:5000';
+    const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || window.API_CONFIG.BASE_URL;
     const res = await fetch(`${_apiBase}/api/product/authors`);
     if (!res.ok) throw new Error('Không tải được danh sách tác giả');
     const authors = await res.json();
@@ -1146,7 +1146,7 @@ function buildProductQuery({ MaTL, priceRange, MaNCC, HinhThuc, MaTG, search }) 
   if (MaTG) params.append('MaTG', Array.isArray(MaTG) ? MaTG.join(',') : MaTG);
   if (HinhThuc) params.append('HinhThuc', Array.isArray(HinhThuc) ? HinhThuc.join(',') : HinhThuc);
   if (search) params.append('search', search);
-  const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'http://localhost:5000';
+  const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || window.API_CONFIG.BASE_URL;
   return `${_apiBase}/api/product?` + params.toString();
 }
 
@@ -1396,7 +1396,7 @@ async function loadPromotionsFromAPI() {
   dealHotContainer.innerHTML = '';
 
   try {
-    const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'http://localhost:5000';
+    const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || window.API_CONFIG.BASE_URL;
     const res = await fetch(`${_apiBase}/api/books/promotions`, { headers: { 'Accept': 'application/json' } });
     if (!res.ok) throw new Error('Lỗi khi tải khuyến mãi');
     const data = await res.json();
@@ -1460,7 +1460,7 @@ async function loadAllProductsToMain() {
 
   try {
     console.log('[products] fetching /api/product');
-    const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'http://localhost:5000';
+    const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || window.API_CONFIG.BASE_URL;
     const res = await fetch(`${_apiBase}/api/product`, {
       headers: { 'Accept': 'application/json' }
     });
@@ -1489,7 +1489,7 @@ async function loadProductsByPromotion(promoId) {
 
   try {
     console.log(`[promotions] fetching /api/books/promotions/${promoId}/products`);
-    const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'http://localhost:5000';
+    const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || window.API_CONFIG.BASE_URL;
     const res = await fetch(`${_apiBase}/api/books/promotions/${promoId}/products`, {
       headers: { 'Accept': 'application/json' }
     });
@@ -1520,3 +1520,4 @@ if (typeof window !== 'undefined' && isBookPage()) {
     loadPromotionsFromAPI();
   });
 }
+

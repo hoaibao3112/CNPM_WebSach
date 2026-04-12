@@ -149,7 +149,7 @@ async function handleFAQInChat(message, chatMessages) {
     const keywordToSend = words.find(word => FAQ_KEYWORDS.includes(word.toLowerCase())) || message;
     console.log('Gửi từ khóa FAQ:', keywordToSend);
 
-    const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'http://localhost:5000';
+    const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || window.API_CONFIG.BASE_URL;
     const response = await fetch(`${_apiBase}/api/support/faq?keyword=${encodeURIComponent(keywordToSend)}`, {
       headers: {
         'Content-Type': 'application/json; charset=utf-8'
@@ -309,7 +309,7 @@ function setupChat() {
     const typingId = showTypingIndicator();
 
     try {
-      const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'http://localhost:5000';
+      const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || window.API_CONFIG.BASE_URL;
       // Gửi yêu cầu đến API
       const response = await fetch(`${_apiBase}/api/openai/chat`, {
         method: 'POST',
@@ -523,7 +523,7 @@ function setupChat() {
           return;
       }
 
-      const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'http://localhost:5000';
+      const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || window.API_CONFIG.BASE_URL;
       const response = await fetch(`${_apiBase}${endpoint}`, {
         headers: { 'Content-Type': 'application/json; charset=utf-8' }
       });
@@ -682,7 +682,7 @@ async function showProductSuggestionWithDelay(productInfo) {
 
 
   // Tìm sản phẩm
-    const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'http://localhost:5000';
+    const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || window.API_CONFIG.BASE_URL;
     if (productInfo.type === 'id') {
       response = await fetch(`${_apiBase}/api/product/${productInfo.value}`, {
         headers: { 'Content-Type': 'application/json; charset=utf-8' }
@@ -812,7 +812,7 @@ async function renderPromotionsInChat() {
 
   try {
     // Use backend absolute URL so frontend served from a different origin can reach the API
-    const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'http://localhost:5000';
+    const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || window.API_CONFIG.BASE_URL;
     const res = await fetch(`${_apiBase}/api/khuyenmai?activeOnly=true&limit=10`, { headers: { 'Content-Type': 'application/json; charset=utf-8' } });
     if (!res.ok) throw new Error('Failed to load promotions');
     const data = await res.json();
@@ -955,7 +955,7 @@ async function searchAndShowProductSuggestion(productInfo) {
   if (!suggestionDiv) return;
 
   try {
-    const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'http://localhost:5000';
+    const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || window.API_CONFIG.BASE_URL;
     if (productInfo.type === 'id') {
       response = await fetch(`${_apiBase}/api/product/${productInfo.value}`, {
         headers: {
