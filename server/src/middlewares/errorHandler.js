@@ -25,8 +25,8 @@ const errorHandler = (err, req, res, _next) => {
     message: err.message || 'Lỗi server nội bộ'
   };
 
-  // Chỉ show details & stack khi development
-  if (process.env.NODE_ENV === 'development') {
+  // Show details for debugging production 500 errors
+  if (process.env.NODE_ENV === 'development' || true) { // TEMPORARY: force details for debugging
     response.details = err.details || null;
     response.stack = err.stack;
   }

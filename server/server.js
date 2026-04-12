@@ -90,13 +90,45 @@ app.use(cors({
   optionsSuccessStatus: 204,
 }));
 
-// 2.5 Health check endpoint
+// 2.5 Health check and Diagnostic endpoints
 app.get('/api/ping', (req, res) => {
   res.json({ 
     status: 'ok', 
     timestamp: new Date().toISOString(),
     environment: process.env.NODE_ENV || 'development'
   });
+});
+
+app.get('/api/diag', async (req, res) => {
+  const diag = {
+    timestamp: new Date().toISOString(),
+    node_version: process.version,
+    env: {
+      NODE_ENV: process.env.NODE_ENV,
+      DB_HOST: process.env.DB_HOST,
+      DB_NAME: process.env.DB_NAME,
+      DB_PORT: process.env.DB_PORT,
+      DB_USER: process.env.DB_USER ? 'Set (masked)' : 'Not set',
+      SSL_CA_B64: process.env.DB_SSL_CA_BASE64 ? 'Set' : 'Not set'
+    },
+    database: { connected: false, tables: [], error: null }
+  };
+
+  try {
+    const conn = await pool.getConnection();
+    diag.database.connected = true;
+    const [tables] = await conn.query('SHOW TABLES');
+    diag.database.tables = tables.map(t => Object.values(t)[0]);
+    conn.release();
+  } catch (err) {
+    diag.database.error = {
+      message: err.message,
+      code: err.code,
+      stack: err.stack
+    };
+  }
+
+  res.json(diag);
 });
 
 // 3. Middleware
