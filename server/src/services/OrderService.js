@@ -347,7 +347,7 @@ class OrderService {
     async createOrReuseAddress(connection, customer, shippingAddress) {
         const [[matchingAddr]] = await connection.query(
             `SELECT MaDiaChi FROM diachi 
-             WHERE MaKH = ? AND TenNguoiNhan = ? AND SDT = ? AND DiaChiChiTiet = ? 
+             WHERE MakH = ? AND TenNguoiNhan = ? AND SDT = ? AND DiaChiChiTiet = ? 
              AND TinhThanh = ? AND QuanHuyen = ? AND PhuongXa = ? LIMIT 1`,
             [customer.makh, customer.name, customer.phone, shippingAddress.detail,
             shippingAddress.province, shippingAddress.district, shippingAddress.ward]
@@ -359,7 +359,7 @@ class OrderService {
         }
 
         const [addressResult] = await connection.query(
-            'INSERT INTO diachi (MaKH, TenNguoiNhan, SDT, DiaChiChiTiet, TinhThanh, QuanHuyen, PhuongXa) VALUES (?, ?, ?, ?, ?, ?, ?)',
+            'INSERT INTO diachi (MakH, TenNguoiNhan, SDT, DiaChiChiTiet, TinhThanh, QuanHuyen, PhuongXa) VALUES (?, ?, ?, ?, ?, ?, ?)',
             [customer.makh, customer.name, customer.phone, shippingAddress.detail,
             shippingAddress.province, shippingAddress.district, shippingAddress.ward]
         );
