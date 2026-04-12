@@ -56,22 +56,31 @@ const allowedOrigins = [
   'https://cnpm-websach.onrender.com',
 ];
 
+// Helper to check if origin is allowed (including subdomains for Vercel/Render)
+const isOriginAllowed = (origin) => {
+  if (!origin) return true;
+  if (allowedOrigins.includes(origin)) return true;
+  if (origin.startsWith('http://localhost') || origin.startsWith('http://127.0.0.1')) return true;
+  
+  try {
+    const url = new URL(origin);
+    return url.hostname.endsWith('.vercel.app') || url.hostname.endsWith('.onrender.com');
+  } catch (err) {
+    return false;
+  }
+};
 
 app.use(cors({
   origin: (origin, callback) => {
-    if (!origin) return callback(null, true);
-    if (allowedOrigins.includes(origin) || origin.startsWith('http://localhost') || origin.startsWith('http://127.0.0.1')) {
+    if (isOriginAllowed(origin)) {
       return callback(null, true);
     }
-    console.warn(`CORS blocked: Origin ${origin} not allowed`);
+    console.warn(`⚠️ CORS blocked: Origin ${origin} not allowed`);
     return callback(new Error('Not allowed by CORS'));
   },
-  methods: ['GET', 'POST', 'PUT', 'DELETE','PATCH', 'OPTIONS'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   credentials: true,
-  // Allow common headers plus our debug header X-Auth-Key which the frontend attaches.
-  // If you later add other custom headers, include them here (or use a function to echo requested headers).
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Auth-Key', 'X-Requested-With', 'Accept', 'Origin'],
-  // Ensure preflight (OPTIONS) returns a friendly status for some clients
   optionsSuccessStatus: 204,
 }));
 

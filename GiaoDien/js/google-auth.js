@@ -5,7 +5,11 @@
 (function () {
   // Use your Client ID from Google Cloud Console
   const GOOGLE_CLIENT_ID = '384701986163-efvf2jsg54kp6jjgqgj24o609vbr6uop.apps.googleusercontent.com';
-  const SERVER_GOOGLE_AUTH_URL = 'http://localhost:5000/api/client/auth/google';
+  
+  // Use API_CONFIG if available, otherwise fallback to local
+  const SERVER_GOOGLE_AUTH_URL = window.API_CONFIG 
+    ? window.API_CONFIG.buildUrl('/api/client/auth/google')
+    : 'http://localhost:5000/api/client/auth/google';
 
   function handleCredentialResponse(response) {
     const id_token = response && response.credential;
