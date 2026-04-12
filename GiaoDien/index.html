@@ -192,7 +192,7 @@
   <script>
     // Load footer partial and inject into the page
     (function () {
-      fetch('components/footer')
+      fetch('components/footer.html')
         .then(function (res) { return res.text(); })
         .then(function (html) {
           document.getElementById('load-footer').innerHTML = html;

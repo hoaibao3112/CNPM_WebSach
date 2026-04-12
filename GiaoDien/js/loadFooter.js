@@ -30,8 +30,8 @@
 
     // Try common relative locations in case pages are nested or opened differently
     tryFetch([
-      'components/footer', // usual path for pages in GiaoDien/ (no .html for Vercel cleanUrls)
-      './components/footer' // alternative relative path
+      'components/footer.html', // usual path for pages in GiaoDien/
+      './components/footer.html' // alternative relative path
     ])
       .then(function (html) {
         // If Shadow DOM is available, use it to isolate footer styles
