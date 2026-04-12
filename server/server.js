@@ -131,6 +131,37 @@ app.get('/api/diag', async (req, res) => {
   res.json(diag);
 });
 
+app.get('/api/diag/schema', async (req, res) => {
+    try {
+        const connection = await pool.getConnection();
+        const tablesToInspect = ['hoadon', 'chitiethoadon', 'khachhang', 'diachi', 'sanpham'];
+        const schema = {};
+
+        for (const table of tablesToInspect) {
+            try {
+                const [cols] = await connection.query(`DESCRIBE ${table}`);
+                schema[table] = cols.map(c => ({
+                    Field: c.Field,
+                    Type: c.Type,
+                    Null: c.Null,
+                    Key: c.Key,
+                    Default: c.Default
+                }));
+            } catch (e) {
+                schema[table] = { error: e.message };
+            }
+        }
+        
+        connection.release();
+        res.json({
+            timestamp: new Date().toISOString(),
+            schema
+        });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
 // 3. Middleware
 app.use(cookieParser());
 app.use(express.json());
