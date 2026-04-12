@@ -134,7 +134,7 @@ app.get('/api/diag', async (req, res) => {
 app.get('/api/diag/schema', async (req, res) => {
     try {
         const connection = await pool.getConnection();
-        const tablesToInspect = ['hoadon', 'chitiethoadon', 'khachhang', 'diachi', 'sanpham'];
+        const tablesToInspect = ['hoadon', 'chitiethoadon', 'khachhang', 'diachi', 'sanpham', 'giohang_chitiet', 'khuyen_mai'];
         const schema = {};
 
         for (const table of tablesToInspect) {
