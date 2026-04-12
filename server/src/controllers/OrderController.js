@@ -20,7 +20,14 @@ class OrderController {
             return baseController.sendSuccess(res, checkoutResult.payload);
 
         } catch (error) {
-            return baseController.sendError(res, error.message || 'Lỗi khi đặt hàng', 500, error.message);
+            console.error('[CRITICAL] Order placement failed:', error);
+            // Return verbose error to frontend for debugging
+            return res.status(500).json({
+                success: false,
+                message: error.message || 'Lỗi khi đặt hàng',
+                detail: error.stack, // Temp for debugging
+                sqlMessage: error.sqlMessage // MySQL specific
+            });
         }
     }
 

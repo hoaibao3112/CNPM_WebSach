@@ -704,9 +704,9 @@ class OrderService {
             [orderId],
         );
 
-        const [items] = await pool.query('SELECT MaSP, Soluong FROM chitiethoadon WHERE MaHD = ?', [orderId]);
+        const [items] = await pool.query('SELECT MaSP, SoLuong FROM chitiethoadon WHERE MaHD = ?', [orderId]);
         for (const item of items) {
-            await pool.query('UPDATE sanpham SET SoLuong = SoLuong + ? WHERE MaSP = ?', [item.Soluong, item.MaSP]);
+            await pool.query('UPDATE sanpham SET SoLuong = SoLuong + ? WHERE MaSP = ?', [item.SoLuong, item.MaSP]);
         }
 
         return { orderId, amount, rspCode, status: 'failed' };
