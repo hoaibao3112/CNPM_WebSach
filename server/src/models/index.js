@@ -4,7 +4,46 @@
  */
 import { Sequelize } from 'sequelize';
 import dotenv from 'dotenv';
+import fs from 'fs';
+import path from 'path';
+
 dotenv.config();
+
+// --- SSL Config Detection ---
+let sslOptions = null;
+const sslCaRaw = process.env.DB_SSL_CA || null;
+const sslCaB64 = process.env.DB_SSL_CA_BASE64 || null;
+
+if (sslCaB64) {
+  try {
+    sslOptions = {
+      ca: Buffer.from(sslCaB64, 'base64'),
+      rejectUnauthorized: process.env.DB_REJECT_UNAUTHORIZED !== 'false'
+    };
+  } catch (e) { console.warn('Sequelize SSL: failed to parse DB_SSL_CA_BASE64'); }
+} else if (sslCaRaw) {
+  sslOptions = {
+    ca: sslCaRaw,
+    rejectUnauthorized: process.env.DB_REJECT_UNAUTHORIZED !== 'false'
+  };
+} else if ((process.env.DB_HOST || '').includes('tidbcloud.com') || process.env.DB_REQUIRE_SSL === 'true') {
+  // Try local CA files
+  const caFiles = ['isrgrootx1.pem', 'tidb-ca.pem'];
+  let loadedCa = null;
+  for (const f of caFiles) {
+    try {
+      const p = path.join(process.cwd(), f);
+      if (fs.existsSync(p)) {
+        loadedCa = fs.readFileSync(p);
+        break;
+      }
+    } catch (e) { /* ignore */ }
+  }
+  sslOptions = {
+    ca: loadedCa,
+    rejectUnauthorized: process.env.DB_REJECT_UNAUTHORIZED !== 'false'
+  };
+}
 
 // --- Sequelize instance ---
 const sequelize = new Sequelize(
@@ -17,6 +56,7 @@ const sequelize = new Sequelize(
     dialect: 'mysql',
     logging: process.env.NODE_ENV === 'development' ? console.log : false,
     timezone: '+07:00',
+    dialectOptions: sslOptions ? { ssl: { ...sslOptions, minVersion: 'TLSv1.2' } } : {},
     pool: {
       max: 10,
       min: 0,
