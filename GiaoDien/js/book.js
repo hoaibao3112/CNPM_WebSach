@@ -662,6 +662,11 @@ async function fetchAndDisplayPromotions() {
 
     // API trả về { success: true, data: { data: [...], pagination: {...} } }
     const products = responseData.data?.data || responseData.data || responseData;
+    console.log('🔍 DEBUG fetchAndDisplayPromotions:');
+    console.log('responseData:', responseData);
+    console.log('products:', products);
+    console.log('Is Array?', Array.isArray(products));
+    console.log('Type:', typeof products);
     if (!Array.isArray(products)) throw new Error('Dữ liệu trả về không hợp lệ');
 
     // Giả lập dữ liệu nếu API chưa có GiaGoc, PhanTramGiam, DaBan
