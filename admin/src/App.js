@@ -26,7 +26,7 @@ import RefundManagement from './pages/RefundManagement.js';
 import AdminHome from './pages/AdminHome';
 
 // Global Axios Configuration
-axios.defaults.baseURL = 'http://localhost:5000/api';
+axios.defaults.baseURL = (process.env.REACT_APP_API_BASE || 'https://cnpm-customer.onrender.com') + '/api';
 axios.interceptors.request.use((config) => {
   const token = localStorage.getItem('authToken');
   if (token) {

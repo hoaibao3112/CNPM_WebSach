@@ -156,7 +156,7 @@ const InvoiceManagement = () => {
     setLoading(true);
     try {
       const token = localStorage.getItem('authToken');
-      const response = await axios.get('http://localhost:5000/api/orders/hoadon', {
+      const response = await axios.get((process.env.REACT_APP_API_BASE || 'https://cnpm-customer.onrender.com') + '/api/orders/hoadon', {
         headers: { Authorization: `Bearer ${token}` }
       });
 
@@ -191,10 +191,10 @@ const InvoiceManagement = () => {
       if (!token) return;
 
       const [countRes, roomsRes] = await Promise.all([
-        axios.get('http://localhost:5000/api/chat/admin/unread-count', {
+        axios.get((process.env.REACT_APP_API_BASE || 'https://cnpm-customer.onrender.com') + '/api/chat/admin/unread-count', {
           headers: { Authorization: `Bearer ${token}` }
         }),
-        axios.get('http://localhost:5000/api/chat/admin/unread-rooms', {
+        axios.get((process.env.REACT_APP_API_BASE || 'https://cnpm-customer.onrender.com') + '/api/chat/admin/unread-rooms', {
           headers: { Authorization: `Bearer ${token}` }
         })
       ]);
@@ -268,7 +268,7 @@ const InvoiceManagement = () => {
   const markRoomAsRead = async (roomId) => {
     try {
       const token = localStorage.getItem('authToken');
-      await axios.patch(`http://localhost:5000/api/chat/admin/mark-read/${roomId}`, {}, {
+      await axios.patch(`${process.env.REACT_APP_API_BASE || 'https://cnpm-customer.onrender.com'}/api/chat/admin/mark-read/${roomId}`, {}, {
         headers: { Authorization: `Bearer ${token}` }
       });
 
@@ -307,7 +307,7 @@ const InvoiceManagement = () => {
       console.log('📨 Loading messages for room:', roomId);
 
       const msgRes = await axios.get(
-        `http://localhost:5000/api/chat/rooms/${roomId}/messages`,
+        `${process.env.REACT_APP_API_BASE || 'https://cnpm-customer.onrender.com'}/api/chat/rooms/${roomId}/messages`,
         { headers: { Authorization: `Bearer ${token || localStorage.getItem('authToken')}` } }
       );
 
@@ -355,7 +355,7 @@ const InvoiceManagement = () => {
       const token = localStorage.getItem('authToken');
 
       const msgRes = await axios.get(
-        `http://localhost:5000/api/chat/rooms/${currentRoom.room_id}/messages`,
+        `${process.env.REACT_APP_API_BASE || 'https://cnpm-customer.onrender.com'}/api/chat/rooms/${currentRoom.room_id}/messages`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
@@ -410,7 +410,7 @@ const InvoiceManagement = () => {
 
   const handleViewInvoice = async (id) => {
     try {
-      const res = await axios.get(`http://localhost:5000/api/orders/hoadon/${id}`);
+      const res = await axios.get(`${process.env.REACT_APP_API_BASE || 'https://cnpm-customer.onrender.com'}/api/orders/hoadon/${id}`);
 
       // ✅ FORMAT ĐỊA CHỈ TRƯỚC KHI SET STATE
       const formattedAddress = await formatFullAddress(res.data);
@@ -442,7 +442,7 @@ const InvoiceManagement = () => {
       console.log('🔒 handleViewReview - token preview:', token ? (token.substring(0, 30) + '...') : '<no-token>');
       const headers = token ? { Authorization: `Bearer ${token}` } : {};
       console.log('🔎 handleViewReview - headers:', headers);
-      const res = await axios.get(`http://localhost:5000/api/orderreview/${orderId}`, { headers });
+      const res = await axios.get(`${process.env.REACT_APP_API_BASE || 'https://cnpm-customer.onrender.com'}/api/orderreview/${orderId}`, { headers });
       console.log('🔎 handleViewReview - API response:', res && res.data ? res.data : res);
       if (res && res.data) {
         setReviewData(res.data.review || null);
@@ -489,7 +489,7 @@ const InvoiceManagement = () => {
       console.log('👤 Fetching customer info...');
       try {
         const customerRes = await axios.get(
-          `http://localhost:5000/api/client/khachhang/${customerId}`,
+          `${process.env.REACT_APP_API_BASE || 'https://cnpm-customer.onrender.com'}/api/client/khachhang/${customerId}`,
           { headers: { Authorization: `Bearer ${token}` } }
         );
         console.log('✅ Customer info:', customerRes.data);
@@ -502,7 +502,7 @@ const InvoiceManagement = () => {
       // 2. Create or get chat room
       console.log('🏠 Creating/getting chat room...');
       const roomRes = await axios.post(
-        'http://localhost:5000/api/chat/rooms',
+        (process.env.REACT_APP_API_BASE || 'https://cnpm-customer.onrender.com') + '/api/chat/rooms',
         { customer_id: customerId },
         {
           headers: {
@@ -583,7 +583,7 @@ const InvoiceManagement = () => {
       setNewMessage('');
 
       const response = await axios.post(
-        'http://localhost:5000/api/chat/messages',
+        (process.env.REACT_APP_API_BASE || 'https://cnpm-customer.onrender.com') + '/api/chat/messages',
         {
           room_id: currentRoom.room_id,
           message: messageText
@@ -661,7 +661,7 @@ const InvoiceManagement = () => {
   const handleStatusChange = async (id, newStatus, ghichu = null, force = false) => {
     try {
       const token = localStorage.getItem('authToken');
-      await axios.put(`http://localhost:5000/api/orders/hoadon/${id}/trangthai`, {
+      await axios.put(`${process.env.REACT_APP_API_BASE || 'https://cnpm-customer.onrender.com'}/api/orders/hoadon/${id}/trangthai`, {
         trangthai: newStatus,
         ghichu: ghichu,
         force: force
@@ -689,7 +689,7 @@ const InvoiceManagement = () => {
       async onOk() {
         try {
           const token = localStorage.getItem('authToken');
-          await axios.put(`http://localhost:5000/api/orders/hoadon/${id}/huy`, {
+          await axios.put(`${process.env.REACT_APP_API_BASE || 'https://cnpm-customer.onrender.com'}/api/orders/hoadon/${id}/huy`, {
             lyDo: 'Hủy bởi quản trị viên'
           }, {
             headers: { Authorization: `Bearer ${token}` }

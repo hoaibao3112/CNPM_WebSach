@@ -14,7 +14,7 @@ const STATUS_LABELS = {
 };
 
 const ReturnManagement = () => {
-  const API = process.env.REACT_APP_API_BASE || 'http://localhost:5000';
+  const API = process.env.REACT_APP_API_BASE || (process.env.REACT_APP_API_BASE || 'https://cnpm-customer.onrender.com') + '';
   const [returnsList, setReturnsList] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');

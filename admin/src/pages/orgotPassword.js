@@ -11,7 +11,7 @@ const ForgotPassword = () => {
   // Bước 1: Gửi OTP
   const handleSendOtp = async (values) => {
     try {
-      const res = await axios.post('http://localhost:5000/api/forgot-password/send-otp', {
+      const res = await axios.post((process.env.REACT_APP_API_BASE || 'https://cnpm-customer.onrender.com') + '/api/forgot-password/send-otp', {
         email: values.email
       });
       if (res.data.success) {
@@ -30,7 +30,7 @@ const ForgotPassword = () => {
   // Bước 2: Xác thực OTP
   const handleVerifyOtp = async (values) => {
     try {
-      const res = await axios.post('http://localhost:5000/api/forgot-password/verify-otp', {
+      const res = await axios.post((process.env.REACT_APP_API_BASE || 'https://cnpm-customer.onrender.com') + '/api/forgot-password/verify-otp', {
         email,
         otp: values.otp
       });
@@ -52,7 +52,7 @@ const ForgotPassword = () => {
       return;
     }
     try {
-      const res = await axios.post('http://localhost:5000/api/forgot-password/reset', {
+      const res = await axios.post((process.env.REACT_APP_API_BASE || 'https://cnpm-customer.onrender.com') + '/api/forgot-password/reset', {
         email,
         otp,
         newPassword: values.newPassword

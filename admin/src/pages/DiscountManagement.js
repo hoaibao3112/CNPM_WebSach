@@ -148,7 +148,7 @@ const DiscountManagement = () => {
     setLoading(true);
     try {
       const response = await axios.get(
-        `http://localhost:5000/api/khuyenmai?search=${encodeURIComponent(search)}`,
+        `${process.env.REACT_APP_API_BASE || 'https://cnpm-customer.onrender.com'}/api/khuyenmai?search=${encodeURIComponent(search)}`,
         {
           headers: {
             Authorization: `Bearer ${localStorage.getItem('authToken')}`,
@@ -193,7 +193,7 @@ const DiscountManagement = () => {
 
   const fetchProducts = async () => {
     try {
-      const response = await axios.get('http://localhost:5000/api/product', {
+      const response = await axios.get((process.env.REACT_APP_API_BASE || 'https://cnpm-customer.onrender.com') + '/api/product', {
         headers: {
           Authorization: `Bearer ${localStorage.getItem('authToken')}`,
         },
@@ -215,7 +215,7 @@ const DiscountManagement = () => {
   const fetchCoupons = async () => {
     setCouponLoading(true);
     try {
-      const response = await axios.get('http://localhost:5000/api/coupons/admin/all', {
+      const response = await axios.get((process.env.REACT_APP_API_BASE || 'https://cnpm-customer.onrender.com') + '/api/coupons/admin/all', {
         headers: { Authorization: `Bearer ${localStorage.getItem('authToken')}` }
       });
       setCoupons(response.data.data || []);
@@ -269,12 +269,12 @@ const DiscountManagement = () => {
         MaKM: values.MaKM || null
       };
       if (couponFormType === 'add') {
-        await axios.post('http://localhost:5000/api/coupons/admin/create', payload, {
+        await axios.post((process.env.REACT_APP_API_BASE || 'https://cnpm-customer.onrender.com') + '/api/coupons/admin/create', payload, {
           headers: { Authorization: `Bearer ${localStorage.getItem('authToken')}` }
         });
         message.success('Tạo coupon thành công!');
       } else {
-        await axios.put(`http://localhost:5000/api/coupons/admin/${editingCoupon.MaPhieu}`, payload, {
+        await axios.put(`${process.env.REACT_APP_API_BASE || 'https://cnpm-customer.onrender.com'}/api/coupons/admin/${editingCoupon.MaPhieu}`, payload, {
           headers: { Authorization: `Bearer ${localStorage.getItem('authToken')}` }
         });
         message.success('Cập nhật coupon thành công!');
@@ -297,7 +297,7 @@ const DiscountManagement = () => {
       okType: 'danger',
       onOk: async () => {
         try {
-          await axios.delete(`http://localhost:5000/api/coupons/admin/${maPhieu}`, {
+          await axios.delete(`${process.env.REACT_APP_API_BASE || 'https://cnpm-customer.onrender.com'}/api/coupons/admin/${maPhieu}`, {
             headers: { Authorization: `Bearer ${localStorage.getItem('authToken')}` }
           });
           message.success('Xóa coupon thành công!');
@@ -314,7 +314,7 @@ const DiscountManagement = () => {
   const fetchPreferenceForms = async () => {
     setPreferenceLoading(true);
     try {
-      const response = await axios.get('http://localhost:5000/api/preferences/admin/forms', {
+      const response = await axios.get((process.env.REACT_APP_API_BASE || 'https://cnpm-customer.onrender.com') + '/api/preferences/admin/forms', {
         headers: { Authorization: `Bearer ${localStorage.getItem('authToken')}` }
       });
       setPreferenceForms(response.data.data || []);
@@ -365,12 +365,12 @@ const DiscountManagement = () => {
       };
 
       if (preferenceFormType === 'add') {
-        await axios.post('http://localhost:5000/api/preferences/admin/forms', payload, {
+        await axios.post((process.env.REACT_APP_API_BASE || 'https://cnpm-customer.onrender.com') + '/api/preferences/admin/forms', payload, {
           headers: { Authorization: `Bearer ${localStorage.getItem('authToken')}` }
         });
         message.success('Tạo form thành công!');
       } else {
-        await axios.put(`http://localhost:5000/api/preferences/admin/forms/${editingPreferenceForm.MaForm}`, payload, {
+        await axios.put(`${process.env.REACT_APP_API_BASE || 'https://cnpm-customer.onrender.com'}/api/preferences/admin/forms/${editingPreferenceForm.MaForm}`, payload, {
           headers: { Authorization: `Bearer ${localStorage.getItem('authToken')}` }
         });
         message.success('Cập nhật form thành công!');
@@ -393,7 +393,7 @@ const DiscountManagement = () => {
       okType: 'danger',
       onOk: async () => {
         try {
-          await axios.delete(`http://localhost:5000/api/preferences/admin/forms/${formId}`, {
+          await axios.delete(`${process.env.REACT_APP_API_BASE || 'https://cnpm-customer.onrender.com'}/api/preferences/admin/forms/${formId}`, {
             headers: { Authorization: `Bearer ${localStorage.getItem('authToken')}` }
           });
           message.success('Xóa form thành công!');
@@ -408,7 +408,7 @@ const DiscountManagement = () => {
 
   const handleViewFormDetail = async (formId) => {
     try {
-      const response = await axios.get(`http://localhost:5000/api/preferences/admin/forms/${formId}`, {
+      const response = await axios.get(`${process.env.REACT_APP_API_BASE || 'https://cnpm-customer.onrender.com'}/api/preferences/admin/forms/${formId}`, {
         headers: { Authorization: `Bearer ${localStorage.getItem('authToken')}` }
       });
       setSelectedFormDetail(response.data.data);
@@ -461,10 +461,10 @@ const DiscountManagement = () => {
   const fetchCategoriesAndAuthors = async () => {
     try {
       const [catRes, authRes] = await Promise.all([
-        axios.get('http://localhost:5000/api/product/categories', {
+        axios.get((process.env.REACT_APP_API_BASE || 'https://cnpm-customer.onrender.com') + '/api/product/categories', {
           headers: { Authorization: `Bearer ${localStorage.getItem('authToken')}` }
         }),
-        axios.get('http://localhost:5000/api/author', {
+        axios.get((process.env.REACT_APP_API_BASE || 'https://cnpm-customer.onrender.com') + '/api/author', {
           headers: { Authorization: `Bearer ${localStorage.getItem('authToken')}` }
         })
       ]);
@@ -479,7 +479,7 @@ const DiscountManagement = () => {
   const handleManageQuestions = async (formId) => {
     try {
       setCurrentFormForQuestions(formId);
-      const response = await axios.get(`http://localhost:5000/api/preferences/admin/forms/${formId}`, {
+      const response = await axios.get(`${process.env.REACT_APP_API_BASE || 'https://cnpm-customer.onrender.com'}/api/preferences/admin/forms/${formId}`, {
         headers: { Authorization: `Bearer ${localStorage.getItem('authToken')}` }
       });
       setQuestions(response.data.data.questions || []);
@@ -495,7 +495,7 @@ const DiscountManagement = () => {
     setResponsesLoading(true);
     try {
       // Lấy tất cả form để có thể query responses
-      const formsResponse = await axios.get('http://localhost:5000/api/preferences/admin/forms', {
+      const formsResponse = await axios.get((process.env.REACT_APP_API_BASE || 'https://cnpm-customer.onrender.com') + '/api/preferences/admin/forms', {
         headers: { Authorization: `Bearer ${localStorage.getItem('authToken')}` }
       });
 
@@ -506,7 +506,7 @@ const DiscountManagement = () => {
       for (const form of forms) {
         try {
           const responsesRes = await axios.get(
-            `http://localhost:5000/api/preferences/admin/forms/${form.MaForm}/responses`,
+            `${process.env.REACT_APP_API_BASE || 'https://cnpm-customer.onrender.com'}/api/preferences/admin/forms/${form.MaForm}/responses`,
             {
               headers: { Authorization: `Bearer ${localStorage.getItem('authToken')}` }
             }
@@ -550,7 +550,7 @@ const DiscountManagement = () => {
     try {
       // Fetch chi tiết câu trả lời từ endpoint mới (trả về answers array)
       const detailRes = await axios.get(
-        `http://localhost:5000/api/preferences/admin/responses/${response.MaPhanHoi}`,
+        `${process.env.REACT_APP_API_BASE || 'https://cnpm-customer.onrender.com'}/api/preferences/admin/responses/${response.MaPhanHoi}`,
         {
           headers: { Authorization: `Bearer ${localStorage.getItem('authToken')}` }
         }
@@ -607,7 +607,7 @@ const DiscountManagement = () => {
         ThuTu: values.ThuTu || 0
       };
 
-      await axios.post('http://localhost:5000/api/preferences/admin/questions', payload, {
+      await axios.post((process.env.REACT_APP_API_BASE || 'https://cnpm-customer.onrender.com') + '/api/preferences/admin/questions', payload, {
         headers: { Authorization: `Bearer ${localStorage.getItem('authToken')}` }
       });
 
@@ -630,7 +630,7 @@ const DiscountManagement = () => {
       okType: 'danger',
       onOk: async () => {
         try {
-          await axios.delete(`http://localhost:5000/api/preferences/admin/questions/${questionId}`, {
+          await axios.delete(`${process.env.REACT_APP_API_BASE || 'https://cnpm-customer.onrender.com'}/api/preferences/admin/questions/${questionId}`, {
             headers: { Authorization: `Bearer ${localStorage.getItem('authToken')}` }
           });
           message.success('Xóa câu hỏi thành công!');
@@ -661,7 +661,7 @@ const DiscountManagement = () => {
         ThuTu: values.ThuTu || 0
       };
 
-      await axios.post('http://localhost:5000/api/preferences/admin/options', payload, {
+      await axios.post((process.env.REACT_APP_API_BASE || 'https://cnpm-customer.onrender.com') + '/api/preferences/admin/options', payload, {
         headers: { Authorization: `Bearer ${localStorage.getItem('authToken')}` }
       });
 
@@ -685,7 +685,7 @@ const DiscountManagement = () => {
       okType: 'danger',
       onOk: async () => {
         try {
-          await axios.delete(`http://localhost:5000/api/preferences/admin/options/${optionId}`, {
+          await axios.delete(`${process.env.REACT_APP_API_BASE || 'https://cnpm-customer.onrender.com'}/api/preferences/admin/options/${optionId}`, {
             headers: { Authorization: `Bearer ${localStorage.getItem('authToken')}` }
           });
           message.success('Xóa lựa chọn thành công!');
@@ -703,7 +703,7 @@ const DiscountManagement = () => {
     setDetailLoading(true);
     setDetail(null);
     try {
-      const response = await axios.get(`http://localhost:5000/api/khuyenmai/${id}`, {
+      const response = await axios.get(`${process.env.REACT_APP_API_BASE || 'https://cnpm-customer.onrender.com'}/api/khuyenmai/${id}`, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem('authToken')}`,
         },
@@ -760,14 +760,14 @@ const DiscountManagement = () => {
       }
 
       if (formType === 'add') {
-        await axios.post('http://localhost:5000/api/khuyenmai', values, {
+        await axios.post((process.env.REACT_APP_API_BASE || 'https://cnpm-customer.onrender.com') + '/api/khuyenmai', values, {
           headers: {
             Authorization: `Bearer ${localStorage.getItem('authToken')}`,
           },
         });
         message.success('Thêm khuyến mãi thành công!');
       } else {
-        await axios.put(`http://localhost:5000/api/khuyenmai/${values.MaKM}`, values, {
+        await axios.put(`${process.env.REACT_APP_API_BASE || 'https://cnpm-customer.onrender.com'}/api/khuyenmai/${values.MaKM}`, values, {
           headers: {
             Authorization: `Bearer ${localStorage.getItem('authToken')}`,
           },
@@ -799,7 +799,7 @@ const DiscountManagement = () => {
         setDeleteId(id);
         setDeleteLoading(true);
         try {
-          await axios.delete(`http://localhost:5000/api/khuyenmai/${id}`, {
+          await axios.delete(`${process.env.REACT_APP_API_BASE || 'https://cnpm-customer.onrender.com'}/api/khuyenmai/${id}`, {
             headers: {
               Authorization: `Bearer ${localStorage.getItem('authToken')}`,
             },
@@ -826,7 +826,7 @@ const DiscountManagement = () => {
     setToggleStatusLoading(prev => ({ ...prev, [id]: true }));
 
     try {
-      await axios.patch(`http://localhost:5000/api/khuyenmai/${id}/trangthai`,
+      await axios.patch(`${process.env.REACT_APP_API_BASE || 'https://cnpm-customer.onrender.com'}/api/khuyenmai/${id}/trangthai`,
         { trangThai: newStatus },
         {
           headers: {

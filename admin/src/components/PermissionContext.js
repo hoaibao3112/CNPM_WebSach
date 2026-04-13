@@ -17,7 +17,7 @@ export const PermissionProvider = ({ children }) => {
         return;
       }
 
-      const response = await axios.get('http://localhost:5000/api/roles/user/permissions', {
+      const response = await axios.get((process.env.REACT_APP_API_BASE || 'https://cnpm-customer.onrender.com') + '/api/roles/user/permissions', {
         headers: { Authorization: `Bearer ${token}` },
       });
 

@@ -4,7 +4,7 @@ import { Button, Input, message, Table, Modal, Space, Tag, Select, Badge } from 
 
 // Create an axios instance that auto-attaches Authorization from localStorage.
 // If your backend uses cookie-based httpOnly tokens, set withCredentials:true and configure CORS accordingly.
-const api = axios.create({ baseURL: 'http://localhost:5000', withCredentials: false });
+const api = axios.create({ baseURL: (process.env.REACT_APP_API_BASE || 'https://cnpm-customer.onrender.com') + '', withCredentials: false });
 
 const TOKEN_KEYS = ['adminToken', 'token', 'accessToken', 'auth_token', 'jwt', 'authToken', 'wn_token'];
 

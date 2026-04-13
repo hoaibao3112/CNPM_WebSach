@@ -30,7 +30,7 @@
 //   useEffect(() => {
 //     setLoading(true);
 //     axios
-//       .get(`http://localhost:5000/api/khuyenmai?search=${encodeURIComponent(search)}`, {
+//       .get(`${process.env.REACT_APP_API_BASE || 'https://cnpm-customer.onrender.com'}/api/khuyenmai?search=${encodeURIComponent(search)}`, {
 //         headers: {
 //           Authorization: `Bearer ${localStorage.getItem('authToken')}`,
 //         },
@@ -50,7 +50,7 @@
 //     setDetailLoading(true);
 //     setDetail(null);
 //     try {
-//       const res = await axios.get(`http://localhost:5000/api/khuyenmai/${id}`, {
+//       const res = await axios.get(`${process.env.REACT_APP_API_BASE || 'https://cnpm-customer.onrender.com'}/api/khuyenmai/${id}`, {
 //         headers: {
 //           Authorization: `Bearer ${localStorage.getItem('authToken')}`,
 //         },
@@ -110,13 +110,13 @@
 //     setFormError('');
 //     try {
 //       if (formType === 'add') {
-//         await axios.post('http://localhost:5000/api/khuyenmai', form, {
+//         await axios.post((process.env.REACT_APP_API_BASE || 'https://cnpm-customer.onrender.com') + '/api/khuyenmai', form, {
 //           headers: {
 //             Authorization: `Bearer ${localStorage.getItem('authToken')}`,
 //           },
 //         });
 //       } else {
-//         await axios.put(`http://localhost:5000/api/khuyenmai/${form.MaKM}`, form, {
+//         await axios.put(`${process.env.REACT_APP_API_BASE || 'https://cnpm-customer.onrender.com'}/api/khuyenmai/${form.MaKM}`, form, {
 //           headers: {
 //             Authorization: `Bearer ${localStorage.getItem('authToken')}`,
 //           },
@@ -135,7 +135,7 @@
 //     setDeleteId(id);
 //     setDeleteLoading(true);
 //     try {
-//       await axios.delete(`http://localhost:5000/api/khuyenmai/${id}`, {
+//       await axios.delete(`${process.env.REACT_APP_API_BASE || 'https://cnpm-customer.onrender.com'}/api/khuyenmai/${id}`, {
 //         headers: {
 //           Authorization: `Bearer ${localStorage.getItem('authToken')}`,
 //         },
@@ -151,7 +151,7 @@
 //   // Đổi trạng thái
 //   const handleToggleStatus = async (id) => {
 //     try {
-//       await axios.patch(`http://localhost:5000/api/khuyenmai/${id}/toggle-status`, {}, {
+//       await axios.patch(`${process.env.REACT_APP_API_BASE || 'https://cnpm-customer.onrender.com'}/api/khuyenmai/${id}/toggle-status`, {}, {
 //         headers: {
 //           Authorization: `Bearer ${localStorage.getItem('authToken')}`,
 //         },

@@ -97,7 +97,7 @@ const RefundManagement = () => {
     try {
       setProcessing(true);
       const response = await axios.put(
-        `http://localhost:5000/api/orders/refund-requests/${selectedRefund.id}/process`,
+        `${process.env.REACT_APP_API_BASE || 'https://cnpm-customer.onrender.com'}/api/orders/refund-requests/${selectedRefund.id}/process`,
         processForm,
         {
           headers: {

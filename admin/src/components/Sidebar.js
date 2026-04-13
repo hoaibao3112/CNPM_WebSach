@@ -78,7 +78,7 @@ const Sidebar = () => {
   const handleLogout = async () => {
     try {
       await axios.post(
-        'http://localhost:5000/api/logout',
+        (process.env.REACT_APP_API_BASE || 'https://cnpm-customer.onrender.com') + '/api/logout',
         {},
         {
           headers: {

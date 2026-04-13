@@ -25,7 +25,7 @@ const Profile = () => {
   const [avatarFile, setAvatarFile] = useState(null);
   const [avatarUploading, setAvatarUploading] = useState(false);
   // computed avatar src
-  const apiBase = process.env.REACT_APP_API_BASE || 'http://localhost:5000';
+  const apiBase = process.env.REACT_APP_API_BASE || (process.env.REACT_APP_API_BASE || 'https://cnpm-customer.onrender.com') + '';
   const [avatarSrc, setAvatarSrc] = useState(undefined);
 
   const buildAvatarSrc = (anh) => {
