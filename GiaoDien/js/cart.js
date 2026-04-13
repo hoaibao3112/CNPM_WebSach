@@ -1400,7 +1400,7 @@ async function loadProvinces() {
 
   try {
     // Load from local JSON file instead of API
-    const response = await fetch('${window.API_CONFIG.BASE_URL}/api/address/cities');
+    const response = await fetch(`${window.API_CONFIG.BASE_URL}/api/address/cities`);
     const cities = await response.json();
     provinceSelect.innerHTML = '<option value="">-- Chọn Tỉnh/TP --</option>';
     cities.forEach(city => {

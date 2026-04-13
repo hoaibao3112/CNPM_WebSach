@@ -1160,7 +1160,7 @@ sidebarItems.forEach(item => {
   // location helpers: fetch lists from local JSON files via backend API
   async function loadProvinces() {
     try {
-      const res = await fetch('${window.API_CONFIG.BASE_URL}/api/address/cities');
+      const res = await fetch(`${window.API_CONFIG.BASE_URL}/api/address/cities`);
       const cities = await res.json();
       // Transform to match expected format: { code: city_id, name: city_name }
       return cities.map(city => ({
