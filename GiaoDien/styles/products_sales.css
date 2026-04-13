@@ -65,18 +65,24 @@
 .view-all-btn:hover{background:var(--flash-primary); color:#fff; transform:translateY(-2px); box-shadow:var(--shadow-md)}
 
 /* ========== Grid ========== */
-.flash-products{padding:22px}
+.flash-products{padding:20px 22px; overflow-x:auto; overflow-y:hidden; scrollbar-width:thin; scrollbar-color:rgba(255,71,87,.3) transparent}
+.flash-products::-webkit-scrollbar{height:6px}
+.flash-products::-webkit-scrollbar-track{background:transparent}
+.flash-products::-webkit-scrollbar-thumb{background:rgba(255,71,87,.3); border-radius:3px}
+.flash-products::-webkit-scrollbar-thumb:hover{background:rgba(255,71,87,.5)}
+
 .sale-row{
-  display:grid; grid-template-columns:repeat(5,1fr); gap:16px; align-items:stretch;
+  display:grid; grid-template-columns:repeat(4,minmax(220px,1fr)); gap:14px; align-items:stretch;
+  min-width:min-content;
 }
 
 /* ========== Card ========== */
 .sale-item{
-  display:flex; flex-direction:column; height:100%; min-height:360px;
+  display:flex; flex-direction:column; height:100%; min-height:340px;
   background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius);
   overflow:hidden; box-shadow:var(--shadow-sm);
   transition:transform .28s cubic-bezier(.4,0,.2,1), box-shadow .28s, border-color .28s;
-  position:relative;
+  position:relative; flex-shrink:0;
 }
 .sale-item:hover{transform:translateY(-6px); box-shadow:var(--shadow-md); border-color:rgba(255,71,87,.45)}
 .sale-item::after{
@@ -88,7 +94,7 @@
 
 /* ========== Image (taller + fixed) ========== */
 .sale-item-image-wrapper{
-  height:220px; /* taller */
+  height:200px;
   display:flex; align-items:center; justify-content:center; width:100%;
   background:linear-gradient(135deg,#fafafa,#f0f0f0 60%); transition:background .25s ease;
 }
@@ -110,35 +116,35 @@
 @keyframes badge{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
 
 /* ========== Info ========== */
-.sale-item-info{display:flex; flex-direction:column; gap:8px; padding:14px 14px 16px}
+.sale-item-info{display:flex; flex-direction:column; gap:6px; padding:12px 12px 14px}
 .sale-item-title{
-  margin:0; font-size:14px; font-weight:700; color:var(--ink-900); line-height:1.5;
+  margin:0; font-size:13px; font-weight:700; color:var(--ink-900); line-height:1.4;
   display:-webkit-box; -webkit-line-clamp:2; line-clamp:2; -webkit-box-orient:vertical;
-  overflow:hidden; min-height:42px; cursor:pointer; transition:color .2s, transform .2s;
+  overflow:hidden; min-height:38px; cursor:pointer; transition:color .2s, transform .2s;
 }
 .sale-item-title:hover{color:var(--flash-primary); transform:translateX(2px)}
 .sale-item-author{
-  font-size:12px; color:var(--ink-600); font-style:italic;
+  font-size:11px; color:var(--ink-600); font-style:italic;
   white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
 }
-.sale-item-year{font-size:11px; color:var(--ink-400)}
+.sale-item-year{font-size:10px; color:var(--ink-400)}
 
 .sale-item-price{
-  margin-top:auto; padding-top:10px; border-top:1px solid #f0f0f0;
-  display:flex; flex-direction:column; gap:6px;
+  margin-top:auto; padding-top:8px; border-top:1px solid #f0f0f0;
+  display:flex; flex-direction:column; gap:4px;
 }
-.discount-price{margin:0; font-size:20px; font-weight:800; color:var(--flash-primary); letter-spacing:-.3px}
-.orig-price{font-size:13px; color:var(--ink-600); text-decoration:line-through; opacity:.75}
+.discount-price{margin:0; font-size:18px; font-weight:800; color:var(--flash-primary); letter-spacing:-.2px}
+.orig-price{font-size:12px; color:var(--ink-600); text-decoration:line-through; opacity:.75}
 .sale-item-quantity{
-  font-size:11px; color:var(--ink-600); background:#fafafa; border:1px solid rgba(255,71,87,.08);
-  border-radius:6px; padding:5px 10px; width:max-content; font-weight:600;
+  font-size:10px; color:var(--ink-600); background:#fafafa; border:1px solid rgba(255,71,87,.08);
+  border-radius:5px; padding:4px 8px; width:max-content; font-weight:600;
 }
 
 /* Actions */
-.sale-item-actions{display:flex; gap:8px; margin-top:12px}
+.sale-item-actions{display:flex; gap:6px; margin-top:10px}
 .btn-detail,.btn-add-cart{
-  flex:1; min-height:38px; padding:10px 0; font-size:13px; font-weight:700;
-  border-radius:8px; text-align:center; text-decoration:none; cursor:pointer;
+  flex:1; min-height:34px; padding:8px 0; font-size:12px; font-weight:700;
+  border-radius:6px; text-align:center; text-decoration:none; cursor:pointer;
   border:1px solid #e9ecef; background:#f8f9fa; color:var(--ink-900);
   transition:transform .25s, box-shadow .25s, background .25s;
   position:relative; overflow:hidden;
