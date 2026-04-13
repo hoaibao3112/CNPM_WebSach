@@ -487,135 +487,135 @@
    ============================================ */
 @media (max-width: 480px) {
   .personalized-recommendations-section {
-    margin: 8px 0;
-    padding: 6px;
+    margin: 4px 0;
+    padding: 4px;
   }
 
   .recommendations-header {
     flex-direction: column;
-    gap: 6px;
-    margin-bottom: 8px;
-    padding-bottom: 6px;
+    gap: 3px;
+    margin-bottom: 4px;
+    padding-bottom: 3px;
   }
 
   .recommendations-title h2 {
-    font-size: 12px;
-    gap: 4px;
+    font-size: 11px;
+    gap: 3px;
   }
 
   .recommendations-title h2 i {
-    font-size: 14px;
+    font-size: 12px;
   }
 
   .recommendations-subtitle {
-    font-size: 9px;
+    font-size: 8px;
   }
 
   .view-all-recommendations {
     width: 100%;
-    padding: 6px 10px;
-    font-size: 10px;
+    padding: 4px 8px;
+    font-size: 9px;
     justify-content: center;
   }
 
   .recommendations-products {
     grid-template-columns: repeat(2, 1fr);
-    gap: 4px;
+    gap: 2px;
     padding: 0;
   }
 
   .recommendation-card {
-    border-radius: 5px;
+    border-radius: 4px;
   }
 
   .product-image {
-    padding-top: 85%;
+    padding-top: 75%;
   }
 
   .product-image img {
-    padding: 5px;
+    padding: 3px;
   }
 
   .product-info {
-    padding: 5px;
+    padding: 4px;
   }
 
   .product-title {
-    font-size: 9px;
-    height: 24px;
-    margin-bottom: 2px;
+    font-size: 8px;
+    height: 20px;
+    margin-bottom: 1px;
     -webkit-line-clamp: 2;
     line-clamp: 2;
   }
 
   .product-author {
-    font-size: 8px;
-    margin-bottom: 2px;
+    font-size: 7px;
+    margin-bottom: 1px;
   }
 
   .product-meta {
-    gap: 4px;
-    margin-bottom: 2px;
+    gap: 3px;
+    margin-bottom: 1px;
   }
 
   .product-year,
   .product-pages {
-    font-size: 7px;
+    font-size: 6px;
   }
 
   .recommendation-match {
-    margin-bottom: 4px;
-  }
-
-  .match-bar {
-    height: 3px;
     margin-bottom: 2px;
   }
 
+  .match-bar {
+    height: 2px;
+    margin-bottom: 1px;
+  }
+
   .match-text {
-    font-size: 7px;
+    font-size: 6px;
   }
 
   .product-price {
-    gap: 4px;
-    margin-bottom: 3px;
+    gap: 3px;
+    margin-bottom: 2px;
   }
 
   .price {
-    font-size: 10px;
+    font-size: 9px;
   }
 
   .original-price {
-    font-size: 8px;
+    font-size: 7px;
   }
 
   .quantity {
-    font-size: 8px;
-    margin-bottom: 4px;
+    font-size: 7px;
+    margin-bottom: 2px;
   }
 
   .product-actions {
-    gap: 3px;
-    margin-top: 4px;
+    gap: 2px;
+    margin-top: 2px;
   }
 
   .btn-detail,
   .btn-add-cart {
-    font-size: 7px;
-    padding: 3px 0;
+    font-size: 6px;
+    padding: 2px 0;
     border-radius: 2px;
   }
 
   .recommendation-badge,
   .discount-badge {
-    font-size: 7px;
-    padding: 2px 4px;
-    top: 2px;
-    left: 2px;
+    font-size: 6px;
+    padding: 1px 3px;
+    top: 1px;
+    left: 1px;
   }
 
   .discount-badge {
-    right: 2px;
+    right: 1px;
   }
 
 
@@ -624,136 +624,136 @@
    ============================================ */
 @media (max-width: 414px) and (min-width: 360px) {
   .personalized-recommendations-section {
-    margin: 8px 0;
-    padding: 6px;
-    border-radius: 6px;
+    margin: 4px 0;
+    padding: 4px;
+    border-radius: 4px;
   }
 
   .recommendations-header {
     flex-direction: column;
-    gap: 6px;
-    margin-bottom: 8px;
-    padding-bottom: 6px;
+    gap: 3px;
+    margin-bottom: 4px;
+    padding-bottom: 3px;
   }
 
   .recommendations-title h2 {
-    font-size: 12px;
-    gap: 4px;
+    font-size: 11px;
+    gap: 3px;
   }
 
   .recommendations-title h2 i {
-    font-size: 14px;
+    font-size: 12px;
   }
 
   .recommendations-subtitle {
-    font-size: 9px;
+    font-size: 8px;
   }
 
   .view-all-recommendations {
     width: 100%;
-    padding: 6px 10px;
-    font-size: 10px;
+    padding: 4px 8px;
+    font-size: 9px;
     justify-content: center;
   }
 
   .recommendations-products {
     grid-template-columns: repeat(2, 1fr);
-    gap: 4px;
+    gap: 2px;
     padding: 0;
   }
 
   .recommendation-card {
-    border-radius: 5px;
+    border-radius: 4px;
   }
 
   .product-image {
-    padding-top: 85%;
+    padding-top: 75%;
   }
 
   .product-image img {
-    padding: 5px;
+    padding: 3px;
   }
 
   .product-info {
-    padding: 5px;
+    padding: 4px;
   }
 
   .product-title {
-    font-size: 9px;
-    height: 24px;
-    margin-bottom: 2px;
+    font-size: 8px;
+    height: 20px;
+    margin-bottom: 1px;
     -webkit-line-clamp: 2;
     line-clamp: 2;
   }
 
   .product-author {
-    font-size: 8px;
-    margin-bottom: 2px;
+    font-size: 7px;
+    margin-bottom: 1px;
   }
 
   .product-meta {
-    gap: 4px;
-    margin-bottom: 2px;
+    gap: 3px;
+    margin-bottom: 1px;
   }
 
   .product-year,
   .product-pages {
-    font-size: 7px;
+    font-size: 6px;
   }
 
   .recommendation-match {
-    margin-bottom: 4px;
-  }
-
-  .match-bar {
-    height: 3px;
     margin-bottom: 2px;
   }
 
+  .match-bar {
+    height: 2px;
+    margin-bottom: 1px;
+  }
+
   .match-text {
-    font-size: 7px;
+    font-size: 6px;
   }
 
   .product-price {
-    gap: 4px;
-    margin-bottom: 3px;
+    gap: 3px;
+    margin-bottom: 2px;
   }
 
   .price {
-    font-size: 10px;
+    font-size: 9px;
   }
 
   .original-price {
-    font-size: 8px;
+    font-size: 7px;
   }
 
   .quantity {
-    font-size: 8px;
-    margin-bottom: 4px;
+    font-size: 7px;
+    margin-bottom: 2px;
   }
 
   .product-actions {
-    gap: 3px;
-    margin-top: 4px;
+    gap: 2px;
+    margin-top: 2px;
   }
 
   .btn-detail,
   .btn-add-cart {
-    font-size: 7px;
-    padding: 3px 0;
+    font-size: 6px;
+    padding: 2px 0;
     border-radius: 2px;
   }
 
   .recommendation-badge,
   .discount-badge {
-    font-size: 7px;
-    padding: 2px 4px;
-    top: 2px;
-    left: 2px;
+    font-size: 6px;
+    padding: 1px 3px;
+    top: 1px;
+    left: 1px;
   }
 
   .discount-badge {
-    right: 2px;
+    right: 1px;
   }
 
 
