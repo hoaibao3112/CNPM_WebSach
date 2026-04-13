@@ -2948,6 +2948,176 @@ body {
     width: 100%;
     min-width: auto;
   }
+}
+
+/* Responsive iPhone XS Max (<= 414px) - OPTIMIZED FOR IPHONE */
+@media (max-width: 414px) {
+  .product-detail-section {
+    padding: 9px;
+    gap: 9px;
+  }
+
+  .main-image {
+    height: 24vh;
+    max-height: 150px;
+    padding: 5px;
+  }
+
+  .product-thumbs img {
+    width: 42px;
+    height: 58px;
+  }
+
+  .product-info h1 {
+    font-size: 1.25rem;
+    margin-bottom: 7px;
+  }
+
+  .product-meta {
+    padding: 7px;
+    margin-bottom: 7px;
+  }
+
+  .product-meta span {
+    font-size: 11px;
+    margin-bottom: 4px;
+  }
+
+  .price-section {
+    padding: 9px;
+    margin-bottom: 9px;
+    min-height: 65px;
+  }
+
+  .current-price {
+    font-size: 1.5rem;
+  }
+
+  .delivery-info {
+    padding: 7px;
+    margin-bottom: 9px;
+  }
+
+  .delivery-item {
+    margin-bottom: 5px;
+    font-size: 11px;
+  }
+
+  .action-buttons {
+    gap: 5px;
+  }
+
+  .btn {
+    padding: 7px;
+    font-size: 11px;
+  }
+
+  .products-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 7px;
+    padding: 7px;
+  }
+
+  .product-card {
+    min-height: 215px;
+  }
+
+  .product-card img {
+    height: 110px;
+  }
+
+  .product-card h3 {
+    font-size: 10.5px;
+    min-height: 30px;
+    padding: 5px;
+    padding-top: 7px;
+  }
+
+  .product-card .author,
+  .product-card .year {
+    font-size: 8.5px;
+    padding: 0 5px;
+  }
+
+  .product-card .price {
+    font-size: 12px;
+    padding: 5px;
+  }
+
+  .product-card .btn-add-cart,
+  .product-card .btn-detail {
+    font-size: 8.5px;
+    min-height: 26px;
+    padding: 4.5px;
+  }
+
+  .related-products {
+    margin: 11px auto 13px;
+  }
+
+  .related-products h2 {
+    font-size: 14px;
+    padding: 9px 11px;
+  }
+
+  .product-promotions {
+    padding: 9px;
+    margin-bottom: 9px;
+  }
+
+  .product-promotions h3 {
+    font-size: 12.5px;
+    margin-bottom: 9px;
+  }
+
+  .promotion-title {
+    font-size: 11px;
+  }
+
+  .promotion-desc {
+    font-size: 9.5px;
+  }
+
+  .promotion-discount {
+    font-size: 0.85rem;
+    padding: 5.5px;
+  }
+
+  .promotion-code {
+    font-size: 0.82rem;
+    padding: 3.5px;
+  }
+
+  .comment-form,
+  #rating-form {
+    padding: 9px;
+  }
+
+  .comment-item,
+  .rating-item {
+    padding: 9px;
+  }
+
+  .comment-avatar {
+    width: 34px;
+    height: 34px;
+    font-size: 13px;
+  }
+
+  .product-description,
+  .product-comments,
+  .product-ratings {
+    padding: 11px 9px;
+    margin-bottom: 11px;
+  }
+
+  .product-description h2,
+  .product-comments h2,
+  .product-ratings h2 {
+    font-size: 15px;
+    margin-bottom: 9px;
+  }
+}
 
   .wish list button {
     padding: 6px;

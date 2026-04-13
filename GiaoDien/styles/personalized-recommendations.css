@@ -620,6 +620,144 @@
 }
 
 /* ============================================
+   IPHONE XS MAX: 414px
+   ============================================ */
+@media (max-width: 414px) and (min-width: 360px) {
+  .personalized-recommendations-section {
+    margin: 11px 0;
+    padding: 9px;
+    border-radius: 7px;
+  }
+
+  .recommendations-header {
+    flex-direction: column;
+    gap: 7px;
+    margin-bottom: 9px;
+    padding-bottom: 7px;
+  }
+
+  .recommendations-title h2 {
+    font-size: 13.5px;
+    gap: 4px;
+  }
+
+  .recommendations-title h2 i {
+    font-size: 15px;
+  }
+
+  .recommendations-subtitle {
+    font-size: 10px;
+  }
+
+  .view-all-recommendations {
+    width: 100%;
+    padding: 8px 11px;
+    font-size: 10.5px;
+    justify-content: center;
+  }
+
+  .recommendations-products {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 5.5px;
+    padding: 0;
+  }
+
+  .recommendation-card {
+    border-radius: 6px;
+  }
+
+  .product-image {
+    padding-top: 95%;
+  }
+
+  .product-image img {
+    padding: 7.5px;
+  }
+
+  .product-info {
+    padding: 7.5px;
+  }
+
+  .product-title {
+    font-size: 10px;
+    height: 28px;
+    margin-bottom: 4px;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+  }
+
+  .product-author {
+    font-size: 9px;
+    margin-bottom: 4px;
+  }
+
+  .product-meta {
+    gap: 5.5px;
+    margin-bottom: 4px;
+  }
+
+  .product-year,
+  .product-pages {
+    font-size: 8px;
+  }
+
+  .recommendation-match {
+    margin-bottom: 5.5px;
+  }
+
+  .match-bar {
+    height: 4px;
+    margin-bottom: 3px;
+  }
+
+  .match-text {
+    font-size: 8px;
+  }
+
+  .product-price {
+    gap: 5.5px;
+    margin-bottom: 4px;
+  }
+
+  .price {
+    font-size: 10.5px;
+  }
+
+  .original-price {
+    font-size: 9px;
+  }
+
+  .quantity {
+    font-size: 8.5px;
+    margin-bottom: 5.5px;
+  }
+
+  .product-actions {
+    gap: 4px;
+    margin-top: 5.5px;
+  }
+
+  .btn-detail,
+  .btn-add-cart {
+    font-size: 8px;
+    padding: 4px 0;
+    border-radius: 3px;
+  }
+
+  .recommendation-badge,
+  .discount-badge {
+    font-size: 8px;
+    padding: 3px 6px;
+    top: 4px;
+    left: 4px;
+  }
+
+  .discount-badge {
+    right: 4px;
+  }
+}
+
+/* ============================================
    ULTRA MICRO: 360px & BELOW
    ============================================ */
 @media (max-width: 360px) {

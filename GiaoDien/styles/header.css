@@ -706,6 +706,128 @@ body {
   }
 }
 
+/* ========== Responsive iPhone XS Max: ≤414px ========== */
+@media screen and (max-width: 414px) and (min-width: 360px) {
+  body {
+    padding-top: 98px;
+  }
+
+  .logo {
+    height: 13px;
+    display: block;
+  }
+
+  .top-bar-container {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 8px;
+    gap: 6px;
+  }
+
+  .search-container,
+  .search-bar {
+    width: 100%;
+    margin: 0;
+    flex: none;
+  }
+
+  .search-container input,
+  .search-bar input,
+  #search-input {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 8px 12px;
+    font-size: 13px;
+    border-radius: 14px;
+    border: none;
+  }
+
+  .search-container button {
+    padding: 8px 12px;
+    border-radius: 0 14px 14px 0;
+  }
+
+  .top-links {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    gap: 6px;
+    margin: 0;
+    padding: 0 6px;
+  }
+
+  .top-links::-webkit-scrollbar {
+    height: 4px;
+  }
+
+  .top-links::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 2px;
+  }
+
+  .top-links > li {
+    flex: 0 0 auto;
+    list-style: none;
+    position: relative;
+  }
+
+  .top-links > li > a {
+    width: 32px;
+    height: 32px;
+    display: flex !important;
+    justify-content: center;
+    align-items: center;
+    border-radius: 50%;
+    font-size: 0;
+    background-color: rgba(255,255,255,0.08);
+    color: white;
+    position: relative;
+  }
+
+  .top-links > li > a i {
+    font-size: 14px;
+  }
+
+  .top-links li .dropdown-content {
+    position: fixed;
+    top: auto; 
+    left: auto;
+    min-width: 160px;
+    max-width: 215px;
+    width: auto;
+    background: white;
+    color: #333;
+    border-radius: 6px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    display: none;
+    z-index: 9999;
+    animation: slideDown 0.3s ease-out;
+  }
+
+  .top-links li .dropdown-content a {
+    display: block;
+    padding: 8px 12px;
+    font-size: 12px;
+    color: #333;
+    text-decoration: none;
+  }
+
+  .top-links li .dropdown-content a:hover {
+    background-color: #f5f5f5;
+    color: #d32f2f;
+  }
+
+  .top-links li.dropdown-active .dropdown-content {
+    display: block;
+  }
+
+  .textTK {
+    display: none;
+  }
+}
+
 /* ========== Responsive ≤360px - ULTRA COMPACT ========== */
 @media screen and (max-width: 360px) {
   body {
