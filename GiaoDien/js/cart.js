@@ -1,4 +1,4 @@
-﻿// cart.js - Optimized for cart operations with backend API and localStorage fallback
+// cart.js - Optimized for cart operations with backend API and localStorage fallback
 
 // Utility function to format price
 function formatPrice(price) {
@@ -911,7 +911,7 @@ async function checkout() {
 
     if (!response.ok) {
       console.error('❌ API Error:', result);
-      throw new Error(result.error || `HTTP error! Status: ${response.status}`);
+      throw new Error(result.error || result.message || result.detail || `HTTP error! Status: ${response.status}`);
     }
 
     // ✅ XỬ LÝ RESPONSE ĐÚNG CHO COD VÀ VNPAY
@@ -954,7 +954,7 @@ async function checkout() {
         throw new Error('Phương thức thanh toán không được hỗ trợ');
       }
     } else {
-      throw new Error(result.error || 'Đặt hàng thất bại');
+      throw new Error(result.error || result.message || result.detail || 'Đặt hàng thất bại');
     }
 
   } catch (error) {
