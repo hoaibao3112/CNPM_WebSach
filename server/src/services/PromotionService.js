@@ -217,7 +217,7 @@ class PromotionService {
     async getActiveProducts() {
         // Return products currently in active promotions
         const [products] = await pool.query(`
-      SELECT DISTINCT s.*, km.TenKM, ct.GiaTriGiam
+      SELECT DISTINCT s.*, km.TenKM, km.LoaiKM, km.NgayKetThuc, ct.GiaTriGiam
       FROM sanpham s
       JOIN sp_khuyen_mai spkm ON s.MaSP = spkm.MaSP
       JOIN khuyen_mai km ON spkm.MaKM = km.MaKM
