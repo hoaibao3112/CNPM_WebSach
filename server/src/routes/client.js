@@ -6,8 +6,11 @@ import { authenticateToken } from '../middlewares/auth.js';
 
 const router = express.Router();
 
+// ===== PUBLIC ENDPOINTS (No Auth Required) =====
+
 // Public config endpoint (no auth required) - for frontend to get environment config
 router.get('/config', (req, res) => {
+  console.log('[API] GET /api/client/config - GOOGLE_CLIENT_ID:', process.env.GOOGLE_CLIENT_ID ? 'SET' : 'NOT SET');
   res.json({
     GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID || '',
     BASE_URL: process.env.BASE_URL || '',
@@ -43,6 +46,7 @@ router.delete('/cart/clear', authenticateToken, CartController.clear);
 router.post('/activity/view', CustomerController.logView);
 router.post('/activity/search', CustomerController.logSearch);
 
+// ===== PARAMETERIZED ROUTES (Must be last to avoid overriding specific routes) =====
 // Proxy other customer-related routes if needed
 router.get('/:makh/promo-usage', CustomerController.getPromoUsage);
 router.get('/:makh/promo-list', CustomerController.getPromoList);
