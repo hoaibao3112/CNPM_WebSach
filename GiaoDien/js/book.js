@@ -157,9 +157,17 @@ function displayProducts(products, containerId = 'book-list', limit = null) {
   const displayCount = limit && limit < products.length ? limit : products.length;
   const displayProducts = products.slice(0, displayCount);
 
+  // Tạo row wrapper cho flash-products
+  let rowWrapper = null;
+  if (containerId === 'flash-products') {
+    rowWrapper = document.createElement('div');
+    rowWrapper.className = 'sale-row';
+  }
+
   displayProducts.forEach(product => {
     const productElement = document.createElement('div');
-    productElement.className = 'product-item';
+    // Dùng sale-item class cho flash-products, product-item cho khác
+    productElement.className = containerId === 'flash-products' ? 'sale-item' : 'product-item';
 
     const isOutOfStock = product.TinhTrang?.data
       ? product.TinhTrang.data[0] === 0
@@ -217,8 +225,18 @@ function displayProducts(products, containerId = 'book-list', limit = null) {
       </div>
     `;
 
-    productList.appendChild(productElement);
+    // Append vào rowWrapper nếu có, nếu không append trực tiếp
+    if (rowWrapper) {
+      rowWrapper.appendChild(productElement);
+    } else {
+      productList.appendChild(productElement);
+    }
   });
+
+  // Append rowWrapper vào container này
+  if (rowWrapper) {
+    productList.appendChild(rowWrapper);
+  }
 
   // tạo nút xem thêm nếu cần
   if (limit && products.length > displayCount) {
