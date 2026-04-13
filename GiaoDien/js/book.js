@@ -644,7 +644,7 @@ async function fetchAndDisplayPromotions() {
 
     // Gọi API để lấy sản phẩm khuyến mãi
     const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || window.API_CONFIG.BASE_URL;
-    const response = await fetch(`${_apiBase}/api/product/sorted/stock`, {
+    const response = await fetch(`${_apiBase}/api/khuyenmai?activeOnly=true&limit=8`, {
       headers: { 'Accept': 'application/json' },
     });
     if (!response.ok) throw new Error(`Lỗi HTTP: ${response.status}`);

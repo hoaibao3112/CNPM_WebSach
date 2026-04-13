@@ -8,7 +8,7 @@
 (function() {
   'use strict';
 
-  const API_BASE = '${window.API_CONFIG.BASE_URL}/api';
+  const API_BASE = `${window.API_CONFIG.BASE_URL}/api`;
   let currentForm = null;
   let selectedAnswers = {};
 
