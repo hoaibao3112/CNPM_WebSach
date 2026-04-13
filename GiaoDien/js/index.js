@@ -680,9 +680,10 @@ async function showProductSuggestionWithDelay(productInfo) {
   scrollToBottom(chatMessages);
 }
 
-
   // Tìm sản phẩm
+  async function findProduct(productInfo) {
     const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || window.API_CONFIG.BASE_URL;
+    let response;
     if (productInfo.type === 'id') {
       response = await fetch(`${_apiBase}/api/product/${productInfo.value}`, {
         headers: { 'Content-Type': 'application/json; charset=utf-8' }
