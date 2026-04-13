@@ -1173,3 +1173,15 @@ body {
     text-align: center;
   }
 }
+
+/* ===== GLOBAL RESPONSIVE LAYOUT FOR BOOK PAGE (ADDED) ===== */
+@media (max-width: 768px) {
+  .container {
+    flex-direction: column;
+  }
+  .sidebar {
+    width: 100%;
+    min-width: 100%;
+    margin-bottom: 20px;
+  }
+}

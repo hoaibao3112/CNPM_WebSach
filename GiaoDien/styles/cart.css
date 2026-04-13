@@ -1538,3 +1538,14 @@ h2 {
     padding: 8px 4px;
   }
 }
+
+/* ===== ENHANCED RESPONSIVE CART TABLE (ADDED) ===== */
+@media (max-width: 768px) {
+  .cart-items {
+    overflow-x: auto;
+  }
+  .cart-table {
+    min-width: 500px; /* Ensure it scrolls instead of squishing too much */
+  }
+}
+
