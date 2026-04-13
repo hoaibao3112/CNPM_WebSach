@@ -581,28 +581,29 @@ body {
   }
 }
 
-/* ========== Responsive ≤430px ========== */
-@media screen and (max-width: 430.98px) {
+/* ========== Responsive ≤480px - COMPACT ========== */
+@media screen and (max-width: 480px) {
   body {
-    padding-top: 120px; /* header nhiều dòng */
+    padding-top: 100px; /* header compact */
   }
 
   .logo {
-    height: 15px;
+    height: 14px;
     display: block;
   }
 
   .top-bar-container {
     flex-direction: column;
     align-items: stretch;
-    padding: 10px;
+    padding: 8px;
+    gap: 6px;
   }
 
-  /* Thanh tìm kiếm luôn trên */
+  /* Thanh tìm kiếm */
   .search-container,
   .search-bar {
-    width: 70%;
-    margin: 8px auto;
+    width: 100%;
+    margin: 0;
     flex: none;
   }
 
@@ -611,38 +612,47 @@ body {
   #search-input {
     width: 100%;
     box-sizing: border-box;
+    padding: 8px 12px;
+    font-size: 13px;
+    border-radius: 15px;
+    border: none;
   }
 
-  /* Tabs icon tròn, scroll ngang */
+  .search-container button {
+    padding: 8px 12px;
+    border-radius: 0 15px 15px 0;
+  }
+
+  /* Tabs icon tròn */
   .top-links {
     display: flex;
-    justify-content: center; /* hoặc flex-end nếu muốn đẩy sang phải */
+    justify-content: center;
     align-items: center;
     overflow-x: auto;
     flex-wrap: nowrap;
-    gap: 8px;
+    gap: 6px;
     margin: 0;
-    padding: 0 8px;
+    padding: 0 6px;
   }
 
   .top-links::-webkit-scrollbar {
-    height: 6px;
+    height: 4px;
   }
 
   .top-links::-webkit-scrollbar-thumb {
     background: rgba(255, 255, 255, 0.3);
-    border-radius: 3px;
+    border-radius: 2px;
   }
 
   .top-links > li {
     flex: 0 0 auto;
     list-style: none;
-    position: relative; /* để JS căn dropdown */
+    position: relative;
   }
 
   .top-links > li > a {
-    width: 30px;
-    height: 30px;
+    width: 32px;
+    height: 32px;
     display: flex !important;
     justify-content: center;
     align-items: center;
@@ -654,21 +664,21 @@ body {
   }
 
   .top-links > li > a i {
-    font-size: 15px;
+    font-size: 14px;
   }
 
-  /* Dropdown mobile: nổi ra ngoài scroll container */
+  /* Dropdown mobile */
   .top-links li .dropdown-content {
     position: fixed;
     top: auto; 
     left: auto;
-    min-width: 180px;
-    max-width: 240px;
+    min-width: 160px;
+    max-width: 220px;
     width: auto;
     background: white;
     color: #333;
-    border-radius: 8px;
-    box-shadow: 0 6px 18px rgba(0,0,0,0.15);
+    border-radius: 6px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
     display: none;
     z-index: 9999;
     animation: slideDown 0.3s ease-out;
@@ -676,8 +686,8 @@ body {
 
   .top-links li .dropdown-content a {
     display: block;
-    padding: 10px 16px;
-    font-size: 14px;
+    padding: 8px 12px;
+    font-size: 12px;
     color: #333;
     text-decoration: none;
   }
@@ -687,32 +697,74 @@ body {
     color: #d32f2f;
   }
 
-  /* Khi active: hiển thị dropdown */
   .top-links li.dropdown-active .dropdown-content {
     display: block;
   }
+
+  .textTK {
+    display: none;
+  }
 }
 
-/* ========== Responsive ≤375px ========== */
-@media screen and (max-width: 375px) {
-  .top-links > li > a {
-    width: 44px;
-    height: 44px;
+/* ========== Responsive ≤360px - ULTRA COMPACT ========== */
+@media screen and (max-width: 360px) {
+  body {
+    padding-top: 90px;
   }
 
-  .top-links > li > a i {
-    font-size: 18px;
+  .logo {
+    height: 12px;
   }
 
-  .top-links li .dropdown-content a {
-    font-size: 13px;
-    padding: 8px 12px;
+  .top-bar-container {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 6px;
+    gap: 4px;
   }
 
   .search-container,
   .search-bar {
-    width: calc(100% - 16px);
-    margin: 6px auto;
+    width: 100%;
+    margin: 0;
+  }
+
+  .search-container input,
+  .search-bar input,
+  #search-input {
+    padding: 6px 10px;
+    font-size: 12px;
+    border-radius: 12px;
+  }
+
+  .search-container button {
+    padding: 6px 10px;
+    font-size: 12px;
+  }
+
+  .top-links {
+    justify-content: center;
+    gap: 4px;
+    padding: 0 4px;
+  }
+
+  .top-links > li > a {
+    width: 28px;
+    height: 28px;
+  }
+
+  .top-links > li > a i {
+    font-size: 12px;
+  }
+
+  .top-links li .dropdown-content {
+    min-width: 140px;
+    max-width: 200px;
+  }
+
+  .top-links li .dropdown-content a {
+    padding: 6px 10px;
+    font-size: 11px;
   }
 }
 
