@@ -165,65 +165,87 @@ function displayProducts(products, containerId = 'book-list', limit = null) {
   }
 
   displayProducts.forEach(product => {
-    const productElement = document.createElement('div');
-    // Dùng sale-item class cho flash-products, product-item cho khác
-    productElement.className = containerId === 'flash-products' ? 'sale-item' : 'product-item';
-
     const isOutOfStock = product.TinhTrang?.data
       ? product.TinhTrang.data[0] === 0
       : (product.TinhTrang === 0 || product.SoLuong === 0);
 
     const discountPercent = product.PhanTramGiam || 0;
-    const progressPercent = product.DaBan && product.SoLuong
-      ? Math.min((product.DaBan / (product.SoLuong + product.DaBan)) * 100, 100)
-      : 0;
-
-    // compute author once so we can debug when it's missing
     const authorName = getAuthorName(product);
-    if (authorName === 'Đang cập nhật') {
-      // helpful debug: print the product's possible author fields so you can inspect in DevTools
-      console.debug('Missing author for product.MaSP=' + (product.MaSP || product.MaSP === 0 ? product.MaSP : '(no id)'), {
-        MaSP: product.MaSP,
-        TenSP: product.TenSP,
-        TacGia: product.TacGia,
-        TenTG: product.TenTG,
-        TacGiaName: product.TacGiaName,
-        Author: product.Author,
-        raw: product
-      });
-    }
+    const originalPrice = product.GiaGoc || (product.DonGia * 1.25);
 
-    productElement.innerHTML = `
-      <div class="product-image">
-        <img src="img/product/${product.HinhAnh || 'default-book.jpg'}"
-             alt="${escapeHtml(product.TenSP)}"
-             onerror="this.src='img/default-book.jpg'">
-        ${isOutOfStock ? '<span class="stock-status">HẾT HÀNG</span>' : ''}
-      </div>
-      <div class="product-info">
-        <h3 class="product-title">${escapeHtml(product.TenSP)}</h3>
-  <p class="product-author">Tác giả: ${escapeHtml(authorName)}</p>
-        <p class="product-year">Năm XB: ${product.NamXB || 'Đang cập nhật'}</p>
-        <div class="product-price">
-          <span class="original-price">${formatPrice(product.GiaGoc || (product.DonGia * 1.25))}đ</span>
-          <span class="price">${formatPrice(product.DonGia)}đ</span>
-          ${discountPercent ? `<span class="discount">-${discountPercent}%</span>` : ''}
+    let productElement = document.createElement('div');
+
+    // FLASH-PRODUCTS: HTML structure cho CSS sale-item
+    if (containerId === 'flash-products') {
+      productElement.className = 'sale-item';
+      productElement.innerHTML = `
+        <div class="sale-item-image-wrapper">
+          <img class="sale-item-img" 
+               src="img/product/${product.HinhAnh || 'default-book.jpg'}"
+               alt="${escapeHtml(product.TenSP)}"
+               onerror="this.src='img/default-book.jpg'">
+          ${discountPercent ? `<div class="badge-discount">-${discountPercent}%</div>` : ''}
         </div>
-        <div class="progress-bar">
-          <div class="progress" style="width: ${progressPercent}%;"></div>
+        <div class="sale-item-info">
+          <h3 class="sale-item-title" onclick="viewDetail(${product.MaSP})">${escapeHtml(product.TenSP)}</h3>
+          <p class="sale-item-author">${escapeHtml(authorName)}</p>
+          <p class="sale-item-year">Năm: ${product.NamXB || '?'}</p>
+          <div class="sale-item-price">
+            <p class="discount-price">${formatPrice(product.DonGia)}đ</p>
+            <p class="orig-price">${formatPrice(originalPrice)}đ</p>
+            <div class="sale-item-quantity">Còn ${product.SoLuong || 0} cuốn</div>
+          </div>
+          <div class="sale-item-actions">
+            <button class="btn-add-cart" ${isOutOfStock ? 'disabled' : ''}
+                    onclick="addToCart(${product.MaSP}, '${escapeHtml(product.TenSP)}', ${product.DonGia}, '${product.HinhAnh || 'default-book.jpg'}')">
+              Thêm giỏ
+            </button>
+            <button class="btn-detail" onclick="viewDetail(${product.MaSP})">
+              Chi tiết
+            </button>
+          </div>
         </div>
-        <small>Còn ${product.SoLuong || 0} cuốn sách</small>
-        <div class="product-actions">
-          <button class="btn-add-cart" ${isOutOfStock ? 'disabled' : ''}
-                  onclick="addToCart(${product.MaSP}, '${escapeHtml(product.TenSP)}', ${product.DonGia}, '${product.HinhAnh || 'default-book.jpg'}')">
-            Thêm giỏ hàng
-          </button>
-          <button class="btn-detail" onclick="viewDetail(${product.MaSP})">
-            <i class="fas fa-info-circle"></i> Chi tiết
-          </button>
+      `;
+    } 
+    // OTHER SECTIONS: Giữ nguyên HTML structure cũ
+    else {
+      productElement.className = 'product-item';
+      const progressPercent = product.DaBan && product.SoLuong
+        ? Math.min((product.DaBan / (product.SoLuong + product.DaBan)) * 100, 100)
+        : 0;
+
+      productElement.innerHTML = `
+        <div class="product-image">
+          <img src="img/product/${product.HinhAnh || 'default-book.jpg'}"
+               alt="${escapeHtml(product.TenSP)}"
+               onerror="this.src='img/default-book.jpg'">
+          ${isOutOfStock ? '<span class="stock-status">HẾT HÀNG</span>' : ''}
         </div>
-      </div>
-    `;
+        <div class="product-info">
+          <h3 class="product-title">${escapeHtml(product.TenSP)}</h3>
+          <p class="product-author">Tác giả: ${escapeHtml(authorName)}</p>
+          <p class="product-year">Năm XB: ${product.NamXB || 'Đang cập nhật'}</p>
+          <div class="product-price">
+            <span class="original-price">${formatPrice(originalPrice)}đ</span>
+            <span class="price">${formatPrice(product.DonGia)}đ</span>
+            ${discountPercent ? `<span class="discount">-${discountPercent}%</span>` : ''}
+          </div>
+          <div class="progress-bar">
+            <div class="progress" style="width: ${progressPercent}%;"></div>
+          </div>
+          <small>Còn ${product.SoLuong || 0} cuốn sách</small>
+          <div class="product-actions">
+            <button class="btn-add-cart" ${isOutOfStock ? 'disabled' : ''}
+                    onclick="addToCart(${product.MaSP}, '${escapeHtml(product.TenSP)}', ${product.DonGia}, '${product.HinhAnh || 'default-book.jpg'}')">
+              Thêm giỏ hàng
+            </button>
+            <button class="btn-detail" onclick="viewDetail(${product.MaSP})">
+              <i class="fas fa-info-circle"></i> Chi tiết
+            </button>
+          </div>
+        </div>
+      `;
+    }
 
     // Append vào rowWrapper nếu có, nếu không append trực tiếp
     if (rowWrapper) {
@@ -233,7 +255,7 @@ function displayProducts(products, containerId = 'book-list', limit = null) {
     }
   });
 
-  // Append rowWrapper vào container này
+  // Append rowWrapper vào container
   if (rowWrapper) {
     productList.appendChild(rowWrapper);
   }
