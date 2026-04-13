@@ -8,11 +8,11 @@
    Section Container
    ============================================ */
 .personalized-recommendations-section {
-  margin: 0;
-  padding: 0;
-  background: transparent;
-  border-radius: 0;
-  box-shadow: none;
+  margin: 40px 0;
+  padding: 30px 20px;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
 /* ============================================
@@ -22,94 +22,104 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 8px;
-  padding-bottom: 8px;
-  border-bottom: 1px solid #f0f0f0;
+  margin-bottom: 25px;
+  padding-bottom: 15px;
+  border-bottom: 2px solid #f0f0f0;
 }
 
 .recommendations-title h2 {
-  margin: 0;
-  font-size: 18px;
+  margin: 0 0 5px 0;
+  font-size: 28px;
   font-weight: 700;
   color: #2c3e50;
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 10px;
 }
 
 .recommendations-title h2 i {
   color: #e74c3c;
   animation: heartbeat 1.5s ease-in-out infinite;
-  font-size: 16px;
+}
+
+@keyframes heartbeat {
+  0%, 100% {
+    transform: scale(1);
+  }
+  10%, 30% {
+    transform: scale(1.1);
+  }
+  20%, 40% {
+    transform: scale(1);
+  }
 }
 
 .recommendations-subtitle {
-  margin: 2px 0 0 0;
-  font-size: 11px;
+  margin: 5px 0 0 0;
+  font-size: 14px;
   color: #7f8c8d;
   font-style: italic;
 }
 
 .view-all-recommendations {
-  padding: 6px 12px;
+  padding: 10px 20px;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
   border: none;
-  border-radius: 16px;
-  font-size: 12px;
+  border-radius: 25px;
+  font-size: 14px;
   font-weight: 600;
   cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   transition: all 0.3s ease;
-  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.2);
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
 }
 
 .view-all-recommendations:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
 }
 
 .view-all-recommendations i {
   transition: transform 0.3s ease;
-  font-size: 12px;
 }
 
 .view-all-recommendations:hover i {
-  transform: translateX(2px)
+  transform: translateX(3px);
 }
 
 /* ============================================
-   Products Grid - 2 COLUMNS LIKE BOOK.CSS
+   Products Grid - DESKTOP 5 COLUMNS
    ============================================ */
 .recommendations-products {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 12px;
-  padding: 8px 0;
+  grid-template-columns: repeat(5, 18%);
+  gap: 20px;
+  padding: 10px 0;
   justify-content: center;
 }
 
 /* ============================================
-   Product Card - ULTRA COMPACT LIKE BOOK CARD
+   Product Card - Style giống book.css
    ============================================ */
 .recommendation-card {
   background: #fff;
   border: 1px solid #eaeaea;
-  border-radius: 4px;
+  border-radius: 8px;
   overflow: hidden;
   transition: all 0.3s ease;
   display: flex;
   flex-direction: column;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
   position: relative;
   cursor: pointer;
 }
 
 .recommendation-card:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+  transform: translateY(-3px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
   border-color: #d32f2f;
 }
 
@@ -155,7 +165,7 @@
 /* Image Container */
 .product-image {
   width: 100%;
-  padding-top: 100%;
+  padding-top: 140%;
   position: relative;
   overflow: hidden;
   background: #f9f9f9;
@@ -168,7 +178,7 @@
   width: 100%;
   height: 100%;
   object-fit: contain;
-  padding: 8px;
+  padding: 15px;
   transition: transform 0.3s;
 }
 
@@ -178,19 +188,19 @@
 
 /* Product Info */
 .product-info {
-  padding: 8px;
+  padding: 15px;
   flex-grow: 1;
   display: flex;
   flex-direction: column;
 }
 
 .product-title {
-  font-size: 13px;
+  font-size: 16px;
   font-weight: 600;
-  margin-bottom: 3px;
+  margin-bottom: 6px;
   color: #333;
-  line-height: 1.2;
-  height: 32px;
+  line-height: 1.3;
+  height: 40px;
   overflow: hidden;
   text-overflow: ellipsis;
   display: -webkit-box;
@@ -200,22 +210,22 @@
 }
 
 .product-author {
-  font-size: 11px;
+  font-size: 13px;
   color: #666;
-  margin-bottom: 3px;
+  margin-bottom: 8px;
   font-style: italic;
 }
 
 .product-meta {
   display: flex;
-  gap: 6px;
+  gap: 10px;
   flex-wrap: wrap;
-  margin-bottom: 3px;
+  margin-bottom: 8px;
 }
 
 .product-year,
 .product-pages {
-  font-size: 10px;
+  font-size: 12px;
   color: #888;
 }
 
@@ -249,28 +259,33 @@
 .product-price {
   display: flex;
   align-items: center;
-  gap: 5px;
-  margin-bottom: 3px;
+  gap: 8px;
+  margin-bottom: 8px;
   margin-top: auto;
 }
 
 .price {
   color: #d32f2f;
   font-weight: bold;
-  font-size: 12px;
+  font-size: 16px;
 }
 
 .original-price {
-  font-size: 10px;
+  font-size: 14px;
   color: #95a5a6;
   text-decoration: line-through;
 }
 
 /* Quantity */
 .quantity {
-  font-size: 10px;
+  font-size: 12px;
   color: #666;
-  margin-bottom: 3px;
+  margin-bottom: 8px;
+}
+
+.out-of-stock {
+  color: #e74c3c;
+  font-weight: 600;
 }
 
 .out-of-stock {
@@ -281,15 +296,15 @@
 /* Action Buttons */
 .product-actions {
   display: flex;
-  gap: 5px;
-  margin-top: 4px;
+  gap: 10px;
+  margin-top: 10px;
 }
 
 .btn-detail,
 .btn-add-cart {
   flex: 1;
-  padding: 4px 0;
-  font-size: 10px;
+  padding: 8px 0;
+  font-size: 13px;
   cursor: pointer;
   border-radius: 4px;
   transition: all 0.2s;
@@ -299,7 +314,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 3px;
+  gap: 5px;
 }
 
 .btn-detail {
