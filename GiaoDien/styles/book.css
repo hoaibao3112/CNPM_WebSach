@@ -1137,9 +1137,9 @@ body {
 }
 
 
-/* Mobile nhỏ */
-@media (max-width: 375px) {
-  /* 3 cột */
+/* Mobile phone - 480px+ */
+@media (max-width: 480px) {
+  /* Grid 2 cột */
   #book-list,
   #promotion-book-list,
   #textbook-list,
@@ -1148,10 +1148,125 @@ body {
   #search-book-list {
     display: grid !important;
     grid-template-columns: repeat(2, 1fr) !important;
-    gap: 4px !important;
+    gap: 8px !important;
+    padding: 8px 0 !important;
   }
 
-  /* Giảm font, padding */
+  .product-item {
+    border-radius: 8px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+  }
+
+  /* Giảm ảnh sản phẩm */
+  .product-image {
+    padding-top: 80% !important;
+  }
+
+  #promotion-book-list .product-image {
+    padding-top: 80% !important;
+  }
+
+  #textbook-list .product-image {
+    padding-top: 80% !important;
+  }
+
+  .product-image img {
+    padding: 8px !important;
+  }
+
+  .product-info {
+    padding: 8px !important;
+  }
+
+  .product-title {
+    font-size: 12px !important;
+    height: 32px !important;
+    margin-bottom: 3px !important;
+  }
+
+  .product-author {
+    font-size: 10px !important;
+    margin-bottom: 2px !important;
+  }
+
+  .product-year {
+    font-size: 9px !important;
+    margin-bottom: 3px !important;
+  }
+
+  .price {
+    font-size: 13px !important;
+  }
+
+  .quantity {
+    font-size: 10px !important;
+  }
+
+  .product-actions {
+    gap: 6px !important;
+    margin-top: 6px !important;
+  }
+
+  .btn-detail,
+  .btn-add-cart {
+    padding: 6px 0 !important;
+    font-size: 11px !important;
+  }
+}
+
+/* Ultra-small mobile - 375px and below */
+@media (max-width: 375px) {
+  /* 2 cột siêu nhỏ */
+  #book-list,
+  #promotion-book-list,
+  #textbook-list,
+  #politics-book-list,
+  #science-book-list,
+  #search-book-list {
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 6px !important;
+    padding: 6px 0 !important;
+  }
+
+  .product-image {
+    padding-top: 70% !important;
+  }
+
+  #promotion-book-list .product-image,
+  #textbook-list .product-image {
+    padding-top: 70% !important;
+  }
+
+  .product-image img {
+    padding: 6px !important;
+  }
+
+  .product-info {
+    padding: 6px !important;
+  }
+
+  .product-title {
+    font-size: 11px !important;
+    height: 28px !important;
+  }
+
+  .product-author {
+    font-size: 9px !important;
+  }
+
+  .product-year {
+    font-size: 8px !important;
+  }
+
+  .price {
+    font-size: 12px !important;
+  }
+
+  .quantity {
+    font-size: 9px !important;
+  }
+
   .btn-detail,
   .btn-add-cart {
     font-size: 10px;
@@ -1168,7 +1283,7 @@ body {
   }
 
   .top-links {
-    display: block; /* xếp dọc */
+    display: block;
     font-size: 11px;
     text-align: center;
   }
