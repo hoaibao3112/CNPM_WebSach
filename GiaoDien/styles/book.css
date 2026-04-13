@@ -1148,26 +1148,26 @@ body {
   #search-book-list {
     display: grid !important;
     grid-template-columns: repeat(2, 1fr) !important;
-    gap: 8px !important;
+    gap: 12px !important;
     padding: 8px 0 !important;
   }
 
   .product-item {
-    border-radius: 8px;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+    border-radius: 6px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
   }
 
-  /* Giảm ảnh sản phẩm siêu nhỏ */
+  /* Ảnh sản phẩm 80% -> 70% */
   .product-image {
-    padding-top: 60% !important;
+    padding-top: 70% !important;
   }
 
   #promotion-book-list .product-image {
-    padding-top: 60% !important;
+    padding-top: 70% !important;
   }
 
   #textbook-list .product-image {
-    padding-top: 60% !important;
+    padding-top: 70% !important;
   }
 
   .product-image img {
@@ -1179,18 +1179,18 @@ body {
   }
 
   .product-title {
-    font-size: 12px !important;
+    font-size: 13px !important;
     height: 32px !important;
     margin-bottom: 3px !important;
   }
 
   .product-author {
-    font-size: 10px !important;
+    font-size: 11px !important;
     margin-bottom: 2px !important;
   }
 
   .product-year {
-    font-size: 9px !important;
+    font-size: 10px !important;
     margin-bottom: 3px !important;
   }
 
@@ -1203,7 +1203,7 @@ body {
   }
 
   .product-actions {
-    gap: 6px !important;
+    gap: 8px !important;
     margin-top: 6px !important;
   }
 
@@ -1214,9 +1214,9 @@ body {
   }
 }
 
-/* iPhone XS Max - 414px SIÊU NHỎ */
+/* iPhone XS Max - 414px */
 @media (max-width: 414px) and (min-width: 376px) {
-  /* 2 cột siêu nhỏ */
+  /* 2 cột */
   #book-list,
   #promotion-book-list,
   #textbook-list,
@@ -1225,66 +1225,66 @@ body {
   #search-book-list {
     display: grid !important;
     grid-template-columns: repeat(2, 1fr) !important;
-    gap: 5px !important;
-    padding: 5px 0 !important;
+    gap: 10px !important;
+    padding: 6px 0 !important;
   }
 
   .product-item {
     border-radius: 6px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
   }
 
-  /* Ảnh nhỏ nhất */
+  /* Ảnh balanced */
   .product-image {
-    padding-top: 55% !important;
+    padding-top: 65% !important;
   }
 
   #promotion-book-list .product-image,
   #textbook-list .product-image {
-    padding-top: 55% !important;
+    padding-top: 65% !important;
   }
 
   .product-image img {
-    padding: 5px !important;
+    padding: 6px !important;
   }
 
   .product-info {
-    padding: 5px !important;
+    padding: 7px !important;
   }
 
   .product-title {
-    font-size: 10px !important;
-    height: 24px !important;
+    font-size: 12px !important;
+    height: 28px !important;
     margin-bottom: 2px !important;
   }
 
   .product-author {
-    font-size: 8.5px !important;
+    font-size: 10px !important;
     margin-bottom: 1px !important;
   }
 
   .product-year {
-    font-size: 8px !important;
+    font-size: 9px !important;
     margin-bottom: 2px !important;
   }
 
   .price {
-    font-size: 11px !important;
+    font-size: 12px !important;
   }
 
   .quantity {
-    font-size: 8px !important;
+    font-size: 9px !important;
   }
 
   .product-actions {
-    gap: 4px !important;
+    gap: 6px !important;
     margin-top: 4px !important;
   }
 
   .btn-detail,
   .btn-add-cart {
-    padding: 4px 0 !important;
-    font-size: 8px !important;
+    padding: 5px 0 !important;
+    font-size: 10px !important;
   }
 }
 
@@ -1360,6 +1360,65 @@ body {
     display: block;
     font-size: 11px;
     text-align: center;
+  }
+}
+
+/* Ultra-small mobile - 360px and below */
+@media (max-width: 360px) {
+  #book-list,
+  #promotion-book-list,
+  #textbook-list,
+  #politics-book-list,
+  #science-book-list,
+  #search-book-list {
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 6px !important;
+    padding: 6px 0 !important;
+  }
+
+  .product-image {
+    padding-top: 50% !important;
+  }
+
+  #promotion-book-list .product-image,
+  #textbook-list .product-image {
+    padding-top: 50% !important;
+  }
+
+  .product-image img {
+    padding: 6px !important;
+  }
+
+  .product-info {
+    padding: 6px !important;
+  }
+
+  .product-title {
+    font-size: 11px !important;
+    height: 28px !important;
+  }
+
+  .product-author {
+    font-size: 9px !important;
+  }
+
+  .product-year {
+    font-size: 8px !important;
+  }
+
+  .price {
+    font-size: 12px !important;
+  }
+
+  .quantity {
+    font-size: 9px !important;
+  }
+
+  .btn-detail,
+  .btn-add-cart {
+    font-size: 10px !important;
+    padding: 5px 0 !important;
   }
 }
 
