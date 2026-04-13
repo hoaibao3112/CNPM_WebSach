@@ -4,7 +4,7 @@
 
 (function () {
   // Use your Client ID from Google Cloud Console
-  const GOOGLE_CLIENT_ID = '384701986163-efvf2jsg54kp6jjgqgj24o609vbr6uop.apps.googleusercontent.com';
+  const GOOGLE_CLIENT_ID = '9709603804-5t8d5hjunt2829hnmt4li8ou09okmjld.apps.googleusercontent.com';
   
   // Use API_CONFIG if available, otherwise fallback to local
   const SERVER_GOOGLE_AUTH_URL = window.API_CONFIG 
