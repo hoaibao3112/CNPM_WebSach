@@ -63,43 +63,58 @@
       });
   }
 
-  // Initialize Google button when both Google API is ready AND config is loaded
-  const initializeGoogleButton = () => {
-    if (!document.getElementById('googleSignIn')) return;
+  // Initialize Google button - wait for backend config to load
+  const initializeGoogleButton = (attempt = 0) => {
+    const maxAttempts = 20; // Try for up to 10 seconds (500ms * 20)
+    
+    if (!document.getElementById('googleSignIn')) {
+      console.warn('⚠️ #googleSignIn element not found');
+      return;
+    }
 
     const GOOGLE_CLIENT_ID = getGoogleClientId();
     
     // Check if CLIENT_ID is properly loaded
     if (!GOOGLE_CLIENT_ID) {
-      console.warn('⚠️ GOOGLE_CLIENT_ID not yet loaded from backend. Retrying in 500ms...');
-      setTimeout(initializeGoogleButton, 500);
+      if (attempt < maxAttempts) {
+        console.log(`⏳ Waiting for GOOGLE_CLIENT_ID from backend... (attempt ${attempt + 1}/${maxAttempts})`);
+        setTimeout(() => initializeGoogleButton(attempt + 1), 500);
+      } else {
+        console.error('❌ GOOGLE_CLIENT_ID not loaded after 10 seconds. Google Sign-In will not work.');
+      }
       return;
     }
 
     console.log('✅ Initializing Google Sign-In with CLIENT_ID from backend');
 
     // Initialize the Google Identity Services client
-    google.accounts.id.initialize({
-      client_id: GOOGLE_CLIENT_ID,
-      callback: handleCredentialResponse
-    });
+    try {
+      google.accounts.id.initialize({
+        client_id: GOOGLE_CLIENT_ID,
+        callback: handleCredentialResponse
+      });
 
-    // Render the button
-    google.accounts.id.renderButton(
-      document.getElementById('googleSignIn'),
-      { theme: 'outline', size: 'large', text: 'continue_with' }
-    );
+      // Render the button
+      google.accounts.id.renderButton(
+        document.getElementById('googleSignIn'),
+        { theme: 'outline', size: 'large', text: 'continue_with' }
+      );
 
-    // Optional: show One Tap prompt
-    // google.accounts.id.prompt();
+      console.log('✅ Google Sign-In button rendered successfully');
+    } catch (error) {
+      console.error('❌ Error initializing Google Sign-In:', error);
+    }
   };
 
   // Wait for DOM and Google API to be ready
-  window.addEventListener('load', initializeGoogleButton);
-  
-  // Also try to initialize if page is already loaded (cached pages)
-  if (document.readyState === 'complete') {
-    initializeGoogleButton();
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => {
+      // Small delay to ensure google.accounts.id is available
+      setTimeout(initializeGoogleButton, 100);
+    });
+  } else {
+    // Page already loaded
+    setTimeout(initializeGoogleButton, 100);
   }
 })();
 
