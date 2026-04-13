@@ -1549,3 +1549,180 @@ h2 {
   }
 }
 
+/* ===== MOBILE PHONE 480px ===== */
+@media (max-width: 480px) {
+  .container {
+    padding: 10px;
+  }
+
+  .page-title {
+    font-size: 1.3rem;
+    margin: 10px 0 15px;
+  }
+
+  .cart-items {
+    margin-bottom: 10px;
+  }
+
+  .cart-table {
+    font-size: 11px;
+    min-width: 100%;
+  }
+
+  .cart-table th,
+  .cart-table td {
+    padding: 6px 4px !important;
+    font-size: 10px;
+  }
+
+  .cart-table td img {
+    width: 40px;
+    height: auto;
+  }
+
+  .product-info h3 {
+    font-size: 11px;
+  }
+
+  .quantity-input {
+    width: 35px;
+    padding: 3px;
+    font-size: 9px;
+  }
+
+  .btn-remove {
+    padding: 3px 6px;
+    font-size: 9px;
+  }
+
+  .cart-summary {
+    padding: 10px;
+  }
+
+  .summary-row {
+    font-size: 11px;
+    padding: 4px 0;
+  }
+
+  .summary-total {
+    font-size: 12px;
+    padding: 6px 0;
+  }
+
+  .cart-buttons {
+    gap: 6px;
+  }
+
+  .continue-btn,
+  .update-btn,
+  .checkout-btn {
+    font-size: 11px;
+    padding: 8px;
+  }
+
+  .coupon-box {
+    gap: 6px;
+    flex-direction: column;
+  }
+
+  .coupon-input input {
+    font-size: 11px;
+    padding: 6px;
+  }
+
+  .apply-btn {
+    font-size: 11px;
+    padding: 8px;
+  }
+
+  .delivery-section,
+  .payment-section {
+    padding: 10px;
+    margin-bottom: 8px;
+  }
+
+  .delivery-section h3,
+  .payment-section h3 {
+    font-size: 12px;
+  }
+}
+
+/* ===== ULTRA-SMALL MOBILE 360px ===== */
+@media (max-width: 360px) {
+  .container {
+    padding: 6px;
+  }
+
+  .page-title {
+    font-size: 1.1rem;
+    margin: 6px 0 10px;
+  }
+
+  .cart-table {
+    font-size: 9px;
+  }
+
+  .cart-table th,
+  .cart-table td {
+    padding: 4px 3px !important;
+    font-size: 9px;
+  }
+
+  .cart-table td img {
+    width: 32px;
+    height: auto;
+  }
+
+  .product-info h3 {
+    font-size: 10px;
+  }
+
+  .quantity-input {
+    width: 30px;
+    padding: 2px;
+    font-size: 8px;
+  }
+
+  .btn-remove {
+    padding: 2px 4px;
+    font-size: 8px;
+  }
+
+  .cart-summary {
+    padding: 8px;
+  }
+
+  .summary-row {
+    font-size: 10px;
+    padding: 3px 0;
+  }
+
+  .summary-total {
+    font-size: 11px;
+  }
+
+  .continue-btn,
+  .update-btn,
+  .checkout-btn {
+    font-size: 10px;
+    padding: 6px;
+  }
+
+  .coupon-input input,
+  .apply-btn {
+    font-size: 10px;
+    padding: 5px;
+  }
+
+  .delivery-section,
+  .payment-section {
+    padding: 8px;
+    margin-bottom: 6px;
+  }
+
+  .delivery-section h3,
+  .payment-section h3 {
+    font-size: 11px;
+  }
+}
+

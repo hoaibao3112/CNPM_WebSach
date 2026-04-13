@@ -2160,3 +2160,322 @@ body {
         gap: var(--space-md);
     }
 }
+
+/* ===== MOBILE PHONE 480px ===== */
+@media (max-width: 480px) {
+  .container {
+    padding: 10px;
+  }
+
+  .order-header {
+    padding: 12px;
+    flex-direction: column;
+    align-items: flex-start;
+    margin-bottom: 15px;
+  }
+
+  .order-header h1 {
+    font-size: 1.2rem;
+    margin-bottom: 8px;
+  }
+
+  .status-section,
+  .action-buttons {
+    min-width: 100%;
+    gap: 6px;
+  }
+
+  .order-filter,
+  .order-sorter {
+    gap: 4px;
+    flex-direction: column;
+  }
+
+  .order-filter select,
+  .order-sorter select {
+    padding: 6px;
+    font-size: 11px;
+  }
+
+  .order-list {
+    gap: 10px;
+  }
+
+  .order-card {
+    padding: 10px;
+  }
+
+  .order-card h3 {
+    font-size: 12px;
+    margin-bottom: 6px;
+  }
+
+  .order-info {
+    gap: 4px;
+    font-size: 10px;
+  }
+
+  .order-items {
+    gap: 8px;
+    max-height: 200px;
+  }
+
+  .order-item {
+    padding: 6px;
+    gap: 6px;
+  }
+
+  .order-item img {
+    width: 40px;
+    height: 55px;
+  }
+
+  .order-item-details {
+    gap: 2px;
+  }
+
+  .order-item-details h4 {
+    font-size: 10px;
+  }
+
+  .order-item-details p {
+    font-size: 9px;
+  }
+
+  .order-price {
+    font-size: 11px;
+  }
+
+  .order-actions {
+    gap: 5px;
+    flex-direction: column;
+  }
+
+  .btn-detail,
+  .btn-track,
+  .btn-reorder,
+  .btn-return {
+    padding: 7px 10px;
+    font-size: 10px;
+  }
+
+  .chat-section {
+    padding: 10px;
+    margin-top: 10px;
+  }
+
+  .chat-messages {
+    max-height: 250px;
+  }
+
+  .chat-form {
+    gap: 6px;
+  }
+
+  .chat-form input {
+    padding: 6px;
+    font-size: 11px;
+  }
+
+  .chat-form button {
+    padding: 6px 12px;
+    font-size: 10px;
+  }
+
+  .delivery-info {
+    padding: 8px;
+    font-size: 10px;
+  }
+
+  .address-change-modal,
+  .refund-modal {
+    width: 90%;
+    padding: 12px;
+  }
+
+  .modal-title {
+    font-size: 13px;
+  }
+
+  .form-group input,
+  .form-group select,
+  .form-group textarea {
+    font-size: 11px;
+    padding: 6px;
+  }
+
+  .modal-buttons button {
+    padding: 7px 12px;
+    font-size: 10px;
+  }
+}
+
+/* ===== ULTRA-SMALL MOBILE 360px ===== */
+@media (max-width: 360px) {
+  .container {
+    padding: 6px;
+    min-height: 100vh;
+  }
+
+  .order-header {
+    padding: 8px;
+    gap: 6px;
+  }
+
+  .order-header h1 {
+    font-size: 1rem;
+  }
+
+  .status-section,
+  .action-buttons {
+    gap: 4px;
+    flex-wrap: wrap;
+  }
+
+  .order-filter,
+  .order-sorter {
+    gap: 3px;
+    flex-direction: column;
+  }
+
+  .order-filter select,
+  .order-sorter select {
+    padding: 5px;
+    font-size: 10px;
+  }
+
+  .order-list {
+    gap: 8px;
+  }
+
+  .order-card {
+    padding: 8px;
+    border-radius: 6px;
+  }
+
+  .order-card h3 {
+    font-size: 11px;
+    margin-bottom: 4px;
+  }
+
+  .order-info {
+    gap: 3px;
+    font-size: 9px;
+  }
+
+  .order-items {
+    gap: 6px;
+    max-height: 180px;
+  }
+
+  .order-item {
+    padding: 5px;
+    gap: 5px;
+  }
+
+  .order-item img {
+    width: 35px;
+    height: 50px;
+  }
+
+  .order-item-details h4 {
+    font-size: 9px;
+  }
+
+  .order-item-details p {
+    font-size: 8px;
+  }
+
+  .order-price {
+    font-size: 10px;
+  }
+
+  .order-actions {
+    gap: 4px;
+    flex-direction: column;
+  }
+
+  .btn-detail,
+  .btn-track,
+  .btn-reorder,
+  .btn-return {
+    padding: 6px 8px;
+    font-size: 9px;
+    border-radius: 4px;
+  }
+
+  .chat-section {
+    padding: 8px;
+    margin-top: 8px;
+  }
+
+  .chat-header h3 {
+    font-size: 11px;
+  }
+
+  .chat-messages {
+    max-height: 200px;
+    font-size: 9px;
+  }
+
+  .chat-message {
+    padding: 5px 8px;
+    margin: 4px 0;
+  }
+
+  .chat-form {
+    gap: 4px;
+  }
+
+  .chat-form input {
+    padding: 5px;
+    font-size: 10px;
+  }
+
+  .chat-form button {
+    padding: 5px 8px;
+    font-size: 9px;
+  }
+
+  .delivery-info {
+    padding: 6px;
+    font-size: 9px;
+  }
+
+  .address-change-modal,
+  .refund-modal {
+    width: 95%;
+    padding: 8px;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+
+  .modal-title {
+    font-size: 12px;
+    margin-bottom: 8px;
+  }
+
+  .form-group {
+    margin-bottom: 8px;
+  }
+
+  .form-group label {
+    font-size: 10px;
+  }
+
+  .form-group input,
+  .form-group select,
+  .form-group textarea {
+    font-size: 10px;
+    padding: 5px;
+  }
+
+  .modal-buttons {
+    gap: 4px;
+  }
+
+  .modal-buttons button {
+    padding: 6px 8px;
+    font-size: 9px;
+  }
+}
