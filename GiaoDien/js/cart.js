@@ -909,13 +909,17 @@ async function checkout() {
     const result = await response.json();
     console.log('🔍 API Response:', JSON.stringify(result, null, 2));
 
-    if (!response.ok) {
+    // ✅ Tương thích với cả Backend cũ (trả về trực tiếp) và mới (trả về {success, data})
+    const isSuccess = result.success === true || !!result.orderId || (result.data && !!result.data.orderId);
+    const dataResponse = result.data || result;
+
+    if (!response.ok && !isSuccess) {
       console.error('❌ API Error:', result);
       throw new Error(result.error || result.message || result.detail || `HTTP error! Status: ${response.status}`);
     }
 
     // ✅ XỬ LÝ RESPONSE ĐÚNG CHO COD VÀ VNPAY
-    if (result.success) {
+    if (isSuccess) {
       // ✅ XÓA CÁC MÃ KHUYẾN MÃI ĐÃ LƯU
       clearSavedCodes();
       // ✅ Cập nhật localStorage.myPromos: loại bỏ các mã đã dùng (nếu có)
@@ -926,18 +930,24 @@ async function checkout() {
         await loadSavedPromos();
       } catch (e) { console.warn('⚠️ Could not sync local myPromos after checkout:', e); }
 
-      if (formData.paymentMethod === 'VNPAY' && result.paymentUrl) {
-        console.log('🔄 Redirecting to VNPay:', result.paymentUrl);
-        window.location.href = result.paymentUrl;
+      if (formData.paymentMethod === 'VNPAY' && dataResponse.paymentUrl) {
+        console.log('🔄 Redirecting to VNPay:', dataResponse.paymentUrl);
+        window.location.href = dataResponse.paymentUrl;
       } else if (formData.paymentMethod === 'COD') {
         // ✅ COD SUCCESS - REDIRECT với đầy đủ thông tin
-        console.log('✅ COD Order successful:', result.orderId);
+        console.log('✅ COD Order successful:', dataResponse.orderId);
         showToast('Đặt hàng COD thành công!');
         await clearCart();
 
+        // Decode in case of corrupted string from DB/Backend
+        let successMessage = dataResponse.message || 'Đặt hàng COD thành công';
+        if (successMessage.includes('Ä')) {
+            successMessage = 'Đặt hàng COD thành công';
+        }
+
         // ✅ Truyền đầy đủ thông tin: amount, discount, shipping, và các mã khuyến mãi
         const params = new URLSearchParams({
-          orderId: result.orderId,
+          orderId: dataResponse.orderId,
           status: 'cod',
           paymentMethod: 'COD',
           amount: totalAmount,
@@ -946,7 +956,7 @@ async function checkout() {
           shipping: shippingFee,
           discountCode: discountCode || '',
           freeShipCode: freeShipCode || '',
-          message: encodeURIComponent('Đặt hàng COD thành công')
+          message: encodeURIComponent(successMessage)
         });
 
         window.location.href = `order-confirmation.html?${params.toString()}`;
@@ -954,7 +964,11 @@ async function checkout() {
         throw new Error('Phương thức thanh toán không được hỗ trợ');
       }
     } else {
-      throw new Error(result.error || result.message || result.detail || 'Đặt hàng thất bại');
+      let errorMessage = result.error || result.message || result.detail || 'Đặt hàng thất bại';
+      if (errorMessage.includes('Ä')) {
+          errorMessage = 'Lỗi hệ thống hoặc Database từ chối.';
+      }
+      throw new Error(errorMessage);
     }
 
   } catch (error) {
