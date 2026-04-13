@@ -3029,3 +3029,45 @@ body {
     gap: 0.4rem;
   }
 }
+
+/* ========================================
+   MODERN MOBILE UX: FIXED BOTTOM ACTION BAR
+======================================== */
+@media (max-width: 768px) {
+  .action-buttons {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    padding: 10px 15px;
+    margin: 0;
+    box-shadow: 0 -4px 20px rgba(0,0,0,0.15);
+    z-index: 1000;
+    justify-content: space-between;
+    gap: 12px;
+    border-top: 1px solid rgba(0,0,0,0.05);
+    border-radius: 20px 20px 0 0; /* Bo tròn cạnh trên */
+  }
+
+  .add-to-cart-btn, .buy-now-btn {
+    flex: 1;
+    padding: 14px 10px;
+    min-width: 0;
+    font-size: 0.95rem;
+    border-radius: 12px;
+  }
+
+  /* Tạo khoảng trắng ở dưới cùng body để khi cuộn không bị che bởi Action Bar */
+  body {
+    padding-bottom: 90px;
+  }
+
+  /* Bo góc ảnh sản phẩm mềm mại hơn */
+  .main-image {
+    border-radius: 16px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+  }
+}
+

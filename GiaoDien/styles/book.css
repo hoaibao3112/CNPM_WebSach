@@ -1183,5 +1183,36 @@ body {
     width: 100%;
     min-width: 100%;
     margin-bottom: 20px;
+    border-radius: 16px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.05); /* Tách sidebar nhẹ nhàng */
+    border: none;
+  }
+  
+  /* Thẻ sách phong cách App Mobile (vuông vức hơn, bóng đổ mịn) */
+  .product-item {
+    border-radius: 12px;
+    border: none;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+    background: #fff;
+    overflow: hidden;
+  }
+  .product-image {
+    padding-top: 100%; /* Giảm bớt chiều cao ảnh để cân đối card */
+    background: #f8f9fa;
+  }
+  .product-info {
+    padding: 10px;
+  }
+  .product-title {
+    font-size: 13px;
+    font-weight: 600;
+  }
+  .price {
+    font-size: 15px;
+  }
+  .btn-add-cart, .btn-detail {
+    border-radius: 8px; /* Nút bo tròn hơn */
+    font-weight: 600;
   }
 }
+

@@ -1731,26 +1731,49 @@ footer iframe {
   }
   .grid-slideshow {
     grid-template-columns: 1fr;
-    grid-template-rows: auto auto auto;
+    grid-template-rows: auto auto;
     width: 95%;
+    gap: 10px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.08); /* Bóng đổ sang trọng */
+    border-radius: 16px;
   }
   .slide-large {
     grid-row: 1;
     grid-column: 1;
-    height: 30vh;
+    height: 25vh;
+    border-radius: 12px;
   }
   .slide-small {
-    height: 15vh;
+    display: none; /* Ẩn ảnh nhỏ trên Mobile để tập trung ảnh siêu to */
   }
+  
+  /* Scroll ngang mượt mà phong cách App */
   .promotion-cards {
     width: 95%;
     gap: 15px;
     justify-content: flex-start;
+    padding: 15px;
+    border-radius: 16px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.05);
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* IE/Edge */
+    -webkit-overflow-scrolling: touch; /* Xoắn tự nhiên cho iOS */
+  }
+  .promotion-cards::-webkit-scrollbar {
+    display: none; /* Trốn cuộn màn hình */
   }
   .promo-card {
-    width: 80px;
+    width: 90px;
+    flex-shrink: 0;
   }
   .promo-card img {
     width: 100%;
+    border-radius: 20px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
   }
-}
+  .promo-card p {
+    font-size: 0.8rem;
+    font-weight: 600;
+  }
+}
+

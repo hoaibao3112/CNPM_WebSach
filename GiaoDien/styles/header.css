@@ -741,3 +741,21 @@ body {
   transform: translateY(0); 
 }
 
+/* ===== MODERN MOBILE HEADER UX (ADDED) ===== */
+@media (max-width: 768px) {
+  /* Khung search bar hiện đại bo tròn */
+  .search-container input,
+  #search-input {
+    border-radius: 20px 0 0 20px;
+    padding: 10px 18px;
+    border: none;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  }
+  .search-container button {
+    border-radius: 0 20px 20px 0;
+    border: none;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  }
+}
+
+
