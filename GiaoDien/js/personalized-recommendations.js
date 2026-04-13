@@ -6,7 +6,7 @@
 const PersonalizedRecommendations = {
   // Configuration
   config: {
-    apiBaseUrl: '${window.API_CONFIG.BASE_URL}/api',
+    apiBaseUrl: `${window.API_CONFIG.BASE_URL}/api`,
   defaultLimit: 8,
     storageKeys: {
       customerInfo: 'customerInfo',

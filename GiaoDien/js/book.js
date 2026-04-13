@@ -652,14 +652,16 @@ async function fetchAndDisplayPromotions() {
     const text = await response.text();
     if (!text) throw new Error('Phản hồi từ server rỗng');
 
-    let products;
+    let responseData;
     try {
-      products = JSON.parse(text);
+      responseData = JSON.parse(text);
     } catch (e) {
       console.error('Nội dung phản hồi:', text);
       throw new Error(`Lỗi phân tích JSON: ${e.message}`);
     }
 
+    // API trả về { data: [...], pagination: {...} }
+    const products = responseData.data || responseData;
     if (!Array.isArray(products)) throw new Error('Dữ liệu trả về không hợp lệ');
 
     // Giả lập dữ liệu nếu API chưa có GiaGoc, PhanTramGiam, DaBan
