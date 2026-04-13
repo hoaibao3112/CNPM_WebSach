@@ -3065,26 +3065,6 @@ body {
   }
 }
 
-  .product-info h1 {
-    font-size: 1.5rem;
-  }
-
-  .price-section {
-    padding: 10px;
-  }
-
-  .comment-item {
-    flex-direction: column;
-    gap: 8px;
-  }
-
-  .comment-avatar {
-    width: 30px;
-    height: 30px;
-    font-size: 1rem;
-  }
-}
-
 /* Responsive Mobile (<= 425px) */
 @media (max-width: 430px) {
   body {
