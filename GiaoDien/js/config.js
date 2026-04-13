@@ -62,12 +62,19 @@ window.API_CONFIG = API_CONFIG;
 // Fetch dynamic config from backend (GOOGLE_CLIENT_ID, etc.)
 async function fetchBackendConfig() {
     try {
-        const response = await fetch(`${API_CONFIG.BASE_URL}/api/client/config`);
+        const url = `${API_CONFIG.BASE_URL}/api/client/config`;
+        console.log('🔍 Fetching backend config from:', url);
+        
+        const response = await fetch(url);
+        console.log('📡 Backend config response status:', response.status, response.statusText);
+        
         if (!response.ok) {
-            console.warn('⚠️ Failed to fetch backend config, using defaults');
+            console.warn(`⚠️ Failed to fetch backend config (${response.status}):`, response.statusText);
             return;
         }
+        
         const config = await response.json();
+        console.log('📦 Backend config received:', config);
         
         // Update API_CONFIG with backend values
         if (config.GOOGLE_CLIENT_ID) {
@@ -79,11 +86,11 @@ async function fetchBackendConfig() {
             // API_CONFIG.BASE_URL = config.BASE_URL;
         }
         
-        console.log('✅ Backend config loaded:', {
-            GOOGLE_CLIENT_ID: config.GOOGLE_CLIENT_ID ? 'Loaded' : 'Not set'
+        console.log('✅ Backend config loaded successfully:', {
+            GOOGLE_CLIENT_ID: config.GOOGLE_CLIENT_ID ? `${config.GOOGLE_CLIENT_ID.substring(0, 20)}...` : 'Not set'
         });
     } catch (error) {
-        console.error('❌ Error fetching backend config:', error);
+        console.error('❌ Error fetching backend config:', error.message, error);
     }
 }
 
