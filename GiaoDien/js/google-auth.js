@@ -3,8 +3,8 @@
 // NOTE: it's safe to expose CLIENT_ID on the frontend; do NOT expose client secret here.
 
 (function () {
-  // Use your Client ID from Google Cloud Console
-  const GOOGLE_CLIENT_ID = '9709603804-5t8d5hjunt2829hnmt4li8ou09okmjld.apps.googleusercontent.com';
+  // Get Google Client ID from API config or environment
+  const GOOGLE_CLIENT_ID = window.API_CONFIG?.GOOGLE_CLIENT_ID || '9709603804-5t8d5hjunt2829hnmt4li8ou09okmjld.apps.googleusercontent.com';
   
   // Use API_CONFIG if available, otherwise fallback to local
   const SERVER_GOOGLE_AUTH_URL = window.API_CONFIG 
