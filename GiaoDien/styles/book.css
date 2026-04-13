@@ -1157,17 +1157,17 @@ body {
     box-shadow: 0 2px 6px rgba(0,0,0,0.08);
   }
 
-  /* Giảm ảnh sản phẩm */
+  /* Giảm ảnh sản phẩm siêu nhỏ */
   .product-image {
-    padding-top: 80% !important;
+    padding-top: 60% !important;
   }
 
   #promotion-book-list .product-image {
-    padding-top: 80% !important;
+    padding-top: 60% !important;
   }
 
   #textbook-list .product-image {
-    padding-top: 80% !important;
+    padding-top: 60% !important;
   }
 
   .product-image img {
@@ -1214,6 +1214,80 @@ body {
   }
 }
 
+/* iPhone XS Max - 414px SIÊU NHỎ */
+@media (max-width: 414px) and (min-width: 376px) {
+  /* 2 cột siêu nhỏ */
+  #book-list,
+  #promotion-book-list,
+  #textbook-list,
+  #politics-book-list,
+  #science-book-list,
+  #search-book-list {
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 5px !important;
+    padding: 5px 0 !important;
+  }
+
+  .product-item {
+    border-radius: 6px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  }
+
+  /* Ảnh nhỏ nhất */
+  .product-image {
+    padding-top: 55% !important;
+  }
+
+  #promotion-book-list .product-image,
+  #textbook-list .product-image {
+    padding-top: 55% !important;
+  }
+
+  .product-image img {
+    padding: 5px !important;
+  }
+
+  .product-info {
+    padding: 5px !important;
+  }
+
+  .product-title {
+    font-size: 10px !important;
+    height: 24px !important;
+    margin-bottom: 2px !important;
+  }
+
+  .product-author {
+    font-size: 8.5px !important;
+    margin-bottom: 1px !important;
+  }
+
+  .product-year {
+    font-size: 8px !important;
+    margin-bottom: 2px !important;
+  }
+
+  .price {
+    font-size: 11px !important;
+  }
+
+  .quantity {
+    font-size: 8px !important;
+  }
+
+  .product-actions {
+    gap: 4px !important;
+    margin-top: 4px !important;
+  }
+
+  .btn-detail,
+  .btn-add-cart {
+    padding: 4px 0 !important;
+    font-size: 8px !important;
+  }
+}
+
 /* Ultra-small mobile - 375px and below */
 @media (max-width: 375px) {
   /* 2 cột siêu nhỏ */
@@ -1230,12 +1304,12 @@ body {
   }
 
   .product-image {
-    padding-top: 70% !important;
+    padding-top: 50% !important;
   }
 
   #promotion-book-list .product-image,
   #textbook-list .product-image {
-    padding-top: 70% !important;
+    padding-top: 50% !important;
   }
 
   .product-image img {
