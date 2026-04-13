@@ -660,8 +660,8 @@ async function fetchAndDisplayPromotions() {
       throw new Error(`Lỗi phân tích JSON: ${e.message}`);
     }
 
-    // API trả về { data: [...], pagination: {...} }
-    const products = responseData.data || responseData;
+    // API trả về { success: true, data: { data: [...], pagination: {...} } }
+    const products = responseData.data?.data || responseData.data || responseData;
     if (!Array.isArray(products)) throw new Error('Dữ liệu trả về không hợp lệ');
 
     // Giả lập dữ liệu nếu API chưa có GiaGoc, PhanTramGiam, DaBan
