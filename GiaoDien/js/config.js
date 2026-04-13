@@ -18,7 +18,7 @@ const API_CONFIG = {
 
         // Priority 2: Vercel or other production hosting
         if (hostname !== 'localhost' && hostname !== '127.0.0.1' && !hostname.startsWith('192.168.')) {
-            return 'https://cnpm-websach.onrender.com';
+            return 'https://cnpm-websach-2.onrender.com';
         }
 
         // Priority 3: Local development (default)
@@ -29,7 +29,7 @@ const API_CONFIG = {
     WS_URL: (() => {
         const hostname = window.location.hostname;
         if (hostname !== 'localhost' && hostname !== '127.0.0.1') {
-            return 'wss://cnpm-websach.onrender.com';
+            return 'wss://cnpm-websach-2.onrender.com';
         }
         return 'ws://localhost:5000';
     })(),
@@ -38,7 +38,7 @@ const API_CONFIG = {
     CHATBOT_URL: (() => {
         const hostname = window.location.hostname;
         if (hostname !== 'localhost' && hostname !== '127.0.0.1') {
-            return 'https://cnpm-websach.onrender.com/api/chatbot';
+            return 'https://cnpm-websach-2.onrender.com/api/chatbot';
         }
         return 'http://127.0.0.1:8002';
     })(),
