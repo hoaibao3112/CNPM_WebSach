@@ -634,9 +634,9 @@ async function fetchAndDisplayProducts() {
 
 // Tải sách khuyến mãi
 async function fetchAndDisplayPromotions() {
-  const productList = document.getElementById('promotion-book-list');
+  const productList = document.getElementById('flash-products');
   if (!productList) {
-    console.error('Không tìm thấy phần tử #promotion-book-list');
+    console.error('Không tìm thấy phần tử #flash-products');
     return;
   }
 
@@ -673,7 +673,7 @@ async function fetchAndDisplayPromotions() {
       DaBan: product.DaBan || Math.floor(Math.random() * 50) // Giả lập số lượng đã bán
     }));
 
-  displayProducts(productsWithDiscount, 'promotion-book-list', 5);
+  displayProducts(productsWithDiscount, 'flash-products', 5);
   } catch (error) {
     console.error('Lỗi khi tải sách khuyến mãi:', error);
     productList.innerHTML = `
