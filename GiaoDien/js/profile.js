@@ -1,4 +1,4 @@
-document.addEventListener('DOMContentLoaded', function() {
+﻿document.addEventListener('DOMContentLoaded', function() {
   loadUserProfile();
   loadWishlist();
   loadPromoCodes();
@@ -21,7 +21,7 @@ async function loadUserProfile() {
   }
 
   try {
-    const response = await fetch('${window.API_CONFIG.BASE_URL}/api/client/profile', {
+    const response = await fetch(`${window.API_CONFIG.BASE_URL}/api/client/profile` , {
       method: 'GET',
       headers: {
         'Authorization': `Bearer ${token}`
@@ -649,7 +649,7 @@ async function renderMembershipCard() {
   const token = localStorage.getItem('token');
   if (token) {
     try {
-      const res = await fetch('${window.API_CONFIG.BASE_URL}/api/client/profile', {
+      const res = await fetch(`${window.API_CONFIG.BASE_URL}/api/client/profile` , {
         method: 'GET',
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -1301,7 +1301,7 @@ sidebarItems.forEach(item => {
 
   async function createAddress(payload) {
     try {
-      const res = await fetch('${window.API_CONFIG.BASE_URL}/api/orders/customer-addresses', {
+      const res = await fetch(`${window.API_CONFIG.BASE_URL}/api/orders/customer-addresses` , {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${token()}`,

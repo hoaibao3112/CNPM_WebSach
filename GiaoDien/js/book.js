@@ -891,7 +891,7 @@ async function renderCategoryToFil() {
 //   dealHotContainer.innerHTML = '<div class="loading">Đang tải sản phẩm khuyến mãi...</div>';
 //   dealHotContainer.style.display = 'grid';
 
-//   fetch('${window.API_CONFIG.BASE_URL}/api/khuyenmai?activeOnly=true', {
+//   fetch(`${window.API_CONFIG.BASE_URL}/api/khuyenmai?activeOnly=true`, {
 //     headers: {
 //       'Content-Type': 'application/json; charset=utf-8'
 //     }

@@ -1,4 +1,4 @@
-document.addEventListener('DOMContentLoaded', initializeApp);
+﻿document.addEventListener('DOMContentLoaded', initializeApp);
 const addressCache = {
     provinces: new Map(),
     districts: new Map(),
@@ -875,7 +875,7 @@ async function submitReturnRequest(order) {
   const ly_do = document.getElementById('return-reason')?.value?.trim() || 'Khách báo lỗi khi nhận hàng';
   // First create tra_hang record (without files)
   try {
-    const resp = await fetch('${window.API_CONFIG.BASE_URL}/api/tra-hang', {
+    const resp = await fetch(`${window.API_CONFIG.BASE_URL}/api/tra-hang` , {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -2247,7 +2247,7 @@ async function createChatRoom() {
     }
 
     try {
-        const response = await fetch('${window.API_CONFIG.BASE_URL}/api/chat/rooms', {
+        const response = await fetch(`${window.API_CONFIG.BASE_URL}/api/chat/rooms` , {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -2283,7 +2283,7 @@ async function fetchChatRooms() {
     if (!checkAuth()) return [];
 
     try {
-        const response = await fetch('${window.API_CONFIG.BASE_URL}/api/chat/rooms', {
+        const response = await fetch(`${window.API_CONFIG.BASE_URL}/api/chat/rooms` , {
             headers: { 
                 'Authorization': `Bearer ${getToken()}` 
             }
@@ -2559,7 +2559,7 @@ async function sendMessage() {
     }
 
     try {
-        const response = await fetch('${window.API_CONFIG.BASE_URL}/api/chat/messages', {
+        const response = await fetch(`${window.API_CONFIG.BASE_URL}/api/chat/messages` , {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

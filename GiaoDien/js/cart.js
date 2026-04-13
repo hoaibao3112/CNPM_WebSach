@@ -1,4 +1,4 @@
-// cart.js - Optimized for cart operations with backend API and localStorage fallback
+﻿// cart.js - Optimized for cart operations with backend API and localStorage fallback
 
 // Utility function to format price
 function formatPrice(price) {
@@ -894,7 +894,7 @@ async function checkout() {
   try {
     console.log('🔄 Sending request to API...');
 
-    const response = await fetch('${window.API_CONFIG.BASE_URL}/api/orders/place-order', {
+    const response = await fetch(`${window.API_CONFIG.BASE_URL}/api/orders/place-order` , {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${getToken()}`,
@@ -1704,7 +1704,7 @@ async function applyPromo() {
       }))
     };
 
-    const res = await fetch("${window.API_CONFIG.BASE_URL}/api/khuyenmai/apply-to-cart", {
+    const res = await fetch(`${window.API_CONFIG.BASE_URL}/api/khuyenmai/apply-to-cart` , {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -2064,7 +2064,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     try {
       const token = getToken();
       if (token) {
-        const resp = await fetch('${window.API_CONFIG.BASE_URL}/api/client/profile', {
+        const resp = await fetch(`${window.API_CONFIG.BASE_URL}/api/client/profile` , {
           method: 'GET',
           headers: { 'Authorization': `Bearer ${token}` }
         });
@@ -2834,14 +2834,14 @@ async function restoreCartFromBackup() {
       // send restore to server: delete current cart and insert backup items
       try {
         // Clear server cart first
-        await fetch('${window.API_CONFIG.BASE_URL}/api/cart/clear', {
+        await fetch(`${window.API_CONFIG.BASE_URL}/api/cart/clear` , {
           method: 'DELETE',
           headers: { 'Authorization': `Bearer ${getToken()}` }
         });
 
         // Add each backup item
         for (const it of backup) {
-          await fetch('${window.API_CONFIG.BASE_URL}/api/cart/add', {
+          await fetch(`${window.API_CONFIG.BASE_URL}/api/cart/add` , {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${getToken()}` },
             body: JSON.stringify({ productId: it.id, quantity: it.quantity })

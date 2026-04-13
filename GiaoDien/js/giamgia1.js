@@ -209,7 +209,7 @@ async function fetchAndDisplayMultiCategoryProducts() {
 
   try {
     productList.innerHTML = '<div class="loading">Đang tải sản phẩm khuyến mãi...</div>';
-    const response = await fetch('${window.API_CONFIG.BASE_URL}/api/khuyenmai/active-products');
+    const response = await fetch(`${window.API_CONFIG.BASE_URL}/api/khuyenmai/active-products`);
     if (!response.ok) throw new Error(`Lỗi HTTP: ${response.status}`);
     const json = await response.json();
     const products = json && json.data ? json.data : [];

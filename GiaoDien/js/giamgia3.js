@@ -8,7 +8,7 @@ function isLoggedIn() {
 // Lấy danh sách khuyến mãi từ API
 async function fetchVouchers() {
   try {
-    const response = await fetch('${window.API_CONFIG.BASE_URL}/api/khuyenmai');
+    const response = await fetch(`${window.API_CONFIG.BASE_URL}/api/khuyenmai`);
     const data = await response.json();
     return data.data || [];
   } catch (error) {

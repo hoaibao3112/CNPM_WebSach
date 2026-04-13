@@ -41,7 +41,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // ===== Lấy danh sách category và gán sự kiện =====
-    fetch('${window.API_CONFIG.BASE_URL}/api/product/categories')
+    fetch(`${window.API_CONFIG.BASE_URL}/api/product/categories`)
         .then(res => res.json())
         .then(categories => {
             // Clear existing list first
