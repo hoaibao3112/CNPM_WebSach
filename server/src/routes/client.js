@@ -6,6 +6,14 @@ import { authenticateToken } from '../middlewares/auth.js';
 
 const router = express.Router();
 
+// Public config endpoint (no auth required) - for frontend to get environment config
+router.get('/config', (req, res) => {
+  res.json({
+    GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID || '',
+    BASE_URL: process.env.BASE_URL || '',
+  });
+});
+
 // Auth routes (mirrored for backward compatibility)
 router.post('/login', AuthController.login);
 router.post('/register/send-otp', AuthController.sendOTP);

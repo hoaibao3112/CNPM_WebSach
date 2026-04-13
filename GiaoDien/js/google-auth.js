@@ -3,13 +3,17 @@
 // NOTE: it's safe to expose CLIENT_ID on the frontend; do NOT expose client secret here.
 
 (function () {
-  // Get Google Client ID from API config or environment
-  const GOOGLE_CLIENT_ID = window.API_CONFIG?.GOOGLE_CLIENT_ID || '9709603804-5t8d5hjunt2829hnmt4li8ou09okmjld.apps.googleusercontent.com';
+  // Get Google Client ID from API config (fetched from backend)
+  // NO hardcoded fallback - config must come from backend only
+  const getGoogleClientId = () => window.API_CONFIG?.GOOGLE_CLIENT_ID || '';
   
-  // Use API_CONFIG if available, otherwise fallback to local
-  const SERVER_GOOGLE_AUTH_URL = window.API_CONFIG 
-    ? window.API_CONFIG.buildUrl('/api/client/auth/google')
-    : '${window.API_CONFIG.BASE_URL}/api/client/auth/google';
+  // Use API_CONFIG to build auth endpoint
+  const getServerGoogleAuthUrl = () => {
+    if (window.API_CONFIG?.buildUrl) {
+      return window.API_CONFIG.buildUrl('/api/client/auth/google');
+    }
+    return '/api/client/auth/google';
+  };
 
   function handleCredentialResponse(response) {
     const id_token = response && response.credential;
@@ -18,6 +22,8 @@
       alert('Đăng nhập Google thất bại (không nhận được token)');
       return;
     }
+
+    const SERVER_GOOGLE_AUTH_URL = getServerGoogleAuthUrl();
 
     // Send the ID token to the server for verification and account creation/login
     fetch(SERVER_GOOGLE_AUTH_URL, {
@@ -57,13 +63,20 @@
       });
   }
 
-  window.addEventListener('load', function () {
+  // Initialize Google button when both Google API is ready AND config is loaded
+  const initializeGoogleButton = () => {
     if (!document.getElementById('googleSignIn')) return;
 
-    if (!GOOGLE_CLIENT_ID || GOOGLE_CLIENT_ID.indexOf('YOUR_CLIENT_ID') !== -1) {
-      console.warn('GOOGLE_CLIENT_ID not configured in google-auth.js');
+    const GOOGLE_CLIENT_ID = getGoogleClientId();
+    
+    // Check if CLIENT_ID is properly loaded
+    if (!GOOGLE_CLIENT_ID) {
+      console.warn('⚠️ GOOGLE_CLIENT_ID not yet loaded from backend. Retrying in 500ms...');
+      setTimeout(initializeGoogleButton, 500);
       return;
     }
+
+    console.log('✅ Initializing Google Sign-In with CLIENT_ID from backend');
 
     // Initialize the Google Identity Services client
     google.accounts.id.initialize({
@@ -79,6 +92,14 @@
 
     // Optional: show One Tap prompt
     // google.accounts.id.prompt();
-  });
+  };
+
+  // Wait for DOM and Google API to be ready
+  window.addEventListener('load', initializeGoogleButton);
+  
+  // Also try to initialize if page is already loaded (cached pages)
+  if (document.readyState === 'complete') {
+    initializeGoogleButton();
+  }
 })();
 
