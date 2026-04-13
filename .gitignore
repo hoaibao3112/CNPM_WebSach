@@ -31,6 +31,8 @@ __pycache__/
 
 # Database dumps / local snapshots
 Dump_TiDB_Compatible.sql
+Dump20260413.sql
+*.sql
 server/db_dump.json
 
 # AI/vector store generated artifacts
