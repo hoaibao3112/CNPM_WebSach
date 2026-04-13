@@ -642,9 +642,9 @@ async function fetchAndDisplayPromotions() {
   try {
     productList.innerHTML = '<div class="loading">Đang tải sách khuyến mãi...</div>';
 
-    // Gọi API để lấy sản phẩm khuyến mãi
+    // Gọi API để lấy sản phẩm khuyến mãi (không phải khuyến mãi data)
     const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || window.API_CONFIG.BASE_URL;
-    const response = await fetch(`${_apiBase}/api/khuyenmai?activeOnly=true&limit=8`, {
+    const response = await fetch(`${_apiBase}/api/khuyenmai/active-products`, {
       headers: { 'Accept': 'application/json' },
     });
     if (!response.ok) throw new Error(`Lỗi HTTP: ${response.status}`);
@@ -660,13 +660,8 @@ async function fetchAndDisplayPromotions() {
       throw new Error(`Lỗi phân tích JSON: ${e.message}`);
     }
 
-    // API trả về { success: true, data: { data: [...], pagination: {...} } }
-    const products = responseData.data?.data || responseData.data || responseData;
-    console.log('🔍 DEBUG fetchAndDisplayPromotions:');
-    console.log('responseData:', responseData);
-    console.log('products:', products);
-    console.log('Is Array?', Array.isArray(products));
-    console.log('Type:', typeof products);
+    // API trả về sản phẩm khuyến mãi
+    const products = responseData.data || responseData;
     if (!Array.isArray(products)) throw new Error('Dữ liệu trả về không hợp lệ');
 
     // Giả lập dữ liệu nếu API chưa có GiaGoc, PhanTramGiam, DaBan
