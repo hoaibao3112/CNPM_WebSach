@@ -24,7 +24,7 @@ const Sidebar = () => {
   }, [isOpen]);
   const navigate = useNavigate();
   const location = useLocation();
-  const { hasPermission, permissions } = useContext(PermissionContext);
+  const { permissions } = useContext(PermissionContext);
 
   const menuItems = [
     { to: '/admin', icon: 'dashboard', text: 'Trang Chủ', permission: null },

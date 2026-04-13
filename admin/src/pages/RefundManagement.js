@@ -35,6 +35,7 @@ const RefundManagement = () => {
 
   useEffect(() => {
     fetchRefunds();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentPage, statusFilter]);
 
   // ✅ CẬP NHẬT API CALL - SỬ DỤNG API MỚI

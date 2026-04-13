@@ -12,17 +12,18 @@ const SalaryPage = () => {
 
   const formatPrice = (price) => new Intl.NumberFormat('vi-VN').format(price) + 'đ';
 
-  const fetchSalary = async () => {
-    try {
-      const res = await api.post(`/salary/compute/${selectedYear}/${selectedMonth}`);
-      const resData = res.data.data || res.data;
-      setSalaryData(Array.isArray(resData) ? resData : (resData?.data || []));
-    } catch (error) {
-      message.error('Lỗi khi tính lương');
-    }
-  };
-
-  useEffect(() => { fetchSalary(); }, [selectedMonth, selectedYear, fetchSalary]);
+  useEffect(() => {
+    const fetchSalary = async () => {
+      try {
+        const res = await api.post(`/salary/compute/${selectedYear}/${selectedMonth}`);
+        const resData = res.data.data || res.data;
+        setSalaryData(Array.isArray(resData) ? resData : (resData?.data || []));
+      } catch (error) {
+        message.error('Lỗi khi tính lương');
+      }
+    };
+    fetchSalary();
+  }, [selectedMonth, selectedYear]);
 
   const showDetail = async (record) => {
     setSelectedEmployee(record);

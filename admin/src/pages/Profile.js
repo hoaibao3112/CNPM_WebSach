@@ -28,7 +28,7 @@ const Profile = () => {
   const apiBase = process.env.REACT_APP_API_BASE || (process.env.REACT_APP_API_BASE || 'https://cnpm-customer.onrender.com') + '';
   const [avatarSrc, setAvatarSrc] = useState(undefined);
 
-  const buildAvatarSrc = (anh) => {
+  const buildAvatarSrc = React.useCallback((anh) => {
     if (!anh) return undefined;
     if (anh.startsWith('http')) return anh;
     // remove leading slashes
@@ -37,7 +37,7 @@ const Profile = () => {
     if (clean.startsWith('uploads/')) return `${apiBase}/${clean}`;
     // otherwise assume it's a filename stored in nhanvien and prefix uploads/nhanvien/
     return `${apiBase}/uploads/nhanvien/${clean}`;
-  };
+  }, [apiBase]);
 
   // Chi tiết ngày công
   const [detailModal, setDetailModal] = useState(false);

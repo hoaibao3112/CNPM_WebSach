@@ -411,7 +411,8 @@ const CompanyManagement = () => {
           <Button
             key="cancel"
             onClick={() => {
-              setState(prev => (prev, {
+              setState(prev => ({
+                ...prev,
                 isModalVisible: false,
                 editingCompany: null,
               }));

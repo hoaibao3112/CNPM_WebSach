@@ -17,9 +17,7 @@ import {
   Typography,
   Divider,
   Spin,
-  Badge,
   Tabs,
-  Statistic,
   Switch,
   InputNumber,
   Rate
@@ -37,7 +35,6 @@ import {
   DollarOutlined,
   TagOutlined,
   TagsOutlined,
-  SendOutlined,
   FormOutlined,
   BarChartOutlined,
   UserOutlined,
@@ -52,7 +49,6 @@ import '../styles/DiscountManagement.css';
 const { TabPane } = Tabs;
 const { Option } = Select;
 const { Title, Text } = Typography;
-const { RangePicker } = DatePicker;
 
 const defaultForm = {
   TenKM: '',
@@ -112,7 +108,6 @@ const DiscountManagement = () => {
   const [preferenceFormType, setPreferenceFormType] = useState('add');
   const [preferenceForm] = Form.useForm();
   const [editingPreferenceForm, setEditingPreferenceForm] = useState(null);
-  const [selectedFormDetail, setSelectedFormDetail] = useState(null);
 
   // States for Question Management
   const [showQuestionManager, setShowQuestionManager] = useState(false);
@@ -120,7 +115,6 @@ const DiscountManagement = () => {
   const [questions, setQuestions] = useState([]);
   const [questionForm] = Form.useForm();
   const [optionForm] = Form.useForm();
-  const [editingQuestion, setEditingQuestion] = useState(null);
   const [showAddOption, setShowAddOption] = useState(null); // ID của câu hỏi đang thêm option
   const [categories, setCategories] = useState([]);
   const [authors, setAuthors] = useState([]);
@@ -142,6 +136,7 @@ const DiscountManagement = () => {
   // Lấy danh sách khuyến mãi
   useEffect(() => {
     fetchPromotions();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [reload, search]);
 
   const fetchPromotions = async () => {
@@ -404,43 +399,6 @@ const DiscountManagement = () => {
         }
       }
     });
-  };
-
-  const handleViewFormDetail = async (formId) => {
-    try {
-      const response = await axios.get(`${process.env.REACT_APP_API_BASE || 'https://cnpm-customer.onrender.com'}/api/preferences/admin/forms/${formId}`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('authToken')}` }
-      });
-      setSelectedFormDetail(response.data.data);
-      Modal.info({
-        title: 'Chi tiết Form',
-        width: 800,
-        content: (
-          <div>
-            <p><strong>Tên:</strong> {response.data.data.TenForm}</p>
-            <p><strong>Mô tả:</strong> {response.data.data.MoTa}</p>
-            <p><strong>Số câu hỏi:</strong> {response.data.data.questions?.length || 0}</p>
-            <Divider />
-            {response.data.data.questions?.map((q, idx) => (
-              <div key={q.CauHoiID} style={{ marginBottom: 16 }}>
-                <Text strong>Câu {idx + 1}: {q.NoiDungCauHoi}</Text>
-                <div style={{ marginLeft: 16 }}>
-                  <Text type="secondary">Loại: {q.LoaiCauHoi}</Text>
-                  <ul>
-                    {q.options?.map(opt => (
-                      <li key={opt.LuaChonID}>{opt.NoiDung}</li>
-                    ))}
-                  </ul>
-                </div>
-              </div>
-            ))}
-          </div>
-        )
-      });
-    } catch (err) {
-      message.error('Không thể tải chi tiết form');
-      console.error(err);
-    }
   };
 
   // Load data based on active tab
