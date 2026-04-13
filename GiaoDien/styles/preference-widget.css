@@ -590,6 +590,99 @@
   }
 }
 
+/* ===== RESPONSIVE iPhone XS Max: 414px ===== */
+@media (max-width: 414px) and (min-width: 380px) {
+  .preference-floating-btn {
+    right: 18px;
+    bottom: 85px;
+    padding: 11px 15px;
+  }
+
+  .prompt-icon {
+    font-size: 22px;
+  }
+
+  .prompt-text strong {
+    font-size: 13px;
+  }
+
+  .prompt-text p {
+    font-size: 10px;
+  }
+
+  .preference-modal-content {
+    width: 96%;
+    max-height: 92vh;
+  }
+
+  .preference-header {
+    padding: 28px 18px 18px;
+  }
+
+  .preference-icon {
+    font-size: 48px;
+  }
+
+  .preference-header h2 {
+    font-size: 21px;
+  }
+
+  .preference-subtitle {
+    font-size: 13px;
+  }
+
+  .preference-form {
+    padding: 18px;
+  }
+
+  .question-title {
+    font-size: 15px;
+  }
+
+  .options-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .option-item {
+    padding: 11px;
+  }
+
+  .rating-stars {
+    font-size: 30px;
+    gap: 5px;
+  }
+
+  .preference-footer {
+    padding: 14px 18px;
+  }
+
+  .preference-submit-btn {
+    font-size: 15px;
+    padding: 14px;
+  }
+
+  .success-content {
+    padding: 28px 18px;
+  }
+
+  .success-icon {
+    font-size: 55px;
+  }
+
+  .success-content h2 {
+    font-size: 22px;
+  }
+
+  .coupon-code {
+    font-size: 22px;
+    letter-spacing: 2px;
+  }
+
+  .coupon-box {
+    padding: 18px;
+  }
+}
+
 @media (max-width: 480px) {
   .preference-close {
     width: 30px;
