@@ -8,6 +8,7 @@ function formatPrice(price) {
 
 // Hàm thoát ký tự HTML
 function escapeHtml(unsafe) {
+  if (!unsafe) return ''; // Safety check for undefined/null
   return unsafe
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
