@@ -141,15 +141,19 @@
   padding: 24px;
   background: var(--fs-red);
   width: 100%;
+  display: block;
+  overflow: visible;
 }
 
 .sale-track-wrap {
   width: 100%;
+  display: block;
+  overflow: visible;
 }
 
 .sale-track {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(4, minmax(200px, 1fr));
   gap: 16px;
   width: 100%;
   margin: 0;
@@ -171,6 +175,8 @@
   cursor: pointer;
   box-shadow: var(--shadow-card);
   transition: transform 0.25s, box-shadow 0.25s;
+  width: auto;
+  min-width: 0;
 }
 
 .sale-item:hover {
