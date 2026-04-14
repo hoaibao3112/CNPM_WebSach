@@ -149,6 +149,8 @@
   width: 100%;
   display: block;
   overflow: visible;
+  margin: 0;
+  padding: 0;
 }
 
 .sale-track {
@@ -159,6 +161,8 @@
   margin: 0;
   padding: 0;
   list-style: none;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid yellow;
 }
 
 /* ════════════════════════════════════════════════════════════
