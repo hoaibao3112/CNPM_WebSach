@@ -22,7 +22,7 @@ body {
 /* ── Navbar (legacy support) ────────────────────────────── */
 header {
   background-color: #fff;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   padding: 14px 0;
 }
 
@@ -43,8 +43,15 @@ header {
   white-space: nowrap;
 }
 
-nav ul { display: flex; list-style: none; }
-nav ul li { margin-left: 24px; }
+nav ul {
+  display: flex;
+  list-style: none;
+}
+
+nav ul li {
+  margin-left: 24px;
+}
+
 nav ul li a {
   text-decoration: none;
   color: #444;
@@ -52,7 +59,10 @@ nav ul li a {
   font-size: 14px;
   transition: color 0.25s;
 }
-nav ul li a:hover { color: #C0392B; }
+
+nav ul li a:hover {
+  color: #C0392B;
+}
 
 /* ── Main container ─────────────────────────────────────── */
 body .container {
@@ -70,7 +80,7 @@ body .container {
   background: #fff;
   padding: 24px 20px 24px 24px;
   border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
   border: 1px solid #ede8e3;
 }
 
@@ -118,7 +128,9 @@ body .container {
   transition: gap 0.2s;
 }
 
-.product-section .view-all a:hover { gap: 9px; }
+.product-section .view-all a:hover {
+  gap: 9px;
+}
 
 /* ── Promotion section ──────────────────────────────────── */
 .promotion-section {
@@ -163,7 +175,9 @@ body .container {
   transition: gap 0.2s;
 }
 
-.promotion-section .view-all a:hover { gap: 9px; }
+.promotion-section .view-all a:hover {
+  gap: 9px;
+}
 
 /* ── Footer ─────────────────────────────────────────────── */
 footer {
@@ -175,7 +189,11 @@ footer {
   font-size: 13px;
 }
 
-footer iframe { width: 100%; height: 200px; border: none; }
+footer iframe {
+  width: 100%;
+  height: 200px;
+  border: none;
+}
 
 /* ── Hotline ─────────────────────────────────────────────── */
 .hotline {
@@ -207,8 +225,13 @@ footer iframe { width: 100%; height: 200px; border: none; }
 }
 
 @keyframes marquee {
-  0%   { transform: translate(0, 0); }
-  100% { transform: translate(-100%, 0); }
+  0% {
+    transform: translate(0, 0);
+  }
+
+  100% {
+    transform: translate(-100%, 0);
+  }
 }
 
 /* ── Fade animation (hero transitions) ──────────────────── */
@@ -218,12 +241,21 @@ footer iframe { width: 100%; height: 200px; border: none; }
 }
 
 @keyframes fadeSlide {
-  from { opacity: 0.3; transform: translateY(12px); }
-  to   { opacity: 1;   transform: translateY(0);    }
+  from {
+    opacity: 0.3;
+    transform: translateY(12px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* ── Hidden deal-hot list ────────────────────────────────── */
-#deal-hot-list { display: none; }
+#deal-hot-list {
+  display: none;
+}
 
 /* ═══════════════════════════════════════════════════════════
    GRID SLIDESHOW
@@ -265,7 +297,9 @@ footer iframe { width: 100%; height: 200px; border: none; }
   transition: transform 0.5s ease;
 }
 
-.grid-slideshow img:hover { transform: scale(1.04); }
+.grid-slideshow img:hover {
+  transform: scale(1.04);
+}
 
 /* ═══════════════════════════════════════════════════════════
    PROMOTION CARDS (category buttons)
@@ -378,17 +412,26 @@ footer iframe { width: 100%; height: 200px; border: none; }
   border-bottom: 1px solid #333;
 }
 
-.footer-links { list-style: none; }
-.footer-links li { margin-bottom: 6px; }
+.footer-links {
+  list-style: none;
+}
 
-.footer-link, .contact-link {
+.footer-links li {
+  margin-bottom: 6px;
+}
+
+.footer-link,
+.contact-link {
   color: #bbb;
   text-decoration: none;
   font-size: 0.83rem;
   transition: color 0.25s;
 }
 
-.footer-link:hover, .contact-link:hover { color: #f39c12; }
+.footer-link:hover,
+.contact-link:hover {
+  color: #f39c12;
+}
 
 .contact-item {
   display: flex;
@@ -404,7 +447,9 @@ footer iframe { width: 100%; height: 200px; border: none; }
   text-align: center;
 }
 
-.social-media { margin-top: 12px; }
+.social-media {
+  margin-top: 12px;
+}
 
 .social-link {
   color: #bbb;
@@ -429,7 +474,9 @@ footer iframe { width: 100%; height: 200px; border: none; }
   color: #aaa;
 }
 
-.footer-bottom strong { color: #f39c12; }
+.footer-bottom strong {
+  color: #f39c12;
+}
 
 /* Payment & app links */
 .payment-methods {
@@ -447,8 +494,15 @@ footer iframe { width: 100%; height: 200px; border: none; }
   margin-top: 14px;
 }
 
-.app-links img { height: 34px; width: auto; }
-.payment-methods img { height: 28px; width: auto; }
+.app-links img {
+  height: 34px;
+  width: auto;
+}
+
+.payment-methods img {
+  height: 28px;
+  width: auto;
+}
 
 /* ═══════════════════════════════════════════════════════════
    CHAT WIDGET
@@ -465,13 +519,15 @@ footer iframe { width: 100%; height: 200px; border: none; }
   pointer-events: auto;
 }
 
-.chat-icon:hover { transform: scale(1.1); }
+.chat-icon:hover {
+  transform: scale(1.1);
+}
 
 .chat-icon img {
   width: 100%;
   height: 100%;
   border-radius: 50%;
-  box-shadow: 0 4px 14px rgba(0,0,0,0.2);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2);
 }
 
 .chat-modal {
@@ -484,7 +540,7 @@ footer iframe { width: 100%; height: 200px; border: none; }
   z-index: 10051;
   background: #fff;
   border-radius: 14px;
-  box-shadow: 0 8px 28px rgba(0,0,0,0.15);
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.15);
   overflow: hidden;
   border: 1px solid #ede8e3;
 }
@@ -508,7 +564,9 @@ footer iframe { width: 100%; height: 200px; border: none; }
   z-index: 2;
 }
 
-.chat-close:hover { color: #C0392B; }
+.chat-close:hover {
+  color: #C0392B;
+}
 
 .chat-header {
   flex-shrink: 0;
@@ -577,7 +635,9 @@ footer iframe { width: 100%; height: 200px; border: none; }
   gap: 5px;
 }
 
-.chat-message.suggestion h4::before { content: "💡"; }
+.chat-message.suggestion h4::before {
+  content: "💡";
+}
 
 .chat-message.suggestion p {
   margin: 0 0 10px 0;
@@ -651,11 +711,21 @@ footer iframe { width: 100%; height: 200px; border: none; }
   transform: translateY(-1px);
 }
 
-.chat-form button:disabled { background: #ccc; cursor: not-allowed; }
+.chat-form button:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}
 
 @keyframes slideInUp {
-  from { opacity: 0; transform: translateY(10px); }
-  to   { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* ── CSS Custom Properties ───────────────────────────────── */
@@ -669,8 +739,13 @@ footer iframe { width: 100%; height: 200px; border: none; }
 
 /* ── Responsive ─────────────────────────────────────────── */
 @media (max-width: 1100px) {
-  .grid-slideshow { width: 95%; }
-  .promotion-cards { width: 95%; }
+  .grid-slideshow {
+    width: 95%;
+  }
+
+  .promotion-cards {
+    width: 95%;
+  }
 }
 
 @media (max-width: 768px) {
@@ -681,8 +756,17 @@ footer iframe { width: 100%; height: 200px; border: none; }
     gap: 8px;
   }
 
-  .slide-large { grid-row: auto; grid-column: auto; height: 32vw; min-height: 160px; }
-  .slide-small { height: 22vw; min-height: 100px; }
+  .slide-large {
+    grid-row: auto;
+    grid-column: auto;
+    height: 32vw;
+    min-height: 160px;
+  }
+
+  .slide-small {
+    height: 22vw;
+    min-height: 100px;
+  }
 
   .promotion-cards {
     gap: 3%;
@@ -691,16 +775,43 @@ footer iframe { width: 100%; height: 200px; border: none; }
     justify-content: flex-start;
   }
 
-  .promo-card { width: 18%; }
+  .promo-card {
+    width: 18%;
+  }
 
-  .footer-section { flex: 100%; margin-bottom: 18px; }
-  .footer-container { flex-direction: column; }
+  .footer-section {
+    flex: 100%;
+    margin-bottom: 18px;
+  }
 
-  .chat-modal { width: calc(100vw - 24px); right: 12px; }
+  .footer-container {
+    flex-direction: column;
+  }
+
+  .chat-modal {
+    width: calc(100vw - 24px);
+    right: 12px;
+  }
 }
 
 @media (max-width: 480px) {
-  .promo-card { width: 24%; }
-  .promo-card img { width: 70%; border-radius: 10px; }
-  .promo-card p { font-size: 10px; }
+  .promo-card {
+    width: 24%;
+  }
+
+  .promo-card img {
+    width: 70%;
+    border-radius: 10px;
+  }
+
+  .promo-card p {
+    font-size: 10px;
+  }
+}
+
+/* Đảm bảo flash sale full width, không bị sidebar ảnh hưởng */
+.flash-sale-container {
+  width: 100%;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
 }
