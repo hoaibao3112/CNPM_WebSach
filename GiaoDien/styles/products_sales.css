@@ -173,30 +173,36 @@
    ────────────────────────────────────────────────────────── */
 .sale-item {
   background: var(--bg-card);
-  border-radius: 8px;
-  border: none;
+  border-radius: 12px;
+  border: 1px solid var(--border);
   display: flex; flex-direction: column;
   position: relative; overflow: hidden;
   font-family: 'Inter', sans-serif;
   text-decoration: none;
   cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
 }
 
 .sale-item:hover {
-  transform: translateY(-2px);
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.08);
 }
 
 .sale-item-image-wrapper {
   position: relative;
-  width: 100%; aspect-ratio: 1; /* Cắt ảnh hình vuông */
+  width: 100%; 
+  aspect-ratio: 3/4; /* Tỉ lệ chuẩn 3:4 giống thiêt kế thẻ sách */
   overflow: hidden; 
-  background: #fff;
+  background: #faf8f6;
+  border-bottom: 1px solid var(--border);
 }
 
 .sale-item-img {
+  position: absolute;
+  top: 0; left: 0;
   width: 100%; height: 100%;
-  object-fit: contain; /* Ảnh không bị cắt gọt lòi viền trắng */
-  padding: 10px;
+  object-fit: contain; 
+  padding: 14px;
 }
 
 /* Giấu các thành phần rườm rà */
@@ -208,19 +214,19 @@
   display: none !important;
 }
 
-/* Info Section (Rất chật, ko có padding thừa) */
+/* Info Section */
 .sale-item-info {
-  padding: 10px 12px 12px;
+  padding: 14px 16px;
   display: flex; flex-direction: column; flex-grow: 1;
 }
 
 .sale-item-title {
-  font-family: 'Inter', sans-serif;
-  font-size: 13.5px; 
-  font-weight: 400; 
-  color: var(--fs-dark);
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 14px; 
+  font-weight: 600; 
+  color: #1a1a1a;
   margin: 0 0 10px; 
-  line-height: 1.4;
+  line-height: 1.35;
   display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
   overflow: hidden; text-overflow: ellipsis; 
   height: 38px;
