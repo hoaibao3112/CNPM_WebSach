@@ -135,7 +135,6 @@
 }
 
 .sale-track-wrap {
-  display: block !important;
   position: relative;
   overflow: hidden;
   padding: 10px 0;
@@ -143,14 +142,10 @@
 }
 
 .sale-track {
-  display: flex !important;
-  flex-direction: row !important;
-  flex-wrap: nowrap !important;
-  align-items: flex-start !important;
-  gap: 15px !important; 
-  transition: transform 0.5s ease;
-  width: max-content !important;
-  clear: both !important;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 15px; 
+  width: 100%;
 }
 
 /* Slide Nav Buttons (Tròn trắng, chỉ thò ra) */
@@ -182,17 +177,13 @@
   background: var(--bg-card);
   border-radius: 12px;
   border: 1px solid var(--border);
-  /* Layout Cứu Cánh (Ngang ngang) */
-  display: flex !important;
-  flex-direction: column !important;
-  float: left !important; /* Ép ngang nếu flex hỏng */
-  
-  /* Cố định kích thước để không bị bung to/xuống dòng */
-  width: 250px !important;
-  min-width: 200px !important;
-  max-width: 285px !important; 
-  flex: 0 0 250px !important;
-  margin-right: 15px !important; /* Dùng margin bù cho gap nếu flex hỏng */
+  display: flex; flex-direction: column;
+  position: relative; overflow: hidden;
+  font-family: 'Inter', sans-serif;
+  text-decoration: none;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+  width: 100%; /* Đầy đặn ô lưới grid */
 }
 
 .sale-item:hover {
@@ -312,10 +303,18 @@
 }
 
 /* ========== RESPONSIVE ========== */
+@media (max-width: 1024px) {
+  .sale-track { grid-template-columns: repeat(3, 1fr); }
+}
+
 @media (max-width: 768px) {
   .flash-sale-header { padding: 10px; }
   .flash-sale-left h2 { font-size: 20px; }
   .countdown::before { display: none; } /* Ẩn chữ kết thúc trong */
   .flash-products { padding: 10px; }
-  .nav-btn { display: none !important; }
+  .sale-track { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 480px) {
+  .sale-track { grid-template-columns: 1fr; }
 }

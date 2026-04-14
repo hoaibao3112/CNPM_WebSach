@@ -294,7 +294,7 @@
 		return wrapper;
 	}
 
-		// Render products into a sliding track with paging (4 items per view)
+		// Render products (chỉ hiển thị đúng 4 sản phẩm)
 		function renderProducts(list) {
 			container.innerHTML = '';
 			if (!list || !list.length) {
@@ -302,95 +302,19 @@
 				return;
 			}
 
+			// Chỉ lấy tối đa 4 sản phẩm
+			const displayList = list.slice(0, 4);
+
 			const trackWrap = document.createElement('div');
 			trackWrap.className = 'sale-track-wrap';
 
 			const track = document.createElement('div');
 			track.className = 'sale-track';
-			list.forEach(p => track.appendChild(createProductCard(p)));
+			
+			displayList.forEach(p => track.appendChild(createProductCard(p)));
 
 			trackWrap.appendChild(track);
 			container.appendChild(trackWrap);
-
-			// paging controls
-			const itemsPerPage = 4;
-			let currentPage = 0;
-			const totalPages = Math.max(1, Math.ceil(list.length / itemsPerPage));
-
-			// create nav only if more than one page
-			if (totalPages > 1) {
-				const prev = document.createElement('button');
-				prev.className = 'nav-btn nav-prev';
-				prev.innerHTML = '&lt;';
-				prev.title = 'Xem trước';
-				prev.disabled = true;
-
-				const next = document.createElement('button');
-				next.className = 'nav-btn nav-next';
-				next.innerHTML = '&gt;';
-				next.title = 'Xem thêm';
-
-				function updateNav() {
-					// compute translate based on container width
-					const step = trackWrap.clientWidth;
-					track.style.transform = `translateX(${-currentPage * step}px)`;
-					prev.disabled = currentPage === 0;
-					next.disabled = currentPage >= totalPages - 1;
-				}
-
-				prev.addEventListener('click', () => {
-					if (currentPage > 0) {
-						currentPage -= 1;
-						updateNav();
-					}
-				});
-
-				next.addEventListener('click', () => {
-					if (currentPage < totalPages - 1) {
-						currentPage += 1;
-						updateNav();
-					}
-				});
-
-				// Recompute on resize
-				window.addEventListener('resize', () => {
-					updateNav();
-				});
-
-				// Add nav buttons into the track wrapper so top:50% centers them correctly
-				trackWrap.appendChild(prev);
-				trackWrap.appendChild(next);
-
-				// initial layout: ensure each item width equals trackWrap width / itemsPerPage
-				function layoutItems() {
-					const wrapWidth = trackWrap.clientWidth;
-					const totalGap = (itemsPerPage - 1) * 20; // 20px gap between items
-					const itemWidth = Math.floor((wrapWidth - totalGap) / itemsPerPage);
-					const children = track.children;
-					for (let i = 0; i < children.length; i++) {
-						children[i].style.flex = `0 0 ${itemWidth}px`;
-						children[i].style.maxWidth = `${itemWidth}px`;
-					}
-				}
-
-				// run layout and updateNav after appended to DOM
-				setTimeout(() => {
-					layoutItems();
-					updateNav();
-				}, 50);
-			} else {
-				// single page: make items flexible (fit 4 columns)
-				setTimeout(() => {
-					const wrapWidth = trackWrap.clientWidth;
-					const totalGap = (4 - 1) * 20; // 20px gap
-					const itemWidth = Math.floor((wrapWidth - totalGap) / 4);
-					const children = track.children;
-					for (let i = 0; i < children.length; i++) {
-						children[i].style.flex = `0 0 ${itemWidth}px`;
-						children[i].style.maxWidth = `${itemWidth}px`;
-					}
-				}, 50);
-			}
 		}
 
 	let countdownInterval = null;
