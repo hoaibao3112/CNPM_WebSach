@@ -67,6 +67,7 @@ const PersonalizedRecommendations = {
       // Thử lấy từ customerId trước (dùng bởi preference-widget)
       let customerId = localStorage.getItem('customerId');
       if (customerId) {
+        customerId = String(customerId).replace(/\D/g, '');
         console.log('✅ Found customerId:', customerId);
         return customerId;
       }
@@ -75,27 +76,36 @@ const PersonalizedRecommendations = {
       const customerInfo = localStorage.getItem(this.config.storageKeys.customerInfo);
       if (customerInfo) {
         const parsed = JSON.parse(customerInfo);
-        customerId = parsed.makh || parsed.MaKH;
-        console.log('✅ Found from customerInfo:', customerId);
-        return customerId;
+        let id = parsed.makh || parsed.MaKH;
+        if (id) {
+            id = String(id).replace(/\D/g, '');
+            console.log('✅ Found from customerInfo:', id);
+            return id;
+        }
       }
 
       // Thử lấy từ user object
       const user = localStorage.getItem('user');
       if (user) {
         const parsed = JSON.parse(user);
-        customerId = parsed.makh || parsed.MaKH;
-        console.log('✅ Found from user:', customerId);
-        return customerId;
+        let id = parsed.makh || parsed.MaKH;
+        if (id) {
+            id = String(id).replace(/\D/g, '');
+            console.log('✅ Found from user:', id);
+            return id;
+        }
       }
 
       // Thử lấy từ loggedInUser
       const loggedInUser = localStorage.getItem('loggedInUser');
       if (loggedInUser) {
         const parsed = JSON.parse(loggedInUser);
-        customerId = parsed.makh || parsed.MaKH;
-        console.log('✅ Found from loggedInUser:', customerId);
-        return customerId;
+        let id = parsed.makh || parsed.MaKH;
+        if (id) {
+            id = String(id).replace(/\D/g, '');
+            console.log('✅ Found from loggedInUser:', id);
+            return id;
+        }
       }
 
       console.warn('⚠️ Không tìm thấy customerId trong localStorage');

@@ -1404,7 +1404,7 @@ document.addEventListener('DOMContentLoaded', () => {
     fetchAndDisplayProducts();
     fetchAndDisplayPromotions();
     fetchAndDisplayTextbooks();
-    fetchAndDisplayPoliticsBooks();
+    // fetchAndDisplayPoliticsBooks(); // Đã loại bỏ phần Sách Chính Trị trong index.html
     fetchAndDisplayScienceBooks();
   }
 
