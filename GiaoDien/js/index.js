@@ -108,7 +108,8 @@ function loadContent(url) {
         document.querySelector('.container').innerHTML = newContainer.innerHTML;
         history.pushState({}, '', url);
         if (typeof fetchAndDisplayProducts === 'function') fetchAndDisplayProducts();
-        if (typeof fetchAndDisplayPromotions === 'function') fetchAndDisplayPromotions();
+        // Flash Sale is rendered by products_sales.js only.
+        // Avoid calling book.js promotion renderer here to prevent DOM overwrite.
         if (typeof fetchAndDisplayTextbooks === 'function') fetchAndDisplayTextbooks();
       } else {
         console.error('Không tìm thấy .container, chuyển hướng trực tiếp');
