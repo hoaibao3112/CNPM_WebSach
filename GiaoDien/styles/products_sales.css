@@ -169,11 +169,6 @@
   align-content: start !important;
 }
 
-/* DEBUG: Thêm border để kiểm tra grid hoạt động */
-.sale-track {
-  border: 2px solid #00ff00 !important;
-}
-
 /* ════════════════════════════════════════════════════════════
    PRODUCT CARD
    ════════════════════════════════════════════════════════════ */
@@ -181,18 +176,17 @@
 .sale-item {
   background: var(--bg-card);
   border-radius: var(--radius-card);
-  border: 2px solid #ff0000 !important;
+  border: 1px solid var(--border);
   display: flex !important;
   flex-direction: column !important;
   overflow: hidden;
   cursor: pointer;
   box-shadow: var(--shadow-card);
   transition: transform 0.25s, box-shadow 0.25s;
-  width: auto !important;
+  width: 100% !important;
   height: auto !important;
-  min-width: auto !important;
-  max-width: 100% !important;
-  flex: 1 1 auto !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
 }
 
 .sale-item:hover {
