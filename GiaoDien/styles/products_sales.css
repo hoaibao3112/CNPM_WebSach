@@ -1,2552 +1,302 @@
-/* ════════════════════════════════════════════════════════════
-   PRODUCTS_SALES.CSS — Flash Sale Component (CLEAN & FINAL)
-   ════════════════════════════════════════════════════════════ */
-
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap');
-
-:root {
-  --fs-red: #C0392B;
-  --fs-red-dark: #962d22;
-  --fs-red-light: #fdf0ef;
-  --fs-dark: #1a1a1a;
-  --fs-muted: #888888;
-  --bg-card: #ffffff;
-  --border: #ebebeb;
-  --shadow-card: 0 2px 12px rgba(0, 0, 0, 0.07);
-  --shadow-hover: 0 10px 28px rgba(192, 57, 43, 0.18);
-  --radius-card: 14px;
-  --font-body: 'Be Vietnam Pro', 'Segoe UI', sans-serif;
-  --font-display: 'Playfair Display', Georgia, serif;
-}
-
-/* ════════════════════════════════════════════════════════════
-   RESET & CONTAINERS
-   ════════════════════════════════════════════════════════════ */
-
-#flash-sale,
-.flash-sale-container {
-  width: 100%;
-  margin: 0;
-  padding: 0;
-}
-
-.flash-sale-container {
-  font-family: var(--font-body);
-}
-
-/* ════════════════════════════════════════════════════════════
-   HEADER
-   ════════════════════════════════════════════════════════════ */
-
-.flash-sale-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 16px 24px;
-  background: #fff;
-  border-bottom: 1px solid var(--border);
-}
-
-.flash-sale-left {
-  display: flex;
-  align-items: center;
-  gap: 18px;
-}
-
-.flash-sale-left h2 {
-  font-family: var(--font-body);
-  font-size: 22px;
-  font-weight: 900;
-  font-style: italic;
-  color: var(--fs-red);
-  margin: 0;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  white-space: nowrap;
-}
-
-.flash-sale-left h2::before {
-  content: '⚡';
-  color: #f39c12;
-}
-
-.countdown {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.countdown::before {
-  content: 'Kết thúc trong';
-  color: var(--fs-dark);
-  font-size: 13px;
-  font-weight: 600;
-  margin-right: 6px;
-}
-
-.cd-box {
-  background: #1a1a1a;
-  color: #fff;
-  padding: 5px 8px;
-  border-radius: 5px;
-  font-weight: 700;
-  font-size: 14px;
-  min-width: 30px;
-  text-align: center;
-}
-
-.cd-lbl {
-  visibility: hidden;
-  width: 8px;
-  display: inline-block;
-}
-
-.cd-lbl::after {
-  content: ':';
-  visibility: visible;
-  position: absolute;
-  color: #1a1a1a;
-  font-size: 17px;
-  font-weight: 800;
-}
-
-.cd-lbl:last-child::after {
-  content: '';
-}
-
-.view-all-btn {
-  background: transparent;
-  color: #0056b3;
-  border: none;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  padding: 0;
-  transition: color 0.2s;
-}
-
-.view-all-btn:hover {
-  color: var(--fs-red);
-}
-
-/* ════════════════════════════════════════════════════════════
-   PRODUCTS GRID SECTION — CRITICAL!
-   ════════════════════════════════════════════════════════════ */
-
-.flash-products {
-  padding: 24px;
-  background: var(--fs-red);
-  width: 100%;
-  display: block;
-  margin: 0;
-  box-sizing: border-box;
-  overflow: visible;
-}
-
-.sale-track-wrap {
-  width: 100%;
-  display: block;
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
-
-/* ⭐ MAIN GRID — 4 COLUMNS ON DESKTOP ⭐ */
-.sale-track {
-  display: grid !important;
-  grid-template-columns: repeat(4, 1fr) !important;
-  gap: 16px !important;
-  width: 100% !important;
-  max-width: 100% !important;
-  margin: 0 !important;
-  padding: 0 !important;
-  list-style: none !important;
-  box-sizing: border-box !important;
-  grid-auto-flow: row !important;
-  grid-auto-rows: auto !important;
-  align-items: start !important;
-  align-content: start !important;
-}
-
-/* ════════════════════════════════════════════════════════════
-   PRODUCT CARD
-   ════════════════════════════════════════════════════════════ */
-
-.sale-item {
-  background: var(--bg-card);
-  border-radius: var(--radius-card);
-  border: 1px solid var(--border);
-  display: flex !important;
-  flex-direction: column !important;
-  overflow: hidden;
-  cursor: pointer;
-  box-shadow: var(--shadow-card);
-  transition: transform 0.25s, box-shadow 0.25s;
-  width: 100% !important;
-  height: auto !important;
-  min-width: 0 !important;
-  min-height: 0 !important;
-}
-
-.sale-item:hover {
-  transform: translateY(-5px);
-  box-shadow: var(--shadow-hover);
-}
-
-.sale-item-image-wrapper {
-  position: relative;
-  width: 100%;
-  height: 280px;
-  background: #f9f6f3;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
-  flex-shrink: 0;
-}
-
-.sale-item-img {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-  padding: 12px;
-  transition: transform 0.35s;
-}
-
-.sale-item:hover .sale-item-img {
-  transform: scale(1.06);
-}
-
-.badge-discount {
-  position: absolute;
-  top: 12px;
-  left: 12px;
-  background: var(--fs-red);
-  color: #fff;
-  font-size: 11px;
-  font-weight: 700;
-  padding: 5px 10px;
-  border-radius: 4px;
-}
-
-/* Hide unnecessary elements */
-.card-wishlist,
-.sale-item-author,
-.sale-item-year {
-  display: none !important;
-}
-
-/* ════════════════════════════════════════════════════════════
-   INFO SECTION
-   ════════════════════════════════════════════════════════════ */
-
-.sale-item-info {
-  padding: 14px;
-  display: flex;
-  flex-direction: column;
-  flex-grow: 1;
-  gap: 8px;
-}
-
-.sale-item-title {
-  font-family: var(--font-display);
-  font-size: 13.5px;
-  font-weight: 600;
-  color: var(--fs-dark);
-  margin: 0;
-  line-height: 1.3;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-.sale-item-price {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  margin-top: auto;
-}
-
-.discount-price {
-  font-size: 15px;
-  font-weight: 800;
-  color: var(--fs-red);
-  margin: 0;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.badge-percent {
-  display: inline-block;
-  background: var(--fs-red-light);
-  color: var(--fs-red);
-  font-size: 10px;
-  font-weight: 700;
-  padding: 3px 6px;
-  border-radius: 3px;
-  white-space: nowrap;
-}
-
-.orig-price {
-  font-size: 11px;
-  color: var(--fs-muted);
-  text-decoration: line-through;
-  margin: 0;
-}
-
-.sale-item-quantity {
-  font-size: 10px;
-  color: var(--fs-muted);
-  display: none;
-}
-
-.sold-fill {
-  height: 3px;
-  background: linear-gradient(90deg, var(--fs-red), var(--fs-red-light));
-  border-radius: 2px;
-}
-
-/* ════════════════════════════════════════════════════════════
-   ACTION BUTTONS
-   ════════════════════════════════════════════════════════════ */
-
-.sale-item-actions {
-  display: flex !important;
-  gap: 8px;
-  flex-direction: row;
-  width: 100%;
-}
-
-.btn-add-cart,
-.btn-detail {
-  flex: 1;
-  padding: 10px 12px;
-  border: none;
-  border-radius: 6px;
-  font-size: 12px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
-  font-family: var(--font-body);
-}
-
-.btn-add-cart {
-  background: var(--fs-red);
-  color: #fff;
-}
-
-.btn-add-cart:hover:not(:disabled) {
-  background: var(--fs-red-dark);
-  transform: scale(1.02);
-}
-
-.btn-add-cart:disabled {
-  background: #ccc;
-  cursor: not-allowed;
-}
-
-.btn-detail {
-  background: #f0f0f0;
-  color: var(--fs-dark);
-}
-
-.btn-detail:hover {
-  background: #e0e0e0;
-}
-
-/* ════════════════════════════════════════════════════════════
-   LOADING & ERROR STATES
-   ════════════════════════════════════════════════════════════ */
-
-.loading,
-.error-message {
-  text-align: center;
-  padding: 40px 20px;
-  color: var(--fs-dark);
-  font-size: 16px;
-  font-family: var(--font-body);
-}
-
-.error-box {
-  text-align: center;
-  padding: 40px 20px;
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 8px;
-}
-
-.retry-btn,
-.use-cache-btn {
-  margin-top: 12px;
-  padding: 10px 20px;
-  background: var(--fs-red);
-  color: #fff;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 14px;
-  font-weight: 600;
-  margin-left: 8px;
-}
-
-/* ════════════════════════════════════════════════════════════
-   TOAST NOTIFICATIONS
-   ════════════════════════════════════════════════════════════ */
-
-.toast-notification {
-  position: fixed;
-  bottom: 20px;
-  right: 20px;
-  background: #333;
-  color: #fff;
-  padding: 14px 20px;
-  border-radius: 6px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-  z-index: 9999;
-  animation: slideIn 0.3s ease-in-out;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-family: var(--font-body);
-}
-
-.toast-notification.hide {
-  animation: slideOut 0.3s ease-in-out;
-}
-
-.toast-close {
-  background: none;
-  border: none;
-  color: #fff;
-  font-size: 18px;
-  cursor: pointer;
-}
-
-@keyframes slideIn {
-  from {
-    transform: translateY(100px);
-    opacity: 0;
-  }
-  to {
-    transform: translateY(0);
-    opacity: 1;
-  }
-}
-
-@keyframes slideOut {
-  from {
-    transform: translateY(0);
-    opacity: 1;
-  }
-  to {
-    transform: translateY(100px);
-    opacity: 0;
-  }
-}
-
-.no-products {
-  text-align: center;
-  padding: 40px 20px;
-  color: #ffffff;
-  font-size: 16px;
-  font-family: var(--font-body);
-}
-
-/* ════════════════════════════════════════════════════════════
-   RESPONSIVE DESIGN
-   ════════════════════════════════════════════════════════════ */
-
-@media (max-width: 1024px) {
-  .sale-track {
-    grid-template-columns: repeat(3, 1fr) !important;
-    gap: 12px !important;
-  }
-
-  .flash-products {
-    padding: 16px;
-  }
-}
-
-@media (max-width: 768px) {
-  .flash-sale-header {
-    padding: 12px 14px;
-    gap: 10px;
-  }
-
-  .flash-sale-left h2 {
-    font-size: 18px;
-  }
-
-  .countdown::before {
-    display: none;
-  }
-
-  .sale-track {
-    grid-template-columns: repeat(2, 1fr) !important;
-    gap: 10px !important;
-  }
-
-  .flash-products {
-    padding: 12px;
-  }
-
-  .sale-item-image-wrapper {
-    height: 200px;
-  }
-
-  .sale-item-info {
-    padding: 10px;
-  }
-}
-
-@media (max-width: 480px) {
-  .flash-sale-header {
-    padding: 10px 12px;
-  }
-
-  .flash-sale-left h2 {
-    font-size: 16px;
-  }
-
-  .sale-track {
-    grid-template-columns: repeat(2, 1fr) !important;
-    gap: 8px !important;
-  }
-
-  .flash-products {
-    padding: 10px;
-  }
-
-  .sale-item-image-wrapper {
-    height: 150px;
-  }
-
-  .sale-item-title {
-    font-size: 11px;
-  }
-
-  .discount-price {
-    font-size: 13px;
-  }
-
-  .btn-add-cart,
-  .btn-detail {
-    padding: 8px 10px;
-    font-size: 11px;
-  }
-}
-/* ════════════════════════════════════════════════════════════
-   PRODUCTS_SALES.CSS — Flash Sale Component (CLEAN)
-   ════════════════════════════════════════════════════════════ */
-
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap');
-
-:root {
-  --fs-red: #C0392B;
-  --fs-red-dark: #962d22;
-  --fs-red-light: #fdf0ef;
-  --fs-dark: #1a1a1a;
-  --fs-muted: #888888;
-  --bg-card: #ffffff;
-  --border: #ebebeb;
-  --shadow-card: 0 2px 12px rgba(0, 0, 0, 0.07);
-  --shadow-hover: 0 10px 28px rgba(192, 57, 43, 0.18);
-  --radius-card: 14px;
-  --font-body: 'Be Vietnam Pro', 'Segoe UI', sans-serif;
-  --font-display: 'Playfair Display', Georgia, serif;
-}
-
-/* ════════════════════════════════════════════════════════════
-   FLASH SALE CONTAINER — CSS RESET
-   ════════════════════════════════════════════════════════════ */
-
-#flash-sale {
-  width: 100% !important;
-  margin: 0 !important;
-  padding: 0 !important;
-}
-
-.flash-sale-container {
-  width: 100% !important;
-  margin: 0 !important;
-  padding: 0 !important;
-  font-family: var(--font-body);
-}
-
-/* ════════════════════════════════════════════════════════════
-   HEADER
-   ════════════════════════════════════════════════════════════ */
-
-.flash-sale-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 16px 24px;
-  background: #fff;
-  border-bottom: 1px solid var(--border);
-}
-
-.flash-sale-left {
-  display: flex;
-  align-items: center;
-  gap: 18px;
-}
-
-.flash-sale-left h2 {
-  font-family: var(--font-body);
-  font-size: 22px;
-  font-weight: 900;
-  font-style: italic;
-  color: var(--fs-red);
-  margin: 0;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  white-space: nowrap;
-}
-
-.flash-sale-left h2::before {
-  content: '⚡';
-  color: #f39c12;
-}
-
-.countdown {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  flex-wrap: nowrap;
-}
-
-.countdown::before {
-  content: 'Kết thúc trong';
-  color: var(--fs-dark);
-  font-size: 13px;
-  font-weight: 600;
-  margin-right: 6px;
-}
-
-.cd-box {
-  background: #1a1a1a;
-  color: #fff;
-  padding: 5px 8px;
-  border-radius: 5px;
-  font-weight: 700;
-  font-size: 14px;
-  min-width: 30px;
-  text-align: center;
-}
-
-.cd-lbl {
-  visibility: hidden;
-  width: 8px;
-  display: inline-block;
-}
-
-.cd-lbl::after {
-  content: ':';
-  visibility: visible;
-  position: absolute;
-  color: #1a1a1a;
-  font-size: 17px;
-  font-weight: 800;
-}
-
-.cd-lbl:last-child::after {
-  content: '';
-}
-
-.view-all-btn {
-  background: transparent;
-  color: #0056b3;
-  border: none;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  padding: 0;
-  transition: color 0.2s;
-}
-
-.view-all-btn:hover {
-  color: var(--fs-red);
-}
-
-/* ════════════════════════════════════════════════════════════
-   PRODUCTS GRID SECTION
-   ════════════════════════════════════════════════════════════ */
-
-.flash-products {
-  padding: 24px;
-  background: var(--fs-red);
-  width: 100% !important;
-  display: block !important;
-  margin: 0 !important;
-  overflow: visible !important;
-  box-sizing: border-box !important;
-}
-
-.sale-track-wrap {
-  width: 100% !important;
-  display: block !important;
-  margin: 0 !important;
-  padding: 0 !important;
-  overflow: visible !important;
-  box-sizing: border-box !important;
-}
-
-.sale-track {
-  display: grid !important;
-  grid-template-columns: repeat(4, 1fr) !important;
-  gap: 16px;
-  width: 100%;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-/* ════════════════════════════════════════════════════════════
-   PRODUCT CARD
-   ════════════════════════════════════════════════════════════ */
-
-.sale-item {
-  background: var(--bg-card);
-  border-radius: var(--radius-card);
-  border: 1px solid var(--border);
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  cursor: pointer;
-  box-shadow: var(--shadow-card);
-  transition: transform 0.25s, box-shadow 0.25s;
-  width: 100% !important;
-  min-width: 0 !important;
-}
-
-.sale-item:hover {
-  transform: translateY(-5px);
-  box-shadow: var(--shadow-hover);
-}
-
-.sale-item-image-wrapper {
-  position: relative;
-  width: 100%;
-  height: 280px;
-  background: #f9f6f3;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
-}
-
-.sale-item-img {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-  padding: 12px;
-  transition: transform 0.35s;
-}
-
-.sale-item:hover .sale-item-img {
-  transform: scale(1.06);
-}
-
-.badge-discount {
-  position: absolute;
-  top: 12px;
-  left: 12px;
-  background: var(--fs-red);
-  color: #fff;
-  font-size: 11px;
-  font-weight: 700;
-  padding: 5px 10px;
-  border-radius: 4px;
-}
-
-.card-wishlist,
-.sale-item-author,
-.sale-item-year,
-.sale-item-actions {
-  display: none;
-}
-
-/* ════════════════════════════════════════════════════════════
-   INFO SECTION
-   ════════════════════════════════════════════════════════════ */
-
-.sale-item-info {
-  padding: 14px;
-  display: flex;
-  flex-direction: column;
-  flex-grow: 1;
-  gap: 8px;
-}
-
-.sale-item-title {
-  font-family: var(--font-display);
-  font-size: 13.5px;
-  font-weight: 600;
-  color: var(--fs-dark);
-  margin: 0;
-  line-height: 1.3;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-.sale-item-price {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  margin-top: auto;
-}
-
-.discount-price {
-  font-size: 15px;
-  font-weight: 800;
-  color: var(--fs-red);
-  margin: 0;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.badge-percent {
-  display: inline-block;
-  background: var(--fs-red-light);
-  color: var(--fs-red);
-  font-size: 10px;
-  font-weight: 700;
-  padding: 3px 6px;
-  border-radius: 3px;
-  border: 1px solid rgba(192, 57, 43, 0.2);
-}
-
-.orig-price {
-  font-size: 11px;
-  color: var(--fs-muted);
-  text-decoration: line-through;
-  margin: 0;
-}
-
-/* ════════════════════════════════════════════════════════════
-   SOLD BAR
-   ════════════════════════════════════════════════════════════ */
-
-.sale-item-quantity {
-  background: #e0e0e0;
-  border-radius: 12px;
-  text-align: center;
-  font-size: 10.5px;
-  font-weight: 700;
-  padding: 6px 0;
-  position: relative;
-  overflow: hidden;
-  width: 100%;
-  margin-top: 6px;
-}
-
-.sale-item-quantity span {
-  position: relative;
-  z-index: 2;
-  color: #fff;
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
-}
-
-.sold-fill {
-  position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  background: linear-gradient(90deg, var(--fs-red-dark), var(--fs-red));
-  z-index: 1;
-}
-
-/* ════════════════════════════════════════════════════════════
-   LOADING & ERROR
-   ════════════════════════════════════════════════════════════ */
-
-.flash-products .loading,
-.flash-products .no-products {
-  text-align: center;
-  color: #fff;
-  padding: 48px 20px;
-  font-size: 15px;
-}
-
-.error-box {
-  text-align: center;
-  padding: 32px;
-  color: #fff;
-}
-
-.error-message {
-  font-size: 14px;
-  margin-bottom: 14px;
-}
-
-.retry-btn,
-.use-cache-btn {
-  background: #fff;
-  color: var(--fs-red);
-  border: none;
-  padding: 9px 22px;
-  border-radius: 6px;
-  font-weight: 700;
-  cursor: pointer;
-  margin: 4px;
-  font-size: 13px;
-  transition: opacity 0.2s;
-}
-
-.retry-btn:hover,
-.use-cache-btn:hover {
-  opacity: 0.88;
-}
-
-/* ════════════════════════════════════════════════════════════
-   RESPONSIVE
-   ════════════════════════════════════════════════════════════ */
-
-@media (max-width: 1024px) {
-  .sale-track {
-    grid-template-columns: repeat(3, 1fr) !important;
-    gap: 12px;
-  }
-
-  .flash-products {
-    padding: 16px;
-  }
-}
-
-@media (max-width: 768px) {
-  .flash-sale-header {
-    padding: 12px 14px;
-    gap: 10px;
-  }
-
-  .flash-sale-left h2 {
-    font-size: 18px;
-  }
-
-  .countdown::before {
-    display: none;
-  }
-
-  .sale-track {
-    grid-template-columns: repeat(2, 1fr) !important;
-    gap: 10px;
-  }
-
-  .flash-products {
-    padding: 12px;
-  }
-
-  .sale-item-image-wrapper {
-    height: 200px;
-  }
-
-  .sale-item-info {
-    padding: 10px;
-  }
-}
-
-@media (max-width: 480px) {
-  .flash-sale-header {
-    padding: 10px 12px;
-  }
-
-  .flash-sale-left h2 {
-    font-size: 16px;
-  }
-
-  .sale-track {
-    grid-template-columns: repeat(2, 1fr) !important;
-    gap: 8px;
-  }
-
-  .flash-products {
-    padding: 10px;
-  }
-
-  .sale-item-image-wrapper {
-    height: 150px;
-  }
-
-  .sale-item-title {
-    font-size: 11px;
-  }
-
-  .discount-price {
-    font-size: 13px;
-  }
-}
-/* ============================================================
-   PRODUCTS_SALES.CSS — Flash Sale (Clean & Override-Safe)
-   ============================================================ */
-
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap');
-
-:root {
-  --fs-red: #C0392B;
-  --fs-red-dark: #962d22;
-  --fs-red-light: #fdf0ef;
-  --fs-dark: #1a1a1a;
-  --fs-muted: #888888;
-  --bg-card: #ffffff;
-  --border: #ebebeb;
-  --shadow-card: 0 2px 12px rgba(0, 0, 0, 0.07);
-  --shadow-hover: 0 10px 28px rgba(192, 57, 43, 0.18);
-  --radius-card: 14px;
-  --font-body: 'Be Vietnam Pro', 'Segoe UI', sans-serif;
-  --font-display: 'Playfair Display', Georgia, serif;
-}
-
-/* ═════════════════════════════════════════════════════════
-   RESET & OVERRIDE INDEX.CSS INTERFERENCE
-   ═════════════════════════════════════════════════════════ */
+﻿/* Flash Sale isolated styles: scoped under #flash-sale to avoid conflicts */
 
 #flash-sale {
   width: 100%;
-  max-width: 100%;
   margin: 0;
   padding: 0;
-  display: block;
-  box-sizing: border-box;
-  position: relative;
 }
 
-.flash-sale-container {
+#flash-sale .flash-sale-container {
   width: 100%;
-  max-width: 100%;
   margin: 0;
-  display: block;
-  font-family: var(--font-body);
-  box-sizing: border-box;
-  border-radius: 0;
-  overflow: visible;
-  box-shadow: none;
+  padding: 0;
+  font-family: 'Inter', Arial, sans-serif;
 }
 
-/* ═════════════════════════════════════════════════════════
-   HEADER
-   ═════════════════════════════════════════════════════════ */
-
-.flash-sale-header {
+#flash-sale .flash-sale-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 16px 24px;
-  background: #ffffff;
-  border-bottom: 1px solid var(--border);
-  width: 100%;
-  box-sizing: border-box;
-}
-
-.flash-sale-left {
-  display: flex;
-  align-items: center;
-  gap: 18px;
-  flex-wrap: wrap;
-}
-
-.flash-sale-left h2 {
-  font-family: var(--font-body);
-  font-size: 22px;
-  font-weight: 900;
-  font-style: italic;
-  color: var(--fs-red);
-  margin: 0;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  letter-spacing: -0.5px;
-  white-space: nowrap;
-}
-
-.flash-sale-left h2::before {
-  content: '⚡';
-  font-style: normal;
-  color: #f39c12;
-}
-
-/* Countdown */
-.countdown {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  flex-wrap: nowrap;
-}
-
-.countdown::before {
-  content: 'Kết thúc trong';
-  color: var(--fs-dark);
-  font-size: 13px;
-  font-weight: 600;
-  font-family: var(--font-body);
-  margin-right: 6px;
-  white-space: nowrap;
-}
-
-.cd-box {
-  background: #1a1a1a;
-  color: #ffffff;
-  padding: 5px 8px;
-  border-radius: 5px;
-  font-weight: 700;
-  font-family: var(--font-body);
-  font-size: 14px;
-  min-width: 30px;
-  text-align: center;
-  letter-spacing: 0.5px;
-}
-
-.cd-lbl {
-  visibility: hidden;
-  width: 8px;
-  position: relative;
-  display: inline-block;
-}
-
-.cd-lbl::after {
-  content: ':';
-  visibility: visible;
-  position: absolute;
-  left: 0;
-  top: -5px;
-  color: #1a1a1a;
-  font-size: 17px;
-  font-weight: 800;
-}
-
-.cd-lbl:last-child::after {
-  content: '';
-}
-
-/* View All Button */
-.view-all-btn {
-  background: transparent;
-  color: #0056b3;
-  border: none;
-  font-family: var(--font-body);
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  padding: 0;
-  display: flex;
-  align-items: center;
-  gap: 3px;
-  white-space: nowrap;
-  transition: color 0.2s;
-}
-
-.view-all-btn:hover {
-  color: var(--fs-red);
-}
-
-.view-all-btn::after {
-  content: '›';
-  font-size: 20px;
-  font-weight: 400;
-  line-height: 1;
-}
-
-/* ═════════════════════════════════════════════════════════
-   PRODUCTS GRID AREA
-   ═════════════════════════════════════════════════════════ */
-
-.flash-products {
-  padding: 24px;
-  background: var(--fs-red);
-  width: 100%;
-  box-sizing: border-box;
-  display: block;
-  margin: 0;
-}
-
-.sale-track-wrap {
-  width: 100%;
-  margin: 0;
-  padding: 0;
-  display: block;
-  box-sizing: border-box;
-  overflow: visible;
-}
-
-/* CRITICAL FIX: Grid Layout */
-.sale-track {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 16px;
-  width: 100%;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-  box-sizing: border-box;
-  align-items: start;
-}
-
-/* ═════════════════════════════════════════════════════════
-   PRODUCT CARD
-   ═════════════════════════════════════════════════════════ */
-
-.sale-item {
-  background: var(--bg-card);
-  border-radius: var(--radius-card);
-  border: 1px solid var(--border);
-  display: flex;
-  flex-direction: column;
-  position: relative;
-  overflow: hidden;
-  font-family: var(--font-body);
-  text-decoration: none;
-  cursor: pointer;
-  box-shadow: var(--shadow-card);
-  width: 100%;
-  min-width: 0;
-  height: 100%;
-  transition: transform 0.25s ease, box-shadow 0.25s ease;
-}
-
-.sale-item:hover {
-  transform: translateY(-5px);
-  box-shadow: var(--shadow-hover);
-}
-
-/* Image Section */
-.sale-item-image-wrapper {
-  position: relative;
-  width: 100%;
-  height: 300px;
-  overflow: hidden;
-  background: #f9f6f3;
-  flex-shrink: 0;
-  border-bottom: 1px solid var(--border);
-}
-
-.sale-item-img {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-  padding: 12px;
-  transition: transform 0.35s ease;
-}
-
-.sale-item:hover .sale-item-img {
-  transform: scale(1.06);
-}
-
-/* Discount Badge */
-.badge-discount {
-  display: flex !important;
-  position: absolute;
-  top: 12px;
-  left: 12px;
-  background: var(--fs-red);
-  color: #fff;
-  font-size: 11px;
-  font-weight: 700;
-  padding: 5px 10px;
-  border-radius: 4px;
-  z-index: 5;
-  letter-spacing: 0.3px;
-  font-family: var(--font-body);
-}
-
-/* Hide Extra Elements */
-.card-wishlist,
-.sale-item-author,
-.sale-item-year,
-.sale-item-actions {
-  display: none !important;
-}
-
-/* Info Section */
-.sale-item-info {
-  padding: 14px;
-  display: flex;
-  flex-direction: column;
-  flex-grow: 1;
-  gap: 8px;
-  min-height: 120px;
-}
-
-.sale-item-title {
-  font-family: var(--font-display);
-  font-size: 13.5px;
-  font-weight: 600;
-  color: var(--fs-dark);
-  margin: 0;
-  line-height: 1.3;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  min-height: 36px;
-}
-
-/* Price Section */
-.sale-item-price {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  margin-top: auto;
-}
-
-.discount-price {
-  font-size: 15px;
-  font-weight: 800;
-  color: var(--fs-red);
-  margin: 0;
-  line-height: 1.2;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.badge-percent {
-  display: inline-block;
-  background: var(--fs-red-light);
-  color: var(--fs-red);
-  font-size: 10px;
-  font-weight: 700;
-  padding: 3px 6px;
-  border-radius: 3px;
-  border: 1px solid rgba(192, 57, 43, 0.2);
-  white-space: nowrap;
-}
-
-.orig-price {
-  font-size: 11px;
-  color: var(--fs-muted);
-  text-decoration: line-through;
-  margin: 0;
-}
-
-/* ═════════════════════════════════════════════════════════
-   SOLD BAR
-   ═════════════════════════════════════════════════════════ */
-
-.sale-item-quantity {
-  background: #e0e0e0;
-  border-radius: 12px;
-  text-align: center;
-  font-size: 10.5px;
-  font-weight: 700;
-  padding: 6px 0;
-  text-transform: uppercase;
-  position: relative;
-  overflow: hidden;
-  width: 100%;
-  letter-spacing: 0.3px;
-  margin-top: 6px;
-}
-
-.sale-item-quantity span {
-  position: relative;
-  z-index: 2;
-  color: #ffffff;
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
-}
-
-.sold-fill {
-  position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  background: linear-gradient(90deg, var(--fs-red-dark), var(--fs-red));
-  z-index: 1;
-}
-
-/* ═════════════════════════════════════════════════════════
-   LOADING & ERROR STATES
-   ═════════════════════════════════════════════════════════ */
-
-.flash-products .loading,
-.flash-products .no-products {
-  text-align: center;
-  color: #fff;
-  padding: 48px 20px;
-  font-size: 15px;
-  font-family: var(--font-body);
-}
-
-.error-box {
-  text-align: center;
-  padding: 32px;
-  color: #fff;
-}
-
-.error-message {
-  font-size: 14px;
-  margin-bottom: 14px;
-}
-
-.retry-btn,
-.use-cache-btn {
   background: #fff;
-  color: var(--fs-red);
-  border: none;
-  padding: 9px 22px;
-  border-radius: 6px;
-  font-weight: 700;
-  cursor: pointer;
-  margin: 4px;
-  font-size: 13px;
-  font-family: var(--font-body);
-  transition: opacity 0.2s, transform 0.2s;
+  border-bottom: 1px solid #ebebeb;
 }
 
-.retry-btn:hover,
-.use-cache-btn:hover {
-  opacity: 0.88;
-  transform: translateY(-1px);
+#flash-sale .flash-sale-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 
-/* ═════════════════════════════════════════════════════════
-   RESPONSIVE DESIGN
-   ═════════════════════════════════════════════════════════ */
-
-/* Tablet 1024px */
-@media (max-width: 1024px) {
-  .flash-products {
-    padding: 16px;
-  }
-
-  .sale-track {
-    grid-template-columns: repeat(3, 1fr);
-    gap: 12px;
-  }
-}
-
-/* Tablet 768px */
-@media (max-width: 768px) {
-  .flash-sale-header {
-    padding: 12px 14px;
-    flex-direction: row;
-    gap: 10px;
-  }
-
-  .flash-sale-left {
-    gap: 10px;
-  }
-
-  .flash-sale-left h2 {
-    font-size: 18px;
-  }
-
-  .countdown::before {
-    display: none;
-  }
-
-  .flash-products {
-    padding: 12px;
-  }
-
-  .sale-track {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 10px;
-  }
-
-  .sale-item-title {
-    font-size: 12px;
-  }
-
-  .sale-item-info {
-    padding: 10px;
-    min-height: 100px;
-  }
-
-  .sale-item-image-wrapper {
-    height: 200px;
-  }
-}
-
-/* Mobile 480px */
-@media (max-width: 480px) {
-  .flash-sale-header {
-    padding: 10px 12px;
-    gap: 8px;
-  }
-
-  .flash-sale-left h2 {
-    font-size: 16px;
-  }
-
-  .flash-products {
-    padding: 10px;
-  }
-
-  .sale-track {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 8px;
-  }
-
-  .sale-item-image-wrapper {
-    height: 150px;
-  }
-
-  .sale-item-info {
-    padding: 8px;
-    min-height: 80px;
-  }
-
-  .sale-item-title {
-    font-size: 11px;
-    min-height: 30px;
-  }
-
-  .discount-price {
-    font-size: 13px;
-  }
-}
-
-/* Mobile 360px */
-@media (max-width: 360px) {
-  .flash-sale-left h2 {
-    font-size: 14px;
-  }
-
-  .cd-box {
-    font-size: 12px;
-    padding: 3px 6px;
-  }
-
-  .sale-item-title {
-    font-size: 10px;
-  }
-}
-/* ============================================================
-   PRODUCTS_SALES.CSS — Flash Sale Premium (Clean & Fixed)
-   ============================================================ */
-
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap');
-
-:root {
-  --fs-red: #C0392B;
-  --fs-red-dark: #962d22;
-  --fs-red-light: #fdf0ef;
-  --fs-dark: #1a1a1a;
-  --fs-muted: #888888;
-  --bg-card: #ffffff;
-  --border: #ebebeb;
-  --shadow-card: 0 2px 12px rgba(0, 0, 0, 0.07);
-  --shadow-hover: 0 10px 28px rgba(192, 57, 43, 0.18);
-  --radius-card: 14px;
-  --radius-sm: 8px;
-  --font-body: 'Be Vietnam Pro', 'Segoe UI', sans-serif;
-  --font-display: 'Playfair Display', Georgia, serif;
-}
-
-/* RESET & BASE */
-* {
-  box-sizing: border-box;
-}
-
-/* ──────────────────────────────────────────────────────────
-   FLASH SALE CONTAINER — CSS RESET (Override index.css inheritance)
-   ────────────────────────────────────────────────────────── */
-
-#flash-sale {
-  width: 100% !important;
-  max-width: 100% !important;
-  margin: 0 !important;
-  padding: 0 !important;
-  display: block !important;
-  position: relative !important;
-}
-
-.flash-sale-container {
-  width: 100%;
-  max-width: 100%;
+#flash-sale .flash-sale-left h2 {
   margin: 0;
-  border-radius: 0;
-  overflow: visible;
-  box-shadow: none;
-  font-family: var(--font-body);
-}
-
-/* ──────────────────────────────────────────────────────────
-   HEADER
-   ────────────────────────────────────────────────────────── */
-.flash-sale-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 16px 24px;
-  background: #ffffff;
-  border-bottom: 1px solid var(--border);
-  width: 100%;
-  box-sizing: border-box;
-}
-
-.flash-sale-left {
-  display: flex;
-  align-items: center;
-  gap: 18px;
-  flex-wrap: wrap;
-}
-
-.flash-sale-left h2 {
-  font-family: var(--font-body);
-  font-size: 22px;
-  font-weight: 900;
+  font-size: 40px;
   font-style: italic;
-  color: var(--fs-red);
-  margin: 0;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  letter-spacing: -0.5px;
-  white-space: nowrap;
-}
-
-.flash-sale-left h2::before {
-  content: '⚡';
-  font-style: normal;
-  color: #f39c12;
-}
-
-/* Countdown */
-.countdown {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  flex-wrap: nowrap;
-}
-
-.countdown::before {
-  content: 'Kết thúc trong';
-  color: var(--fs-dark);
-  font-size: 13px;
-  font-weight: 600;
-  font-family: var(--font-body);
-  margin-right: 6px;
-  white-space: nowrap;
-}
-
-.cd-box {
-  background: #1a1a1a;
-  color: #ffffff;
-  padding: 5px 8px;
-  border-radius: 5px;
-  font-weight: 700;
-  font-family: var(--font-body);
-  font-size: 14px;
-  min-width: 30px;
-  text-align: center;
-  letter-spacing: 0.5px;
-}
-
-.cd-lbl {
-  visibility: hidden;
-  width: 8px;
-  position: relative;
-  display: inline-block;
-}
-
-.cd-lbl::after {
-  content: ':';
-  visibility: visible;
-  position: absolute;
-  left: 0;
-  top: -5px;
-  color: #1a1a1a;
-  font-size: 17px;
+  color: #c0392b;
   font-weight: 800;
-}
-
-.cd-lbl:last-child::after {
-  content: '';
-}
-
-/* View All Button */
-.view-all-btn {
-  background: transparent;
-  color: #0056b3;
-  border: none;
-  font-family: var(--font-body);
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  padding: 0;
-  display: flex;
-  align-items: center;
-  gap: 3px;
-  white-space: nowrap;
-  transition: color 0.2s;
-}
-
-.view-all-btn:hover {
-  color: var(--fs-red);
-}
-
-.view-all-btn::after {
-  content: '›';
-  font-size: 20px;
-  font-weight: 400;
   line-height: 1;
 }
 
-/* ──────────────────────────────────────────────────────────
-   PRODUCTS AREA
-   ────────────────────────────────────────────────────────── */
-.flash-products {
-  padding: 24px;
-  background: var(--fs-red);
-  width: 100%;
-  box-sizing: border-box;
-}
-
-.sale-track-wrap {
-  position: relative;
-  width: 100%;
-  overflow: visible;
-}
-
-/* KEY FIX: Grid layout */
-.sale-track {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 16px;
-  width: 100%;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-  box-sizing: border-box;
-}
-
-/* ──────────────────────────────────────────────────────────
-   ITEM CARD
-   ────────────────────────────────────────────────────────── */
-.sale-item {
-  background: var(--bg-card);
-  border-radius: var(--radius-card);
-  border: 1px solid var(--border);
+#flash-sale .countdown {
   display: flex;
-  flex-direction: column;
-  position: relative;
-  overflow: hidden;
-  font-family: var(--font-body);
-  text-decoration: none;
-  cursor: pointer;
-  box-shadow: var(--shadow-card);
-  width: 100%;
-  min-width: 0;
-  transition: transform 0.25s ease, box-shadow 0.25s ease;
+  align-items: center;
+  gap: 4px;
 }
 
-.sale-item:hover {
-  transform: translateY(-5px);
-  box-shadow: var(--shadow-hover);
+#flash-sale .countdown::before {
+  content: 'Kết thúc trong';
+  font-size: 13px;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin-right: 6px;
 }
 
-/* Image Wrapper — FIXED */
-.sale-item-image-wrapper {
-  position: relative;
-  width: 100%;
-  aspect-ratio: 2.5 / 3;
-  overflow: hidden;
-  background: #f9f6f3;
-  flex-shrink: 0;
-}
-
-.sale-item-img {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-  padding: 12px;
-  transition: transform 0.35s ease;
-}
-
-.sale-item:hover .sale-item-img {
-  transform: scale(1.06);
-}
-
-/* Badge discount */
-.badge-discount {
-  display: flex !important;
-  position: absolute;
-  top: 12px;
-  left: 12px;
-  background: var(--fs-red);
+#flash-sale .cd-box {
+  min-width: 30px;
+  text-align: center;
   color: #fff;
-  font-size: 11px;
-  font-weight: 700;
-  padding: 5px 10px;
+  background: #1a1a1a;
   border-radius: 4px;
-  z-index: 5;
-  letter-spacing: 0.3px;
-  font-family: var(--font-body);
+  padding: 4px 7px;
+  font-size: 13px;
+  font-weight: 700;
 }
 
-/* Hide unnecessary elements */
-.card-wishlist,
-.sale-item-author,
-.sale-item-year,
-.sale-item-actions {
-  display: none !important;
-}
-
-/* Info Section */
-.sale-item-info {
-  padding: 14px;
-  display: flex;
-  flex-direction: column;
-  flex-grow: 1;
-  gap: 8px;
-  min-height: 120px;
-}
-
-.sale-item-title {
-  font-family: var(--font-display);
-  font-size: 13.5px;
-  font-weight: 600;
-  color: var(--fs-dark);
-  margin: 0;
-  line-height: 1.3;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  min-height: 36px;
-}
-
-/* Price Section */
-.sale-item-price {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  margin-top: auto;
-}
-
-.discount-price {
-  font-size: 15px;
-  font-weight: 800;
-  color: var(--fs-red);
-  margin: 0;
-  line-height: 1.2;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.badge-percent {
+#flash-sale .cd-lbl {
   display: inline-block;
-  background: var(--fs-red-light);
-  color: var(--fs-red);
-  font-size: 10px;
-  font-weight: 700;
-  padding: 3px 6px;
-  border-radius: 3px;
-  border: 1px solid rgba(192, 57, 43, 0.2);
-  white-space: nowrap;
-}
-
-.orig-price {
-  font-size: 11px;
-  color: var(--fs-muted);
-  text-decoration: line-through;
-  margin: 0;
-}
-
-/* SOLD BAR */
-.sale-item-quantity {
-  background: #e0e0e0;
-  border-radius: 12px;
-  text-align: center;
-  font-size: 10.5px;
-  font-weight: 700;
-  padding: 6px 0;
-  text-transform: uppercase;
+  width: 7px;
   position: relative;
-  overflow: hidden;
-  width: 100%;
-  letter-spacing: 0.3px;
-  margin-top: 6px;
+  color: transparent;
 }
 
-.sale-item-quantity span {
-  position: relative;
-  z-index: 2;
-  color: #ffffff;
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
-}
-
-.sold-fill {
-  position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  background: linear-gradient(90deg, var(--fs-red-dark), var(--fs-red));
-  z-index: 1;
-}
-
-/* ──────────────────────────────────────────────────────────
-   LOADING & ERROR
-   ────────────────────────────────────────────────────────── */
-.flash-products .loading,
-.flash-products .no-products {
-  text-align: center;
-  color: #fff;
-  padding: 48px 20px;
-  font-size: 15px;
-  font-family: var(--font-body);
-}
-
-.error-box {
-  text-align: center;
-  padding: 32px;
-  color: #fff;
-}
-
-.error-message {
-  font-size: 14px;
-  margin-bottom: 14px;
-}
-
-.retry-btn,
-.use-cache-btn {
-  background: #fff;
-  color: var(--fs-red);
-  border: none;
-  padding: 9px 22px;
-  border-radius: 6px;
-  font-weight: 700;
-  cursor: pointer;
-  margin: 4px;
-  font-size: 13px;
-  font-family: var(--font-body);
-  transition: opacity 0.2s, transform 0.2s;
-}
-
-.retry-btn:hover,
-.use-cache-btn:hover {
-  opacity: 0.88;
-  transform: translateY(-1px);
-}
-
-/* ──────────────────────────────────────────────────────────
-   RESPONSIVE
-   ────────────────────────────────────────────────────────── */
-
-/* Tablet 1024px */
-@media (max-width: 1024px) {
-  .flash-products {
-    padding: 16px;
-  }
-
-  .sale-track {
-    grid-template-columns: repeat(3, 1fr);
-    gap: 12px;
-  }
-}
-
-/* Tablet 768px */
-@media (max-width: 768px) {
-  .flash-sale-header {
-    padding: 12px 14px;
-    flex-direction: row;
-    gap: 10px;
-  }
-
-  .flash-sale-left {
-    gap: 10px;
-  }
-
-  .flash-sale-left h2 {
-    font-size: 18px;
-  }
-
-  .countdown::before {
-    display: none;
-  }
-
-  .flash-products {
-    padding: 12px;
-  }
-
-  .sale-track {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 10px;
-  }
-
-  .sale-item-title {
-    font-size: 12px;
-  }
-
-  .sale-item-info {
-    padding: 10px;
-    min-height: 100px;
-  }
-}
-
-/* Mobile 480px */
-@media (max-width: 480px) {
-  .flash-sale-header {
-    padding: 10px 12px;
-    gap: 8px;
-  }
-
-  .flash-sale-left h2 {
-    font-size: 16px;
-  }
-
-  .flash-products {
-    padding: 10px;
-  }
-
-  .sale-track {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 8px;
-  }
-
-  .sale-item-image-wrapper {
-    aspect-ratio: 2 / 3;
-  }
-
-  .sale-item-info {
-    padding: 8px;
-    min-height: 80px;
-  }
-
-  .sale-item-title {
-    font-size: 11px;
-    min-height: 30px;
-  }
-
-  .discount-price {
-    font-size: 13px;
-  }
-}
-
-/* Mobile nhỏ 360px */
-@media (max-width: 360px) {
-  .flash-sale-left h2 {
-    font-size: 14px;
-  }
-
-  .cd-box {
-    font-size: 12px;
-    padding: 3px 6px;
-  }
-
-  .sale-item-title {
-    font-size: 10px;
-  }
-}
-/* ============================================================
-   PRODUCTS_SALES.CSS — Flash Sale Premium (Fixed & Improved)
-   ============================================================ */
-
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap');
-
-:root {
-  --fs-red: #C0392B;
-  --fs-red-dark: #962d22;
-  --fs-red-light: #fdf0ef;
-  --fs-dark: #1a1a1a;
-  --fs-muted: #888888;
-  --bg-card: #ffffff;
-  --border: #ebebeb;
-  --shadow-card: 0 2px 12px rgba(0, 0, 0, 0.07);
-  --shadow-hover: 0 10px 28px rgba(192, 57, 43, 0.18);
-  --radius-card: 14px;
-  --radius-sm: 8px;
-  --font-body: 'Be Vietnam Pro', 'Segoe UI', sans-serif;
-  --font-display: 'Playfair Display', Georgia, serif;
-}
-
-/* ──────────────────────────────────────────────────────────
-   CONTAINER
-   ────────────────────────────────────────────────────────── */
-.flash-sale-container {
-  max-width: 1280px;
-  margin: 36px auto;
-  border-radius: 16px;
-  overflow: hidden;
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
-  font-family: var(--font-body);
-}
-
-/* ──────────────────────────────────────────────────────────
-   HEADER
-   ────────────────────────────────────────────────────────── */
-.flash-sale-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 16px 24px;
-  background: #ffffff;
-  border-bottom: 1px solid var(--border);
-}
-
-.flash-sale-left {
-  display: flex;
-  align-items: center;
-  gap: 18px;
-  flex-wrap: wrap;
-}
-
-.flash-sale-left h2 {
-  font-family: var(--font-body);
-  font-size: 22px;
-  font-weight: 900;
-  font-style: italic;
-  color: var(--fs-red);
-  margin: 0;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  letter-spacing: -0.5px;
-  white-space: nowrap;
-}
-
-.flash-sale-left h2::before {
-  content: '⚡';
-  font-style: normal;
-  color: #f39c12;
-}
-
-/* Countdown */
-.countdown {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  flex-wrap: nowrap;
-}
-
-.countdown::before {
-  content: 'Kết thúc trong';
-  color: var(--fs-dark);
-  font-size: 13px;
-  font-weight: 600;
-  font-family: var(--font-body);
-  margin-right: 6px;
-  white-space: nowrap;
-}
-
-.cd-box {
-  background: #1a1a1a;
-  color: #ffffff;
-  padding: 5px 8px;
-  border-radius: 5px;
-  font-weight: 700;
-  font-family: var(--font-body);
-  font-size: 14px;
-  min-width: 30px;
-  text-align: center;
-  letter-spacing: 0.5px;
-}
-
-.cd-lbl {
-  visibility: hidden;
-  width: 8px;
-  position: relative;
-}
-
-.cd-lbl::after {
+#flash-sale .cd-lbl::after {
   content: ':';
-  visibility: visible;
+  color: #1a1a1a;
   position: absolute;
   left: 0;
-  top: -5px;
-  color: #1a1a1a;
-  font-size: 17px;
-  font-weight: 800;
+  top: -2px;
+  font-weight: 700;
 }
 
-.cd-lbl:last-child::after {
+#flash-sale .cd-lbl:last-child::after {
   content: '';
 }
 
-/* View All Button */
-.view-all-btn {
+#flash-sale .view-all-btn {
+  border: 0;
   background: transparent;
-  color: #0056b3;
-  border: none;
-  font-family: var(--font-body);
+  color: #0b63c7;
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
-  padding: 0;
-  display: flex;
-  align-items: center;
-  gap: 3px;
-  white-space: nowrap;
-  transition: color 0.2s;
 }
 
-.view-all-btn:hover {
-  color: var(--fs-red);
+#flash-sale .view-all-btn:hover {
+  color: #c0392b;
 }
 
-.view-all-btn::after {
-  content: '›';
-  font-size: 20px;
-  font-weight: 400;
-  line-height: 1;
+#flash-products {
+  background: #c0392b;
+  padding: 18px;
 }
 
-/* ──────────────────────────────────────────────────────────
-   PRODUCTS AREA
-   ────────────────────────────────────────────────────────── */
-.flash-products {
-  padding: 16px;
-  background: var(--fs-red);
-}
-
-.sale-track-wrap {
-  position: relative;
-  overflow: visible;
-  padding: 6px 0;
+#flash-products .sale-track-wrap {
   width: 100%;
-  display: flex;
-  flex-direction: column;
 }
 
-/* ─── Grid layout for Desktop ─── */
-.sale-track {
+#flash-products .sale-track {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 14px;
   width: 100%;
-  box-sizing: border-box;
-  list-style: none;
   margin: 0;
   padding: 0;
-  grid-auto-flow: row;
+  list-style: none;
 }
 
-/* Nav Buttons */
-.nav-btn {
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 38px;
-  height: 38px;
+#flash-products .sale-item {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-width: 0;
   background: #fff;
-  border: 1px solid #ddd;
-  border-radius: 50%;
-  color: var(--fs-dark);
-  font-size: 18px;
-  cursor: pointer;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  border: 1px solid #ebebeb;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+#flash-products .sale-item-image-wrapper {
+  width: 100%;
+  height: 230px;
+  background: #f6f3f1;
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 10;
-  transition: background 0.2s, color 0.2s;
-}
-
-.nav-btn:hover {
-  background: var(--fs-red);
-  color: #fff;
-  border-color: var(--fs-red);
-}
-
-.nav-prev {
-  left: -18px;
-}
-
-.nav-next {
-  right: -18px;
-}
-
-.nav-btn:disabled {
-  display: none;
-}
-
-/* ──────────────────────────────────────────────────────────
-   ITEM CARD
-   ────────────────────────────────────────────────────────── */
-.sale-item {
-  background: var(--bg-card);
-  border-radius: var(--radius-card);
-  border: 1px solid var(--border);
-  display: flex;
-  flex-direction: column;
-  position: relative;
   overflow: hidden;
-  font-family: var(--font-body);
-  text-decoration: none;
-  cursor: pointer;
-  box-shadow: var(--shadow-card);
-  width: 100%;
-  min-width: 0;
-  transition: transform 0.25s ease, box-shadow 0.25s ease;
 }
 
-.sale-item:hover {
-  transform: translateY(-5px);
-  box-shadow: var(--shadow-hover);
-}
-
-/* Image Wrapper */
-.sale-item-image-wrapper {
-  position: relative;
-  width: 100%;
-  aspect-ratio: 3 / 4;
-  overflow: hidden;
-  background: #f9f6f3;
-  border-bottom: 1px solid var(--border);
-}
-
-.sale-item-img {
-  position: absolute;
-  top: 0;
-  left: 0;
+#flash-products .sale-item-img {
   width: 100%;
   height: 100%;
   object-fit: contain;
-  padding: 14px;
-  transition: transform 0.35s ease;
+  padding: 10px;
 }
 
-.sale-item:hover .sale-item-img {
-  transform: scale(1.06);
-}
-
-/* Badge giảm giá — bật lại */
-.badge-discount {
-  display: block !important;
+#flash-products .badge-discount {
   position: absolute;
   top: 10px;
   left: 10px;
-  background: var(--fs-red);
+  background: #c0392b;
   color: #fff;
+  border-radius: 4px;
+  padding: 4px 8px;
   font-size: 11px;
   font-weight: 700;
-  padding: 3px 8px;
-  border-radius: 4px;
-  z-index: 5;
-  letter-spacing: 0.3px;
-  font-family: var(--font-body);
 }
 
-/* Ẩn các phần thừa */
-.card-wishlist,
-.sale-item-author,
-.sale-item-year,
-.sale-item-actions {
-  display: none !important;
-}
-
-/* Info Section */
-.sale-item-info {
-  padding: 12px 14px;
+#flash-products .sale-item-info {
   display: flex;
   flex-direction: column;
-  flex-grow: 1;
   gap: 6px;
+  padding: 12px;
+  flex: 1;
 }
 
-.sale-item-title {
-  font-family: var(--font-display);
-  font-size: 13.5px;
-  font-weight: 600;
-  color: var(--fs-dark);
+#flash-products .sale-item-title {
   margin: 0;
-  line-height: 1.4;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  color: #1a1a1a;
+  font-size: 14px;
+  line-height: 1.35;
   min-height: 38px;
 }
 
-/* Price Section */
-.sale-item-price {
+#flash-products .sale-item-author,
+#flash-products .sale-item-year,
+#flash-products .sale-item-quantity {
+  display: none;
+}
+
+#flash-products .sale-item-price {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
-  gap: 2px;
+  gap: 4px;
   margin-top: auto;
-  padding-bottom: 2px;
 }
 
-.discount-price {
-  font-size: 15px;
+#flash-products .discount-price {
+  color: #c0392b;
+  font-size: 24px;
   font-weight: 800;
-  color: var(--fs-red);
-  margin: 0;
-  line-height: 1.2;
 }
 
-.badge-percent {
-  display: inline-block;
-  background: var(--fs-red-light);
-  color: var(--fs-red);
-  font-size: 10px;
-  font-weight: 700;
-  padding: 2px 5px;
-  border-radius: 3px;
-  margin-left: 5px;
-  vertical-align: middle;
-  border: 1px solid rgba(192, 57, 43, 0.2);
-}
-
-.orig-price {
+#flash-products .orig-price {
+  color: #8f8f8f;
   font-size: 12px;
-  color: var(--fs-muted);
   text-decoration: line-through;
-  margin: 0;
 }
 
-/* ──────────────────────────────────────────────────────────
-   SOLD BAR
-   ────────────────────────────────────────────────────────── */
-.sale-item-quantity {
-  background: #e0e0e0;
-  border-radius: 12px;
-  text-align: center;
-  font-size: 10.5px;
+#flash-products .badge-percent {
+  display: inline-block;
+  margin-left: 6px;
+  background: #fdf0ef;
+  color: #c0392b;
+  border-radius: 4px;
+  font-size: 11px;
   font-weight: 700;
-  padding: 5px 8px;
-  text-transform: uppercase;
-  position: relative;
-  overflow: hidden;
-  width: 100%;
-  letter-spacing: 0.3px;
-  margin-top: 4px;
+  padding: 3px 6px;
 }
 
-.sale-item-quantity span {
-  position: relative;
-  z-index: 2;
-  color: #ffffff;
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+#flash-products .sale-item-actions {
+  display: flex;
+  gap: 8px;
 }
 
-.sold-fill {
-  position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  background: linear-gradient(90deg, var(--fs-red-dark), var(--fs-red));
-  border-radius: 12px;
-  z-index: 1;
+#flash-products .btn-add-cart,
+#flash-products .btn-detail {
+  flex: 1;
+  border-radius: 8px;
+  border: 0;
+  padding: 8px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
 }
 
-/* ──────────────────────────────────────────────────────────
-   LOADING & ERROR STATES
-   ────────────────────────────────────────────────────────── */
-.flash-products .loading,
-.flash-products .no-products {
-  text-align: center;
-  color: #fff;
-  padding: 48px 20px;
-  font-size: 15px;
-  font-family: var(--font-body);
-}
-
-.error-box {
-  text-align: center;
-  padding: 32px;
+#flash-products .btn-add-cart {
+  background: #c0392b;
   color: #fff;
 }
 
-.error-message {
-  font-size: 14px;
-  margin-bottom: 14px;
+#flash-products .btn-detail {
+  background: #f2f2f2;
+  color: #1a1a1a;
 }
 
-.retry-btn,
-.use-cache-btn {
-  background: #fff;
-  color: var(--fs-red);
-  border: none;
-  padding: 9px 22px;
+#flash-products .loading,
+#flash-products .error-message,
+#flash-products .no-products {
+  text-align: center;
+  color: #fff;
+  padding: 24px 12px;
+}
+
+#flash-products .error-box {
+  text-align: center;
+  padding: 18px;
+}
+
+#flash-products .retry-btn,
+#flash-products .use-cache-btn {
+  border: 0;
   border-radius: 6px;
+  background: #fff;
+  color: #c0392b;
+  padding: 8px 14px;
+  margin: 6px;
   font-weight: 700;
   cursor: pointer;
-  margin: 4px;
-  font-size: 13px;
-  font-family: var(--font-body);
-  transition: opacity 0.2s, transform 0.2s;
 }
 
-.retry-btn:hover,
-.use-cache-btn:hover {
-  opacity: 0.88;
-  transform: translateY(-1px);
-}
-
-/* ──────────────────────────────────────────────────────────
-   RESPONSIVE
-   ────────────────────────────────────────────────────────── */
-
-/* Tablet lớn */
 @media (max-width: 1100px) {
-  .sale-track {
-    grid-template-columns: repeat(3, 1fr);
+  #flash-products .sale-track {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
 
-/* Tablet */
 @media (max-width: 768px) {
-  .flash-sale-header {
+  #flash-sale .flash-sale-header {
     padding: 12px 14px;
-    flex-wrap: wrap;
-    gap: 8px;
   }
 
-  .flash-sale-left h2 {
-    font-size: 18px;
-  }
-
-  .countdown::before {
+  #flash-sale .countdown::before {
     display: none;
   }
 
-  .flash-products {
-    padding: 10px;
+  #flash-products {
+    padding: 12px;
   }
 
-  .sale-track {
-    grid-template-columns: repeat(2, 1fr);
+  #flash-products .sale-track {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 10px;
   }
 
-  .sale-item-title {
-    font-size: 13px;
+  #flash-products .sale-item-image-wrapper {
+    height: 180px;
   }
 }
 
-/* Mobile nhỏ */
-@media (max-width: 420px) {
-  .flash-sale-header {
-    padding: 10px 12px;
-  }
-
-  .flash-sale-left h2 {
-    font-size: 16px;
-  }
-
-  .sale-track {
-    grid-template-columns: repeat(2, 1fr);
+@media (max-width: 480px) {
+  #flash-products .sale-track {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 8px;
   }
 
-  .sale-item-image-wrapper {
-    aspect-ratio: 2 / 3;
+  #flash-products .sale-item-image-wrapper {
+    height: 150px;
   }
 
-  .sale-item-info {
-    padding: 10px 10px;
-  }
-
-  .discount-price {
+  #flash-products .discount-price {
     font-size: 14px;
   }
 }

@@ -127,6 +127,12 @@ async function addToCart(productId, productName, price, image) {
 
 // Hàm hiển thị danh sách sản phẩm
 function displayProducts(products, containerId = 'book-list', limit = null) {
+  // Flash Sale has a dedicated renderer in products_sales.js.
+  // Guard here to avoid asynchronous overwrite/race from book.js.
+  if (containerId === 'flash-products') {
+    return;
+  }
+
   const productList = document.getElementById(containerId);
   if (!productList) {
     console.error(`Không tìm thấy phần tử #${containerId}`);
@@ -1402,7 +1408,8 @@ document.addEventListener('DOMContentLoaded', () => {
   // chỉ gọi các hàm này khi ở tràng index
   if (currentPath.endsWith("index.html") || currentPath === "/") {
     fetchAndDisplayProducts();
-    fetchAndDisplayPromotions();
+    // Flash Sale section is owned by products_sales.js
+    // Keep one renderer only to avoid DOM overwrite/race conditions.
     fetchAndDisplayTextbooks();
     // fetchAndDisplayPoliticsBooks(); // Đã loại bỏ phần Sách Chính Trị trong index.html
     fetchAndDisplayScienceBooks();
