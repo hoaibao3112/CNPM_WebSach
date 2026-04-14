@@ -166,13 +166,16 @@
   width: 100%;
 }
 
-/* ─── KEY FIX: Grid layout ─── */
+/* ─── Grid layout for Desktop ─── */
 .sale-track {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 14px;
   width: 100%;
   box-sizing: border-box;
+  list-style: none;
+  margin: 0;
+  padding: 0;
 }
 
 /* Nav Buttons */
@@ -496,34 +499,4 @@
   .discount-price {
     font-size: 14px;
   }
-}
-
-/* Flash sale container - full width */
-#flash-sale,
-.flash-sale-container {
-  width: 100%;
-  max-width: 100%;
-  box-sizing: border-box;
-  overflow: hidden;
-}
-
-/* Sale track wrap - hiển thị đúng */
-.sale-track-wrap {
-  width: 100%;
-  overflow-x: auto;
-}
-
-.sale-track {
-  display: flex;
-  flex-direction: row;
-  gap: 12px;
-  padding: 8px 0;
-  width: max-content;
-  /* hoặc 100% nếu muốn grid */
-}
-
-.sale-item {
-  min-width: 200px;
-  max-width: 220px;
-  flex-shrink: 0;
 }
