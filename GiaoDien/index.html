@@ -5,6 +5,12 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Trang Chủ | Bookstore</title>
+  <!-- Google Fonts: Playfair Display + Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <!-- AOS — Animate On Scroll -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.css" />
   <link rel="stylesheet" href="styles/header.css" />
   <link rel="stylesheet" href="styles/index.css" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
@@ -214,6 +220,16 @@
   <script src="js/preference-widget.js"></script>
   <script src="js/personalized-recommendations.js"></script>
   <script src="js/chatbot.js"></script>
+  <!-- AOS Init -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.js"></script>
+  <script>
+    AOS.init({
+      duration: 600,
+      easing: 'ease-out-cubic',
+      once: true,
+      offset: 60
+    });
+  </script>
 </body>
 
 </html>

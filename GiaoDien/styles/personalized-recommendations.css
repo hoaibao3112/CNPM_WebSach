@@ -1,174 +1,198 @@
-/**
- * Personalized Recommendations Component Styles
- * Component: Có thể bạn thích
- * Style tương tự book.css
- */
+/* ============================================================
+   PERSONALIZED-RECOMMENDATIONS.CSS
+   Premium card design — Đồng bộ với book.css
+   Font: Playfair Display + Inter
+   Colors: #FFFFFF + #C0392B
+   ============================================================ */
 
-/* ============================================
-   Section Container
-   ============================================ */
+/* ── Section container ──────────────────────────────────── */
 .personalized-recommendations-section {
   margin: 40px 0;
-  padding: 30px 20px;
+  padding: 32px 28px;
   background: #fff;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  border-radius: 16px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.07);
+  border: 1px solid #ede8e3;
 }
 
-/* ============================================
-   Header
-   ============================================ */
+/* ── Header ─────────────────────────────────────────────── */
 .recommendations-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 25px;
-  padding-bottom: 15px;
-  border-bottom: 2px solid #f0f0f0;
+  margin-bottom: 26px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid #f0e8e5;
 }
 
 .recommendations-title h2 {
-  margin: 0 0 5px 0;
-  font-size: 28px;
+  margin: 0 0 4px 0;
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 26px;
   font-weight: 700;
-  color: #2c3e50;
+  color: #1a1a1a;
   display: flex;
   align-items: center;
   gap: 10px;
 }
 
 .recommendations-title h2 i {
-  color: #e74c3c;
-  animation: heartbeat 1.5s ease-in-out infinite;
+  color: #C0392B;
+  animation: heartbeat 1.6s ease-in-out infinite;
 }
 
 @keyframes heartbeat {
-  0%, 100% {
-    transform: scale(1);
-  }
-  10%, 30% {
-    transform: scale(1.1);
-  }
-  20%, 40% {
-    transform: scale(1);
-  }
+  0%, 100%  { transform: scale(1); }
+  10%, 30%  { transform: scale(1.15); }
+  20%, 40%  { transform: scale(1); }
 }
 
 .recommendations-subtitle {
-  margin: 5px 0 0 0;
-  font-size: 14px;
-  color: #7f8c8d;
+  margin: 4px 0 0 0;
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  color: #999;
   font-style: italic;
 }
 
 .view-all-recommendations {
-  padding: 10px 20px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
+  padding: 10px 22px;
+  background: linear-gradient(135deg, #C0392B 0%, #e74c3c 100%);
+  color: #fff;
   border: none;
   border-radius: 25px;
-  font-size: 14px;
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
   font-weight: 600;
   cursor: pointer;
   display: flex;
   align-items: center;
   gap: 8px;
   transition: all 0.3s ease;
-  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+  box-shadow: 0 4px 14px rgba(192, 57, 43, 0.28);
 }
 
 .view-all-recommendations:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+  box-shadow: 0 6px 20px rgba(192, 57, 43, 0.38);
+  background: linear-gradient(135deg, #962d22 0%, #C0392B 100%);
 }
 
 .view-all-recommendations i {
-  transition: transform 0.3s ease;
+  transition: transform 0.25s ease;
 }
 
 .view-all-recommendations:hover i {
-  transform: translateX(3px);
+  transform: translateX(4px);
 }
 
-/* ============================================
-   Products Grid - DESKTOP 5 COLUMNS
-   ============================================ */
+/* ── Products grid ───────────────────────────────────────── */
 .recommendations-products {
   display: grid;
-  grid-template-columns: repeat(5, 18%);
+  grid-template-columns: repeat(5, 1fr);
   gap: 20px;
-  padding: 10px 0;
-  justify-content: center;
+  padding: 6px 0;
 }
 
-/* ============================================
-   Product Card - Style giống book.css
-   ============================================ */
+/* ══════════════════════════════════════════
+   RECOMMENDATION CARD
+   ══════════════════════════════════════════ */
 .recommendation-card {
   background: #fff;
-  border: 1px solid #eaeaea;
-  border-radius: 8px;
+  border: 1px solid #ede8e3;
+  border-radius: 12px;
   overflow: hidden;
-  transition: all 0.3s ease;
+  transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
   display: flex;
   flex-direction: column;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
   position: relative;
   cursor: pointer;
 }
 
 .recommendation-card:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
-  border-color: #d32f2f;
+  transform: scale(1.03);
+  box-shadow: 0 12px 32px rgba(192, 57, 43, 0.15), 0 4px 12px rgba(0, 0, 0, 0.07);
+  border-color: #C0392B;
 }
 
-/* Badges */
+/* ── Recommendation badge (top-left) ────────────────────── */
 .recommendation-badge {
   position: absolute;
   top: 8px;
   left: 8px;
-  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-  color: white;
-  padding: 5px 12px;
+  background: #C0392B;
+  color: #fff;
+  padding: 4px 10px;
   border-radius: 20px;
-  font-size: 11px;
-  font-weight: 600;
+  font-family: 'Inter', sans-serif;
+  font-size: 10px;
+  font-weight: 700;
   z-index: 2;
-  box-shadow: 0 2px 8px rgba(245, 87, 108, 0.3);
-  animation: pulse 2s ease-in-out infinite;
+  box-shadow: 0 2px 8px rgba(192, 57, 43, 0.3);
+  letter-spacing: 0.3px;
+  animation: pulse 2.2s ease-in-out infinite;
 }
 
 @keyframes pulse {
-  0%, 100% {
-    transform: scale(1);
-  }
-  50% {
-    transform: scale(1.05);
-  }
+  0%, 100% { transform: scale(1); }
+  50%       { transform: scale(1.06); }
 }
 
+/* ── Discount badge ─────────────────────────────────────── */
 .discount-badge {
   position: absolute;
   top: 8px;
   right: 8px;
-  background: #e74c3c;
-  color: white;
-  padding: 5px 10px;
+  background: #C0392B;
+  color: #fff;
+  padding: 4px 10px;
   border-radius: 6px;
-  font-size: 12px;
+  font-family: 'Inter', sans-serif;
+  font-size: 11px;
   font-weight: 700;
   z-index: 2;
-  box-shadow: 0 2px 8px rgba(231, 76, 60, 0.3);
+  box-shadow: 0 2px 6px rgba(192, 57, 43, 0.3);
 }
 
-/* Image Container */
+/* ── Wishlist heart ─────────────────────────────────────── */
+.recommendation-card .wishlist-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.9);
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 3;
+  transition: background 0.2s, transform 0.2s;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.12);
+}
+
+.recommendation-card .wishlist-btn i {
+  font-size: 14px;
+  color: #bbb;
+  transition: color 0.2s, transform 0.2s;
+}
+
+.recommendation-card .wishlist-btn:hover i,
+.recommendation-card .wishlist-btn.active i {
+  color: #C0392B;
+  transform: scale(1.2);
+}
+
+/* ── Image container ────────────────────────────────────── */
 .product-image {
   width: 100%;
-  padding-top: 140%;
+  padding-top: 133%; /* 3/4 aspect ratio */
   position: relative;
   overflow: hidden;
-  background: #f9f9f9;
+  background: #faf8f6;
 }
 
 .product-image img {
@@ -178,29 +202,30 @@
   width: 100%;
   height: 100%;
   object-fit: contain;
-  padding: 15px;
-  transition: transform 0.3s;
+  padding: 14px;
+  transition: transform 0.4s ease;
 }
 
 .recommendation-card:hover .product-image img {
-  transform: scale(1.03);
+  transform: scale(1.07);
 }
 
-/* Product Info */
+/* ── Info area ──────────────────────────────────────────── */
 .product-info {
-  padding: 15px;
+  padding: 14px;
   flex-grow: 1;
   display: flex;
   flex-direction: column;
 }
 
 .product-title {
-  font-size: 16px;
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 14px;
   font-weight: 600;
-  margin-bottom: 6px;
-  color: #333;
-  line-height: 1.3;
-  height: 40px;
+  margin-bottom: 5px;
+  color: #1a1a1a;
+  line-height: 1.35;
+  height: 39px;
   overflow: hidden;
   text-overflow: ellipsis;
   display: -webkit-box;
@@ -210,104 +235,111 @@
 }
 
 .product-author {
-  font-size: 13px;
-  color: #666;
-  margin-bottom: 8px;
+  font-family: 'Inter', sans-serif;
+  font-size: 12px;
+  color: #999;
+  margin-bottom: 6px;
   font-style: italic;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .product-meta {
   display: flex;
-  gap: 10px;
+  gap: 8px;
   flex-wrap: wrap;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
 }
 
 .product-year,
 .product-pages {
-  font-size: 12px;
-  color: #888;
+  font-family: 'Inter', sans-serif;
+  font-size: 11px;
+  color: #bbb;
 }
 
-/* Match Score Bar */
+/* ── Match score bar ─────────────────────────────────────── */
 .recommendation-match {
-  margin-bottom: 12px;
+  margin-bottom: 10px;
 }
 
 .match-bar {
-  height: 6px;
-  background: #ecf0f1;
+  height: 5px;
+  background: #f0ebe7;
   border-radius: 3px;
   overflow: hidden;
-  margin-bottom: 5px;
+  margin-bottom: 4px;
 }
 
 .match-fill {
   height: 100%;
-  background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(90deg, #C0392B, #e74c3c);
   border-radius: 3px;
-  transition: width 0.5s ease;
+  transition: width 0.6s ease;
 }
 
 .match-text {
-  font-size: 11px;
-  color: #7f8c8d;
+  font-family: 'Inter', sans-serif;
+  font-size: 10px;
+  color: #aaa;
   font-weight: 600;
 }
 
-/* Price */
+/* ── Price ───────────────────────────────────────────────── */
 .product-price {
   display: flex;
   align-items: center;
   gap: 8px;
+  flex-wrap: wrap;
   margin-bottom: 8px;
   margin-top: auto;
 }
 
 .price {
-  color: #d32f2f;
-  font-weight: bold;
+  color: #C0392B;
+  font-family: 'Inter', sans-serif;
+  font-weight: 700;
   font-size: 16px;
+  letter-spacing: -0.3px;
 }
 
 .original-price {
-  font-size: 14px;
-  color: #95a5a6;
+  font-family: 'Inter', sans-serif;
+  font-size: 12px;
+  color: #bbb;
   text-decoration: line-through;
 }
 
-/* Quantity */
 .quantity {
-  font-size: 12px;
-  color: #666;
+  font-family: 'Inter', sans-serif;
+  font-size: 11px;
+  color: #999;
   margin-bottom: 8px;
 }
 
 .out-of-stock {
-  color: #e74c3c;
+  color: #C0392B;
   font-weight: 600;
 }
 
-.out-of-stock {
-  color: #e74c3c;
-  font-weight: 600;
-}
-
-/* Action Buttons */
+/* ── Action buttons ─────────────────────────────────────── */
 .product-actions {
   display: flex;
-  gap: 10px;
+  gap: 8px;
   margin-top: 10px;
 }
 
 .btn-detail,
 .btn-add-cart {
   flex: 1;
-  padding: 8px 0;
-  font-size: 13px;
+  padding: 9px 0;
+  font-family: 'Inter', sans-serif;
+  font-size: 12px;
+  font-weight: 600;
   cursor: pointer;
-  border-radius: 4px;
-  transition: all 0.2s;
+  border-radius: 8px;
+  transition: background 0.25s ease, transform 0.15s ease, box-shadow 0.25s ease;
   text-align: center;
   text-decoration: none;
   border: none;
@@ -315,112 +347,140 @@
   align-items: center;
   justify-content: center;
   gap: 5px;
+  position: relative;
+  overflow: hidden;
+  min-height: 36px;
+}
+
+/* Ripple */
+.btn-add-cart::after {
+  content: '';
+  position: absolute;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.4);
+  transform: translate(-50%, -50%);
+  transition: width 0.5s ease, height 0.5s ease, opacity 0.5s ease;
+  opacity: 0;
+  top: 50%;
+  left: 50%;
+}
+.btn-add-cart:active::after {
+  width: 200px;
+  height: 200px;
+  opacity: 1;
+  transition: 0s;
 }
 
 .btn-detail {
-  background: #f5f5f5;
-  color: #333;
-  border: 1px solid #ddd;
+  background: #f4f0ec;
+  color: #555;
+  border: 1px solid #e0d8d0;
 }
 
 .btn-detail:hover {
-  background: #e0e0e0;
+  background: #ede6de;
+  transform: translateY(-1px);
 }
 
 .btn-add-cart {
-  background: #d32f2f;
-  color: white;
+  background: #C0392B;
+  color: #fff;
+  box-shadow: 0 3px 10px rgba(192, 57, 43, 0.25);
 }
 
 .btn-add-cart:hover {
-  background: #b71c1c;
+  background: #962d22;
+  transform: translateY(-1px);
+  box-shadow: 0 5px 14px rgba(192, 57, 43, 0.35);
 }
 
 .btn-add-cart:disabled {
-  background: #e0e0e0;
-  color: #9e9e9e;
+  background: #e0dbd7;
+  color: #aaa;
   cursor: not-allowed;
+  box-shadow: none;
+  transform: none;
 }
 
-/* ============================================
-   Loading State
-   ============================================ */
+/* ── Loading state ───────────────────────────────────────── */
 .recommendations-loading {
   text-align: center;
   padding: 60px 20px;
 }
 
 .loading-spinner {
-  width: 50px;
-  height: 50px;
-  margin: 0 auto 20px;
-  border: 4px solid #f3f3f3;
-  border-top: 4px solid #667eea;
+  width: 46px;
+  height: 46px;
+  margin: 0 auto 18px;
+  border: 3px solid #f0ebe7;
+  border-top: 3px solid #C0392B;
   border-radius: 50%;
-  animation: spin 1s linear infinite;
+  animation: spin 0.9s linear infinite;
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
+  0%   { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
 }
 
 .recommendations-loading p {
-  font-size: 16px;
-  color: #7f8c8d;
+  font-family: 'Inter', sans-serif;
+  font-size: 15px;
+  color: #999;
 }
 
-/* ============================================
-   Empty State
-   ============================================ */
+/* ── Empty state ─────────────────────────────────────────── */
 .recommendations-empty {
   text-align: center;
   padding: 60px 20px;
 }
 
 .recommendations-empty i {
-  font-size: 60px;
-  color: #e0e0e0;
-  margin-bottom: 20px;
+  font-size: 56px;
+  color: #e0d8d0;
+  margin-bottom: 18px;
 }
 
 .recommendations-empty p {
-  font-size: 16px;
-  color: #7f8c8d;
-  margin: 10px 0;
+  font-family: 'Inter', sans-serif;
+  font-size: 15px;
+  color: #999;
+  margin: 8px 0;
 }
 
 .empty-subtitle {
-  font-size: 14px;
-  color: #95a5a6;
+  font-size: 13px;
+  color: #bbb;
 }
 
-/* ============================================
-   Error State
-   ============================================ */
+/* ── Error state ─────────────────────────────────────────── */
 .recommendations-error {
   text-align: center;
   padding: 60px 20px;
 }
 
 .recommendations-error i {
-  font-size: 60px;
-  color: #e74c3c;
-  margin-bottom: 20px;
+  font-size: 56px;
+  color: #C0392B;
+  margin-bottom: 18px;
 }
 
 .recommendations-error p {
-  font-size: 16px;
-  color: #7f8c8d;
+  font-family: 'Inter', sans-serif;
+  font-size: 15px;
+  color: #999;
   margin-bottom: 20px;
 }
 
 .retry-btn {
-  padding: 10px 24px;
-  background: #667eea;
-  color: white;
+  padding: 10px 26px;
+  background: #C0392B;
+  color: #fff;
   border: none;
   border-radius: 25px;
+  font-family: 'Inter', sans-serif;
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
@@ -428,44 +488,38 @@
   align-items: center;
   gap: 8px;
   transition: all 0.3s ease;
+  box-shadow: 0 3px 10px rgba(192, 57, 43, 0.25);
 }
 
 .retry-btn:hover {
-  background: #764ba2;
+  background: #962d22;
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+  box-shadow: 0 5px 14px rgba(192, 57, 43, 0.3);
 }
 
-/* ============================================
-   Responsive Design
-   ============================================ */
+/* ── Responsive ─────────────────────────────────────────── */
 @media (max-width: 1400px) {
-  .recommendations-products {
-    grid-template-columns: repeat(4, 22%);
-  }
+  .recommendations-products { grid-template-columns: repeat(4, 1fr); }
 }
 
-@media (max-width: 1200px) {
-  .recommendations-products {
-    grid-template-columns: repeat(3, 30%);
-  }
+@media (max-width: 1100px) {
+  .recommendations-products { grid-template-columns: repeat(3, 1fr); }
 }
 
 @media (max-width: 768px) {
   .personalized-recommendations-section {
-    padding: 20px 15px;
+    padding: 20px 16px;
     margin: 20px 0;
+    border-radius: 12px;
   }
 
   .recommendations-header {
     flex-direction: column;
     align-items: flex-start;
-    gap: 15px;
+    gap: 14px;
   }
 
-  .recommendations-title h2 {
-    font-size: 22px;
-  }
+  .recommendations-title h2 { font-size: 20px; }
 
   .view-all-recommendations {
     width: 100%;
@@ -474,444 +528,78 @@
 
   .recommendations-products {
     grid-template-columns: repeat(2, 1fr);
-    gap: 15px;
+    gap: 12px;
   }
 
-  .product-title {
-    font-size: 14px;
-    height: 36px;
-  }
+  .product-title { font-size: 13px; height: 36px; }
+  .price { font-size: 14px; }
 
-  .price {
-    font-size: 15px;
-  }
+  .btn-detail,
+  .btn-add-cart { min-height: 44px; font-size: 11px; }
+
+  .recommendation-card:hover { transform: scale(1.01); }
 }
 
-/* ============================================
-   ULTRA COMPACT MOBILE: 480px
-   ============================================ */
 @media (max-width: 480px) {
   .personalized-recommendations-section {
-    margin: 4px 0;
-    padding: 4px;
+    margin: 12px 0;
+    padding: 14px 10px;
+    border-radius: 10px;
   }
 
   .recommendations-header {
-    flex-direction: column;
-    gap: 3px;
-    margin-bottom: 4px;
-    padding-bottom: 3px;
+    gap: 10px;
+    margin-bottom: 12px;
+    padding-bottom: 10px;
   }
 
-  .recommendations-title h2 {
-    font-size: 11px;
-    gap: 3px;
-  }
-
-  .recommendations-title h2 i {
-    font-size: 12px;
-  }
-
-  .recommendations-subtitle {
-    font-size: 8px;
-  }
+  .recommendations-title h2 { font-size: 16px; }
+  .recommendations-subtitle { font-size: 11px; }
 
   .view-all-recommendations {
-    width: 100%;
-    padding: 4px 8px;
-    font-size: 9px;
-    justify-content: center;
+    padding: 8px 14px;
+    font-size: 12px;
   }
 
   .recommendations-products {
     grid-template-columns: repeat(2, 1fr);
-    gap: 2px;
+    gap: 8px;
     padding: 0;
   }
 
-  .recommendation-card {
-    border-radius: 4px;
-  }
+  .recommendation-card { border-radius: 8px; }
 
-  .product-image {
-    padding-top: 75%;
-  }
+  .product-image { padding-top: 133%; }
+  .product-image img { padding: 8px; }
+  .product-info { padding: 8px; }
 
-  .product-image img {
-    padding: 3px;
-  }
+  .product-title { font-size: 11px; height: 30px; }
+  .product-author { font-size: 10px; }
 
-  .product-info {
-    padding: 4px;
-  }
-
-  .product-title {
-    font-size: 8px;
-    height: 20px;
-    margin-bottom: 1px;
-    -webkit-line-clamp: 2;
-    line-clamp: 2;
-  }
-
-  .product-author {
-    font-size: 7px;
-    margin-bottom: 1px;
-  }
-
-  .product-meta {
-    gap: 3px;
-    margin-bottom: 1px;
-  }
-
-  .product-year,
-  .product-pages {
-    font-size: 6px;
-  }
-
-  .recommendation-match {
-    margin-bottom: 2px;
-  }
-
-  .match-bar {
-    height: 2px;
-    margin-bottom: 1px;
-  }
-
-  .match-text {
-    font-size: 6px;
-  }
-
-  .product-price {
-    gap: 3px;
-    margin-bottom: 2px;
-  }
-
-  .price {
-    font-size: 9px;
-  }
-
-  .original-price {
-    font-size: 7px;
-  }
-
-  .quantity {
-    font-size: 7px;
-    margin-bottom: 2px;
-  }
-
-  .product-actions {
-    gap: 2px;
-    margin-top: 2px;
-  }
-
-  .btn-detail,
-  .btn-add-cart {
-    font-size: 6px;
-    padding: 2px 0;
-    border-radius: 2px;
-  }
+  .price { font-size: 12px; }
+  .original-price { font-size: 10px; }
+  .quantity { font-size: 10px; }
 
   .recommendation-badge,
   .discount-badge {
-    font-size: 6px;
-    padding: 1px 3px;
-    top: 1px;
-    left: 1px;
-  }
-
-  .discount-badge {
-    right: 1px;
-  }
-
-
-/* ============================================
-   IPHONE XS MAX: 414px
-   ============================================ */
-@media (max-width: 414px) and (min-width: 360px) {
-  .personalized-recommendations-section {
-    margin: 4px 0;
-    padding: 4px;
-    border-radius: 4px;
-  }
-
-  .recommendations-header {
-    flex-direction: column;
-    gap: 3px;
-    margin-bottom: 4px;
-    padding-bottom: 3px;
-  }
-
-  .recommendations-title h2 {
-    font-size: 11px;
-    gap: 3px;
-  }
-
-  .recommendations-title h2 i {
-    font-size: 12px;
-  }
-
-  .recommendations-subtitle {
-    font-size: 8px;
-  }
-
-  .view-all-recommendations {
-    width: 100%;
-    padding: 4px 8px;
     font-size: 9px;
-    justify-content: center;
+    padding: 2px 6px;
+    top: 4px;
+    left: 4px;
   }
 
-  .recommendations-products {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 2px;
-    padding: 0;
-  }
+  .discount-badge { right: 4px; left: auto; }
 
-  .recommendation-card {
-    border-radius: 4px;
-  }
-
-  .product-image {
-    padding-top: 75%;
-  }
-
-  .product-image img {
-    padding: 3px;
-  }
-
-  .product-info {
-    padding: 4px;
-  }
-
-  .product-title {
-    font-size: 8px;
-    height: 20px;
-    margin-bottom: 1px;
-    -webkit-line-clamp: 2;
-    line-clamp: 2;
-  }
-
-  .product-author {
-    font-size: 7px;
-    margin-bottom: 1px;
-  }
-
-  .product-meta {
-    gap: 3px;
-    margin-bottom: 1px;
-  }
-
-  .product-year,
-  .product-pages {
-    font-size: 6px;
-  }
-
-  .recommendation-match {
-    margin-bottom: 2px;
-  }
-
-  .match-bar {
-    height: 2px;
-    margin-bottom: 1px;
-  }
-
-  .match-text {
-    font-size: 6px;
-  }
-
-  .product-price {
-    gap: 3px;
-    margin-bottom: 2px;
-  }
-
-  .price {
-    font-size: 9px;
-  }
-
-  .original-price {
-    font-size: 7px;
-  }
-
-  .quantity {
-    font-size: 7px;
-    margin-bottom: 2px;
-  }
-
-  .product-actions {
-    gap: 2px;
-    margin-top: 2px;
-  }
+  .product-actions { gap: 5px; margin-top: 6px; }
 
   .btn-detail,
   .btn-add-cart {
-    font-size: 6px;
-    padding: 2px 0;
-    border-radius: 2px;
+    font-size: 10px;
+    padding: 6px 0;
+    min-height: 44px;
+    border-radius: 6px;
   }
 
-  .recommendation-badge,
-  .discount-badge {
-    font-size: 6px;
-    padding: 1px 3px;
-    top: 1px;
-    left: 1px;
-  }
-
-  .discount-badge {
-    right: 1px;
-  }
-
-
-/* ============================================
-   ULTRA MICRO: 360px & BELOW
-   ============================================ */
-@media (max-width: 360px) {
-  .personalized-recommendations-section {
-    margin: 8px 0;
-    padding: 8px;
-    border-radius: 8px;
-  }
-
-  .recommendations-header {
-    flex-direction: column;
-    gap: 6px;
-    margin-bottom: 8px;
-    padding-bottom: 6px;
-  }
-
-  .recommendations-title h2 {
-    font-size: 12px;
-    gap: 3px;
-  }
-
-  .recommendations-title h2 i {
-    font-size: 14px;
-  }
-
-  .recommendations-subtitle {
-    font-size: 9px;
-  }
-
-  .view-all-recommendations {
-    width: 100%;
-    padding: 6px 10px;
-    font-size: 9px;
-    justify-content: center;
-  }
-
-  .recommendations-products {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 4px;
-    padding: 0;
-  }
-
-  .recommendation-card {
-    border-radius: 5px;
-  }
-
-  .product-image {
-    padding-top: 90%;
-  }
-
-  .product-image img {
-    padding: 6px;
-  }
-
-  .product-info {
-    padding: 6px;
-  }
-
-  .product-title {
-    font-size: 9px;
-    height: 24px;
-    margin-bottom: 2px;
-    -webkit-line-clamp: 2;
-    line-clamp: 2;
-  }
-
-  .product-author {
-    font-size: 8px;
-    margin-bottom: 2px;
-  }
-
-  .product-meta {
-    gap: 4px;
-    margin-bottom: 2px;
-  }
-
-  .product-year,
-  .product-pages {
-    font-size: 7px;
-  }
-
-  .recommendation-match {
-    margin-bottom: 4px;
-  }
-
-  .match-bar {
-    height: 3px;
-    margin-bottom: 2px;
-  }
-
-  .match-text {
-    font-size: 7px;
-  }
-
-  .product-price {
-    gap: 4px;
-    margin-bottom: 2px;
-  }
-
-  .price {
-    font-size: 9px;
-  }
-
-  .original-price {
-    font-size: 7px;
-  }
-
-  .quantity {
-    font-size: 7px;
-    margin-bottom: 4px;
-  }
-
-  .product-actions {
-    gap: 2px;
-    margin-top: 4px;
-  }
-
-  .btn-detail,
-  .btn-add-cart {
-    font-size: 7px;
-    padding: 3px 0;
-    border-radius: 2px;
-  }
-
-  .recommendation-badge,
-  .discount-badge {
-    font-size: 7px;
-    padding: 2px 4px;
-    top: 2px;
-    left: 2px;
-  }
-
-  .discount-badge {
-    right: 2px;
-  }
-}
-
-/* ============================================
-   Print Styles
-   ============================================ */
-@media print {
-  .personalized-recommendations-section {
-    box-shadow: none;
-    border: 1px solid #ddd;
-  }
-
-  .view-all-recommendations,
-  .product-actions,
-  .recommendation-toast {
-    display: none !important;
-  }
+  .match-bar { height: 3px; }
+  .match-text { font-size: 9px; }
 }
