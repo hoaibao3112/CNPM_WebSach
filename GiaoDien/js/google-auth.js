@@ -33,19 +33,25 @@
     })
       .then(async (res) => {
         const data = await res.json().catch(() => ({}));
+        const payload = data && data.data ? data.data : data;
         if (!res.ok) {
           console.error('Server returned error for Google auth:', data);
-          alert(data.error || 'Đăng nhập Google thất bại');
+          const errorText =
+            (typeof data.message === 'string' && data.message) ||
+            (typeof data.error === 'string' && data.error) ||
+            (typeof payload?.message === 'string' && payload.message) ||
+            'Đăng nhập Google thất bại';
+          alert(errorText);
           return;
         }
 
         // Expect the server to return { token, refreshToken, user }
-        if (data.token) {
+        if (payload && payload.token) {
           try {
-            localStorage.setItem('token', data.token);
-            if (data.refreshToken) localStorage.setItem('refreshToken', data.refreshToken);
+            localStorage.setItem('token', payload.token);
+            if (payload.refreshToken) localStorage.setItem('refreshToken', payload.refreshToken);
             // optional: store user info
-            if (data.user) localStorage.setItem('user', JSON.stringify(data.user));
+            if (payload.user) localStorage.setItem('user', JSON.stringify(payload.user));
           } catch (err) {
             console.warn('Could not save tokens to localStorage', err);
           }

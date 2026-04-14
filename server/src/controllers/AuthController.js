@@ -107,7 +107,8 @@ class AuthController {
 
         } catch (error) {
             logger.error('Google Auth error:', error);
-            return baseController.sendError(res, error.message || 'Lỗi xác thực Google', 500);
+            const statusCode = Number.isInteger(error?.statusCode) ? error.statusCode : 500;
+            return baseController.sendError(res, error.message || 'Lỗi xác thực Google', statusCode, error?.details || null);
         }
     }
 
