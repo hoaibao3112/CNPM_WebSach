@@ -401,7 +401,19 @@
 		const res = await fetch(API_URL, { cache: 'no-store' });
 		if (!res.ok) throw new Error(`API returned ${res.status}`);
 		const json = await res.json();
-		return json && json.data ? json.data : [];
+
+		// Support both response formats:
+		// 1) Standardized: { success: true, data: [...] }
+		// 2) Auto-unwrapped by api-patcher.js: [...]
+		if (Array.isArray(json)) {
+			return json;
+		}
+
+		if (json && Array.isArray(json.data)) {
+			return json.data;
+		}
+
+		return [];
 	}
 
 	// load(forceRefresh=false): if forceRefresh is true, always attempt fetch (used by retry)
