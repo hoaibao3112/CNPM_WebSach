@@ -135,15 +135,21 @@
 }
 
 .sale-track-wrap {
+  display: block;
   position: relative;
   overflow: hidden;
   padding: 5px 0;
+  width: 100%;
 }
 
 .sale-track {
-  display: flex;
-  gap: 10px; /* Gap nhỏ giữa các thẻ */
+  display: flex !important;
+  flex-direction: row !important;
+  flex-wrap: nowrap !important;
+  align-items: stretch;
+  gap: 10px; 
   transition: transform 0.5s ease;
+  width: max-content; /* Ngăn container tự co lại gây xuống dòng */
 }
 
 /* Slide Nav Buttons (Tròn trắng, chỉ thò ra) */
@@ -182,11 +188,11 @@
   cursor: pointer;
   box-shadow: 0 2px 8px rgba(0,0,0,0.04);
   
-  /* Cố định kích thước để không bị bung to */
-  width: calc((100% - 30px) / 4);
+  /* Cố định kích thước để không bị bung to/xuống dòng */
+  width: 285px; /* Ép cứng width */
   min-width: 200px;
   max-width: 285px; 
-  flex-shrink: 0;
+  flex: 0 0 285px !important;
 }
 
 .sale-item:hover {
