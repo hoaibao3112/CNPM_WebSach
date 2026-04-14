@@ -267,8 +267,7 @@ class AuthService {
           tenkh: name || email.split('@')[0],
           matkhau: await bcrypt.hash(crypto.randomBytes(16).toString('hex'), 10),
           google_id: googleId,
-          avatar: picture || null,
-          ngaythamgia: new Date()
+          avatar: picture || null
         });
       }
 
