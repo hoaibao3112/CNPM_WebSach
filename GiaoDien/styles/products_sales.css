@@ -24,25 +24,25 @@
    ═════════════════════════════════════════════════════════ */
 
 #flash-sale {
-  width: 100% !important;
-  max-width: 100% !important;
-  margin: 0 !important;
-  padding: 0 !important;
-  display: block !important;
-  box-sizing: border-box !important;
-  position: relative !important;
+  width: 100%;
+  max-width: 100%;
+  margin: 0;
+  padding: 0;
+  display: block;
+  box-sizing: border-box;
+  position: relative;
 }
 
 .flash-sale-container {
-  width: 100% !important;
-  max-width: 100% !important;
-  margin: 0 !important;
-  display: block !important;
+  width: 100%;
+  max-width: 100%;
+  margin: 0;
+  display: block;
   font-family: var(--font-body);
-  box-sizing: border-box !important;
-  border-radius: 0 !important;
-  overflow: visible !important;
-  box-shadow: none !important;
+  box-sizing: border-box;
+  border-radius: 0;
+  overflow: visible;
+  box-shadow: none;
 }
 
 /* ═════════════════════════════════════════════════════════
@@ -175,31 +175,32 @@
 .flash-products {
   padding: 24px;
   background: var(--fs-red);
-  width: 100% !important;
-  box-sizing: border-box !important;
-  display: block !important;
-  margin: 0 !important;
+  width: 100%;
+  box-sizing: border-box;
+  display: block;
+  margin: 0;
 }
 
 .sale-track-wrap {
-  width: 100% !important;
-  margin: 0 !important;
-  padding: 0 !important;
-  display: block !important;
-  box-sizing: border-box !important;
-  overflow: visible !important;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  display: block;
+  box-sizing: border-box;
+  overflow: visible;
 }
 
 /* CRITICAL FIX: Grid Layout */
 .sale-track {
-  display: grid !important;
-  grid-template-columns: repeat(4, 1fr) !important;
-  gap: 16px !important;
-  width: 100% !important;
-  margin: 0 !important;
-  padding: 0 !important;
-  list-style: none !important;
-  box-sizing: border-box !important;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  box-sizing: border-box;
+  align-items: start;
 }
 
 /* ═════════════════════════════════════════════════════════
@@ -210,7 +211,7 @@
   background: var(--bg-card);
   border-radius: var(--radius-card);
   border: 1px solid var(--border);
-  display: flex !important;
+  display: flex;
   flex-direction: column;
   position: relative;
   overflow: hidden;
@@ -218,8 +219,9 @@
   text-decoration: none;
   cursor: pointer;
   box-shadow: var(--shadow-card);
-  width: 100% !important;
-  min-width: 0 !important;
+  width: 100%;
+  min-width: 0;
+  height: 100%;
   transition: transform 0.25s ease, box-shadow 0.25s ease;
 }
 
@@ -231,8 +233,8 @@
 /* Image Section */
 .sale-item-image-wrapper {
   position: relative;
-  width: 100% !important;
-  aspect-ratio: 2.5 / 3;
+  width: 100%;
+  height: 300px;
   overflow: hidden;
   background: #f9f6f3;
   flex-shrink: 0;
@@ -282,7 +284,7 @@
 /* Info Section */
 .sale-item-info {
   padding: 14px;
-  display: flex !important;
+  display: flex;
   flex-direction: column;
   flex-grow: 1;
   gap: 8px;
@@ -306,7 +308,7 @@
 
 /* Price Section */
 .sale-item-price {
-  display: flex !important;
+  display: flex;
   flex-direction: column;
   gap: 4px;
   margin-top: auto;
@@ -433,8 +435,8 @@
   }
 
   .sale-track {
-    grid-template-columns: repeat(3, 1fr) !important;
-    gap: 12px !important;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
   }
 }
 
@@ -463,8 +465,8 @@
   }
 
   .sale-track {
-    grid-template-columns: repeat(2, 1fr) !important;
-    gap: 10px !important;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
   }
 
   .sale-item-title {
@@ -474,6 +476,10 @@
   .sale-item-info {
     padding: 10px;
     min-height: 100px;
+  }
+
+  .sale-item-image-wrapper {
+    height: 200px;
   }
 }
 
@@ -493,12 +499,12 @@
   }
 
   .sale-track {
-    grid-template-columns: repeat(2, 1fr) !important;
-    gap: 8px !important;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
   }
 
   .sale-item-image-wrapper {
-    aspect-ratio: 2 / 3;
+    height: 150px;
   }
 
   .sale-item-info {
