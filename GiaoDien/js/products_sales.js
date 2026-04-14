@@ -414,7 +414,13 @@
 			const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
 			const minutes = Math.floor((diff / (1000 * 60)) % 60);
 			const seconds = Math.floor((diff / 1000) % 60);
-			countdownEl.textContent = `${days}d ${hours}h ${minutes}m ${seconds}s`;
+			
+			countdownEl.innerHTML = `
+				<span class="cd-box">${days}</span><span class="cd-lbl">ngày</span>
+				<span class="cd-box">${hours.toString().padStart(2, '0')}</span><span class="cd-lbl">giờ</span>
+				<span class="cd-box">${minutes.toString().padStart(2, '0')}</span><span class="cd-lbl">phút</span>
+				<span class="cd-box">${seconds.toString().padStart(2, '0')}</span><span class="cd-lbl">giây</span>
+			`;
 		}
 
 		update();
