@@ -138,12 +138,8 @@
 		});
 
 		// Discount badge
-		if (p.LoaiKM) {
-			const badge = document.createElement('div');
-			badge.className = 'badge-discount';
-			badge.textContent = 'KHUYẾN MÃI';
-			imageWrapper.appendChild(badge);
-		}
+		// We remove the hardcoded 'KHUYẾN MÃI' badge from imageWrapper
+		// because the screenshot shows the percentage next to the price instead!
 
 		imageWrapper.appendChild(img);
 
@@ -195,30 +191,39 @@
 		const discounted = document.createElement('span');
 		discounted.className = 'discount-price';
 
-		// Calculate discounted price depending on LoaiKM
+		let percentValue = 0;
 		if (p.LoaiKM === 'giam_tien_mat') {
 			const discount = Number(p.GiaTriGiam) || 0;
 			const d = Math.max(0, Number(p.DonGia) - discount);
 			discounted.textContent = formatCurrency(d);
+			if (p.DonGia > 0) percentValue = Math.round((discount / p.DonGia) * 100);
 		} else if (p.LoaiKM === 'giam_phan_tram') {
 			const percent = Number(p.GiaTriGiam) || 0;
 			const d = Math.round(Number(p.DonGia) * (1 - percent / 100));
 			discounted.textContent = formatCurrency(d);
+			percentValue = Math.round(percent);
 		} else {
 			discounted.textContent = formatCurrency(p.DonGia || 0);
 		}
 
-		const original = document.createElement('span');
+		priceLeft.appendChild(discounted);
+		priceLeft.appendChild(document.createTextNode(' '));
+		
+		// Insert percentage badge next to discount price
+		if (percentValue > 0) {
+			const percentBadge = document.createElement('span');
+			percentBadge.className = 'badge-percent';
+			percentBadge.textContent = `-${percentValue}%`;
+			priceLeft.appendChild(percentBadge);
+		}
+
+		const original = document.createElement('div');
 		original.className = 'orig-price';
 		original.textContent = formatCurrency(p.DonGia || 0);
 
-		priceLeft.appendChild(discounted);
-		priceLeft.appendChild(document.createTextNode(' '));
-		priceLeft.appendChild(original);
-
 		const quantity = document.createElement('div');
 		quantity.className = 'sale-item-quantity';
-		quantity.textContent = `Còn ${p.SoLuong || 0} cuốn`;
+		quantity.innerHTML = `<span>Đã bán (0)</span><div class="sold-fill" style="width: 10%"></div>`;
 
 		priceWrap.appendChild(priceLeft);
 		priceWrap.appendChild(quantity);
