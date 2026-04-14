@@ -155,14 +155,12 @@
 
 .sale-track {
   display: grid;
-  grid-template-columns: repeat(4, minmax(200px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
   gap: 16px;
   width: 100%;
   margin: 0;
   padding: 0;
   list-style: none;
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid yellow;
 }
 
 /* ════════════════════════════════════════════════════════════
