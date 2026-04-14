@@ -3,30 +3,31 @@
    ============================================================ */
 
 :root {
-  --fs-red: #ff5252;       /* Nền đỏ đặc trưng Flash Sale */
-  --fs-dark: #333333;      /* Chữ đen đậm */
+  --fs-red: #ee2624;
+  --fs-dark: #333333;
   --text-muted: #888888;
   --bg-card: #ffffff;
+  --border: #e8e8e8;
 }
 
 /* ──────────────────────────────────────────────────────────
    CONTAINER & HEADER
    ────────────────────────────────────────────────────────── */
 .flash-sale-container {
-  max-width: 1280px; 
-  margin: 30px auto; 
+  max-width: 1280px;
+  margin: 30px auto;
   position: relative;
   border-radius: 8px;
   overflow: hidden;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.05); /* Bóng nhẹ */
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
 }
 
-/* Header trắng tinh tươm */
+/* Header */
 .flash-sale-header {
-  display: flex; 
-  align-items: center; 
+  display: flex;
+  align-items: center;
   justify-content: space-between;
-  padding: 15px 20px; 
+  padding: 15px 20px;
   background: #ffffff;
 }
 
@@ -36,28 +37,26 @@
   gap: 15px;
 }
 
-/* Text "FLASH SALE" xiên và màu đỏ cam */
 .flash-sale-left h2 {
-  font-family: 'Inter', Arial, sans-serif; 
-  font-size: 26px; 
+  font-family: 'Inter', Arial, sans-serif;
+  font-size: 26px;
   font-weight: 900;
   font-style: italic;
-  color: #ee2624; 
-  margin: 0; 
-  display: flex; 
-  align-items: center; 
+  color: var(--fs-red);
+  margin: 0;
+  display: flex;
+  align-items: center;
   letter-spacing: -1px;
 }
 
-/* Thay thế chữ A bằng biểu tượng tia sét nếu có thể, dùng pseudo ::before */
 .flash-sale-left h2::before {
-  content: '⚡'; /* Tia chớp */
+  content: '⚡';
   color: #f39c12;
   font-style: normal;
   margin-right: 5px;
 }
 
-/* Countdown Label */
+/* Countdown */
 .countdown {
   display: flex;
   align-items: center;
@@ -71,10 +70,8 @@
   font-weight: 600;
   font-family: 'Inter', sans-serif;
   margin-right: 8px;
-  text-transform: none;
 }
 
-/* Countdown Box Đen */
 .cd-box {
   background: #000000;
   color: #ffffff;
@@ -93,12 +90,11 @@
   position: relative;
 }
 
-/* Thay chữ bằng dấu hai chấm ( : ) */
 .cd-lbl::after {
   content: ':';
   visibility: visible;
   position: absolute;
-  left: 0; 
+  left: 0;
   top: -6px;
   color: #000000;
   font-size: 18px;
@@ -106,21 +102,21 @@
 }
 .cd-lbl:last-child::after { content: ''; }
 
-/* Nút Xem Tất Cả màu Xanh */
+/* Nút Xem Tất Cả */
 .view-all-btn {
-  background: transparent; 
+  background: transparent;
   color: #0056b3;
   border: none;
-  font-family: 'Inter', sans-serif; 
+  font-family: 'Inter', sans-serif;
   font-size: 14px;
-  font-weight: 600; 
+  font-weight: 600;
   cursor: pointer;
   padding: 0;
   display: flex;
   align-items: center;
 }
 .view-all-btn::after {
-  content: ' \203A'; /* Dấu > lớn */
+  content: ' \203A';
   font-size: 20px;
   margin-left: 5px;
   font-weight: normal;
@@ -129,9 +125,9 @@
 /* ──────────────────────────────────────────────────────────
    MAIN PRODUCTS AREA
    ────────────────────────────────────────────────────────── */
-.flash-products { 
-  padding: 15px; 
-  background: var(--fs-red); /* Nền đỏ chót */
+.flash-products {
+  padding: 15px;
+  background: var(--fs-red);
 }
 
 .sale-track-wrap {
@@ -144,46 +140,48 @@
 .sale-track {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 15px; 
+  gap: 15px;
   width: 100%;
 }
 
-/* Slide Nav Buttons (Tròn trắng, chỉ thò ra) */
+/* Nav Buttons */
 .nav-btn {
   position: absolute;
-  top: 45%; /* Cao hơn trỏ xuống 1 chút */
+  top: 45%;
   transform: translateY(-50%);
   width: 40px; height: 40px;
   background: #fff;
   border: 1px solid #ddd;
   border-radius: 50%;
   color: var(--fs-dark);
-  font-size: 20px; font-weight: normal;
+  font-size: 20px;
   cursor: pointer;
   box-shadow: 0 2px 6px rgba(0,0,0,0.2);
   display: flex; align-items: center; justify-content: center;
   z-index: 10;
 }
-
-.nav-prev { left: -20px; } /* Thò 1 nửa ra ngoài */
+.nav-prev { left: -20px; }
 .nav-next { right: -20px; }
-
-.nav-btn:disabled { display: none; } /* Ẩn nếu ko có */
+.nav-btn:disabled { display: none; }
 
 /* ──────────────────────────────────────────────────────────
-   ITEM CARD (Trắng trơn, ảnh full viền)
+   ITEM CARD — Fixed sizing to prevent oversized cards
    ────────────────────────────────────────────────────────── */
 .sale-item {
   background: var(--bg-card);
   border-radius: 12px;
   border: 1px solid var(--border);
-  display: flex; flex-direction: column;
-  position: relative; overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden;
   font-family: 'Inter', sans-serif;
   text-decoration: none;
   cursor: pointer;
   box-shadow: 0 4px 12px rgba(0,0,0,0.06);
-  width: 100%; /* Đầy đặn ô lưới grid */
+  width: 100%;
+  max-width: 280px;   /* ← FIX: prevent card from growing beyond 280px */
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .sale-item:hover {
@@ -191,11 +189,13 @@
   box-shadow: 0 8px 24px rgba(0,0,0,0.08);
 }
 
+/* Image wrapper — capped height to prevent oversized images */
 .sale-item-image-wrapper {
   position: relative;
-  width: 100%; 
-  aspect-ratio: 3/4; /* Tỉ lệ chuẩn 3:4 giống thiêt kế thẻ sách */
-  overflow: hidden; 
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  max-height: 260px;    /* ← FIX: cap image container height */
+  overflow: hidden;
   background: #faf8f6;
   border-bottom: 1px solid var(--border);
 }
@@ -203,15 +203,16 @@
 .sale-item-img {
   position: absolute;
   top: 0; left: 0;
-  width: 100%; height: 100%;
-  object-fit: contain; 
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
   padding: 14px;
 }
 
-/* Giấu các thành phần rườm rà */
-.card-wishlist, 
-.badge-discount, 
-.sale-item-author, 
+/* Hide unnecessary elements */
+.card-wishlist,
+.badge-discount,
+.sale-item-author,
 .sale-item-year,
 .sale-item-actions {
   display: none !important;
@@ -220,22 +221,27 @@
 /* Info Section */
 .sale-item-info {
   padding: 14px 16px;
-  display: flex; flex-direction: column; flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
 }
 
 .sale-item-title {
   font-family: 'Playfair Display', Georgia, serif;
-  font-size: 14px; 
-  font-weight: 600; 
+  font-size: 14px;
+  font-weight: 600;
   color: #1a1a1a;
-  margin: 0 0 10px; 
+  margin: 0 0 10px;
   line-height: 1.35;
-  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
-  overflow: hidden; text-overflow: ellipsis; 
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
   height: 38px;
 }
 
-/* Giá Box */
+/* Price Section */
 .sale-item-price {
   margin-top: auto;
   display: flex;
@@ -245,15 +251,14 @@
 }
 
 .discount-price {
-  font-size: 16px; 
-  font-weight: 700; 
-  color: #ee2624; /* Đỏ giá */
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--fs-red);
   margin: 0;
 }
 
-/* Phần trăm bên cạnh giá */
 .badge-percent {
-  background: #ee2624;
+  background: var(--fs-red);
   color: #fff;
   font-size: 11px;
   font-weight: 700;
@@ -264,14 +269,14 @@
 }
 
 .orig-price {
-  font-size: 12px; 
-  color: var(--text-muted); 
-  text-decoration: line-through; 
+  font-size: 12px;
+  color: var(--text-muted);
+  text-decoration: line-through;
   margin-top: 2px;
 }
 
 /* ──────────────────────────────────────────────────────────
-   Thanh trạng thái "Đã Bán" tròn
+   Sold Bar
    ────────────────────────────────────────────────────────── */
 .sale-item-quantity {
   background: #e0e0e0;
@@ -291,30 +296,78 @@
   position: relative;
   z-index: 2;
   color: #ffffff;
-  text-shadow: 0 1px 2px rgba(0,0,0,0.3); /* Để dễ đọc trên nền xám */
+  text-shadow: 0 1px 2px rgba(0,0,0,0.3);
 }
 
 .sold-fill {
   position: absolute;
   left: 0; top: 0; bottom: 0;
-  background: #ee2624; /* Nước màu đỏ chạy */
+  background: var(--fs-red);
   border-radius: 12px;
   z-index: 1;
 }
 
-/* ========== RESPONSIVE ========== */
+/* ──────────────────────────────────────────────────────────
+   Loading & Error States
+   ────────────────────────────────────────────────────────── */
+.flash-products .loading,
+.flash-products .no-products {
+  text-align: center;
+  color: #fff;
+  padding: 40px 20px;
+  font-size: 15px;
+  font-family: 'Inter', sans-serif;
+}
+
+.error-box {
+  text-align: center;
+  padding: 30px;
+  color: #fff;
+}
+
+.error-message {
+  font-size: 14px;
+  margin-bottom: 12px;
+}
+
+.retry-btn,
+.use-cache-btn {
+  background: #fff;
+  color: var(--fs-red);
+  border: none;
+  padding: 8px 20px;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  margin: 4px;
+  font-size: 13px;
+  transition: opacity 0.2s;
+}
+
+.retry-btn:hover,
+.use-cache-btn:hover {
+  opacity: 0.85;
+}
+
+/* ──────────────────────────────────────────────────────────
+   RESPONSIVE
+   ────────────────────────────────────────────────────────── */
 @media (max-width: 1024px) {
   .sale-track { grid-template-columns: repeat(3, 1fr); }
+  .sale-item { max-width: 100%; }
 }
 
 @media (max-width: 768px) {
   .flash-sale-header { padding: 10px; }
   .flash-sale-left h2 { font-size: 20px; }
-  .countdown::before { display: none; } /* Ẩn chữ kết thúc trong */
+  .countdown::before { display: none; }
   .flash-products { padding: 10px; }
   .sale-track { grid-template-columns: repeat(2, 1fr); }
+  .sale-item { max-width: 100%; }
 }
 
 @media (max-width: 480px) {
   .sale-track { grid-template-columns: 1fr; }
+  .sale-item { max-width: 100%; }
+  .sale-item-image-wrapper { max-height: 220px; }
 }
