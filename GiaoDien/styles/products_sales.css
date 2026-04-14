@@ -135,10 +135,10 @@
 }
 
 .sale-track-wrap {
-  display: block;
+  display: block !important;
   position: relative;
   overflow: hidden;
-  padding: 5px 0;
+  padding: 10px 0;
   width: 100%;
 }
 
@@ -146,10 +146,11 @@
   display: flex !important;
   flex-direction: row !important;
   flex-wrap: nowrap !important;
-  align-items: stretch;
-  gap: 10px; 
+  align-items: flex-start !important;
+  gap: 15px !important; 
   transition: transform 0.5s ease;
-  width: max-content; /* Ngăn container tự co lại gây xuống dòng */
+  width: max-content !important;
+  clear: both !important;
 }
 
 /* Slide Nav Buttons (Tròn trắng, chỉ thò ra) */
@@ -181,18 +182,17 @@
   background: var(--bg-card);
   border-radius: 12px;
   border: 1px solid var(--border);
-  display: flex; flex-direction: column;
-  position: relative; overflow: hidden;
-  font-family: 'Inter', sans-serif;
-  text-decoration: none;
-  cursor: pointer;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  /* Layout Cứu Cánh (Ngang ngang) */
+  display: flex !important;
+  flex-direction: column !important;
+  float: left !important; /* Ép ngang nếu flex hỏng */
   
   /* Cố định kích thước để không bị bung to/xuống dòng */
-  width: 285px; /* Ép cứng width */
-  min-width: 200px;
-  max-width: 285px; 
-  flex: 0 0 285px !important;
+  width: 250px !important;
+  min-width: 200px !important;
+  max-width: 285px !important; 
+  flex: 0 0 250px !important;
+  margin-right: 15px !important; /* Dùng margin bù cho gap nếu flex hỏng */
 }
 
 .sale-item:hover {
