@@ -1,4 +1,525 @@
 /* ============================================================
+   PRODUCTS_SALES.CSS — Flash Sale Premium (Clean & Fixed)
+   ============================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap');
+
+:root {
+  --fs-red: #C0392B;
+  --fs-red-dark: #962d22;
+  --fs-red-light: #fdf0ef;
+  --fs-dark: #1a1a1a;
+  --fs-muted: #888888;
+  --bg-card: #ffffff;
+  --border: #ebebeb;
+  --shadow-card: 0 2px 12px rgba(0, 0, 0, 0.07);
+  --shadow-hover: 0 10px 28px rgba(192, 57, 43, 0.18);
+  --radius-card: 14px;
+  --radius-sm: 8px;
+  --font-body: 'Be Vietnam Pro', 'Segoe UI', sans-serif;
+  --font-display: 'Playfair Display', Georgia, serif;
+}
+
+/* RESET & BASE */
+* {
+  box-sizing: border-box;
+}
+
+/* ──────────────────────────────────────────────────────────
+   FLASH SALE CONTAINER
+   ────────────────────────────────────────────────────────── */
+
+#flash-sale {
+  width: 100%;
+  max-width: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+.flash-sale-container {
+  width: 100%;
+  max-width: 100%;
+  margin: 0;
+  border-radius: 0;
+  overflow: visible;
+  box-shadow: none;
+  font-family: var(--font-body);
+}
+
+/* ──────────────────────────────────────────────────────────
+   HEADER
+   ────────────────────────────────────────────────────────── */
+.flash-sale-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 24px;
+  background: #ffffff;
+  border-bottom: 1px solid var(--border);
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.flash-sale-left {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  flex-wrap: wrap;
+}
+
+.flash-sale-left h2 {
+  font-family: var(--font-body);
+  font-size: 22px;
+  font-weight: 900;
+  font-style: italic;
+  color: var(--fs-red);
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  letter-spacing: -0.5px;
+  white-space: nowrap;
+}
+
+.flash-sale-left h2::before {
+  content: '⚡';
+  font-style: normal;
+  color: #f39c12;
+}
+
+/* Countdown */
+.countdown {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: nowrap;
+}
+
+.countdown::before {
+  content: 'Kết thúc trong';
+  color: var(--fs-dark);
+  font-size: 13px;
+  font-weight: 600;
+  font-family: var(--font-body);
+  margin-right: 6px;
+  white-space: nowrap;
+}
+
+.cd-box {
+  background: #1a1a1a;
+  color: #ffffff;
+  padding: 5px 8px;
+  border-radius: 5px;
+  font-weight: 700;
+  font-family: var(--font-body);
+  font-size: 14px;
+  min-width: 30px;
+  text-align: center;
+  letter-spacing: 0.5px;
+}
+
+.cd-lbl {
+  visibility: hidden;
+  width: 8px;
+  position: relative;
+  display: inline-block;
+}
+
+.cd-lbl::after {
+  content: ':';
+  visibility: visible;
+  position: absolute;
+  left: 0;
+  top: -5px;
+  color: #1a1a1a;
+  font-size: 17px;
+  font-weight: 800;
+}
+
+.cd-lbl:last-child::after {
+  content: '';
+}
+
+/* View All Button */
+.view-all-btn {
+  background: transparent;
+  color: #0056b3;
+  border: none;
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  white-space: nowrap;
+  transition: color 0.2s;
+}
+
+.view-all-btn:hover {
+  color: var(--fs-red);
+}
+
+.view-all-btn::after {
+  content: '›';
+  font-size: 20px;
+  font-weight: 400;
+  line-height: 1;
+}
+
+/* ──────────────────────────────────────────────────────────
+   PRODUCTS AREA
+   ────────────────────────────────────────────────────────── */
+.flash-products {
+  padding: 24px;
+  background: var(--fs-red);
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.sale-track-wrap {
+  position: relative;
+  width: 100%;
+  overflow: visible;
+}
+
+/* KEY FIX: Grid layout */
+.sale-track {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  box-sizing: border-box;
+}
+
+/* ──────────────────────────────────────────────────────────
+   ITEM CARD
+   ────────────────────────────────────────────────────────── */
+.sale-item {
+  background: var(--bg-card);
+  border-radius: var(--radius-card);
+  border: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden;
+  font-family: var(--font-body);
+  text-decoration: none;
+  cursor: pointer;
+  box-shadow: var(--shadow-card);
+  width: 100%;
+  min-width: 0;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.sale-item:hover {
+  transform: translateY(-5px);
+  box-shadow: var(--shadow-hover);
+}
+
+/* Image Wrapper — FIXED */
+.sale-item-image-wrapper {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 2.5 / 3;
+  overflow: hidden;
+  background: #f9f6f3;
+  flex-shrink: 0;
+}
+
+.sale-item-img {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  padding: 12px;
+  transition: transform 0.35s ease;
+}
+
+.sale-item:hover .sale-item-img {
+  transform: scale(1.06);
+}
+
+/* Badge discount */
+.badge-discount {
+  display: flex !important;
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  background: var(--fs-red);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 5px 10px;
+  border-radius: 4px;
+  z-index: 5;
+  letter-spacing: 0.3px;
+  font-family: var(--font-body);
+}
+
+/* Hide unnecessary elements */
+.card-wishlist,
+.sale-item-author,
+.sale-item-year,
+.sale-item-actions {
+  display: none !important;
+}
+
+/* Info Section */
+.sale-item-info {
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  gap: 8px;
+  min-height: 120px;
+}
+
+.sale-item-title {
+  font-family: var(--font-display);
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--fs-dark);
+  margin: 0;
+  line-height: 1.3;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-height: 36px;
+}
+
+/* Price Section */
+.sale-item-price {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: auto;
+}
+
+.discount-price {
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--fs-red);
+  margin: 0;
+  line-height: 1.2;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.badge-percent {
+  display: inline-block;
+  background: var(--fs-red-light);
+  color: var(--fs-red);
+  font-size: 10px;
+  font-weight: 700;
+  padding: 3px 6px;
+  border-radius: 3px;
+  border: 1px solid rgba(192, 57, 43, 0.2);
+  white-space: nowrap;
+}
+
+.orig-price {
+  font-size: 11px;
+  color: var(--fs-muted);
+  text-decoration: line-through;
+  margin: 0;
+}
+
+/* SOLD BAR */
+.sale-item-quantity {
+  background: #e0e0e0;
+  border-radius: 12px;
+  text-align: center;
+  font-size: 10.5px;
+  font-weight: 700;
+  padding: 6px 0;
+  text-transform: uppercase;
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+  letter-spacing: 0.3px;
+  margin-top: 6px;
+}
+
+.sale-item-quantity span {
+  position: relative;
+  z-index: 2;
+  color: #ffffff;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+.sold-fill {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  background: linear-gradient(90deg, var(--fs-red-dark), var(--fs-red));
+  z-index: 1;
+}
+
+/* ──────────────────────────────────────────────────────────
+   LOADING & ERROR
+   ────────────────────────────────────────────────────────── */
+.flash-products .loading,
+.flash-products .no-products {
+  text-align: center;
+  color: #fff;
+  padding: 48px 20px;
+  font-size: 15px;
+  font-family: var(--font-body);
+}
+
+.error-box {
+  text-align: center;
+  padding: 32px;
+  color: #fff;
+}
+
+.error-message {
+  font-size: 14px;
+  margin-bottom: 14px;
+}
+
+.retry-btn,
+.use-cache-btn {
+  background: #fff;
+  color: var(--fs-red);
+  border: none;
+  padding: 9px 22px;
+  border-radius: 6px;
+  font-weight: 700;
+  cursor: pointer;
+  margin: 4px;
+  font-size: 13px;
+  font-family: var(--font-body);
+  transition: opacity 0.2s, transform 0.2s;
+}
+
+.retry-btn:hover,
+.use-cache-btn:hover {
+  opacity: 0.88;
+  transform: translateY(-1px);
+}
+
+/* ──────────────────────────────────────────────────────────
+   RESPONSIVE
+   ────────────────────────────────────────────────────────── */
+
+/* Tablet 1024px */
+@media (max-width: 1024px) {
+  .flash-products {
+    padding: 16px;
+  }
+
+  .sale-track {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+  }
+}
+
+/* Tablet 768px */
+@media (max-width: 768px) {
+  .flash-sale-header {
+    padding: 12px 14px;
+    flex-direction: row;
+    gap: 10px;
+  }
+
+  .flash-sale-left {
+    gap: 10px;
+  }
+
+  .flash-sale-left h2 {
+    font-size: 18px;
+  }
+
+  .countdown::before {
+    display: none;
+  }
+
+  .flash-products {
+    padding: 12px;
+  }
+
+  .sale-track {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+
+  .sale-item-title {
+    font-size: 12px;
+  }
+
+  .sale-item-info {
+    padding: 10px;
+    min-height: 100px;
+  }
+}
+
+/* Mobile 480px */
+@media (max-width: 480px) {
+  .flash-sale-header {
+    padding: 10px 12px;
+    gap: 8px;
+  }
+
+  .flash-sale-left h2 {
+    font-size: 16px;
+  }
+
+  .flash-products {
+    padding: 10px;
+  }
+
+  .sale-track {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+  }
+
+  .sale-item-image-wrapper {
+    aspect-ratio: 2 / 3;
+  }
+
+  .sale-item-info {
+    padding: 8px;
+    min-height: 80px;
+  }
+
+  .sale-item-title {
+    font-size: 11px;
+    min-height: 30px;
+  }
+
+  .discount-price {
+    font-size: 13px;
+  }
+}
+
+/* Mobile nhỏ 360px */
+@media (max-width: 360px) {
+  .flash-sale-left h2 {
+    font-size: 14px;
+  }
+
+  .cd-box {
+    font-size: 12px;
+    padding: 3px 6px;
+  }
+
+  .sale-item-title {
+    font-size: 10px;
+  }
+}
+/* ============================================================
    PRODUCTS_SALES.CSS — Flash Sale Premium (Fixed & Improved)
    ============================================================ */
 
