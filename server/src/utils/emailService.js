@@ -39,8 +39,8 @@ function buildTransportConfig(portOverride) {
 
 async function sendMailWithRetry(mailOptions) {
   const primaryConfig = buildTransportConfig();
-  const fallbackConfig = primaryConfig.port === 465 ? null : buildTransportConfig(465);
-  const transportConfigs = fallbackConfig ? [primaryConfig, fallbackConfig] : [primaryConfig];
+  const fallbackConfig = primaryConfig.port === 465 ? buildTransportConfig(587) : buildTransportConfig(465);
+  const transportConfigs = [primaryConfig, fallbackConfig];
 
   let lastError = null;
 
@@ -228,6 +228,8 @@ export async function sendOTPEmail(email, otp) {
     html: htmlContent
   };
 
+  let resendFailureReason = '';
+
   // Ưu tiên Resend trước để tránh lỗi SMTP từ hạ tầng Render
   if (resendConfigured) {
     try {
@@ -235,6 +237,7 @@ export async function sendOTPEmail(email, otp) {
       console.log('✅ Email gửi thành công qua Resend:', resendInfo.response);
       return true;
     } catch (resendError) {
+      resendFailureReason = resendError?.response?.data?.message || resendError?.message || 'Lỗi Resend không xác định';
       console.error('❌ Gửi mail qua Resend thất bại, sẽ thử SMTP:', {
         message: resendError?.message,
         response: resendError?.response?.data
@@ -242,7 +245,7 @@ export async function sendOTPEmail(email, otp) {
 
       // Không có SMTP thì trả lỗi ngay từ Resend
       if (!smtpConfigured) {
-        throw new Error(`Gửi email OTP thất bại: ${resendError?.response?.data?.message || resendError?.message || 'Lỗi Resend không xác định'}`);
+        throw new Error(`Gửi email OTP thất bại: Resend lỗi (${resendFailureReason})`);
       }
     }
   }
@@ -254,7 +257,10 @@ export async function sendOTPEmail(email, otp) {
     return true;
   } catch (smtpError) {
     const smtpReason = smtpError?.message || 'Lỗi SMTP không xác định';
-    throw new Error(`Gửi email OTP thất bại: ${smtpReason}`);
+    if (resendFailureReason) {
+      throw new Error(`Gửi email OTP thất bại: Resend lỗi (${resendFailureReason}) | SMTP lỗi (${smtpReason})`);
+    }
+    throw new Error(`Gửi email OTP thất bại: SMTP lỗi (${smtpReason})`);
   }
 }
 // Email xác nhận đơn hàng – giao diện đẹp, thân thiện Outlook/Gmail
@@ -601,19 +607,7 @@ export async function sendOrderConfirmationEmail(email, order = {}) {
   ].filter(Boolean).join('\n');
 
   try {
-    const transporter = nodemailer.createTransport({
-      host: process.env.EMAIL_HOST || 'smtp.gmail.com',
-      port: Number(process.env.EMAIL_PORT || 587),
-      secure: false,
-      requireTLS: true,
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS
-      },
-      tls: {
-        rejectUnauthorized: false
-      }
-    });
+    const transporter = nodemailer.createTransport(buildTransportConfig());
 
     const info = await transporter.sendMail({
       from: `${brandName} <${process.env.EMAIL_USER}>`,
