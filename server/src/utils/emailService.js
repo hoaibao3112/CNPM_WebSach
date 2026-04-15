@@ -231,6 +231,8 @@ export async function sendOTPEmail(email, otp) {
         console.log('✅ Email gửi thành công (forgot-password):', info.response);
         return true;
     } catch (smtpError) {
+        const resendConfigured = hasResendConfig();
+
         if (hasResendConfig()) {
           try {
             const resendInfo = await sendMailWithResend(mailOptions);
@@ -245,7 +247,9 @@ export async function sendOTPEmail(email, otp) {
         }
 
         const reason = smtpError?.code === 'ETIMEDOUT'
-          ? 'Không thể kết nối SMTP (timeout)'
+          ? (resendConfigured
+              ? 'Không thể kết nối SMTP (timeout) và fallback Resend thất bại'
+              : 'Không thể kết nối SMTP (timeout). Chưa cấu hình fallback Resend (RESEND_API_KEY, RESEND_FROM_EMAIL)')
           : (smtpError?.message || 'Lỗi không xác định');
         throw new Error(`Gửi email OTP thất bại: ${reason}`);
     }
