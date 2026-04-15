@@ -164,42 +164,18 @@ export async function sendOTPEmail(email, otp) {
 
   // Tái sử dụng logic template cũ...
   const htmlContent = `
-            <!DOCTYPE html>
-            <html lang="vi">
-            <head>
-                <meta charset="UTF-8">
-                <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                <style>
-                    body { font-family: 'Arial', sans-serif; background-color: #f0f2f5; margin: 0; padding: 0; color: #333; }
-                    .container { max-width: 600px; margin: 40px auto; background-color: #ffffff; border-radius: 10px; overflow: hidden; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); }
-                    .header { background-color: #007bff; color: white; text-align: center; padding: 20px; border-bottom: 2px solid #0056b3; }
-                    .header img { max-width: 150px; margin-bottom: 10px; }
-                    .content { padding: 30px; text-align: center; }
-                    .otp-box { background-color: #e9ecef; padding: 20px; border-radius: 8px; display: inline-block; font-size: 28px; font-weight: bold; color: #dc3545; margin: 20px 0; letter-spacing: 2px; border: 2px dashed #dc3545; }
-                    .copy-btn { display: inline-block; margin-top: 10px; padding: 10px 20px; background-color: #007bff; color: white; text-decoration: none; border-radius: 5px; font-size: 14px; }
-                    .footer { text-align: center; padding: 15px; background-color: #f8f9fa; color: #6c757d; font-size: 12px; border-top: 1px solid #dee2e6; }
-                </style>
-            </head>
-            <body>
-                <div class="container">
-                    <div class="header">
-                        <img src="https://cdn1.fahasa.com/skin/frontend/ma_vanese/fahasa/images/fahasa-logo.png" alt="Company Logo" />
-                        <h2>Xác Nhận Mã OTP</h2>
-                    </div>
-                    <div class="content">
-                        <p>Xin chào, <strong>Bạn</strong>,</p>
-                        <p>Cảm ơn bạn đã sử dụng hệ thống của chúng tôi! Dưới đây là mã OTP để đặt lại mật khẩu:</p>
-                        <div class="otp-box">${otp}</div>
-                        <p>Mã này có hiệu lực trong <strong>5 phút</strong>. Vui lòng không chia sẻ mã này với bất kỳ ai.</p>
-                        <p>Nếu bạn không yêu cầu mã này, hãy liên hệ với bộ phận hỗ trợ qua <a href="mailto:${process.env.EMAIL_USER}">email hỗ trợ</a>.</p>
-                    </div>
-                    <div class="footer">
-                        <p>&copy; ${new Date().getFullYear()} Công Ty Bao Store VipPro. Đã đăng ký bản quyền.</p>
-                    </div>
-                </div>
-            </body>
-            </html>
-        `;
+    <div style="font-family: sans-serif; max-width: 500px; margin: auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
+      <h2 style="color: #007bff; text-align: center;">Mã Xác Thực OTP</h2>
+      <p>Xin chào,</p>
+      <p>Bạn đang thực hiện yêu cầu đặt lại mật khẩu tại <strong>${brandName}</strong>.</p>
+      <div style="background: #f8f9fa; padding: 15px; text-align: center; border-radius: 5px; margin: 20px 0;">
+        <span style="font-size: 32px; font-weight: bold; letter-spacing: 5px; color: #dc3545;">${otp}</span>
+      </div>
+      <p style="font-size: 13px; color: #666;">Mã này có hiệu lực trong 5 phút. Vui lòng không gửi mã này cho bất kỳ ai.</p>
+      <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;">
+      <p style="font-size: 11px; color: #999; text-align: center;">Đây là email tự động, vui lòng không phản hồi.</p>
+    </div>
+  `;
 
   const brandName = process.env.BRAND_NAME || 'BAO STORE';
   const mailOptions = {
