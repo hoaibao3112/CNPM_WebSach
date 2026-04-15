@@ -142,7 +142,7 @@ async function handleSendOTP() {
         sendOtpBtn.disabled = true;
         sendOtpBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang gửi...';
 
-        const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || window.API_CONFIG.BASE_URL;
+        const _apiBase = window.API_CONFIG?.BASE_URL || 'https://cnpm-websach-2.onrender.com';
         const response = await fetch(`${_apiBase}/api/client/forgot-password/send-otp`, {
             method: 'POST',
             headers: {
@@ -195,7 +195,7 @@ async function handleVerifyOTP() {
         verifyOtpBtn.disabled = true;
         verifyOtpBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang xác nhận...';
 
-        const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || window.API_CONFIG.BASE_URL;
+        const _apiBase = window.API_CONFIG?.BASE_URL || 'https://cnpm-websach-2.onrender.com';
         const response = await fetch(`${_apiBase}/api/client/forgot-password/verify-otp`, {
             method: 'POST',
             headers: {
@@ -262,11 +262,13 @@ async function handleResetPassword() {
             resetToken
         };
 
-        const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || window.API_CONFIG.BASE_URL;
+        const _apiBase = window.API_CONFIG?.BASE_URL || 'https://cnpm-websach-2.onrender.com';
         const response = await fetch(`${_apiBase}/api/client/forgot-password/reset`, {
             method: 'POST',
+            mode: 'cors', // Đảm bảo bật CORS
             headers: {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
             },
             body: JSON.stringify(payload)
         });
@@ -274,7 +276,7 @@ async function handleResetPassword() {
         const data = await response.json();
 
         if (response.ok) {
-            showMessage(messageElement, data.message || 'Đặt lại mật khẩu thành công', 'success');
+            showMessage(messageElement, (data && data.message) || 'Đặt lại mật khẩu thành công', 'success');
             
             // Xóa dữ liệu tạm
             sessionStorage.removeItem('resetEmail');

@@ -23,30 +23,8 @@
             console.log('📡 Fetch Patched URL:', url);
         }
 
-        // 2. Thực hiện request
-        const response = await originalFetch.call(this, url, options);
-
-        // 3. Clone response để có thể đọc JSON mà không làm hỏng stream gốc
-        const contentType = response.headers.get('content-type');
-        if (contentType && contentType.includes('application/json')) {
-            const clone = response.clone();
-
-            // Patch phương thức .json() của response trả về
-            const originalJson = response.json;
-            response.json = async function () {
-                const result = await originalJson.call(this);
-
-                // Nếu result có định dạng { success: true, data: ... }, trả về data
-                if (result && typeof result === 'object' && result.success === true && result.data !== undefined) {
-                    console.log('📦 Auto-unwrapped standardized response from:', url);
-                    return result.data;
-                }
-
-                return result;
-            };
-        }
-
-        return response;
+        // 2. Thực hiện request và trả về kết quả nguyên bản
+        return originalFetch.call(this, url, options);
     };
 
     console.log('✅ Global API Response Patcher initialized!');

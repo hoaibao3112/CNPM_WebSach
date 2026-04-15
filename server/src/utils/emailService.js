@@ -114,19 +114,19 @@ async function sendMailWithSendGrid(mailOptions) {
 
   const brandName = process.env.BRAND_NAME || 'BAO STORE';
   const apiKey = process.env.SENDGRID_API_KEY.trim(); // Loại bỏ khoảng trắng thừa
-  
+
   const payload = {
-    personalizations: [{ 
-      to: [{ email: mailOptions.to }] 
+    personalizations: [{
+      to: [{ email: mailOptions.to }]
     }],
-    from: { 
-      email: process.env.SENDGRID_FROM_EMAIL.trim(), 
-      name: brandName 
+    from: {
+      email: process.env.SENDGRID_FROM_EMAIL.trim(),
+      name: brandName
     },
     subject: mailOptions.subject,
-    content: [{ 
-      type: 'text/html', 
-      value: mailOptions.html 
+    content: [{
+      type: 'text/html',
+      value: mailOptions.html
     }]
   };
 
