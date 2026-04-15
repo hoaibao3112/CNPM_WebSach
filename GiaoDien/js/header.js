@@ -100,32 +100,69 @@ async function updateCartCount() {
 
 async function searchProduct(value) {
   try {
+    const keyword = typeof value === 'string' ? value.trim() : '';
+    if (!keyword) return [];
+
     const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || window.API_CONFIG.BASE_URL;
     const response = await fetch(
-      `${_apiBase}/api/product/search-product?search=${value}`
+      `${_apiBase}/api/product?search=${encodeURIComponent(keyword)}`
     );
     if (response.ok) {
       const result = await response.json();
       return result;
     }
+    return [];
   } catch (error) {
     console.error("Error fetching products:", error);
     showAlert("Lỗi khi tải sản phẩm", "error");
-    return null;
+    return [];
   }
 }
 
+const normalizeSearchProducts = (payload) => {
+  if (Array.isArray(payload)) return payload;
+  if (payload && Array.isArray(payload.data)) return payload.data;
+  if (payload && payload.success === true && Array.isArray(payload.data)) return payload.data;
+  return [];
+};
+
 const renderProductSearch = (productsFond, data) => {
-  if (!data || !Array.isArray(data)) return;
+  if (!productsFond) return;
+
+  const products = normalizeSearchProducts(data);
   productsFond.innerHTML = "";
 
-  data.slice(0, 6).forEach((itemData) => {
+  if (products.length === 0) return;
+
+  const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || window.API_CONFIG.BASE_URL;
+
+  products.slice(0, 6).forEach((itemData) => {
     const item = document.createElement("div");
     const img = document.createElement("img");
     const p = document.createElement("p");
 
     item.classList.add("item");
-    img.src = "img/product/" + itemData.HinhAnh;
+    const imageName = itemData.HinhAnh || itemData.Anh || '';
+    const imageCandidates = imageName
+      ? [
+          `${_apiBase}/product-images/${imageName}`,
+          `img/product/${imageName}`,
+          `../img/product/${imageName}`
+        ]
+      : ['img/default-book.jpg'];
+
+    let imageIndex = 0;
+    img.src = imageCandidates[imageIndex];
+    img.onerror = () => {
+      imageIndex += 1;
+      if (imageIndex < imageCandidates.length) {
+        img.src = imageCandidates[imageIndex];
+      } else {
+        img.onerror = null;
+        img.src = 'img/default-book.jpg';
+      }
+    };
+
     p.textContent = itemData.TenSP;
     item.addEventListener("click", () => {
       loadProductDetailOnHeader(itemData.MaSP);
