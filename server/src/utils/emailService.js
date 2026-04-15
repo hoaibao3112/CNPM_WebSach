@@ -230,15 +230,6 @@ export async function sendOTPEmail(email, otp) {
   }
 
   throw new Error(`Tất cả phương thức gửi mail đều thất bại: ${errors.join(' | ')}`);
-};
-    
-    // Gợi ý cho người dùng nếu lỗi timeout
-    if (smtpReason.includes('timeout') || smtpError?.code === 'ETIMEDOUT') {
-      finalMessage += ' (Gợi ý: Hãy đổi EMAIL_PORT sang 587 trong Dashboard Render)';
-    }
-
-    throw new Error(finalMessage);
-  }
 }
 // Email xác nhận đơn hàng – giao diện đẹp, thân thiện Outlook/Gmail
 
