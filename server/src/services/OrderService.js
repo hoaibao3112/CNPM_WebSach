@@ -683,7 +683,7 @@ class OrderService {
             );
 
             try {
-                const [[order]] = await pool.query('SELECT makh, TongTien FROM hoadon WHERE MaHD = ?', [orderId]);
+                const [[order]] = await pool.query('SELECT makh, TongTien, email FROM hoadon hd LEFT JOIN khachhang kh ON hd.makh = kh.makh WHERE MaHD = ?', [orderId]);
                 if (order) {
                     const connection = await pool.getConnection();
                     try {
@@ -691,10 +691,21 @@ class OrderService {
                     } finally {
                         connection.release();
                     }
+
+                    // Gửi email xác nhận sau khi thanh toán thành công
+                    try {
+                        const fullOrder = await this.getOrderById(orderId);
+                        await sendOrderConfirmationEmail(order.email, {
+                            ...fullOrder,
+                            paymentMethod: 'VNPAY',
+                        });
+                        logger.info(`✅ [VNPAY] Đã gửi email xác nhận cho đơn hàng #${orderId}`);
+                    } catch (emailErr) {
+                        logger.warn(`⚠️ [VNPAY] Gửi email thất bại cho đơn #${orderId}:`, emailErr.message);
+                    }
                 }
             } catch (error) {
-                // Non-blocking: payment success should not fail because loyalty points failed
-                logger.warn('Loyalty after VNPay failed:', error.message);
+                logger.warn('Error processing post-VNPAY success tasks:', error.message);
             }
 
             return { orderId, amount, rspCode, status: 'success' };

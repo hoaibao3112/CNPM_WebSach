@@ -8,6 +8,7 @@ import axios from 'axios';
 import { HoaDon } from '../models/index.js';
 import AppError from '../utils/AppError.js';
 import logger from '../utils/logger.js';
+import { sendOrderConfirmationEmail } from '../utils/emailService.js';
 
 class MoMoPaymentService {
   constructor() {
@@ -196,6 +197,23 @@ class MoMoPaymentService {
         });
 
         logger.info('✅ MoMo Payment Success:', { orderId, transId });
+
+        // Gửi email xác nhận sau khi thanh toán thành công (Non-blocking)
+        setTimeout(async () => {
+          try {
+            // Sử dụng dynamic import để tránh circular dependency với OrderService
+            const OrderService = (await import('./OrderService.js')).default;
+            const fullOrder = await OrderService.getOrderById(orderId);
+            await sendOrderConfirmationEmail(fullOrder.customerEmail, {
+              ...fullOrder,
+              paymentMethod: 'MoMo',
+            });
+            logger.info(`✅ [MoMo] Đã gửi email xác nhận cho đơn hàng #${orderId}`);
+          } catch (emailErr) {
+            logger.warn(`⚠️ [MoMo] Gửi email thất bại cho đơn #${orderId}:`, emailErr.message);
+          }
+        }, 100);
+
         return true;
       } else {
         // Payment failed

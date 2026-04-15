@@ -113,24 +113,40 @@ async function sendMailWithSendGrid(mailOptions) {
   }
 
   const brandName = process.env.BRAND_NAME || 'BAO STORE';
+  const apiKey = process.env.SENDGRID_API_KEY.trim(); // Loại bỏ khoảng trắng thừa
+  
   const payload = {
-    personalizations: [{ to: [{ email: mailOptions.to }] }],
-    from: { email: process.env.SENDGRID_FROM_EMAIL, name: brandName },
-    subject: mailOptions.subject,
-    content: [{ type: 'text/html', value: mailOptions.html }]
-  };
-
-  const response = await axios.post(SENDGRID_API_URL, payload, {
-    headers: {
-      Authorization: `Bearer ${process.env.SENDGRID_API_KEY}`,
-      'Content-Type': 'application/json'
+    personalizations: [{ 
+      to: [{ email: mailOptions.to }] 
+    }],
+    from: { 
+      email: process.env.SENDGRID_FROM_EMAIL.trim(), 
+      name: brandName 
     },
-    timeout: EMAIL_SOCKET_TIMEOUT_MS
-  });
-
-  return {
-    response: `sendgrid:ok`
+    subject: mailOptions.subject,
+    content: [{ 
+      type: 'text/html', 
+      value: mailOptions.html 
+    }]
   };
+
+  try {
+    const response = await axios.post(SENDGRID_API_URL, payload, {
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json'
+      },
+      timeout: EMAIL_SOCKET_TIMEOUT_MS
+    });
+
+    return {
+      response: `sendgrid:ok`
+    };
+  } catch (error) {
+    // Log chi tiết lỗi từ SendGrid để dễ debug
+    const errMsg = error.response?.data?.errors?.[0]?.message || error.message;
+    throw new Error(`SendGrid API error: ${errMsg}`);
+  }
 }
 
 export function generateOTP() {
