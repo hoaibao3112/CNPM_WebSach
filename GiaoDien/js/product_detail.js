@@ -448,6 +448,7 @@ window.viewAuthorDetail = (authorId) => {
  */
 
 function displayProductDetail(product) {
+    const apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || window.API_CONFIG.BASE_URL;
     // Debug chi tiết hơn
     console.log('🔍 =====PRODUCT DEBUG=====');
     console.log('🔍 Raw product object:', product);
@@ -515,8 +516,34 @@ function displayProductDetail(product) {
             if (!filename) return 'https://via.placeholder.com/300x400?text=Book';
             // if filename looks like a url, use it
             if (/^https?:\/\//i.test(filename)) return filename;
-            // try client-side img folder first
-            return `img/product/${filename}`;
+            // prefer backend static route, then fallback to local client folders
+            return `${apiBase}/product-images/${filename}`;
+        };
+
+        const buildFallbackCandidates = (filename) => {
+            if (!filename) return ['https://via.placeholder.com/300x400?text=Book'];
+            if (/^https?:\/\//i.test(filename)) return [filename];
+            return [
+                `${apiBase}/product-images/${filename}`,
+                `img/product/${filename}`,
+                `../img/product/${filename}`,
+                'img/default-book.jpg',
+                'https://via.placeholder.com/300x400?text=Book'
+            ];
+        };
+
+        const applyImageFallback = (imgEl, candidates) => {
+            let index = 0;
+            imgEl.src = candidates[index] || 'https://via.placeholder.com/300x400?text=Book';
+            imgEl.onerror = () => {
+                index += 1;
+                if (index < candidates.length) {
+                    imgEl.src = candidates[index];
+                } else {
+                    imgEl.onerror = null;
+                    imgEl.src = 'https://via.placeholder.com/300x400?text=Book';
+                }
+            };
         };
 
         let images = [];
@@ -535,7 +562,8 @@ function displayProductDetail(product) {
         }
 
         // set main image to first image
-        mainImage.src = images[0].url;
+        const firstName = images[0].filename || images[0].url;
+        applyImageFallback(mainImage, buildFallbackCandidates(firstName));
         mainImage.alt = escapeHtml(product.TenSP);
 
         // build thumbnails
@@ -548,12 +576,13 @@ function displayProductDetail(product) {
 
             visible.forEach((imgObj, idx) => {
                 const imgEl = document.createElement('img');
-                imgEl.src = imgObj.url;
+                const thumbName = imgObj.filename || imgObj.url;
+                applyImageFallback(imgEl, buildFallbackCandidates(thumbName));
                 imgEl.alt = escapeHtml(product.TenSP) + (idx === 0 ? ' - chính' : ` - ảnh ${idx+1}`);
                 if (idx === 0) imgEl.classList.add('active');
                 imgEl.addEventListener('click', () => {
                     // swap main image
-                    mainImage.src = imgObj.url;
+                    applyImageFallback(mainImage, buildFallbackCandidates(thumbName));
                     // update active class
                     thumbsContainer.querySelectorAll('img').forEach(i => i.classList.remove('active'));
                     imgEl.classList.add('active');

@@ -178,6 +178,47 @@ class ProductService {
     `, [id]);
 
         if (!product) throw new Error('Sản phẩm không tồn tại');
+
+        const [galleryRows] = await pool.query(
+            `
+            SELECT Id, FileName, SortOrder
+            FROM sanpham_anh
+            WHERE MaSP = ?
+            ORDER BY SortOrder ASC, Id ASC
+            `,
+            [id]
+        );
+
+        const images = [];
+        const seenFilenames = new Set();
+
+        if (product.HinhAnh) {
+            const mainName = String(product.HinhAnh).trim();
+            if (mainName) {
+                seenFilenames.add(mainName);
+                images.push({
+                    id: 0,
+                    filename: mainName,
+                    sortOrder: -1,
+                });
+            }
+        }
+
+        for (const row of galleryRows) {
+            const fileName = String(row.FileName || '').trim();
+            if (!fileName || seenFilenames.has(fileName)) {
+                continue;
+            }
+
+            seenFilenames.add(fileName);
+            images.push({
+                id: row.Id,
+                filename: fileName,
+                sortOrder: Number(row.SortOrder || 0),
+            });
+        }
+
+        product.images = images;
         return product;
     }
 
