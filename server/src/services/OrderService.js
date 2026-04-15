@@ -3,6 +3,7 @@ import logger from '../utils/logger.js';
 import { VNPay, ignoreLogger, ProductCode, VnpLocale, dateFormat } from 'vnpay';
 import { pointsFromOrderAmount, addLoyaltyPoints, subtractLoyaltyPoints, computeTier } from '../utils/loyalty.js';
 import { sendOrderConfirmationEmail } from '../utils/emailService.js';
+import MoMoPaymentService from './MoMoPaymentService.js';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -799,9 +800,6 @@ class OrderService {
 
         if (paymentMethod === 'MOMO') {
             try {
-                // Import MoMoPaymentService
-                const MoMoPaymentService = (await import('../services/MoMoPaymentService.js')).default;
-                
                 const paymentUrl = await MoMoPaymentService.createPaymentUrl(
                     orderResult.orderId,
                     orderResult.finalTotalAmount,

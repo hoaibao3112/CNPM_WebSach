@@ -21,11 +21,19 @@ class OrderController {
 
         } catch (error) {
             console.error('[CRITICAL] Order placement failed:', error);
+            // Log full error for debugging
+            logger.error('Order Error Details:', {
+                message: error.message,
+                code: error.code,
+                paymentMethod: req.body.paymentMethod,
+                stack: error.stack
+            });
+            
             // Return verbose error to frontend for debugging
             return res.status(500).json({
                 success: false,
                 message: error.message || 'Lỗi khi đặt hàng',
-                detail: error.stack, // Temp for debugging
+                detail: error.message, // For user visibility
                 sqlMessage: error.sqlMessage // MySQL specific
             });
         }
