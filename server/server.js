@@ -8,6 +8,7 @@ import { createServer } from 'http';
 import { WebSocketServer } from 'ws';
 import jwt from 'jsonwebtoken';
 import path from 'path';
+import fs from 'fs';
 import pool from './src/config/connectDatabase.js';
 import { initRoutes } from './src/routes/index.js';
 import errorHandler from './src/middlewares/errorHandler.js';
@@ -184,7 +185,54 @@ app.use(express.urlencoded({ extended: true }));
 app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
 
 // Serve product images from backend/product so they are reachable at /product-images/<file>
-app.use('/product-images', express.static(path.join(process.cwd(), 'backend', 'product')));
+const productImagesDir = path.join(process.cwd(), 'backend', 'product');
+let productImageIndex = new Map();
+
+const rebuildProductImageIndex = () => {
+  try {
+    const files = fs.readdirSync(productImagesDir, { withFileTypes: true });
+    const next = new Map();
+
+    for (const file of files) {
+      if (!file.isFile()) continue;
+      next.set(file.name.toLowerCase(), file.name);
+    }
+
+    productImageIndex = next;
+  } catch (error) {
+    console.warn('Could not build product image index:', error.message);
+    productImageIndex = new Map();
+  }
+};
+
+rebuildProductImageIndex();
+
+app.use('/product-images', (req, res, next) => {
+  const rawPath = decodeURIComponent(req.path || '/').replace(/^\/+/, '');
+  if (!rawPath) {
+    return next();
+  }
+
+  const safeName = path.basename(rawPath);
+  const exactPath = path.join(productImagesDir, safeName);
+  if (fs.existsSync(exactPath)) {
+    return res.sendFile(exactPath);
+  }
+
+  let actualName = productImageIndex.get(safeName.toLowerCase());
+  if (!actualName) {
+    rebuildProductImageIndex();
+    actualName = productImageIndex.get(safeName.toLowerCase());
+  }
+
+  if (actualName) {
+    return res.sendFile(path.join(productImagesDir, actualName));
+  }
+
+  return next();
+});
+
+app.use('/product-images', express.static(productImagesDir));
 
 app.use('/vnpay', createProxyMiddleware({
   target: 'https://sandbox.vnpayment.vn',
