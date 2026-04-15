@@ -3,7 +3,7 @@ import fs from 'fs';
 import path from 'path';
 import axios from 'axios';
 
-const EMAIL_CONNECTION_TIMEOUT_MS = Number(process.env.EMAIL_CONNECTION_TIMEOUT_MS || 10000);
+const EMAIL_CONNECTION_TIMEOUT_MS = Number(process.env.EMAIL_CONNECTION_TIMEOUT_MS || 5000); // 5s cho Render đỡ lag
 const EMAIL_SOCKET_TIMEOUT_MS = Number(process.env.EMAIL_SOCKET_TIMEOUT_MS || 15000);
 const EMAIL_MAX_RETRIES = Number(process.env.EMAIL_MAX_RETRIES || 2);
 const RESEND_API_URL = 'https://api.resend.com/emails';
@@ -221,10 +221,11 @@ export async function sendOTPEmail(email, otp) {
             </html>
         `;
 
+  const brandName = process.env.BRAND_NAME || 'BAO STORE';
   const mailOptions = {
-    from: process.env.EMAIL_USER,
+    from: `"${brandName}" <${process.env.EMAIL_USER}>`,
     to: email,
-    subject: 'Mã OTP để đặt lại mật khẩu',
+    subject: `[${brandName}] Mã OTP để đặt lại mật khẩu`,
     html: htmlContent
   };
 
@@ -257,10 +258,18 @@ export async function sendOTPEmail(email, otp) {
     return true;
   } catch (smtpError) {
     const smtpReason = smtpError?.message || 'Lỗi SMTP không xác định';
-    if (resendFailureReason) {
-      throw new Error(`Gửi email OTP thất bại: Resend lỗi (${resendFailureReason}) | SMTP lỗi (${smtpReason})`);
+    
+    // Nếu cả 2 đều lỗi, ném lỗi chi tiết nhất
+    let finalMessage = `Gửi email OTP thất bại. `;
+    if (resendFailureReason) finalMessage += `Resend lỗi: ${resendFailureReason}. `;
+    finalMessage += `SMTP lỗi: ${smtpReason}.`;
+    
+    // Gợi ý cho người dùng nếu lỗi timeout
+    if (smtpReason.includes('timeout') || smtpError?.code === 'ETIMEDOUT') {
+      finalMessage += ' (Gợi ý: Hãy đổi EMAIL_PORT sang 587 trong Dashboard Render)';
     }
-    throw new Error(`Gửi email OTP thất bại: SMTP lỗi (${smtpReason})`);
+
+    throw new Error(finalMessage);
   }
 }
 // Email xác nhận đơn hàng – giao diện đẹp, thân thiện Outlook/Gmail
