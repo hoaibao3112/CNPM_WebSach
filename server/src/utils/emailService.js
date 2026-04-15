@@ -2,6 +2,74 @@ import nodemailer from 'nodemailer';
 import fs from 'fs';
 import path from 'path';
 
+const EMAIL_CONNECTION_TIMEOUT_MS = Number(process.env.EMAIL_CONNECTION_TIMEOUT_MS || 10000);
+const EMAIL_SOCKET_TIMEOUT_MS = Number(process.env.EMAIL_SOCKET_TIMEOUT_MS || 15000);
+const EMAIL_MAX_RETRIES = Number(process.env.EMAIL_MAX_RETRIES || 2);
+
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+function buildTransportConfig(portOverride) {
+  const host = process.env.EMAIL_HOST || 'smtp.gmail.com';
+  const port = Number(portOverride || process.env.EMAIL_PORT || 587);
+  const secure = port === 465;
+
+  return {
+    host,
+    port,
+    secure,
+    requireTLS: !secure,
+    auth: {
+      user: process.env.EMAIL_USER,
+      pass: process.env.EMAIL_PASS
+    },
+    connectionTimeout: EMAIL_CONNECTION_TIMEOUT_MS,
+    greetingTimeout: EMAIL_CONNECTION_TIMEOUT_MS,
+    socketTimeout: EMAIL_SOCKET_TIMEOUT_MS,
+    tls: {
+      rejectUnauthorized: false
+    }
+  };
+}
+
+async function sendMailWithRetry(mailOptions) {
+  const primaryConfig = buildTransportConfig();
+  const fallbackConfig = primaryConfig.port === 465 ? null : buildTransportConfig(465);
+  const transportConfigs = fallbackConfig ? [primaryConfig, fallbackConfig] : [primaryConfig];
+
+  let lastError = null;
+
+  for (let cfgIndex = 0; cfgIndex < transportConfigs.length; cfgIndex += 1) {
+    const config = transportConfigs[cfgIndex];
+
+    for (let attempt = 1; attempt <= EMAIL_MAX_RETRIES; attempt += 1) {
+      try {
+        const transporter = nodemailer.createTransport(config);
+        return await transporter.sendMail(mailOptions);
+      } catch (error) {
+        lastError = error;
+        const canRetry = attempt < EMAIL_MAX_RETRIES;
+
+        console.error('❌ Lỗi gửi email (forgot-password):', {
+          message: error?.message,
+          code: error?.code,
+          response: error?.response,
+          responseCode: error?.responseCode,
+          host: config.host,
+          port: config.port,
+          attempt,
+          maxRetries: EMAIL_MAX_RETRIES
+        });
+
+        if (canRetry) {
+          await sleep(500 * attempt);
+        }
+      }
+    }
+  }
+
+  throw lastError;
+}
+
 export function generateOTP() {
     return Math.floor(100000 + Math.random() * 900000).toString();
 }
@@ -14,21 +82,7 @@ export async function sendOTPEmail(email, otp) {
             throw new Error('Email service chưa được cấu hình. Vui lòng liên hệ quản trị viên.');
         }
 
-        console.log(`📧 Cấu hình email: ${process.env.EMAIL_USER} @ ${process.env.EMAIL_HOST}:${process.env.EMAIL_PORT}`);
-
-        const transporter = nodemailer.createTransport({
-            host: process.env.EMAIL_HOST || 'smtp.gmail.com',
-            port: process.env.EMAIL_PORT || 587,
-            secure: false,
-            requireTLS: true,
-            auth: {
-                user: process.env.EMAIL_USER,
-                pass: process.env.EMAIL_PASS
-            },
-            tls: {
-                rejectUnauthorized: false
-            }
-        });
+    console.log(`📧 Cấu hình email: ${process.env.EMAIL_USER} @ ${process.env.EMAIL_HOST || 'smtp.gmail.com'}:${process.env.EMAIL_PORT || 587}`);
 
         // Mẫu HTML cải tiến cho email
         const htmlContent = `
@@ -141,18 +195,14 @@ export async function sendOTPEmail(email, otp) {
             html: htmlContent
         };
 
-        const info = await transporter.sendMail(mailOptions);
+        const info = await sendMailWithRetry(mailOptions);
         console.log('✅ Email gửi thành công (forgot-password):', info.response);
         return true;
     } catch (error) {
-        console.error('❌ Lỗi gửi email (forgot-password):', {
-            message: error.message,
-            code: error.code,
-            response: error.response,
-            responseCode: error.responseCode
-        });
-        // Throw error thay vì return false để frontend biết
-        throw new Error(`Gửi email OTP thất bại: ${error.message}`);
+        const reason = error?.code === 'ETIMEDOUT'
+          ? 'Không thể kết nối SMTP (timeout)'
+          : (error?.message || 'Lỗi không xác định');
+        throw new Error(`Gửi email OTP thất bại: ${reason}`);
     }
 }
 // Email xác nhận đơn hàng – giao diện đẹp, thân thiện Outlook/Gmail
