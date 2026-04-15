@@ -7,9 +7,14 @@ const EMAIL_CONNECTION_TIMEOUT_MS = Number(process.env.EMAIL_CONNECTION_TIMEOUT_
 const EMAIL_SOCKET_TIMEOUT_MS = Number(process.env.EMAIL_SOCKET_TIMEOUT_MS || 15000);
 const EMAIL_MAX_RETRIES = Number(process.env.EMAIL_MAX_RETRIES || 2);
 const RESEND_API_URL = 'https://api.resend.com/emails';
+const SENDGRID_API_URL = 'https://api.sendgrid.com/v3/mail/send';
 
 function hasResendConfig() {
   return Boolean(process.env.RESEND_API_KEY && (process.env.RESEND_FROM_EMAIL || process.env.EMAIL_USER));
+}
+
+function hasSendGridConfig() {
+  return Boolean(process.env.SENDGRID_API_KEY && process.env.SENDGRID_FROM_EMAIL);
 }
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -102,22 +107,46 @@ async function sendMailWithResend(mailOptions) {
   };
 }
 
+async function sendMailWithSendGrid(mailOptions) {
+  if (!hasSendGridConfig()) {
+    throw new Error('SendGrid chưa được cấu hình');
+  }
+
+  const brandName = process.env.BRAND_NAME || 'BAO STORE';
+  const payload = {
+    personalizations: [{ to: [{ email: mailOptions.to }] }],
+    from: { email: process.env.SENDGRID_FROM_EMAIL, name: brandName },
+    subject: mailOptions.subject,
+    content: [{ type: 'text/html', value: mailOptions.html }]
+  };
+
+  const response = await axios.post(SENDGRID_API_URL, payload, {
+    headers: {
+      Authorization: `Bearer ${process.env.SENDGRID_API_KEY}`,
+      'Content-Type': 'application/json'
+    },
+    timeout: EMAIL_SOCKET_TIMEOUT_MS
+  });
+
+  return {
+    response: `sendgrid:ok`
+  };
+}
+
 export function generateOTP() {
   return Math.floor(100000 + Math.random() * 900000).toString();
 }
 
 export async function sendOTPEmail(email, otp) {
   const resendConfigured = hasResendConfig();
+  const sendGridConfigured = hasSendGridConfig();
   const smtpConfigured = Boolean(process.env.EMAIL_USER && process.env.EMAIL_PASS);
 
-  // Cần ít nhất 1 provider để gửi mail
-  if (!resendConfigured && !smtpConfigured) {
-    throw new Error('Email service chưa được cấu hình. Cần SMTP hoặc Resend.');
+  if (!resendConfigured && !sendGridConfigured && !smtpConfigured) {
+    throw new Error('Email service chưa được cấu hình. Cần SendGrid, Resend hoặc SMTP.');
   }
 
-  console.log(`📧 Cấu hình email: ${process.env.EMAIL_USER} @ ${process.env.EMAIL_HOST || 'smtp.gmail.com'}:${process.env.EMAIL_PORT || 587}`);
-
-  // Mẫu HTML cải tiến cho email
+  // Tái sử dụng logic template cũ...
   const htmlContent = `
             <!DOCTYPE html>
             <html lang="vi">
@@ -125,78 +154,14 @@ export async function sendOTPEmail(email, otp) {
                 <meta charset="UTF-8">
                 <meta name="viewport" content="width=device-width, initial-scale=1.0">
                 <style>
-                    body {
-                        font-family: 'Arial', sans-serif;
-                        background-color: #f0f2f5;
-                        margin: 0;
-                        padding: 0;
-                        color: #333;
-                    }
-                    .container {
-                        max-width: 600px;
-                        margin: 40px auto;
-                        background-color: #ffffff;
-                        border-radius: 10px;
-                        overflow: hidden;
-                        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-                    }
-                    .header {
-                        background-color: #007bff;
-                        color: white;
-                        text-align: center;
-                        padding: 20px;
-                        border-bottom: 2px solid #0056b3;
-                    }
-                    .header img {
-                        max-width: 150px;
-                        margin-bottom: 10px;
-                    }
-                    .content {
-                        padding: 30px;
-                        text-align: center;
-                    }
-                    .otp-box {
-                        background-color: #e9ecef;
-                        padding: 20px;
-                        border-radius: 8px;
-                        display: inline-block;
-                        font-size: 28px;
-                        font-weight: bold;
-                        color: #dc3545;
-                        margin: 20px 0;
-                        letter-spacing: 2px;
-                        border: 2px dashed #dc3545;
-                    }
-                    .copy-btn {
-                        display: inline-block;
-                        margin-top: 10px;
-                        padding: 10px 20px;
-                        background-color: #007bff;
-                        color: white;
-                        text-decoration: none;
-                        border-radius: 5px;
-                        font-size: 14px;
-                    }
-                    .copy-btn:hover {
-                        background-color: #0056b3;
-                    }
-                    .footer {
-                        text-align: center;
-                        padding: 15px;
-                        background-color: #f8f9fa;
-                        color: #6c757d;
-                        font-size: 12px;
-                        border-top: 1px solid #dee2e6;
-                    }
-                    .footer a {
-                        color: #007bff;
-                        text-decoration: none;
-                    }
-                    @media (max-width: 480px) {
-                        .container { margin: 20px auto; }
-                        .content { padding: 15px; }
-                        .otp-box { font-size: 22px; padding: 15px; }
-                    }
+                    body { font-family: 'Arial', sans-serif; background-color: #f0f2f5; margin: 0; padding: 0; color: #333; }
+                    .container { max-width: 600px; margin: 40px auto; background-color: #ffffff; border-radius: 10px; overflow: hidden; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); }
+                    .header { background-color: #007bff; color: white; text-align: center; padding: 20px; border-bottom: 2px solid #0056b3; }
+                    .header img { max-width: 150px; margin-bottom: 10px; }
+                    .content { padding: 30px; text-align: center; }
+                    .otp-box { background-color: #e9ecef; padding: 20px; border-radius: 8px; display: inline-block; font-size: 28px; font-weight: bold; color: #dc3545; margin: 20px 0; letter-spacing: 2px; border: 2px dashed #dc3545; }
+                    .copy-btn { display: inline-block; margin-top: 10px; padding: 10px 20px; background-color: #007bff; color: white; text-decoration: none; border-radius: 5px; font-size: 14px; }
+                    .footer { text-align: center; padding: 15px; background-color: #f8f9fa; color: #6c757d; font-size: 12px; border-top: 1px solid #dee2e6; }
                 </style>
             </head>
             <body>
@@ -209,7 +174,6 @@ export async function sendOTPEmail(email, otp) {
                         <p>Xin chào, <strong>Bạn</strong>,</p>
                         <p>Cảm ơn bạn đã sử dụng hệ thống của chúng tôi! Dưới đây là mã OTP để đặt lại mật khẩu:</p>
                         <div class="otp-box">${otp}</div>
-                        <a href="#" class="copy-btn" onclick="navigator.clipboard.writeText('${otp}');alert('Đã sao chép OTP!');return false;">Sao chép mã</a>
                         <p>Mã này có hiệu lực trong <strong>5 phút</strong>. Vui lòng không chia sẻ mã này với bất kỳ ai.</p>
                         <p>Nếu bạn không yêu cầu mã này, hãy liên hệ với bộ phận hỗ trợ qua <a href="mailto:${process.env.EMAIL_USER}">email hỗ trợ</a>.</p>
                     </div>
@@ -229,40 +193,44 @@ export async function sendOTPEmail(email, otp) {
     html: htmlContent
   };
 
-  let resendFailureReason = '';
+  let errors = [];
 
-  // Ưu tiên Resend trước để tránh lỗi SMTP từ hạ tầng Render
+  // THỨ TỰ ƯU TIÊN GỬI:
+  // 1. Resend (Nhanh nhất, ưu tiên cho email chính của bạn)
   if (resendConfigured) {
     try {
-      const resendInfo = await sendMailWithResend(mailOptions);
-      console.log('✅ Email gửi thành công qua Resend:', resendInfo.response);
+      const info = await sendMailWithResend(mailOptions);
+      console.log('✅ OTP gửi qua Resend thành công');
       return true;
-    } catch (resendError) {
-      resendFailureReason = resendError?.response?.data?.message || resendError?.message || 'Lỗi Resend không xác định';
-      console.error('❌ Gửi mail qua Resend thất bại, sẽ thử SMTP:', {
-        message: resendError?.message,
-        response: resendError?.response?.data
-      });
-
-      // Không có SMTP thì trả lỗi ngay từ Resend
-      if (!smtpConfigured) {
-        throw new Error(`Gửi email OTP thất bại: Resend lỗi (${resendFailureReason})`);
-      }
+    } catch (e) {
+      errors.push(`Resend lỗi: ${e?.response?.data?.message || e.message}`);
     }
   }
 
-  // Fallback SMTP
-  try {
-    const info = await sendMailWithRetry(mailOptions);
-    console.log('✅ Email gửi thành công qua SMTP (fallback):', info.response);
-    return true;
-  } catch (smtpError) {
-    const smtpReason = smtpError?.message || 'Lỗi SMTP không xác định';
-    
-    // Nếu cả 2 đều lỗi, ném lỗi chi tiết nhất
-    let finalMessage = `Gửi email OTP thất bại. `;
-    if (resendFailureReason) finalMessage += `Resend lỗi: ${resendFailureReason}. `;
-    finalMessage += `SMTP lỗi: ${smtpReason}.`;
+  // 2. SendGrid (Cứu cánh cho gửi người lạ, không bị Render chặn)
+  if (sendGridConfigured) {
+    try {
+      const info = await sendMailWithSendGrid(mailOptions);
+      console.log('✅ OTP gửi qua SendGrid thành công');
+      return true;
+    } catch (e) {
+      errors.push(`SendGrid lỗi: ${e?.response?.data?.message || e.message}`);
+    }
+  }
+
+  // 3. SMTP (Dự phòng cuối cùng)
+  if (smtpConfigured) {
+    try {
+      const info = await sendMailWithRetry(mailOptions);
+      console.log('✅ OTP gửi qua SMTP thành công');
+      return true;
+    } catch (e) {
+      errors.push(`SMTP lỗi: ${e.message}`);
+    }
+  }
+
+  throw new Error(`Tất cả phương thức gửi mail đều thất bại: ${errors.join(' | ')}`);
+};
     
     // Gợi ý cho người dùng nếu lỗi timeout
     if (smtpReason.includes('timeout') || smtpError?.code === 'ETIMEDOUT') {
@@ -616,25 +584,43 @@ export async function sendOrderConfirmationEmail(email, order = {}) {
   ].filter(Boolean).join('\n');
 
   try {
-    const transporter = nodemailer.createTransport(buildTransportConfig());
-
-    const info = await transporter.sendMail({
-      from: `${brandName} <${process.env.EMAIL_USER}>`,
+    const brandName = process.env.BRAND_NAME || 'BAO STORE';
+    const mailOptions = {
+      from: `"${brandName}" <${process.env.EMAIL_USER}>`,
       to: email,
       subject: `Xác nhận đơn hàng #${orderId} – tổng ${fmt(grandTotal)}đ`,
       html,
       text,
       attachments: attachments.length ? attachments : undefined
-    });
+    };
 
-    console.log(`✅ Email xác nhận đơn hàng gửi thành công tới ${email}`, info.messageId || info.response);
+    // Ưu tiên các provider API (Resend/SendGrid) để tránh bị chặn trên Render
+    if (hasResendConfig()) {
+      try {
+        await sendMailWithResend(mailOptions);
+        console.log(`✅ Xác nhận đơn hàng gửi qua Resend thành công tới ${email}`);
+        return true;
+      } catch (e) {
+        console.warn('⚠️ Gửi xác nhận qua Resend lỗi, thử SendGrid/SMTP...');
+      }
+    }
+
+    if (hasSendGridConfig()) {
+      try {
+        await sendMailWithSendGrid(mailOptions);
+        console.log(`✅ Xác nhận đơn hàng gửi qua SendGrid thành công tới ${email}`);
+        return true;
+      } catch (e) {
+        console.warn('⚠️ Gửi xác nhận qua SendGrid lỗi, thử SMTP...');
+      }
+    }
+
+    // Cuối cùng mới là SMTP
+    const info = await sendMailWithRetry(mailOptions);
+    console.log(`✅ Xác nhận đơn hàng gửi qua SMTP thành công tới ${email}`, info.response);
     return true;
   } catch (err) {
-    console.error('❌ Lỗi gửi email xác nhận đơn hàng:', {
-      message: err?.message,
-      code: err?.code,
-      email: email
-    });
+    console.error('❌ Tất cả phương thức gửi xác nhận đơn hàng đều thất bại:', err.message);
     return false;
   }
 }
