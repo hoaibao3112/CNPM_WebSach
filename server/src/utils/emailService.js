@@ -8,13 +8,25 @@ export function generateOTP() {
 
 export async function sendOTPEmail(email, otp) {
     try {
+        // Kiểm tra config email
+        if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+            console.error('❌ EMAIL_USER hoặc EMAIL_PASS chưa được cấu hình trong .env');
+            throw new Error('Email service chưa được cấu hình. Vui lòng liên hệ quản trị viên.');
+        }
+
+        console.log(`📧 Cấu hình email: ${process.env.EMAIL_USER} @ ${process.env.EMAIL_HOST}:${process.env.EMAIL_PORT}`);
+
         const transporter = nodemailer.createTransport({
             host: process.env.EMAIL_HOST || 'smtp.gmail.com',
             port: process.env.EMAIL_PORT || 587,
             secure: false,
+            requireTLS: true,
             auth: {
                 user: process.env.EMAIL_USER,
                 pass: process.env.EMAIL_PASS
+            },
+            tls: {
+                rejectUnauthorized: false
             }
         });
 
@@ -130,16 +142,17 @@ export async function sendOTPEmail(email, otp) {
         };
 
         const info = await transporter.sendMail(mailOptions);
-        console.log('Email sent to người dùng lấy lại mật khẩu:', info.response);
+        console.log('✅ Email gửi thành công (forgot-password):', info.response);
         return true;
     } catch (error) {
-        console.error('Lỗi gửi email cho người dùng lấy lại mật khẩu:', {
+        console.error('❌ Lỗi gửi email (forgot-password):', {
             message: error.message,
             code: error.code,
             response: error.response,
             responseCode: error.responseCode
         });
-        return false;
+        // Throw error thay vì return false để frontend biết
+        throw new Error(`Gửi email OTP thất bại: ${error.message}`);
     }
 }
 // Email xác nhận đơn hàng – giao diện đẹp, thân thiện Outlook/Gmail
@@ -490,7 +503,14 @@ export async function sendOrderConfirmationEmail(email, order = {}) {
       host: process.env.EMAIL_HOST || 'smtp.gmail.com',
       port: Number(process.env.EMAIL_PORT || 587),
       secure: false,
-      auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS }
+      requireTLS: true,
+      auth: { 
+        user: process.env.EMAIL_USER, 
+        pass: process.env.EMAIL_PASS 
+      },
+      tls: {
+        rejectUnauthorized: false
+      }
     });
 
     const info = await transporter.sendMail({
@@ -502,10 +522,14 @@ export async function sendOrderConfirmationEmail(email, order = {}) {
       attachments: attachments.length ? attachments : undefined
     });
 
-    console.log(`Order confirmation sent to ${email}`, info.messageId || info.response);
+    console.log(`✅ Email xác nhận đơn hàng gửi thành công tới ${email}`, info.messageId || info.response);
     return true;
   } catch (err) {
-    console.error('Lỗi gửi email xác nhận đơn hàng:', err?.message || err);
+    console.error('❌ Lỗi gửi email xác nhận đơn hàng:', {
+      message: err?.message,
+      code: err?.code,
+      email: email
+    });
     return false;
   }
 }
