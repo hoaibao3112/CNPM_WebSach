@@ -3,10 +3,34 @@
 // NOTE: it's safe to expose CLIENT_ID on the frontend; do NOT expose client secret here.
 
 (function () {
-  // Get Google Client ID from API config (fetched from backend)
-  // NO hardcoded fallback - config must come from backend only
-  const getGoogleClientId = () => window.API_CONFIG?.GOOGLE_CLIENT_ID || '';
-  
+  // Wait for config to be fully loaded
+  const waitForConfig = (callback, maxRetries = 30) => {
+    let retries = 0;
+    const checkConfig = () => {
+      if (window.API_CONFIG?.GOOGLE_CLIENT_ID) {
+        console.log('✅ Google Client ID ready:', window.API_CONFIG.GOOGLE_CLIENT_ID.substring(0, 20) + '...');
+        callback();
+      } else if (retries < maxRetries) {
+        retries++;
+        setTimeout(checkConfig, 100);
+      } else {
+        console.warn('⚠️ Config not ready after timeout, using defaults');
+        callback();
+      }
+    };
+    checkConfig();
+  };
+
+  // Get Google Client ID from API config
+  const getGoogleClientId = () => {
+    const clientId = window.API_CONFIG?.GOOGLE_CLIENT_ID;
+    if (!clientId) {
+      console.warn('⚠️ GOOGLE_CLIENT_ID not found in config');
+      return '';
+    }
+    return clientId;
+  };
+
   // Use API_CONFIG to build auth endpoint
   const getServerGoogleAuthUrl = () => {
     if (window.API_CONFIG?.buildUrl) {
@@ -70,9 +94,7 @@
   }
 
   // Initialize Google button - wait for backend config to load
-  const initializeGoogleButton = (attempt = 0) => {
-    const maxAttempts = 20; // Try for up to 10 seconds (500ms * 20)
-    
+  const initializeGoogleButton = () => {
     if (!document.getElementById('googleSignIn')) {
       console.warn('⚠️ #googleSignIn element not found');
       return;
@@ -80,18 +102,12 @@
 
     const GOOGLE_CLIENT_ID = getGoogleClientId();
     
-    // Check if CLIENT_ID is properly loaded
     if (!GOOGLE_CLIENT_ID) {
-      if (attempt < maxAttempts) {
-        console.log(`⏳ Waiting for GOOGLE_CLIENT_ID from backend... (attempt ${attempt + 1}/${maxAttempts})`);
-        setTimeout(() => initializeGoogleButton(attempt + 1), 500);
-      } else {
-        console.error('❌ GOOGLE_CLIENT_ID not loaded after 10 seconds. Google Sign-In will not work.');
-      }
+      console.error('❌ GOOGLE_CLIENT_ID not available. Google Sign-In will not work.');
       return;
     }
 
-    console.log('✅ Initializing Google Sign-In with CLIENT_ID from backend');
+    console.log('✅ Initializing Google Sign-In with CLIENT_ID');
 
     // Initialize the Google Identity Services client
     try {
@@ -112,15 +128,18 @@
     }
   };
 
-  // Wait for DOM and Google API to be ready
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => {
-      // Small delay to ensure google.accounts.id is available
-      setTimeout(initializeGoogleButton, 100);
-    });
-  } else {
-    // Page already loaded
-    setTimeout(initializeGoogleButton, 100);
-  }
+  // Wait for DOM ready and config to be loaded
+  const initWhenReady = () => {
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', () => {
+        waitForConfig(initializeGoogleButton);
+      });
+    } else {
+      // Page already loaded
+      waitForConfig(initializeGoogleButton);
+    }
+  };
+
+  initWhenReady();
 })();
 

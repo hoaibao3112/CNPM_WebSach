@@ -30,6 +30,7 @@ router.post('/forgot-password/send-otp', AuthController.sendForgotOTP);
 router.post('/forgot-password/verify-otp', AuthController.verifyForgotOTP);
 router.post('/forgot-password/reset', AuthController.resetPassword);
 router.post('/auth/google', AuthController.googleAuth);
+router.post('/auth/facebook', AuthController.facebookAuth);
 router.post('/logout', authenticateToken, AuthController.logout);
 
 // Profile routes

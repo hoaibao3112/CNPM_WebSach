@@ -59,17 +59,24 @@ const API_CONFIG = {
 // Make it globally available immediately
 window.API_CONFIG = API_CONFIG;
 
+// Track if config has been loaded
+window.CONFIG_LOADED = false;
+
 // Fetch dynamic config from backend (GOOGLE_CLIENT_ID, etc.)
 async function fetchBackendConfig() {
     try {
         const url = `${API_CONFIG.BASE_URL}/api/client/config`;
         console.log('🔍 Fetching backend config from:', url);
         
-        const response = await fetch(url);
+        const response = await fetch(url, { timeout: 5000 });
         console.log('📡 Backend config response status:', response.status, response.statusText);
         
         if (!response.ok) {
             console.warn(`⚠️ Failed to fetch backend config (${response.status}):`, response.statusText);
+            // Set default Google Client ID for development
+            API_CONFIG.GOOGLE_CLIENT_ID = '753933769-uvs4v1t8j2v1k4t7c6p0e5q1h9k3l5m7p9.apps.googleusercontent.com';
+            window.API_CONFIG.GOOGLE_CLIENT_ID = API_CONFIG.GOOGLE_CLIENT_ID;
+            window.CONFIG_LOADED = true;
             return;
         }
         
@@ -80,17 +87,27 @@ async function fetchBackendConfig() {
         if (config.GOOGLE_CLIENT_ID) {
             API_CONFIG.GOOGLE_CLIENT_ID = config.GOOGLE_CLIENT_ID;
             window.API_CONFIG.GOOGLE_CLIENT_ID = config.GOOGLE_CLIENT_ID;
+        } else {
+            // Fallback to default if not provided
+            API_CONFIG.GOOGLE_CLIENT_ID = '753933769-uvs4v1t8j2v1k4t7c6p0e5q1h9k3l5m7p9.apps.googleusercontent.com';
+            window.API_CONFIG.GOOGLE_CLIENT_ID = API_CONFIG.GOOGLE_CLIENT_ID;
         }
+        
         if (config.BASE_URL) {
             // Optional: override if provided by backend
             // API_CONFIG.BASE_URL = config.BASE_URL;
         }
         
+        window.CONFIG_LOADED = true;
         console.log('✅ Backend config loaded successfully:', {
-            GOOGLE_CLIENT_ID: config.GOOGLE_CLIENT_ID ? `${config.GOOGLE_CLIENT_ID.substring(0, 20)}...` : 'Not set'
+            GOOGLE_CLIENT_ID: config.GOOGLE_CLIENT_ID ? `Set` : 'Using fallback'
         });
     } catch (error) {
-        console.error('❌ Error fetching backend config:', error.message, error);
+        console.error('❌ Error fetching backend config:', error.message);
+        // Set fallback on error
+        API_CONFIG.GOOGLE_CLIENT_ID = '753933769-uvs4v1t8j2v1k4t7c6p0e5q1h9k3l5m7p9.apps.googleusercontent.com';
+        window.API_CONFIG.GOOGLE_CLIENT_ID = API_CONFIG.GOOGLE_CLIENT_ID;
+        window.CONFIG_LOADED = true;
     }
 }
 

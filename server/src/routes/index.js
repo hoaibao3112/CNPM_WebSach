@@ -38,6 +38,7 @@ import couponRoutes from './couponRoutes.js';
 import recommendationRoutes from './recommendationRoutes.js';
 import refundRoutes from './refundRoutes.js';
 import chatbotProxy from './chatbotProxy.js';
+import momoPaymentRoutes from './momoPaymentRoutes.js';
 
 export const initRoutes = (app) => {
   // Root path - Server status
@@ -107,4 +108,5 @@ export const initRoutes = (app) => {
   app.use('/api/coupons', couponRoutes);
   app.use('/api/recommendation', recommendationRoutes);
   app.use('/api/chatbot', chatbotProxy);
+  app.use('/api/payments', momoPaymentRoutes);  // MoMo Payment Routes
 };

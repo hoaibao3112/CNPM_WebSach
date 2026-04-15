@@ -112,6 +112,26 @@ class AuthController {
         }
     }
 
+    async facebookAuth(req, res) {
+        try {
+            const { accessToken } = req.body;
+
+            if (!accessToken) {
+                return baseController.sendError(res, 'Thiếu Facebook access token', 400);
+            }
+
+            // Import here to avoid circular dependency
+            const FacebookAuthService = (await import('../services/FacebookAuthService.js')).default;
+            const result = await FacebookAuthService.facebookAuth(accessToken);
+            return baseController.sendSuccess(res, result, 'Đăng nhập Facebook thành công');
+
+        } catch (error) {
+            logger.error('Facebook Auth error:', error);
+            const statusCode = Number.isInteger(error?.statusCode) ? error.statusCode : 400;
+            return baseController.sendError(res, error.message || 'Lỗi xác thực Facebook', statusCode);
+        }
+    }
+
     async logout(req, res) {
         return baseController.sendSuccess(res, null, 'Đăng xuất thành công');
     }

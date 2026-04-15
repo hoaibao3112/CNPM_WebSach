@@ -37,7 +37,7 @@
 
       <div class="options">
         <label><input type="checkbox"> Remember me</label>
-        <a href="#">Forgot Password?</a>
+        <a href="#" onclick="document.getElementById('forgotPasswordModal').classList.add('active'); return false;">Forgot Password?</a>
       </div>
 
       <button type="submit" id="btnSubmit" class="login-btn">Login</button>
@@ -46,6 +46,11 @@
 
       <!-- Google Sign-in button -->
       <div id="googleSignIn" style="margin: 16px 0;"></div>
+
+      <!-- Facebook Login button -->
+      <button type="button" id="facebookLoginBtn" class="facebook-login-btn" style="width: 100%; padding: 12px; margin-top: 10px; background: #1877F2; color: white; border: none; border-radius: 5px; font-size: 16px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;">
+        <i class="fab fa-facebook"></i> Đăng nhập với Facebook
+      </button>
 
       <!-- small page footer removed in favor of shared footer -->
     </form>
@@ -96,6 +101,11 @@
   <!-- Google Identity Services -->
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <script src="js/google-auth.js"></script>
+  
+  <!-- Facebook SDK -->
+  <script async defer crossorigin="anonymous" src="https://connect.facebook.net/vi_VN/sdk.js#xfbml=1&version=v18.0" allowFullScreen="" allow="autoplay clipboard-write encrypted-media picture-in-picture toolbar-items-tracking"></script>
+  <script src="js/facebook-login.js"></script>
+  
   <script src="js/login.js"></script>
   <script src="js/loadHeader.js"></script>
 
