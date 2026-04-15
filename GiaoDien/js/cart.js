@@ -933,6 +933,9 @@ async function checkout() {
       if (formData.paymentMethod === 'VNPAY' && dataResponse.paymentUrl) {
         console.log('🔄 Redirecting to VNPay:', dataResponse.paymentUrl);
         window.location.href = dataResponse.paymentUrl;
+      } else if (formData.paymentMethod === 'MOMO' && dataResponse.paymentUrl) {
+        console.log('🔄 Redirecting to MoMo:', dataResponse.paymentUrl);
+        window.location.href = dataResponse.paymentUrl;
       } else if (formData.paymentMethod === 'COD') {
         // ✅ COD SUCCESS - REDIRECT với đầy đủ thông tin
         console.log('✅ COD Order successful:', dataResponse.orderId);

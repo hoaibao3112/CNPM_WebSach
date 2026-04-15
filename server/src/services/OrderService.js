@@ -797,7 +797,40 @@ class OrderService {
             };
         }
 
-        throw new Error('PhÆ°Æ¡ng thá»©c thanh toÃ¡n khÃ´ng há»£p lá»‡');
+        if (paymentMethod === 'MOMO') {
+            try {
+                // Import MoMoPaymentService
+                const MoMoPaymentService = (await import('../services/MoMoPaymentService.js')).default;
+                
+                const paymentUrl = await MoMoPaymentService.createPaymentUrl(
+                    orderResult.orderId,
+                    orderResult.finalTotalAmount,
+                    `Thanh toán đơn hàng #${orderResult.orderId}`,
+                    orderResult.customer.makh
+                );
+
+                return {
+                    responseType: 'raw',
+                    statusCode: 200,
+                    payload: {
+                        success: true,
+                        orderId: orderResult.orderId,
+                        paymentUrl,
+                        message: 'Đơn hàng đã tạo, chuyển hướng thanh toán MoMo',
+                        appliedTier: orderResult.userTier,
+                        discountAmount: orderResult.discountAmount,
+                        memberDiscountAmount: orderResult.memberDiscountAmount,
+                        shippingFee: orderResult.shippingFee,
+                        finalTotalAmount: orderResult.finalTotalAmount,
+                    },
+                };
+            } catch (error) {
+                logger.error('❌ MoMo Payment Error:', error);
+                throw new Error(error instanceof Error ? error.message : 'Lỗi tạo URL thanh toán MoMo');
+            }
+        }
+
+        throw new Error('Phương thức thanh toán không hợp lệ');
     }
 
     // ===== GET CUSTOMER ORDERS =====
