@@ -67,7 +67,16 @@ class MoMoPaymentService {
       logger.info('📱 MoMo Payment Request Created:', {
         orderId,
         amount,
-        requestId
+        requestId,
+        partnerCode: this.partnerCode,
+        paymentDataKeys: Object.keys(paymentData)
+      });
+
+      logger.info('🔐 MoMo Signature Debug:', {
+        signature: paymentData.signature,
+        partnerCode: paymentData.partnerCode,
+        accessKey: this.accessKey ? 'SET' : 'MISSING',
+        secretKey: this.secretKey ? 'SET' : 'MISSING'
       });
 
       // Call MoMo API
@@ -78,6 +87,11 @@ class MoMoPaymentService {
         timeout: 10000
       });
 
+      logger.info('✅ MoMo API Response:', {
+        status: response.status,
+        responseData: response.data
+      });
+
       if (response.data && response.data.payUrl) {
         return {
           paymentUrl: response.data.payUrl,
@@ -86,7 +100,7 @@ class MoMoPaymentService {
           momoOrderId: response.data.orderId
         };
       } else {
-        logger.error('❌ MoMo API Error:', response.data);
+        logger.error('❌ MoMo API Error (No payUrl):', response.data);
         throw new AppError(
           response.data?.message || 'Lỗi tạo yêu cầu thanh toán MoMo',
           response.data?.resultCode || 500
@@ -95,6 +109,10 @@ class MoMoPaymentService {
     } catch (error) {
       logger.error('❌ MoMo Payment URL Creation Error:', {
         message: error.message,
+        code: error.code,
+        status: error.response?.status,
+        statusText: error.response?.statusText,
+        responseData: error.response?.data,
         orderId,
         amount
       });
