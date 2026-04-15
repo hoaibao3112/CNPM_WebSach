@@ -157,15 +157,25 @@ document.addEventListener('DOMContentLoaded', function() {
     fbLoginBtn.addEventListener('click', handleFacebookLogin);
   }
 
-  // Kiểm tra đã đăng nhập chưa
-  FB.getLoginStatus(function(response) {
-    if (response.status === 'connected') {
-      const user = localStorage.getItem('user');
-      if (user) {
-        updateAccountDisplay(JSON.parse(user).tenkh);
-      }
+  // Check login status (wait for FB to be ready)
+  const checkFbLoginStatus = () => {
+    if (typeof FB !== 'undefined' && FB.getLoginStatus) {
+      FB.getLoginStatus(function(response) {
+        if (response.status === 'connected') {
+          const user = localStorage.getItem('user');
+          if (user) {
+            updateAccountDisplay(JSON.parse(user).tenkh);
+          }
+        }
+      });
+    } else if (attempt < 30) {
+      // Retry waiting for FB
+      setTimeout(checkFbLoginStatus, 100);
     }
-  });
+  };
+  
+  let attempt = 0;
+  checkFbLoginStatus();
 });
 
 // Update account display
