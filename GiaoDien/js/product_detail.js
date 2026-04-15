@@ -680,77 +680,24 @@ async function checkAndDisplayPromotions(productId) {
     
     try {
         const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || window.API_CONFIG.BASE_URL;
-        const response = await fetch(`${_apiBase}/api/khuyenmai?activeOnly=true`);
-        console.log('📡 Promotions API response status:', response.status);
+        const response = await fetch(`${_apiBase}/api/khuyenmai/product/${productId}`);
+        console.log('📡 Product Promotion API response status:', response.status);
         
         if (!response.ok) {
-            console.error('❌ Failed to fetch promotions:', response.status);
-            return;
-        }
-
-        const result = await response.json();
-        console.log('📦 Promotions data:', result);
-        
-        const promotions = result.data || result;
-        console.log('🎯 Found promotions:', promotions.length);
-        
-        if (!promotions || promotions.length === 0) {
-            console.log('⚠️ No active promotions found');
+            console.error('❌ Failed to fetch product promotions:', response.status);
             displayPromotions([]);
             return;
         }
 
-        const applicablePromotions = [];
-
-        for (const promotion of promotions) {
-            console.log('🔎 Checking promotion:', promotion.TenKM, 'ID:', promotion.MaKM);
-            
-            try {
-                const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || window.API_CONFIG.BASE_URL;
-                const detailResponse = await fetch(`${_apiBase}/api/khuyenmai/${promotion.MaKM}`);
-                
-                if (!detailResponse.ok) {
-                    console.warn('⚠️ Failed to fetch promotion detail:', promotion.MaKM);
-                    continue;
-                }
-
-                const promotionDetail = await detailResponse.json();
-                console.log('📋 Promotion detail:', promotionDetail);
-                
-                let isApplicable = false;
-                
-                if (!promotionDetail.SanPhamApDung || promotionDetail.SanPhamApDung.length === 0) {
-                    console.log('✅ Promotion applies to all products');
-                    isApplicable = true;
-                } else {
-                    const productInList = promotionDetail.SanPhamApDung.some(p => {
-                        console.log('🔍 Comparing:', p.MaSP, 'with', productId);
-                        return p.MaSP == productId;
-                    });
-                    
-                    if (productInList) {
-                        console.log('✅ Product found in promotion list');
-                        isApplicable = true;
-                    } else {
-                        console.log('❌ Product not in promotion list');
-                    }
-                }
-
-                if (isApplicable) {
-                    console.log('🎉 Adding applicable promotion:', promotion.TenKM);
-                    applicablePromotions.push(promotionDetail);
-                }
-                
-            } catch (error) {
-                console.error('❌ Error checking promotion:', promotion.MaKM, error);
-            }
-        }
-
-        console.log('🎊 Total applicable promotions:', applicablePromotions.length);
-        displayPromotions(applicablePromotions);
+        const data = await response.json();
+        const promotions = data.data || [];
+        console.log('🎯 Found applicable promotions:', promotions.length);
+        
+        displayPromotions(promotions);
 
     } catch (error) {
         console.error('❌ Error in checkAndDisplayPromotions:', error);
+        displayPromotions([]);
     }
 }
 

@@ -6,6 +6,7 @@ const router = express.Router();
 
 router.get('/', PromotionController.getAllPromotions);
 router.get('/active-products', PromotionController.getActiveProducts);
+router.get('/product/:masp', PromotionController.getPromotionsByProduct);
 router.get('/my-promotions', authenticateToken, PromotionController.getMyCoupons);
 router.get('/:makm', PromotionController.getPromotionById);
 

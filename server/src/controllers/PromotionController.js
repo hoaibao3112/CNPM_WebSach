@@ -78,6 +78,16 @@ class PromotionController {
             return baseController.sendError(res, 'Lỗi khi lấy sản phẩm khuyến mãi', 500, error.message);
         }
     }
+
+    async getPromotionsByProduct(req, res) {
+        try {
+            const masp = req.params.masp;
+            const promotions = await PromotionService.getPromotionsByProductId(masp);
+            return baseController.sendSuccess(res, promotions);
+        } catch (error) {
+            return baseController.sendError(res, 'Lỗi khi lấy khuyến mãi của sản phẩm', 500, error.message);
+        }
+    }
 }
 
 export default new PromotionController();

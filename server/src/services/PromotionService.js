@@ -235,6 +235,20 @@ class PromotionService {
     `);
         return products;
     }
+
+    async getPromotionsByProductId(masp) {
+        const [promotions] = await pool.query(`
+            SELECT km.*, ct.GiaTriGiam, ct.GiaTriDonToiThieu, ct.GiamToiDa, ct.SoLuongToiThieu
+            FROM khuyen_mai km
+            JOIN sp_khuyen_mai spkm ON km.MaKM = spkm.MaKM
+            JOIN ct_khuyen_mai ct ON km.MaKM = ct.MaKM
+            WHERE spkm.MaSP = ?
+              AND km.NgayBatDau <= NOW() AND km.NgayKetThuc >= NOW()
+              AND CAST(km.TrangThai AS UNSIGNED) = 1
+        `, [masp]);
+        return promotions;
+    }
+}
 }
 
 export default new PromotionService();
