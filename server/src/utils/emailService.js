@@ -163,6 +163,7 @@ export async function sendOTPEmail(email, otp) {
   }
 
   // Tái sử dụng logic template cũ...
+  const brandName = process.env.BRAND_NAME || 'BAO STORE';
   const htmlContent = `
     <div style="font-family: sans-serif; max-width: 500px; margin: auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
       <h2 style="color: #007bff; text-align: center;">Mã Xác Thực OTP</h2>
@@ -176,8 +177,6 @@ export async function sendOTPEmail(email, otp) {
       <p style="font-size: 11px; color: #999; text-align: center;">Đây là email tự động, vui lòng không phản hồi.</p>
     </div>
   `;
-
-  const brandName = process.env.BRAND_NAME || 'BAO STORE';
   const mailOptions = {
     from: `"${brandName}" <${process.env.EMAIL_USER}>`,
     to: email,
