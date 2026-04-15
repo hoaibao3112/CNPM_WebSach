@@ -20,7 +20,7 @@ class PromotionService {
         const params = [searchTerm];
 
         if (activeOnly === 'true' || activeOnly === true) {
-            whereClause += ` AND k.NgayBatDau <= NOW() AND k.NgayKetThuc >= NOW() AND k.TrangThai = 1`;
+            whereClause += ` AND k.NgayBatDau <= NOW() AND k.NgayKetThuc >= NOW() AND CAST(k.TrangThai AS UNSIGNED) = 1`;
         }
 
         if (loaiKM) {
@@ -217,13 +217,21 @@ class PromotionService {
     async getActiveProducts() {
         // Return products currently in active promotions
         const [products] = await pool.query(`
-      SELECT DISTINCT s.*, km.TenKM, km.LoaiKM, km.NgayKetThuc, ct.GiaTriGiam
+      SELECT DISTINCT s.MaSP, s.TenSP, s.HinhAnh, s.DonGia, s.SoLuong, s.MaTG, s.NamXB,
+             km.MaKM, km.TenKM, km.LoaiKM, km.NgayKetThuc,
+             ct.GiaTriGiam, ct.GiaTriDonToiThieu, ct.GiamToiDa,
+             tg.TenTG AS TacGia
       FROM sanpham s
       JOIN sp_khuyen_mai spkm ON s.MaSP = spkm.MaSP
       JOIN khuyen_mai km ON spkm.MaKM = km.MaKM
       JOIN ct_khuyen_mai ct ON km.MaKM = ct.MaKM
-      WHERE km.NgayBatDau <= NOW() AND km.NgayKetThuc >= NOW() 
-        AND km.TrangThai = 1
+      LEFT JOIN tacgia tg ON s.MaTG = tg.MaTG
+      WHERE km.NgayBatDau <= NOW() AND km.NgayKetThuc >= NOW()
+        AND CAST(km.TrangThai AS UNSIGNED) = 1
+        AND CAST(s.TinhTrang AS UNSIGNED) = 1
+        AND s.SoLuong > 0
+      ORDER BY km.NgayKetThuc ASC
+      LIMIT 20
     `);
         return products;
     }

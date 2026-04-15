@@ -89,7 +89,7 @@ class ProductService {
             FROM sanpham sp
             LEFT JOIN nhacungcap ncc ON sp.MaNCC = ncc.MaNCC
             LEFT JOIN theloai tl ON sp.MaTL = tl.MaTL
-            WHERE sp.SoLuong <= sp.MinSoLuong AND sp.TinhTrang = 1
+            WHERE sp.SoLuong <= sp.MinSoLuong AND CAST(sp.TinhTrang AS UNSIGNED) = 1
         `);
         return products;
     }
@@ -130,7 +130,7 @@ class ProductService {
             FROM sanpham sp
             LEFT JOIN nhacungcap ncc ON sp.MaNCC = ncc.MaNCC
             LEFT JOIN theloai tl ON sp.MaTL = tl.MaTL
-            WHERE sp.TinhTrang = 1
+            WHERE CAST(sp.TinhTrang AS UNSIGNED) = 1
             ORDER BY ${orderBy}
         `;
 
@@ -144,7 +144,7 @@ class ProductService {
             FROM sanpham sp
             LEFT JOIN nhacungcap ncc ON sp.MaNCC = ncc.MaNCC
             LEFT JOIN theloai tl ON sp.MaTL = tl.MaTL
-            WHERE sp.MaTL = ? AND sp.TinhTrang = 1
+            WHERE sp.MaTL = ? AND CAST(sp.TinhTrang AS UNSIGNED) = 1
             ORDER BY sp.MaSP DESC
         `, [categoryId]);
         return products;
