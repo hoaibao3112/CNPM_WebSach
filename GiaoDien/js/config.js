@@ -46,8 +46,9 @@ const API_CONFIG = {
         return 'http://127.0.0.1:8002';
     })(),
 
-    // Google Client ID - will be set after fetching from backend
+    // Google & Facebook Client IDs - will be set after fetching from backend
     GOOGLE_CLIENT_ID: '',
+    FACEBOOK_CLIENT_ID: '',
 
     // Helper method to build full URL
     buildUrl: function (endpoint) {
@@ -93,6 +94,15 @@ async function fetchBackendConfig() {
             window.API_CONFIG.GOOGLE_CLIENT_ID = API_CONFIG.GOOGLE_CLIENT_ID;
         }
         
+        if (config.FACEBOOK_CLIENT_ID) {
+            API_CONFIG.FACEBOOK_CLIENT_ID = config.FACEBOOK_CLIENT_ID;
+            window.API_CONFIG.FACEBOOK_CLIENT_ID = config.FACEBOOK_CLIENT_ID;
+        } else {
+            // Fallback for development
+            API_CONFIG.FACEBOOK_CLIENT_ID = '904742255223792';
+            window.API_CONFIG.FACEBOOK_CLIENT_ID = API_CONFIG.FACEBOOK_CLIENT_ID;
+        }
+        
         if (config.BASE_URL) {
             // Optional: override if provided by backend
             // API_CONFIG.BASE_URL = config.BASE_URL;
@@ -100,13 +110,16 @@ async function fetchBackendConfig() {
         
         window.CONFIG_LOADED = true;
         console.log('✅ Backend config loaded successfully:', {
-            GOOGLE_CLIENT_ID: config.GOOGLE_CLIENT_ID ? `Set` : 'Using fallback'
+            GOOGLE_CLIENT_ID: config.GOOGLE_CLIENT_ID ? `Set` : 'Using fallback',
+            FACEBOOK_CLIENT_ID: config.FACEBOOK_CLIENT_ID ? `Set` : 'Using fallback'
         });
     } catch (error) {
         console.error('❌ Error fetching backend config:', error.message);
         // Set fallback on error
         API_CONFIG.GOOGLE_CLIENT_ID = '753933769-uvs4v1t8j2v1k4t7c6p0e5q1h9k3l5m7p9.apps.googleusercontent.com';
         window.API_CONFIG.GOOGLE_CLIENT_ID = API_CONFIG.GOOGLE_CLIENT_ID;
+        API_CONFIG.FACEBOOK_CLIENT_ID = '904742255223792';
+        window.API_CONFIG.FACEBOOK_CLIENT_ID = API_CONFIG.FACEBOOK_CLIENT_ID;
         window.CONFIG_LOADED = true;
     }
 }

@@ -11,12 +11,15 @@ const router = express.Router();
 // Public config endpoint (no auth required) - for frontend to get environment config
 router.get('/config', (req, res) => {
   const googleClientId = process.env.GOOGLE_CLIENT_ID || '';
+  const facebookClientId = process.env.FACEBOOK_CLIENT_ID || '';
   
   console.log('[API] GET /api/client/config');
   console.log('  GOOGLE_CLIENT_ID from env:', googleClientId ? 'SET' : 'NOT SET');
+  console.log('  FACEBOOK_CLIENT_ID from env:', facebookClientId ? 'SET' : 'NOT SET');
   
   res.json({
     GOOGLE_CLIENT_ID: googleClientId,
+    FACEBOOK_CLIENT_ID: facebookClientId,
     BASE_URL: process.env.BASE_URL || '',
   });
 });

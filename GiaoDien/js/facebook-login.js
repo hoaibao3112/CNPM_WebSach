@@ -10,14 +10,15 @@ const isFacebookAvailable = isHttps || (window.location.protocol === 'http:' && 
 // Facebook SDK Initialize
 window.fbAsyncInit = function() {
   try {
+    const facebookAppId = window.API_CONFIG?.FACEBOOK_CLIENT_ID || '904742255223792';
     FB.init({
-      appId: '904742255223792',
+      appId: facebookAppId,
       cookie: true,
       xfbml: true,
       version: 'v18.0'
     });
 
-    console.log('✅ Facebook SDK initialized');
+    console.log('✅ Facebook SDK initialized with App ID:', facebookAppId.substring(0, 10) + '...');
     FB.AppEvents.logPageView();
   } catch (error) {
     console.error('❌ Facebook init error:', error);
@@ -30,12 +31,24 @@ function loadFacebookSDK() {
     return; // SDK already loaded
   }
 
-  const script = document.createElement('script');
-  script.id = 'facebook-jssdk';
-  script.src = 'https://connect.facebook.net/vi_VN/sdk.js#xfbml=1&version=v18.0';
-  script.async = true;
-  script.defer = true;
-  document.body.appendChild(script);
+  // Wait for config to load
+  const waitForConfig = (attempt = 0) => {
+    if (window.API_CONFIG?.FACEBOOK_CLIENT_ID && document.body) {
+      const script = document.createElement('script');
+      script.id = 'facebook-jssdk';
+      script.src = 'https://connect.facebook.net/vi_VN/sdk.js#xfbml=1&version=v18.0';
+      script.async = true;
+      script.defer = true;
+      document.body.appendChild(script);
+      console.log('✅ Facebook SDK loaded');
+    } else if (attempt < 20) {
+      setTimeout(() => waitForConfig(attempt + 1), 100);
+    } else {
+      console.warn('⚠️ Facebook SDK load timeout');
+    }
+  };
+  
+  waitForConfig();
 }
 
 // Load SDK on page ready
