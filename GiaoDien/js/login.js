@@ -78,7 +78,7 @@ function setupForgotPassword() {
     if (forgotPasswordLink) {
         forgotPasswordLink.addEventListener('click', function(e) {
             e.preventDefault();
-            document.getElementById('forgotPasswordModal').style.display = 'block';
+            document.getElementById('forgotPasswordModal').classList.add('active');
         });
     }
 
@@ -86,10 +86,19 @@ function setupForgotPassword() {
     const closeModal = document.querySelector('.close-modal');
     if (closeModal) {
         closeModal.addEventListener('click', function() {
-            document.getElementById('forgotPasswordModal').style.display = 'none';
+            document.getElementById('forgotPasswordModal').classList.remove('active');
             resetForgotPasswordForm();
         });
     }
+
+    // Đóng modal khi click ngoài modal-content
+    window.addEventListener('click', function(e) {
+        const modal = document.getElementById('forgotPasswordModal');
+        if (e.target === modal) {
+            modal.classList.remove('active');
+            resetForgotPasswordForm();
+        }
+    });
 
     // Gửi OTP
     const sendOtpBtn = document.getElementById('sendOtpBtn');
@@ -263,7 +272,7 @@ async function handleResetPassword() {
             sessionStorage.removeItem('resetToken');
             
             setTimeout(() => {
-                document.getElementById('forgotPasswordModal').style.display = 'none';
+                document.getElementById('forgotPasswordModal').classList.remove('active');
                 resetForgotPasswordForm();
                 window.location.href = 'login.html';
             }, 2000);
