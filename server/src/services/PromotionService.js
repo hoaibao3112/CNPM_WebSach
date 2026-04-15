@@ -249,6 +249,5 @@ class PromotionService {
         return promotions;
     }
 }
-}
 
 export default new PromotionService();
