@@ -165,22 +165,30 @@ export async function sendOTPEmail(email, otp) {
   // Tái sử dụng logic template cũ...
   const brandName = process.env.BRAND_NAME || 'BAO STORE';
   const htmlContent = `
-    <div style="font-family: sans-serif; max-width: 500px; margin: auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
-      <h2 style="color: #007bff; text-align: center;">Mã Xác Thực OTP</h2>
-      <p>Xin chào,</p>
-      <p>Bạn đang thực hiện yêu cầu đặt lại mật khẩu tại <strong>${brandName}</strong>.</p>
-      <div style="background: #f8f9fa; padding: 15px; text-align: center; border-radius: 5px; margin: 20px 0;">
-        <span style="font-size: 32px; font-weight: bold; letter-spacing: 5px; color: #dc3545;">${otp}</span>
+    <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 550px; margin: 40px auto; padding: 30px; border: 1px solid #e1e4e8; border-radius: 12px; background-color: #ffffff; color: #24292e;">
+      <div style="text-align: center; margin-bottom: 25px;">
+        <h1 style="color: #0366d6; font-size: 24px; margin: 0;">${brandName} Support</h1>
       </div>
-      <p style="font-size: 13px; color: #666;">Mã này có hiệu lực trong 5 phút. Vui lòng không gửi mã này cho bất kỳ ai.</p>
-      <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;">
-      <p style="font-size: 11px; color: #999; text-align: center;">Đây là email tự động, vui lòng không phản hồi.</p>
+      <p style="font-size: 16px; line-height: 1.6;">Xin chào,</p>
+      <p style="font-size: 16px; line-height: 1.6;">Chúng tôi đã nhận được yêu cầu cung cấp mã xác thực cho tài khoản của bạn. Vui lòng sử dụng mã dưới đây để tiếp tục:</p>
+      
+      <div style="background-color: #f6f8fa; border: 1px solid #d1d5da; padding: 20px; text-align: center; border-radius: 8px; margin: 25px 0;">
+        <div style="font-size: 12px; color: #586069; margin-bottom: 8px; text-transform: uppercase; font-weight: bold;">Mã xác thực của bạn</div>
+        <span style="font-size: 36px; font-weight: bold; letter-spacing: 6px; color: #24292e;">${otp}</span>
+      </div>
+      
+      <p style="font-size: 14px; color: #586069; line-height: 1.6;">Mã này sẽ hết hạn sau <strong>5 phút</strong>. Vì lý do bảo mật, tuyệt đối không chia sẻ mã này với bất kỳ ai, kể cả nhân viên của ${brandName}.</p>
+      
+      <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e1e4e8; font-size: 12px; color: #586069; text-align: center;">
+        <p>Cảm ơn bạn đã tin tưởng sử dụng dịch vụ của chúng tôi.</p>
+        <p>© ${new Date().getFullYear()} ${brandName}. Trân trọng.</p>
+      </div>
     </div>
   `;
   const mailOptions = {
-    from: `"${brandName}" <${process.env.EMAIL_USER}>`,
+    from: `"${brandName} Security" <${process.env.SENDGRID_FROM_EMAIL}>`,
     to: email,
-    subject: `[${brandName}] Mã OTP để đặt lại mật khẩu`,
+    subject: `🔐 ${otp} là mã xác thực tài khoản ${brandName} của bạn`,
     html: htmlContent
   };
 
