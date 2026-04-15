@@ -1,10 +1,16 @@
 import nodemailer from 'nodemailer';
 import fs from 'fs';
 import path from 'path';
+import axios from 'axios';
 
 const EMAIL_CONNECTION_TIMEOUT_MS = Number(process.env.EMAIL_CONNECTION_TIMEOUT_MS || 10000);
 const EMAIL_SOCKET_TIMEOUT_MS = Number(process.env.EMAIL_SOCKET_TIMEOUT_MS || 15000);
 const EMAIL_MAX_RETRIES = Number(process.env.EMAIL_MAX_RETRIES || 2);
+const RESEND_API_URL = 'https://api.resend.com/emails';
+
+function hasResendConfig() {
+  return Boolean(process.env.RESEND_API_KEY && (process.env.RESEND_FROM_EMAIL || process.env.EMAIL_USER));
+}
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -70,22 +76,47 @@ async function sendMailWithRetry(mailOptions) {
   throw lastError;
 }
 
+async function sendMailWithResend(mailOptions) {
+  if (!hasResendConfig()) {
+    throw new Error('Resend chưa được cấu hình');
+  }
+
+  const from = process.env.RESEND_FROM_EMAIL || process.env.EMAIL_USER;
+  const payload = {
+    from,
+    to: [mailOptions.to],
+    subject: mailOptions.subject,
+    html: mailOptions.html
+  };
+
+  const response = await axios.post(RESEND_API_URL, payload, {
+    headers: {
+      Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
+      'Content-Type': 'application/json'
+    },
+    timeout: EMAIL_SOCKET_TIMEOUT_MS
+  });
+
+  return {
+    response: `resend:${response.data?.id || 'ok'}`
+  };
+}
+
 export function generateOTP() {
     return Math.floor(100000 + Math.random() * 900000).toString();
 }
 
 export async function sendOTPEmail(email, otp) {
-    try {
-        // Kiểm tra config email
-        if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
-            console.error('❌ EMAIL_USER hoặc EMAIL_PASS chưa được cấu hình trong .env');
-            throw new Error('Email service chưa được cấu hình. Vui lòng liên hệ quản trị viên.');
-        }
+  // Kiểm tra config email
+  if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+    console.error('❌ EMAIL_USER hoặc EMAIL_PASS chưa được cấu hình trong .env');
+    throw new Error('Email service chưa được cấu hình. Vui lòng liên hệ quản trị viên.');
+  }
 
-    console.log(`📧 Cấu hình email: ${process.env.EMAIL_USER} @ ${process.env.EMAIL_HOST || 'smtp.gmail.com'}:${process.env.EMAIL_PORT || 587}`);
+  console.log(`📧 Cấu hình email: ${process.env.EMAIL_USER} @ ${process.env.EMAIL_HOST || 'smtp.gmail.com'}:${process.env.EMAIL_PORT || 587}`);
 
-        // Mẫu HTML cải tiến cho email
-        const htmlContent = `
+  // Mẫu HTML cải tiến cho email
+  const htmlContent = `
             <!DOCTYPE html>
             <html lang="vi">
             <head>
@@ -188,20 +219,34 @@ export async function sendOTPEmail(email, otp) {
             </html>
         `;
 
-        const mailOptions = {
-            from: process.env.EMAIL_USER,
-            to: email,
-            subject: 'Mã OTP để đặt lại mật khẩu',
-            html: htmlContent
-        };
+    const mailOptions = {
+        from: process.env.EMAIL_USER,
+        to: email,
+        subject: 'Mã OTP để đặt lại mật khẩu',
+        html: htmlContent
+    };
 
+    try {
         const info = await sendMailWithRetry(mailOptions);
         console.log('✅ Email gửi thành công (forgot-password):', info.response);
         return true;
-    } catch (error) {
-        const reason = error?.code === 'ETIMEDOUT'
+    } catch (smtpError) {
+        if (hasResendConfig()) {
+          try {
+            const resendInfo = await sendMailWithResend(mailOptions);
+            console.log('✅ Email gửi thành công qua Resend (fallback):', resendInfo.response);
+            return true;
+          } catch (resendError) {
+            console.error('❌ Fallback Resend cũng thất bại:', {
+              message: resendError?.message,
+              response: resendError?.response?.data
+            });
+          }
+        }
+
+        const reason = smtpError?.code === 'ETIMEDOUT'
           ? 'Không thể kết nối SMTP (timeout)'
-          : (error?.message || 'Lỗi không xác định');
+          : (smtpError?.message || 'Lỗi không xác định');
         throw new Error(`Gửi email OTP thất bại: ${reason}`);
     }
 }
