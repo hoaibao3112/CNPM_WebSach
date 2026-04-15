@@ -61,6 +61,14 @@ class MoMoPaymentService {
         signature: '' // Will be set below
       };
 
+      logger.info('🛠️ MoMo Request Data assembled, ready for signature:', {
+        partnerCode: this.partnerCode,
+        amount: Math.round(amount),
+        orderId: String(orderId),
+        accessKey: this.accessKey ? 'SET' : 'MISSING',
+        secretKey: this.secretKey ? 'SET' : 'MISSING'
+      });
+
       // Generate signature
       paymentData.signature = this.generateSignature(paymentData);
 
@@ -107,6 +115,11 @@ class MoMoPaymentService {
         );
       }
     } catch (error) {
+      logger.error('🔴 [CRITICAL] MoMo API Call FAILED - Entering catch block');
+      logger.error('Error type:', error.constructor.name);
+      logger.error('Error message:', error.message);
+      logger.error('Error response status:', error.response?.status);
+      logger.error('Error response data:', error.response?.data);
       logger.error('❌ MoMo Payment URL Creation Error:', {
         message: error.message,
         code: error.code,
