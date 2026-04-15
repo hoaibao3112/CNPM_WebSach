@@ -39,8 +39,8 @@ function buildTransportConfig(portOverride) {
 
 async function sendMailWithRetry(mailOptions) {
   const primaryConfig = buildTransportConfig();
-  const fallbackConfig = primaryConfig.port === 465 ? null : buildTransportConfig(465);
-  const transportConfigs = fallbackConfig ? [primaryConfig, fallbackConfig] : [primaryConfig];
+  const fallbackConfig = primaryConfig.port === 465 ? buildTransportConfig(587) : buildTransportConfig(465);
+  const transportConfigs = [primaryConfig, fallbackConfig];
 
   let lastError = null;
 
@@ -601,19 +601,7 @@ export async function sendOrderConfirmationEmail(email, order = {}) {
   ].filter(Boolean).join('\n');
 
   try {
-    const transporter = nodemailer.createTransport({
-      host: process.env.EMAIL_HOST || 'smtp.gmail.com',
-      port: Number(process.env.EMAIL_PORT || 587),
-      secure: false,
-      requireTLS: true,
-      auth: { 
-        user: process.env.EMAIL_USER, 
-        pass: process.env.EMAIL_PASS 
-      },
-      tls: {
-        rejectUnauthorized: false
-      }
-    });
+    const transporter = nodemailer.createTransport(buildTransportConfig());
 
     const info = await transporter.sendMail({
       from: `${brandName} <${process.env.EMAIL_USER}>`,
