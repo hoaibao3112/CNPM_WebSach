@@ -22,7 +22,7 @@ class OrderController {
         } catch (error) {
             console.error('[CRITICAL] Order placement failed:', error);
             // Log full error for debugging
-            logger.error('Order Error Details:', {
+            console.error('Order Error Details:', {
                 message: error.message,
                 code: error.code,
                 paymentMethod: req.body.paymentMethod,
