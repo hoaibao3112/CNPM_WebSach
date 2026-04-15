@@ -10,6 +10,7 @@ const ForgotPassword = () => {
   const [otp, setOtp] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [otpToken, setOtpToken] = useState('');
   const [resetToken, setResetToken] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
@@ -20,6 +21,7 @@ const ForgotPassword = () => {
     try {
       const response = await api.post('/forgot-password/send-otp', { email });
       toast.success(response.data.message);
+      setOtpToken(response.data?.data?.token || '');
       setStep(2);
     } catch (error) {
       toast.error(error.response?.data?.error || 'Lỗi khi gửi OTP');
@@ -32,9 +34,9 @@ const ForgotPassword = () => {
     e.preventDefault();
     setLoading(true);
     try {
-      const response = await api.post('/forgot-password/verify-otp', { email, otp });
+      const response = await api.post('/forgot-password/verify-otp', { email, otp, token: otpToken });
       toast.success(response.data.message);
-      setResetToken(response.data.resetToken);
+      setResetToken(response.data?.data?.resetToken || '');
       setStep(3);
     } catch (error) {
       toast.error(error.response?.data?.error || 'Lỗi khi xác thực OTP');
@@ -53,10 +55,10 @@ const ForgotPassword = () => {
 
     setLoading(true);
     try {
-      const response = await api.post('/forgot-password/reset-password', {
+      const response = await api.post('/forgot-password/reset', {
         email,
         resetToken,
-        newPassword
+        matkhau: newPassword
       });
       toast.success(response.data.message);
       navigate('/admin/login');

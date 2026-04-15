@@ -29,6 +29,7 @@ const Login = () => {
   const [forgotVisible, setForgotVisible] = useState(false);
   const [forgotStep, setForgotStep] = useState(1);
   const [forgotEmail, setForgotEmail] = useState('');
+  const [forgotOtpToken, setForgotOtpToken] = useState('');
   const [resetToken, setResetToken] = useState('');
   const [forgotLoading, setForgotLoading] = useState(false);
 
@@ -90,6 +91,7 @@ const Login = () => {
         email: values.email
       });
       if (res.status === 200) {
+        setForgotOtpToken(res.data?.data?.token || '');
         setForgotEmail(values.email);
         setForgotStep(2);
         message.success(res.data.message || 'Đã gửi mã OTP về email!');
@@ -113,11 +115,12 @@ const Login = () => {
     try {
       const res = await api.post('/forgot-password/verify-otp', {
         email: forgotEmail,
-        otp: values.otp
+        otp: values.otp,
+        token: forgotOtpToken
       });
       if (res.status === 200) {
         setForgotStep(3);
-        setResetToken(res.data.resetToken);
+        setResetToken(res.data?.data?.resetToken || '');
         message.success(res.data.message || 'Xác thực OTP thành công!');
       } else {
         message.error(res.data.error || res.data.message || 'OTP không đúng!');
@@ -141,11 +144,10 @@ const Login = () => {
     setForgotLoading(true);
     setErrorMsg('');
     try {
-      const res = await api.post('/forgot-password/reset-password', {
+      const res = await api.post('/forgot-password/reset', {
         email: forgotEmail,
         resetToken: resetToken,
-        newPassword: values.newPassword,
-        confirmPassword: values.confirmPassword
+        matkhau: values.newPassword
       });
       if (res.status === 200) {
         message.success(res.data.message || 'Đặt lại mật khẩu thành công!');
@@ -153,6 +155,7 @@ const Login = () => {
           setForgotVisible(false);
           setForgotStep(1);
           form.resetFields();
+          setForgotOtpToken('');
           setResetToken('');
           setForgotEmail('');
         }, 1500);
@@ -174,6 +177,7 @@ const Login = () => {
     setForgotVisible(false);
     setForgotStep(1);
     form.resetFields();
+    setForgotOtpToken('');
     setResetToken('');
     setForgotEmail('');
   };
