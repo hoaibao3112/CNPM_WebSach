@@ -39,8 +39,8 @@ function buildTransportConfig(portOverride) {
 
 async function sendMailWithRetry(mailOptions) {
   const primaryConfig = buildTransportConfig();
-  const fallbackConfig = primaryConfig.port === 465 ? buildTransportConfig(587) : buildTransportConfig(465);
-  const transportConfigs = [primaryConfig, fallbackConfig];
+  const fallbackConfig = primaryConfig.port === 465 ? null : buildTransportConfig(465);
+  const transportConfigs = fallbackConfig ? [primaryConfig, fallbackConfig] : [primaryConfig];
 
   let lastError = null;
 
@@ -103,7 +103,7 @@ async function sendMailWithResend(mailOptions) {
 }
 
 export function generateOTP() {
-    return Math.floor(100000 + Math.random() * 900000).toString();
+  return Math.floor(100000 + Math.random() * 900000).toString();
 }
 
 export async function sendOTPEmail(email, otp) {
@@ -221,41 +221,41 @@ export async function sendOTPEmail(email, otp) {
             </html>
         `;
 
-    const mailOptions = {
-        from: process.env.EMAIL_USER,
-        to: email,
-        subject: 'Mã OTP để đặt lại mật khẩu',
-        html: htmlContent
-    };
+  const mailOptions = {
+    from: process.env.EMAIL_USER,
+    to: email,
+    subject: 'Mã OTP để đặt lại mật khẩu',
+    html: htmlContent
+  };
 
-    // Ưu tiên Resend trước để tránh lỗi SMTP từ hạ tầng Render
-    if (resendConfigured) {
-      try {
-        const resendInfo = await sendMailWithResend(mailOptions);
-        console.log('✅ Email gửi thành công qua Resend:', resendInfo.response);
-        return true;
-      } catch (resendError) {
-        console.error('❌ Gửi mail qua Resend thất bại, sẽ thử SMTP:', {
-          message: resendError?.message,
-          response: resendError?.response?.data
-        });
+  // Ưu tiên Resend trước để tránh lỗi SMTP từ hạ tầng Render
+  if (resendConfigured) {
+    try {
+      const resendInfo = await sendMailWithResend(mailOptions);
+      console.log('✅ Email gửi thành công qua Resend:', resendInfo.response);
+      return true;
+    } catch (resendError) {
+      console.error('❌ Gửi mail qua Resend thất bại, sẽ thử SMTP:', {
+        message: resendError?.message,
+        response: resendError?.response?.data
+      });
 
-        // Không có SMTP thì trả lỗi ngay từ Resend
-        if (!smtpConfigured) {
-          throw new Error(`Gửi email OTP thất bại: ${resendError?.response?.data?.message || resendError?.message || 'Lỗi Resend không xác định'}`);
-        }
+      // Không có SMTP thì trả lỗi ngay từ Resend
+      if (!smtpConfigured) {
+        throw new Error(`Gửi email OTP thất bại: ${resendError?.response?.data?.message || resendError?.message || 'Lỗi Resend không xác định'}`);
       }
     }
+  }
 
-    // Fallback SMTP
-    try {
-      const info = await sendMailWithRetry(mailOptions);
-      console.log('✅ Email gửi thành công qua SMTP (fallback):', info.response);
-      return true;
-    } catch (smtpError) {
-      const smtpReason = smtpError?.message || 'Lỗi SMTP không xác định';
-      throw new Error(`Gửi email OTP thất bại: ${smtpReason}`);
-    }
+  // Fallback SMTP
+  try {
+    const info = await sendMailWithRetry(mailOptions);
+    console.log('✅ Email gửi thành công qua SMTP (fallback):', info.response);
+    return true;
+  } catch (smtpError) {
+    const smtpReason = smtpError?.message || 'Lỗi SMTP không xác định';
+    throw new Error(`Gửi email OTP thất bại: ${smtpReason}`);
+  }
 }
 // Email xác nhận đơn hàng – giao diện đẹp, thân thiện Outlook/Gmail
 
@@ -379,8 +379,8 @@ export async function sendOrderConfirmationEmail(email, order = {}) {
   // Badge màu theo trạng thái
   const statusColor =
     orderStatus.toUpperCase().includes('HỦY') ? '#EF4444' :
-    orderStatus.toUpperCase().includes('THANH TOÁN') ? '#22C55E' :
-    '#3B82F6';
+      orderStatus.toUpperCase().includes('THANH TOÁN') ? '#22C55E' :
+        '#3B82F6';
 
   // Preheader (ẩn)
   const preheader =
@@ -601,7 +601,19 @@ export async function sendOrderConfirmationEmail(email, order = {}) {
   ].filter(Boolean).join('\n');
 
   try {
-    const transporter = nodemailer.createTransport(buildTransportConfig());
+    const transporter = nodemailer.createTransport({
+      host: process.env.EMAIL_HOST || 'smtp.gmail.com',
+      port: Number(process.env.EMAIL_PORT || 587),
+      secure: false,
+      requireTLS: true,
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS
+      },
+      tls: {
+        rejectUnauthorized: false
+      }
+    });
 
     const info = await transporter.sendMail({
       from: `${brandName} <${process.env.EMAIL_USER}>`,
