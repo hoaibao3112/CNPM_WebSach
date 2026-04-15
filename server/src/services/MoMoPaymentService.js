@@ -20,11 +20,13 @@ class MoMoPaymentService {
   }
 
   /**
-   * Generate MD5 signature
+   * Generate SHA256 signature (MoMo requires SHA256, not MD5!)
    */
   generateSignature(data) {
-    const rawSignature = `accessKey=${this.accessKey}&amount=${data.amount}&extraData=${data.extraData}&ipnUrl=${data.ipnUrl}&orderId=${data.orderId}&orderInfo=${data.orderInfo}&partnerCode=${data.partnerCode}&redirectUrl=${data.redirectUrl}&requestId=${data.requestId}&requestType=${data.requestType}&secretKey=${this.secretKey}`;
-    return crypto.createHash('md5').update(rawSignature).digest('hex');
+    // Order matters! Must follow MoMo's requirement
+    const rawSignature = `accessKey=${this.accessKey}&amount=${data.amount}&extraData=${data.extraData}&ipnUrl=${data.ipnUrl}&orderId=${data.orderId}&orderInfo=${data.orderInfo}&partnerCode=${data.partnerCode}&redirectUrl=${data.redirectUrl}&requestId=${data.requestId}&requestType=${data.requestType}`;
+    // Use HMAC-SHA256 with secretKey as the key (NOT part of signature string)
+    return crypto.createHmac('sha256', this.secretKey).update(rawSignature).digest('hex');
   }
 
   /**
