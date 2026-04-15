@@ -60,7 +60,8 @@ class AuthController {
             const token = await AuthService.sendForgotOTP(email);
             return baseController.sendSuccess(res, { token }, 'OTP đã được gửi đến email của bạn');
         } catch (error) {
-            return baseController.sendError(res, error.message, 400);
+            const status = Number.isInteger(error?.statusCode) ? error.statusCode : 500;
+            return baseController.sendError(res, error.message, status);
         }
     }
 
@@ -70,7 +71,8 @@ class AuthController {
             const resetToken = await AuthService.verifyForgotOTP(email, otp, token);
             return baseController.sendSuccess(res, { resetToken }, 'OTP xác thực thành công');
         } catch (error) {
-            return baseController.sendError(res, error.message, 400);
+            const status = Number.isInteger(error?.statusCode) ? error.statusCode : 500;
+            return baseController.sendError(res, error.message, status);
         }
     }
 
@@ -80,7 +82,8 @@ class AuthController {
             await AuthService.resetPassword(email, matkhau, resetToken);
             return baseController.sendSuccess(res, null, 'Đặt lại mật khẩu thành công');
         } catch (error) {
-            return baseController.sendError(res, error.message, 500);
+            const status = Number.isInteger(error?.statusCode) ? error.statusCode : 500;
+            return baseController.sendError(res, error.message, status);
         }
     }
 

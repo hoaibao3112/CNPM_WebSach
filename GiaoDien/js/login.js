@@ -120,7 +120,8 @@ function setupForgotPassword() {
 }
 
 async function handleSendOTP() {
-    const email = document.getElementById('forgotEmail').value;
+    const emailInput = document.getElementById('forgotEmail');
+    const email = (emailInput.value || '').trim();
     const messageElement = document.getElementById('forgotPasswordMessage');
     const sendOtpBtn = document.getElementById('sendOtpBtn');
 
@@ -128,6 +129,14 @@ async function handleSendOTP() {
         showMessage(messageElement, 'Vui lòng nhập email', 'error');
         return;
     }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+        showMessage(messageElement, 'Email không hợp lệ', 'error');
+        return;
+    }
+
+    emailInput.value = email;
 
     try {
         sendOtpBtn.disabled = true;
