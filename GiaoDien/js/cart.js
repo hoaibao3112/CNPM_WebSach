@@ -19,7 +19,10 @@ function getToken() {
 
 // Get user ID
 function getUserId() {
-  return JSON.parse(localStorage.getItem('user') || '{}')?.makh;
+  const user = JSON.parse(localStorage.getItem('user') || '{}');
+  const makh = user?.makh;
+  // Ensure return is string or number, never null/undefined/object
+  return makh ? String(makh).trim() : null;
 }
 
 // Get cart from backend or localStorage
@@ -2174,7 +2177,12 @@ async function loadSavedPromos() {
 
     // ALSO fetch issued coupons (e.g., freeship issued by preference form)
     try {
-      const couponsRes = await fetch(`${window.API_CONFIG.BASE_URL}/api/coupons/my-coupons?makh=${getUserId()}`, {
+      const userId = getUserId();
+      if (!userId) {
+        console.warn('⚠️ getUserId returned null/undefined');
+        return promoList;
+      }
+      const couponsRes = await fetch(`${window.API_CONFIG.BASE_URL}/api/coupons/my-coupons?makh=${userId}`, {
         headers: {
           Authorization: `Bearer ${getToken()}`
         }
