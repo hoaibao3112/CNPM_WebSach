@@ -107,10 +107,12 @@ export function generateOTP() {
 }
 
 export async function sendOTPEmail(email, otp) {
-  // Kiểm tra config email
-  if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
-    console.error('❌ EMAIL_USER hoặc EMAIL_PASS chưa được cấu hình trong .env');
-    throw new Error('Email service chưa được cấu hình. Vui lòng liên hệ quản trị viên.');
+  const resendConfigured = hasResendConfig();
+  const smtpConfigured = Boolean(process.env.EMAIL_USER && process.env.EMAIL_PASS);
+
+  // Cần ít nhất 1 provider để gửi mail
+  if (!resendConfigured && !smtpConfigured) {
+    throw new Error('Email service chưa được cấu hình. Cần SMTP hoặc Resend.');
   }
 
   console.log(`📧 Cấu hình email: ${process.env.EMAIL_USER} @ ${process.env.EMAIL_HOST || 'smtp.gmail.com'}:${process.env.EMAIL_PORT || 587}`);
@@ -226,32 +228,33 @@ export async function sendOTPEmail(email, otp) {
         html: htmlContent
     };
 
-    try {
-        const info = await sendMailWithRetry(mailOptions);
-        console.log('✅ Email gửi thành công (forgot-password):', info.response);
+    // Ưu tiên Resend trước để tránh lỗi SMTP từ hạ tầng Render
+    if (resendConfigured) {
+      try {
+        const resendInfo = await sendMailWithResend(mailOptions);
+        console.log('✅ Email gửi thành công qua Resend:', resendInfo.response);
         return true;
-    } catch (smtpError) {
-        const resendConfigured = hasResendConfig();
+      } catch (resendError) {
+        console.error('❌ Gửi mail qua Resend thất bại, sẽ thử SMTP:', {
+          message: resendError?.message,
+          response: resendError?.response?.data
+        });
 
-        if (hasResendConfig()) {
-          try {
-            const resendInfo = await sendMailWithResend(mailOptions);
-            console.log('✅ Email gửi thành công qua Resend (fallback):', resendInfo.response);
-            return true;
-          } catch (resendError) {
-            console.error('❌ Fallback Resend cũng thất bại:', {
-              message: resendError?.message,
-              response: resendError?.response?.data
-            });
-          }
+        // Không có SMTP thì trả lỗi ngay từ Resend
+        if (!smtpConfigured) {
+          throw new Error(`Gửi email OTP thất bại: ${resendError?.response?.data?.message || resendError?.message || 'Lỗi Resend không xác định'}`);
         }
+      }
+    }
 
-        const reason = smtpError?.code === 'ETIMEDOUT'
-          ? (resendConfigured
-              ? 'Không thể kết nối SMTP (timeout) và fallback Resend thất bại'
-              : 'Không thể kết nối SMTP (timeout). Chưa cấu hình fallback Resend (RESEND_API_KEY, RESEND_FROM_EMAIL)')
-          : (smtpError?.message || 'Lỗi không xác định');
-        throw new Error(`Gửi email OTP thất bại: ${reason}`);
+    // Fallback SMTP
+    try {
+      const info = await sendMailWithRetry(mailOptions);
+      console.log('✅ Email gửi thành công qua SMTP (fallback):', info.response);
+      return true;
+    } catch (smtpError) {
+      const smtpReason = smtpError?.message || 'Lỗi SMTP không xác định';
+      throw new Error(`Gửi email OTP thất bại: ${smtpReason}`);
     }
 }
 // Email xác nhận đơn hàng – giao diện đẹp, thân thiện Outlook/Gmail
