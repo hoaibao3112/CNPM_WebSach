@@ -188,18 +188,7 @@ export async function sendOTPEmail(email, otp) {
   let errors = [];
 
   // THỨ TỰ ƯU TIÊN GỬI:
-  // 1. Resend (Nhanh nhất, ưu tiên cho email chính của bạn)
-  if (resendConfigured) {
-    try {
-      const info = await sendMailWithResend(mailOptions);
-      console.log('✅ OTP gửi qua Resend thành công');
-      return true;
-    } catch (e) {
-      errors.push(`Resend lỗi: ${e?.response?.data?.message || e.message}`);
-    }
-  }
-
-  // 2. SendGrid (Cứu cánh cho gửi người lạ, không bị Render chặn)
+  // 1. SendGrid (Cứu cánh - Luôn chạy đầu tiên vì đã Verify chính chủ)
   if (sendGridConfigured) {
     try {
       const info = await sendMailWithSendGrid(mailOptions);
@@ -207,6 +196,17 @@ export async function sendOTPEmail(email, otp) {
       return true;
     } catch (e) {
       errors.push(`SendGrid lỗi: ${e?.response?.data?.message || e.message}`);
+    }
+  }
+
+  // 2. Resend (Nhanh - Dùng cho các email chính chủ)
+  if (resendConfigured) {
+    try {
+      const info = await sendMailWithResend(mailOptions);
+      console.log('✅ OTP gửi qua Resend thành công');
+      return true;
+    } catch (e) {
+      errors.push(`Resend lỗi: ${e?.response?.data?.message || e.message}`);
     }
   }
 
