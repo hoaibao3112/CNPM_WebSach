@@ -33,14 +33,15 @@ function loadFacebookSDK() {
 
   // Wait for config to load
   const waitForConfig = (attempt = 0) => {
-    if (window.API_CONFIG?.FACEBOOK_CLIENT_ID && document.body) {
+    const facebookAppId = window.API_CONFIG?.FACEBOOK_CLIENT_ID || '904742255223792';
+    if (document.body) {
       const script = document.createElement('script');
       script.id = 'facebook-jssdk';
-      script.src = 'https://connect.facebook.net/vi_VN/sdk.js#xfbml=1&version=v18.0';
+      script.src = `https://connect.facebook.net/vi_VN/sdk.js#xfbml=1&version=v18.0&appId=${facebookAppId}`;
       script.async = true;
       script.defer = true;
       document.body.appendChild(script);
-      console.log('✅ Facebook SDK loaded');
+      console.log('✅ Facebook SDK loaded with appId:', facebookAppId);
     } else if (attempt < 20) {
       setTimeout(() => waitForConfig(attempt + 1), 100);
     } else {
