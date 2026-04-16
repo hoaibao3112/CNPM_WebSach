@@ -217,9 +217,12 @@ async def generate_response(message: str, session_id: str, top_k: int = 5) -> tu
 
 # ─── API Endpoints ──────────────────────────────────────────────
 
+import asyncio
+
 @app.on_event("startup")
 async def startup_event():
-    init_components()
+    print("🚀 App starting... Binding port immediately to pass Render health checks!")
+    asyncio.create_task(asyncio.to_thread(init_components))
 
 
 @app.get("/")
