@@ -9,7 +9,14 @@ function escapeHtml(unsafe) {
   }[c]));
 }
 // ====== PHẦN VOUCHER ======
-const VOUCHER_API = "${window.API_CONFIG.BASE_URL}/api/khuyenmai";
+// ✅ FIX: Sử dụng function thay vì hardcode template string literal
+function getVoucherApi() {
+  const baseUrl = window.API_CONFIG?.BASE_URL;
+  if (!baseUrl) throw new Error('API_CONFIG.BASE_URL is not configured');
+  return `${baseUrl}/api/khuyenmai`;
+}
+
+const VOUCHER_API = getVoucherApi();
 
 function isLoggedIn() {
   return !!(localStorage.getItem("token") && localStorage.getItem("customerId"));
@@ -25,11 +32,20 @@ function formatDate(dateStr) {
 async function fetchVouchers() {
   try {
     const res = await fetch(VOUCHER_API);
+    // ✅ FIX: Check response.ok trước khi parse JSON
+    if (!res.ok) {
+      throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+    }
     const json = await res.json();
-    if (json?.data) return Array.isArray(json.data) ? json.data : [json.data];
+    // ✅ FIX: Validate response structure
+    if (json?.data && Array.isArray(json.data)) {
+      return json.data;
+    } else if (Array.isArray(json)) {
+      return json;
+    }
     return [];
-  } catch {
-    console.error("Lỗi tải voucher");
+  } catch (error) {
+    console.error("❌ Lỗi tải voucher:", error.message);
     return [];
   }
 }

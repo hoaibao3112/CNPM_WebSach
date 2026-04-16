@@ -57,87 +57,93 @@ document.addEventListener('DOMContentLoaded', function() {
     promotionList.innerHTML = '<div class="loading">Đang tải khuyến mãi...</div>';
     
     try {
-      const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || window.API_CONFIG.BASE_URL;
-      let url = `${_apiBase}/api/khuyenmai`;
+      // ✅ FIX: Sửa logic check API_CONFIG - nên throw error nếu không config
+      const baseUrl = window.API_CONFIG?.BASE_URL;
+      if (!baseUrl) {
+        throw new Error('API_CONFIG.BASE_URL is not configured');
+      }
+      
+      let url = `${baseUrl}/api/khuyenmai`;
       if (activeOnly) {
         url += '?activeOnly=true';
       }
       
       const response = await fetch(url);
-      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
       
-      if (data.data && data.data.length > 0) {
-        renderPromotions(data.data);
+      const data = await response.json();
+      const promotions = data.data || [];
+      
+      if (Array.isArray(promotions) && promotions.length > 0) {
+        renderPromotions(promotions);
       } else {
         promotionList.innerHTML = '<div class="no-promotions">Hiện không có khuyến mãi nào.</div>';
       }
     } catch (error) {
-      console.error('Lỗi khi tải khuyến mãi:', error);
+      console.error('❌ Lỗi khi tải khuyến mãi:', error);
       promotionList.innerHTML = '<div class="error">Đã xảy ra lỗi khi tải khuyến mãi. Vui lòng thử lại sau.</div>';
     }
   }
   
   // Hàm hiển thị danh sách khuyến mãi
-  function renderPromotions(promotions) {
+  async function renderPromotions(promotions) {
     const promotionList = document.getElementById('promotionList');
     promotionList.innerHTML = '';
+    const baseUrl = window.API_CONFIG?.BASE_URL;
     
-    promotions.forEach(promotion => {
+    // ✅ FIX: Fetch tất cả chi tiết TRƯỚC khi render (tránh N+1 queries)
+    const promotionsWithDetails = await Promise.all(
+      promotions.map(async (promotion) => {
+        try {
+          const response = await fetch(`${baseUrl}/api/khuyenmai/${promotion.MaKM}`);
+          if (!response.ok) throw new Error(`HTTP ${response.status}`);
+          const details = await response.json();
+          return { ...promotion, details: details.data || details };
+        } catch (error) {
+          console.warn(`⚠️ Không tải chi tiết khuyến mãi ${promotion.MaKM}:`, error);
+          return { ...promotion, details: null };
+        }
+      })
+    );
+    
+    // ✅ Sau đó render tất cả
+    promotionsWithDetails.forEach(promotion => {
       const now = new Date();
       const startDate = new Date(promotion.NgayBatDau);
       const endDate = new Date(promotion.NgayKetThuc);
       const isActive = promotion.TrangThai === 1 && now >= startDate && now <= endDate;
       
-      // Tạo HTML cho từng khuyến mãi
       const promotionCard = document.createElement('div');
       promotionCard.className = `promotion-card ${isActive ? 'active-promotion' : ''}`;
       
-      // Lấy thông tin chi tiết khuyến mãi
       let discountInfo = '';
       let productList = '';
       
-      const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || window.API_CONFIG.BASE_URL;
-      fetch(`${_apiBase}/api/khuyenmai/${promotion.MaKM}`)
-        .then(response => response.json())
-        .then(details => {
-          // Xử lý thông tin giảm giá
-          if (promotion.LoaiKM === 'giam_phan_tram' && details.chi_tiet.PhanTramGiam) {
-            discountInfo = `Giảm <span class="discount-value">${details.chi_tiet.PhanTramGiam}%</span>`;
-            if (details.chi_tiet.GiamToiDa) {
-              discountInfo += ` (tối đa <span class="discount-value">${formatCurrency(details.chi_tiet.GiamToiDa)}</span>)`;
-            }
-          } else if (promotion.LoaiKM === 'giam_tien_mat' && details.chi_tiet.SoTienGiam) {
-            discountInfo = `Giảm <span class="discount-value">${formatCurrency(details.chi_tiet.SoTienGiam)}</span>`;
-          } else if (promotion.LoaiKM === 'mua_x_tang_y') {
-            discountInfo = `Mua ${details.chi_tiet.SoLuongMua} tặng ${details.chi_tiet.SoLuongTang}`;
+      // ✅ FIX: Validate details tồn tại trước khi access
+      if (promotion.details) {
+        const details = promotion.details;
+        const chiTiet = details.chi_tiet || {};
+        
+        if (promotion.LoaiKM === 'giam_phan_tram' && chiTiet.PhanTramGiam) {
+          discountInfo = `Giảm <span class="discount-value">${chiTiet.PhanTramGiam}%</span>`;
+          if (chiTiet.GiamToiDa) {
+            discountInfo += ` (tối đa <span class="discount-value">${formatCurrency(chiTiet.GiamToiDa)}</span>)`;
           }
-          
-          // Xử lý danh sách sản phẩm
-          if (details.san_pham_ap_dung && details.san_pham_ap_dung.length > 0) {
-            productList = details.san_pham_ap_dung.map(product => 
-              `<span class="product-tag">${product.TenSP}</span>`
-            ).join('');
-          }
-          
-          // Cập nhật nội dung thẻ khuyến mãi với thông tin chi tiết
-          const productsHtml = productList ? `
-            <div class="promotion-products">
-              <div class="products-title">Áp dụng cho:</div>
-              <div class="product-list">${productList}</div>
-            </div>
-          ` : '';
-          
-          const contentDiv = promotionCard.querySelector('.promotion-content');
-          if (contentDiv) {
-            contentDiv.innerHTML += `
-              <div class="discount-info">${discountInfo}</div>
-              ${productsHtml}
-            `;
-          }
-        })
-        .catch(error => {
-          console.error('Lỗi khi lấy chi tiết khuyến mãi:', error);
-        });
+        } else if (promotion.LoaiKM === 'giam_tien_mat' && chiTiet.SoTienGiam) {
+          discountInfo = `Giảm <span class="discount-value">${formatCurrency(chiTiet.SoTienGiam)}</span>`;
+        } else if (promotion.LoaiKM === 'mua_x_tang_y' && chiTiet.SoLuongMua) {
+          discountInfo = `Mua ${chiTiet.SoLuongMua} tặng ${chiTiet.SoLuongTang || 0}`;
+        }
+        
+        // ✅ FIX: Validate san_pham_ap_dung là array
+        if (Array.isArray(details.san_pham_ap_dung) && details.san_pham_ap_dung.length > 0) {
+          productList = details.san_pham_ap_dung.map(product => 
+            `<span class="product-tag">${product.TenSP || ''}</span>`
+          ).join('');
+        }
+      }
       
       // Thêm nội dung cơ bản vào thẻ khuyến mãi
       promotionCard.innerHTML = `

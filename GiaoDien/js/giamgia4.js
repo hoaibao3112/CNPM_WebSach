@@ -42,8 +42,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // ===== Lấy danh sách category và gán sự kiện =====
     fetch(`${window.API_CONFIG.BASE_URL}/api/product/categories`)
-        .then(res => res.json())
+        .then(res => {
+            // ✅ FIX: Check response.ok trước khi gọi .json()
+            if (!res.ok) {
+                throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+            }
+            return res.json();
+        })
         .then(categories => {
+            // ✅ FIX: Validate categories là array
+            if (!Array.isArray(categories)) {
+                console.warn('⚠️ API response is not an array:', categories);
+                categories = [];
+            }
             // Clear existing list first
             categoryUl.innerHTML = '';
 
@@ -71,9 +82,25 @@ document.addEventListener('DOMContentLoaded', () => {
             function loadProducts(categoryId) {
                 const url = `${window.API_CONFIG.BASE_URL}/api/product/category-current-year/${categoryId === 'all' ? 'all' : categoryId}`;
                 fetch(url)
-                    .then(res => res.json())
-                    .then(products => renderProducts(products, 5))
-                    .catch(err => console.error('Lỗi khi load sản phẩm:', err));
+                    .then(res => {
+                        // ✅ FIX: Validate response
+                        if (!res.ok) {
+                            throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+                        }
+                        return res.json();
+                    })
+                    .then(response => {
+                        // ✅ FIX: Handle both array and { data: [...] } responses
+                        const products = Array.isArray(response) ? response : (response.data || []);
+                        if (!Array.isArray(products)) {
+                            throw new Error('Invalid response format: products is not an array');
+                        }
+                        renderProducts(products, 5);
+                    })
+                    .catch(err => {
+                        console.error('❌ Lỗi khi load sản phẩm:', err);
+                        productRow.innerHTML = `<p>Lỗi tải sản phẩm: ${err.message}</p>`;
+                    });
             }
 
             loadProducts('all');

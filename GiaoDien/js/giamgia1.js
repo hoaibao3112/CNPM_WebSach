@@ -106,8 +106,17 @@ function showToast(message, timeout = 1800) {
 // Initialize cart count on load
 document.addEventListener('DOMContentLoaded', updateCartCount);
 
+// ✅ FIX: Sử dụng function thay vì hardcode template string literal
+function getImageBase() {
+  const baseUrl = window.API_CONFIG?.BASE_URL;
+  if (!baseUrl) {
+    console.warn('⚠️ API_CONFIG.BASE_URL not configured, using fallback');
+    return '/product-images';
+  }
+  return `${baseUrl}/product-images`;
+}
 
-const IMAGE_BASE = '${window.API_CONFIG.BASE_URL}/product-images';
+const IMAGE_BASE = getImageBase();
 
 // Hàm hiển thị danh sách sản phẩm
 function displayProducts(products, containerId = 'multi-category-list', limit = null) {

@@ -3,49 +3,34 @@
 async function loadThamGiaVouchers() {
   const promoOffers = document.querySelector(".promo-offers");
 
-  // Try multiple endpoints / shapes to be resilient during development
-  const endpoints = [
-    "${window.API_CONFIG.BASE_URL}/api/khuyenmai/public?limit=10",
-    "http://localhost:5501/api/khuyenmai/public?limit=10",
-    "/api/khuyenmai/public?limit=10",
-    "${window.API_CONFIG.BASE_URL}/api/voucher/",
-    "http://localhost:5501/api/voucher/",
-    "/api/voucher/",
-  ];
-
+  // ✅ FIX: Dùng endpoint chính từ config, không hardcode localhost
   let vouchers = null;
-
-  for (const url of endpoints) {
-    try {
-      const res = await fetch(url);
-      if (!res.ok) continue;
-      const payload = await res.json();
-
-      // Server may return { data: [...] } (as in `khuyenmai` routes)
-      if (Array.isArray(payload)) {
-        vouchers = payload;
-        break;
-      }
-      if (Array.isArray(payload.data)) {
-        vouchers = payload.data;
-        break;
-      }
-      // older shape: list under `promotions` or direct array
-      if (Array.isArray(payload.promotions)) {
-        vouchers = payload.promotions;
-        break;
-      }
-
-      // If payload is a single object with Code fields, wrap it
-      if (payload && typeof payload === 'object' && (payload.Code || payload.MaKM || payload.MaCode)) {
-        vouchers = [payload];
-        break;
-      }
-    } catch (err) {
-      // try next endpoint
-      console.warn('Fetch failed for', url, err.message || err);
-      continue;
+  
+  try {
+    const baseUrl = window.API_CONFIG?.BASE_URL;
+    if (!baseUrl) {
+      throw new Error('API_CONFIG.BASE_URL not configured');
     }
+    
+    const url = `${baseUrl}/api/khuyenmai?limit=10`;
+    const res = await fetch(url);
+    if (!res.ok) {
+      throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+    }
+    
+    const payload = await res.json();
+
+    // ✅ Normalize response - API trả về { data: [...] }
+    if (Array.isArray(payload.data)) {
+      vouchers = payload.data;
+    } else if (Array.isArray(payload)) {
+      vouchers = payload;
+    } else {
+      vouchers = [];
+    }
+  } catch (error) {
+    console.error('❌ Lỗi tải khuyến mãi:', error.message);
+    vouchers = [];
   }
 
   if (!vouchers || vouchers.length === 0) {
