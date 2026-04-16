@@ -692,14 +692,14 @@ function updatePriceDisplay(product) {
   
     if (product.GiaBia > product.DonGia) {
         originalPriceElement.textContent = formatPrice(product.GiaBia);
-        originalPriceElement.style.display = 'inline';
+        originalPriceElement.classList.remove('hidden');
         const discount = Math.round((1 - product.DonGia / product.GiaBia) * 100);
         const discountAmount = product.GiaBia - product.DonGia;
         discountElement.textContent = `Tiết kiệm: ${formatPrice(discountAmount)} (${discount}%)`;
-        discountElement.style.display = 'block';
+        discountElement.classList.remove('hidden');
     } else {
-        originalPriceElement.style.display = 'none';
-        discountElement.style.display = 'none';
+        originalPriceElement.classList.add('hidden');
+        discountElement.classList.add('hidden');
     }
 }
 
@@ -749,11 +749,11 @@ function displayPromotions(promotions) {
     }
 
     if (!promotions || promotions.length === 0) {
-        promotionSection.style.display = 'none';
+        promotionSection.classList.add('hidden');
         return;
     }
 
-    promotionSection.style.display = 'block';
+    promotionSection.classList.remove('hidden');
 
     // load saved promos from localStorage so we can mark saved buttons
     const myPromosCache = JSON.parse(localStorage.getItem('myPromos') || '[]');

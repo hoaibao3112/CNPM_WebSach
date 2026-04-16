@@ -26,11 +26,18 @@ async function fetchAuthorsByNationality(page = 1, nationality = '', search = ''
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
     const data = await res.json();
-    if (!data?.data || !data?.pagination) throw new Error('Dữ liệu API không hợp lệ');
+    
+    // ✅ FIX: Handle multiple API response formats
+    const authors = data?.data || data || [];
+    const pagination = data?.pagination || { page: 1, totalPages: 1 };
+    
+    if (!Array.isArray(authors) || authors.length === 0) {
+      console.warn('⚠️ No authors returned from API:', data);
+    }
 
-    const { data: authors, pagination } = data;
-    currentPage = pagination.page || 1;
-    totalPages = pagination.totalPages || 1;
+    const { page = 1, totalPages = 1 } = pagination;
+    currentPage = page;
+    totalPages = totalPages;
 
     renderAuthors(authors);
     updatePagination();
