@@ -9,8 +9,8 @@ const PersonalizedRecommendations = {
     apiBaseUrl: `${window.API_CONFIG.BASE_URL}/api`,
   defaultLimit: 8,
     storageKeys: {
-      customerInfo: 'customerInfo',
-      authToken: 'authToken'
+      customerInfo: 'user',
+      authToken: 'token'
     }
   },
 

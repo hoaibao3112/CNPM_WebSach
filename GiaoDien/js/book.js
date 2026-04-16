@@ -663,7 +663,8 @@ async function fetchAndDisplayProducts() {
     const response = await fetch(url);
     if (!response.ok) throw new Error(`Lỗi HTTP: ${response.status}`);
 
-    const products = await response.json();
+    const responseData = await response.json();
+    const products = responseData.data || responseData;
     if (!Array.isArray(products)) throw new Error('Dữ liệu trả về không hợp lệ');
 
   displayProducts(products, 'book-list', 10);
@@ -800,7 +801,8 @@ async function fetchAndDisplayTextbooks() {
     const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || window.API_CONFIG.BASE_URL;
     const response = await fetch(`${_apiBase}/api/product/category/6`);
 
-    const products = await response.json();
+    const responseData = await response.json();
+    const products = responseData.data || responseData;
     if (!Array.isArray(products)) throw new Error('Dữ liệu trả về không hợp lệ');
 
   displayProducts(products, 'textbook-list', 5);
@@ -847,7 +849,8 @@ async function fetchAndDisplayPoliticsBooks() {
 
     let products;
     try {
-      products = JSON.parse(text);
+      const responseData = JSON.parse(text);
+      products = responseData.data || responseData;
     } catch (e) {
       console.error('Nội dung phản hồi:', text);
       throw new Error(`Lỗi phân tích JSON: ${e.message}`);
@@ -881,7 +884,8 @@ async function fetchAndDisplayScienceBooks() {
     const response = await fetch(`${_apiBase}/api/product/category/4`);
     if (!response.ok) throw new Error(`Lỗi HTTP: ${response.status}`);
 
-    const products = await response.json();
+    const responseData = await response.json();
+    const products = responseData.data || responseData;
     if (!Array.isArray(products)) throw new Error('Dữ liệu trả về không hợp lệ');
 
   displayProducts(products, 'science-book-list', 5);
@@ -1520,9 +1524,10 @@ async function loadAllProductsToMain() {
       throw new Error(`HTTP ${res.status} ${text}`);
     }
 
-    const allProducts = await res.json();
-    console.log('[products] allProducts:', allProducts);
-    displayProducts(allProducts, 'search-book-list');
+    const responseData = await res.json();
+    const products = responseData.data || responseData;
+    console.log('[products] products:', products);
+    displayProducts(products, 'search-book-list');
   } catch (err) {
     console.error('Không tải được tất cả sản phẩm:', err);
     mainContainer.innerHTML = `<p>Không tải được tất cả sản phẩm: ${escapeHtml(err.message || String(err))}</p>`;
@@ -1549,7 +1554,8 @@ async function loadProductsByPromotion(promoId) {
       throw new Error(`HTTP ${res.status} ${text}`);
     }
 
-    const products = await res.json();
+    const responseData = await res.json();
+    const products = responseData.data || responseData;
     console.log('[promotions] products:', products);
 
     if (!Array.isArray(products)) {
