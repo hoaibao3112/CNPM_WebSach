@@ -53,17 +53,21 @@ function sortObject(obj) {
  * @returns {number} Phí ship (VND)
  */
 function calculateShippingFee(province, totalWeight, customerTier = 'Đồng') {
-  // Chuẩn hóa tên tỉnh/thành
-  const provinceLower = String(province || '').toLowerCase().trim();
+  // ✅ FIX #2: Normalize tên tỉnh thành - loại bỏ khoảng trắng thừa, lowercase
+  const provinceNormalized = String(province || '')
+    .toLowerCase()
+    .trim()
+    .replace(/\s+/g, ' ');  // Chuyển nhiều khoảng trắng thành 1
   
   // Kiểm tra nội thành TP.HCM - FREE SHIP
-  const isHCM = provinceLower.includes('hồ chí minh') || 
-                provinceLower.includes('ho chi minh') ||
-                provinceLower.includes('hcm') ||
-                provinceLower.includes('tp.hcm') ||
-                provinceLower.includes('tphcm') ||
-                provinceLower === '79' ||  // Mã tỉnh TP.HCM (API cũ)
-                provinceLower === '50';    // Mã tỉnh TP.HCM (API mới)
+  const isHCM = provinceNormalized.includes('hồ chí minh') || 
+                provinceNormalized.includes('ho chi minh') ||
+                provinceNormalized.includes('hcm') ||
+                provinceNormalized.includes('tp.hcm') ||
+                provinceNormalized.includes('tp hcm') ||  // ← Thêm variant
+                provinceNormalized.includes('tphcm') ||
+                provinceNormalized === '79' ||  // Mã tỉnh TP.HCM (API cũ)
+                provinceNormalized === '50';    // Mã tỉnh TP.HCM (API mới)
 
   if (isHCM) {
     console.log('📍 Nội thành TP.HCM -> FREE SHIP');
@@ -3384,9 +3388,15 @@ router.put('/hoadon/:id/address', authenticateToken, async (req, res) => {
 
     const userTier = customerRows[0]?.loyalty_tier || 'Đồng';
 
-    // Tính phí ship cũ và mới
-    const oldShippingFee = order.PhiShip || 
-      calculateShippingFee(order.OldProvince || '', totalWeight, userTier);
+    // ✅ FIX #1: Sửa falsy coercion - PhiShip = 0 là hợp lệ (free ship)
+    let oldShippingFee;
+    if (order.PhiShip !== null && order.PhiShip !== undefined) {
+      // Dùng giá trị từ DB (chính xác)
+      oldShippingFee = order.PhiShip;
+    } else {
+      // Fallback: recalculate từ province (nếu DB không có PhiShip)
+      oldShippingFee = calculateShippingFee(order.OldProvince || '', totalWeight, userTier);
+    }
     
     const newShippingFee = calculateShippingFee(newProvince, totalWeight, userTier);
     
@@ -3463,16 +3473,21 @@ router.put('/hoadon/:id/address', authenticateToken, async (req, res) => {
           order.TrangThaiThanhToan === 'Đã thanh toán') {
         
         // ✅ ĐÃ THANH TOÁN VNPAY: Ghi chú thu thêm tiền ship khi giao
+        // ✅ FIX #3: Cập nhật cả PhiShip + TongTien trong DB
+        // (Để lần update tiếp theo tính toán chính xác)
+        const newTotal = order.TongTien + shippingDiff;
+        
         noteText = `\n[${new Date().toLocaleString('vi-VN')}] ⚠️ ĐỔI ĐỊA CHỈ: Thu thêm ${shippingDiff.toLocaleString()}đ phí ship khi giao hàng (Đã TT VNPay ${order.TongTien.toLocaleString()}đ)`;
         
         updateQuery = `
           UPDATE hoadon 
           SET MaDiaChi = ?,
               PhiShip = ?,
+              TongTien = ?,
               GhiChu = CONCAT(IFNULL(GhiChu, ''), ?)
           WHERE MaHD = ?
         `;
-        updateParams = [newAddressId, newShippingFee, noteText, id];
+        updateParams = [newAddressId, newShippingFee, newTotal, noteText, id];
         
       } else if (order.PhuongThucThanhToan === 'COD') {
         
@@ -3528,13 +3543,15 @@ router.put('/hoadon/:id/address', authenticateToken, async (req, res) => {
       if (order.PhuongThucThanhToan === 'VNPAY' && 
           order.TrangThaiThanhToan === 'Đã thanh toán') {
         
+        const newTotal = order.TongTien + shippingDiff;
+        
         return res.json({
           success: true,
           warning: true,
           message: `Địa chỉ đã được cập nhật. Shipper sẽ thu thêm ${shippingDiff.toLocaleString()}đ phí ship khi giao hàng.`,
           data: {
             ...responseData,
-            TongTien: order.TongTien,  // ✅ Giữ nguyên tổng tiền (VNPAY đã thanh toán)
+            TongTien: newTotal,  // ✅ Trả về tổng tiền mới (đã cập nhật vào DB)
             collectOnDelivery: shippingDiff,
             note: `Đã thanh toán online ${order.TongTien.toLocaleString()}đ. Thu thêm ${shippingDiff.toLocaleString()}đ khi giao.`
           }
