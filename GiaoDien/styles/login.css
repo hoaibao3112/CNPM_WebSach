@@ -1,15 +1,29 @@
-/* ============================================================
-   LOGIN.CSS — Premium Login Page
-   Font: Playfair Display + Inter
-   Colors: #FFFFFF + #C0392B
-   ============================================================ */
+/* ========================================
+   LOGIN PAGE - MODERN DESIGN
+   White + Ocean Blue Theme with Animations
+======================================== */
 
 :root {
+  --primary-blue: #00BCD4;
+  --ocean-blue: #0097A7;
+  --light-teal: #80DEEA;
+  --soft-blue: #E0F7FA;
+  
+  --white: #FFFFFF;
+  --light-gray: #F5F5F5;
+  --medium-gray: #EEEEEE;
+  --dark-gray: #333333;
+  --text-color: #424242;
+  
+  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.08);
+  --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.12);
+  --shadow-lg: 0 8px 16px rgba(0, 0, 0, 0.15);
+  --shadow-xl: 0 12px 24px rgba(0, 188, 212, 0.2);
+  
+  --border-radius: 12px;
+  --transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  
   --top-bar-height: 72px;
-  --red-primary: #C0392B;
-  --red-dark: #962d22;
-  --red-light: #fdf0ef;
-  --border-light: #fcd5ce;
 }
 
 * {
@@ -19,13 +33,16 @@
 }
 
 body {
-  background: linear-gradient(135deg, #fdf0ef 0%, #f7f3f0 40%, #fce4ec 100%);
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: linear-gradient(135deg, var(--soft-blue) 0%, var(--white) 50%, #F0F8FF 100%);
   min-height: 100vh;
   display: flex;
+  align-items: center;
   justify-content: center;
-  align-items: flex-start;
+  color: var(--text-color);
+  line-height: 1.6;
   padding: 20px;
-  font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  padding-top: calc(var(--top-bar-height) + 20px);
 }
 
 /* ── Login container ─────────────────────────────────────── */
