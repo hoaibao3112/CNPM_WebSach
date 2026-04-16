@@ -127,8 +127,22 @@ async function addToCart(productId, productName, price, image) {
 
 // Hàm hiển thị danh sách sản phẩm
 function displayProducts(productsData, containerId = 'book-list', limit = null) {
-  // Safety check for standardized API response
-  const products = (productsData && productsData.data) ? productsData.data : (Array.isArray(productsData) ? productsData : []);
+  // Bulletproof unwrap for standardized API response: { success, data } or [...]
+  let finalProducts = [];
+  if (Array.isArray(productsData)) {
+    finalProducts = productsData;
+  } else if (productsData && Array.isArray(productsData.data)) {
+    finalProducts = productsData.data;
+  } else if (productsData && productsData.success && Array.isArray(productsData.data)) {
+    finalProducts = productsData.data;
+  } else if (productsData && productsData.products && Array.isArray(productsData.products)) {
+    finalProducts = productsData.products;
+  }
+  
+  if (!Array.isArray(finalProducts)) {
+    console.warn(`[displayProducts] data for ${containerId} is not an array:`, productsData);
+    finalProducts = [];
+  }
   
   // Flash Sale has a dedicated renderer in products_sales.js.
   // Guard here to avoid asynchronous overwrite/race from book.js.
@@ -152,7 +166,7 @@ function displayProducts(productsData, containerId = 'book-list', limit = null) 
   }
 
   // nếu không có sản phẩm
-  if (!products || products.length === 0) {
+  if (!finalProducts || finalProducts.length === 0) {
     productList.innerHTML = `
       <div class="no-products">
         <i class="fas fa-book"></i>
@@ -162,9 +176,9 @@ function displayProducts(productsData, containerId = 'book-list', limit = null) 
     return;
   }
 
-  allProducts[containerId] = products;
-  const displayCount = limit && limit < products.length ? limit : products.length;
-  const displayProducts = products.slice(0, displayCount);
+  allProducts[containerId] = finalProducts;
+  const displayCount = limit && limit < finalProducts.length ? limit : finalProducts.length;
+  const displayProducts = finalProducts.slice(0, displayCount);
 
   // Tạo row wrapper cho flash-products
   let rowWrapper = null;
@@ -190,9 +204,9 @@ function displayProducts(productsData, containerId = 'book-list', limit = null) 
       productElement.innerHTML = `
         <div class="sale-item-image-wrapper">
           <img class="sale-item-img" 
-               src="img/product/${product.HinhAnh || 'default-book.jpg'}"
+               src="img/product/${product.HinhAnh || 'sp01.jpg'}"
                alt="${escapeHtml(product.TenSP)}"
-               onerror="this.src='img/default-book.jpg'">
+               onerror="this.src='img/product/sp01.jpg'">
           ${discountPercent ? `<div class="badge-discount">-${discountPercent}%</div>` : ''}
         </div>
         <div class="sale-item-info">
@@ -206,7 +220,7 @@ function displayProducts(productsData, containerId = 'book-list', limit = null) 
           </div>
           <div class="sale-item-actions">
             <button class="btn-add-cart" ${isOutOfStock ? 'disabled' : ''}
-                    onclick="addToCart(${product.MaSP}, '${escapeHtml(product.TenSP)}', ${product.DonGia}, '${product.HinhAnh || 'default-book.jpg'}')">
+                    onclick="addToCart(${product.MaSP}, '${escapeHtml(product.TenSP)}', ${product.DonGia}, '${product.HinhAnh || 'sp01.jpg'}')">
               Thêm giỏ
             </button>
             <button class="btn-detail" onclick="viewDetail(${product.MaSP})">
@@ -225,9 +239,9 @@ function displayProducts(productsData, containerId = 'book-list', limit = null) 
 
       productElement.innerHTML = `
         <div class="product-image">
-          <img src="img/product/${product.HinhAnh || 'default-book.jpg'}"
-               alt="${escapeHtml(product.TenSP)}"
-               onerror="this.src='img/default-book.jpg'">
+            <img src="img/product/${product.HinhAnh || 'sp01.jpg'}"
+                 alt="${escapeHtml(product.TenSP)}"
+                 onerror="this.src='img/product/sp01.jpg'">
           ${isOutOfStock ? '<span class="stock-status">HẾT HÀNG</span>' : ''}
         </div>
         <div class="product-info">
@@ -245,7 +259,7 @@ function displayProducts(productsData, containerId = 'book-list', limit = null) 
           <small>Còn ${product.SoLuong || 0} cuốn sách</small>
           <div class="product-actions">
             <button class="btn-add-cart" ${isOutOfStock ? 'disabled' : ''}
-                    onclick="addToCart(${product.MaSP}, '${escapeHtml(product.TenSP)}', ${product.DonGia}, '${product.HinhAnh || 'default-book.jpg'}')">
+                    onclick="addToCart(${product.MaSP}, '${escapeHtml(product.TenSP)}', ${product.DonGia}, '${product.HinhAnh || 'sp01.jpg'}')">
               Thêm giỏ hàng
             </button>
             <button class="btn-detail" onclick="viewDetail(${product.MaSP})">
@@ -1020,7 +1034,7 @@ async function populateSuppliers() {
     const res = await fetch(`${_apiBase}/api/product/suppliers`);
     if (!res.ok) throw new Error('Không tải được danh sách nhà cung cấp');
     const responseData = await res.json();
-    const suppliers = responseData.data || responseData;
+    const suppliers = (responseData && responseData.data) ? responseData.data : (Array.isArray(responseData) ? responseData : []);
     if (!Array.isArray(suppliers)) throw new Error('Dữ liệu nhà cung cấp không hợp lệ');
     // Clear except the 'Tất cả' button (first child)
     container.innerHTML = '';
@@ -1067,7 +1081,7 @@ async function populateHinhThuc() {
       const res = await fetch(`${_apiBase}/api/product`);
       if (!res.ok) throw new Error('Không lấy được sản phẩm để xác định HìnhThức');
       const responseData = await res.json();
-      const products = responseData.data || responseData;
+      const products = (responseData && responseData.data) ? responseData.data : (Array.isArray(responseData) ? responseData : []);
       if (!Array.isArray(products)) throw new Error('Dữ liệu sản phẩm không hợp lệ');
       const set = new Set();
       products.forEach(p => { if (p.HinhThuc) set.add(p.HinhThuc); });
@@ -1116,7 +1130,7 @@ async function populateAuthors() {
     const res = await fetch(`${_apiBase}/api/product/authors`);
     if (!res.ok) throw new Error('Không tải được danh sách tác giả');
     const responseData = await res.json();
-    const authors = responseData.data || responseData;
+    const authors = (responseData && responseData.data) ? responseData.data : (Array.isArray(responseData) ? responseData : []);
     if (!Array.isArray(authors)) throw new Error('Dữ liệu tác giả không hợp lệ');
     // Clear existing buttons and add 'Tất cả'
     container.innerHTML = '';
