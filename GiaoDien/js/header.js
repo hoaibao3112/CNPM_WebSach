@@ -13,29 +13,39 @@ function setupDropdownHover(selector) {
 
 // Kiểm tra trạng thái đăng nhập
 function checkLoginStatus() {
-  const user = JSON.parse(localStorage.getItem('user') || localStorage.getItem('loggedInUser') || '{}');
+  let user = {};
+  try {
+    const rawUser = localStorage.getItem('user') || localStorage.getItem('loggedInUser');
+    if (rawUser && rawUser !== 'undefined' && rawUser !== 'null') {
+      user = JSON.parse(rawUser);
+    }
+  } catch (error) {
+    console.error('Lỗi parse thông tin user từ localStorage:', error);
+    user = {};
+  }
 
   const loginLink = document.getElementById('loginLink');
   const loginLinkDiv = document.getElementById('loginLinkDiv');
-
-  
   const loggedInAccount = document.querySelector('.logged-in-account');
   const accountLink = document.getElementById('accountLink');
+  const accountDropdown = document.querySelector('.account-dropdown .dropdown-content');
 
   if (user && (user.tenkh || user.hoten || user.username || user.makh)) {
-    // if (loginLink) loginLink.style.display = 'none'; // MOVE 
     if (loggedInAccount) {
       loggedInAccount.style.display = 'inline-block';
       if (accountLink) {
         accountLink.innerHTML = `<i class="fas fa-user"></i> ${user.tenkh || user.hoten || user.username}`;
-        loginLinkDiv.style.display = 'none' // Code mới
       }
     }
-    const accountDropdown = document.querySelector('.account-dropdown .dropdown-content');
+    if (loginLinkDiv) loginLinkDiv.style.display = 'none';
+    if (loginLink) loginLink.style.display = 'none';
     if (accountDropdown) accountDropdown.style.display = 'none';
   } else {
+    // Guest
+    if (loginLinkDiv) loginLinkDiv.style.display = 'block';
     if (loginLink) loginLink.style.display = 'inline-block';
     if (loggedInAccount) loggedInAccount.style.display = 'none';
+    if (accountDropdown) accountDropdown.style.display = ''; // Revert to CSS hover logic
   }
 }
 
