@@ -12,7 +12,7 @@ from langchain_community.vectorstores import FAISS
 from langchain_huggingface import HuggingFaceEmbeddings
 from config import (
     DB_HOST, DB_PORT, DB_USER, DB_PASSWORD, DB_NAME,
-    FAISS_INDEX_PATH, EMBEDDING_MODEL
+    FAISS_INDEX_PATH, EMBEDDING_MODEL, GEMINI_API_KEY
 )
 
 
@@ -196,6 +196,7 @@ def main():
 
     # 3. Create embeddings and store in FAISS
     print("🧠 Creating embeddings and storing in FAISS...")
+
     embeddings = HuggingFaceEmbeddings(model_name=EMBEDDING_MODEL)
 
     vectorstore = FAISS.from_documents(

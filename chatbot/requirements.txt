@@ -3,7 +3,7 @@ langchain>=0.3.7
 langchain-core>=0.3.17
 langchain-community>=0.3.7
 langchain-text-splitters>=0.3.2
-langchain-ollama>=0.2.0
+langchain-google-genai>=2.0.0
 sentence-transformers
 faiss-cpu
 pymupdf
@@ -11,3 +11,4 @@ pandas
 fastapi
 uvicorn[standard]
 mysql-connector-python
+python-dotenv

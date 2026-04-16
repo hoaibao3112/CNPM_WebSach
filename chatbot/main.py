@@ -9,14 +9,14 @@ import time
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
-from langchain_ollama import ChatOllama
+from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_community.vectorstores import FAISS
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_core.messages import HumanMessage, AIMessage
 from langchain_core.output_parsers import StrOutputParser
 from config import (
-    OLLAMA_BASE_URL, OLLAMA_MODEL,
+    GEMINI_API_KEY, LLM_MODEL,
     FAISS_INDEX_PATH,
     EMBEDDING_MODEL, CHATBOT_PORT
 )
@@ -89,12 +89,15 @@ def init_components():
     """Initialize LLM, embeddings, and vector store."""
     global llm, vectorstore, retriever
 
-    print(f"🤖 Initializing Ollama LLM: {OLLAMA_MODEL} at {OLLAMA_BASE_URL}")
-    llm = ChatOllama(
-        model=OLLAMA_MODEL,
-        base_url=OLLAMA_BASE_URL,
+    if not GEMINI_API_KEY:
+        print("❌ WARNING: GEMINI_API_KEY is missing! Chatbot will fail to generate responses.")
+
+    print(f"🤖 Initializing Google Gemini LLM: {LLM_MODEL}")
+    llm = ChatGoogleGenerativeAI(
+        model=LLM_MODEL,
+        google_api_key=GEMINI_API_KEY,
         temperature=0.3,
-        num_predict=512,
+        max_output_tokens=512,
     )
 
     print(f"🧠 Loading embeddings: {EMBEDDING_MODEL}")
@@ -224,7 +227,7 @@ async def root():
     return {
         "status": "OK",
         "service": "WebSach AI Chatbot",
-        "model": OLLAMA_MODEL,
+        "model": LLM_MODEL,
         "faiss_index": os.path.exists(FAISS_INDEX_PATH),
     }
 
@@ -234,7 +237,7 @@ async def health():
     prune_expired_sessions()
     return {
         "status": "healthy",
-        "model": OLLAMA_MODEL,
+        "model": LLM_MODEL,
         "llm_ready": llm is not None,
         "vectorstore_ready": vectorstore is not None,
         "active_sessions": len(conversation_history),
@@ -260,7 +263,7 @@ async def chat(request: ChatRequest):
     if llm is None:
         raise HTTPException(
             status_code=503,
-            detail="Chatbot chưa sẵn sàng. Vui lòng kiểm tra Ollama đang chạy."
+            detail="Chatbot chưa sẵn sàng. Vui lòng kiểm tra mã Gemini API."
         )
 
     try:

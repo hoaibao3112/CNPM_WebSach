@@ -1,12 +1,15 @@
 """Configuration for the AI Chatbot service."""
 
 import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-# Ollama settings
-OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
-OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "llama3.2:latest")
+# Gemini settings
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
+LLM_MODEL = os.getenv("LLM_MODEL", "gemini-1.5-flash")
 
 # FAISS settings
 _faiss_env_path = os.getenv("FAISS_INDEX_PATH")
