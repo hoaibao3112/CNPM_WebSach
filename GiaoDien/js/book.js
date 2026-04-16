@@ -1453,7 +1453,8 @@ async function loadPromotionsFromAPI() {
     const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || window.API_CONFIG.BASE_URL;
     const res = await fetch(`${_apiBase}/api/books/promotions`, { headers: { 'Accept': 'application/json' } });
     if (!res.ok) throw new Error('Lỗi khi tải khuyến mãi');
-    const data = await res.json();
+    const responseData = await res.json();
+    const data = responseData.data || responseData;
 
     if (!Array.isArray(data) || data.length === 0) {
       promotionsList.innerHTML = '<li>Không có khuyến mãi</li>';

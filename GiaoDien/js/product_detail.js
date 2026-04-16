@@ -218,8 +218,9 @@ async function fetchRatings(productId) {
         const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || window.API_CONFIG.BASE_URL;
         const response = await fetch(`${_apiBase}/api/ratings/${productId}`);
         if (response.ok) {
-            const result = await response.json();
-            displayRatings(result.ratings, result.averageRating, result.totalRatings, productId);
+            const responseData = await response.json();
+            const result = responseData.data || responseData;
+            displayRatings(result.ratings || [], result.averageRating || 0, result.totalRatings || 0, productId);
         } else {
             const result = await response.json();
             showAlert(result.error || 'Lỗi khi tải đánh giá', 'error');
@@ -369,15 +370,19 @@ async function fetchProductDetail(productId) {
         
         if (!response.ok) throw new Error(`Lỗi HTTP: ${response.status}`);
         
-        const product = await response.json();
+        const responseData = await response.json();
+        const product = responseData.data || responseData;
+        
         console.log('Product data from API:', product);
         localStorage.setItem('currentProduct', JSON.stringify(product));
         displayProductDetail(product);
         fetchRelatedProducts(product.MaSP);
         fetchRatings(product.MaSP); // Thêm gọi API đánh giá
         checkAndDisplayPromotions(product.MaSP); // THÊM: Check promotions khi fetch API
-        if (product.MaTG && product.MaTG !== 'null' && product.MaTG !== '') {
-            fetchRelatedAuthor(product.MaTG);
+        
+        const maTG = product.MaTG || product.matg;
+        if (maTG && maTG !== 'null' && maTG !== '') {
+            fetchRelatedAuthor(maTG);
         } else {
             console.warn('No valid MaTG found for product:', product.MaSP);
             document.getElementById('related-authors').innerHTML = '<p>Không có thông tin tác giả</p>';
@@ -398,7 +403,8 @@ async function fetchRelatedAuthor(authorId) {
         const response = await fetch(`${_apiBase}/api/author/${authorId}`);
         if (!response.ok) throw new Error(`Lỗi API: ${response.status}`);
         
-        const author = await response.json();
+        const responseData = await response.json();
+        const author = responseData.data || responseData;
         console.log('Author data:', author);
         displayRelatedAuthor(author);
     } catch (error) {
@@ -897,7 +903,8 @@ async function showPromotionDetail(promotionId) {
         const response = await fetch(`${_apiBase}/api/khuyenmai/${promotionId}`);
         if (!response.ok) throw new Error('Không thể tải chi tiết khuyến mãi');
         
-        const promotion = await response.json();
+        const responseData = await response.json();
+        const promotion = responseData.data || responseData;
         
         const modalHtml = `
             <div class="promotion-detail-modal" id="promotionDetailModal">
@@ -1088,9 +1095,15 @@ function savePromotion(code, promotionId) {
                 if (res.ok) {
                     // add to local myPromos cache so profile page reflects change immediately
                     const myPromos = JSON.parse(localStorage.getItem('myPromos') || '[]');
+                    const innerData = data.data || {};
                     const exists = myPromos.some(p => (p.MaKM && String(p.MaKM) === String(promotionId)) || p.code === code || p.MaPhieu === code);
                     if (!exists) {
-                        myPromos.unshift({ MaKM: promotionId, code: code, ngay_lay: (data.ngay_lay || new Date().toISOString()), status: 'Chua_su_dung' });
+                        myPromos.unshift({ 
+                            MaKM: promotionId, 
+                            code: code, 
+                            ngay_lay: (innerData.ngay_lay || data.ngay_lay || new Date().toISOString()), 
+                            status: 'Chua_su_dung' 
+                        });
                         localStorage.setItem('myPromos', JSON.stringify(myPromos));
                     }
 
@@ -1144,7 +1157,8 @@ async function fetchRelatedProducts(currentProductId) {
         const response = await fetch(`${_apiBase}/api/product`);
         if (!response.ok) throw new Error(`Lỗi API: ${response.status}`);
         
-        const allProducts = await response.json();
+        const responseData = await response.json();
+        const allProducts = responseData.data || responseData;
         if (!Array.isArray(allProducts)) throw new Error('Dữ liệu không phải mảng');
   
         const relatedProducts = allProducts
@@ -1348,7 +1362,8 @@ function formatDate(dateString) {
  * Bảo vệ chống XSS
  */
 function escapeHtml(unsafe) {
-    return unsafe
+    if (unsafe === undefined || unsafe === null) return '';
+    return String(unsafe)
         .replace(/&/g, "&amp;")
         .replace(/</g, "&lt;")
         .replace(/>/g, "&gt;")

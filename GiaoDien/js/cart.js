@@ -37,7 +37,9 @@ async function getCart() {
         }
       });
       if (response.ok) {
-        const cartItems = await response.json();
+        const responseData = await response.json();
+        const cartItems = responseData.data || responseData;
+        if (!Array.isArray(cartItems)) return getLocalCart();
         return cartItems.map(item => ({
           id: item.MaSP,
           name: item.name,

@@ -1,4 +1,4 @@
-﻿document.addEventListener('DOMContentLoaded', initializeApp);
+document.addEventListener('DOMContentLoaded', initializeApp);
 const addressCache = {
     provinces: new Map(),
     districts: new Map(),
@@ -19,8 +19,9 @@ async function getProvinceName(provinceCode) {
         const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || window.API_CONFIG.BASE_URL;
         const response = await fetch(`${_apiBase}/api/orders/resolve/province/${provinceCode}`);
         if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-        const data = await response.json();
-        const provinceName = data.name || provinceCode;
+        const responseData = await response.json();
+        const data = responseData.data || responseData;
+        const provinceName = data.name || data || provinceCode;
         
         // Lưu vào cache
         addressCache.provinces.set(provinceCode.toString(), provinceName);
@@ -104,8 +105,9 @@ async function getDistrictName(districtCode, provinceCode) {
         const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || window.API_CONFIG.BASE_URL;
         const response = await fetch(`${_apiBase}/api/orders/resolve/district/${districtCode}`);
         if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-        const data = await response.json();
-        const districtName = data.name || districtCode;
+        const responseData = await response.json();
+        const data = responseData.data || responseData;
+        const districtName = data.name || data || districtCode;
         
         // Lưu vào cache
         addressCache.districts.set(districtCode.toString(), districtName);
@@ -138,8 +140,9 @@ async function getWardName(wardCode, districtCode) {
         const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || window.API_CONFIG.BASE_URL;
         const response = await fetch(`${_apiBase}/api/orders/resolve/ward/${wardCode}`);
         if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-        const data = await response.json();
-        const wardName = data.name || wardCode;
+        const responseData = await response.json();
+        const data = responseData.data || responseData;
+        const wardName = data.name || data || wardCode;
         
         // Lưu vào cache
         addressCache.wards.set(wardCode.toString(), wardName);
@@ -305,13 +308,14 @@ async function fetchOrders(customerId, statusFilter = 'all') {
             throw new Error('Không thể lấy danh sách đơn hàng');
         }
 
-        let orders = await response.json();
+        const responseData = await response.json();
+        let orders = responseData.data || responseData;
         
-        console.log('📋 Raw orders from API:', orders.map(o => ({
+        console.log('📋 Raw orders from API:', Array.isArray(orders) ? orders.map(o => ({
             id: o.id,
             tinhtrang: o.tinhtrang,
             status: o.status
-        })));
+        })) : orders);
 
         // ✅ KHÔNG MAP LẠI STATUS NỮA - SỬ DỤNG TRỰC TIẾP tinhtrang
         // Chỉ lọc theo statusFilter nếu cần
@@ -357,7 +361,8 @@ async function fetchOrderDetail(orderId) {
             throw new Error('Không thể lấy chi tiết đơn hàng');
         }
 
-        const data = await response.json();
+        const responseData = await response.json();
+        const data = responseData.data || responseData;
         console.log('Order Detail:', data);
 
         // Ánh xạ trạng thái
@@ -370,7 +375,7 @@ async function fetchOrderDetail(orderId) {
         };
 
         // Ánh xạ trạng thái từ API
-        data.status = statusMapping[data.status] || 'pending';
+        data.status = statusMapping[data.tinhtrang || data.status] || 'pending';
 
         return data;
     } catch (error) {

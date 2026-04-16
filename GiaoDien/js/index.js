@@ -159,7 +159,8 @@ async function handleFAQInChat(message, chatMessages) {
     if (!response.ok) {
       throw new Error(`Lỗi khi tải FAQ: ${response.status}`);
     }
-    const data = await response.json();
+    const responseData = await response.json();
+    const data = responseData.data || responseData;
     console.log('Phản hồi FAQ API:', data);
 
     if (!data.faqs || data.faqs.length === 0) {
@@ -324,7 +325,8 @@ function setupChat() {
         throw new Error(`Lỗi API: ${response.status} - ${response.statusText}`);
       }
 
-      const data = await response.json();
+      const responseData = await response.json();
+      const data = responseData.data || responseData;
       console.log('📥 Phản hồi từ AI:', data);
 
       // Xóa typing indicator
@@ -531,7 +533,8 @@ function setupChat() {
 
       if (!response.ok) throw new Error('Failed to load recommendations');
       
-      const result = await response.json();
+      const responseData = await response.json();
+      const result = responseData.data || responseData;
       loading.remove();
 
       if (!result.data || result.data.length === 0) {
@@ -699,8 +702,9 @@ async function showProductSuggestionWithDelay(productInfo) {
       throw new Error('Lỗi tìm kiếm sản phẩm');
     }
 
-    const data = await response.json();
-    return productInfo.type === 'id' ? data : (data.data && data.data.length > 0 ? data.data[0] : null);
+    const responseData = await response.json();
+    const data = responseData.data || responseData;
+    return productInfo.type === 'id' ? data : (Array.isArray(data) ? data[0] : (data && data.data && data.data.length > 0 ? data.data[0] : null));
   }
 
   // Ẩn gợi ý sản phẩm

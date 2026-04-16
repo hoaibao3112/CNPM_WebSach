@@ -1,4 +1,4 @@
-﻿document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function() {
   loadUserProfile();
   loadWishlist();
   loadPromoCodes();
@@ -28,10 +28,11 @@ async function loadUserProfile() {
       }
     });
 
-    const data = await response.json();
+    const responseData = await response.json();
+    const data = responseData.data || responseData;
 
     if (!response.ok || !data.user) {
-      throw new Error(data.error || 'Không thể lấy thông tin người dùng');
+      throw new Error(responseData.error || responseData.message || 'Không thể lấy thông tin người dùng');
     }
 
     const user = data.user;
@@ -348,9 +349,10 @@ async function fetchOrderReview(orderId) {
       headers: { 'Authorization': `Bearer ${token}` }
     });
     if (!resp.ok) return null;
-    const data = await resp.json();
+    const responseData = await resp.json();
+    const data = responseData.data || responseData;
     // server returns { review: ... } — return the inner review object (or null)
-    return (data && data.review) ? data.review : null;
+    return (data && data.review) ? data.review : (data && data.MaDG ? data : null);
   } catch (e) {
     console.warn('fetchOrderReview error', e);
     return null;
@@ -376,7 +378,8 @@ async function loadReviewedOrders() {
       headers: { 'Authorization': `Bearer ${token}` }
     });
     if (!resp.ok) throw new Error('Không thể lấy đơn hàng');
-    const orders = await resp.json();
+    const responseData = await resp.json();
+    const orders = responseData.data || responseData;
 
     // Kiểm tra review cho từng đơn (song song)
     const checks = await Promise.all(orders.map(async o => {
@@ -653,7 +656,8 @@ async function renderMembershipCard() {
         method: 'GET',
         headers: { Authorization: `Bearer ${token}` }
       });
-      const js = await res.json();
+      const responseData = await res.json();
+      const js = responseData.data || responseData;
       if (res.ok && js.user) {
         user = js.user;
         localStorage.setItem('user', JSON.stringify(user));
