@@ -234,27 +234,325 @@ footer {
 }
 
 /* ===== RESPONSIVE ===== */
+@media (max-width: 1024px) {
+  .product-list {
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 24px;
+  }
+
+  .product-card img {
+    height: 240px;
+  }
+
+  .voucher-card {
+    width: 220px;
+  }
+}
+
+@media (max-width: 768px) {
+  header {
+    padding: 15px 15px;
+  }
+
+  header h1 {
+    font-size: 1.4rem;
+  }
+
+  .logo {
+    font-size: 2rem;
+  }
+
+  header p {
+    font-size: 0.9rem;
+  }
+
+  .voucher-section {
+    padding: 30px 0;
+    margin-top: 15px;
+  }
+
+  .voucher-banner {
+    margin-bottom: 25px;
+  }
+
+  .voucher-banner .banner {
+    font-size: 24px;
+    padding: 12px 30px;
+  }
+
+  .voucher-list {
+    gap: 12px;
+    padding: 0 15px;
+  }
+
+  .voucher-card {
+    width: calc(50% - 6px);
+    padding: 15px;
+  }
+
+  .top-banner, .deal-banner {
+    margin: 20px auto;
+    padding: 0 15px;
+  }
+
+  .top-banner img, .deal-banner img {
+    border-radius: 14px;
+  }
+
+  .product-section {
+    max-width: 100%;
+    margin: 25px auto 50px auto;
+    padding: 0 15px 50px 15px;
+  }
+
+  .product-section h2 {
+    font-size: 1.3rem;
+    margin: 20px 0 18px 0;
+  }
+
+  .product-list {
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+  }
+
+  .product-card {
+    border-radius: 12px;
+  }
+
+  .product-card img {
+    height: 200px;
+    padding: 12px;
+  }
+
+  .product-card .card-body {
+    padding: 15px;
+  }
+
+  .product-card h3 {
+    font-size: 1.1rem;
+    margin-bottom: 6px;
+  }
+
+  .product-card p {
+    font-size: 0.9rem;
+  }
+
+  .product-price {
+    font-size: 1.1rem;
+    margin-top: 10px;
+  }
+
+  .product-author {
+    margin-top: 3px;
+  }
+
+  footer {
+    padding: 12px 0;
+    font-size: 0.95rem;
+  }
+}
+
 @media (max-width: 600px) {
+  header {
+    padding: 12px 10px;
+  }
+
   header h1 {
     font-size: 1.2rem;
   }
+
+  .brand {
+    gap: 10px;
+  }
+
   .logo {
     font-size: 1.8rem;
   }
+
   header p {
     font-size: 0.85rem;
+    display: none;
   }
+
+  .voucher-section {
+    padding: 25px 0;
+  }
+
+  .voucher-banner {
+    margin-bottom: 20px;
+  }
+
+  .voucher-banner .banner {
+    font-size: 18px;
+    padding: 10px 20px;
+    border-radius: 8px;
+  }
+
+  .voucher-banner .banner-title {
+    padding: 4px 10px;
+    font-size: 12px;
+    margin-right: 8px;
+  }
+
+  .voucher-list {
+    gap: 10px;
+    padding: 0 10px;
+    flex-direction: column;
+  }
+
+  .voucher-card {
+    width: 100%;
+    padding: 12px;
+    font-size: 0.9rem;
+  }
+
+  .voucher-type {
+    font-size: 18px;
+  }
+
+  .voucher-desc {
+    font-size: 13px;
+  }
+
+  .voucher-hsd {
+    font-size: 12px;
+  }
+
+  .btn-save {
+    padding: 5px 12px;
+    font-size: 0.85rem;
+    width: 100%;
+    float: none;
+    margin-top: 8px;
+  }
+
+  .top-banner, .deal-banner {
+    margin: 15px auto;
+    padding: 0 10px;
+  }
+
   .top-banner img, .deal-banner img {
     border-radius: 10px;
   }
+
+  .product-section {
+    margin: 20px auto 40px auto;
+    padding: 0 10px 40px 10px;
+  }
+
+  .product-section h2 {
+    font-size: 1.2rem;
+    margin: 18px 0 15px 0;
+    gap: 8px;
+  }
+
+  .product-list {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+
+  .product-card {
+    border-radius: 10px;
+  }
+
   .product-card img {
-    height: 200px;
+    height: 150px;
     padding: 8px;
   }
-  .product-section {
-    padding: 0 15px 40px 15px;
+
+  .product-card .card-body {
+    padding: 12px;
   }
+
+  .product-card h3 {
+    font-size: 1rem;
+    margin-bottom: 4px;
+  }
+
+  .product-card p {
+    font-size: 0.85rem;
+  }
+
+  .product-price {
+    font-size: 1rem;
+    margin-top: 8px;
+  }
+
+  .product-author {
+    font-size: 0.9rem;
+  }
+
+  footer {
+    padding: 10px 0;
+    font-size: 0.9rem;
+  }
+}
+
+@media (max-width: 400px) {
+  header {
+    flex-direction: column;
+    gap: 10px;
+    padding: 10px 8px;
+  }
+
+  header h1 {
+    font-size: 1.1rem;
+  }
+
+  .logo {
+    font-size: 1.6rem;
+  }
+
+  .voucher-section {
+    padding: 20px 0;
+  }
+
+  .voucher-list {
+    padding: 0 8px;
+  }
+
+  .voucher-card {
+    width: 100%;
+    padding: 10px;
+  }
+
+  .voucher-type {
+    font-size: 16px;
+  }
+
+  .product-section {
+    padding: 0 8px 30px 8px;
+    margin: 15px auto 30px auto;
+  }
+
+  .product-section h2 {
+    font-size: 1.1rem;
+    margin: 15px 0 12px 0;
+  }
+
   .product-list {
-    grid-template-columns: 1fr; /* 1 cột trên mobile */
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .product-card img {
+    height: 140px;
+    padding: 6px;
+  }
+
+  .product-card .card-body {
+    padding: 10px;
+  }
+
+  .product-card h3 {
+    font-size: 0.95rem;
+  }
+
+  .product-card p {
+    font-size: 0.8rem;
+  }
+
+  .product-price {
+    font-size: 0.95rem;
   }
 }

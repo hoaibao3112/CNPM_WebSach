@@ -162,3 +162,132 @@
     display: table;
     clear: both;
   }
+
+/* ===== RESPONSIVE MOBILE ===== */
+@media (max-width: 768px) {
+    .promotion-container {
+        max-width: 100%;
+        margin: 15px 0;
+        padding: 0 10px;
+        float: none;
+        width: 100%;
+    }
+
+    .promotion-header {
+        text-align: center;
+        margin-bottom: 15px;
+        padding-right: 0;
+    }
+
+    .promotion-header h2 {
+        font-size: 1.5rem;
+    }
+
+    .promotion-grid {
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        gap: 12px;
+    }
+
+    .promotion-image {
+        height: 140px;
+    }
+
+    .promotion-title {
+        font-size: 1rem;
+        margin-bottom: 6px;
+    }
+
+    .promotion-period {
+        font-size: 0.8rem;
+        margin-bottom: 6px;
+    }
+
+    .promotion-type {
+        padding: 2px 5px;
+        font-size: 0.7rem;
+    }
+
+    .promotion-description {
+        margin-bottom: 10px;
+        font-size: 0.85rem;
+    }
+
+    .products-title {
+        font-size: 0.8rem;
+        margin-bottom: 5px;
+    }
+
+    .product-tag {
+        padding: 2px 5px;
+        font-size: 0.7rem;
+    }
+
+    .active-badge {
+        padding: 3px 6px;
+        font-size: 0.65rem;
+        top: 8px;
+        right: 8px;
+    }
+
+    .side-content {
+        float: none;
+        width: 100%;
+        margin: 15px 0;
+        padding: 12px;
+    }
+}
+
+@media (max-width: 480px) {
+    .promotion-container {
+        padding: 0 8px;
+        margin: 12px 0;
+    }
+
+    .promotion-header h2 {
+        font-size: 1.3rem;
+    }
+
+    .promotion-grid {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+
+    .promotion-card {
+        border-radius: 6px;
+    }
+
+    .promotion-image {
+        height: 120px;
+    }
+
+    .promotion-content {
+        padding: 10px;
+    }
+
+    .promotion-title {
+        font-size: 0.95rem;
+    }
+
+    .promotion-period {
+        font-size: 0.75rem;
+    }
+
+    .promotion-description {
+        font-size: 0.8rem;
+        margin-bottom: 8px;
+    }
+
+    .promotion-products {
+        margin-top: 10px;
+        padding-top: 8px;
+    }
+
+    .product-list {
+        gap: 4px;
+    }
+
+    .product-tag {
+        padding: 2px 4px;
+        font-size: 0.65rem;
+    }
+}

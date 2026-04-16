@@ -399,6 +399,193 @@ body {
     }
 }
 
+/* ===== RESPONSIVE MOBILE ===== */
+@media (max-width: 768px) {
+    body {
+        background: linear-gradient(135deg, #fff7b2 0%, #ffe082 100%);
+    }
+
+    .top-banner, .deal-banner {
+        margin: 12px 0 16px 0;
+    }
+
+    .top-banner img, .deal-banner img {
+        border-radius: 12px;
+    }
+
+    .voucher-list {
+        grid-template-columns: 1fr;
+        gap: 16px;
+        padding: 0 12px;
+    }
+
+    .voucher-card {
+        flex-direction: column;
+        padding: 16px;
+        border-left: none;
+        border-top: 4px solid #4ecb71;
+        text-align: center;
+    }
+
+    .voucher-icon {
+        margin-right: 0;
+        margin-bottom: 12px;
+        font-size: 1.8rem;
+        min-width: auto;
+    }
+
+    .voucher-info {
+        width: 100%;
+    }
+
+    .voucher-title {
+        font-size: 1.1rem;
+    }
+
+    .voucher-desc {
+        font-size: 0.9rem;
+    }
+
+    .voucher-action {
+        flex-direction: column;
+        width: 100%;
+        margin-top: 12px;
+    }
+
+    .voucher-btn {
+        width: 100%;
+        padding: 12px 16px;
+        min-height: 44px;
+        font-size: 1rem;
+    }
+
+    .voucher-btn:hover:not(:disabled) {
+        transform: scale(1.02);
+    }
+
+    .detail-btn {
+        font-size: 1.3rem;
+    }
+
+    /* Modal responsive */
+    .modal-overlay {
+        padding: 12px;
+    }
+
+    .modal-content {
+        border-radius: 12px;
+    }
+
+    .modal-body {
+        padding: 20px;
+    }
+
+    .detail-header h3 {
+        font-size: 1.3rem;
+    }
+
+    .detail-section h4 {
+        font-size: 1rem;
+    }
+
+    /* Notification responsive */
+    .notification {
+        top: 10px;
+        right: 10px;
+        left: 10px;
+        max-width: none;
+    }
+}
+
+@media (max-width: 480px) {
+    body {
+        font-size: 14px;
+    }
+
+    .voucher-list {
+        gap: 12px;
+        padding: 0 8px;
+    }
+
+    .voucher-card {
+        padding: 12px;
+    }
+
+    .voucher-icon {
+        font-size: 1.6rem;
+        margin-bottom: 10px;
+    }
+
+    .icon-label {
+        font-size: 0.65rem;
+    }
+
+    .voucher-title {
+        font-size: 1rem;
+        margin-bottom: 4px;
+    }
+
+    .voucher-desc {
+        font-size: 0.85rem;
+        margin-bottom: 6px;
+    }
+
+    .voucher-discount {
+        font-size: 0.95rem;
+    }
+
+    .voucher-expiry {
+        font-size: 0.8rem;
+    }
+
+    .voucher-conditions {
+        font-size: 0.75rem;
+    }
+
+    .voucher-action {
+        gap: 8px;
+    }
+
+    .voucher-btn {
+        padding: 10px 14px;
+        min-height: 40px;
+        font-size: 0.9rem;
+    }
+
+    .modal-body {
+        padding: 16px;
+    }
+
+    .detail-header h3 {
+        font-size: 1.2rem;
+        margin-bottom: 16px;
+    }
+
+    .detail-section h4 {
+        font-size: 0.95rem;
+    }
+
+    .detail-item {
+        margin: 8px 0;
+        padding: 6px 0;
+    }
+
+    .code-display {
+        font-size: 1rem;
+        padding: 3px 10px;
+    }
+
+    .condition-list {
+        margin: 12px 0;
+        padding-left: 16px;
+    }
+
+    .condition-list li {
+        margin: 6px 0;
+        font-size: 0.9rem;
+    }
+}
+
 /* Responsive design */
 @media (max-width: 768px) {
     .voucher-list {
