@@ -144,6 +144,9 @@ function displayProducts(productsData, containerId = 'book-list', limit = null) 
     finalProducts = [];
   }
   
+  // Safety alias for any remaining references e.g. in line 287 (in case of partial apply)
+  const products = finalProducts;
+  
   // Flash Sale has a dedicated renderer in products_sales.js.
   // Guard here to avoid asynchronous overwrite/race from book.js.
   if (containerId === 'flash-products') {
@@ -284,7 +287,7 @@ function displayProducts(productsData, containerId = 'book-list', limit = null) 
   }
 
   // tạo nút xem thêm nếu cần
-  if (limit && products.length > displayCount) {
+  if (limit && finalProducts.length > displayCount) {
     const viewMoreButton = document.createElement('div');
     viewMoreButton.className = 'view-more-container';
     viewMoreButton.innerHTML = `
@@ -1020,8 +1023,17 @@ async function renderCategoryToFil() {
 async function loadListProductSearch() {
   const params = new URLSearchParams(window.location.search);
   const keyword = params.get("search") || "";
-  productsSearchMain = await searchProduct(keyword);
-  // const productsCategory = products.filter(item => item.MaTL === '1');
+  const responseData = await searchProduct(keyword);
+  
+  // Unwrap search results for the global productsSearchMain
+  if (Array.isArray(responseData)) {
+    productsSearchMain = responseData;
+  } else if (responseData && Array.isArray(responseData.data)) {
+    productsSearchMain = responseData.data;
+  } else {
+    productsSearchMain = [];
+  }
+  
   displayProducts(productsSearchMain, 'search-book-list', 10);
 }
 
@@ -1034,8 +1046,15 @@ async function populateSuppliers() {
     const res = await fetch(`${_apiBase}/api/product/suppliers`);
     if (!res.ok) throw new Error('Không tải được danh sách nhà cung cấp');
     const responseData = await res.json();
-    const suppliers = (responseData && responseData.data) ? responseData.data : (Array.isArray(responseData) ? responseData : []);
-    if (!Array.isArray(suppliers)) throw new Error('Dữ liệu nhà cung cấp không hợp lệ');
+    let suppliersCount = 0;
+    let suppliersArr = [];
+
+    // Robust unwrap
+    if (Array.isArray(responseData)) suppliersArr = responseData;
+    else if (responseData && Array.isArray(responseData.data)) suppliersArr = responseData.data;
+    else if (responseData && responseData.data && Array.isArray(responseData.data.data)) suppliersArr = responseData.data.data;
+    
+    if (!Array.isArray(suppliersArr)) throw new Error('Dữ liệu nhà cung cấp không hợp lệ');
     // Clear except the 'Tất cả' button (first child)
     container.innerHTML = '';
     // Add 'Tất cả'
@@ -1045,7 +1064,7 @@ async function populateSuppliers() {
     allBtn.textContent = 'Tất cả';
     container.appendChild(allBtn);
 
-    suppliers.forEach(s => {
+    suppliersArr.forEach(s => {
       const btn = document.createElement('button');
       btn.className = 'filter-btn';
       btn.dataset.value = s.MaNCC;
@@ -1081,10 +1100,14 @@ async function populateHinhThuc() {
       const res = await fetch(`${_apiBase}/api/product`);
       if (!res.ok) throw new Error('Không lấy được sản phẩm để xác định HìnhThức');
       const responseData = await res.json();
-      const products = (responseData && responseData.data) ? responseData.data : (Array.isArray(responseData) ? responseData : []);
-      if (!Array.isArray(products)) throw new Error('Dữ liệu sản phẩm không hợp lệ');
+      let productsArr = [];
+      if (Array.isArray(responseData)) productsArr = responseData;
+      else if (responseData && Array.isArray(responseData.data)) productsArr = responseData.data;
+      else if (responseData && responseData.data && Array.isArray(responseData.data.data)) productsArr = responseData.data.data;
+
+      if (!Array.isArray(productsArr)) throw new Error('Dữ liệu sản phẩm không hợp lệ');
       const set = new Set();
-      products.forEach(p => { if (p.HinhThuc) set.add(p.HinhThuc); });
+      productsArr.forEach(p => { if (p.HinhThuc) set.add(p.HinhThuc); });
       values = Array.from(set);
     } catch (err) {
       console.warn('Fallback populateHinhThuc failed:', err);
@@ -1130,8 +1153,16 @@ async function populateAuthors() {
     const res = await fetch(`${_apiBase}/api/product/authors`);
     if (!res.ok) throw new Error('Không tải được danh sách tác giả');
     const responseData = await res.json();
-    const authors = (responseData && responseData.data) ? responseData.data : (Array.isArray(responseData) ? responseData : []);
-    if (!Array.isArray(authors)) throw new Error('Dữ liệu tác giả không hợp lệ');
+    console.log('[populateAuthors] raw response:', responseData);
+    let authorsArr = [];
+    if (Array.isArray(responseData)) authorsArr = responseData;
+    else if (responseData && Array.isArray(responseData.data)) authorsArr = responseData.data;
+    else if (responseData && responseData.data && Array.isArray(responseData.data.data)) authorsArr = responseData.data.data;
+
+    if (!Array.isArray(authorsArr)) {
+       console.error('[populateAuthors] Failed to find array in response:', responseData);
+       throw new Error('Dữ liệu tác giả không hợp lệ');
+    }
     // Clear existing buttons and add 'Tất cả'
     container.innerHTML = '';
     const allBtn = document.createElement('button');
@@ -1142,7 +1173,7 @@ async function populateAuthors() {
 
     // create buttons but only append first N (8) initially
     const MAX_VISIBLE = 8;
-    const authorButtons = authors.map(a => {
+    const authorButtons = authorsArr.map(a => {
       const btn = document.createElement('button');
       btn.className = 'filter-btn';
       btn.dataset.value = a.MaTG;
@@ -1377,10 +1408,22 @@ let currentCategory = "";
 let currentPriceRange = "";
 
 function applyFilters() {
-  console.log(productsSearchMain)
   if (!productsSearchMain) return;
 
-  let productsFiltered = [...productsSearchMain];
+  // Robust unwrap for global search variable
+  let sourceArr = [];
+  if (Array.isArray(productsSearchMain)) {
+    sourceArr = productsSearchMain;
+  } else if (productsSearchMain && Array.isArray(productsSearchMain.data)) {
+    sourceArr = productsSearchMain.data;
+  }
+  
+  if (!Array.isArray(sourceArr)) {
+    console.warn('[applyFilters] productsSearchMain is not an array:', productsSearchMain);
+    return;
+  }
+
+  let productsFiltered = [...sourceArr];
 
   // lọc theo danh mục
   if (currentCategory) {
