@@ -811,7 +811,7 @@ class OrderService {
 
         if (paymentMethod === 'MOMO') {
             try {
-                const paymentUrl = await MoMoPaymentService.createPaymentUrl(
+                const momoResult = await MoMoPaymentService.createPaymentUrl(
                     orderResult.orderId,
                     orderResult.finalTotalAmount,
                     `Thanh toán đơn hàng #${orderResult.orderId}`,
@@ -824,7 +824,7 @@ class OrderService {
                     payload: {
                         success: true,
                         orderId: orderResult.orderId,
-                        paymentUrl,
+                        paymentUrl: momoResult.paymentUrl,
                         message: 'Đơn hàng đã tạo, chuyển hướng thanh toán MoMo',
                         appliedTier: orderResult.userTier,
                         discountAmount: orderResult.discountAmount,
