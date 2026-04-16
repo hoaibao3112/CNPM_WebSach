@@ -126,7 +126,10 @@ async function addToCart(productId, productName, price, image) {
 }
 
 // Hàm hiển thị danh sách sản phẩm
-function displayProducts(products, containerId = 'book-list', limit = null) {
+function displayProducts(productsData, containerId = 'book-list', limit = null) {
+  // Safety check for standardized API response
+  const products = (productsData && productsData.data) ? productsData.data : (Array.isArray(productsData) ? productsData : []);
+  
   // Flash Sale has a dedicated renderer in products_sales.js.
   // Guard here to avoid asynchronous overwrite/race from book.js.
   if (containerId === 'flash-products') {
@@ -1016,7 +1019,9 @@ async function populateSuppliers() {
     const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || window.API_CONFIG.BASE_URL;
     const res = await fetch(`${_apiBase}/api/product/suppliers`);
     if (!res.ok) throw new Error('Không tải được danh sách nhà cung cấp');
-    const suppliers = await res.json();
+    const responseData = await res.json();
+    const suppliers = responseData.data || responseData;
+    if (!Array.isArray(suppliers)) throw new Error('Dữ liệu nhà cung cấp không hợp lệ');
     // Clear except the 'Tất cả' button (first child)
     container.innerHTML = '';
     // Add 'Tất cả'
@@ -1061,7 +1066,9 @@ async function populateHinhThuc() {
       const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || window.API_CONFIG.BASE_URL;
       const res = await fetch(`${_apiBase}/api/product`);
       if (!res.ok) throw new Error('Không lấy được sản phẩm để xác định HìnhThức');
-      const products = await res.json();
+      const responseData = await res.json();
+      const products = responseData.data || responseData;
+      if (!Array.isArray(products)) throw new Error('Dữ liệu sản phẩm không hợp lệ');
       const set = new Set();
       products.forEach(p => { if (p.HinhThuc) set.add(p.HinhThuc); });
       values = Array.from(set);
@@ -1108,7 +1115,9 @@ async function populateAuthors() {
     const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || window.API_CONFIG.BASE_URL;
     const res = await fetch(`${_apiBase}/api/product/authors`);
     if (!res.ok) throw new Error('Không tải được danh sách tác giả');
-    const authors = await res.json();
+    const responseData = await res.json();
+    const authors = responseData.data || responseData;
+    if (!Array.isArray(authors)) throw new Error('Dữ liệu tác giả không hợp lệ');
     // Clear existing buttons and add 'Tất cả'
     container.innerHTML = '';
     const allBtn = document.createElement('button');
@@ -1224,7 +1233,8 @@ async function fetchProductsWithFilters(filters, containerId = null, limit = 10)
     productList.innerHTML = '<div class="loading">Đang tải sản phẩm...</div>';
     const res = await fetch(url);
     if (!res.ok) throw new Error('Lỗi HTTP ' + res.status);
-    const products = await res.json();
+    const responseData = await res.json();
+    const products = responseData.data || responseData;
     displayProducts(products, resolvedId, limit);
   } catch (err) {
     console.error('Lỗi fetchProductsWithFilters:', err);
