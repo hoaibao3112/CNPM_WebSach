@@ -45,17 +45,26 @@ async function createMoMoPayment(orderId, amount, orderInfo = '') {
     const data = await response.json();
     hideLoadingSpinner();
 
-    if (response.ok && data.data?.paymentUrl) {
-      // Redirect tới MoMo payment page
-      window.location.href = data.data.paymentUrl;
+    console.log('[MoMo] Create payment response:', data);
+
+    if (response.ok && data.data) {
+      const paymentUrl = (typeof data.data === 'string') ? data.data : (data.data.paymentUrl || data.data.payUrl);
+      
+      if (paymentUrl && typeof paymentUrl === 'string') {
+        console.log('[MoMo] Redirecting to:', paymentUrl);
+        window.location.href = paymentUrl;
+      } else {
+        console.error('[MoMo] paymentUrl is missing or not a string:', data);
+        alert('Lỗi: Không nhận được liên kết thanh toán hợp lệ từ MoMo');
+      }
     } else {
       alert(data.message || 'Lỗi tạo link thanh toán MoMo');
       console.error('MoMo Payment Error:', data);
     }
   } catch (error) {
     hideLoadingSpinner();
-    console.error('MoMo Payment Error:', error);
-    alert(`Lỗi: ${error.message}`);
+    console.error('MoMo Payment Error Catch:', error);
+    alert(`Lỗi hệ thống: ${error.message}`);
   }
 }
 

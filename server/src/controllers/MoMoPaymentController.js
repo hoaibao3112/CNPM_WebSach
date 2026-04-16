@@ -49,12 +49,17 @@ class MoMoPaymentController {
     try {
       const { orderId, resultCode, transId } = req.query;
 
-      logger.info('📱 MoMo Return Redirect:', { orderId, resultCode, transId });
+      logger.info('📱 MoMo Return Redirect Params:', { orderId, resultCode, transId });
 
-      // Redirect về frontend với query params
-      const frontendUrl = process.env.CLIENT_CUSTOMER_URL || 'http://localhost:5501';
-      const redirectUrl = `${frontendUrl}/order-confirmation.html?orderId=${orderId}&resultCode=${resultCode}&transId=${transId}`;
+      // Determine FrontEnd URL
+      const rawFrontendUrl = process.env.CLIENT_CUSTOMER_URL || 'http://localhost:5501';
+      // Clean target URL (ensure it's a string, no trailing slash duplication)
+      const frontendUrl = String(rawFrontendUrl).replace(/\/$/, '');
+      
+      const redirectPath = '/order-confirmation.html';
+      const redirectUrl = `${frontendUrl}${redirectPath}?orderId=${orderId || ''}&resultCode=${resultCode || ''}&transId=${transId || ''}`;
 
+      logger.info(`📱 Redirecting user back to frontend: ${redirectUrl}`);
       return res.redirect(redirectUrl);
     } catch (error) {
       logger.error('MoMo Return Error:', error);
