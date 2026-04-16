@@ -19,7 +19,7 @@ router.put('/hoadon/:id/status', authenticateToken, OrderController.updateOrderS
 router.put('/hoadon/:id/trangthai', authenticateToken, OrderController.updateOrderStatus); // Vietnamese alias
 
 // Update order address (alternative pattern)
-router.put('/hoadon/:id/address', authenticateToken, OrderController.updateAddress);
+router.put('/hoadon/:id/address', authenticateToken, OrderController.updateOrderAddress);
 
 // Delete order (admin)
 router.delete('/hoadon/:id', authenticateToken, OrderController.deleteOrder);

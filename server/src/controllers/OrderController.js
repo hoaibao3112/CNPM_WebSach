@@ -178,6 +178,26 @@ class OrderController {
         }
     }
 
+    async updateOrderAddress(req, res) {
+        try {
+            const { id } = req.params;  // This is the order ID (MaHD)
+            const customerId = req.user.makh;
+
+            if (!customerId) {
+                return baseController.sendError(res, 'Không xác thực được người dùng', 401);
+            }
+
+            const result = await OrderService.updateOrderAddress(id, customerId, req.body);
+            return baseController.sendSuccess(res, result, result.message);
+
+        } catch (error) {
+            if (error.message.includes('khong ton tai') || error.message.includes('không tồn tại')) {
+                return baseController.sendError(res, error.message, 404);
+            }
+            return baseController.sendError(res, 'Lỗi khi cập nhật địa chỉ', 500, error.message);
+        }
+    }
+
     async updateAddress(req, res) {
         try {
             const { id } = req.params;
@@ -191,7 +211,7 @@ class OrderController {
             return baseController.sendSuccess(res, { id }, 'Cập nhật địa chỉ thành công');
 
         } catch (error) {
-            if (error.message === 'Địa chỉ không tồn tại') {
+            if (error.message.includes('khong ton tai') || error.message.includes('không tồn tại')) {
                 return baseController.sendError(res, error.message, 404);
             }
             return baseController.sendError(res, 'Lỗi khi cập nhật địa chỉ', 500, error.message);

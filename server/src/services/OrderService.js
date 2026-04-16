@@ -995,6 +995,86 @@ class OrderService {
         return result.insertId;
     }
 
+    async updateOrderAddress(orderId, customerId, addressData) {
+        // This method updates the delivery address for an order (hoadon.MaDiaChi)
+        const { MaDiaChi, TenNguoiNhan, SDT, DiaChiChiTiet, TinhThanh, QuanHuyen, PhuongXa } = addressData;
+        
+        // First verify the order belongs to the customer
+        const [[order]] = await pool.query(
+            `SELECT MaHD, MaDiaChi, TongTien, PhiShip FROM hoadon WHERE MaHD = ? AND makh = ?`,
+            [orderId, customerId]
+        );
+
+        if (!order) {
+            throw new Error('Khong tim thay don hang');
+        }
+
+        // Case 1: User selected a saved address (MaDiaChi provided)
+        if (MaDiaChi) {
+            // Verify the address exists and belongs to customer
+            const [[savedAddr]] = await pool.query(
+                `SELECT MaDiaChi FROM diachi WHERE MaDiaChi = ? AND MaKH = ?`,
+                [MaDiaChi, customerId]
+            );
+
+            if (!savedAddr) {
+                throw new Error('Dia chi khong ton tai hoac khong thuoc ve khach hang nay');
+            }
+
+            // Update order to use this address
+            const [result] = await pool.query(
+                `UPDATE hoadon SET MaDiaChi = ? WHERE MaHD = ? AND makh = ?`,
+                [MaDiaChi, orderId, customerId]
+            );
+
+            if (result.affectedRows === 0) {
+                throw new Error('Cap nhat dia chi that bai');
+            }
+
+            return { id: orderId, message: 'Cap nhat dia chi thanh cong' };
+        }
+
+        // Case 2: User entered a new address
+        if (!TenNguoiNhan || !SDT || !DiaChiChiTiet) {
+            throw new Error('Vui long dien day du thong tin dia chi');
+        }
+
+        // Check if address already exists for this customer
+        const [[existingAddr]] = await pool.query(
+            `SELECT MaDiaChi FROM diachi WHERE MaKH = ? AND DiaChiChiTiet = ? AND TinhThanh = ? LIMIT 1`,
+            [customerId, DiaChiChiTiet, TinhThanh]
+        );
+
+        let newAddressId;
+        if (existingAddr) {
+            // Update existing address
+            newAddressId = existingAddr.MaDiaChi;
+            await pool.query(
+                `UPDATE diachi SET TenNguoiNhan = ?, SDT = ?, QuanHuyen = ?, PhuongXa = ? WHERE MaDiaChi = ?`,
+                [TenNguoiNhan, SDT, QuanHuyen, PhuongXa, newAddressId]
+            );
+        } else {
+            // Create new address
+            const [insertResult] = await pool.query(
+                `INSERT INTO diachi (MaKH, TenNguoiNhan, SDT, DiaChiChiTiet, TinhThanh, QuanHuyen, PhuongXa) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+                [customerId, TenNguoiNhan, SDT, DiaChiChiTiet, TinhThanh, QuanHuyen, PhuongXa]
+            );
+            newAddressId = insertResult.insertId;
+        }
+
+        // Update order with new address
+        const [result] = await pool.query(
+            `UPDATE hoadon SET MaDiaChi = ? WHERE MaHD = ? AND makh = ?`,
+            [newAddressId, orderId, customerId]
+        );
+
+        if (result.affectedRows === 0) {
+            throw new Error('Cap nhat dia chi that bai');
+        }
+
+        return { id: orderId, message: 'Cap nhat dia chi thanh cong' };
+    }
+
     async updateAddress(addressId, customerId, addressData) {
         const { name, phone, detail, province, district, ward } = addressData;
         const [result] = await pool.query(
