@@ -537,13 +537,16 @@ function setupChat() {
       const result = responseData.data || responseData;
       loading.remove();
 
-      if (!result.data || result.data.length === 0) {
+      // Handle both { data: [...] } and just [...]
+      const products = Array.isArray(result) ? result : (result.data || []);
+
+      if (products.length === 0) {
         addMessage('ai', 'Xin lỗi, hiện tại chưa có sản phẩm phù hợp.');
         return;
       }
 
       // Render product carousel
-      renderProductCarousel(result.data, result.message);
+      renderProductCarousel(products, responseData.message || result.message);
       
     } catch (error) {
       console.error('Error handling chat action:', error);

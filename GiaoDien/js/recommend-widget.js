@@ -138,7 +138,8 @@
                 console.error(`Lỗi API: ${response.statusText}`);
                 return [];
             }
-            const data = await response.json();
+            const responseData = await response.json();
+            const data = responseData.data || responseData;
             return Array.isArray(data) ? data : [];
         } catch (error) {
             console.error('Lỗi mạng khi lấy đề xuất:', error);
