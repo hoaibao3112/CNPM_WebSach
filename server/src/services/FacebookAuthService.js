@@ -44,15 +44,14 @@ class FacebookAuthService {
       const fbPayload = await this.verifyFacebookToken(accessToken);
 
       const fbId = fbPayload.id;
-      const email = fbPayload.email;
+      let email = fbPayload.email;
       const name = fbPayload.name;
       const picture = fbPayload.picture?.data?.url || null;
 
+      // If email not public, generate temp email from FB ID
       if (!email) {
-        throw new AppError(
-          'Email không được làm công khai trên tài khoản Facebook của bạn. Vui lòng cập nhật quyền riêng tư.',
-          400
-        );
+        email = `fb_${fbId}@facebook.local`;
+        logger.warn('⚠️ Facebook user email not public, using temp email', { fbId, email });
       }
 
       logger.info('✅ Facebook token verified', { fbId, email, name });
