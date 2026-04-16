@@ -108,30 +108,41 @@ async function loadTopSellingProducts() {
   const container = document.querySelector('.product-slides');
   if (!container) return;
 
-  const endpoints = [
-    '${window.API_CONFIG.BASE_URL}/api/product/top-selling?limit=6',
-    'http://localhost:5501/api/product/top-selling?limit=6',
-    '/api/product/top-selling?limit=6',
-    '/api/products/top-selling?limit=6',
-    '/top-selling?limit=6'
-  ];
-
-  let products = null;
-  for (const url of endpoints) {
-    try {
-      const res = await fetch(url);
-      if (!res.ok) continue;
-      const payload = await res.json();
-      if (Array.isArray(payload)) { products = payload; break; }
-      if (Array.isArray(payload.data)) { products = payload.data; break; }
-      if (Array.isArray(payload.results)) { products = payload.results; break; }
-      if (payload && typeof payload === 'object' && (payload.MaSP || payload.MaSP === 0)) { products = [payload]; break; }
-    } catch (err) {
-      console.warn('Top-selling fetch failed for', url, err && err.message);
-      continue;
-    }
+  // ✅ FIX: Sử dụng endpoint chính từ config
+  const baseUrl = window.API_CONFIG?.BASE_URL;
+  if (!baseUrl) {
+    console.error('❌ API_CONFIG.BASE_URL not configured');
+    return;
   }
 
+  let products = null;
+  
+  try {
+    // ✅ Dùng endpoint /api/product/promotion để lấy sản phẩm bán chạy
+    // (hoặc /api/product?limit=6 để lấy sản phẩm đầu tiên)
+    const url = `${baseUrl}/api/product/promotion?limit=6`;
+    const res = await fetch(url);
+    if (!res.ok) {
+      throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+    }
+    const payload = await res.json();
+    
+    // ✅ Normalize response structure
+    if (Array.isArray(payload)) { 
+      products = payload; 
+    } else if (Array.isArray(payload.data)) { 
+      products = payload.data; 
+    } else if (Array.isArray(payload.results)) { 
+      products = payload.results; 
+    } else {
+      products = [];
+    }
+  } catch (err) {
+    console.warn('❌ Top-selling fetch failed:', err.message);
+    products = null;
+  }
+
+  // ✅ FIX: Kiểm tra products trước khi map
   if (!products || products.length === 0) {
     if (!container.querySelector('.slide-image')) {
       container.innerHTML = '<p style="text-align:center;">Chưa có sản phẩm bán chạy</p>';

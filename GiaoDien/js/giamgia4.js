@@ -80,7 +80,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Load products for a given category. Render only up to 5 items.
             function loadProducts(categoryId) {
-                const url = `${window.API_CONFIG.BASE_URL}/api/product/category-current-year/${categoryId === 'all' ? 'all' : categoryId}`;
+                // ✅ FIX: Sử dụng endpoint đúng /api/product/category/:id
+                // Nếu categoryId='all', lấy tất cả sản phẩm từ /api/product
+                const url = categoryId === 'all' 
+                    ? `${window.API_CONFIG.BASE_URL}/api/product`
+                    : `${window.API_CONFIG.BASE_URL}/api/product/category/${categoryId}`;
                 fetch(url)
                     .then(res => {
                         // ✅ FIX: Validate response

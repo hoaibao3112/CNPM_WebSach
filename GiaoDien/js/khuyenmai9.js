@@ -137,20 +137,32 @@ function loadProductDetail(MaSP) {
     window.location.href = "product_detail.html";
   }
 }
-async function fetchAndDisplayHoatHinh(apiUrl = "${window.API_CONFIG.BASE_URL}/api/product/theloai/1", containerId = "multi-category-list") {
+async function fetchAndDisplayHoatHinh(categoryId = 1, containerId = "multi-category-list") {
   const container = document.getElementById(containerId);
   container.innerHTML = `<p class="loading">⏳ Đang tải sản phẩm...</p>`;
   try {
+    // ✅ FIX: Sử dụng endpoint đúng /api/product/category/:id
+    const baseUrl = window.API_CONFIG?.BASE_URL;
+    if (!baseUrl) throw new Error('API_CONFIG.BASE_URL not configured');
+    
+    const apiUrl = `${baseUrl}/api/product/category/${categoryId}`;
     const res = await fetch(apiUrl);
-    const { data } = await res.json();
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    
+    const result = await res.json();
+    const data = Array.isArray(result) ? result : (result.data || []);
     displayProducts(data || [], containerId);
-  } catch {
+  } catch (err) {
+    console.error('❌ Lỗi tải sản phẩm:', err.message);
     container.innerHTML = `<p class="error">⚠️ Lỗi tải sản phẩm.</p>`;
   }
 }
 function displayProducts(products, id) {
   const container = document.getElementById(id);
-  const IMAGE_BASE = "${window.API_CONFIG.BASE_URL}/product-images";
+  // ✅ FIX: Sử dụng function thay vì template string literal
+  const baseUrl = window.API_CONFIG?.BASE_URL || '/product-images';
+  const IMAGE_BASE = `${baseUrl}/product-images`;
+  
   if (!products?.length) {
     container.innerHTML = `<p>Không có sản phẩm nào.</p>`;
     return;
@@ -178,26 +190,29 @@ function loadProductDetail(MaSP) {
 
 // ===== Lấy và hiển thị sản phẩm thể loại "Hoạt hình" =====
 /**
- * Lấy và hiển thị danh sách sản phẩm thể loại Hoạt hình (MaTL = 21)
- * @param {string} apiUrl - Đường dẫn API (mặc định: /api/product/hoathinh)
+ * Lấy và hiển thị danh sách sản phẩm theo thể loại
+ * @param {number} categoryId - ID thể loại (MaTL) - mặc định là 1
  * @param {string} containerId - ID của container để render
  */
-async function fetchAndDisplayHoatHinh(apiUrl = '${window.API_CONFIG.BASE_URL}/api/product/theloai/1', containerId = 'multi-category-list') {
+async function fetchAndDisplayHoatHinh(categoryId = 1, containerId = 'multi-category-list') {
   const container = document.getElementById(containerId);
   if (!container) return;
-  container.innerHTML = `<p class="loading">⏳ Đang tải sản phẩm thể loại Hoạt hình...</p>`;
+  container.innerHTML = `<p class="loading">⏳ Đang tải sản phẩm theo thể loại...</p>`;
 
   try {
+    // ✅ FIX: Sử dụng endpoint đúng /api/product/category/:id
+    const baseUrl = window.API_CONFIG?.BASE_URL;
+    if (!baseUrl) throw new Error('API_CONFIG.BASE_URL not configured');
+    
+    const apiUrl = `${baseUrl}/api/product/category/${categoryId}`;
     const response = await fetch(apiUrl);
-    if (!response.ok) throw new Error('Không thể tải dữ liệu từ API.');
+    if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
 
-    const { data } = await response.json();
-
-    // ✅ lấy trực tiếp data vì API đã filter theo MaTL = 21
-    const hoatHinh = data || [];
+    const result = await response.json();
+    const hoatHinh = Array.isArray(result) ? result : (result.data || []);
 
     if (hoatHinh.length === 0) {
-      container.innerHTML = `<p class="no-products">Không có sản phẩm thể loại Hoạt hình.</p>`;
+      container.innerHTML = `<p class="no-products">Không có sản phẩm theo thể loại này.</p>`;
       return;
     }
     // ✅ Hiển thị sản phẩm bằng hàm có sẵn
@@ -212,7 +227,9 @@ function displayProducts(products, containerId = 'multi-category-list') {
   const container = document.getElementById(containerId);
   if (!container) return;
 
-  const IMAGE_BASE = '${window.API_CONFIG.BASE_URL}/product-images'; 
+  // ✅ FIX: Sử dụng function thay vì template string literal
+  const baseUrl = window.API_CONFIG?.BASE_URL || '/product-images';
+  const IMAGE_BASE = `${baseUrl}/product-images`; 
 
   container.innerHTML = '';
 

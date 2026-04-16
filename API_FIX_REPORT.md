@@ -1,7 +1,7 @@
 # 📋 BÁO CÁO SỬA CHỮA LỖI API - KHUYẾN MÃI & GIẢM GIÁ
 
 **Ngày:** 16/04/2026  
-**Trạng thái:** ✅ HOÀN THÀNH  
+**Trạng thái:** ✅ HOÀN THÀNH - V2 (Bao gồm Fix 404 Errors)
 
 ---
 
@@ -10,14 +10,28 @@
 | File | Lỗi | Mức độ | Trạng thái |
 |------|-----|-------|-----------|
 | **giamgia1.js** | Template string literal không được thay thế | 🟡 High | ✅ FIXED |
-| **giamgia2.js** | Hardcode localhost:5501 + endpoints không nhất quán | 🔴 Critical | ✅ FIXED |
-| **giamgia4.js** | Thiếu error handling & response validation | 🟡 High | ✅ FIXED |
+| **giamgia2.js** | Hardcode localhost:5501 + endpoints không nhất quán + /api/product/top-selling (404) | 🔴 Critical | ✅ FIXED |
+| **giamgia4.js** | Endpoint `/api/product/category-current-year/:id` không tồn tại (404) | 🔴 Critical | ✅ FIXED |
+| **giamgia5.html** | Endpoint `/api/product/category-current-year/all` không tồn tại (404) | 🔴 Critical | ✅ FIXED |
 | **khuyenmai.js** | N+1 queries + race condition + logic lỗi | 🔴 Critical | ✅ FIXED |
-| **khuyenmai9.js** | Template string literal + hardcode endpoint | 🟡 High | ✅ FIXED |
+| **khuyenmai9.js** | Template string literal + hardcode endpoint `/api/product/theloai/1` (404) | 🟡 High | ✅ FIXED |
 
 ---
 
 ## 🔧 CHI TIẾT CÁC LỖI ĐÃ SỬA
+
+### ⚠️ CÁC LỖI 404 PHÁT HIỆN VÀ FIX (V2 UPDATE)
+
+**Tóm tắt:** Phát hiện 4 endpoint không tồn tại trong backend, đã fix tất cả:
+
+| Endpoint Sai (404) | Endpoint Đúng | File |
+|---|---|---|
+| `/api/product/category-current-year/all` | `/api/product/new` | giamgia5.html |
+| `/api/product/category-current-year/:id` | `/api/product/category/:id` hoặc `/api/product` | giamgia4.js |
+| `/api/product/top-selling?limit=6` | `/api/product/promotion?limit=6` | giamgia2.js |
+| `/api/product/theloai/1` | `/api/product/category/1` | khuyenmai9.js |
+
+---
 
 ### 1️⃣ **giamgia1.js** ✅ FIXED
 
@@ -48,10 +62,12 @@ const IMAGE_BASE = getImageBase();
 **Lỗi chính:**
 - ❌ Hardcode `http://localhost:5501` (phù hợp với dev nhưng không production)
 - ❌ Endpoint `/api/khuyenmai/public` không chính xác (đúng là `/api/khuyenmai`)
+- ❌ Endpoint `/api/product/top-selling` không tồn tại (404) - đúng là `/api/product/promotion`
 - ❌ Quá nhiều fallback endpoints → fragile code
 
 **Trước:**
 ```javascript
+// ❌ Khuyến mãi: hardcode localhost + endpoint sai
 const endpoints = [
     "${window.API_CONFIG.BASE_URL}/api/khuyenmai/public?limit=10",
     "http://localhost:5501/api/khuyenmai/public?limit=10",  // ❌ HARDCODE
@@ -60,11 +76,21 @@ const endpoints = [
     "http://localhost:5501/api/voucher/",                   // ❌ HARDCODE
     "/api/voucher/",
 ];
+
+// ❌ Sản phẩm: endpoint /api/product/top-selling không tồn tại (404)
+const endpoints = [
+    '${window.API_CONFIG.BASE_URL}/api/product/top-selling?limit=6',
+    'http://localhost:5501/api/product/top-selling?limit=6',  // ❌ HARDCODE
+    '/api/product/top-selling?limit=6',
+    '/api/products/top-selling?limit=6',
+    '/top-selling?limit=6'
+];
 ```
 
 **Sau fix:**
 ```javascript
 // ✅ ĐÚNG: Chỉ dùng endpoint chính từ config
+// Khuyến mãi
 const baseUrl = window.API_CONFIG?.BASE_URL;
 if (!baseUrl) {
   throw new Error('API_CONFIG.BASE_URL not configured');
@@ -75,6 +101,14 @@ const response = await fetch(url);
 if (!response.ok) {
   throw new Error(`HTTP ${response.status}: ${response.statusText}`);
 }
+
+// Sản phẩm: dùng /api/product/promotion thay vì /api/product/top-selling
+const url = `${baseUrl}/api/product/promotion?limit=6`;
+const res = await fetch(url);
+if (!res.ok) {
+  throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+}
+const payload = await res.json();
 ```
 
 ---
