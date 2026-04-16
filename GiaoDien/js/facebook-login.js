@@ -10,7 +10,7 @@ const isFacebookAvailable = isHttps || (window.location.protocol === 'http:' && 
 // Facebook SDK Initialize
 window.fbAsyncInit = function() {
   try {
-    const facebookAppId = window.API_CONFIG?.FACEBOOK_CLIENT_ID || '904742255223792';
+    const facebookAppId = window.API_CONFIG?.FACEBOOK_CLIENT_ID || '4294997817425546';
     FB.init({
       appId: facebookAppId,
       cookie: true,
@@ -33,7 +33,7 @@ function loadFacebookSDK() {
 
   // Wait for config to load
   const waitForConfig = (attempt = 0) => {
-    const facebookAppId = window.API_CONFIG?.FACEBOOK_CLIENT_ID || '904742255223792';
+    const facebookAppId = window.API_CONFIG?.FACEBOOK_CLIENT_ID || '4294997817425546';
     if (document.body) {
       const script = document.createElement('script');
       script.id = 'facebook-jssdk';
