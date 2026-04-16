@@ -85,7 +85,7 @@ function handleFacebookLogin() {
     if (response.status === 'unknown') {
       // SDK not ready, wait a bit and try again
       setTimeout(function() {
-        FB.login(performLogin, {scope: 'public_profile,email'});
+        FB.login(performLogin, {scope: 'public_profile'});
       }, 500);
     } else {
       performLogin(response);
