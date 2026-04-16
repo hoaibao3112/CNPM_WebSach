@@ -82,7 +82,9 @@ async function updateCartCount() {
         }
       });
       if (response.ok) {
-        const cart = await response.json();
+        const responseData = await response.json();
+        const cart = responseData.data || responseData;
+        if (!Array.isArray(cart)) throw new Error('Dữ liệu giỏ hàng không hợp lệ');
         const cartCount = cart.reduce((total, item) => total + item.quantity, 0);
         cartLink.innerHTML = `<i class="fas fa-shopping-cart"></i> Giỏ hàng (${cartCount})`;
         return;
