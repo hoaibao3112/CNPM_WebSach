@@ -215,14 +215,32 @@
           </div>
         </div>
 
-        <div class="form-group">
-          <label for="payment-method">Phương thức thanh toán *</label>
-          <select id="payment-method" class="form-input" required>
-            <option value="">-- Chọn phương thức --</option>
-            <option value="COD">Thanh toán khi nhận hàng (COD)</option>
-            <option value="VNPAY">Thanh toán qua VNPay</option>
-            <option value="MOMO">Thanh toán qua MoMo</option>
-          </select>
+        <div class="form-group" id="payment-method-group" style="position: relative;">
+          <label>Phương thức thanh toán *</label>
+          <input type="hidden" id="payment-method" class="form-input" required>
+          <div class="payment-methods-grid">
+            <label class="payment-method-card" data-method="COD">
+              <input type="radio" name="paymentOption" value="COD" onchange="document.getElementById('payment-method').value = this.value; document.getElementById('payment-method').dispatchEvent(new Event('change'));">
+              <div class="payment-card-content">
+                <i class="fas fa-hand-holding-usd payment-icon cod-icon"></i>
+                <span>Thanh toán COD</span>
+              </div>
+            </label>
+            <label class="payment-method-card" data-method="VNPAY">
+              <input type="radio" name="paymentOption" value="VNPAY" onchange="document.getElementById('payment-method').value = this.value; document.getElementById('payment-method').dispatchEvent(new Event('change'));">
+              <div class="payment-card-content">
+                <i class="fas fa-credit-card payment-icon vnpay-icon" style="color: #005A9E;"></i>
+                <span>Qua VNPay</span>
+              </div>
+            </label>
+            <label class="payment-method-card" data-method="MOMO">
+              <input type="radio" name="paymentOption" value="MOMO" onchange="document.getElementById('payment-method').value = this.value; document.getElementById('payment-method').dispatchEvent(new Event('change'));">
+              <div class="payment-card-content">
+                <i class="fas fa-wallet payment-icon momo-icon" style="color: #A50064;"></i>
+                <span>Qua MoMo</span>
+              </div>
+            </label>
+          </div>
         </div>
 
         <div class="form-group">
