@@ -50,11 +50,18 @@ document.addEventListener('DOMContentLoaded', () => {
             return res.json();
         })
         .then(categories => {
-            // ✅ FIX: Validate categories là array
+            // ✅ FIX: API trả về { data: [...] } hoặc array trực tiếp - handle cả hai
+            let categoryList = categories;
             if (!Array.isArray(categories)) {
-                console.warn('⚠️ API response is not an array:', categories);
-                categories = [];
+                // Nếu response là object, lấy data field
+                if (categories && categories.data && Array.isArray(categories.data)) {
+                    categoryList = categories.data;
+                } else {
+                    console.warn('⚠️ API response structure không hợp lệ:', categories);
+                    categoryList = [];
+                }
             }
+            
             // Clear existing list first
             categoryUl.innerHTML = '';
 
@@ -67,7 +74,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Deduplicate categories based on MaTL
             const seen = new Set();
-            categories.forEach(cat => {
+            categoryList.forEach(cat => {
                 const id = String(cat.MaTL);
                 if (seen.has(id)) return; // skip duplicate
                 seen.add(id);
