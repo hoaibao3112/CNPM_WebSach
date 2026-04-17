@@ -215,6 +215,102 @@ body {
 }
 
 /* ========================================
+   PROMOTIONS SECTION
+======================================== */
+.promotions-section {
+  background: #FFF3E0;
+  border-left: 4px solid #FF9800;
+  padding: 1.5rem;
+  border-radius: var(--border-radius);
+  margin-bottom: 1.5rem;
+}
+
+.promotions-title {
+  background: #FF9800;
+  color: var(--white);
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  display: inline-block;
+  font-weight: 700;
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
+}
+
+.promotion-item {
+  background: var(--white);
+  padding: 1rem;
+  border-radius: 4px;
+  margin-bottom: 0.75rem;
+  border-left: 3px solid #FF9800;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.promotion-item:last-child {
+  margin-bottom: 0;
+}
+
+.promotion-info {
+  flex: 1;
+}
+
+.promotion-label {
+  color: #FF9800;
+  font-weight: 700;
+  font-size: 0.85rem;
+  margin-bottom: 0.3rem;
+}
+
+.promotion-text {
+  color: var(--text-color);
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+.promotion-discount {
+  color: #E53935;
+  font-weight: 700;
+  font-size: 0.95rem;
+}
+
+.promotion-code {
+  background: #FFE0B2;
+  color: #E65100;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  font-weight: 700;
+  font-size: 0.85rem;
+  text-align: center;
+  min-width: 120px;
+}
+
+.promotion-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+  justify-content: flex-end;
+}
+
+.promotion-btn {
+  padding: 0.4rem 1rem;
+  border: none;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition);
+  background: transparent;
+  border: 1px solid #FF9800;
+  color: #FF9800;
+}
+
+.promotion-btn:hover {
+  background: #FF9800;
+  color: var(--white);
+}
+
+/* ========================================
    PRICE SECTION
 ======================================== */
 .price-section {
@@ -668,6 +764,22 @@ body {
   .related-products h2,
   .related-authors h2 {
     font-size: 1.2rem;
+  }
+  
+  .promotion-item {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .promotion-code {
+    width: 100%;
+    margin-top: 0.75rem;
+  }
+  
+  .promotion-actions {
+    justify-content: flex-start;
+    margin-top: 0.75rem;
+    width: 100%;
   }
 }
 
