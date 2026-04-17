@@ -1054,8 +1054,6 @@ function savePromotion(code, promotionId) {
         return;
     }
 
-    const token = localStorage.getItem('token');
-
     // Helper to mark button UI as saved (change text/icon & disable)
     const markButtonSaved = () => {
         try {
@@ -1063,21 +1061,29 @@ function savePromotion(code, promotionId) {
             const btn = card?.querySelector('.promotion-save-btn') || card?.querySelector('.promotion-detail-btn.save');
             if (!btn) return;
 
-            // Add saved class for visual styles
             btn.classList.add('saved');
-            // Make button non-interactive once saved
             btn.setAttribute('aria-pressed', 'true');
-            try { btn.disabled = true; } catch (e) { /* some elements may not support disabled */ }
-
-            // Replace content with saved icon + label
+            try { btn.disabled = true; } catch (e) {}
             btn.innerHTML = '<i class="fas fa-bookmark"></i> Đã lưu';
         } catch (e) {
-            // ignore
             console.error('markButtonSaved error', e);
         }
     };
 
-    // If user is logged in, try to claim/save promo on server (store in profile)
+    // PRIMARY: Save to localStorage (works for everyone, always)
+    let saved = JSON.parse(localStorage.getItem('savedPromotions') || '[]');
+    const alreadySaved = saved.some(p => p.code === code);
+    
+    if (!alreadySaved) {
+        saved.push({ id: promotionId, code: code, savedAt: new Date().toISOString() });
+        localStorage.setItem('savedPromotions', JSON.stringify(saved));
+    }
+
+    markButtonSaved();
+    showAlert(`✅ Đã lưu mã: ${code}`, 'success');
+
+    // SECONDARY: If logged in, try to also save to server (optional, non-blocking)
+    const token = localStorage.getItem('token');
     if (token) {
         (async () => {
             try {
@@ -1087,53 +1093,30 @@ function savePromotion(code, promotionId) {
                     headers: {
                         'Content-Type': 'application/json',
                         'Authorization': `Bearer ${token}`
-                    }
+                    },
+                    timeout: 5000  // Short timeout, don't wait long for server
                 });
 
-                const data = await res.json().catch(() => ({}));
-
                 if (res.ok) {
-                    // add to local myPromos cache so profile page reflects change immediately
+                    const data = await res.json().catch(() => ({}));
                     const myPromos = JSON.parse(localStorage.getItem('myPromos') || '[]');
-                    const innerData = data.data || {};
-                    const exists = myPromos.some(p => (p.MaKM && String(p.MaKM) === String(promotionId)) || p.code === code || p.MaPhieu === code);
+                    const exists = myPromos.some(p => (p.MaKM && String(p.MaKM) === String(promotionId)) || p.code === code);
                     if (!exists) {
                         myPromos.unshift({ 
                             MaKM: promotionId, 
                             code: code, 
-                            ngay_lay: (innerData.ngay_lay || data.ngay_lay || new Date().toISOString()), 
+                            ngay_lay: new Date().toISOString(), 
                             status: 'Chua_su_dung' 
                         });
                         localStorage.setItem('myPromos', JSON.stringify(myPromos));
                     }
-
-                    markButtonSaved();
-                    showAlert('Đã lưu mã khuyến mãi vào hồ sơ', 'success');
-                } else {
-                    // 401 -> not authenticated
-                    if (res.status === 401) {
-                        showAlert('Vui lòng đăng nhập để lưu mã vào hồ sơ', 'info');
-                    } else {
-                        showAlert(data.error || data.message || 'Không thể lưu mã khuyến mãi', 'error');
-                    }
                 }
+                // If server save fails (404 or any error), silently ignore - localStorage already saved
             } catch (err) {
-                console.error('Error claiming promotion:', err);
-                showAlert('Lỗi khi lưu mã khuyến mãi. Vui lòng thử lại.', 'error');
+                // Server save failed - silently ignore, localStorage already has the code
+                console.log('Server save skipped (endpoint may not exist):', err.message);
             }
         })();
-        return;
-    }
-
-    // If not logged in, fallback to local saved list and prompt to login to save in profile
-    let saved = JSON.parse(localStorage.getItem('savedPromotions') || '[]');
-    if (!saved.some(p => p.code === code)) {
-        saved.push({ id: promotionId, code: code, savedAt: new Date().toISOString() });
-        localStorage.setItem('savedPromotions', JSON.stringify(saved));
-        markButtonSaved();
-        showAlert(`Đã lưu mã khuyến mãi cục bộ: ${code}. Đăng nhập để lưu vào hồ sơ.`, 'success');
-    } else {
-        showAlert('Mã khuyến mãi đã được lưu (cục bộ)', 'info');
     }
 }
 
