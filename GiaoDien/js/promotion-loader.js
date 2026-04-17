@@ -38,8 +38,8 @@ async function loadProductPromotions() {
     console.log('📊 Promotions array:', promotions);
     
     if (!Array.isArray(promotions) || promotions.length === 0) {
-      console.warn('⚠️ No active promotions found, using fallback');
-      renderFallbackPromotions();
+      console.warn('⚠️ No active promotions found');
+      showNoPromotionsMessage();
       return;
     }
     
@@ -75,55 +75,36 @@ async function loadProductPromotions() {
     
   } catch (error) {
     console.error('❌ Error loading promotions:', error);
-    console.log('📍 Rendering fallback promotions...');
-    renderFallbackPromotions();
+    console.log('📍 Showing no promotions message...');
+    showNoPromotionsMessage();
   }
 }
 
-function renderFallbackPromotions() {
-  console.log('📍 renderFallbackPromotions called');
+function showNoPromotionsMessage() {
+  console.log('📍 showNoPromotionsMessage called');
   const container = document.getElementById('promotions-container');
   console.log('📍 Container found:', !!container);
   
   if (!container) {
-    console.error('❌ Container not found in renderFallbackPromotions!');
+    console.error('❌ Container not found in showNoPromotionsMessage!');
     return;
   }
   
   container.innerHTML = `
-    <div class="promotion-item">
-      <div class="promotion-info">
-        <div class="promotion-label">% Giảm %</div>
-        <div class="promotion-text">Đang áp dụng</div>
-        <div class="promotion-text" style="font-weight: 600; margin-top: 0.5rem;">Đại Tiệc Sách Hè 5 Tháng</div>
-        <div class="promotion-text">Chương trình khuyến mãi lớn nhất năm kéo dài 5 tháng dành cho các tín đồ yêu sách.</div>
-        <div class="promotion-discount">-20.00%</div>
-        <div style="color: var(--text-color); font-size: 0.9rem; margin-top: 0.5rem;">Tối đa 500.000 đ</div>
-      </div>
-      <div class="promotion-code">SUMMER2026</div>
-      <div class="promotion-actions">
-        <button class="promotion-btn" type="button" onclick="showPromotionDetails('SUMMER2026')">Chi tiết</button>
-        <button class="promotion-btn" type="button" onclick="savePromotionCode('SUMMER2026')">Lưu mã</button>
-      </div>
-    </div>
-
-    <div class="promotion-item">
-      <div class="promotion-info">
-        <div class="promotion-label">% Giảm %</div>
-        <div class="promotion-text">Đang áp dụng</div>
-        <div class="promotion-text" style="font-weight: 600; margin-top: 0.5rem;">Miễn Phí Vận Chuyển Độc Sách Mua Hè</div>
-        <div class="promotion-text">Miễn phí vận chuyển cho tất cả đơn hàng từ 200.000đ. Áp dụng toàn quốc.</div>
-        <div style="color: var(--text-color); font-size: 0.9rem; margin-top: 0.5rem;">Đơn tối thiểu: <strong>200.000 đ</strong></div>
-      </div>
-      <div class="promotion-code">FREESHIP2026</div>
-      <div class="promotion-actions">
-        <button class="promotion-btn" type="button" onclick="showPromotionDetails('FREESHIP2026')">Chi tiết</button>
-        <button class="promotion-btn" type="button" onclick="savePromotionCode('FREESHIP2026')">Lưu mã</button>
-      </div>
+    <div style="
+      text-align: center;
+      padding: 2rem;
+      color: #999;
+      font-size: 0.95rem;
+      background: #F5F5F5;
+      border-radius: 8px;
+    ">
+      <div style="font-size: 2rem; margin-bottom: 0.5rem;">✨</div>
+      <p style="margin: 0;">Không có khuyến mãi áp dụng cho sản phẩm này lúc này.</p>
     </div>
   `;
   
-  console.log('✅ Fallback promotions rendered');
+  console.log('✅ No promotions message shown');
 }
 
 function renderProductPromotions(promotions) {
@@ -165,22 +146,33 @@ function renderProductPromotions(promotions) {
       return; // Skip nếu không nhận diện được loại
     }
     
+    // Xác định badge icon
+    let badgeIcon = '%';
+    let badgeColor = '#FF9800';
+    if (promotion.LoaiKM === 'mua_x_tang_y') {
+      badgeIcon = '🎁';
+      badgeColor = '#4CAF50';
+    } else if (chiTiet.DonToiThieu) {
+      badgeIcon = '🚚';
+      badgeColor = '#2196F3';
+    }
+
     const promotionHTML = `
       <div class="promotion-item">
+        <div class="promotion-badge" style="background-color: ${badgeColor};">
+          ${badgeIcon}
+        </div>
         <div class="promotion-info">
-          <div class="promotion-label">% Giảm %</div>
-          <div class="promotion-text">Đang áp dụng</div>
-          <div class="promotion-text" style="font-weight: 600; margin-top: 0.5rem;">
-            ${promotion.TenKM || 'Khuyến mãi'}
-          </div>
+          <div class="promotion-label">${promotion.TenKM || 'Khuyến mãi'}</div>
           <div class="promotion-text">
             ${promotion.MoTa || ''}
           </div>
-          <div class="promotion-discount">${discountValue}</div>
-          ${chiTiet.GiamToiDa ? `<div style="color: var(--text-color); font-size: 0.9rem; margin-top: 0.5rem;">Tối đa ${formatCurrency(chiTiet.GiamToiDa)}</div>` : ''}
-          ${chiTiet.DonToiThieu ? `<div style="color: var(--text-color); font-size: 0.9rem; margin-top: 0.5rem;">Đơn tối thiểu: <strong>${formatCurrency(chiTiet.DonToiThieu)}</strong></div>` : ''}
+          <div class="promotion-code-display">${promotion.MaKM || 'N/A'}</div>
+          <div class="promotion-details">
+            ${discountValue ? `<span>${discountValue}</span>` : ''}
+            ${chiTiet.DonToiThieu ? `<span>Đơn: ${formatCurrency(chiTiet.DonToiThieu)}</span>` : ''}
+          </div>
         </div>
-        <div class="promotion-code">${promotion.MaKM || 'N/A'}</div>
         <div class="promotion-actions">
           <button class="promotion-btn" type="button" onclick="showPromotionDetails('${promotion.MaKM}')">Chi tiết</button>
           <button class="promotion-btn" type="button" onclick="savePromotionCode('${promotion.MaKM}')">Lưu mã</button>
