@@ -198,16 +198,80 @@ function formatCurrency(value) {
 }
 
 function showPromotionDetails(maKM) {
-  // Mở modal hoặc trang chi tiết khuyến mãi
-  console.log('Chi tiết khuyến mãi:', maKM);
-  // TODO: Implement modal hoặc navigate to promotion detail page
+  console.log('🔍 Opening promotion details for:', maKM);
+  const container = document.getElementById('promotions-container');
+  const items = container.querySelectorAll('.promotion-item');
+  let promotionData = null;
+  
+  items.forEach(item => {
+    const codeDisplay = item.querySelector('.promotion-code-display');
+    if (codeDisplay && codeDisplay.textContent.trim() === maKM) {
+      promotionData = {
+        code: maKM,
+        title: item.querySelector('.promotion-label')?.textContent || '',
+        description: item.querySelector('.promotion-text')?.textContent || '',
+        details: item.querySelector('.promotion-details')?.textContent || ''
+      };
+    }
+  });
+  
+  if (!promotionData) return;
+  
+  const modal = document.createElement('div');
+  modal.id = 'promotion-detail-modal';
+  modal.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: center; z-index: 1000;';
+  
+  modal.innerHTML = `
+    <div style="background: white; padding: 2rem; border-radius: 12px; max-width: 500px; width: 90%; box-shadow: 0 10px 40px rgba(0,0,0,0.3);">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+        <h2 style="margin: 0; font-size: 1.3rem; color: #333;">${promotionData.title}</h2>
+        <button onclick="document.getElementById('promotion-detail-modal').remove()" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #999;">✕</button>
+      </div>
+      <div style="margin-bottom: 1.5rem;">
+        <p style="margin: 0 0 1rem 0; color: #666; line-height: 1.6;">${promotionData.description}</p>
+        <div style="background: #F5F5F5; padding: 1rem; border-radius: 8px; margin-top: 1rem; font-size: 0.9rem; color: #666;">${promotionData.details}</div>
+      </div>
+      <div style="display: flex; gap: 1rem;">
+        <button onclick="savePromotionCode('${promotionData.code}'); document.getElementById('promotion-detail-modal').remove();" style="flex: 1; padding: 0.8rem; background: #333; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">Sao chép mã</button>
+        <button onclick="document.getElementById('promotion-detail-modal').remove()" style="flex: 1; padding: 0.8rem; background: #F0F0F0; color: #333; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">Đóng</button>
+      </div>
+    </div>
+  `;
+  
+  document.body.appendChild(modal);
 }
 
 function savePromotionCode(maKM) {
-  // Lưu mã khuyến mãi vào clipboard hoặc localStorage
-  console.log('Saved code:', maKM);
-  // TODO: Copy to clipboard
-  alert(`Mã khuyến mãi "${maKM}" đã được sao chép!`);
+  console.log('📋 Copying code:', maKM);
+  
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(maKM).then(() => {
+      showToast(`✅ Đã sao chép mã "${maKM}"`);
+    }).catch(() => {
+      fallbackCopyCode(maKM);
+    });
+  } else {
+    fallbackCopyCode(maKM);
+  }
+}
+
+function fallbackCopyCode(maKM) {
+  const textarea = document.createElement('textarea');
+  textarea.value = maKM;
+  document.body.appendChild(textarea);
+  textarea.select();
+  document.execCommand('copy');
+  document.body.removeChild(textarea);
+  showToast(`✅ Đã sao chép mã "${maKM}"`);
+}
+
+function showToast(message) {
+  const toast = document.createElement('div');
+  toast.style.cssText = 'position: fixed; bottom: 2rem; right: 2rem; background: #4CAF50; color: white; padding: 1rem 1.5rem; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.2); z-index: 2000;';
+  toast.textContent = message;
+  document.body.appendChild(toast);
+  
+  setTimeout(() => toast.remove(), 2000);
 }
 
 // Auto-load khi DOM ready
