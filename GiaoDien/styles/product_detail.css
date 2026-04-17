@@ -1086,10 +1086,11 @@ body {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   gap: 0;
   opacity: 1;
   transform: translateY(0);
+  align-items: stretch;
 }
 
 .promotion-card:hover {
@@ -1109,10 +1110,13 @@ body {
 .promotion-header {
   background: linear-gradient(135deg, #FFF8E1 0%, #FFF3CD 100%);
   padding: 1.25rem;
-  border-bottom: 2px solid #FFB74D;
+  border-right: 2px solid #FFB74D;
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
+  justify-content: center;
+  min-width: 160px;
+  flex-shrink: 0;
 }
 
 .promotion-icon {
@@ -1167,7 +1171,8 @@ body {
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 0.8rem;
+  justify-content: center;
 }
 
 .promotion-info {
@@ -1196,13 +1201,13 @@ body {
 
 .promotion-value {
   display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  align-items: flex-start;
-  padding: 1rem;
-  background: linear-gradient(135deg, #FFF8E1 0%, #FFFDE7 100%);
-  border-radius: 8px;
-  border-left: 4px solid #FF9800;
+  flex-direction: row;
+  gap: 1rem;
+  align-items: center;
+  padding: 0.75rem;
+  background: transparent;
+  border-radius: 0;
+  border-left: none;
 }
 
 .promotion-discount {
@@ -1247,19 +1252,22 @@ body {
 .promotion-actions {
   display: flex;
   gap: 0.75rem;
-  padding: 1rem 1.25rem 1.25rem 1.25rem;
-  border-top: 1px solid #f0f0f0;
+  padding: 1.25rem;
+  border-left: 1px solid #f0f0f0;
+  flex-direction: column;
+  justify-content: center;
   flex-wrap: wrap;
+  flex-shrink: 0;
 }
 
 .promotion-detail-btn,
 .promotion-save-btn {
-  flex: 1;
-  min-width: 100px;
-  padding: 0.7rem 1rem;
+  flex: 0 0 auto;
+  min-width: 120px;
+  padding: 0.65rem 1rem;
   border: none;
   border-radius: 6px;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   font-weight: 700;
   cursor: pointer;
   transition: all 0.2s;
@@ -1269,6 +1277,7 @@ body {
   gap: 0.5rem;
   text-transform: uppercase;
   letter-spacing: 0.5px;
+  white-space: nowrap;
 }
 
 .promotion-detail-btn {
@@ -1370,8 +1379,8 @@ body {
 ======================================== */
 #promotions-container {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 1.75rem;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
   width: 100%;
 }
 
@@ -1379,17 +1388,12 @@ body {
    RESPONSIVE - TABLET & SMALL SCREENS
 ======================================== */
 @media (max-width: 1200px) {
-  #promotions-container {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-@media (max-width: 768px) {
   .promotion-card {
-    border-radius: 10px;
+    flex-direction: row;
   }
 
   .promotion-header {
+    min-width: 140px;
     padding: 1rem;
   }
 
@@ -1402,19 +1406,51 @@ body {
   }
 
   .promotion-actions {
-    padding: 0.85rem 1rem 1rem 1rem;
-    flex-direction: row;
+    padding: 1rem;
   }
 
   .promotion-detail-btn,
   .promotion-save-btn {
-    width: auto;
-    min-width: unset;
+    min-width: 100px;
+    padding: 0.6rem 0.85rem;
+    font-size: 0.8rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .promotion-card {
+    flex-direction: column;
+    border-radius: 10px;
   }
 
-  #promotions-container {
-    grid-template-columns: 1fr;
-    gap: 1.25rem;
+  .promotion-header {
+    padding: 1rem;
+    border-right: none;
+    border-bottom: 2px solid #FFB74D;
+    min-width: unset;
+    flex-shrink: unset;
+  }
+
+  .promotion-content {
+    padding: 1rem;
+  }
+
+  .promotion-title {
+    font-size: 0.95rem;
+  }
+
+  .promotion-actions {
+    padding: 0.85rem 1rem 1rem 1rem;
+    border-left: none;
+    border-top: 1px solid #f0f0f0;
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+
+  .promotion-detail-btn,
+  .promotion-save-btn {
+    flex: 1 1 calc(50% - 0.4rem);
+    min-width: auto;
   }
 
   .promotion-discount {
