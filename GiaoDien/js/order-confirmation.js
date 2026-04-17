@@ -467,6 +467,135 @@ document.addEventListener('DOMContentLoaded', async function() {
                 </div>
             `;
         }
+        // ✅ XỬ LÝ ZALOPAY SUCCESS
+        else if (paymentMethod === 'zalopay' && returnCode === '1') {
+            const displayAmountParam = amount ? parseFloat(amount) : null;
+            const displaySubtotal = subtotal ? parseFloat(subtotal) : null;
+            const displayDiscount = discount ? parseFloat(discount) : 0;
+            const displayShipping = (orderDetails && typeof orderDetails.PhiShip !== 'undefined' && orderDetails.PhiShip !== null)
+                ? Number(orderDetails.PhiShip)
+                : (shipping ? parseFloat(shipping) : 0);
+
+            let finalTotal = null;
+            if (orderDetails && typeof orderDetails.TongTien !== 'undefined' && orderDetails.TongTien !== null) {
+                finalTotal = parseFloat(orderDetails.TongTien);
+            } else if (displaySubtotal !== null) {
+                finalTotal = Math.max(0, displaySubtotal - (displayDiscount || 0) + (displayShipping || 0));
+            } else if (displayAmountParam !== null) {
+                finalTotal = displayAmountParam;
+            }
+
+            resultContent.innerHTML = `
+                <div class="success-icon">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <h1 style="color: #FFC600;">Thanh toán ZaloPay thành công!</h1>
+                <div class="order-details">
+                    <div class="detail-section">
+                        <div class="section-title">
+                            <i class="fas fa-receipt"></i>
+                            Thông tin đơn hàng
+                        </div>
+                        <div class="detail-row">
+                            <span class="label">Mã đơn hàng:</span>
+                            <span class="value">#${orderId}</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="label">Ngày đặt:</span>
+                            <span class="value">${orderDetails?.NgayTao ? new Date(orderDetails.NgayTao).toLocaleDateString('vi-VN') : new Date().toLocaleDateString('vi-VN')}</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="label">Tổng tiền:</span>
+                            <span class="value total-amount">${finalTotal !== null ? formatPrice(finalTotal) : 'N/A'}</span>
+                        </div>
+                        ${displayShipping > 0 ? `
+                        <div class="detail-row">
+                            <span class="label">Phí vận chuyển:</span>
+                            <span class="value">${formatPrice(displayShipping)}</span>
+                        </div>
+                        ` : displayShipping === 0 && (freeShipCode || (orderDetails && orderDetails.PhiShip === 0)) ? `
+                        <div class="detail-row">
+                            <span class="label">Phí vận chuyển:</span>
+                            <span class="value" style="color: #27ae60; font-weight: bold;">Miễn phí</span>
+                        </div>
+                        ` : ''}
+                        <div class="detail-row">
+                            <span class="label">Phương thức:</span>
+                            <span class="value">ZaloPay</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="label">Thanh toán:</span>
+                            <span class="value">
+                                <span class="status-badge status-success">Đã thanh toán</span>
+                            </span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="label">Trạng thái:</span>
+                            <span class="value">
+                                <span class="status-badge status-pending">Chờ xử lý</span>
+                            </span>
+                        </div>
+                    </div>
+                    
+                    ${orderDetails?.items ? `
+                    <div class="detail-section">
+                        <div class="section-title">
+                            <i class="fas fa-book"></i>
+                            Sản phẩm (${orderDetails.items.length})
+                        </div>
+                        <div class="products-list">
+                            ${formatProductList(orderDetails.items)}
+                        </div>
+                    </div>
+                    ` : ''}
+                </div>
+                <div class="info-note">
+                    <i class="fas fa-info-circle"></i>
+                    <strong>Thông báo:</strong> Đơn hàng đã thanh toán thành công qua ZaloPay và đang chờ xử lý.
+                </div>
+            `;
+        }
+        // ✅ XỬ LÝ ZALOPAY FAILED
+        else if (paymentMethod === 'zalopay' && returnCode !== '1') {
+            resultContent.innerHTML = `
+                <div class="error-icon">
+                    <i class="fas fa-times-circle"></i>
+                </div>
+                <h1 style="color: #e74c3c;">Thanh toán ZaloPay thất bại!</h1>
+                <div class="order-details">
+                    <div class="detail-section">
+                        <div class="section-title">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            Chi tiết lỗi
+                        </div>
+                        <div class="detail-row">
+                            <span class="label">Mã đơn hàng:</span>
+                            <span class="value">#${orderId || 'N/A'}</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="label">Phương thức:</span>
+                            <span class="value">ZaloPay</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="label">Kết quả:</span>
+                            <span class="value" style="color: #e74c3c; font-weight: bold;">Thất bại (Mã: ${returnCode || 'unknown'})</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="error-note">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <strong>Đơn hàng đã bị hủy</strong> do thanh toán thất bại. Sản phẩm đã được hoàn lại kho.
+                </div>
+                <div class="retry-options">
+                    <a href="cart.html" class="btn btn-primary">
+                        <i class="fas fa-redo"></i> Thử lại
+                    </a>
+                    <a href="book.html" class="btn btn-secondary">
+                        <i class="fas fa-shopping-cart"></i> Tiếp tục mua sắm
+                    </a>
+                </div>
+            `;
+        }
         // ✅ XỬ LÝ DEFAULT
         else {
             resultContent.innerHTML = `

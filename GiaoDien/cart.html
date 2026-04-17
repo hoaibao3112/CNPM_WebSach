@@ -240,6 +240,13 @@
                 <span>Qua MoMo</span>
               </div>
             </label>
+            <label class="payment-method-card" data-method="ZALOPAY">
+              <input type="radio" name="paymentOption" value="ZALOPAY" onchange="document.getElementById('payment-method').value = this.value; document.getElementById('payment-method').dispatchEvent(new Event('change'));">
+              <div class="payment-card-content">
+                <i class="fas fa-wallet payment-icon zalopay-icon" style="color: #FFC600; font-weight: bold;">ZP</i>
+                <span>Qua ZaloPay</span>
+              </div>
+            </label>
           </div>
         </div>
 
@@ -311,11 +318,29 @@
       </div>
     </div>
   </div>
+
+  <!-- Modal ZaloPay Payment -->
+  <div id="ZALOPAY" class="modal">
+    <div class="modal-content">
+      <span class="close-modal">&times;</span>
+      <div class="modal-body">
+        <h2>🟡 Thanh toán ZaloPay</h2>
+        <p style="color: #666; margin: 10px 0;">Bạn sẽ được chuyển hướng đến trang thanh toán ZaloPay</p>
+        <div id="zalopay-payment-info" style="background: #fffbf0; padding: 15px; border-radius: 5px; margin: 15px 0; border-left: 4px solid #FFC600;">
+          <p><strong>Số tiền:</strong> <span id="zalopay-amount">0đ</span></p>
+          <p><strong>Nội dung:</strong> <span id="zalopay-order-info">Thanh toán đơn hàng</span></p>
+        </div>
+        <button class="btn" id="zalopay-confirm-btn" style="width: 100%; background: #FFC600; color: #333; padding: 12px; border: none; border-radius: 5px; cursor: pointer; font-weight: 600; margin-bottom: 10px;">Tiếp tục thanh toán ZaloPay</button>
+        <button class="btn cancel-btn" onclick="document.getElementById('ZALOPAY').style.display='none'">Hủy</button>
+      </div>
+    </div>
+  </div>
   
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="js/momo-payment.js"></script>
+<script src="js/zalopay-payment.js"></script>
 <script src="js/cart.js"></script>
  <script src="js/loadHeader.js"></script>
 </body>

@@ -4,6 +4,7 @@ import { VNPay, ignoreLogger, ProductCode, VnpLocale, dateFormat } from 'vnpay';
 import { pointsFromOrderAmount, addLoyaltyPoints, subtractLoyaltyPoints, computeTier } from '../utils/loyalty.js';
 import { sendOrderConfirmationEmail } from '../utils/emailService.js';
 import MoMoPaymentService from './MoMoPaymentService.js';
+import ZaloPayPaymentService from './ZaloPayPaymentService.js';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -836,6 +837,36 @@ class OrderService {
             } catch (error) {
                 logger.error('❌ MoMo Payment Error:', error);
                 throw new Error(error instanceof Error ? error.message : 'Lỗi tạo URL thanh toán MoMo');
+            }
+        }
+
+        if (paymentMethod === 'ZALOPAY') {
+            try {
+                const zaloPayResult = await ZaloPayPaymentService.createPaymentUrl(
+                    orderResult.orderId,
+                    orderResult.finalTotalAmount,
+                    `Thanh toán đơn hàng #${orderResult.orderId}`,
+                    orderResult.customer.makh
+                );
+
+                return {
+                    responseType: 'raw',
+                    statusCode: 200,
+                    payload: {
+                        success: true,
+                        orderId: orderResult.orderId,
+                        paymentUrl: zaloPayResult.paymentUrl,
+                        message: 'Đơn hàng đã tạo, chuyển hướng thanh toán ZaloPay',
+                        appliedTier: orderResult.userTier,
+                        discountAmount: orderResult.discountAmount,
+                        memberDiscountAmount: orderResult.memberDiscountAmount,
+                        shippingFee: orderResult.shippingFee,
+                        finalTotalAmount: orderResult.finalTotalAmount,
+                    },
+                };
+            } catch (error) {
+                logger.error('❌ ZaloPay Payment Error:', error);
+                throw new Error(error instanceof Error ? error.message : 'Lỗi tạo URL thanh toán ZaloPay');
             }
         }
 
