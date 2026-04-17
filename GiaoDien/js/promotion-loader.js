@@ -13,25 +13,28 @@ async function loadProductPromotions() {
   
   try {
     const baseUrl = window.API_CONFIG?.BASE_URL;
+    console.log('🔍 Loading promotions from:', baseUrl);
+    
     if (!baseUrl) {
       throw new Error('API_CONFIG.BASE_URL is not configured');
     }
     
     // Lấy danh sách khuyến mãi đang hoạt động
     const response = await fetch(`${baseUrl}/api/khuyenmai?activeOnly=true`);
+    console.log('📡 API Response status:', response.status);
+    
     if (!response.ok) {
       throw new Error(`HTTP ${response.status}`);
     }
     
     const data = await response.json();
+    console.log('📦 API Data:', data);
     const promotions = data.data || [];
     
     if (!Array.isArray(promotions) || promotions.length === 0) {
-      // Nếu không có khuyến mãi, ẩn section
-      const section = document.querySelector('.promotions-section');
-      if (section) {
-        section.classList.add('hidden');
-      }
+      console.warn('⚠️ No active promotions found, using fallback');
+      // Hiển thị khuyến mãi mẫu
+      renderFallbackPromotions();
       return;
     }
     
@@ -61,11 +64,49 @@ async function loadProductPromotions() {
     
   } catch (error) {
     console.error('❌ Error loading promotions:', error);
-    const section = document.querySelector('.promotions-section');
-    if (section) {
-      section.classList.add('hidden');
-    }
+    // Fallback: hiển thị khuyến mãi mẫu
+    renderFallbackPromotions();
   }
+}
+
+function renderFallbackPromotions() {
+  const container = document.getElementById('promotions-container');
+  if (!container) return;
+  
+  container.innerHTML = `
+    <div class="promotion-item">
+      <div class="promotion-info">
+        <div class="promotion-label">% Giảm %</div>
+        <div class="promotion-text">Đang áp dụng</div>
+        <div class="promotion-text" style="font-weight: 600; margin-top: 0.5rem;">Đại Tiệc Sách Hè 5 Tháng</div>
+        <div class="promotion-text">Chương trình khuyến mãi lớn nhất năm kéo dài 5 tháng dành cho các tín đồ yêu sách.</div>
+        <div class="promotion-discount">-20.00%</div>
+        <div style="color: var(--text-color); font-size: 0.9rem; margin-top: 0.5rem;">Tối đa 500.000 đ</div>
+      </div>
+      <div class="promotion-code">SUMMER2026</div>
+      <div class="promotion-actions">
+        <button class="promotion-btn" type="button" onclick="showPromotionDetails('SUMMER2026')">Chi tiết</button>
+        <button class="promotion-btn" type="button" onclick="savePromotionCode('SUMMER2026')">Lưu mã</button>
+      </div>
+    </div>
+
+    <div class="promotion-item">
+      <div class="promotion-info">
+        <div class="promotion-label">% Giảm %</div>
+        <div class="promotion-text">Đang áp dụng</div>
+        <div class="promotion-text" style="font-weight: 600; margin-top: 0.5rem;">Miễn Phí Vận Chuyển Độc Sách Mua Hè</div>
+        <div class="promotion-text">Miễn phí vận chuyển cho tất cả đơn hàng từ 200.000đ. Áp dụng toàn quốc.</div>
+        <div style="color: var(--text-color); font-size: 0.9rem; margin-top: 0.5rem;">Đơn tối thiểu: <strong>200.000 đ</strong></div>
+      </div>
+      <div class="promotion-code">FREESHIP2026</div>
+      <div class="promotion-actions">
+        <button class="promotion-btn" type="button" onclick="showPromotionDetails('FREESHIP2026')">Chi tiết</button>
+        <button class="promotion-btn" type="button" onclick="savePromotionCode('FREESHIP2026')">Lưu mã</button>
+      </div>
+    </div>
+  `;
+  
+  console.log('✅ Fallback promotions rendered');
 }
 
 function renderProductPromotions(promotions) {
