@@ -110,7 +110,8 @@ class ZaloPayPaymentService {
       logger.info('✅ ZaloPay API Response:', {
         status: response.status,
         responseStatus: response.data?.return_code,
-        returnMessage: response.data?.return_message
+        returnMessage: response.data?.return_message,
+        fullResponse: JSON.stringify(response.data)
       });
 
       if (response.data && response.data.return_code === 1) {
