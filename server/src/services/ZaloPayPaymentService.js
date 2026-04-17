@@ -5,6 +5,7 @@
  */
 import crypto from 'crypto';
 import axios from 'axios';
+import qs from 'qs';
 import { HoaDon } from '../models/index.js';
 import AppError from '../utils/AppError.js';
 import logger from '../utils/logger.js';
@@ -99,7 +100,7 @@ class ZaloPayPaymentService {
       });
 
       // Call ZaloPay API
-      const response = await axios.post(this.endpoint, paymentData, {
+      const response = await axios.post(this.endpoint, qs.stringify(paymentData), {
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded'
         },
