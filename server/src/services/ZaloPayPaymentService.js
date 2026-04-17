@@ -8,7 +8,7 @@ import axios from 'axios';
 import { HoaDon } from '../models/index.js';
 import AppError from '../utils/AppError.js';
 import logger from '../utils/logger.js';
-import { sendOrderConfirmationEmail, sendPaymentSuccessEmail } from '../utils/emailService.js';
+import { sendOrderConfirmationEmail } from '../utils/emailService.js';
 import { addLoyaltyPoints } from '../utils/loyalty.js';
 
 class ZaloPayPaymentService {
