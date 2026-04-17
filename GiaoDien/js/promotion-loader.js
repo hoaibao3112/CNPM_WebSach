@@ -4,10 +4,12 @@
  */
 
 async function loadProductPromotions() {
+  console.log('🚀 loadProductPromotions started');
   const promotionsContainer = document.getElementById('promotions-container');
+  console.log('📍 promotions-container element:', promotionsContainer);
   
   if (!promotionsContainer) {
-    console.warn('⚠️ promotions-container not found');
+    console.error('❌ promotions-container not found!');
     return;
   }
   
@@ -20,7 +22,10 @@ async function loadProductPromotions() {
     }
     
     // Lấy danh sách khuyến mãi đang hoạt động
-    const response = await fetch(`${baseUrl}/api/khuyenmai?activeOnly=true`);
+    const url = `${baseUrl}/api/khuyenmai?activeOnly=true`;
+    console.log('📡 Fetching:', url);
+    
+    const response = await fetch(url);
     console.log('📡 API Response status:', response.status);
     
     if (!response.ok) {
@@ -28,15 +33,17 @@ async function loadProductPromotions() {
     }
     
     const data = await response.json();
-    console.log('📦 API Data:', data);
+    console.log('📦 API Data received:', data);
     const promotions = data.data || [];
+    console.log('📊 Promotions array:', promotions);
     
     if (!Array.isArray(promotions) || promotions.length === 0) {
       console.warn('⚠️ No active promotions found, using fallback');
-      // Hiển thị khuyến mãi mẫu
       renderFallbackPromotions();
       return;
     }
+    
+    console.log(`✅ Found ${promotions.length} promotions, fetching details...`);
     
     // Fetch chi tiết từng khuyến mãi
     const promotionsWithDetails = await Promise.all(
@@ -45,6 +52,7 @@ async function loadProductPromotions() {
           const detailResponse = await fetch(`${baseUrl}/api/khuyenmai/${promotion.MaKM}`);
           if (!detailResponse.ok) throw new Error(`HTTP ${detailResponse.status}`);
           const detailData = await detailResponse.json();
+          console.log(`✅ Loaded details for ${promotion.MaKM}:`, detailData);
           return { ...promotion, details: detailData.data || detailData };
         } catch (error) {
           console.warn(`⚠️ Cannot load details for ${promotion.MaKM}`, error);
@@ -53,25 +61,34 @@ async function loadProductPromotions() {
       })
     );
     
+    console.log('🎨 About to render promotions:', promotionsWithDetails);
     // Render promotions
     renderProductPromotions(promotionsWithDetails);
+    console.log('✅ Promotions rendered!');
     
     // Show promotions section
     const section = document.querySelector('.promotions-section');
     if (section) {
       section.classList.remove('hidden');
+      console.log('✅ Promotions section shown');
     }
     
   } catch (error) {
     console.error('❌ Error loading promotions:', error);
-    // Fallback: hiển thị khuyến mãi mẫu
+    console.log('📍 Rendering fallback promotions...');
     renderFallbackPromotions();
   }
 }
 
 function renderFallbackPromotions() {
+  console.log('📍 renderFallbackPromotions called');
   const container = document.getElementById('promotions-container');
-  if (!container) return;
+  console.log('📍 Container found:', !!container);
+  
+  if (!container) {
+    console.error('❌ Container not found in renderFallbackPromotions!');
+    return;
+  }
   
   container.innerHTML = `
     <div class="promotion-item">
@@ -110,12 +127,20 @@ function renderFallbackPromotions() {
 }
 
 function renderProductPromotions(promotions) {
+  console.log('🎨 renderProductPromotions called with:', promotions);
   const container = document.getElementById('promotions-container');
-  if (!container) return;
+  console.log('📍 Container found:', !!container);
+  
+  if (!container) {
+    console.error('❌ Container not found in renderProductPromotions!');
+    return;
+  }
   
   container.innerHTML = '';
+  console.log('✅ Container cleared');
   
-  promotions.forEach(promotion => {
+  promotions.forEach((promotion, index) => {
+    console.log(`🔄 Rendering promotion ${index}:`, promotion);
     const details = promotion.details || {};
     const chiTiet = details.chi_tiet || {};
     
@@ -136,6 +161,7 @@ function renderProductPromotions(promotions) {
       discountValue = `Mua ${chiTiet.SoLuongMua || 0} tặng ${chiTiet.SoLuongTang || 0}`;
       discountInfo = discountValue;
     } else {
+      console.warn(`⚠️ Unknown promotion type: ${promotion.LoaiKM}`);
       return; // Skip nếu không nhận diện được loại
     }
     
@@ -162,8 +188,11 @@ function renderProductPromotions(promotions) {
       </div>
     `;
     
+    console.log(`✅ Appending HTML for promotion ${index}`);
     container.innerHTML += promotionHTML;
   });
+  
+  console.log('✅ All promotions rendered!');
 }
 
 function formatCurrency(value) {
