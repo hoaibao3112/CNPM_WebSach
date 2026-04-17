@@ -223,6 +223,7 @@ body {
   padding: 1.25rem;
   border-radius: var(--border-radius);
   margin-bottom: 1.5rem;
+  display: none; /* Ẩn promotions section */
 }
 
 .promotions-title {
