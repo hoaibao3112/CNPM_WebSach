@@ -23,6 +23,20 @@ class ZaloPayPaymentService {
   }
 
   /**
+   * app_trans_id phải unique theo ngày: yyMMdd_xxx
+   * @param {number|string} orderId - Mã đơn hàng
+   * @returns {string}
+   */
+  buildAppTransId(orderId) {
+    const now = new Date();
+    const yy = String(now.getFullYear()).slice(-2);
+    const mm = String(now.getMonth() + 1).padStart(2, '0');
+    const dd = String(now.getDate()).padStart(2, '0');
+    const suffix = `${orderId}_${Date.now()}`;
+    return `${yy}${mm}${dd}_${suffix}`;
+  }
+
+  /**
    * Generate HMAC-SHA256 signature (ZaloPay sử dụng SHA256)
    * @param {string} data - Data string to sign
    * @param {string} key - Secret key
@@ -46,46 +60,52 @@ class ZaloPayPaymentService {
         throw new AppError('Thông tin đơn hàng không hợp lệ', 400);
       }
 
-      const requestId = `${orderId}-${Date.now()}`;
-      const timestamp = Math.round(Date.now() / 1000);
+      const appTime = Date.now();
       const amountInteger = Math.round(amount);
+      const appTransId = this.buildAppTransId(orderId);
+      const description = (orderInfo || `Thanh toan don hang #${orderId}`).slice(0, 255);
+      const appUser = `customer_${customerId}`;
+      const embedData = JSON.stringify({
+        redirecturl: this.redirectUrl,
+        orderId,
+        customerId
+      });
+      const item = JSON.stringify([
+        {
+          itemid: `order_${orderId}`,
+          itemnumber: 1,
+          itemname: 'Thanh toan don hang',
+          itemdesc: description,
+          itemprice: amountInteger
+        }
+      ]);
 
       logger.info('🛠️ ZaloPay Request Data assembling:', {
         appId: this.appId,
         orderId,
         amount: amountInteger,
-        timestamp,
+        appTime,
         key1: this.key1 ? 'SET' : 'MISSING'
       });
 
-      // ZaloPay signature data format
-      const dataStr = `${this.appId}|${orderId}|${amountInteger}|${timestamp}|${this.ipnUrl}|{"customerId":"${customerId}","orderId":"${orderId}"}`;
+      // ZaloPay v2 MAC format: app_id|app_trans_id|app_user|amount|app_time|embed_data|item
+      const dataStr = `${this.appId}|${appTransId}|${appUser}|${amountInteger}|${appTime}|${embedData}|${item}`;
       const mac = this.generateSignature(dataStr, this.key1);
 
       const paymentData = {
         app_id: parseInt(this.appId),
-        app_trans_id: `${timestamp}${String(orderId).padStart(6, '0')}`,
-        app_user: `customer_${customerId}`,
-        app_time: timestamp * 1000,
+        app_trans_id: appTransId,
+        app_user: appUser,
+        app_time: appTime,
         amount: amountInteger,
         app_data: JSON.stringify({
           customerId,
           orderId,
-          description: orderInfo || `Thanh toán đơn hàng #${orderId}`
+          description
         }),
-        embed_data: JSON.stringify({
-          redirecturl: this.redirectUrl
-        }),
-        item: JSON.stringify([
-          {
-            itemid: `order_${orderId}`,
-            itemnumber: 1,
-            itemname: 'Thanh toán đơn hàng',
-            itemdesc: orderInfo || `Đơn hàng #${orderId}`,
-            itemprice: amountInteger
-          }
-        ]),
-        description: orderInfo || `Thanh toán đơn hàng #${orderId}`,
+        embed_data: embedData,
+        item,
+        description,
         bank_code: '',
         callback_url: this.ipnUrl,
         mac
@@ -96,7 +116,7 @@ class ZaloPayPaymentService {
         amount: amountInteger,
         appTransId: paymentData.app_trans_id,
         appId: this.appId,
-        timestamp
+        appTime
       });
 
       // Call ZaloPay API
@@ -137,6 +157,11 @@ class ZaloPayPaymentService {
         orderId,
         amount
       });
+
+      if (error instanceof AppError) {
+        throw error;
+      }
+
       throw new AppError(`Lỗi tạo thanh toán ZaloPay: ${error.message}`, 500);
     }
   }
@@ -148,24 +173,20 @@ class ZaloPayPaymentService {
    */
   verifyCallback(data) {
     try {
-      const { mac, ...paymentData } = data;
-
-      // Reconstruct signature data in exact order
-      const appTransId = paymentData.app_trans_id || '';
-      const dataStr = `${appTransId}|${paymentData.amount}|${paymentData.app_user}|${paymentData.app_time}`;
+      const { data: dataStr = '', mac = '' } = data;
 
       const calculatedSignature = this.generateSignature(dataStr, this.key2);
 
       if (mac !== calculatedSignature) {
         logger.warn('❌ ZaloPay Callback - Invalid Signature:', {
-          appTransId,
+          appTransId: 'unknown',
           receivedMac: mac,
           calculatedMac: calculatedSignature
         });
         return false;
       }
 
-      logger.info('✅ ZaloPay Callback - Signature Verified:', { appTransId });
+      logger.info('✅ ZaloPay Callback - Signature Verified');
       return true;
     } catch (error) {
       logger.error('❌ ZaloPay Callback Verification Error:', error.message);
@@ -185,27 +206,29 @@ class ZaloPayPaymentService {
         throw new AppError('Chữ ký ZaloPay không hợp lệ', 400);
       }
 
-      const appTransId = data.app_trans_id;
-      const returnCode = parseInt(data.return_code);
-      const zpTransToken = data.zp_trans_token;
-      const serverTime = data.server_time;
+      // IPN payload chuẩn nằm trong field "data"
+      const payload = JSON.parse(data.data || '{}');
+      const appTransId = payload.app_trans_id;
+      const returnCode = parseInt(payload.status, 10);
+      const zpTransId = payload.zp_trans_id;
+      const serverTime = payload.server_time;
 
       logger.info('💳 ZaloPay Callback Received:', {
         appTransId,
         returnCode,
-        zpTransToken,
+        zpTransId,
         serverTime
       });
 
       // Parse app_data to get orderId
       let appData = {};
       try {
-        appData = JSON.parse(data.app_data || '{}');
+        appData = JSON.parse(payload.app_data || '{}');
       } catch (e) {
         logger.warn('ZaloPay app_data parse error:', e.message);
       }
 
-      const orderId = appData.orderId || data.app_id;
+      const orderId = appData.orderId;
       if (!orderId) {
         throw new AppError('Không tìm thấy ID đơn hàng trong callback', 400);
       }
@@ -221,14 +244,14 @@ class ZaloPayPaymentService {
         // Payment successful
         await order.update({
           TinhTrang: 'Đã thanh toán',
-          GhiChu: `ZaloPay Payment - Trans ID: ${zpTransToken}`,
+          GhiChu: `ZaloPay Payment - Trans ID: ${zpTransId}`,
           PhuongThucThanhToan: 'ZaloPay'
         });
 
         logger.info('✅ ZaloPay Payment Success:', {
           orderId,
-          zpTransToken,
-          amount: data.amount
+          zpTransId,
+          amount: payload.amount
         });
 
         // Get customer info for email
@@ -268,7 +291,7 @@ class ZaloPayPaymentService {
         logger.warn('❌ ZaloPay Payment Failed:', {
           orderId,
           returnCode,
-          returnMessage: data.return_message
+          returnMessage: payload.return_message
         });
 
         return false;

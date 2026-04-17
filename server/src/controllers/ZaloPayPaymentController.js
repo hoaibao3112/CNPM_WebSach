@@ -83,39 +83,30 @@ class ZaloPayPaymentController {
   async zaloPayIPN(req, res) {
     try {
       const callbackData = req.body;
+      const parsedData = callbackData?.data ? JSON.parse(callbackData.data) : {};
 
       logger.info('💳 ZaloPay IPN Callback Received:', {
-        appTransId: callbackData.app_trans_id,
-        returnCode: callbackData.return_code,
-        zpTransToken: callbackData.zp_trans_token,
-        amount: callbackData.amount
+        appTransId: parsedData.app_trans_id,
+        returnCode: parsedData.status,
+        zpTransId: parsedData.zp_trans_id,
+        amount: parsedData.amount
       });
 
       // Xử lý callback
       const success = await ZaloPayPaymentService.handleZaloPayCallback(callbackData);
 
-      // Luôn trả về 200 OK để ZaloPay biết rằng chúng ta đã nhận được callback
+      // ZaloPay yêu cầu return_code để xác nhận callback
       return res.status(200).json({
-        statusCode: 200,
-        message: success ? 'Xử lý thanh toán thành công' : 'Thanh toán thất bại',
-        data: {
-          appTransId: callbackData.app_trans_id,
-          returnCode: callbackData.return_code,
-          processed: success
-        }
+        return_code: success ? 1 : 2,
+        return_message: success ? 'success' : 'payment failed'
       });
     } catch (error) {
       logger.error('ZaloPay IPN Error:', error.message);
 
-      // Vẫn trả về 200 để ZaloPay không retry, nhưng log chi tiết lỗi
+      // return_code != 1 để ZaloPay có thể retry callback
       return res.status(200).json({
-        statusCode: 200,
-        message: 'Callback received but processing failed',
-        error: error.message,
-        data: {
-          appTransId: req.body?.app_trans_id,
-          processed: false
-        }
+        return_code: -1,
+        return_message: error.message || 'invalid callback'
       });
     }
   }
