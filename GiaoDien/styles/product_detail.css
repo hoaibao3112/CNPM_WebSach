@@ -1076,6 +1076,28 @@ body {
 }
 
 /* ========================================
+   PRODUCT PROMOTIONS SECTION (Full Width)
+======================================== */
+.product-promotions {
+  grid-column: 1 / -1;
+  width: 100%;
+}
+
+.product-promotions h3 {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #333;
+  margin-bottom: 1.5rem;
+  margin-top: 0;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid #FFB74D;
+}
+
+.product-promotions.hidden {
+  display: none;
+}
+
+/* ========================================
    PROMOTION CARD - Main Structure
 ======================================== */
 .promotion-card {
