@@ -21,12 +21,12 @@ class OrderService {
     constructor() {
         // VNPay configuration
         this.vnpay = new VNPay({
-            tmnCode: process.env.VNP_TMNCODE,
-            secureSecret: process.env.VNP_HASHSECRET,
-            vnpayHost: 'https://sandbox.vnpayment.vn/paymentv2/vpcpay.html',
+            tmnCode: process.env.VNP_TMNCODE || 'MPEBN4AM',
+            secureSecret: process.env.VNP_HASHSECRET || 'JNW4HXMTKJ0X3IE8YBVXGRVRACHISEH5',
+            vnpayHost: process.env.VNP_URL || 'https://sandbox.vnpayment.vn/paymentv2/vpcpay.html',
             testMode: true,
             hashAlgorithm: 'SHA512',
-            enableLog: true,
+            enableLog: process.env.NODE_ENV !== 'production',
             loggerFn: ignoreLogger,
         });
     }
