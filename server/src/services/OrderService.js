@@ -23,7 +23,7 @@ class OrderService {
         this.vnpay = new VNPay({
             tmnCode: process.env.VNP_TMNCODE || 'MPEBN4AM',
             secureSecret: process.env.VNP_HASHSECRET || 'JNW4HXMTKJ0X3IE8YBVXGRVRACHISEH5',
-            vnpayHost: process.env.VNP_URL || 'https://sandbox.vnpayment.vn/paymentv2/vpcpay.html',
+            vnpayHost: process.env.VNP_URL ? process.env.VNP_URL.split('/paymentv2')[0] : 'https://sandbox.vnpayment.vn',
             testMode: true,
             hashAlgorithm: 'SHA512',
             enableLog: process.env.NODE_ENV !== 'production',
@@ -589,9 +589,14 @@ class OrderService {
         const tomorrow = new Date();
         tomorrow.setDate(tomorrow.getDate() + 1);
 
+        // Ensure IPv4 format for VNPay
+        let clientIp = ip || '127.0.0.1';
+        if (clientIp === '::1') clientIp = '127.0.0.1';
+        if (clientIp.includes('::ffff:')) clientIp = clientIp.replace('::ffff:', '');
+
         return await this.vnpay.buildPaymentUrl({
             vnp_Amount: amount,
-            vnp_IpAddr: ip || '127.0.0.1',
+            vnp_IpAddr: clientIp,
             vnp_TxnRef: orderId.toString(),
             vnp_OrderInfo: `Thanh toan don hang ${orderId}`,
             vnp_OrderType: ProductCode.Other,
@@ -669,6 +674,17 @@ class OrderService {
     }
 
     async processVNPayReturn(vnpParams) {
+        let verify;
+        try {
+            verify = this.vnpay.verifyReturnUrl(vnpParams);
+        } catch (error) {
+            throw new Error('Lỗi xác thực VNPay: ' + error.message);
+        }
+
+        if (!verify.isVerified) {
+            throw new Error('Chữ ký VNPay không hợp lệ (sai checksum)');
+        }
+
         const orderId = vnpParams.vnp_TxnRef;
         const rspCode = vnpParams.vnp_ResponseCode;
         const amount = Number.parseInt(vnpParams.vnp_Amount || '0', 10) / 100;
