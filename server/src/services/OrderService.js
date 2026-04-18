@@ -591,8 +591,10 @@ class OrderService {
 
         // Ensure IPv4 format for VNPay
         let clientIp = ip || '127.0.0.1';
-        if (clientIp === '::1') clientIp = '127.0.0.1';
-        if (clientIp.includes('::ffff:')) clientIp = clientIp.replace('::ffff:', '');
+        if (clientIp === '::1' || clientIp.includes(':')) {
+            clientIp = '127.0.0.1'; // Force IPv4 if IPv6 (VNPay only officially supports max 15 chars)
+        }
+        clientIp = clientIp.substring(0, 15);
 
         return await this.vnpay.buildPaymentUrl({
             vnp_Amount: amount,
