@@ -327,6 +327,14 @@ async def chat(request: ChatRequest):
         traceback.print_exc() # Print to Render logs for debugging
         error_msg = str(e)
         print(f"❌ Chat error: {error_msg}")
+        
+        # Friendly message for Rate Limit / Quota issues
+        if "429" in error_msg or "RESOURCE_EXHAUSTED" in error_msg:
+            return ChatResponse(
+                reply="⚠️ Hiện tại hệ thống AI đang bận xử lý nhiều yêu cầu (vượt quá hạn mức miễn phí). Bạn vui lòng đợi khoảng 1 phút rồi thử lại nhé!",
+                session_id=request.session_id or str(uuid.uuid4())
+            )
+            
         raise HTTPException(
             status_code=500,
             detail=f"Lỗi AI: {error_msg}"
