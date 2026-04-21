@@ -5,6 +5,7 @@ plus static knowledge docs, and stores them in FAISS.
 """
 
 import os
+import time
 import mysql.connector
 import fitz
 from langchain_text_splitters import RecursiveCharacterTextSplitter
@@ -207,23 +208,37 @@ def main():
     chunks = text_splitter.create_documents(all_docs)
     print(f"   Created {len(chunks)} chunks")
 
-    # 3. Create embeddings and store in FAISS
+    # 3. Create embeddings and store in FAISS (with batching to avoid 429 error)
     print("🧠 Creating embeddings and storing in FAISS...")
+    print("   (Using batching and delays to stay within Free Tier limits)")
 
     embeddings = GoogleGenerativeAIEmbeddings(
         model=EMBEDDING_MODEL,
         google_api_key=GEMINI_API_KEY
     )
 
-    vectorstore = FAISS.from_documents(
-        documents=chunks,
-        embedding=embeddings
-    )
-    
-    vectorstore.save_local(FAISS_INDEX_PATH)
+    BATCH_SIZE = 20
+    vectorstore = None
 
-    print(f"\n✅ Ingestion complete!")
-    print(f"   Stored {len(chunks)} chunks in FAISS index at '{FAISS_INDEX_PATH}'")
+    for i in range(0, len(chunks), BATCH_SIZE):
+        batch = chunks[i:i + BATCH_SIZE]
+        print(f"   Processing batch {i//BATCH_SIZE + 1}/{(len(chunks) + BATCH_SIZE - 1)//BATCH_SIZE} ({len(batch)} chunks)...")
+        
+        if vectorstore is None:
+            vectorstore = FAISS.from_documents(batch, embeddings)
+        else:
+            vectorstore.add_documents(batch)
+        
+        if i + BATCH_SIZE < len(chunks):
+            print("   ⏳ Waiting 15s to stay well below rate limits...")
+            time.sleep(15)
+
+    if vectorstore:
+        vectorstore.save_local(FAISS_INDEX_PATH)
+        print(f"\n✅ Ingestion complete!")
+        print(f"   Stored {len(chunks)} chunks in FAISS index at '{FAISS_INDEX_PATH}'")
+    else:
+        print("❌ No documents to index.")
 
 
 if __name__ == "__main__":
