@@ -91,6 +91,15 @@ class AccountController {
         }
     }
 
+    async getEmployeeByMaTK(req, res) {
+        try {
+            const employee = await AccountService.getEmployeeByMaTK(req.params.matk);
+            return baseController.sendSuccess(res, employee);
+        } catch (error) {
+            return baseController.sendError(res, error.message, 404);
+        }
+    }
+
     async createEmployee(req, res) {
         try {
             const imagePath = req.file ? `/uploads/nhanvien/${req.file.filename}` : null;

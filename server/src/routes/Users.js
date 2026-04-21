@@ -19,6 +19,7 @@ const upload = multer({ storage });
 
 router.get('/', AccountController.getAllEmployees);
 router.get('/me', authenticateToken, AccountController.getMe);
+router.get('/by-matk/:matk', AccountController.getEmployeeByMaTK);
 router.get('/:id', AccountController.getEmployeeById);
 router.post('/', upload.single('Anh'), AccountController.createEmployee);
 router.put('/:id', upload.single('Anh'), AccountController.updateEmployee);

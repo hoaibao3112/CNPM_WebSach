@@ -68,6 +68,21 @@ class AccountService {
         return rows[0];
     }
 
+    async getEmployeeByMaTK(matk) {
+        const [rows] = await pool.query(`
+            SELECT nv.* FROM nhanvien nv
+            JOIN taikhoan tk ON nv.MaNV = tk.MaTK
+            WHERE tk.MaTK = ?
+        `, [matk]);
+        if (rows.length === 0) {
+            // Có thể bảng nhanvien và taikhoan ko khớp Manv = Matk, mà là một số setup khác?
+            // Hoặc fallback lấy profile
+            const profile = await this.getProfile(matk);
+            return profile;
+        }
+        return rows[0];
+    }
+
     async createEmployee(data) {
         const { MaNV, TenNV, SDT, GioiTinh, DiaChi, Email, TinhTrang, Anh } = data;
         await pool.query(
