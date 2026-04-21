@@ -82,6 +82,42 @@ Thông tin ngữ cảnh từ cơ sở dữ liệu:
 {context}
 """
 
+import google.generativeai as genai
+
+def select_best_model(preferred_model: str, api_key: str) -> str:
+    """Find the best available generation model from the API."""
+    try:
+        genai.configure(api_key=api_key)
+        available_models = [
+            m.name for m in genai.list_models() 
+            if 'generateContent' in m.supported_generation_methods
+        ]
+        
+        # 1. Try the preferred model (with and without models/ prefix)
+        clean_pref = preferred_model.replace("models/", "")
+        for m in available_models:
+            if clean_pref in m:
+                print(f"🎯 Selected preferred model: {m}")
+                return m
+        
+        # 2. Try common stable fallbacks in order of preference
+        fallbacks = ["gemini-2.0-flash", "gemini-1.5-flash", "gemini-pro", "gemini-1.5-pro"]
+        for fb in fallbacks:
+            for m in available_models:
+                if fb in m:
+                    print(f"🔄 Fallback to available model: {m}")
+                    return m
+        
+        # 3. Last resort: first available model
+        if available_models:
+            print(f"⚠️ Using first available model: {available_models[0]}")
+            return available_models[0]
+            
+    except Exception as e:
+        print(f"❌ Error listing models: {e}")
+    
+    return preferred_model # Default back to config if listing fails
+
 # ─── Initialize Components ──────────────────────────────────────
 
 def init_components():
@@ -91,9 +127,12 @@ def init_components():
     if not GEMINI_API_KEY:
         print("❌ WARNING: GEMINI_API_KEY is missing! Chatbot will fail to generate responses.")
 
-    print(f"🤖 Initializing Google Gemini LLM: {LLM_MODEL}")
+    # Auto-select the best model based on account permissions
+    actual_model = select_best_model(LLM_MODEL, GEMINI_API_KEY)
+    
+    print(f"🤖 Initializing Google Gemini LLM: {actual_model}")
     llm = ChatGoogleGenerativeAI(
-        model=LLM_MODEL,
+        model=actual_model,
         google_api_key=GEMINI_API_KEY,
         temperature=0.3,
         max_output_tokens=512,

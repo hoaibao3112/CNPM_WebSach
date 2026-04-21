@@ -3,9 +3,8 @@ langchain>=0.3.7
 langchain-core>=0.3.17
 langchain-community>=0.3.7
 langchain-text-splitters>=0.3.2
-langchain-google-genai>=2.0.0
-langchain-huggingface
-sentence-transformers
+langchain-google-genai>=2.0.7
+google-generativeai>=0.8.3
 faiss-cpu
 pymupdf
 pandas
