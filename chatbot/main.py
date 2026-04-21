@@ -9,9 +9,8 @@ import time
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
-from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain_google_genai import ChatGoogleGenerativeAI, GoogleGenerativeAIEmbeddings
 from langchain_community.vectorstores import FAISS
-from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_core.messages import HumanMessage, AIMessage
 from langchain_core.output_parsers import StrOutputParser
@@ -100,8 +99,11 @@ def init_components():
         max_output_tokens=512,
     )
 
-    print(f"🧠 Loading embeddings: {EMBEDDING_MODEL}")
-    embeddings = HuggingFaceEmbeddings(model_name=EMBEDDING_MODEL)
+    print(f"🧠 Using Google AI embeddings: {EMBEDDING_MODEL}")
+    embeddings = GoogleGenerativeAIEmbeddings(
+        model=EMBEDDING_MODEL,
+        google_api_key=GEMINI_API_KEY
+    )
 
     if os.path.exists(FAISS_INDEX_PATH):
         print(f"📦 Loading FAISS index from {FAISS_INDEX_PATH}")

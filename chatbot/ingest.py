@@ -9,7 +9,7 @@ import mysql.connector
 import fitz
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_community.vectorstores import FAISS
-from langchain_huggingface import HuggingFaceEmbeddings
+from langchain_google_genai import GoogleGenerativeAIEmbeddings
 from config import (
     DB_HOST, DB_PORT, DB_USER, DB_PASSWORD, DB_NAME,
     FAISS_INDEX_PATH, EMBEDDING_MODEL, GEMINI_API_KEY
@@ -206,7 +206,10 @@ def main():
     # 3. Create embeddings and store in FAISS
     print("🧠 Creating embeddings and storing in FAISS...")
 
-    embeddings = HuggingFaceEmbeddings(model_name=EMBEDDING_MODEL)
+    embeddings = GoogleGenerativeAIEmbeddings(
+        model=EMBEDDING_MODEL,
+        google_api_key=GEMINI_API_KEY
+    )
 
     vectorstore = FAISS.from_documents(
         documents=chunks,
