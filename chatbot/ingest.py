@@ -17,14 +17,23 @@ from config import (
 
 
 def get_db_connection():
-    return mysql.connector.connect(
-        host=DB_HOST,
-        port=DB_PORT,
-        user=DB_USER,
-        password=DB_PASSWORD,
-        database=DB_NAME,
-        charset="utf8mb4"
-    )
+    from config import DB_REQUIRE_SSL
+    
+    conn_params = {
+        "host": DB_HOST,
+        "port": DB_PORT,
+        "user": DB_USER,
+        "password": DB_PASSWORD,
+        "database": DB_NAME,
+        "charset": "utf8mb4"
+    }
+    
+    if DB_REQUIRE_SSL:
+        # TiDB Cloud requires SSL. We enable it here.
+        # ssl_disabled=False is the default if any ssl_* params are provided.
+        conn_params["ssl_disabled"] = False
+        
+    return mysql.connector.connect(**conn_params)
 
 
 def load_faqs(cursor):

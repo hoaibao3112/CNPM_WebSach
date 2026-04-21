@@ -23,11 +23,14 @@ FAISS_INDEX_PATH = (
 DB_HOST = os.getenv("DB_HOST", "127.0.0.1")
 DB_PORT = int(os.getenv("DB_PORT", "3306"))
 DB_USER = os.getenv("DB_USER", "root")
-DB_PASSWORD = os.getenv("DB_PASSWORD", "kimloan12345")
+DB_PASSWORD = os.getenv("DB_PASSWORD", "")
 DB_NAME = os.getenv("DB_NAME", "qlbs")
+
+# SSL settings for TiDB Cloud
+DB_REQUIRE_SSL = os.getenv("DB_REQUIRE_SSL", "false").lower() == "true"
 
 # Embedding model
 EMBEDDING_MODEL = os.getenv("EMBEDDING_MODEL", "all-MiniLM-L6-v2")
 
-# Server
-CHATBOT_PORT = int(os.getenv("CHATBOT_PORT", "8000"))
+# Server (Render uses PORT env var)
+CHATBOT_PORT = int(os.getenv("PORT", os.getenv("CHATBOT_PORT", "8000")))
