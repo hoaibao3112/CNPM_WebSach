@@ -292,17 +292,17 @@ class OrderController {
             const result = await OrderService.processVNPayReturn(req.query);
             if (result.status === 'success') {
                 return res.redirect(
-                    `${process.env.CLIENT_CUSTOMER_URL}/GiaoDien/order-confirmation.html?orderId=${result.orderId}&amount=${result.amount}&status=success`
+                    `${process.env.CLIENT_CUSTOMER_URL}/order-confirmation.html?orderId=${result.orderId}&amount=${result.amount}&status=success`
                 );
             }
 
             return res.redirect(
-                `${process.env.CLIENT_CUSTOMER_URL}/GiaoDien/order-confirmation.html?orderId=${result.orderId}&amount=${result.amount}&status=failed&code=${result.rspCode}`
+                `${process.env.CLIENT_CUSTOMER_URL}/order-confirmation.html?orderId=${result.orderId}&amount=${result.amount}&status=failed&code=${result.rspCode}`
             );
 
         } catch (error) {
             return res.redirect(
-                `${process.env.CLIENT_CUSTOMER_URL}/GiaoDien/order-confirmation.html?status=error`
+                `${process.env.CLIENT_CUSTOMER_URL}/order-confirmation.html?status=error`
             );
         }
     }

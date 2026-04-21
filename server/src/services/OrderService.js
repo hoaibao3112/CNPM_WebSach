@@ -597,7 +597,7 @@ class OrderService {
         clientIp = clientIp.substring(0, 15);
 
         return await this.vnpay.buildPaymentUrl({
-            vnp_Amount: amount,
+            vnp_Amount: Math.round(amount * 100),
             vnp_IpAddr: clientIp,
             vnp_TxnRef: orderId.toString(),
             vnp_OrderInfo: `Thanh toan don hang ${orderId}`,
