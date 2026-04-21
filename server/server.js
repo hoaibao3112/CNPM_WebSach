@@ -93,7 +93,19 @@ app.use(cors({
   optionsSuccessStatus: 204,
 }));
 
-// 2.5 Health check and Diagnostic endpoints
+// 2.5 Explicitly handle all OPTIONS preflight requests
+app.options('*', cors({
+  origin: (origin, callback) => {
+    if (isOriginAllowed(origin)) return callback(null, true);
+    return callback(new Error(`Not allowed by CORS: ${origin}`));
+  },
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  credentials: true,
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Auth-Key', 'X-Requested-With', 'Accept', 'Origin'],
+  optionsSuccessStatus: 204,
+}));
+
+// Health check and Diagnostic endpoints
 app.get('/api/ping', (req, res) => {
   res.json({ 
     status: 'ok', 
