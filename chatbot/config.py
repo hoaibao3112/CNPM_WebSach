@@ -30,7 +30,7 @@ DB_NAME = os.getenv("DB_NAME", "qlbs")
 DB_REQUIRE_SSL = os.getenv("DB_REQUIRE_SSL", "false").lower() == "true"
 
 # Embedding model
-EMBEDDING_MODEL = os.getenv("EMBEDDING_MODEL", "models/embedding-001")
+EMBEDDING_MODEL = os.getenv("EMBEDDING_MODEL", "text-embedding-004")
 
 # Server (Render uses PORT env var)
 CHATBOT_PORT = int(os.getenv("PORT", os.getenv("CHATBOT_PORT", "8000")))
