@@ -8,6 +8,15 @@ const errorHandler = (err, req, res, _next) => {
   const statusCode = err.statusCode || 500;
   const status = err.status || 'error';
 
+  // Always set CORS headers on error responses so browser sees the real error
+  const origin = req.headers.origin;
+  if (origin) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
+    res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,PATCH,OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type,Authorization,X-Auth-Key,X-Requested-With,Accept,Origin');
+  }
+
   // Log error
   if (statusCode >= 500) {
     logger.error(`${req.method} ${req.originalUrl} - ${err.message}`, {
