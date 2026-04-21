@@ -81,13 +81,7 @@ const isOriginAllowed = (origin) => {
 };
 
 app.use(cors({
-  origin: (origin, callback) => {
-    if (isOriginAllowed(origin)) {
-      return callback(null, true);
-    }
-    console.warn(`⚠️ CORS blocked: Origin ${origin} not allowed`);
-    return callback(new Error(`Not allowed by CORS: ${origin}`));
-  },
+  origin: true, // Reflect origin of requester (highly permissive for debugging)
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   credentials: true,
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Auth-Key', 'X-Requested-With', 'Accept', 'Origin'],

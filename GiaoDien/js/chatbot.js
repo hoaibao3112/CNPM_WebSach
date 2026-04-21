@@ -143,10 +143,8 @@ function initChatbot() {
     const API_BASE = window.API_CONFIG ? window.API_CONFIG.BASE_URL : window.API_CONFIG.BASE_URL;
     const configuredChatbotUrl = window.API_CONFIG ? window.API_CONFIG.CHATBOT_URL : '';
     const chatEndpoints = [
-        configuredChatbotUrl ? `${configuredChatbotUrl.replace(/\/$/, '')}/chat` : '',
-        `${API_BASE.replace(/\/$/, '')}/api/chatbot/chat`,
-        'http://127.0.0.1:8002/chat'
-    ].filter(Boolean);
+        `${API_BASE.replace(/\/$/, '')}/api/chatbot/chat`
+    ];
     
     // Initial welcome message
     addMessage('bot', 'Xin chào! 👋 Tôi là trợ lý AI của WebSach. Tôi có thể giúp bạn tìm sách, tư vấn sản phẩm, hoặc trả lời câu hỏi về cửa hàng. Hãy hỏi tôi bất cứ điều gì!');
