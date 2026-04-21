@@ -9,7 +9,7 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 # Gemini settings
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
-LLM_MODEL = os.getenv("LLM_MODEL", "gemini-1.5-flash")
+LLM_MODEL = os.getenv("LLM_MODEL", "gemini-pro") # Using gemini-pro for maximum compatibility
 
 # FAISS settings
 _faiss_env_path = os.getenv("FAISS_INDEX_PATH")

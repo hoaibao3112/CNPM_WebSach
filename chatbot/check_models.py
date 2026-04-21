@@ -12,16 +12,18 @@ if not api_key or api_key.startswith("AQ."):
 
 genai.configure(api_key=api_key)
 
-print("🔍 Đang kiểm tra danh sách model khả dụng...")
+print("🔍 Đang kiểm tra danh sách model khả dụng cho API Key này...")
 try:
-    models = genai.list_models()
-    found = False
-    for m in models:
-        if 'embedContent' in m.supported_generation_methods:
-            print(f"✅ Model Embedding tìm thấy: {m.name}")
-            found = True
-    if not found:
-        print("❌ Không tìm thấy model embedding nào cho Key này.")
+    found_any = False
+    for m in genai.list_models():
+        found_any = True
+        status = "✅" if "generateContent" in m.supported_generation_methods else "📦"
+        print(f"{status} Model: {m.name}")
+        print(f"   - Phương thức hỗ trợ: {m.supported_generation_methods}")
+        print("-" * 30)
+
+    if not found_any:
+        print("❌ Không tìm thấy model nào! Vui lòng kiểm tra lại API Key.")
 except Exception as e:
     print(f"❌ Lỗi khi kết nối Google API: {e}")
     print("Vui lòng kiểm tra lại sự chính xác của API Key và kết nối mạng.")
