@@ -38,13 +38,17 @@ router.post('/chat', async (req, res) => {
     }
 
     if (error.response) {
+      logger.error(`AI Service Error (${error.response.status}):`, error.response.data);
       return res.status(error.response.status).json({
         error: error.response.data?.detail || 'Lỗi từ chatbot service.',
+        details: error.response.data
       });
     }
 
+    logger.error('Chatbot proxy network/unknown error:', error.message);
     return res.status(500).json({
-      error: 'Lỗi hệ thống. Vui lòng thử lại sau.',
+      error: 'Lỗi hệ thống (Proxy). Vui lòng thử lại sau.',
+      details: error.message
     });
   }
 });

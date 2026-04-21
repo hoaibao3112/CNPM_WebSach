@@ -285,12 +285,12 @@ async def chat(request: ChatRequest):
         )
     except Exception as e:
         import traceback
-        with open("error.log", "w", encoding="utf-8") as f:
-            traceback.print_exc(file=f)
-        print(f"❌ Chat error: {e}")
+        traceback.print_exc() # Print to Render logs for debugging
+        error_msg = str(e)
+        print(f"❌ Chat error: {error_msg}")
         raise HTTPException(
             status_code=500,
-            detail="Xin lỗi, đã có lỗi xảy ra. Vui lòng thử lại sau."
+            detail=f"Lỗi AI: {error_msg}"
         )
 
 

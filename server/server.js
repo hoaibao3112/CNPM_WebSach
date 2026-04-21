@@ -50,6 +50,7 @@ const allowedOrigins = [
   process.env.CLIENT_ADMIN_URL || 'http://localhost:3000',
   process.env.CLIENT_CUSTOMER_URL || 'http://localhost:5500',
   'https://cnpm-web-sach.vercel.app',
+  'https://cnpm-web-sach.vercel.app/',
   'http://localhost:5501',
   'http://localhost:5000',
   'http://127.0.0.1',
