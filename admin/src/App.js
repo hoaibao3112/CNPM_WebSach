@@ -77,6 +77,10 @@ const App = () => {
 
   return (
     <Routes>
+      {/* Redirect root and /login to /admin/login for Vercel deployment */}
+      <Route path="/" element={<Navigate to="/admin/login" replace />} />
+      <Route path="/login" element={<Navigate to="/admin/login" replace />} />
+
       <Route
         path="/admin/login"
         element={isAuthenticated ? <Navigate to="/admin" replace /> : <Login />}

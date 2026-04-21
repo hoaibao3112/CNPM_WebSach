@@ -8,8 +8,9 @@ build/
 
 # Environment files
 .env
-.env.*
-!.env.example
+.env.local
+.env.*.local
+# NOTE: .env.production is intentionally committed so Vercel can use it during build
 
 # Python virtual environments and caches
 .venv/

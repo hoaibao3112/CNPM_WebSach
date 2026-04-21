@@ -86,9 +86,8 @@ export const PermissionProvider = ({ children }) => {
     await fetchPermissions();
   };
 
-  if (loading) {
-    return <div>Loading permissions...</div>;
-  }
+  // NOTE: Do NOT block children render here - let children handle loading state individually
+  // if (loading) { return <div>...</div>; }  ← This caused blank page on initial load!
 
   return (
     <PermissionContext.Provider

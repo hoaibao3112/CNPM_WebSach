@@ -1,5 +1,6 @@
 {
   "rewrites": [
+    { "source": "/admin/(.*)", "destination": "/admin/build/$1" },
     { "source": "/(.*)", "destination": "/GiaoDien/$1" }
   ]
 }
