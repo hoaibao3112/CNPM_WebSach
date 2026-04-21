@@ -130,12 +130,19 @@ def init_components():
     # Auto-select the best model based on account permissions
     actual_model = select_best_model(LLM_MODEL, GEMINI_API_KEY)
     
-    print(f"🤖 Initializing Google Gemini LLM: {actual_model}")
+    # Ensure model starts with 'models/' if not present, as some SDK versions require it
+    if not actual_model.startswith("models/"):
+        full_model_name = f"models/{actual_model}"
+    else:
+        full_model_name = actual_model
+
+    print(f"🤖 Initializing Google Gemini LLM: {full_model_name} (using API v1)")
     llm = ChatGoogleGenerativeAI(
-        model=actual_model,
+        model=full_model_name,
         google_api_key=GEMINI_API_KEY,
         temperature=0.3,
         max_output_tokens=512,
+        convert_system_message_to_human=True # Better compatibility for some models
     )
 
     print(f"🧠 Using Google AI embeddings: {EMBEDDING_MODEL}")
