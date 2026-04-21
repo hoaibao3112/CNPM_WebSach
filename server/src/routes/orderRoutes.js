@@ -4,6 +4,11 @@ import { authenticateToken } from '../middlewares/auth.js';
 
 const router = express.Router();
 
+// ===== VNPAY =====
+// VNPay payment callback (no auth required - it's a redirect from VNPay)
+// CHÚ Ý: Phải đặt trên các route có tham số như /:id để tránh bị match nhầm
+router.get('/vnpay_return', OrderController.vnpayReturn);
+
 // ===== ORDER OPERATIONS =====
 // Place order (VNPay or COD)
 router.post('/place-order', authenticateToken, OrderController.placeOrder);
@@ -56,8 +61,6 @@ router.get('/resolve/province/:code', OrderController.resolveProvince);
 router.get('/resolve/district/:code', OrderController.resolveDistrict);
 router.get('/resolve/ward/:code', OrderController.resolveWard);
 
-// ===== VNPAY =====
-// VNPay payment callback (no auth required - it's a redirect from VNPay)
-router.get('/vnpay_return', OrderController.vnpayReturn);
+
 
 export default router;
