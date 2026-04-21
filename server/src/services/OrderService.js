@@ -36,11 +36,11 @@ class OrderService {
         const provinceLower = String(province || '').toLowerCase().trim();
 
         // Check if HCM -> Free ship
-        const isHCM = provinceLower.includes('há»“ chÃ­ minh') || provinceLower.includes('hcm') ||
+        const isHCM = provinceLower.includes('hồ chí minh') || provinceLower.includes('hcm') ||
             provinceLower === '79' || provinceLower === '50';
 
         if (isHCM) {
-            logger.info('ðŸ“ Ná»™i thÃ nh TP.HCM -> FREE SHIP');
+            logger.info('ðŸ“ Nội thành TP.HCM -> FREE SHIP');
             return 0;
         }
 
@@ -48,19 +48,19 @@ class OrderService {
         const weight500gUnits = Math.ceil((totalWeight || 0) / 500);
         let shippingFee = weight500gUnits * 15000;
 
-        logger.info(`ðŸ“¦ Trá»ng lÆ°á»£ng: ${totalWeight}g -> PhÃ­ gá»‘c: ${shippingFee.toLocaleString('vi-VN')} VND`);
+        logger.info(`📦 Trá»ng lÆ°á»£ng: ${totalWeight}g -> Phí gốc: ${shippingFee.toLocaleString('vi-VN')} VND`);
 
         // Apply tier discount
-        const tierDiscount = { 'Báº¡c': 0.2, 'VÃ ng': 0.5 };
+        const tierDiscount = { 'Bạc': 0.2, 'Vàng': 0.5 };
         const discount = tierDiscount[customerTier] || 0;
 
         if (discount > 0) {
             const discountAmount = Math.round(shippingFee * discount);
             shippingFee -= discountAmount;
-            logger.info(`ðŸŽ Tier ${customerTier} gi giáº£m ${discount * 100}%: -${discountAmount.toLocaleString('vi-VN')} VND`);
+            logger.info(`ðŸŽ Tier ${customerTier} giảm ${discount * 100}%: -${discountAmount.toLocaleString('vi-VN')} VND`);
         }
 
-        logger.info(`âœ… PhÃ­ ship cuá»‘i: ${shippingFee.toLocaleString('vi-VN')} VND`);
+        logger.info(`✅ Phí ship cuối: ${shippingFee.toLocaleString('vi-VN')} VND`);
         return Math.round(shippingFee);
     }
 
@@ -68,14 +68,14 @@ class OrderService {
     normalizeTier(tier) {
         if (!tier && tier !== 0) return 'Äá»“ng';
         const t = String(tier).trim();
-        if (/vang|v[aÃ áº£Ã£Ã¡áº¡]ng/i.test(t)) return 'VÃ ng';
-        if (/bac|b[aÃ áº£Ã£Ã¡áº¡]c/i.test(t)) return 'Báº¡c';
-        if (/Ä‘á»“ng|dong/i.test(t)) return 'Äá»“ng';
-        // Numeric: 2 -> VÃ ng, 1 -> Báº¡c, 0 -> Äá»“ng
+        if (/vang|v[aÃ áº£Ã£Ã¡áº¡]ng/i.test(t)) return 'Vàng';
+        if (/bac|b[aÃ áº£Ã£Ã¡áº¡]c/i.test(t)) return 'Bạc';
+        if (/đồng|dong/i.test(t)) return 'Äá»“ng';
+        // Numeric: 2 -> Vàng, 1 -> Bạc, 0 -> Äá»“ng
         if (!isNaN(Number(t))) {
             const n = Number(t);
-            if (n >= 2) return 'VÃ ng';
-            if (n === 1) return 'Báº¡c';
+            if (n >= 2) return 'Vàng';
+            if (n === 1) return 'Bạc';
             return 'Äá»“ng';
         }
         return t;
@@ -105,7 +105,7 @@ class OrderService {
             const customerName = user.tenkh || user.name || '';
             const customerPhone = user.sdt || user.phone || '';
 
-            if (!customerId) throw new Error('KhÃ´ng xÃ¡c thá»±c Ä‘Æ°á»£c khÃ¡ch hÃ ng');
+            if (!customerId) throw new Error('Không xác thực được khách hàng');
 
             const customer = { makh: customerId, name: customerName, phone: customerPhone };
 
@@ -115,12 +115,12 @@ class OrderService {
 
             // Validate input
             if (!items || !shippingAddress || !paymentMethod) {
-                throw new Error('Thiáº¿u thÃ´ng tin báº¯t buá»™c');
+                throw new Error('Thiếu thông tin bắt buộc');
             }
 
             // Use fallback for empty name
             if (!customer.name) {
-                customer.name = 'KhÃ¡ch hÃ ng';
+                customer.name = 'Khách hàng';
             }
 
             if (!customer.makh || !shippingAddress.detail ||
@@ -135,7 +135,7 @@ class OrderService {
                     hasWard: !!shippingAddress.ward,
                     shippingAddress
                 });
-                throw new Error('ThÃ´ng tin khÃ¡ch hÃ ng hoáº·c Ä‘á»‹a chá»‰ khÃ´ng Ä‘áº§y Ä‘á»§');
+                throw new Error('Thông tin khách hàng hoặc địa chỉ không đầy đủ');
             }
 
             // Check customer exists
@@ -144,7 +144,7 @@ class OrderService {
                 [customer.makh]
             );
 
-            if (!existingCustomer) throw new Error('KhÃ¡ch hÃ ng khÃ´ng tá»“n táº¡i');
+            if (!existingCustomer) throw new Error('Khách hàng không tồn tại');
 
             // Validate items
             if (!Array.isArray(items) || items.length === 0) {
@@ -157,7 +157,7 @@ class OrderService {
 
             for (const item of items) {
                 if (!item.MaSP || !item.SoLuong || item.SoLuong < 1) {
-                    throw new Error(`Sáº£n pháº©m ${item.MaSP} khÃ´ng há»£p lá»‡`);
+                    throw new Error(`Sáº£n pháº©m ${item.MaSP} khÃ´ng hợp lệ`);
                 }
 
                 const [[product]] = await connection.query(
@@ -165,9 +165,9 @@ class OrderService {
                     [item.MaSP]
                 );
 
-                if (!product) throw new Error(`Sáº£n pháº©m ${item.MaSP} khÃ´ng tá»“n táº¡i`);
+                if (!product) throw new Error(`Sản phẩm ${item.MaSP} không tồn tại`);
                 if (product.SoLuong < item.SoLuong) {
-                    throw new Error(`Sáº£n pháº©m ${item.MaSP} khÃ´ng Ä‘á»§ tá»“n kho (${product.SoLuong} < ${item.SoLuong})`);
+                    throw new Error(`Sản phẩm ${item.MaSP} không đủ tồn kho (${product.SoLuong} < ${item.SoLuong})`);
                 }
 
                 const productWeight = product.TrongLuong || 0;
@@ -183,7 +183,7 @@ class OrderService {
                 });
             }
 
-            logger.info(`ðŸ“¦ Tá»•ng trá»ng lÆ°á»£ng: ${totalWeight}g`);
+            logger.info(`📦 Tá»•ng trá»ng lÆ°á»£ng: ${totalWeight}g`);
 
             // Calculate subtotal
             let subtotal = clientSubtotal || cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
@@ -223,13 +223,13 @@ class OrderService {
                 }
             }
 
-            logger.info(`ðŸš¢ PhÃ­ ship cuá»‘i: ${shippingFee.toLocaleString('vi-VN')} VND (Free: ${isFreeShip})`);
+            logger.info(`ðŸš¢ Phí ship cuối: ${shippingFee.toLocaleString('vi-VN')} VND (Free: ${isFreeShip})`);
 
             // Member discount when free ship
             const userTierNormalized = this.normalizeTier(userTier);
             let memberDiscountAmount = 0;
             if (isFreeShip) {
-                const memberPctMap = { 'Báº¡c': 0.03, 'VÃ ng': 0.05 };
+                const memberPctMap = { 'Bạc': 0.03, 'Vàng': 0.05 };
                 const pct = memberPctMap[userTierNormalized] || 0;
                 if (pct > 0 && subtotal >= 300000) {
                     memberDiscountAmount = Math.round(subtotal * pct);
@@ -241,7 +241,7 @@ class OrderService {
 
             // Calculate final total
             const finalTotalAmount = Math.max(0, amountAfterDiscount - memberDiscountAmount + shippingFee);
-            logger.info(`ðŸ’µ Tá»•ng cuá»‘i: ${finalTotalAmount.toLocaleString('vi-VN')} VND`);
+            logger.info(`💸 Tá»•ng cuối: ${finalTotalAmount.toLocaleString('vi-VN')} VND`);
 
             // BEGIN TRANSACTION
             await connection.beginTransaction();
@@ -261,29 +261,29 @@ class OrderService {
 
             // Create order notes
             const shipNote = isFreeShip
-                ? `PhÃ­ ship: 0Ä‘ (FREE SHIP - MÃ£: ${freeShipCode})`
-                : `PhÃ­ ship: ${shippingFee.toLocaleString()}Ä‘ (${provinceName}, ${totalWeight}g)`;
+                ? `Phí ship: 0đ (FREE SHIP - Mã: ${freeShipCode})`
+                : `Phí ship: ${shippingFee.toLocaleString()}đ (${provinceName}, ${totalWeight}g)`;
 
             let promoNote = '';
             if (discountCode && discountAmount > 0) {
-                promoNote = `[PROMO] MÃ£: ${discountCode}; Giáº£m: ${discountAmount.toLocaleString()}Ä‘\n`;
+                promoNote = `[PROMO] Mã: ${discountCode}; Giảm: ${discountAmount.toLocaleString()}đ\n`;
             }
             if (!promoNote && promoToMark && promoToMark.type === 'phieugiamgia_phathanh' && promoToMark.code) {
-                promoNote = `[PROMO] Phiáº¿u: ${promoToMark.code}\n`;
+                promoNote = `[PROMO] Phiếu: ${promoToMark.code}\n`;
             }
 
             let memberNote = '';
             if (memberDiscountAmount && memberDiscountAmount > 0) {
-                memberNote = `[MEMBER] Giáº£m theo háº¡ng ${userTier}: ${memberDiscountAmount.toLocaleString()}Ä‘\n`;
+                memberNote = `[MEMBER] Giảm theo hạng ${userTier}: ${memberDiscountAmount.toLocaleString()}đ\n`;
             }
 
-            const noteWithDetails = `${notes || ''}\n${promoNote}${memberNote}[LOYALTY] Háº¡ng: ${userTier}\n[SHIPPING] ${shipNote}`;
+            const noteWithDetails = `${notes || ''}\n${promoNote}${memberNote}[LOYALTY] Hạng: ${userTier}\n[SHIPPING] ${shipNote}`;
 
             // Create order
             const [orderResult] = await connection.query(
                 `INSERT INTO hoadon (makh, MaDiaChi, NgayTao, TongTien, PhuongThucThanhToan, GhiChu, tinhtrang, TrangThaiThanhToan, PhiShip) 
                  VALUES (?, ?, NOW(), ?, ?, ?, ?, ?, ?)`,
-                [customer.makh, addressId, finalTotalAmount, paymentMethod, noteWithDetails, 'Chá» xá»­ lÃ½', 'ChÆ°a thanh toÃ¡n', shippingFee]
+                [customer.makh, addressId, finalTotalAmount, paymentMethod, noteWithDetails, 'Chá» xá»­ lÃ½', 'Chưa thanh toán', shippingFee]
             );
             const orderId = orderResult.insertId;
 
@@ -316,7 +316,7 @@ class OrderService {
 
             // COMMIT before payment processing
             await connection.commit();
-            logger.info('âœ… Database operations completed');
+            logger.info('✅ Database operations completed');
 
             // Return order info for payment processing
             return {
@@ -515,7 +515,7 @@ class OrderService {
 
                 if (claim) {
                     if (subtotal >= (freeShipPromo.GiaTriDonToiThieu || 0)) {
-                        logger.info(`ðŸŽ‰ Free ship applied: ${code}`);
+                        logger.info(`🎉 Free ship applied: ${code}`);
                         // Mark as used
                         await connection.query(
                             `UPDATE khachhang_khuyenmai SET trang_thai = 'Da_su_dung' WHERE makh = ? AND makm = ?`,
@@ -541,7 +541,7 @@ class OrderService {
                 if (issued && !issued.NgaySuDung) {
                     const promoType = String(issued.LoaiKM || '').toLowerCase();
                     if (promoType === 'free_ship' && subtotal >= (issued.GiaTriDonToiThieu || 0)) {
-                        logger.info(`ðŸŽ‰ Free ship (issued) applied: ${issued.MaPhieu}`);
+                        logger.info(`🎉 Free ship (issued) applied: ${issued.MaPhieu}`);
                         return { success: true, promoToMark: { type: 'phieugiamgia_phathanh', code: issued.MaPhieu } };
                     }
                 }
@@ -567,7 +567,7 @@ class OrderService {
                          WHERE makh = ? AND makm = ? AND UPPER(REPLACE(trang_thai, ' ', '_')) = 'CHUA_SU_DUNG' LIMIT 1`,
                         [customerId, promoToMark.MaKM]
                     );
-                    logger.info('âœ… Marked khuyenmai:', updateRes.affectedRows);
+                    logger.info('✅ Marked khuyenmai:', updateRes.affectedRows);
                 }
             } else if (promoToMark.type === 'phieugiamgia_phathanh' && promoToMark.code) {
                 if (discountAmount > 0 || isFreeShip) {
@@ -576,7 +576,7 @@ class OrderService {
                          WHERE makh = ? AND MaPhieu = ? AND NgaySuDung IS NULL LIMIT 1`,
                         [customerId, promoToMark.code]
                     );
-                    logger.info('âœ… Marked coupon:', updateRes.affectedRows);
+                    logger.info('✅ Marked coupon:', updateRes.affectedRows);
                 }
             }
         } catch (e) {
@@ -611,7 +611,7 @@ class OrderService {
 
     async rollbackOrderForVnpayError(orderId) {
         await pool.query(
-            'UPDATE hoadon SET tinhtrang = "ÄÃ£ há»§y", GhiChu = "Lá»—i VNPay" WHERE MaHD = ?',
+            'UPDATE hoadon SET tinhtrang = "ÄÃ£ há»§y", GhiChu = "Lỗi VNPay" WHERE MaHD = ?',
             [orderId],
         );
     }
@@ -731,7 +731,7 @@ class OrderService {
         }
 
         await pool.query(
-            `UPDATE hoadon SET TrangThaiThanhToan = 'Tháº¥t báº¡i', tinhtrang = 'ÄÃ£ há»§y' WHERE MaHD = ?`,
+            `UPDATE hoadon SET TrangThaiThanhToan = 'Thất bại', tinhtrang = 'ÄÃ£ há»§y' WHERE MaHD = ?`,
             [orderId],
         );
 
@@ -786,7 +786,7 @@ class OrderService {
                         success: true,
                         orderId: orderResult.orderId,
                         paymentUrl,
-                        message: 'ÄÆ¡n hÃ ng Ä‘Ã£ táº¡o, chuyá»ƒn hÆ°á»›ng thanh toÃ¡n VNPay',
+                        message: 'ÄÆ¡n hÃ ng Ä‘Ã£ táº¡o, chuyển hướng thanh toán VNPay',
                         appliedTier: orderResult.userTier,
                         discountAmount: orderResult.discountAmount,
                         memberDiscountAmount: orderResult.memberDiscountAmount,
@@ -796,7 +796,7 @@ class OrderService {
                 };
             } catch (error) {
                 await this.rollbackOrderForVnpayError(orderResult.orderId);
-                throw new Error(error instanceof Error ? error.message : 'Lá»—i táº¡o URL thanh toÃ¡n VNPay');
+                throw new Error(error instanceof Error ? error.message : 'Lỗi táº¡o URL thanh toÃ¡n VNPay');
             }
         }
 
@@ -946,7 +946,7 @@ class OrderService {
             [orderId]
         );
 
-        if (!order) throw new Error('KhÃ´ng tÃ¬m tháº¥y Ä‘Æ¡n hÃ ng');
+        if (!order) throw new Error('Không tìm thấy đơn hàng');
 
         const [items] = await pool.query(
             `SELECT 
@@ -976,7 +976,7 @@ class OrderService {
                 [orderId, customerId]
             );
 
-            if (!order) throw new Error('KhÃ´ng tÃ¬m tháº¥y Ä‘Æ¡n hÃ ng hoáº·c khÃ´ng cÃ³ quyá»n');
+            if (!order) throw new Error('Không tìm thấy đơn hàng hoáº·c khÃ´ng cÃ³ quyá»n');
 
             // Check if can cancel
             if (!['Chá» xá»­ lÃ½', 'ÄÃ£ xÃ¡c nháº­n'].includes(order.tinhtrang)) {
@@ -986,7 +986,7 @@ class OrderService {
             // Update order status
             await connection.query(
                 `UPDATE hoadon SET tinhtrang = 'ÄÃ£ há»§y', GhiChu = CONCAT(IFNULL(GhiChu, ''), ?) WHERE MaHD = ?`,
-                [`\nLÃ½ do há»§y: ${reason || 'KhÃ´ng cÃ³ lÃ½ do'}`, orderId]
+                [`\nLý do hủy: ${reason || 'KhÃ´ng cÃ³ lÃ½ do'}`, orderId]
             );
 
             // Restore stock
@@ -1132,7 +1132,7 @@ class OrderService {
              WHERE MaDiaChi = ? AND MaKH = ?`,
             [name, phone, detail, province, district, ward, addressId, customerId]
         );
-        if (result.affectedRows === 0) throw new Error('Äá»‹a chá»‰ khÃ´ng tá»“n táº¡i');
+        if (result.affectedRows === 0) throw new Error('Äá»‹a chá»‰ khÃ´ng tồn tại');
         return true;
     }
 
@@ -1141,7 +1141,7 @@ class OrderService {
             `DELETE FROM diachi WHERE MaDiaChi = ? AND MaKH = ?`,
             [addressId, customerId]
         );
-        if (result.affectedRows === 0) throw new Error('Äá»‹a chá»‰ khÃ´ng tá»“n táº¡i');
+        if (result.affectedRows === 0) throw new Error('Äá»‹a chá»‰ khÃ´ng tồn tại');
         return true;
     }
 
@@ -1153,7 +1153,7 @@ class OrderService {
         );
 
         if (!address) {
-            throw new Error('Äá»‹a chá»‰ khÃ´ng tá»“n táº¡i hoáº·c khÃ´ng thuá»™c vá» khÃ¡ch hÃ ng nÃ y');
+            throw new Error('Äá»‹a chá»‰ khÃ´ng tồn tại hoáº·c khÃ´ng thuá»™c vá» khÃ¡ch hÃ ng nÃ y');
         }
 
         // Note: This is a placeholder implementation
