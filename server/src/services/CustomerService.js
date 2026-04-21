@@ -63,6 +63,22 @@ class CustomerService {
         await pool.query(sql, [makh || null, type, masanpham || null, query || null]);
         return true;
     }
+
+    async getAllCustomers() {
+        const [rows] = await pool.query(
+            'SELECT makh, tenkh, email, sdt, diachi, loyalty_points, loyalty_tier, tinhtrang FROM khachhang ORDER BY makh DESC'
+        );
+        return rows;
+    }
+
+    async toggleStatus(makh, tinhtrang) {
+        const [result] = await pool.query(
+            'UPDATE khachhang SET tinhtrang = ? WHERE makh = ?',
+            [tinhtrang, makh]
+        );
+        if (result.affectedRows === 0) throw new Error('Khách hàng không tồn tại');
+        return true;
+    }
 }
 
 export default new CustomerService();

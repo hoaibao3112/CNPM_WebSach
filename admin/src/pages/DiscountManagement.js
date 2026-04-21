@@ -151,8 +151,14 @@ const DiscountManagement = () => {
         }
       );
 
-      // Ensure data is always an array
-      let data = response.data.data || response.data;
+      // Retrieve the array from nested response structure
+      let data = response.data?.data?.data || response.data?.data || response.data || [];
+      if (data && data.pagination === undefined && response.data?.data?.pagination) {
+         // data correctly points to array inside
+      } else if (data && typeof data === 'object' && !Array.isArray(data) && data.data) {
+        data = data.data; // go one level deeper
+      }
+      
       if (!Array.isArray(data)) {
         console.warn('⚠️ Promotions data is not an array:', data);
         data = [];
@@ -194,8 +200,11 @@ const DiscountManagement = () => {
         },
       });
 
+      const productsData = response.data?.data?.data || response.data?.data || response.data || [];
+      let productArr = Array.isArray(productsData) ? productsData : (productsData.data || []);
+      
       setProductOptions(
-        (response.data || []).map((sp) => ({
+        productArr.map((sp) => ({
           label: `${sp.TenSP} (ID: ${sp.MaSP})`,
           value: sp.MaSP,
         }))

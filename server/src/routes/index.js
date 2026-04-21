@@ -67,7 +67,10 @@ export const initRoutes = (app) => {
   app.use('/auth', authRoutes);
 
   // Add logout route specifically at /api/logout for Sidebar compatibility
-  app.use('/api/logout', authRoutes); // Only the logout endpoint
+  app.post('/api/logout', (req, res, next) => {
+    req.url = '/logout'; // rewrite URL so authRoutes matches router.post('/logout')
+    authRoutes(req, res, next);
+  });
 
   app.use('/api/product', productRoutes); // Đăng ký API sản phẩm
   app.use('/api/category', categoryRoutes);

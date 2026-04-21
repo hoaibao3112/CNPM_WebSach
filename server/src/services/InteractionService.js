@@ -32,6 +32,50 @@ class InteractionService {
         return result.insertId;
     }
 
+    async getPendingRatings() {
+        const [ratings] = await pool.query(
+            `SELECT pd.*, s.TenSP, kh.TenKH 
+             FROM pending_danhgia pd
+             LEFT JOIN sanpham s ON pd.MaSP = s.MaSP
+             LEFT JOIN khachhang kh ON pd.MaKH = kh.MaKH
+             ORDER BY pd.NgayDanhGia DESC`
+        );
+        return ratings;
+    }
+
+    async approveRating(id) {
+        const connection = await pool.getConnection();
+        try {
+            await connection.beginTransaction();
+            // Lấy thông tin pending
+            const [[pending]] = await connection.query('SELECT * FROM pending_danhgia WHERE MaPDG = ?', [id]);
+            if (!pending) throw new Error('Không tìm thấy đánh giá chờ duyệt');
+
+            // Chuyển sang bảng chính thức
+            await connection.query(
+                'INSERT INTO danhgia (MaSP, MaKH, SoSao, NhanXet, NgayDanhGia) VALUES (?, ?, ?, ?, ?)',
+                [pending.MaSP, pending.MaKH, pending.SoSao, pending.NhanXet, pending.NgayDanhGia]
+            );
+
+            // Xóa khỏi bảng pending
+            await connection.query('DELETE FROM pending_danhgia WHERE MaPDG = ?', [id]);
+
+            await connection.commit();
+            return true;
+        } catch (error) {
+            await connection.rollback();
+            throw error;
+        } finally {
+            connection.release();
+        }
+    }
+
+    async rejectRating(id) {
+        const [result] = await pool.query('DELETE FROM pending_danhgia WHERE MaPDG = ?', [id]);
+        if (result.affectedRows === 0) throw new Error('Không tìm thấy đánh giá chờ duyệt');
+        return true;
+    }
+
     // --- Comments ---
     async getCommentsByProduct(masp, filters = {}) {
         const { page = 1, limit = 10 } = filters;

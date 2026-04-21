@@ -61,6 +61,26 @@ class CustomerController {
             return baseController.sendError(res, 'Lỗi server', 500, error.message);
         }
     }
+
+    async getAllCustomers(req, res) {
+        try {
+            const result = await CustomerService.getAllCustomers(req.query);
+            return baseController.sendSuccess(res, result);
+        } catch (error) {
+            return baseController.sendError(res, 'Lỗi khi lấy danh sách khách hàng', 500, error.message);
+        }
+    }
+
+    async toggleStatus(req, res) {
+        try {
+            const { makh } = req.params;
+            const { tinhtrang } = req.body;
+            await CustomerService.toggleStatus(makh, tinhtrang);
+            return baseController.sendSuccess(res, null, 'Cập nhật trạng thái thành công');
+        } catch (error) {
+            return baseController.sendError(res, 'Lỗi cập nhật trạng thái', 500, error.message);
+        }
+    }
 }
 
 export default new CustomerController();

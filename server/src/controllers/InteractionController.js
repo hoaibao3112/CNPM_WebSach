@@ -22,6 +22,33 @@ class InteractionController {
         }
     }
 
+    async getPendingRatings(req, res) {
+        try {
+            const result = await InteractionService.getPendingRatings();
+            return baseController.sendSuccess(res, result);
+        } catch (error) {
+            return baseController.sendError(res, 'Lỗi khi lấy danh sách đánh giá chờ duyệt', 500, error.message);
+        }
+    }
+
+    async approveRating(req, res) {
+        try {
+            await InteractionService.approveRating(req.params.id);
+            return baseController.sendSuccess(res, null, 'Duyệt đánh giá thành công');
+        } catch (error) {
+            return baseController.sendError(res, 'Lỗi duyệt đánh giá', 500, error.message);
+        }
+    }
+
+    async rejectRating(req, res) {
+        try {
+            await InteractionService.rejectRating(req.params.id);
+            return baseController.sendSuccess(res, null, 'Đã từ chối đánh giá');
+        } catch (error) {
+            return baseController.sendError(res, 'Lỗi từ chối đánh giá', 500, error.message);
+        }
+    }
+
     // --- Comments ---
     async getComments(req, res) {
         try {
