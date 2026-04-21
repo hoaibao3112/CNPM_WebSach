@@ -93,22 +93,26 @@ def load_categories(cursor):
 def load_promotions(cursor):
     """Load active promotions."""
     docs = []
-    cursor.execute("""
-        SELECT km.MaKM, km.TenKM, km.NgayBD, km.NgayKT, km.GiaTriGiam,
-               km.LoaiGiamGia, km.TrangThai
-        FROM khuyen_mai km
-        WHERE km.TrangThai = 1
-        LIMIT 20
-    """)
-    rows = cursor.fetchall()
-    for makm, ten, ngaybd, ngaykt, giatri, loai, _ in rows:
-        text = (
-            f"Khuyến mãi: {ten}\n"
-            f"Mã: {makm}\n"
-            f"Giảm: {giatri}{'%' if loai == 'phan_tram' else ' VNĐ'}\n"
-            f"Thời gian: {ngaybd} đến {ngaykt}"
-        )
-        docs.append(text)
+    try:
+        cursor.execute("""
+            SELECT km.MaKM, km.TenKM, km.NgayBD, km.NgayKT, km.GiaTriGiam,
+                   km.LoaiGiamGia, km.TrangThai
+            FROM khuyen_mai km
+            WHERE km.TrangThai = 1
+            LIMIT 20
+        """)
+        rows = cursor.fetchall()
+        for makm, ten, ngaybd, ngaykt, giatri, loai, _ in rows:
+            text = (
+                f"Khuyến mãi: {ten}\n"
+                f"Mã: {makm}\n"
+                f"Giảm: {giatri}{'%' if loai == 'phan_tram' else ' VNĐ'}\n"
+                f"Thời gian: {ngaybd} đến {ngaykt}"
+            )
+            docs.append(text)
+    except Exception as e:
+        print(f"  ⚠️ Could not load promotions: {e}. Skipping...")
+        
     print(f"  ✅ Loaded {len(docs)} promotions")
     return docs
 
