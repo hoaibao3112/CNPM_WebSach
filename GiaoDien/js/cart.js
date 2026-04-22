@@ -352,29 +352,29 @@ async function renderCart() {
 
     const row = document.createElement('tr');
     row.innerHTML = `
-      <td class="select-col">
-        <input type="checkbox" class="select-item" data-index="${index}" ${item.selected ? 'checked' : ''}>
+      <td class="select-col w-12 p-4 text-center align-middle">
+        <input type="checkbox" class="select-item h-4 w-4 accent-primary" data-index="${index}" ${item.selected ? 'checked' : ''}>
       </td>
-      <td class="product-col">
-        <div class="product-item">
-          <img src="img/product/${item.image}" alt="${item.name}" class="product-img" onerror="this.src='img/product/default.jpg'">
-          <div class="product-info">
-            <h3>${item.name}</h3>
-            <p>Mã SP: ${item.id}</p>
+      <td class="product-col w-[44%] p-4 align-middle">
+        <div class="product-item flex min-w-0 items-center gap-4">
+          <img src="img/product/${item.image}" alt="${item.name}" class="product-img h-28 w-20 flex-shrink-0 rounded-lg border border-border object-cover bg-gray-50 md:h-32 md:w-24" onerror="this.src='img/product/default.jpg'">
+          <div class="product-info min-w-0">
+            <h3 class="mb-1 truncate text-base font-bold text-gray-800 md:whitespace-normal md:break-words">${item.name}</h3>
+            <p class="text-sm text-gray-500">Mã SP: ${item.id}</p>
           </div>
         </div>
       </td>
-      <td class="price-col">${formatPrice(item.price)}</td>
-      <td class="quantity-col">
-        <div class="quantity-control">
-          <button class="qty-btn minus" data-index="${index}">-</button>
-          <input type="number" class="qty-input" value="${item.quantity}" min="1" data-index="${index}">
-          <button class="qty-btn plus" data-index="${index}">+</button>
+      <td class="price-col w-32 p-4 text-right align-middle text-base font-bold text-gray-800 whitespace-nowrap">${formatPrice(item.price)}</td>
+      <td class="quantity-col w-36 p-4 text-center align-middle">
+        <div class="quantity-control inline-flex items-center overflow-hidden rounded-lg border border-border bg-white">
+          <button class="qty-btn minus h-9 w-8 border-0 bg-gray-50 font-bold text-gray-700 transition-colors hover:bg-gray-100" data-index="${index}">-</button>
+          <input type="number" class="qty-input h-9 w-12 border-0 border-x border-border text-center font-bold outline-none" value="${item.quantity}" min="1" data-index="${index}">
+          <button class="qty-btn plus h-9 w-8 border-0 bg-gray-50 font-bold text-gray-700 transition-colors hover:bg-gray-100" data-index="${index}">+</button>
         </div>
       </td>
-      <td class="total-col">${formatPrice(itemTotal)}</td>
-      <td class="action-col">
-        <button class="remove-btn" data-index="${index}" title="Xóa sản phẩm">
+      <td class="total-col w-32 p-4 text-right align-middle text-base font-bold text-gray-900 whitespace-nowrap">${formatPrice(itemTotal)}</td>
+      <td class="action-col w-14 p-4 text-center align-middle">
+        <button class="remove-btn inline-flex h-9 w-9 items-center justify-center rounded-lg border-0 bg-red-50 text-red-600 transition-colors hover:bg-red-100" data-index="${index}" title="Xóa sản phẩm">
           <i class="fas fa-trash"></i>
         </button>
       </td>
