@@ -2177,7 +2177,8 @@ function initializeChatSystem() {
         })
         .catch(error => {
             console.error('❌ Failed to initialize chat room:', error);
-            showErrorToast('Không thể khởi tạo chat');
+            // showErrorToast('Không thể khởi tạo chat');
+            console.log('Chat system unavailable - continuing without chat.');
         });
 }
 

@@ -4,14 +4,14 @@
         const style = document.createElement('style');
         style.id = 'product-sales-styles';
         style.textContent = `
-            .flash-sale-container { background: #fff; border-radius: 24px; padding: 32px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); border: 1px solid #eee; margin-bottom: 40px; }
-            .flash-sale-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
-            .flash-sale-left { display: flex; align-items: center; gap: 20px; }
-            .flash-sale-left h2 { font-family: 'Playfair Display', serif; font-size: 28px; font-weight: 900; color: #C0392B; margin: 0; letter-spacing: -1px; }
-            .countdown { display: flex; align-items: center; gap: 8px; font-family: 'Inter', sans-serif; }
-            .cd-box { background: #1a1a1a; color: #fff; padding: 4px 8px; border-radius: 6px; font-weight: 700; min-width: 32px; text-align: center; }
-            .cd-lbl { font-size: 12px; color: #666; font-weight: 600; margin-right: 4px; }
-            .flash-products { display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; }
+            .flash-sale-container { background: #fff; border-radius: 24px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.08); border: 1px solid #eee; margin-bottom: 40px; }
+            .flash-sale-header { display: flex; justify-content: space-between; align-items: center; padding: 20px 32px; background: linear-gradient(90deg, #C0392B 0%, #e74c3c 100%); color: white; }
+            .flash-sale-left { display: flex; align-items: center; gap: 24px; }
+            .flash-sale-left h2 { font-family: 'Playfair Display', serif; font-size: 26px; font-weight: 900; color: #ffffff; margin: 0; letter-spacing: 1px; text-transform: uppercase; }
+            .countdown { display: flex; align-items: center; gap: 6px; font-family: 'Inter', sans-serif; background: rgba(0,0,0,0.2); padding: 8px 16px; border-radius: 50px; }
+            .cd-box { background: #fff; color: #C0392B; padding: 2px 8px; border-radius: 6px; font-weight: 800; min-width: 32px; text-align: center; font-size: 14px; }
+            .cd-lbl { font-size: 11px; color: rgba(255,255,255,0.9); font-weight: 600; margin-right: 2px; }
+            .flash-products { display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; padding: 32px; }
             .sale-item { background: #fff; border: 1px solid #eee; border-radius: 20px; overflow: hidden; transition: all 0.3s; display: flex; flex-direction: column; }
             .sale-item:hover { transform: translateY(-5px); box-shadow: 0 10px 30px rgba(0,0,0,0.1); border-color: #C0392B; }
             .sale-item-image-wrapper { width: 100%; aspect-ratio: 3/4; background: #f9f9f9; display: flex; align-items: center; justify-content: center; }
@@ -27,8 +27,11 @@
             .sale-item-actions { display: flex; gap: 8px; margin-top: 16px; }
             .btn-add-cart { flex: 1; background: #C0392B; color: #fff; border: none; padding: 10px; border-radius: 10px; font-weight: 700; cursor: pointer; }
             .btn-detail { flex: 1; background: #fff; color: #555; border: 1px solid #ddd; padding: 10px; border-radius: 10px; font-weight: 700; cursor: pointer; }
-            @media (max-width: 1024px) { .flash-products { grid-template-columns: repeat(2, 1fr); } }
-            @media (max-width: 640px) { .flash-sale-header { flex-direction: column; align-items: flex-start; gap: 16px; } .view-all-btn { width: 100%; } }
+            .view-all-btn { background: rgba(255,255,255,0.2); color: white; border: 1px solid rgba(255,255,255,0.4); padding: 8px 24px; border-radius: 50px; font-weight: 700; font-size: 13px; cursor: pointer; transition: all 0.3s; text-transform: uppercase; }
+            .view-all-btn:hover { background: #fff; color: #C0392B; }
+            @media (max-width: 1024px) { .flash-products { grid-template-columns: repeat(3, 1fr); } }
+            @media (max-width: 768px) { .flash-products { grid-template-columns: repeat(2, 1fr); padding: 20px; } }
+            @media (max-width: 640px) { .flash-sale-header { flex-direction: column; gap: 16px; align-items: center; text-align: center; } .flash-sale-left { flex-direction: column; gap: 12px; } }
         `;
         document.head.appendChild(style);
     }

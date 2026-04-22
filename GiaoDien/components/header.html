@@ -8,7 +8,7 @@
 
 <body>
     <!-- Top bar -->
-    <div class="top-bar fixed top-0 left-0 right-0 z-[9999] bg-white shadow-md h-14">
+    <div class="top-bar fixed top-0 left-0 right-0 z-[9999] bg-[#C0392B] shadow-lg h-14">
         <div class="top-bar-container max-w-[1300px] mx-auto h-full flex items-center justify-between px-4 gap-4">
             <!-- Logo -->
             <a href="index.html" class="flex-shrink-0">
@@ -20,8 +20,8 @@
                 <form id="search-form" class="relative flex items-center bg-gray-100 rounded-lg overflow-hidden border border-transparent focus-within:border-primary focus-within:bg-white transition-all">
                     <input id="search-input" type="text" autocomplete="off" 
                         placeholder="Tìm kiếm sách, tác giả..." name="search"
-                        class="w-full bg-transparent py-2 px-4 outline-none text-sm text-text">
-                    <button type="submit" class="p-2 px-4 text-gray-500 hover:text-primary transition-colors">
+                        class="w-full bg-white py-2 px-4 outline-none text-sm text-gray-800">
+                    <button type="submit" class="p-2 px-4 text-[#C0392B] hover:text-[#962d22] transition-colors">
                         <i class="fas fa-search"></i>
                     </button>
                 </form>
@@ -53,7 +53,7 @@
             <ul class="top-links flex items-center gap-6 list-none m-0 p-0">
                 <!-- Danh mục -->
                 <li class="category-top-dropdown relative group h-14 flex items-center">
-                    <a href="#" class="text-sm font-medium text-text-muted hover:text-primary flex items-center gap-1 transition-colors">
+                    <a href="#" class="text-sm font-medium text-white hover:text-white/80 flex items-center gap-1 transition-colors">
                         <i class="fas fa-book"></i> <span>Danh mục</span> <i class="fas fa-chevron-down text-[10px]"></i>
                     </a>
                     <div class="dropdown-content absolute top-full right-0 w-56 bg-white shadow-xl rounded-b-lg border-t-2 border-primary py-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-[10001]">
@@ -71,7 +71,7 @@
 
                 <!-- Tác giả -->
                 <li class="publisher-dropdown relative group h-14 flex items-center">
-                    <a href="author.html" class="text-sm font-medium text-text-muted hover:text-primary flex items-center gap-1 transition-colors">
+                    <a href="author.html" class="text-sm font-medium text-white hover:text-white/80 flex items-center gap-1 transition-colors">
                         <i class="fas fa-pen-nib"></i> <span>Tác giả</span> <i class="fas fa-chevron-down text-[10px]"></i>
                     </a>
                     <div class="dropdown-content absolute top-full right-0 w-48 bg-white shadow-xl rounded-b-lg border-t-2 border-primary py-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-[10001]">
@@ -82,7 +82,7 @@
                 <!-- Tài khoản -->
                 <li class="account-dropdown relative group h-14 flex items-center" id="accountDropdownContainer">
                     <div id="loginLinkDiv">
-                        <a href="login.html" id="loginLink" class="text-sm font-medium text-text-muted hover:text-primary flex items-center gap-1 transition-colors">
+                        <a href="login.html" id="loginLink" class="text-sm font-medium text-white hover:text-white/80 flex items-center gap-1 transition-colors">
                             <i class="fas fa-user"></i> <span class="textTK">Tài khoản</span> <i class="fas fa-chevron-down text-[10px]"></i>
                         </a>
                     </div>
@@ -95,7 +95,7 @@
                     <!-- Logged In State -->
                     <div class="logged-in-account hidden group h-14 flex items-center">
                         <div class="accountLinkDiv flex items-center gap-1 cursor-pointer">
-                            <a href="#" id="accountLink" class="text-sm font-medium text-text-muted hover:text-primary flex items-center gap-1">
+                            <a href="#" id="accountLink" class="text-sm font-medium text-white hover:text-white/80 flex items-center gap-1">
                                 <i class="fas fa-user"></i> <span class="username">Tên người dùng</span>
                             </a>
                             <i class="fas fa-chevron-down text-[10px]"></i>
@@ -109,7 +109,7 @@
 
                 <!-- Giỏ hàng -->
                 <li class="h-14 flex items-center">
-                    <a href="cart.html" class="text-sm font-bold text-primary hover:text-primary-dark flex items-center gap-2 bg-primary-light px-4 py-2 rounded-full transition-all">
+                        <a href="cart.html" class="text-sm font-bold text-white hover:bg-white/10 flex items-center gap-2 px-4 py-2 rounded-full transition-all border border-white/30">
                         <i class="fas fa-shopping-cart"></i> <span>Giỏ hàng <span id="cart-count">(0)</span></span>
                     </a>
                 </li>
