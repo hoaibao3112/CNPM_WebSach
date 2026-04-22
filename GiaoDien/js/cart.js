@@ -3047,8 +3047,32 @@ async function loadSavedAddresses() {
       };
 
       option.value = JSON.stringify(payload);
-      // Display with names instead of IDs
-      const displayText = `${detailVal || ''}${wardName ? ', ' + wardName : ''}${districtName ? ', ' + districtName : ''}${provinceName ? ', ' + provinceName : ''}`;
+      
+      // Smart display text construction to avoid duplicates
+      let displayText = detailVal || '';
+      
+      const partsToAdd = [];
+      if (wardName && wardName !== 'undefined' && !/^\d+$/.test(wardName)) {
+        if (!displayText.toLowerCase().includes(wardName.toLowerCase())) {
+          partsToAdd.push(wardName);
+        }
+      }
+      if (districtName && districtName !== 'undefined' && !/^\d+$/.test(districtName)) {
+        if (!displayText.toLowerCase().includes(districtName.toLowerCase())) {
+          partsToAdd.push(districtName);
+        }
+      }
+      if (provinceName && provinceName !== 'undefined' && !/^\d+$/.test(provinceName)) {
+        if (!displayText.toLowerCase().includes(provinceName.toLowerCase())) {
+          partsToAdd.push(provinceName);
+        }
+      }
+      
+      if (partsToAdd.length > 0) {
+        if (displayText) displayText += ', ';
+        displayText += partsToAdd.join(', ');
+      }
+
       console.log('📝 Display text:', displayText);
       option.textContent = displayText;
       select.appendChild(option);
