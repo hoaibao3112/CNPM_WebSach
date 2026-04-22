@@ -135,20 +135,18 @@ body.sidebar-closed .sidebar .brand .name {
 }
 
 /* ---------- Nav ---------- */
-.sidebar-nav {
-  padding: 10px 8px 12px 8px;
-  overflow: hidden auto;
-  scrollbar-width: thin;
-  scrollbar-color: var(--sb-border) transparent;
-}
-
-.sidebar ul {
+.sidebar-menu {
   list-style: none;
   margin: 0;
-  padding: 0 8px;
+  padding: 10px 8px 12px 8px;
   display: flex;
   flex-direction: column;
   gap: 6px;
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: thin;
+  scrollbar-color: var(--sb-border) transparent;
 }
 
 .sidebar li { position: relative; }

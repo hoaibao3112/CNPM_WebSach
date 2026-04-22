@@ -7,9 +7,9 @@ dist/
 build/
 
 # Environment files
-.env
-.env.local
-.env.*.local
+**/.env
+**/.env.local
+**/.env.*.local
 # NOTE: .env.production is intentionally committed so Vercel can use it during build
 
 # Python virtual environments and caches
