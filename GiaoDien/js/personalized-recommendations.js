@@ -52,8 +52,12 @@ const PersonalizedRecommendations = {
         .product-price { display: flex; align-items: center; gap: 8px; margin-top: auto; }
         .price { font-size: 16px; font-weight: 800; color: #C0392B; }
         .original-price { font-size: 12px; color: #bbb; text-decoration: line-through; }
-        .btn-add-cart { width: 100%; margin-top: 12px; padding: 10px; background: #C0392B; color: white; border: none; border-radius: 10px; font-weight: 700; cursor: pointer; transition: all 0.2s; }
+        .btn-add-cart { width: 100%; padding: 10px; background: #C0392B; color: white; border: none; border-radius: 10px; font-weight: 700; cursor: pointer; transition: all 0.2s; }
         .btn-add-cart:hover { background: #962d22; }
+        .product-actions { display: flex; gap: 8px; margin-top: 12px; }
+        .product-actions .btn-add-cart { flex: 2; margin-top: 0; font-size: 10px; text-transform: uppercase; }
+        .product-actions .btn-detail { flex: 1; padding: 10px; background: #f8fafc; color: #64748b; border: 1px solid #e2e8f0; border-radius: 10px; font-weight: 700; cursor: pointer; transition: all 0.2s; font-size: 10px; display: flex; align-items: center; justify-content: center; gap: 4px; text-transform: uppercase; }
+        .product-actions .btn-detail:hover { background: #fff; color: #C0392B; border-color: #C0392B; }
         .view-more-container { text-align: center; margin-top: 24px; }
         .view-more-recommendations { padding: 12px 32px; background: #fff; border: 1px solid #C0392B; color: #C0392B; border-radius: 30px; font-weight: 700; cursor: pointer; transition: all 0.2s; }
         .view-more-recommendations:hover { background: #C0392B; color: #fff; }
@@ -490,10 +494,10 @@ const PersonalizedRecommendations = {
 
           <div class="product-actions">
             <button class="btn-add-cart" data-product-id="${productId}" ${stock <= 0 ? 'disabled' : ''}>
-              <i class="fas fa-shopping-cart"></i> Thêm vào giỏ
+               Thêm giỏ
             </button>
             <button class="btn-detail" onclick="window.location.href='product_detail.html?id=${productId}'">
-              <i class="fas fa-eye"></i> Chi tiết
+               Chi tiết
             </button>
           </div>
         </div>

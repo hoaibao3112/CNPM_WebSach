@@ -120,6 +120,22 @@ async function addToCart(productId, productName, price, image) {
     }
 
     localStorage.setItem('cart', JSON.stringify(cart));
+    // Inject common product card styles if not already present
+    if (!document.getElementById('book-js-styles')) {
+      const style = document.createElement('style');
+      style.id = 'book-js-styles';
+      style.textContent = `
+        .product-actions { display: flex; gap: 8px; margin-top: 15px; width: 100%; }
+        .product-actions .btn-add-cart { flex: 2; padding: 12px 5px; font-size: 10px; font-weight: 800; border-radius: 12px; text-transform: uppercase; }
+        .product-actions .btn-detail { flex: 1; padding: 12px 5px; font-size: 10px; font-weight: 800; border-radius: 12px; display: flex; align-items: center; justify-content: center; gap: 4px; text-transform: uppercase; }
+        
+        /* Specific for sale-item-actions in book.js */
+        .sale-item-actions { display: flex; gap: 8px; margin-top: 12px; width: 100%; }
+        .sale-item-actions .btn-add-cart { flex: 2; padding: 12px 5px; font-size: 10px; font-weight: 800; border-radius: 12px; background: #B03A2E; color: white; border: none; text-transform: uppercase; }
+        .sale-item-actions .btn-detail { flex: 1; padding: 12px 5px; font-size: 10px; font-weight: 800; border-radius: 12px; background: #f8fafc; color: #64748b; border: 1px solid #e2e8f0; text-transform: uppercase; }
+      `;
+      document.head.appendChild(style);
+    }
     showToast(`Đã thêm ${productName} vào giỏ hàng! (Vui lòng đăng nhập để lưu vĩnh viễn)`);
     updateCartCount(); // Cập nhật UI
   }

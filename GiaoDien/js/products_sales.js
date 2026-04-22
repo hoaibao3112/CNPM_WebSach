@@ -23,11 +23,11 @@
             .sale-item-price { display: flex; flex-direction: column; gap: 2px; margin-top: auto; }
             .discount-price { font-size: 18px; font-weight: 950; color: #B03A2E; letter-spacing: -1px; }
             .badge-percent { background: #B03A2E; color: #fff; font-size: 10px; font-weight: 900; padding: 3px 10px; border-radius: 8px; box-shadow: 0 4px 10px rgba(176,58,46,0.3); }
-            .sale-item-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px; }
-            .btn-add-cart { background: #B03A2E; color: #fff; border: none; padding: 12px; border-radius: 14px; font-size: 10px; font-weight: 950; cursor: pointer; text-transform: uppercase; transition: all 0.3s; box-shadow: 0 4px 12px rgba(176,58,46,0.2); }
+            .sale-item-actions { display: flex; gap: 10px; margin-top: 15px; width: 100%; }
+            .btn-add-cart { background: #B03A2E; color: #fff; border: none; padding: 12px; border-radius: 14px; font-size: 10px; font-weight: 950; cursor: pointer; text-transform: uppercase; transition: all 0.3s; box-shadow: 0 4px 12px rgba(176,58,46,0.2); flex: 2; }
             .btn-add-cart:hover:not(:disabled) { background: #8E2920; transform: scale(1.05); box-shadow: 0 6px 15px rgba(176,58,46,0.3); }
             .btn-add-cart:disabled { background: #e2e8f0; color: #94a3b8; box-shadow: none; }
-            .btn-detail { background: #f8fafc; color: #64748b; border: 1px solid #e2e8f0; padding: 12px; border-radius: 14px; font-size: 10px; font-weight: 950; cursor: pointer; text-transform: uppercase; transition: all 0.3s; }
+            .btn-detail { background: #f8fafc; color: #64748b; border: 1px solid #e2e8f0; padding: 12px; border-radius: 14px; font-size: 10px; font-weight: 950; cursor: pointer; text-transform: uppercase; transition: all 0.3s; flex: 1; }
             .btn-detail:hover { background: #fff; color: #B03A2E; border-color: #B03A2E; }
             @media (max-width: 1024px) { .flash-products { grid-template-columns: repeat(3, 1fr); } }
             @media (max-width: 768px) { .flash-products { grid-template-columns: repeat(2, 1fr); padding: 16px; gap: 16px; } }
@@ -188,7 +188,7 @@
 
 		const btnAddCart = document.createElement('button');
 		btnAddCart.className = 'btn-add-cart';
-		btnAddCart.innerHTML = '<i class="fas fa-cart-plus mr-1"></i> GIỎ HÀNG';
+		btnAddCart.innerHTML = 'THÊM GIỎ HÀNG';
 		const hasStock = p.SoLuong && p.SoLuong > 0;
 		if (!hasStock) { btnAddCart.disabled = true; btnAddCart.textContent = 'HẾT HÀNG'; }
 
