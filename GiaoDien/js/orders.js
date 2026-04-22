@@ -1104,12 +1104,12 @@ async function submitReturnRequest(order) {
     if (cancelBtn) {
         // Determine if the order is cancellable or requires refund information
         const paymentStatus = (order.paymentStatus || '').toString();
-        const paidIndicators = ['Đã thanh toán', 'Đã nhận tiền', 'Đã nhận'];
+        const paidIndicators = ['Đã thanh toán', 'Đã nhận tiền', 'Đã nhận', 'Ä Ã£ thanh toÃ¡n'];
         const isPaid = paidIndicators.some(ind => paymentStatus.includes(ind));
 
         // Accept both legacy 'pending' flag or Vietnamese tinhtrang values
         const statusValue = (order.status || order.tinhtrang || '').toString();
-        const cancellableStatuses = ['pending', 'Chờ xử lý', 'Chờ xác nhận', 'Đã xác nhận'];
+        const cancellableStatuses = ['pending', 'Chờ xử lý', 'Chờ xác nhận', 'Đã xác nhận', 'Chá»  xá»­ lÃ½', 'Ä Ã£ xÃ¡c nháº­n'];
         const isCancellableStatus = cancellableStatuses.some(s => statusValue.includes(s));
 
         // Show cancel button if status allows cancellation OR payment was already received (so user can provide refund info)

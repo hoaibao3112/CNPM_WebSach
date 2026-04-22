@@ -40,7 +40,7 @@ class OrderService {
             provinceLower === '79' || provinceLower === '50';
 
         if (isHCM) {
-            logger.info('ðŸ“ Nội thành TP.HCM -> FREE SHIP');
+            logger.info('📍 Nội thành TP.HCM -> FREE SHIP');
             return 0;
         }
 
@@ -48,7 +48,7 @@ class OrderService {
         const weight500gUnits = Math.ceil((totalWeight || 0) / 500);
         let shippingFee = weight500gUnits * 15000;
 
-        logger.info(`📦 Trá»ng lÆ°á»£ng: ${totalWeight}g -> Phí gốc: ${shippingFee.toLocaleString('vi-VN')} VND`);
+        logger.info(`📦 Trọng lượng: ${totalWeight}g -> Phí gốc: ${shippingFee.toLocaleString('vi-VN')} VND`);
 
         // Apply tier discount
         const tierDiscount = { 'Bạc': 0.2, 'Vàng': 0.5 };
@@ -57,7 +57,7 @@ class OrderService {
         if (discount > 0) {
             const discountAmount = Math.round(shippingFee * discount);
             shippingFee -= discountAmount;
-            logger.info(`ðŸŽ Tier ${customerTier} giảm ${discount * 100}%: -${discountAmount.toLocaleString('vi-VN')} VND`);
+            logger.info(`🎁 Tier ${customerTier} giảm ${discount * 100}%: -${discountAmount.toLocaleString('vi-VN')} VND`);
         }
 
         logger.info(`✅ Phí ship cuối: ${shippingFee.toLocaleString('vi-VN')} VND`);
@@ -66,17 +66,17 @@ class OrderService {
 
     // ===== NORMALIZE TIER =====
     normalizeTier(tier) {
-        if (!tier && tier !== 0) return 'Äá»“ng';
+        if (!tier && tier !== 0) return 'Đồng';
         const t = String(tier).trim();
         if (/vang|v[aÃ áº£Ã£Ã¡áº¡]ng/i.test(t)) return 'Vàng';
         if (/bac|b[aÃ áº£Ã£Ã¡áº¡]c/i.test(t)) return 'Bạc';
-        if (/đồng|dong/i.test(t)) return 'Äá»“ng';
-        // Numeric: 2 -> Vàng, 1 -> Bạc, 0 -> Äá»“ng
+        if (/đồng|dong/i.test(t)) return 'Đồng';
+        // Numeric: 2 -> Vàng, 1 -> Bạc, 0 -> Đồng
         if (!isNaN(Number(t))) {
             const n = Number(t);
             if (n >= 2) return 'Vàng';
             if (n === 1) return 'Bạc';
-            return 'Äá»“ng';
+            return 'Đồng';
         }
         return t;
     }
@@ -109,9 +109,9 @@ class OrderService {
 
             const customer = { makh: customerId, name: customerName, phone: customerPhone };
 
-            logger.info('ðŸ” [ORDER] Data:', { clientSubtotal, clientDiscount, clientFinalTotal, freeShipCode, discountCode });
-            logger.info('ðŸ” [ORDER] Customer:', customer);
-            logger.info('ðŸ” [ORDER] Shipping Address:', shippingAddress);
+            logger.info('🔍 [ORDER] Data:', { clientSubtotal, clientDiscount, clientFinalTotal, freeShipCode, discountCode });
+            logger.info('🔍 [ORDER] Customer:', customer);
+            logger.info('🔍 [ORDER] Shipping Address:', shippingAddress);
 
             // Validate input
             if (!items || !shippingAddress || !paymentMethod) {
@@ -125,7 +125,7 @@ class OrderService {
 
             if (!customer.makh || !shippingAddress.detail ||
                 !shippingAddress.province || !shippingAddress.district || !shippingAddress.ward) {
-                logger.error('âŒ Validation failed:', {
+                logger.error('❌ Validation failed:', {
                     hasMakh: !!customer.makh,
                     hasName: !!customer.name,
                     hasPhone: !!customer.phone,
@@ -148,7 +148,7 @@ class OrderService {
 
             // Validate items
             if (!Array.isArray(items) || items.length === 0) {
-                throw new Error('KhÃ´ng cÃ³ sáº£n pháº©m Ä‘Æ°á»£c chá»n');
+                throw new Error('Không có sản phẩm được chọn');
             }
 
             // Validate products, check stock, calculate weight
@@ -157,7 +157,7 @@ class OrderService {
 
             for (const item of items) {
                 if (!item.MaSP || !item.SoLuong || item.SoLuong < 1) {
-                    throw new Error(`Sáº£n pháº©m ${item.MaSP} khÃ´ng hợp lệ`);
+                    throw new Error(`Sản phẩm ${item.MaSP} không hợp lệ`);
                 }
 
                 const [[product]] = await connection.query(
@@ -183,7 +183,7 @@ class OrderService {
                 });
             }
 
-            logger.info(`📦 Tá»•ng trá»ng lÆ°á»£ng: ${totalWeight}g`);
+            logger.info(`📦 Tổng trọng lượng: ${totalWeight}g`);
 
             // Calculate subtotal
             let subtotal = clientSubtotal || cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
@@ -193,7 +193,7 @@ class OrderService {
             const customerRow = existingCustomer;
             const tokenTier = user.loyalty_tier || user.loyalty_tier === 0 ? user.loyalty_tier : null;
             const userTier = tokenTier || customerRow.loyalty_tier || computeTier(customerRow.loyalty_points || 0);
-            logger.info('ðŸ” [LOYALTY] userTier:', userTier);
+            logger.info('🔍 [LOYALTY] userTier:', userTier);
 
             // ===== SERVER-SIDE PROMOTION VALIDATION =====
             let promoToMark = null;
@@ -223,7 +223,7 @@ class OrderService {
                 }
             }
 
-            logger.info(`ðŸš¢ Phí ship cuối: ${shippingFee.toLocaleString('vi-VN')} VND (Free: ${isFreeShip})`);
+            logger.info(`🚢 Phí ship cuối: ${shippingFee.toLocaleString('vi-VN')} VND (Free: ${isFreeShip})`);
 
             // Member discount when free ship
             const userTierNormalized = this.normalizeTier(userTier);
@@ -233,15 +233,15 @@ class OrderService {
                 const pct = memberPctMap[userTierNormalized] || 0;
                 if (pct > 0 && subtotal >= 300000) {
                     memberDiscountAmount = Math.round(subtotal * pct);
-                    logger.info(`ðŸŽ–ï¸ Member ${userTierNormalized} discount: -${memberDiscountAmount.toLocaleString('vi-VN')} (${pct * 100}%)`);
+                    logger.info(`🎗️ Member ${userTierNormalized} discount: -${memberDiscountAmount.toLocaleString('vi-VN')} (${pct * 100}%)`);
                 }
             }
 
-            logger.info('ðŸ” [SUMMARY] subtotal:', subtotal, 'discount:', discountAmount, 'memberDiscount:', memberDiscountAmount, 'shipping:', shippingFee);
+            logger.info('🔍 [SUMMARY] subtotal:', subtotal, 'discount:', discountAmount, 'memberDiscount:', memberDiscountAmount, 'shipping:', shippingFee);
 
             // Calculate final total
             const finalTotalAmount = Math.max(0, amountAfterDiscount - memberDiscountAmount + shippingFee);
-            logger.info(`💸 Tá»•ng cuối: ${finalTotalAmount.toLocaleString('vi-VN')} VND`);
+            logger.info(`💸 Tổng cuối: ${finalTotalAmount.toLocaleString('vi-VN')} VND`);
 
             // BEGIN TRANSACTION
             await connection.beginTransaction();
@@ -255,7 +255,7 @@ class OrderService {
                 const cityObj = citiesData.find(c => c.city_id === provinceName);
                 if (cityObj) {
                     provinceName = cityObj.city_name;
-                    logger.info(`ðŸ“ Resolved province ${shippingAddress.province} â†’ ${provinceName}`);
+                    logger.info(`📍 Resolved province ${shippingAddress.province} → ${provinceName}`);
                 }
             }
 
@@ -283,7 +283,7 @@ class OrderService {
             const [orderResult] = await connection.query(
                 `INSERT INTO hoadon (makh, MaDiaChi, NgayTao, TongTien, PhuongThucThanhToan, GhiChu, tinhtrang, TrangThaiThanhToan, PhiShip) 
                  VALUES (?, ?, NOW(), ?, ?, ?, ?, ?, ?)`,
-                [customer.makh, addressId, finalTotalAmount, paymentMethod, noteWithDetails, 'Chá» xá»­ lÃ½', 'Chưa thanh toán', shippingFee]
+                [customer.makh, addressId, finalTotalAmount, paymentMethod, noteWithDetails, 'Chờ xử lý', 'Chưa thanh toán', shippingFee]
             );
             const orderId = orderResult.insertId;
 
@@ -338,7 +338,7 @@ class OrderService {
 
         } catch (error) {
             await connection.rollback();
-            logger.error('âŒ Place order error:', error);
+            logger.error('❌ Place order error:', error);
             throw error;
         } finally {
             connection.release();
@@ -411,11 +411,11 @@ class OrderService {
             }
 
             if (!promotion) {
-                logger.info(`âš ï¸ Promotion not found: ${code}`);
+                logger.info(`⚠️ Promotion not found: ${code}`);
                 return { discountAmount: null, promoToMark: null };
             }
 
-            logger.info('ðŸ” [PROMO FOUND]', promotion);
+            logger.info('🔍 [PROMO FOUND]', promotion);
 
             const promoType = String(promotion.LoaiKM || '').toLowerCase();
 
@@ -456,7 +456,7 @@ class OrderService {
             const subtotalEligible = eligibleItems.reduce((s, it) => s + (it.price || 0) * (it.quantity || 0), 0);
             const totalQtyEligible = eligibleItems.reduce((s, it) => s + (it.quantity || 0), 0);
 
-            logger.info('ðŸ” [ELIGIBLE]', eligibleItems.map(i => i.productId), 'subtotal:', subtotalEligible, 'qty:', totalQtyEligible);
+            logger.info('🔍 [ELIGIBLE]', eligibleItems.map(i => i.productId), 'subtotal:', subtotalEligible, 'qty:', totalQtyEligible);
 
             const minAmount = promotion.GiaTriDonToiThieu || 0;
             const minQty = promotion.SoLuongToiThieu || 0;
@@ -476,7 +476,7 @@ class OrderService {
                 }
             }
 
-            logger.info('ðŸ” [COMPUTED DISCOUNT]', computedDiscount);
+            logger.info('🔍 [COMPUTED DISCOUNT]', computedDiscount);
 
             let promoToMark = null;
             if (promotion.MaKM) {
@@ -488,7 +488,7 @@ class OrderService {
             return { discountAmount: computedDiscount, promoToMark };
 
         } catch (e) {
-            logger.error('âŒ Error validating promotion:', e);
+            logger.error('❌ Error validating promotion:', e);
             return { discountAmount: null, promoToMark: null };
         }
     }
@@ -523,7 +523,7 @@ class OrderService {
                         );
                         return { success: true, promoToMark: { type: 'khachhang_khuyenmai', MaKM: freeShipPromo.MaKM } };
                     } else {
-                        logger.info(`âš ï¸ Minimum not met: ${freeShipPromo.GiaTriDonToiThieu}`);
+                        logger.info(`⚠️ Minimum not met: ${freeShipPromo.GiaTriDonToiThieu}`);
                     }
                 }
             } else {
@@ -550,7 +550,7 @@ class OrderService {
             return { success: false, promoToMark: null };
 
         } catch (e) {
-            logger.error('âŒ Error checking free ship:', e);
+            logger.error('❌ Error checking free ship:', e);
             return { success: false, promoToMark: null };
         }
     }
@@ -558,7 +558,7 @@ class OrderService {
     // ===== HELPER: MARK PROMO AS USED =====
     async markPromoAsUsed(connection, promoToMark, customerId, discountAmount, isFreeShip) {
         try {
-            logger.info('ðŸ” [MARK PROMO]', promoToMark);
+            logger.info('🔍 [MARK PROMO]', promoToMark);
 
             if (promoToMark.type === 'khachhang_khuyenmai' && promoToMark.MaKM) {
                 if (discountAmount > 0 || isFreeShip) {
@@ -580,7 +580,7 @@ class OrderService {
                 }
             }
         } catch (e) {
-            logger.error('âŒ Error marking promo:', e);
+            logger.error('❌ Error marking promo:', e);
         }
     }
 
@@ -611,7 +611,7 @@ class OrderService {
 
     async rollbackOrderForVnpayError(orderId) {
         await pool.query(
-            'UPDATE hoadon SET tinhtrang = "ÄÃ£ há»§y", GhiChu = "Lỗi VNPay" WHERE MaHD = ?',
+            'UPDATE hoadon SET tinhtrang = "Đã hủy", GhiChu = "Lỗi VNPay" WHERE MaHD = ?',
             [orderId],
         );
     }
@@ -692,12 +692,12 @@ class OrderService {
         const amount = Number.parseInt(vnpParams.vnp_Amount || '0', 10) / 100;
 
         if (!orderId) {
-            throw new Error('Thiáº¿u mÃ£ Ä‘Æ¡n hÃ ng tá»« VNPay callback');
+            throw new Error('Thiếu mã đơn hàng từ VNPay callback');
         }
 
         if (rspCode === '00') {
             await pool.query(
-                `UPDATE hoadon SET TrangThaiThanhToan = 'ÄÃ£ thanh toÃ¡n', tinhtrang = 'ÄÃ£ xÃ¡c nháº­n' WHERE MaHD = ?`,
+                `UPDATE hoadon SET TrangThaiThanhToan = 'Đã thanh toán', tinhtrang = 'Đã xác nhận' WHERE MaHD = ?`,
                 [orderId],
             );
 
@@ -731,7 +731,7 @@ class OrderService {
         }
 
         await pool.query(
-            `UPDATE hoadon SET TrangThaiThanhToan = 'Thất bại', tinhtrang = 'ÄÃ£ há»§y' WHERE MaHD = ?`,
+            `UPDATE hoadon SET TrangThaiThanhToan = 'Thất bại', tinhtrang = 'Đã hủy' WHERE MaHD = ?`,
             [orderId],
         );
 
