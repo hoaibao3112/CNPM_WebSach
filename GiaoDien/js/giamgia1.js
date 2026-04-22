@@ -140,50 +140,49 @@ function displayProducts(products, containerId = 'multi-category-list', limit = 
 
   displayProducts.forEach(product => {
     const productElement = document.createElement('div');
-    productElement.className = 'product-item';
+    productElement.className = 'product-card group';
 
-    // Xử lý TinhTrang từ Buffer (an toàn nếu TinhTrang không tồn tại)
+    // Xử lý TinhTrang
     let isOutOfStock = false;
     try {
       if (product && product.TinhTrang !== undefined && product.TinhTrang !== null) {
-        // Nếu TinhTrang là object kiểu Buffer (một số trường hợp từ DB)
         if (typeof product.TinhTrang === 'object' && Array.isArray(product.TinhTrang.data)) {
           isOutOfStock = product.TinhTrang.data[0] === 0;
         } else {
-          // Nếu TinhTrang là số hoặc giá trị trực tiếp
           isOutOfStock = product.TinhTrang === 0 || product.SoLuong === 0;
         }
       } else {
-        // TinhTrang không có -> kiểm tra SoLuong
         isOutOfStock = product.SoLuong === 0;
       }
     } catch (e) {
-      console.warn('Error parsing TinhTrang for product', product && product.MaSP, e);
       isOutOfStock = product.SoLuong === 0;
     }
-    const discountPercent = product.PhanTramGiam || 0;
-    const progressPercent = product.DaBan && product.SoLuong ? Math.min((product.DaBan / (product.SoLuong + product.DaBan)) * 100, 100) : 0;
 
-    const imageSrc = product.HinhAnh ? `${IMAGE_BASE}/${product.HinhAnh}` : 'img/default-book.jpg';
+    const imageSrc = product.HinhAnh ? `${IMAGE_BASE}/${product.HinhAnh}` : 'img/product/default-book.jpg';
     productElement.innerHTML = `
-      <div class="product-image">
+      <div class="relative aspect-[3/4] overflow-hidden">
         <img loading="lazy" src="${imageSrc}"
              alt="${product.TenSP}"
-             onerror="this.src='img/default-book.jpg'">
-        ${isOutOfStock ? '<span class="stock-status">HẾT HÀNG</span>' : ''}
-        <div class="product-badge">MÃ: ${product.MaSP}</div>
-        ${product.DiscountLabel ? `<div class="sale-badge" data-small="true">${product.DiscountLabel}</div>` : ''}
+             class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+             onerror="this.src='img/product/default-book.jpg'">
+        ${isOutOfStock ? '<div class="absolute inset-0 bg-black/60 flex items-center justify-center text-white font-black text-xs uppercase tracking-widest">HẾT HÀNG</div>' : ''}
+        <div class="absolute top-2 left-2 bg-primary text-white text-[8px] font-black px-2 py-0.5 rounded shadow-sm">MÃ: ${product.MaSP}</div>
+        ${product.DiscountLabel ? `<div class="absolute top-2 right-2 bg-red-500 text-white text-[10px] font-black px-2 py-1 rounded shadow-lg animate-pulse">${product.DiscountLabel}</div>` : ''}
       </div>
-      <div class="product-info">
-        <h3 class="product-title">${product.TenSP}</h3>
-        <p class="product-author">Tác giả: ${product.TacGia || 'Đang cập nhật'}</p>
-        <div class="product-price">
-          ${product.GiaKhuyenMai ? `<span class="price">${formatPrice(product.GiaKhuyenMai)}đ</span>
-          <span class="original-price">${formatPrice(product.DonGia)}đ</span>` : `<span class="price">${formatPrice(product.DonGia)}đ</span>`}
-          ${product.DiscountLabel ? `<span class="discount">${product.DiscountLabel}</span>` : ''}
+      <div class="card-body p-4 space-y-2">
+        <h3 class="text-sm font-black text-gray-800 uppercase tracking-tighter line-clamp-2 leading-tight group-hover:text-primary transition-colors">${product.TenSP}</h3>
+        <p class="product-author text-[10px] font-bold text-gray-400 uppercase tracking-widest truncate">${product.TacGia || 'Đang cập nhật'}</p>
+        <div class="product-price flex items-baseline gap-2">
+          ${product.GiaKhuyenMai ? `
+            <span class="text-base font-black text-primary tracking-tighter">${formatPrice(product.GiaKhuyenMai)}đ</span>
+            <span class="text-[10px] font-bold text-gray-300 line-through italic">${formatPrice(product.DonGia)}đ</span>
+          ` : `
+            <span class="text-base font-black text-primary tracking-tighter">${formatPrice(product.DonGia)}đ</span>
+          `}
         </div>
-        <p class="promo-text-small">${product.TenKM ? `Khuyến mãi: ${product.TenKM}` : ''}</p>
-        <button class="view-promo-detail" ${isOutOfStock ? 'disabled' : ''}>Xem chi tiết</button>
+        <button class="view-promo-detail w-full mt-2 py-2 bg-gray-50 hover:bg-primary hover:text-white text-gray-400 font-black text-[10px] uppercase tracking-widest rounded-xl transition-all active:scale-95 border border-border hover:border-primary shadow-sm" ${isOutOfStock ? 'disabled' : ''}>
+          ${isOutOfStock ? 'Liên hệ' : 'Xem chi tiết'}
+        </button>
       </div>
     `;
 

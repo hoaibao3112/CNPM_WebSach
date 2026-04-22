@@ -3,9 +3,9 @@ tailwind.config = {
     extend: {
       colors: {
         primary: {
-          DEFAULT: '#C0392B',
-          dark: '#962d22',
-          light: 'rgba(192, 57, 43, 0.1)',
+          DEFAULT: '#B03A2E',
+          dark: '#8E2920',
+          light: 'rgba(176, 58, 46, 0.1)',
         },
         bg: {
           DEFAULT: '#f7f3f0',

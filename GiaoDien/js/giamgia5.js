@@ -28,57 +28,49 @@ function escapeHtml(str) {
 
 // HÀM MỚI: Tạo HTML cho thẻ sản phẩm (theo layout ảnh)
 function createProductCard(p) {
-	// LƯU Ý: file productRoutes.js cho thấy API /api/products... chỉ trả về p.DonGia.
-	// Tuy nhiên, hình ảnh yêu cầu hiển thị giảm giá.
-	// Chúng ta TẠM GIẢ ĐỊNH rằng backend CÓ thêm trường 'GiaKM' hoặc 'DonGiaGiam' vào.
-	
 	let displayPrice = p.DonGia;
 	let oldPrice = null;
 	let discountBadge = '';
 
-	// Ưu tiên 1: (Giả định) Giá từ khuyến mãi
 	if (p.GiaKM !== undefined && p.GiaKM !== null) {
 		displayPrice = p.GiaKM;
-		oldPrice = p.DonGia; // DonGia gốc
-	}
-	// Ưu tiên 2: (Giả định) Có DonGiaGiam
-	else if (p.DonGiaGiam !== undefined && p.DonGiaGiam !== null) {
+		oldPrice = p.DonGia;
+	} else if (p.DonGiaGiam !== undefined && p.DonGiaGiam !== null) {
 		displayPrice = p.DonGiaGiam;
 		oldPrice = p.DonGia;
 	}
 
-	// Tính % giảm giá nếu có giá cũ
 	if (oldPrice && oldPrice > displayPrice) {
 		const discountPercent = Math.round(((oldPrice - displayPrice) / oldPrice) * 100);
 		if (discountPercent > 0) {
 			oldPrice = formatPrice(oldPrice);
-			discountBadge = `<span class="discount-badge">-${discountPercent}%</span>`;
+			discountBadge = `<span class="absolute top-2 right-2 bg-red-500 text-white text-[10px] font-black px-2 py-1 rounded shadow-lg animate-pulse">-${discountPercent}%</span>`;
 		} else {
-			oldPrice = null; // Giảm giá 0% thì không hiển thị
+			oldPrice = null;
 		}
 	}
 
-	// Giả lập số lượng đã bán (vì API không có 'DaBan')
 	const soldCount = p.DaBan || Math.floor(Math.random() * 50) + 10;
-	
 	const imgSrc = buildImageUrl(p.HinhAnh);
 	
-	// Tạo HTML
 	const card = document.createElement('article');
-	card.className = 'product';
+	card.className = 'product-card group';
 	card.innerHTML = `
-		<span class="product-tag">HOT</span>
-		<div class="imgwrap">
-			<img src="${imgSrc}" alt="${escapeHtml(p.TenSP || '')}" onerror="this.onerror=null;this.src='img/default-book.jpg'" loading="lazy">
+		<div class="relative aspect-[3/4] overflow-hidden">
+			<img src="${imgSrc}" alt="${escapeHtml(p.TenSP || '')}" 
+				 class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+				 onerror="this.onerror=null;this.src='img/product/default-book.jpg'" loading="lazy">
+			<div class="absolute top-2 left-2 bg-primary text-white text-[8px] font-black px-2 py-0.5 rounded shadow-sm">HOT</div>
+			${discountBadge}
 		</div>
-		<div class="product-info">
-			<h4>${escapeHtml(p.TenSP || 'Sản phẩm')}</h4>
-			<div class="price">
-				<span class="new">${formatPrice(displayPrice)}</span>
-				${oldPrice ? `<span class="old">${oldPrice}</span>` : ''}
-				${discountBadge}
+		<div class="card-body p-4 space-y-2">
+			<h3 class="text-sm font-black text-gray-800 uppercase tracking-tighter line-clamp-2 leading-tight group-hover:text-primary transition-colors">${escapeHtml(p.TenSP || 'Sản phẩm')}</h3>
+			<p class="product-author text-[10px] font-bold text-gray-400 uppercase tracking-widest truncate">${escapeHtml(p.TacGia || 'Đang cập nhật')}</p>
+			<div class="product-price flex items-baseline gap-2">
+				<span class="text-base font-black text-primary tracking-tighter">${formatPrice(displayPrice)}</span>
+				${oldPrice ? `<span class="text-[10px] font-bold text-gray-300 line-through italic">${oldPrice}</span>` : ''}
 			</div>
-			<div class="product-sold">
+			<div class="text-[9px] font-bold text-gray-400 uppercase tracking-widest">
 				Đã bán ${soldCount}
 			</div>
 		</div>
