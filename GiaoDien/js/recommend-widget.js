@@ -1,9 +1,33 @@
-/* === WIDGET ĐỀ XUẤT SẢN PHẨM (VỚI PHÂN TRANG) === */
-// cách sử dụng import 2 cái này vô trang nào muốn hiển thị
-//  <link rel="stylesheet" href="styles/recommend-widget.css">
-// <script src="js/recommend-widget.js"></script>
-// imporrt xuống cuối cùng
 (function () {
+    // Inject Styles
+    if (!document.getElementById('recommend-widget-styles')) {
+        const style = document.createElement('style');
+        style.id = 'recommend-widget-styles';
+        style.textContent = `
+            .recommend-section { max-width: 1300px; margin: 40px auto; background: #fff; border-radius: 24px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); padding: 32px; border: 1px solid #eee; position: relative; }
+            .recommend-section h2 { font-family: 'Playfair Display', serif; font-size: 24px; font-weight: 800; color: #1a1a1a; text-align: center; margin-bottom: 32px; display: flex; align-items: center; justify-content: center; gap: 12px; }
+            .recommend-section h2 .title-icon { color: #C0392B; }
+            .widget-empty { text-align: center; padding: 40px; color: #666; font-style: italic; }
+            .product-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 20px; }
+            .product-card { display: flex; flex-direction: column; background: #fff; border: 1px solid #eee; border-radius: 16px; overflow: hidden; transition: all 0.3s; text-decoration: none; }
+            .product-card:hover { transform: translateY(-5px); box-shadow: 0 10px 25px rgba(0,0,0,0.1); border-color: #C0392B; }
+            .card-image { width: 100%; aspect-ratio: 3/4; overflow: hidden; background: #f9f9f9; display: flex; align-items: center; justify-content: center; }
+            .card-image img { width: 100%; height: 100%; object-fit: contain; }
+            .card-content { padding: 16px; flex: 1; display: flex; flex-direction: column; }
+            .card-title { font-size: 14px; font-weight: 700; color: #333; margin: 0 0 8px 0; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+            .card-author { font-size: 12px; color: #888; margin-bottom: 4px; }
+            .card-meta { font-size: 11px; color: #aaa; margin-bottom: 8px; }
+            .card-price { font-size: 16px; font-weight: 800; color: #C0392B; margin-top: auto; }
+            .pagination-controls { display: flex; justify-content: center; gap: 8px; margin-top: 24px; padding-top: 20px; border-top: 1px solid #eee; }
+            .page-btn { min-width: 32px; height: 32px; border-radius: 8px; border: 1px solid #ddd; background: #fff; cursor: pointer; font-weight: 600; font-size: 13px; transition: all 0.2s; }
+            .page-btn:hover:not(:disabled) { border-color: #C0392B; color: #C0392B; }
+            .page-btn.active { background: #C0392B; color: #fff; border-color: #C0392B; }
+            .page-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+            @media (max-width: 1024px) { .product-grid { grid-template-columns: repeat(3, 1fr); } }
+            @media (max-width: 640px) { .product-grid { grid-template-columns: repeat(2, 1fr); } .recommend-section { padding: 20px; } }
+        `;
+        document.head.appendChild(style);
+    }
     // --- CÀI ĐẶT ---
     const MOUNT_POINT_ID = 'recommend-widget-container';
     const API_URL = `${window.API_CONFIG.BASE_URL}/api/product/recommendations`;

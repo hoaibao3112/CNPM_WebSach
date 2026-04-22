@@ -1,41 +1,60 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Kết quả thanh toán | Bookstore</title>
-    <link rel="stylesheet" href="styles/header.css" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <link rel="stylesheet" href="styles/order-confirmation.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+    <link rel="icon" href="favicon.ico" type="image/x-icon" />
+
+    <!-- Tailwind CSS CDN & Config -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="js/tailwind-config.js"></script>
 </head>
-<body>
-    <div class="container">
-        <div id="result-content">
-            <div class="loading">
-                <i class="fas fa-spinner spinner" style="font-size: 40px; margin-bottom: 10px;"></i>
-                <h2 style="font-size: 1.2rem;">Đang xử lý...</h2>
-                <p style="font-size: 12px;">Vui lòng chờ...</p>
+
+<body class="bg-bg min-h-screen font-body antialiased flex items-center justify-center p-4">
+    <div class="container max-w-md w-full bg-white rounded-3xl shadow-2xl border border-border p-8 md:p-10 space-y-10 text-center animate-in fade-in zoom-in duration-500">
+        <!-- Logo/Icon Placeholder -->
+        <div class="flex justify-center">
+            <div class="w-20 h-20 bg-primary-light rounded-full flex items-center justify-center text-primary text-3xl shadow-lg shadow-primary/10">
+                <i class="fas fa-book-open"></i>
+            </div>
+        </div>
+
+        <div id="result-content" class="space-y-6">
+            <!-- Processing State -->
+            <div class="loading space-y-4">
+                <div class="relative">
+                    <i class="fas fa-spinner fa-spin text-5xl text-primary"></i>
+                    <div class="absolute inset-0 flex items-center justify-center">
+                        <div class="w-2 h-2 bg-primary rounded-full animate-ping"></div>
+                    </div>
+                </div>
+                <div class="space-y-1">
+                    <h2 class="text-xl font-black text-gray-800 uppercase tracking-tighter">Đang xử lý thanh toán</h2>
+                    <p class="text-xs font-bold text-gray-400 uppercase tracking-widest animate-pulse">Vui lòng chờ trong giây lát...</p>
+                </div>
             </div>
         </div>
         
-        <div class="btn-group">
-            <a href="index.html" class="btn btn-primary">
-                <i class="fas fa-home"></i> Trang chủ
+        <div class="btn-group flex flex-col gap-3 pt-6 border-t border-gray-50">
+            <a href="index.html" class="bg-primary hover:bg-primary-dark text-white px-8 py-4 rounded-2xl font-black text-sm shadow-lg shadow-primary/20 transition-all active:scale-95 flex items-center justify-center gap-3 uppercase tracking-widest">
+                <i class="fas fa-home"></i> TRANG CHỦ
             </a>
-            <a href="book.html" class="btn btn-secondary">
-                <i class="fas fa-shopping-cart"></i> Mua sắm
-            </a>
-            <a href="#" id="view-orders-btn" class="btn btn-success" style="display: none;">
-                <i class="fas fa-list"></i> Đơn hàng
-            </a>
+            <div class="grid grid-cols-2 gap-3">
+                <a href="book.html" class="bg-white border-2 border-gray-100 hover:border-gray-200 text-gray-600 px-4 py-3 rounded-2xl font-bold text-xs shadow-sm transition-all flex items-center justify-center gap-2">
+                    <i class="fas fa-shopping-cart text-primary"></i> MUA SẮM
+                </a>
+                <a href="orders.html" id="view-orders-btn" class="bg-gray-800 hover:bg-black text-white px-4 py-3 rounded-2xl font-bold text-xs shadow-md transition-all flex items-center justify-center gap-2 hidden">
+                    <i class="fas fa-list"></i> ĐƠN HÀNG
+                </a>
+            </div>
         </div>
     </div>
 
-    
-  <!-- API Configuration - MUST load first! -->
-  <script src="js/config.js"></script>
-  <script src="js/api-patcher.js"></script>
-
-<script src="js/order-confirmation.js"></script>
+    <!-- API Configuration - MUST load first! -->
+    <script src="js/config.js"></script>
+    <script src="js/api-patcher.js"></script>
+    <script src="js/order-confirmation.js"></script>
 </body>
 </html>

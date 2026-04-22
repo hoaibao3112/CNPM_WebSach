@@ -1,65 +1,89 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="vi">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Khuyến Mãi | Bookstore</title>
-  <link rel="stylesheet" href="styles/header.css" />
-    <link rel="stylesheet" href="styles/index.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-  <link rel="stylesheet" href="styles/khuyenmai.css">
   
 </head>
-<body>
-  <!-- Top bar (giống trang chủ) -->
-  <div class="top-bar">
-    <div class="top-bar-container">
-      <img src="img/logo.png" alt="Bookstore" class="logo">
-      <div class="search-container">
-        <form action="/search" method="get">
-          <input type="text" placeholder="Tìm kiếm sách, tác giả..." name="search">
-          <button type="submit"><i class="fas fa-search"></i></button>
-        </form>
-      </div>
-      <ul class="top-links">
-        <li><a href="index.html">Trang chủ</a></li>
-        <li><a href="campany.html">Nhà xuất bản</a></li>
-        <li class="account-dropdown" id="accountDropdownContainer">
-          <a href="login.html" id="loginLink"><i class="fas fa-user"></i> Tài khoản</a>
-        </li>
-        <li><a href="cart.html"><i class="fas fa-shopping-cart"></i> Giỏ hàng</a></li>
-      </ul>
-    </div>
-  </div>
+    <link rel="icon" href="favicon.ico" type="image/x-icon" />
 
-  <!-- Nội dung chính -->
-  <div class="promotion-container">
-    <div class="promotion-header">
-      <h1>Chương Trình Khuyến Mãi</h1>
-      <p>Các ưu đãi hấp dẫn đang chờ bạn khám phá</p>
-    </div>
+    <!-- Tailwind CSS CDN & Config -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="js/tailwind-config.js"></script>
     
-    <div class="filter-options" style="margin-bottom: 20px; text-align: center;">
-      <button id="showAllBtn" class="active">Tất cả</button>
-      <button id="showActiveBtn">Đang diễn ra</button>
+    <!-- API Configuration - LOAD EARLY -->
+    <script src="js/config.js"></script>
+    <script src="js/api-patcher.js"></script>
+</head>
+
+<body class="bg-bg pt-14 font-body antialiased">
+    <div id="load-header"></div>
+
+    <!-- Nội dung chính -->
+    <div class="promotion-container container max-w-[1300px] mx-auto px-4 py-12">
+        <div class="promotion-header text-center space-y-4 mb-12 animate-in fade-in slide-in-from-top-4 duration-700">
+            <h1 class="text-4xl md:text-5xl font-black text-gray-800 uppercase tracking-tighter leading-none">Chương Trình <span class="text-primary">Khuyến Mãi</span></h1>
+            <p class="text-sm font-bold text-gray-400 uppercase tracking-widest italic">Các ưu đãi hấp dẫn đang chờ bạn khám phá</p>
+            <div class="w-20 h-1.5 bg-primary mx-auto rounded-full mt-6 shadow-lg shadow-primary/20"></div>
+        </div>
+        
+        <div class="filter-options flex justify-center gap-3 mb-12">
+            <button id="showAllBtn" class="px-8 py-3 bg-white border-2 border-gray-100 text-gray-400 font-black text-xs uppercase tracking-widest rounded-2xl transition-all active:scale-95 shadow-sm active hover:border-primary-light [&.active]:bg-primary [&.active]:text-white [&.active]:border-primary [&.active]:shadow-lg [&.active]:shadow-primary/20">Tất cả</button>
+            <button id="showActiveBtn" class="px-8 py-3 bg-white border-2 border-gray-100 text-gray-400 font-black text-xs uppercase tracking-widest rounded-2xl transition-all active:scale-95 shadow-sm hover:border-primary-light [&.active]:bg-primary [&.active]:text-white [&.active]:border-primary [&.active]:shadow-lg [&.active]:shadow-primary/20">Đang diễn ra</button>
+        </div>
+        
+        <div id="promotionList" class="promotion-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 min-h-[400px]">
+            <!-- Nội dung khuyến mãi sẽ được thêm vào đây bằng JavaScript -->
+            <div class="loading col-span-full py-20 text-center space-y-4">
+                <i class="fas fa-spinner fa-spin text-3xl text-primary"></i>
+                <p class="text-[10px] font-black text-gray-300 uppercase tracking-widest animate-pulse">Đang tải khuyến mãi...</p>
+            </div>
+        </div>
     </div>
+
+    <div id="load-footer"></div>
+
+    <script src="js/khuyenmai.js"></script>
+    <script src="js/loadHeader.js"></script>
+    <script src="js/loadFooter.js"></script>
     
-    <div id="promotionList" class="promotion-grid">
-      <!-- Nội dung khuyến mãi sẽ được thêm vào đây bằng JavaScript -->
-      <div class="loading">Đang tải khuyến mãi...</div>
-    </div>
-  </div>
-
-  <!-- Footer -->
-  <footer>
-    <iframe src="footer.html" frameborder="0" width="100%" height="200px"></iframe>
-  </footer>
-
-  
-  <!-- API Configuration - MUST load first! -->
-  <script src="js/config.js"></script>
-  <script src="js/api-patcher.js"></script>
-
-<script src="js/khuyenmai.js"></script>
+    <style>
+        /* Card styling for JS rendered cards */
+        .promotion-card {
+            @apply bg-white rounded-3xl border border-border shadow-sm overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-2 flex flex-col;
+        }
+        .promotion-image {
+            @apply relative aspect-[16/9] overflow-hidden bg-gray-100;
+        }
+        .promotion-image img {
+            @apply w-full h-full object-cover transition-transform duration-700;
+        }
+        .promotion-card:hover .promotion-image img {
+            @apply scale-110;
+        }
+        .active-badge {
+            @apply absolute top-4 right-4 bg-green-500 text-white text-[10px] font-black px-3 py-1.5 rounded-full shadow-lg uppercase tracking-widest;
+        }
+        .promotion-content {
+            @apply p-6 space-y-3 flex-1 flex flex-col;
+        }
+        .promotion-title {
+            @apply text-lg font-black text-gray-800 uppercase tracking-tighter leading-tight;
+        }
+        .promotion-period {
+            @apply text-[10px] font-bold text-gray-400 uppercase tracking-widest flex items-center gap-2;
+        }
+        .promotion-type {
+            @apply inline-block text-[10px] font-black text-primary bg-primary-light px-3 py-1 rounded-lg uppercase tracking-widest;
+        }
+        .promotion-description {
+            @apply text-sm text-gray-500 italic line-clamp-3 leading-relaxed flex-1;
+        }
+        .no-promotions, .error {
+            @apply col-span-full bg-white p-20 rounded-3xl border border-border text-center text-gray-400 font-medium italic;
+        }
+    </style>
 </body>
 </html>

@@ -28,6 +28,40 @@ const PersonalizedRecommendations = {
    * Khởi tạo component
    */
   async init() {
+    // Inject Styles
+    if (!document.getElementById('personalized-recommendations-styles')) {
+      const style = document.createElement('style');
+      style.id = 'personalized-recommendations-styles';
+      style.textContent = `
+        .personalized-recommendations-section { margin: 40px 0; padding: 32px; background: #fff; border-radius: 24px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); border: 1px solid #eee; }
+        .recommendations-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; padding-bottom: 16px; border-bottom: 1px solid #eee; }
+        .recommendations-title h2 { font-family: 'Playfair Display', serif; font-size: 24px; font-weight: 800; color: #1a1a1a; display: flex; align-items: center; gap: 10px; }
+        .recommendations-title h2 i { color: #C0392B; }
+        .recommendations-products { display: grid; grid-template-columns: repeat(5, 1fr); gap: 20px; }
+        .recommendation-card { background: #fff; border: 1px solid #eee; border-radius: 16px; overflow: hidden; transition: all 0.3s; display: flex; flex-direction: column; position: relative; cursor: pointer; }
+        .recommendation-card:hover { transform: translateY(-5px); box-shadow: 0 10px 25px rgba(0,0,0,0.1); border-color: #C0392B; }
+        .recommendation-badge { position: absolute; top: 12px; left: 12px; background: #C0392B; color: #fff; padding: 4px 12px; border-radius: 20px; font-size: 10px; font-weight: 800; z-index: 2; }
+        .product-image { width: 100%; aspect-ratio: 3/4; position: relative; background: #f9f9f9; }
+        .product-image img { width: 100%; height: 100%; object-fit: contain; padding: 12px; }
+        .product-info { padding: 16px; flex: 1; display: flex; flex-direction: column; }
+        .product-title { font-size: 14px; font-weight: 700; color: #333; margin-bottom: 4px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; height: 40px; }
+        .product-author { font-size: 12px; color: #888; font-style: italic; margin-bottom: 8px; }
+        .match-bar { height: 4px; background: #eee; border-radius: 2px; margin-bottom: 4px; overflow: hidden; }
+        .match-fill { height: 100%; background: #C0392B; }
+        .match-text { font-size: 10px; color: #aaa; font-weight: 600; }
+        .product-price { display: flex; align-items: center; gap: 8px; margin-top: auto; }
+        .price { font-size: 16px; font-weight: 800; color: #C0392B; }
+        .original-price { font-size: 12px; color: #bbb; text-decoration: line-through; }
+        .btn-add-cart { width: 100%; margin-top: 12px; padding: 10px; background: #C0392B; color: white; border: none; border-radius: 10px; font-weight: 700; cursor: pointer; transition: all 0.2s; }
+        .btn-add-cart:hover { background: #962d22; }
+        .view-more-container { text-align: center; margin-top: 24px; }
+        .view-more-recommendations { padding: 12px 32px; background: #fff; border: 1px solid #C0392B; color: #C0392B; border-radius: 30px; font-weight: 700; cursor: pointer; transition: all 0.2s; }
+        .view-more-recommendations:hover { background: #C0392B; color: #fff; }
+        @media (max-width: 1024px) { .recommendations-products { grid-template-columns: repeat(3, 1fr); } }
+        @media (max-width: 640px) { .recommendations-products { grid-template-columns: repeat(2, 1fr); gap: 12px; } .personalized-recommendations-section { padding: 20px; } }
+      `;
+      document.head.appendChild(style);
+    }
     try {
       const customerId = this.getCustomerId();
       

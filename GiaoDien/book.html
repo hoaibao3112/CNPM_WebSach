@@ -5,97 +5,108 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Trang sách</title>
-    <link rel="stylesheet" href="styles/header.css" />
-    <link rel="stylesheet" href="styles/book.css">
-    <!-- Page-scoped custom styles for product list only (won't affect index.html) -->
-    <link rel="stylesheet" href="styles/book-list-custom.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <link rel="icon" href="favicon.ico" type="image/x-icon" />
+
+    <!-- Tailwind CSS CDN & Config -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="js/tailwind-config.js"></script>
     
     <!-- API Configuration - LOAD EARLY -->
     <script src="js/config.js"></script>
     <script src="js/api-patcher.js"></script>
 </head>
 
-<body class="books-page">
+<body class="books-page bg-bg pt-14 font-body antialiased">
     <!-- header -->
     <div id="load-header"></div>
 
-    <div class="container">
-        <aside class="sidebar">
-            <h3>DANH MỤC SẢN PHẨM</h3>
-            <div class="category-dropdown" id="categoryDropdown">
-                <div class="dropdown-header">
-                    <span>Nổi bật</span>
-                    <i class="fas fa-chevron-down"></i>
-                </div>
-                <div class="dropdown-content" id="category-content">
-                    <!-- <a href="#" onclick="filterProductsByCategory(1)">Truyền Tranh - Comic</a>
-                    <a href="#" onclick="filterProductsByCategory(2)">Văn học nước ngoài</a>
-                    <a href="#" onclick="filterProductsByCategory(3)">Sale cuối năm 2022</a>
-                    <a href="#" onclick="filterProductsByCategory(4)">Sách Văn Học</a>
-                    <a href="#" onclick="filterProductsByCategory(5)">Truyền Tranh BL</a>
-                    <a href="#" onclick="filterProductsByCategory(6)">Sách Kỹ Năng Sống</a>
-                    <a href="#" onclick="filterProductsByCategory(7)">Sách Thiếu Nhi</a>
-                    <a href="#" onclick="filterProductsByCategory(8)">Light Novel</a>
-                    <a href="#" onclick="filterProductsByCategory(9)">Văn Phòng Phẩm - Quà Tặng</a> -->
-                </div>
-            </div>
-            <div class="divider"></div>
-            <div class="price-filter-section">
-                <h3>LỌC THEO GIÁ</h3>
-                <div class="price-buttons" id="priceButtons">
-                    <button class="filter-btn active" data-value="">Tất cả</button>
-                    <button class="filter-btn" data-value="0-50000">Dưới 50.000đ</button>
-                    <button class="filter-btn" data-value="50000-100000">50.000đ - 100.000đ</button>
-                    <button class="filter-btn" data-value="100000-200000">100.000đ - 200.000đ</button>
-                    <button class="filter-btn" data-value="200000">Trên 200.000đ</button>
-                </div>
-            </div>
-            <div class="divider"></div>
-            <div class="supplier-filter">
-                <h3>NHÀ CUNG CẤP</h3>
-                <div class="supplier-buttons" id="supplierButtons">
-                    <!-- buttons will be populated here -->
-                    <button class="filter-btn active" data-value="">Tất cả</button>
-                </div>
-            </div>
-            <div class="divider"></div>
-            <div class="author-filter">
-                <h3>TÁC GIẢ</h3>
-                <div class="author-buttons" id="authorButtons">
-                    <!-- buttons will be populated here -->
-                    <button class="filter-btn active" data-value="">Tất cả</button>
-                </div>
-                <button id="authorToggleBtn" class="view-more-btn" style="margin-top:8px;padding:6px 10px;font-size:13px;display:none;">Xem thêm</button>
-            </div>
-            <div class="divider"></div>
-            <div class="format-filter">
-                <h3>HÌNH THỨC</h3>
-                <div class="format-buttons" id="hinhThucButtons">
-                    <!-- buttons will be populated here -->
-                    <button class="filter-btn active" data-value="">Tất cả</button>
-                </div>
-            </div>
-            <div class="divider"></div>
-            <div class="text-discount-section">
-                <h4>DEAL HOT - GIẢM SỐC</h4>
-                <div class="discount-filter">
-                    <div class="discount-buttons" id="discountButtons">
-                        <button class="filter-btn active" data-id="">Tất cả</button>
+    <div class="container max-w-[1300px] mx-auto px-4 py-8 flex flex-col lg:flex-row gap-8">
+        <!-- Sidebar -->
+        <aside class="sidebar w-full lg:w-64 flex-shrink-0 space-y-6">
+            <div class="bg-white p-5 rounded-lg border border-border shadow-sm">
+                <h3 class="text-sm font-bold text-gray-800 uppercase tracking-wider mb-4 flex items-center gap-2">
+                    <i class="fas fa-list text-primary"></i> DANH MỤC
+                </h3>
+                <div class="category-dropdown relative" id="categoryDropdown">
+                    <div class="dropdown-header flex justify-between items-center p-3 bg-gray-50 rounded-md cursor-pointer hover:bg-gray-100 transition-colors border border-transparent hover:border-border" onclick="toggleDropdown()">
+                        <span class="text-sm font-medium">Nổi bật</span>
+                        <i class="fas fa-chevron-down text-[10px] transition-transform duration-200"></i>
+                    </div>
+                    <div class="dropdown-content absolute top-full left-0 right-0 mt-1 bg-white shadow-xl rounded-lg border border-border overflow-hidden hidden z-10" id="category-content">
+                        <!-- JS renders categories here -->
                     </div>
                 </div>
-                <ul id="promotions-list"></ul>
-                <div id="deal-hot-list"></div>
-                <a href="#" class="text-view-more">Xem thêm deal hot <i class="fas fa-chevron-right"></i></a>
             </div>
-            <div class="divider"></div>
-            <div class="hotline">Hotline: 0938 424 289</div>
+
+            <!-- Price Filter -->
+            <div class="bg-white p-5 rounded-lg border border-border shadow-sm">
+                <h3 class="text-sm font-bold text-gray-800 uppercase tracking-wider mb-4 flex items-center gap-2">
+                    <i class="fas fa-tag text-primary"></i> LỌC THEO GIÁ
+                </h3>
+                <div class="price-buttons flex flex-wrap gap-2" id="priceButtons">
+                    <button class="filter-btn text-xs px-3 py-1.5 rounded-full border border-border bg-white hover:border-primary hover:text-primary transition-all [&.active]:bg-primary [&.active]:text-white [&.active]:border-primary" data-value="">Tất cả</button>
+                    <button class="filter-btn text-xs px-3 py-1.5 rounded-full border border-border bg-white hover:border-primary hover:text-primary transition-all [&.active]:bg-primary [&.active]:text-white [&.active]:border-primary" data-value="0-50000">Dưới 50.000đ</button>
+                    <button class="filter-btn text-xs px-3 py-1.5 rounded-full border border-border bg-white hover:border-primary hover:text-primary transition-all [&.active]:bg-primary [&.active]:text-white [&.active]:border-primary" data-value="50000-100000">50k - 100k</button>
+                    <button class="filter-btn text-xs px-3 py-1.5 rounded-full border border-border bg-white hover:border-primary hover:text-primary transition-all [&.active]:bg-primary [&.active]:text-white [&.active]:border-primary" data-value="100000-200000">100k - 200k</button>
+                    <button class="filter-btn text-xs px-3 py-1.5 rounded-full border border-border bg-white hover:border-primary hover:text-primary transition-all [&.active]:bg-primary [&.active]:text-white [&.active]:border-primary" data-value="200000">Trên 200.000đ</button>
+                </div>
+            </div>
+
+            <!-- Supplier Filter -->
+            <div class="bg-white p-5 rounded-lg border border-border shadow-sm">
+                <h3 class="text-sm font-bold text-gray-800 uppercase tracking-wider mb-4 flex items-center gap-2">
+                    <i class="fas fa-building text-primary"></i> NHÀ CUNG CẤP
+                </h3>
+                <div class="supplier-buttons flex flex-wrap gap-2" id="supplierButtons">
+                    <button class="filter-btn active text-xs px-3 py-1.5 rounded-full border border-border bg-white hover:border-primary hover:text-primary transition-all [&.active]:bg-primary [&.active]:text-white [&.active]:border-primary" data-value="">Tất cả</button>
+                </div>
+            </div>
+
+            <!-- Author Filter -->
+            <div class="bg-white p-5 rounded-lg border border-border shadow-sm">
+                <h3 class="text-sm font-bold text-gray-800 uppercase tracking-wider mb-4 flex items-center gap-2">
+                    <i class="fas fa-pen-nib text-primary"></i> TÁC GIẢ
+                </h3>
+                <div class="author-buttons flex flex-wrap gap-2" id="authorButtons">
+                    <button class="filter-btn active text-xs px-3 py-1.5 rounded-full border border-border bg-white hover:border-primary hover:text-primary transition-all [&.active]:bg-primary [&.active]:text-white [&.active]:border-primary" data-value="">Tất cả</button>
+                </div>
+                <button id="authorToggleBtn" class="view-more-btn mt-3 w-full text-xs font-bold text-primary py-2 border border-primary-light rounded hover:bg-primary hover:text-white transition-all hidden">Xem thêm</button>
+            </div>
+
+            <!-- Deal Hot Section -->
+            <div class="bg-gradient-to-br from-primary to-primary-dark p-5 rounded-lg shadow-md text-white">
+                <h4 class="text-sm font-black uppercase tracking-widest mb-4 flex items-center gap-2">
+                    <i class="fas fa-fire"></i> DEAL HOT - GIẢM SỐC
+                </h4>
+                <div class="discount-filter mb-4" id="discountButtons">
+                    <button class="filter-btn active bg-white/20 hover:bg-white/30 text-xs px-3 py-1 rounded-full transition-all" data-id="">Tất cả deal</button>
+                </div>
+                <ul id="promotions-list" class="space-y-3 mb-4"></ul>
+                <div id="deal-hot-list"></div>
+                <a href="#" class="text-xs font-bold flex items-center justify-center gap-2 hover:translate-x-1 transition-transform">
+                    Xem thêm deal hot <i class="fas fa-chevron-right text-[10px]"></i>
+                </a>
+            </div>
+
+            <div class="p-4 text-center bg-gray-100 rounded-lg border-2 border-dashed border-gray-300">
+                <p class="text-xs font-bold text-gray-500 mb-1 uppercase tracking-tighter">Hỗ trợ đặt hàng</p>
+                <div class="hotline text-lg font-black text-primary tracking-wider">0374 170 367</div>
+            </div>
         </aside>
-        <main class="main-content">
-            <div class="product-section">
-                <h2 id="name-products-list">Danh sách các sản phẩm</h2>
-                <div id="search-book-list" class="product-container"></div>
+
+        <!-- Main Content -->
+        <main class="main-content flex-1">
+            <div class="product-section bg-white p-6 rounded-lg border border-border shadow-sm min-h-[600px]">
+                <div class="flex items-center justify-between mb-8 border-b border-border pb-4">
+                    <h2 id="name-products-list" class="font-display text-2xl font-extrabold text-gray-800">
+                        Danh sách sản phẩm
+                    </h2>
+                    <div class="text-xs text-gray-400 font-medium">Sắp xếp theo: <span class="text-primary cursor-pointer hover:underline">Mặc định</span></div>
+                </div>
+                <div id="search-book-list" class="product-container grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                    <!-- Products rendered by JS -->
+                </div>
             </div>
         </main>
     </div>

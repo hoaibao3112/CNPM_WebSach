@@ -10,8 +10,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="styles/header.css" />
-  <link rel="stylesheet" href="styles/login.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
   
   <!-- API Configuration - LOAD EARLY -->
   <script src="js/config.js"></script>
@@ -42,58 +41,108 @@
 
       <button type="submit" id="btnSubmit" class="login-btn">Login</button>
 
-      <div class="or-separator">or</div>
+  
+  <div class="login-container min-h-[80vh] flex items-center justify-center px-4 py-12">
+    <form id="loginForm" class="login-form w-full max-w-md bg-white p-8 rounded-2xl shadow-xl border border-border">
+      <h1 class="text-3xl font-display font-black text-center text-gray-800 mb-2 tracking-tight">ĐĂNG NHẬP</h1>
+      <p class="text-center text-gray-400 text-sm mb-8">Chào mừng bạn quay trở lại với BaoStore</p>
+      
+      <div id="errorMessage" class="error-message hidden bg-red-50 text-red-600 text-xs p-3 rounded-lg border border-red-100 mb-6 font-medium"></div>
 
-      <!-- Google Sign-in button -->
-      <div id="googleSignIn" style="margin: 16px 0;"></div>
+      <div class="space-y-4">
+        <div class="form-group relative">
+          <i class="fa fa-user absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
+          <input type="text" id="email" placeholder="Email của bạn" required
+            class="w-full pl-12 pr-4 py-3 bg-gray-50 border border-border rounded-xl outline-none focus:border-primary focus:bg-white transition-all text-sm">
+        </div>
 
-      <!-- Facebook Login button -->
-      <button type="button" id="facebookLoginBtn" class="facebook-login-btn" style="width: 100%; padding: 12px; margin-top: 10px; background: #1877F2; color: white; border: none; border-radius: 5px; font-size: 16px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;">
-        <i class="fab fa-facebook"></i> Đăng nhập với Facebook
+        <div class="form-group relative">
+          <i class="fa fa-lock absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
+          <input type="password" id="password" placeholder="Mật khẩu" required
+            class="w-full pl-12 pr-4 py-3 bg-gray-50 border border-border rounded-xl outline-none focus:border-primary focus:bg-white transition-all text-sm">
+        </div>
+      </div>
+
+      <div class="options flex justify-between items-center my-6">
+        <label class="flex items-center gap-2 text-xs text-gray-500 font-medium cursor-pointer">
+          <input type="checkbox" class="accent-primary w-4 h-4 rounded"> Nhớ đăng nhập
+        </label>
+        <a href="#" onclick="document.getElementById('forgotPasswordModal').classList.add('flex'); document.getElementById('forgotPasswordModal').classList.remove('hidden'); return false;" 
+          class="text-xs text-primary font-bold hover:underline">Quên mật khẩu?</a>
+      </div>
+
+      <button type="submit" id="btnSubmit" class="login-btn w-full bg-primary hover:bg-primary-dark text-white py-3.5 rounded-xl font-black text-sm shadow-lg shadow-primary/30 transition-all active:scale-95">
+        ĐĂNG NHẬP NGAY
       </button>
 
-      <!-- small page footer removed in favor of shared footer -->
+      <div class="or-separator flex items-center gap-4 my-8 text-gray-300 text-[10px] font-bold uppercase tracking-widest">
+        <div class="h-px flex-1 bg-gray-200"></div>
+        <span>HOẶC TIẾP TỤC VỚI</span>
+        <div class="h-px flex-1 bg-gray-200"></div>
+      </div>
+
+      <!-- Social Login Buttons -->
+      <div class="space-y-3">
+        <div id="googleSignIn" class="flex justify-center"></div>
+
+        <button type="button" id="facebookLoginBtn" class="facebook-login-btn w-full py-3 px-4 bg-[#1877F2] hover:bg-[#166fe5] text-white rounded-xl text-sm font-bold shadow-md transition-all flex items-center justify-center gap-3">
+          <i class="fab fa-facebook text-lg"></i> Tiếp tục với Facebook
+        </button>
+      </div>
+
+      <p class="text-center mt-8 text-sm text-gray-500">
+        Chưa có tài khoản? <a href="register.html" class="text-primary font-bold hover:underline">Đăng ký ngay</a>
+      </p>
     </form>
   </div>
+
   <!-- Modal Quên Mật Khẩu -->
-  <div id="forgotPasswordModal" class="modal">
-    <div class="modal-content">
-      <span class="close-modal">&times;</span>
-      <h2>🔐 Quên Mật Khẩu</h2>
-      <div id="forgotPasswordMessage" class="message"></div>
+  <div id="forgotPasswordModal" class="modal fixed inset-0 z-[10000] hidden items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+    <div class="modal-content w-full max-w-md bg-white rounded-2xl shadow-2xl relative p-8">
+      <span class="close-modal absolute top-4 right-4 text-2xl text-gray-400 hover:text-primary cursor-pointer transition-colors"
+        onclick="document.getElementById('forgotPasswordModal').classList.add('hidden'); document.getElementById('forgotPasswordModal').classList.remove('flex');">&times;</span>
+      
+      <h2 class="text-2xl font-display font-black text-gray-800 mb-2">🔐 QUÊN MẬT KHẨU</h2>
+      <p class="text-sm text-gray-400 mb-6">Đừng lo, chúng tôi sẽ giúp bạn lấy lại mật khẩu.</p>
+      
+      <div id="forgotPasswordMessage" class="message hidden text-xs p-3 rounded-lg mb-6 font-medium"></div>
 
       <!-- Bước 1: Nhập email -->
-      <div id="step1">
-        <div class="step-indicator">Bước 1 / 3</div>
-        <div class="form-group">
-          <i class="fa fa-envelope"></i>
-          <input type="email" id="forgotEmail" placeholder="Nhập email đăng ký" required>
+      <div id="step1" class="space-y-4">
+        <div class="step-indicator text-[10px] font-bold text-primary bg-primary-light inline-block px-3 py-1 rounded-full uppercase tracking-wider mb-2">Bước 1 / 3</div>
+        <div class="form-group relative">
+          <i class="fa fa-envelope absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
+          <input type="email" id="forgotEmail" placeholder="Nhập email đăng ký" required
+            class="w-full pl-12 pr-4 py-3 bg-gray-50 border border-border rounded-xl outline-none focus:border-primary focus:bg-white transition-all text-sm">
         </div>
-        <button id="sendOtpBtn" class="login-btn">Gửi mã OTP</button>
+        <button id="sendOtpBtn" class="w-full bg-gray-800 hover:bg-black text-white py-3 rounded-xl font-bold text-sm transition-all">Gửi mã OTP</button>
       </div>
 
       <!-- Bước 2: Nhập OTP -->
-      <div id="step2" style="display: none;">
-        <div class="step-indicator">Bước 2 / 3</div>
-        <div class="form-group">
-          <i class="fa fa-key"></i>
-          <input type="text" id="otpCode" placeholder="Nhập mã OTP" required>
+      <div id="step2" class="space-y-4" style="display: none;">
+        <div class="step-indicator text-[10px] font-bold text-primary bg-primary-light inline-block px-3 py-1 rounded-full uppercase tracking-wider mb-2">Bước 2 / 3</div>
+        <div class="form-group relative">
+          <i class="fa fa-key absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
+          <input type="text" id="otpCode" placeholder="Nhập mã OTP" required
+            class="w-full pl-12 pr-4 py-3 bg-gray-50 border border-border rounded-xl outline-none focus:border-primary focus:bg-white transition-all text-sm text-center tracking-widest font-black">
         </div>
-        <button id="verifyOtpBtn" class="login-btn">Xác nhận OTP</button>
+        <button id="verifyOtpBtn" class="w-full bg-primary hover:bg-primary-dark text-white py-3 rounded-xl font-bold text-sm transition-all">Xác nhận OTP</button>
       </div>
 
       <!-- Bước 3: Đặt lại mật khẩu -->
-      <div id="step3" style="display: none;">
-        <div class="step-indicator">Bước 3 / 3</div>
-        <div class="form-group">
-          <i class="fa fa-lock"></i>
-          <input type="password" id="newPassword" placeholder="Mật khẩu mới" required>
+      <div id="step3" class="space-y-4" style="display: none;">
+        <div class="step-indicator text-[10px] font-bold text-primary bg-primary-light inline-block px-3 py-1 rounded-full uppercase tracking-wider mb-2">Bước 3 / 3</div>
+        <div class="form-group relative">
+          <i class="fa fa-lock absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
+          <input type="password" id="newPassword" placeholder="Mật khẩu mới" required
+            class="w-full pl-12 pr-4 py-3 bg-gray-50 border border-border rounded-xl outline-none focus:border-primary focus:bg-white transition-all text-sm">
         </div>
-        <div class="form-group">
-          <i class="fa fa-lock"></i>
-          <input type="password" id="confirmPassword" placeholder="Xác nhận mật khẩu" required>
+        <div class="form-group relative">
+          <i class="fa fa-lock absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
+          <input type="password" id="confirmPassword" placeholder="Xác nhận mật khẩu" required
+            class="w-full pl-12 pr-4 py-3 bg-gray-50 border border-border rounded-xl outline-none focus:border-primary focus:bg-white transition-all text-sm">
         </div>
-        <button id="resetPasswordBtn" class="login-btn">Đặt lại mật khẩu</button>
+        <button id="resetPasswordBtn" class="w-full bg-green-600 hover:bg-green-700 text-white py-3 rounded-xl font-bold text-sm transition-all shadow-lg shadow-green-200">Đặt lại mật khẩu</button>
       </div>
     </div>
   </div>

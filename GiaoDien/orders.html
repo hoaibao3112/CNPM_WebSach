@@ -4,494 +4,615 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Đơn hàng của tôi</title>
-    <link rel="stylesheet" href="styles/header.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
-    <!-- Thêm Leaflet CSS -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
-    <link rel="stylesheet" href="styles/orders.css">
     
     <!-- API Configuration - LOAD EARLY -->
     <script src="js/config.js"></script>
     <script src="js/api-patcher.js"></script>
 </head>
-<body>
-    <div class="container">
+    <link rel="icon" href="favicon.ico" type="image/x-icon" />
+
+    <!-- Tailwind CSS CDN & Config -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="js/tailwind-config.js"></script>
+    
+    <!-- Thêm Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+    
+    <!-- API Configuration - LOAD EARLY -->
+    <script src="js/config.js"></script>
+    <script src="js/api-patcher.js"></script>
+</head>
+
+<body class="bg-bg pt-14 font-body antialiased">
+    <div id="load-header"></div>
+
+    <div class="container max-w-[1300px] mx-auto px-4 py-8">
         <!-- Header Section -->
-        <header class="order-header">
-            <h1><i class="fas fa-clipboard-list"></i> Đơn hàng của <span id="customer-name"></span></h1>
-            <div class="filter-orders">
-               <select id="status-filter" class="filter-select">
-                  <option value="all">Tất cả đơn hàng</option>
-                  <option value="pending">Chờ xử lý</option>
-                  <option value="processing">Đang xử lý</option>
-                  <option value="shipping">Đang giao hàng</option>
-                  <option value="completed">Đã hoàn thành</option>
-                  <option value="cancelled">Đã hủy</option>
-              </select>
-                <button id="search-btn" class="search-btn"><i class="fas fa-search"></i></button>
-                <button id="header-back-btn" class="btn back-btn" title="Quay lại danh sách">
+        <header class="order-header mb-8 flex flex-col md:flex-row md:items-center justify-between gap-6 bg-white p-6 rounded-2xl border border-border shadow-sm">
+            <h1 class="text-2xl font-black text-gray-800 uppercase tracking-tighter flex items-center gap-3">
+                <i class="fas fa-clipboard-list text-primary"></i> Đơn hàng của <span id="customer-name" class="text-primary-dark"></span>
+            </h1>
+            <div class="filter-orders flex items-center gap-3 w-full md:w-auto">
+               <div class="relative flex-1 md:w-64">
+                   <select id="status-filter" class="w-full pl-4 pr-10 py-3 bg-gray-50 border border-border rounded-xl outline-none focus:border-primary transition-all text-sm font-bold text-gray-600 appearance-none">
+                      <option value="all">Tất cả đơn hàng</option>
+                      <option value="pending">Chờ xử lý</option>
+                      <option value="processing">Đang xử lý</option>
+                      <option value="shipping">Đang giao hàng</option>
+                      <option value="completed">Đã hoàn thành</option>
+                      <option value="cancelled">Đã hủy</option>
+                  </select>
+                  <i class="fas fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none text-[10px]"></i>
+               </div>
+                <button id="search-btn" class="bg-gray-800 hover:bg-black text-white p-3.5 rounded-xl transition-all active:scale-95 shadow-md">
+                    <i class="fas fa-search"></i>
+                </button>
+                <button id="header-back-btn" class="bg-white border-2 border-gray-100 hover:border-gray-200 text-gray-400 hover:text-gray-600 p-3 rounded-xl transition-all active:scale-95" title="Quay lại danh sách">
                   <i class="fas fa-arrow-left"></i>
                 </button>
             </div>
         </header>
 
         <!-- Order List Section -->
-        <div class="order-list" id="order-list">
+        <div class="order-list space-y-4" id="order-list">
             <!-- No Orders Message -->
-            <div class="no-orders">
-                <i class="fas fa-box-open"></i>
-                <p>Bạn chưa có đơn hàng nào</p>
-                <a href="/" class="btn">Tiếp tục mua sắm</a>
+            <div class="no-orders bg-white p-16 rounded-2xl border border-border shadow-sm text-center space-y-4">
+                <div class="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mx-auto text-gray-200 text-3xl">
+                    <i class="fas fa-box-open"></i>
+                </div>
+                <p class="text-gray-400 font-medium italic">Bạn chưa có đơn hàng nào</p>
+                <a href="index.html" class="inline-block bg-primary hover:bg-primary-dark text-white px-8 py-3 rounded-xl font-bold text-sm shadow-lg shadow-primary/20 transition-all active:scale-95 uppercase tracking-widest">Tiếp tục mua sắm</a>
             </div>
         </div>
 
         <!-- Loading Modal -->
-        <div id="loading-modal" class="modal">
-            <div class="modal-content" style="text-align: center; background: transparent; box-shadow: none;">
-                <div class="loading-spinner">
-                    <i class="fas fa-spinner fa-spin fa-3x"></i>
-                    <p>Đang tải đơn hàng...</p>
+        <div id="loading-modal" class="modal fixed inset-0 bg-black/40 backdrop-blur-sm z-[2000] hidden items-center justify-center">
+            <div class="modal-content text-center">
+                <div class="loading-spinner text-white space-y-4">
+                    <i class="fas fa-spinner fa-spin fa-3x text-primary"></i>
+                    <p class="font-bold uppercase tracking-widest text-sm">Đang tải đơn hàng...</p>
                 </div>
             </div>
         </div>
 
         <!-- Order Detail Modal -->
-        <div id="order-detail-modal" class="modal">
-            <div class="modal-content">
-                <span class="close-modal">×</span>
-                <div class="modal-header">
-                    <h2>Chi tiết đơn hàng <span id="order-id"></span></h2>
-                    <div class="order-status-badge" id="order-status"></div>
+        <div id="order-detail-modal" class="modal fixed inset-0 bg-black/60 backdrop-blur-md z-[1100] hidden items-center justify-center p-4">
+            <div class="modal-content bg-white w-full max-w-4xl max-h-[90vh] rounded-3xl shadow-2xl overflow-hidden flex flex-col relative">
+                <span class="close-modal absolute top-6 right-6 w-10 h-10 flex items-center justify-center bg-gray-100 hover:bg-red-50 text-gray-400 hover:text-red-500 rounded-full cursor-pointer transition-all z-10 text-xl font-bold">×</span>
+                
+                <div class="modal-header p-8 bg-gray-50 border-b border-border flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div class="space-y-1">
+                        <h2 class="text-2xl font-black text-gray-800 uppercase tracking-tighter">Chi tiết đơn hàng <span id="order-id" class="text-primary"></span></h2>
+                        <p class="text-xs font-bold text-gray-400 uppercase tracking-widest" id="order-date-label">Ngày đặt: <span id="order-date" class="text-gray-600"></span></p>
+                    </div>
+                    <div class="order-status-badge px-6 py-2 rounded-full text-xs font-black uppercase tracking-widest shadow-sm" id="order-status"></div>
                 </div>
 
-                <div class="order-detail-body">
-                    <!-- Order Information -->
-                    <div class="order-info-section">
-                        <h3><i class="fas fa-info-circle"></i> Thông tin đơn hàng</h3>
-                        <div class="info-grid">
-                            <div>
-                                <p><strong>Ngày đặt:</strong> <span id="order-date"></span></p>
-                                <p><strong>Tổng tiền:</strong> <span id="order-total"></span></p>
-                            </div>
-                            <div>
-                                <p><strong>Phương thức thanh toán:</strong> <span id="payment-method"></span></p>
-                                <p><strong>Trạng thái thanh toán:</strong> <span id="payment-status"></span></p>
+                <div class="order-detail-body p-8 overflow-y-auto flex-1 space-y-10">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <!-- Order Information -->
+                        <div class="order-info-section space-y-4">
+                            <h3 class="text-sm font-black text-gray-400 uppercase tracking-widest flex items-center gap-2">
+                                <i class="fas fa-info-circle text-primary"></i> Thông tin chung
+                            </h3>
+                            <div class="bg-gray-50 p-6 rounded-2xl border border-border space-y-3">
+                                <div class="flex justify-between text-sm">
+                                    <span class="text-gray-500 font-medium">Tổng tiền:</span>
+                                    <span id="order-total" class="font-black text-primary text-lg tracking-tighter"></span>
+                                </div>
+                                <div class="flex justify-between text-sm">
+                                    <span class="text-gray-500 font-medium">Thanh toán:</span>
+                                    <span id="payment-method" class="font-bold text-gray-800"></span>
+                                </div>
+                                <div class="flex justify-between text-sm">
+                                    <span class="text-gray-500 font-medium">Trạng thái:</span>
+                                    <span id="payment-status" class="font-bold text-green-600"></span>
+                                </div>
                             </div>
                         </div>
-                    </div>
 
-                    <!-- Shipping Information -->
-                    <div class="shipping-info-section">
-                        <h3><i class="fas fa-truck"></i> Thông tin giao hàng</h3>
-                        <p><strong>Người nhận:</strong> <span id="receiver-name"></span></p>
-                        <p><strong>SĐT:</strong> <span id="receiver-phone"></span></p>
-                        <p><strong>Địa chỉ:</strong> <span id="shipping-address"></span></p>
-                        <div style="margin-top: 10px;">
-                            <strong>Ghi chú:</strong>
-                            <div id="order-notes" style="margin-top: 5px;"></div>
+                        <!-- Shipping Information -->
+                        <div class="shipping-info-section space-y-4">
+                            <h3 class="text-sm font-black text-gray-400 uppercase tracking-widest flex items-center gap-2">
+                                <i class="fas fa-truck text-primary"></i> Giao hàng
+                            </h3>
+                            <div class="bg-gray-50 p-6 rounded-2xl border border-border space-y-3 text-sm">
+                                <p><strong class="text-gray-400 uppercase text-[10px] block mb-1">Người nhận</strong> <span id="receiver-name" class="font-bold text-gray-800"></span></p>
+                                <p><strong class="text-gray-400 uppercase text-[10px] block mb-1">Số điện thoại</strong> <span id="receiver-phone" class="font-bold text-gray-800"></span></p>
+                                <p><strong class="text-gray-400 uppercase text-[10px] block mb-1">Địa chỉ</strong> <span id="shipping-address" class="font-medium text-gray-600 italic"></span></p>
+                                <div class="pt-2 border-t border-gray-200">
+                                    <strong class="text-gray-400 uppercase text-[10px] block mb-1">Ghi chú</strong>
+                                    <div id="order-notes" class="text-gray-500 italic text-xs"></div>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
                     <!-- Delivery Map Section -->
-                    <div class="delivery-map-section">
-                        <h3><i class="fas fa-map-marker-alt"></i> Thông tin giao hàng trên bản đồ</h3>
-                        <div id="delivery-map" style="height: 300px; width: 100%;"></div>
-                        <p><strong>Khoảng cách:</strong> <span id="distance-info">Đang tải...</span></p>
-                        <p><strong>Thời gian dự kiến:</strong> <span id="duration-info">Đang tải...</span></p>
+                    <div class="delivery-map-section space-y-4">
+                        <h3 class="text-sm font-black text-gray-400 uppercase tracking-widest flex items-center gap-2">
+                            <i class="fas fa-map-marker-alt text-primary"></i> Hành trình đơn hàng
+                        </h3>
+                        <div class="rounded-2xl border border-border overflow-hidden shadow-inner bg-gray-100">
+                            <div id="delivery-map" class="h-[300px] w-full z-0"></div>
+                        </div>
+                        <div class="flex flex-wrap gap-6 text-xs font-bold text-gray-500">
+                            <p class="flex items-center gap-2"><i class="fas fa-road text-primary"></i> Khoảng cách: <span id="distance-info" class="text-gray-800">Đang tải...</span></p>
+                            <p class="flex items-center gap-2"><i class="fas fa-clock text-primary"></i> Thời gian dự kiến: <span id="duration-info" class="text-gray-800">Đang tải...</span></p>
+                        </div>
                     </div>
 
                     <!-- Order Items -->
-                    <div class="order-items-section">
-                        <h3><i class="fas fa-shopping-basket"></i> Sản phẩm đã đặt</h3>
-                        <div class="order-items" id="order-items"></div>
+                    <div class="order-items-section space-y-4">
+                        <h3 class="text-sm font-black text-gray-400 uppercase tracking-widest flex items-center gap-2">
+                            <i class="fas fa-shopping-basket text-primary"></i> Sản phẩm đã đặt
+                        </h3>
+                        <div class="order-items divide-y divide-gray-100 bg-white rounded-2xl border border-border overflow-hidden" id="order-items">
+                            <!-- JS renders items here -->
+                        </div>
                     </div>
                 </div>
 
                 <!-- Modal Actions -->
-        <div class="modal-actions">
-          <div class="confirmation-actions">
-            <button class="btn print-btn" onclick="window.print()">
-              <i class="fas fa-print"></i> In hóa đơn
-            </button>
-            <button id="cancel-order-btn" class="btn cancel-btn" data-order-id="">
-              Hủy đơn hàng
-            </button>
-            <!-- Request return button (hidden by default, shown by orders.js when order completed) -->
-            <button id="request-return-btn" class="btn request-return-btn" style="display:none;">
-              <i class="fas fa-undo-alt"></i> Yêu cầu trả hàng
-            </button>
-            <a href="index.html" class="btn home-btn">
-              <i class="fas fa-home"></i> Về trang chủ
-            </a>
-          </div>
-        </div>
-                <!-- NEW: Modal tạo yêu cầu trả hàng -->
-            <div id="return-request-modal" class="modal" style="display:none;">
-              <div class="modal-content" style="max-width:700px;">
-                <span class="close-modal" id="close-return-modal">&times;</span>
-                <div class="modal-header" style="background: linear-gradient(135deg, #6c757d, #495057); color:#fff;">
-                  <h2><i class="fas fa-undo-alt"></i> Yêu cầu trả hàng</h2>
+                <div class="modal-actions p-8 bg-gray-50 border-t border-border">
+                    <div class="confirmation-actions flex flex-wrap gap-3 justify-end">
+                        <button class="bg-white border border-border hover:bg-gray-50 text-gray-600 px-6 py-3 rounded-xl font-bold text-sm transition-all flex items-center gap-2 shadow-sm" onclick="window.print()">
+                          <i class="fas fa-print"></i> In hóa đơn
+                        </button>
+                        <button id="cancel-order-btn" class="bg-red-50 hover:bg-red-100 text-red-600 px-6 py-3 rounded-xl font-bold text-sm transition-all shadow-sm" data-order-id="">
+                          Hủy đơn hàng
+                        </button>
+                        <button id="request-return-btn" class="bg-yellow-50 hover:bg-yellow-100 text-yellow-700 px-6 py-3 rounded-xl font-bold text-sm transition-all shadow-sm hidden">
+                          <i class="fas fa-undo-alt mr-2"></i> Yêu cầu trả hàng
+                        </button>
+                        <a href="index.html" class="bg-primary hover:bg-primary-dark text-white px-8 py-3 rounded-xl font-black text-sm shadow-lg shadow-primary/20 transition-all active:scale-95 flex items-center gap-2">
+                          <i class="fas fa-home"></i> VỀ TRANG CHỦ
+                        </a>
+                    </div>
                 </div>
-                <div class="order-detail-body" style="padding:20px;">
-                  <div class="form-section">
-                    <h3>Chọn sản phẩm muốn trả</h3>
-                    <div id="return-items-list" style="display:grid;gap:8px;"></div>
-                  </div>
-
-                  <div class="form-section">
-                    <label for="return-reason"><strong>Lý do trả hàng</strong></label>
-                    <textarea id="return-reason" rows="3" style="width:100%; padding:8px;" placeholder="Mô tả ngắn lý do..."></textarea>
-                  </div>
-
-                  <div class="form-section">
-                    <label><strong>Ảnh chứng từ (tùy chọn)</strong></label>
-                    <input type="file" id="return-files" multiple accept="image/*" />
-                  </div>
-
-                  <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:12px;">
-                    <button class="btn btn-secondary" id="cancel-return-btn">Hủy</button>
-                    <button class="btn btn-danger" id="submit-return-btn">Gửi yêu cầu</button>
-                  </div>
-                </div>
-              </div>
-            </div>
             </div>
         </div>
 
         <!-- Floating Chat Button -->
-        <div id="chat-floating-btn" class="chat-floating-btn">
-            <i class="fas fa-comments"></i>
-            <span>Hỗ trợ</span>
-        </div>
-
-        <!-- Review Modal (outside order detail) -->
-        <div id="review-modal" class="modal" style="display:none;">
-          <div class="modal-content" style="max-width:600px;">
-            <span class="close-modal" id="close-review-modal">&times;</span>
-            <div class="modal-header">
-              <h2><i class="fas fa-star"></i> Đánh giá đơn hàng <span id="review-order-id"></span></h2>
-            </div>
-            <div class="modal-body" style="padding:16px;">
-              <p>Vui lòng cho chúng tôi biết cảm nhận của bạn về đơn hàng này.</p>
-              <div style="margin:12px 0;">
-                <label>Số sao:</label>
-                <div id="review-stars" class="star-rating" style="margin-top:8px;">
-                  <input type="hidden" id="review-rating" value="5">
-                  <span class="star" data-value="1" aria-hidden="true">☆</span>
-                  <span class="star" data-value="2" aria-hidden="true">☆</span>
-                  <span class="star" data-value="3" aria-hidden="true">☆</span>
-                  <span class="star" data-value="4" aria-hidden="true">☆</span>
-                  <span class="star" data-value="5" aria-hidden="true">☆</span>
-                </div>
-              </div>
-              <div>
-                <label for="review-comment">Nhận xét (tuỳ chọn):</label>
-                <textarea id="review-comment" rows="4" style="width:100%; padding:8px; margin-top:8px;" maxlength="500" placeholder="Viết nhận xét của bạn..."></textarea>
-              </div>
-            </div>
-            <div class="modal-footer" style="display:flex; gap:8px; justify-content:flex-end; padding:12px;">
-              <button class="btn btn-secondary" id="cancel-review-btn">Hủy</button>
-              <button class="btn btn-danger" id="submit-review-btn">Gửi đánh giá</button>
-            </div>
-          </div>
-        </div>
-
-        <!-- ✅ MODAL XÁC NHẬN ĐỔI ĐỊA CHỈ -->
-        <div id="address-change-confirmation-modal" class="modal" style="display:none;">
-          <div class="modal-content" style="max-width:600px;">
-            <span class="close-modal" onclick="closeAddressChangeModal()">&times;</span>
-            <div class="modal-header" style="background: linear-gradient(135deg, #ff9800, #ff5722); color: white;">
-              <h2><i class="fas fa-exclamation-triangle"></i> Xác nhận thay đổi địa chỉ</h2>
-            </div>
-            <div class="modal-body" style="padding:24px;">
-              <!-- Địa chỉ cũ vs mới -->
-              <div style="background: #f8f9fa; padding: 16px; border-radius: 8px; margin-bottom: 20px;">
-                <div style="margin-bottom: 12px;">
-                  <strong style="color: #666;">📍 Địa chỉ cũ:</strong>
-                  <div id="confirm-old-address" style="padding: 8px 0; color: #333;"></div>
-                </div>
-                <div style="border-top: 1px dashed #ddd; margin: 12px 0;"></div>
-                <div>
-                  <strong style="color: #666;">📍 Địa chỉ mới:</strong>
-                  <div id="confirm-new-address" style="padding: 8px 0; color: #333;"></div>
-                </div>
-              </div>
-
-              <!-- Thông tin phí ship -->
-              <div id="shipping-fee-info" style="background: linear-gradient(135deg, #fff3e0, #ffe0b2); padding: 16px; border-radius: 8px; border-left: 4px solid #ff9800; margin-bottom: 20px; display: none;">
-                <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
-                  <i class="fas fa-truck" style="font-size: 24px; color: #ff9800;"></i>
-                  <div style="flex: 1;">
-                    <strong style="color: #e65100; font-size: 16px;">Phí vận chuyển</strong>
-                  </div>
-                </div>
-                <div style="margin: 8px 0;">
-                  <div style="display: flex; justify-content: space-between; padding: 8px 0;">
-                    <span>Phí ship cũ:</span>
-                    <strong id="confirm-old-shipping-fee" style="color: #666;">0đ</strong>
-                  </div>
-                  <div style="display: flex; justify-content: space-between; padding: 8px 0;">
-                    <span>Phí ship mới:</span>
-                    <strong id="confirm-new-shipping-fee" style="color: #ff5722;">0đ</strong>
-                  </div>
-                  <div style="border-top: 2px solid #ff9800; margin: 8px 0;"></div>
-                  <div style="display: flex; justify-content: space-between; padding: 8px 0;">
-                    <span style="font-weight: 600;">Chênh lệch:</span>
-                    <strong id="confirm-shipping-diff" style="color: #d84315; font-size: 18px;">+0đ</strong>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Thông tin thanh toán -->
-              <div id="payment-method-info" style="background: #e3f2fd; padding: 16px; border-radius: 8px; margin-bottom: 20px;">
-                <div style="margin-bottom: 8px;">
-                  <strong>💳 Phương thức thanh toán:</strong> 
-                  <span id="confirm-payment-method"></span>
-                </div>
-                <div>
-                  <strong>💰 Tổng tiền mới:</strong> 
-                  <span id="confirm-new-total" style="color: #d32f2f; font-size: 20px; font-weight: 600;"></span>
-                </div>
-              </div>
-
-              <!-- Message động -->
-              <div id="address-change-message" style="padding: 12px; background: #fff9c4; border-radius: 8px; border-left: 4px solid #fbc02d;">
-                <p style="margin: 0; line-height: 1.6;"></p>
-              </div>
-            </div>
-            <div class="modal-footer" style="display:flex; gap:12px; justify-content:flex-end; padding:16px; background: #f5f5f5;">
-              <button class="btn btn-secondary" onclick="closeAddressChangeModal()">
-                <i class="fas fa-times"></i> Hủy bỏ
-              </button>
-              <button class="btn btn-danger" id="confirm-address-change-btn" onclick="confirmAddressChange()">
-                <i class="fas fa-check"></i> Đồng ý thay đổi
-              </button>
-            </div>
-          </div>
+        <div id="chat-floating-btn" class="chat-floating-btn fixed bottom-8 right-8 w-16 h-16 bg-primary text-white rounded-full flex flex-col items-center justify-center shadow-2xl cursor-pointer hover:scale-110 active:scale-95 transition-all z-[1000] group">
+            <i class="fas fa-comments text-2xl"></i>
+            <span class="text-[9px] font-black uppercase tracking-tighter opacity-0 group-hover:opacity-100 transition-opacity">Hỗ trợ</span>
         </div>
 
         <!-- Chat Popup -->
-        <div id="chat-popup" class="chat-popup">
-            <div class="chat-popup-header">
-                <h3><i class="fas fa-headset"></i> Hỗ trợ khách hàng</h3>
-                <button class="close-chat-btn" id="close-chat-btn">×</button>
+        <div id="chat-popup" class="chat-popup fixed bottom-28 right-8 w-full max-w-[350px] bg-white rounded-3xl shadow-2xl border border-border overflow-hidden z-[1000] hidden flex-col">
+            <div class="chat-popup-header p-4 bg-primary text-white flex items-center justify-between">
+                <h3 class="text-sm font-black uppercase tracking-widest"><i class="fas fa-headset mr-2"></i> Hỗ trợ khách hàng</h3>
+                <button class="close-chat-btn text-2xl leading-none" id="close-chat-btn">×</button>
             </div>
-            <div class="chat-popup-body">
-                <div class="chat-messages" id="chat-messages">
-                    <!-- Tin nhắn sẽ hiển thị ở đây -->
+            <div class="chat-popup-body flex flex-col h-[400px]">
+                <div class="chat-messages flex-1 p-4 overflow-y-auto space-y-3 bg-gray-50" id="chat-messages">
+                    <!-- Messages render here -->
                 </div>
-                <div class="chat-input-area">
-                    <input type="text" id="chat-message-input" placeholder="Nhập tin nhắn của bạn...">
-                    <button id="send-chat-message-btn"><i class="fas fa-paper-plane"></i></button>
+                <div class="chat-input-area p-3 bg-white border-t border-border flex gap-2">
+                    <input type="text" id="chat-message-input" placeholder="Nhập tin nhắn..." class="flex-1 px-4 py-2 bg-gray-50 border border-border rounded-xl outline-none focus:border-primary text-sm">
+                    <button id="send-chat-message-btn" class="bg-primary text-white w-10 h-10 rounded-xl flex items-center justify-center hover:bg-primary-dark transition-all">
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
                 </div>
             </div>
         </div>
 
-        <!-- Modal xác nhận hủy đơn hàng (Thêm mới) -->
-        <div id="cancel-order-modal" class="modal">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h2>Xác nhận hủy đơn hàng</h2>
-                    <span class="close-modal-cancel">×</span>
+        <!-- Cancel Confirmation Modal -->
+        <div id="cancel-order-modal" class="modal fixed inset-0 bg-black/60 backdrop-blur-sm z-[2000] hidden items-center justify-center p-4">
+            <div class="modal-content bg-white w-full max-w-md rounded-3xl shadow-2xl p-8 space-y-6">
+                <div class="text-center space-y-2">
+                    <div class="w-16 h-16 bg-red-50 text-red-500 rounded-full flex items-center justify-center mx-auto text-2xl mb-4">
+                        <i class="fas fa-exclamation-triangle"></i>
+                    </div>
+                    <h2 class="text-xl font-black text-gray-800 uppercase tracking-tighter">Xác nhận hủy đơn hàng</h2>
+                    <p class="text-sm text-gray-400 font-medium italic">Bạn có chắc chắn muốn hủy đơn hàng này không?</p>
                 </div>
-                <div class="modal-body">
-                    <p>Bạn có chắc chắn muốn hủy đơn hàng này không?</p>
-                    <div class="reason-input">
-                        <label for="cancel-reason">Lý do hủy (tùy chọn):</label>
-                        <textarea id="cancel-reason" placeholder="Nhập lý do hủy đơn hàng..." rows="3"></textarea>
+                <div class="reason-input space-y-2">
+                    <label for="cancel-reason" class="text-xs font-bold text-gray-500 uppercase tracking-widest">Lý do hủy (tùy chọn):</label>
+                    <textarea id="cancel-reason" placeholder="Nhập lý do hủy đơn hàng..." rows="3" class="w-full p-4 bg-gray-50 border border-border rounded-2xl outline-none focus:border-primary transition-all text-sm resize-none"></textarea>
+                </div>
+                <div class="modal-footer flex gap-3">
+                    <button id="cancel-cancel-btn" class="flex-1 bg-white border-2 border-gray-100 hover:border-gray-200 text-gray-500 py-3 rounded-xl font-bold text-sm transition-all">Hủy bỏ</button>
+                    <button id="confirm-cancel-btn" class="flex-1 bg-red-600 hover:bg-red-700 text-white py-3 rounded-xl font-black text-sm shadow-lg shadow-red-200 transition-all active:scale-95">XÁC NHẬN HỦY</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Return Request Modal -->
+        <div id="return-request-modal" class="modal fixed inset-0 bg-black/60 backdrop-blur-sm z-[2000] hidden items-center justify-center p-4">
+          <div class="modal-content bg-white w-full max-w-2xl rounded-3xl shadow-2xl overflow-hidden flex flex-col relative">
+            <span class="close-modal absolute top-6 right-6 text-2xl font-bold text-gray-400 hover:text-red-500 cursor-pointer transition-all" id="close-return-modal">×</span>
+            <div class="modal-header p-8 bg-gray-800 text-white">
+              <h2 class="text-xl font-black uppercase tracking-widest flex items-center gap-3">
+                  <i class="fas fa-undo-alt"></i> Yêu cầu trả hàng
+              </h2>
+            </div>
+            <div class="order-detail-body p-8 space-y-8 overflow-y-auto max-h-[70vh]">
+              <div class="form-section space-y-4">
+                <h3 class="text-xs font-bold text-gray-400 uppercase tracking-widest">1. Chọn sản phẩm muốn trả</h3>
+                <div id="return-items-list" class="grid gap-3 bg-gray-50 p-4 rounded-2xl border border-border"></div>
+              </div>
+
+              <div class="form-section space-y-2">
+                <label for="return-reason" class="text-xs font-bold text-gray-500 uppercase tracking-widest">2. Lý do trả hàng</label>
+                <textarea id="return-reason" rows="3" class="w-full p-4 bg-gray-50 border border-border rounded-2xl outline-none focus:border-primary transition-all text-sm resize-none" placeholder="Mô tả ngắn lý do..."></textarea>
+              </div>
+
+              <div class="form-section space-y-2">
+                <label class="text-xs font-bold text-gray-500 uppercase tracking-widest">3. Ảnh chứng từ (tùy chọn)</label>
+                <input type="file" id="return-files" multiple accept="image/*" class="w-full text-xs text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-black file:bg-primary-light file:text-primary hover:file:bg-primary-light/50 cursor-pointer" />
+              </div>
+
+              <div class="flex justify-end gap-3 pt-6 border-t border-border">
+                <button class="bg-white border-2 border-gray-100 hover:border-gray-200 text-gray-500 px-6 py-3 rounded-xl font-bold text-sm transition-all" id="cancel-return-btn">Hủy bỏ</button>
+                <button class="bg-red-600 hover:bg-red-700 text-white px-8 py-3 rounded-xl font-black text-sm shadow-lg shadow-red-200 transition-all active:scale-95 uppercase tracking-widest" id="submit-return-btn">Gửi yêu cầu</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Review Modal -->
+        <div id="review-modal" class="modal fixed inset-0 bg-black/60 backdrop-blur-sm z-[2000] hidden items-center justify-center p-4">
+          <div class="modal-content bg-white w-full max-w-lg rounded-3xl shadow-2xl p-8 relative">
+            <span class="close-modal absolute top-6 right-6 text-2xl font-bold text-gray-400 hover:text-red-500 cursor-pointer transition-all" id="close-review-modal">×</span>
+            <div class="text-center space-y-4 mb-8">
+              <div class="w-16 h-16 bg-yellow-50 text-yellow-500 rounded-full flex items-center justify-center mx-auto text-2xl">
+                  <i class="fas fa-star"></i>
+              </div>
+              <h2 class="text-2xl font-black text-gray-800 uppercase tracking-tighter">Đánh giá đơn hàng <span id="review-order-id" class="text-primary"></span></h2>
+              <p class="text-sm text-gray-400 font-medium italic">Vui lòng cho chúng tôi biết cảm nhận của bạn về đơn hàng này.</p>
+            </div>
+            
+            <div class="space-y-6">
+              <div class="space-y-3">
+                <label class="text-xs font-bold text-gray-500 uppercase tracking-widest">Mức độ hài lòng:</label>
+                <div id="review-stars" class="star-rating flex justify-center gap-3">
+                  <input type="hidden" id="review-rating" value="5">
+                  <span class="star text-4xl text-gray-200 cursor-pointer hover:text-yellow-400 transition-colors" data-value="1">☆</span>
+                  <span class="star text-4xl text-gray-200 cursor-pointer hover:text-yellow-400 transition-colors" data-value="2">☆</span>
+                  <span class="star text-4xl text-gray-200 cursor-pointer hover:text-yellow-400 transition-colors" data-value="3">☆</span>
+                  <span class="star text-4xl text-gray-200 cursor-pointer hover:text-yellow-400 transition-colors" data-value="4">☆</span>
+                  <span class="star text-4xl text-gray-200 cursor-pointer hover:text-yellow-400 transition-colors" data-value="5">☆</span>
+                </div>
+              </div>
+              <div class="space-y-2">
+                <label for="review-comment" class="text-xs font-bold text-gray-500 uppercase tracking-widest">Nhận xét (tuỳ chọn):</label>
+                <textarea id="review-comment" rows="4" class="w-full p-4 bg-gray-50 border border-border rounded-2xl outline-none focus:border-primary transition-all text-sm resize-none" maxlength="500" placeholder="Viết nhận xét của bạn..."></textarea>
+              </div>
+              <div class="flex gap-3 pt-4">
+                <button class="flex-1 bg-white border-2 border-gray-100 hover:border-gray-200 text-gray-500 py-3 rounded-xl font-bold text-sm transition-all" id="cancel-review-btn">Hủy bỏ</button>
+                <button class="flex-1 bg-primary hover:bg-primary-dark text-white py-3 rounded-xl font-black text-sm shadow-lg shadow-primary/20 transition-all active:scale-95 uppercase tracking-widest" id="submit-review-btn">Gửi đánh giá</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Address Change Confirmation Modal -->
+        <div id="address-change-confirmation-modal" class="modal fixed inset-0 bg-black/60 backdrop-blur-sm z-[2100] hidden items-center justify-center p-4">
+          <div class="modal-content bg-white w-full max-w-xl rounded-3xl shadow-2xl overflow-hidden relative">
+            <span class="close-modal absolute top-6 right-6 text-2xl font-bold text-gray-400 hover:text-red-500 cursor-pointer transition-all z-10" onclick="closeAddressChangeModal()">&times;</span>
+            <div class="modal-header p-8 bg-gradient-to-r from-yellow-500 to-orange-600 text-white">
+              <h2 class="text-xl font-black uppercase tracking-widest flex items-center gap-3">
+                  <i class="fas fa-exclamation-triangle"></i> Xác nhận thay đổi địa chỉ
+              </h2>
+            </div>
+            <div class="modal-body p-8 space-y-6 overflow-y-auto max-h-[70vh]">
+              <!-- Address Comparison -->
+              <div class="bg-gray-50 p-6 rounded-2xl border border-border space-y-4">
+                <div class="space-y-1">
+                  <strong class="text-[10px] font-black text-gray-400 uppercase tracking-widest block">📍 Địa chỉ cũ:</strong>
+                  <div id="confirm-old-address" class="text-sm font-medium text-gray-500 italic"></div>
+                </div>
+                <div class="border-t border-dashed border-gray-200"></div>
+                <div class="space-y-1">
+                  <strong class="text-[10px] font-black text-primary uppercase tracking-widest block">📍 Địa chỉ mới:</strong>
+                  <div id="confirm-new-address" class="text-sm font-black text-gray-800"></div>
+                </div>
+              </div>
+
+              <!-- Shipping Fee Info -->
+              <div id="shipping-fee-info" class="bg-orange-50 p-6 rounded-2xl border-l-4 border-orange-500 space-y-4 hidden">
+                <div class="flex items-center gap-3">
+                  <i class="fas fa-truck text-orange-500 text-xl"></i>
+                  <strong class="text-sm font-black text-orange-800 uppercase tracking-tighter">Phí vận chuyển mới</strong>
+                </div>
+                <div class="space-y-2 text-sm">
+                  <div class="flex justify-between text-gray-600">
+                    <span>Phí ship cũ:</span>
+                    <strong id="confirm-old-shipping-fee" class="font-bold">0đ</strong>
+                  </div>
+                  <div class="flex justify-between text-gray-600">
+                    <span>Phí ship mới:</span>
+                    <strong id="confirm-new-shipping-fee" class="font-bold text-orange-600">0đ</strong>
+                  </div>
+                  <div class="border-t border-orange-200 pt-2 flex justify-between">
+                    <span class="font-bold text-orange-800">Chênh lệch:</span>
+                    <strong id="confirm-shipping-diff" class="text-lg font-black text-red-600">+0đ</strong>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Payment Info -->
+              <div id="payment-method-info" class="bg-blue-50 p-6 rounded-2xl border border-blue-100 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div class="space-y-1">
+                  <strong class="text-[10px] font-black text-blue-400 uppercase tracking-widest block">Phương thức:</strong> 
+                  <span id="confirm-payment-method" class="text-sm font-bold text-blue-800"></span>
+                </div>
+                <div class="space-y-1 text-right">
+                  <strong class="text-[10px] font-black text-blue-400 uppercase tracking-widest block">Tổng tiền mới:</strong> 
+                  <span id="confirm-new-total" class="text-2xl font-black text-red-600 tracking-tighter"></span>
+                </div>
+              </div>
+
+              <!-- Dynamic Message -->
+              <div id="address-change-message" class="p-4 bg-yellow-50 rounded-xl border border-yellow-100 text-xs text-yellow-700 font-medium italic">
+                <p class="m-0 leading-relaxed"></p>
+              </div>
+
+              <div class="modal-footer flex gap-3 pt-4 border-t border-gray-100">
+                <button class="flex-1 bg-white border-2 border-gray-100 hover:border-gray-200 text-gray-500 py-3 rounded-xl font-bold text-sm transition-all" onclick="closeAddressChangeModal()">
+                  <i class="fas fa-times mr-1"></i> Hủy bỏ
+                </button>
+                <button class="flex-1 bg-red-600 hover:bg-red-700 text-white py-3 rounded-xl font-black text-sm shadow-lg shadow-red-200 transition-all active:scale-95 uppercase tracking-widest" id="confirm-address-change-btn" onclick="confirmAddressChange()">
+                  <i class="fas fa-check mr-1"></i> Đồng ý thay đổi
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- VNPay Refund Modal -->
+        <div id="vnpay-refund-modal" class="modal fixed inset-0 bg-black/60 backdrop-blur-sm z-[2200] hidden items-center justify-center p-4">
+          <div class="modal-content bg-white w-full max-w-2xl max-h-[90vh] rounded-3xl shadow-2xl overflow-hidden flex flex-col">
+            <div class="refund-modal-header p-8 bg-gradient-to-r from-gray-700 to-gray-900 text-white flex items-center justify-between relative">
+              <div class="flex items-center gap-4">
+                  <div class="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center text-xl">
+                      <i class="fas fa-exclamation-triangle"></i>
+                  </div>
+                  <div>
+                      <h2 class="text-xl font-black uppercase tracking-widest">Xác nhận hoàn tiền VNPay</h2>
+                      <p class="text-[10px] font-bold text-white/50 uppercase tracking-widest">Dành cho đơn hàng đã thanh toán</p>
+                  </div>
+              </div>
+              <span class="close-modal text-3xl font-bold text-white/50 hover:text-white cursor-pointer transition-all" onclick="closeRefundModal()">&times;</span>
+            </div>
+
+            <div class="refund-modal-body p-8 overflow-y-auto flex-1 space-y-8">
+              <!-- Order Summary -->
+              <div class="order-summary-section space-y-4">
+                <h3 class="text-xs font-black text-gray-400 uppercase tracking-widest flex items-center gap-2">
+                    <i class="fas fa-receipt text-primary"></i> Thông tin đơn hàng
+                </h3>
+                <div class="order-summary-grid grid grid-cols-2 gap-4 bg-gray-50 p-6 rounded-2xl border border-border">
+                  <div class="summary-item space-y-1">
+                    <span class="text-[10px] font-black text-gray-400 uppercase block">Mã đơn hàng:</span>
+                    <span class="text-sm font-bold text-gray-800" id="refund-order-id"></span>
+                  </div>
+                  <div class="summary-item space-y-1 text-right">
+                    <span class="text-[10px] font-black text-gray-400 uppercase block">Tổng tiền:</span>
+                    <span class="text-xl font-black text-primary tracking-tighter" id="refund-order-total"></span>
+                  </div>
+                  <div class="summary-item space-y-1">
+                    <span class="text-[10px] font-black text-gray-400 uppercase block">Đã thanh toán:</span>
+                    <span class="text-sm font-bold text-blue-600 flex items-center gap-2"><i class="fas fa-credit-card"></i> VNPay</span>
+                  </div>
+                  <div class="summary-item space-y-1 text-right">
+                    <span class="text-[10px] font-black text-gray-400 uppercase block">Trạng thái:</span>
+                    <span class="text-[10px] font-black px-2 py-0.5 bg-green-100 text-green-700 rounded-md uppercase tracking-widest">Đã thanh toán</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Refund Form -->
+              <form id="refund-form" class="refund-form space-y-8">
+                <div class="form-section space-y-6">
+                  <h3 class="text-xs font-black text-gray-400 uppercase tracking-widest flex items-center gap-2">
+                      <i class="fas fa-undo-alt text-primary"></i> Thông tin hoàn tiền
+                  </h3>
+                  
+                  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div class="form-group space-y-2">
+                        <label for="refund-type" class="text-xs font-bold text-gray-500 uppercase tracking-widest ml-1">Loại hoàn tiền:</label>
+                        <select id="refund-type" name="refundType" required class="w-full p-3 bg-gray-50 border border-border rounded-xl outline-none focus:border-primary font-bold text-sm text-gray-600">
+                          <option value="full">Hoàn tiền toàn bộ</option>
+                          <option value="partial">Hoàn tiền một phần</option>
+                        </select>
+                      </div>
+
+                      <div class="form-group space-y-2 hidden" id="partial-amount-group">
+                        <label for="refund-amount" class="text-xs font-bold text-gray-500 uppercase tracking-widest ml-1">Số tiền hoàn:</label>
+                        <div class="relative">
+                          <input type="number" id="refund-amount" name="refundAmount" placeholder="Nhập số tiền..." min="1000" class="w-full pl-4 pr-12 py-3 bg-gray-50 border border-border rounded-xl outline-none focus:border-primary font-black text-sm text-primary tracking-tighter">
+                          <span class="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-black text-gray-400 uppercase">vnđ</span>
+                        </div>
+                        <small class="text-[10px] text-gray-400 italic block ml-1">Tối thiểu 1.000đ</small>
+                      </div>
+                  </div>
+                </div>
+
+                <div class="form-section space-y-6">
+                  <h3 class="text-xs font-black text-gray-400 uppercase tracking-widest flex items-center gap-2">
+                      <i class="fas fa-comment-alt text-primary"></i> Lý do hủy đơn hàng
+                  </h3>
+                  
+                  <div class="space-y-4">
+                      <div class="form-group space-y-2">
+                        <label for="cancel-reason-select" class="text-xs font-bold text-gray-500 uppercase tracking-widest ml-1">Chọn lý do:</label>
+                        <select id="cancel-reason-select" name="cancelReason" required class="w-full p-3 bg-gray-50 border border-border rounded-xl outline-none focus:border-primary font-bold text-sm text-gray-600">
+                          <option value="">-- Chọn lý do hủy --</option>
+                          <option value="changed-mind">Thay đổi ý định mua hàng</option>
+                          <option value="found-better-price">Tìm được giá tốt hơn ở nơi khác</option>
+                          <option value="delivery-too-long">Thời gian giao hàng quá lâu</option>
+                          <option value="wrong-product">Đặt nhầm sản phẩm</option>
+                          <option value="financial-issue">Vấn đề tài chính</option>
+                          <option value="other">Lý do khác</option>
+                        </select>
+                      </div>
+
+                      <div class="form-group space-y-2 hidden" id="other-reason-group">
+                        <label for="other-reason-detail" class="text-xs font-bold text-gray-500 uppercase tracking-widest ml-1">Chi tiết lý do:</label>
+                        <textarea id="other-reason-detail" name="otherReasonDetail" placeholder="Vui lòng mô tả chi tiết lý do hủy đơn hàng..." rows="3" maxlength="500" class="w-full p-4 bg-gray-50 border border-border rounded-2xl outline-none focus:border-primary text-sm resize-none"></textarea>
+                        <small class="text-[10px] text-gray-400 italic block text-right">0/500 ký tự</small>
+                      </div>
+                  </div>
+                </div>
+
+                <!-- Bank Info -->
+                <div class="bank-info-section space-y-6 pt-6 border-t border-border">
+                    <h3 class="text-xs font-black text-gray-400 uppercase tracking-widest flex items-center gap-2">
+                        <i class="fas fa-university text-primary"></i> Thông tin tài khoản nhận tiền
+                    </h3>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="form-group space-y-2">
+                          <label for="bank-account" class="text-xs font-bold text-gray-500 uppercase tracking-widest ml-1">Số tài khoản <span class="text-red-500">*</span></label>
+                          <input type="text" id="bank-account" name="bankAccount" placeholder="Nhập số tài khoản..." pattern="[0-9]{8,20}" maxlength="20" required class="w-full p-3 bg-gray-50 border border-border rounded-xl outline-none focus:border-primary font-bold text-sm tracking-widest">
+                          <small class="text-[10px] text-gray-400 italic block ml-1">Chỉ nhập số, từ 8-20 chữ số</small>
+                        </div>
+
+                        <div class="form-group space-y-2">
+                          <label for="bank-name" class="text-xs font-bold text-gray-500 uppercase tracking-widest ml-1">Ngân hàng <span class="text-red-500">*</span></label>
+                          <select id="bank-name" name="bankName" required class="w-full p-3 bg-gray-50 border border-border rounded-xl outline-none focus:border-primary font-bold text-sm text-gray-600">
+                            <option value="">-- Chọn ngân hàng --</option>
+                            <option value="Vietcombank">Vietcombank (VCB)</option>
+                            <option value="VietinBank">VietinBank (CTG)</option>
+                            <option value="BIDV">BIDV</option>
+                            <option value="Agribank">Agribank</option>
+                            <option value="Techcombank">Techcombank (TCB)</option>
+                            <option value="ACB">ACB</option>
+                            <option value="MBBank">MBBank (MB)</option>
+                            <option value="TPBank">TPBank</option>
+                            <option value="SHB">SHB</option>
+                            <option value="VPBank">VPBank</option>
+                            <option value="other">Ngân hàng khác</option>
+                          </select>
+                        </div>
+
+                        <div class="form-group space-y-2 hidden" id="other-bank-group">
+                          <label for="other-bank-name" class="text-xs font-bold text-gray-500 uppercase tracking-widest ml-1">Tên ngân hàng khác</label>
+                          <input type="text" id="other-bank-name" placeholder="Nhập tên ngân hàng..." maxlength="100" class="w-full p-3 bg-gray-50 border border-border rounded-xl outline-none focus:border-primary text-sm">
+                        </div>
+
+                        <div class="form-group space-y-2">
+                          <label for="account-holder" class="text-xs font-bold text-gray-500 uppercase tracking-widest ml-1">Tên chủ tài khoản <span class="text-red-500">*</span></label>
+                          <input type="text" id="account-holder" name="accountHolder" placeholder="NHẬP TÊN KHÔNG DẤU..." maxlength="100" required class="w-full p-3 bg-gray-50 border border-border rounded-xl outline-none focus:border-primary font-black text-sm uppercase tracking-widest">
+                          <small class="text-[10px] text-gray-400 italic block ml-1">Phải trùng với tên trên thẻ/sổ</small>
+                        </div>
+
+                        <div class="form-group space-y-2">
+                          <label for="bank-branch" class="text-xs font-bold text-gray-500 uppercase tracking-widest ml-1">Chi nhánh (tùy chọn)</label>
+                          <input type="text" id="bank-branch" name="bankBranch" placeholder="Ví dụ: Quận 1, TP.HCM" maxlength="200" class="w-full p-3 bg-gray-50 border border-border rounded-xl outline-none focus:border-primary text-sm">
+                        </div>
                     </div>
                 </div>
-                <div class="modal-footer">
-                    <button id="confirm-cancel-btn" class="btn confirm-btn">Xác nhận</button>
-                    <button id="cancel-cancel-btn" class="btn cancel-btn">Hủy</button>
+
+                <div class="form-section space-y-4">
+                  <div class="form-group flex items-start gap-3 bg-yellow-50 p-4 rounded-xl border border-yellow-100">
+                    <input type="checkbox" id="confirm-bank-info" name="confirmBankInfo" required class="mt-1 w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary">
+                    <label for="confirm-bank-info" class="text-xs font-medium text-yellow-800 leading-relaxed">Tôi xác nhận thông tin tài khoản nhận tiền hoàn trả là chính xác</label>
+                  </div>
+                  
+                  <div class="form-group flex items-start gap-3 bg-yellow-50 p-4 rounded-xl border border-yellow-100">
+                    <input type="checkbox" id="agree-terms" name="agreeTerms" required class="mt-1 w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary">
+                    <label for="agree-terms" class="text-xs font-medium text-yellow-800 leading-relaxed">Tôi đồng ý với chính sách hoàn tiền và hiểu rằng việc hủy đơn này không thể hoàn tác</label>
+                  </div>
                 </div>
+              </form>
             </div>
-        </div>
-    </div>
-<!-- ✅ Thêm các element bị thiếu vào form hoàn tiền -->
 
-<!-- Thay thế modal vnpay-refund-modal bằng code sau: -->
+            <div class="refund-modal-footer p-8 bg-gray-50 border-t border-border flex flex-col md:flex-row items-center justify-between gap-6">
+              <div class="footer-summary text-center md:text-left space-y-2">
+                <div class="total-refund flex items-center gap-3">
+                  <span class="text-xs font-black text-gray-400 uppercase tracking-widest">Số tiền sẽ hoàn:</span>
+                  <span class="text-2xl font-black text-primary tracking-tighter" id="total-refund-display">0đ</span>
+                </div>
+                <div class="estimated-time text-[10px] font-bold text-gray-400 uppercase tracking-widest flex items-center gap-2 justify-center md:justify-start">
+                  <i class="fas fa-clock text-primary"></i>
+                  <span>Dự kiến hoàn: 1-3 ngày làm việc</span>
+                </div>
+              </div>
 
-<div id="vnpay-refund-modal" class="modal">
-  <div class="modal-content refund-modal-content">
-    <!-- ✅ THÊM HEADER -->
-    <div class="refund-modal-header">
-      <div class="refund-icon">
-        <i class="fas fa-exclamation-triangle"></i>
-      </div>
-      <h2>Xác nhận hủy đơn hàng VNPay</h2>
-      <span class="close-modal" onclick="closeRefundModal()">&times;</span>
-    </div>
-
-    <!-- Body -->
-    <div class="refund-modal-body">
-      <!-- Thông tin đơn hàng -->
-      <div class="order-summary-section">
-        <h3><i class="fas fa-receipt"></i> Thông tin đơn hàng</h3>
-        <div class="order-summary-grid">
-          <div class="summary-item">
-            <span class="label">Mã đơn hàng:</span>
-            <span class="value" id="refund-order-id">#12345</span>
-          </div>
-          <div class="summary-item">
-            <span class="label">Tổng tiền:</span>
-            <span class="value price" id="refund-order-total">450.000đ</span>
-          </div>
-          <div class="summary-item">
-            <span class="label">Đã thanh toán:</span>
-            <span class="value payment-method">VNPay</span>
-          </div>
-          <div class="summary-item">
-            <span class="label">Trạng thái:</span>
-            <span class="value status-paid">Đã thanh toán</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- Form hoàn tiền -->
-      <form id="refund-form" class="refund-form">
-        <!-- Loại hoàn tiền -->
-        <div class="form-section">
-          <h3><i class="fas fa-undo-alt"></i> Thông tin hoàn tiền</h3>
-          
-          <div class="form-group">
-            <label for="refund-type">Loại hoàn tiền:</label>
-            <select id="refund-type" name="refundType" required>
-              <option value="full">Hoàn tiền toàn bộ</option>
-              <option value="partial">Hoàn tiền một phần</option>
-            </select>
-          </div>
-
-          <div class="form-group" id="partial-amount-group" style="display: none;">
-            <label for="refund-amount">Số tiền hoàn:</label>
-            <div class="amount-input-group">
-              <input type="number" id="refund-amount" name="refundAmount" 
-                     placeholder="Nhập số tiền cần hoàn" min="1000">
-              <span class="currency">đ</span>
+              <div class="action-buttons flex gap-3 w-full md:w-auto">
+                <button type="button" class="flex-1 md:flex-none bg-white border-2 border-gray-100 hover:border-gray-200 text-gray-500 px-6 py-3 rounded-xl font-bold text-sm transition-all" onclick="closeRefundModal()">
+                  <i class="fas fa-times mr-1"></i> Hủy bỏ
+                </button>
+                <button type="button" class="flex-1 md:flex-none bg-red-600 disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed hover:bg-red-700 text-white px-8 py-3 rounded-xl font-black text-sm shadow-lg shadow-red-200 transition-all active:scale-95 uppercase tracking-widest" id="confirm-refund-btn" disabled>
+                  <i class="fas fa-check mr-1"></i> Xác nhận & Hoàn tiền
+                </button>
+              </div>
             </div>
-            <small class="help-text">Tối thiểu 1.000đ</small>
           </div>
         </div>
-
-        <!-- ✅ SỬA ID: cancel-reason-select thay vì cancel-reason -->
-        <div class="form-section">
-          <h3><i class="fas fa-comment-alt"></i> Lý do hủy đơn hàng</h3>
-          
-          <div class="form-group">
-            <label for="cancel-reason-select">Chọn lý do:</label>
-            <select id="cancel-reason-select" name="cancelReason" required>
-              <option value="">-- Chọn lý do hủy --</option>
-              <option value="changed-mind">Thay đổi ý định mua hàng</option>
-              <option value="found-better-price">Tìm được giá tốt hơn ở nơi khác</option>
-              <option value="delivery-too-long">Thời gian giao hàng quá lâu</option>
-              <option value="wrong-product">Đặt nhầm sản phẩm</option>
-              <option value="financial-issue">Vấn đề tài chính</option>
-              <option value="other">Lý do khác</option>
-            </select>
-          </div>
-
-          <div class="form-group" id="other-reason-group" style="display: none;">
-            <label for="other-reason-detail">Chi tiết lý do:</label>
-            <textarea id="other-reason-detail" name="otherReasonDetail" 
-                      placeholder="Vui lòng mô tả chi tiết lý do hủy đơn hàng..." 
-                      rows="3" maxlength="500"></textarea>
-            <small class="char-count">0/500 ký tự</small>
-          </div>
-        </div>
-
-        <!-- Xác nhận -->
-        <div class="form-section">
-          <div class="form-group">
-            <label class="checkbox-label">
-              <input type="checkbox" id="confirm-bank-info" name="confirmBankInfo" required>
-              <span class="checkmark"></span>
-              Tôi xác nhận thông tin tài khoản/thẻ nhận tiền hoàn trả là chính xác
-            </label>
-          </div>
-          
-          <div class="form-group">
-            <label class="checkbox-label">
-              <input type="checkbox" id="agree-terms" name="agreeTerms" required>
-              <span class="checkmark"></span>
-              Tôi đồng ý với chính sách hoàn tiền và hiểu rằng việc hủy đơn hàng này không thể hoàn tác
-            </label>
-          </div>
-        </div>
-      </form>
     </div>
 
-   <!-- Thay thế phần footer của modal refund -->
-<div class="refund-modal-footer">
-  <div class="footer-summary">
-    <div class="total-refund">
-      <span class="label">Số tiền sẽ hoàn:</span>
-      <span class="amount" id="total-refund-display">0đ</span>
-    </div>
-    <div class="estimated-time">
-      <i class="fas fa-clock"></i>
-      <span>Dự kiến hoàn tiền: 1-3 ngày làm việc</span>
-    </div>
-  </div>
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <script src="js/orders.js"></script>
+    <script src="js/loadHeader.js"></script>
 
-  <!-- ✅ THÊM FORM THÔNG TIN NGÂN HÀNG -->
-  <div class="bank-info-section">
-    <h3><i class="fas fa-university"></i> Thông tin tài khoản nhận hoàn tiền</h3>
-    
-    <div class="form-group">
-      <label for="bank-account">Số tài khoản <span class="required">*</span></label>
-      <input type="text" id="bank-account" name="bankAccount" 
-             placeholder="Nhập số tài khoản ngân hàng" 
-             pattern="[0-9]{8,20}" maxlength="20" required>
-      <small class="help-text">Chỉ nhập số, từ 8-20 chữ số</small>
-    </div>
+    <style>
+      /* Star rating logic overrides if needed */
+      .star-rating .star { transition: all 0.2s ease; }
+      .star-rating .star.filled { color: #f59e0b; content: '★'; }
+      .star-rating .star:hover { transform: scale(1.2); color: #f59e0b; }
+      
+      @media print {
+          .pt-14, #load-header, .filter-orders, .modal-actions, .chat-floating-btn { display: none !important; }
+          body { background: white !important; padding-top: 0 !important; }
+          .container { max-width: 100% !important; padding: 0 !important; }
+          .modal { position: relative !important; display: block !important; opacity: 1 !important; visibility: visible !important; }
+          .modal-content { box-shadow: none !important; border: none !important; max-width: 100% !important; max-height: none !important; overflow: visible !important; }
+      }
+    </style>
 
-    <div class="form-group">
-      <label for="bank-name">Tên ngân hàng <span class="required">*</span></label>
-      <select id="bank-name" name="bankName" required>
-        <option value="">-- Chọn ngân hàng --</option>
-        <option value="Vietcombank">Vietcombank (VCB)</option>
-        <option value="VietinBank">VietinBank (CTG)</option>
-        <option value="BIDV">BIDV</option>
-        <option value="Agribank">Agribank</option>
-        <option value="Techcombank">Techcombank (TCB)</option>
-        <option value="ACB">ACB</option>
-        <option value="MBBank">MBBank (MB)</option>
-        <option value="TPBank">TPBank</option>
-        <option value="SHB">SHB</option>
-        <option value="VPBank">VPBank</option>
-        <option value="other">Ngân hàng khác</option>
-      </select>
-    </div>
+    <script>
+    // ✅ DEBUG & CORE HANDLERS
+    document.addEventListener('DOMContentLoaded', function () {
+      const headerBack = document.getElementById('header-back-btn');
+      if (headerBack) {
+        headerBack.addEventListener('click', function (e) {
+          e.preventDefault();
+          window.location.href = 'index.html';
+        });
+      }
 
-    <div class="form-group" id="other-bank-group" style="display: none;">
-      <label for="other-bank-name">Tên ngân hàng khác</label>
-      <input type="text" id="other-bank-name" placeholder="Nhập tên ngân hàng" maxlength="100">
-    </div>
+      // Star rating interaction
+      const stars = document.querySelectorAll('#review-stars .star');
+      const ratingInput = document.getElementById('review-rating');
+      if(stars && ratingInput) {
+          stars.forEach(star => {
+              star.addEventListener('click', function() {
+                  const val = this.getAttribute('data-value');
+                  ratingInput.value = val;
+                  stars.forEach(s => {
+                      if(parseInt(s.getAttribute('data-value')) <= val) {
+                          s.innerHTML = '★';
+                          s.classList.add('text-yellow-400');
+                          s.classList.remove('text-gray-200');
+                      } else {
+                          s.innerHTML = '☆';
+                          s.classList.remove('text-yellow-400');
+                          s.classList.add('text-gray-200');
+                      }
+                  });
+              });
+          });
+      }
+    });
 
-    <div class="form-group">
-      <label for="account-holder">Tên chủ tài khoản <span class="required">*</span></label>
-      <input type="text" id="account-holder" name="accountHolder" 
-             placeholder="Nhập đúng tên chủ tài khoản" 
-             maxlength="100" required>
-      <small class="help-text">Phải trùng với tên trên thẻ/sổ tiết kiệm</small>
-    </div>
+    function closeRefundModal() {
+        const modal = document.getElementById('vnpay-refund-modal');
+        if (modal) modal.style.display = 'none';
+    }
 
-    <div class="form-group">
-      <label for="bank-branch">Chi nhánh (tùy chọn)</label>
-      <input type="text" id="bank-branch" name="bankBranch" 
-             placeholder="Ví dụ: Chi nhánh Quận 1, TP.HCM" maxlength="200">
-    </div>
-  </div>
-
-  <div class="action-buttons">
-    <button type="button" class="btn btn-secondary" onclick="closeRefundModal()">
-      <i class="fas fa-times"></i> Hủy bỏ
-    </button>
-    <button type="button" class="btn btn-danger" id="confirm-refund-btn" disabled>
-      <i class="fas fa-check"></i> Xác nhận hủy đơn & hoàn tiền
-    </button>
-  </div>
-</div>
+    function closeAddressChangeModal() {
+        const modal = document.getElementById('address-change-confirmation-modal');
+        if (modal) modal.style.display = 'none';
+    }
+    </script>
+</body>
   </div>
 </div>
     <!-- Thêm Leaflet JS -->

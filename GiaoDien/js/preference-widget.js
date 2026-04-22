@@ -1,12 +1,33 @@
-/**
- * =====================================================
- * PREFERENCE WIDGET - Form Sở thích Khách hàng
- * =====================================================
- * Hiển thị form khảo sát sở thích để khách hàng nhận mã Freeship
- */
-
 (function() {
   'use strict';
+
+  // Inject Styles
+  if (!document.getElementById('preference-widget-styles')) {
+    const style = document.createElement('style');
+    style.id = 'preference-widget-styles';
+    style.textContent = `
+      .preference-floating-btn { position: fixed; bottom: 100px; right: 30px; background: linear-gradient(135deg, #C0392B 0%, #e74c3c 100%); color: white; padding: 15px 20px; border-radius: 50px; box-shadow: 0 10px 30px rgba(192, 57, 43, 0.3); cursor: pointer; z-index: 9998; opacity: 0; transform: translateY(20px); transition: all 0.4s; }
+      .preference-floating-btn.show { opacity: 1; transform: translateY(0); }
+      .preference-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 9999; opacity: 0; pointer-events: none; transition: opacity 0.3s; }
+      .preference-modal.show { opacity: 1; pointer-events: all; }
+      .preference-modal-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(5px); }
+      .preference-modal-content { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.9); width: 90%; max-width: 700px; max-height: 90vh; background: white; border-radius: 24px; overflow: hidden; display: flex; flex-direction: column; transition: transform 0.3s; }
+      .preference-modal.show .preference-modal-content { transform: translate(-50%, -50%) scale(1); }
+      .preference-header { padding: 40px 30px; text-align: center; background: linear-gradient(135deg, #C0392B 0%, #e74c3c 100%); color: white; }
+      .preference-form { flex: 1; overflow-y: auto; padding: 30px; }
+      .question-block { margin-bottom: 24px; padding-bottom: 24px; border-bottom: 1px solid #eee; }
+      .question-title { font-size: 18px; font-weight: 700; margin-bottom: 16px; color: #1a1a1a; }
+      .option-item { display: flex; align-items: center; padding: 14px; border: 1px solid #eee; border-radius: 12px; cursor: pointer; margin-bottom: 8px; transition: all 0.2s; }
+      .option-item:hover { border-color: #C0392B; background: #fff5f5; }
+      .preference-submit-btn { width: 100%; padding: 16px; background: #C0392B; color: white; border: none; border-radius: 30px; font-weight: 700; cursor: pointer; }
+      .preference-success-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 10000; display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 0.3s; }
+      .preference-success-modal.show { opacity: 1; pointer-events: all; }
+      .success-content { background: white; padding: 40px; border-radius: 24px; max-width: 450px; text-align: center; }
+      .coupon-box { background: #C0392B; color: white; padding: 24px; border-radius: 16px; margin: 24px 0; }
+      .coupon-code { font-size: 28px; font-weight: 800; letter-spacing: 2px; }
+    `;
+    document.head.appendChild(style);
+  }
 
   const API_BASE = `${window.API_CONFIG.BASE_URL}/api`;
   let currentForm = null;

@@ -1,111 +1,167 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="vi">
 <head>
 	<meta charset="utf-8" />
 	<meta name="viewport" content="width=device-width, initial-scale=1" />
 	<title>Ưu đãi - Giamgia5</title>
-	<link rel="stylesheet" href="styles/header.css" />
-    <link rel="stylesheet" href="styles/giamgia5.css" />
 	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-	<!-- Include shared voucher styles so promotions look like giamgia page -->
-	<link rel="stylesheet" href="styles/giamgia.css" />
-    <link rel="stylesheet" href="styles/recommend-widget.css" />
+    <link rel="icon" href="favicon.ico" type="image/x-icon" />
+
+    <!-- Tailwind CSS CDN & Config -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="js/tailwind-config.js"></script>
     
-
-	<!-- shared header component -->
-	<div id="load-header"></div>
-
+    <!-- API Configuration - LOAD EARLY -->
+    <script src="js/config.js"></script>
+    <script src="js/api-patcher.js"></script>
 </head>
-<body>
 
-	<header class="hero">
-		<div class="hero-inner">
-			<img src="img/giamgia33/anh1.png" alt="banner" class="hero-banner" />
-			<div class="hero-badge">GIẢM ĐẾN <strong>50%</strong></div>
-		</div>
-	</header>
+<body class="bg-bg pt-14 font-body antialiased">
+    <div id="load-header"></div>
 
-	<main class="container">
-		<section class="offers">
-			<h2>ƯU ĐÃI XỊN XÒ</h2>
-					<div class="offer-cards" id="offer-cards">
-						</div>
-		</section>
+    <header class="hero relative w-full h-auto">
+        <div class="hero-inner relative container max-w-[1300px] mx-auto px-4 py-8">
+            <div class="rounded-[2.5rem] overflow-hidden shadow-2xl border-4 border-white transform hover:scale-[1.01] transition-transform duration-700 relative">
+                <img src="img/giamgia33/anh1.png" alt="banner" class="hero-banner w-full h-auto" />
+                <div class="hero-badge absolute top-8 right-8 bg-primary text-white p-6 rounded-3xl shadow-2xl flex flex-col items-center justify-center animate-bounce">
+                    <span class="text-[10px] font-black uppercase tracking-widest opacity-70">GIẢM ĐẾN</span>
+                    <strong class="text-4xl font-black tracking-tighter">50%</strong>
+                </div>
+            </div>
+        </div>
+    </header>
 
-		<section class="products-section">
-			<div class="section-head-text">
-				<h3>SẢN PHẨM MỚI</h3>
-			</div>
+    <main class="container max-w-[1300px] mx-auto px-4 pb-20 space-y-24">
+        <!-- Offers Section -->
+        <section class="offers space-y-10">
+            <div class="flex items-center gap-4 border-b border-border pb-4">
+                <div class="w-10 h-10 bg-primary text-white rounded-xl flex items-center justify-center shadow-lg shadow-primary/20">
+                    <i class="fas fa-gift text-xs"></i>
+                </div>
+                <h2 class="text-2xl font-black text-gray-800 uppercase tracking-tighter">ƯU ĐÃI XỊN XÒ</h2>
+            </div>
+            <div class="offer-cards grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8" id="offer-cards">
+                <!-- Content loaded from API via giamgia5.js -->
+            </div>
+        </section>
 
-			<nav class="product-tabs" data-controls="carousel-new">
-			<!-- ✅ FIX: Sử dụng endpoint /api/product/new thay vì /api/product/category-current-year/all -->
-			<button type="button" class="tab-btn active" data-api-endpoint="/api/product/new">Sách Mới</button>
+        <!-- New Products Section -->
+        <section class="products-section space-y-10">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-6 border-b border-border pb-4">
+                <div class="section-head-text space-y-1">
+                    <h3 class="text-2xl font-black text-gray-800 uppercase tracking-tighter">SẢN PHẨM <span class="text-primary">MỚI</span></h3>
+                    <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest italic">Cập nhật xu hướng đọc sách mỗi ngày</p>
+                </div>
+                <nav class="product-tabs flex gap-2" data-controls="carousel-new">
+                    <button type="button" class="tab-btn px-6 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all bg-primary text-white shadow-lg shadow-primary/20" data-api-endpoint="/api/product/new">Sách Mới</button>
+                </nav>
+            </div>
 
-			<div class="carousel-container">
-				<div class="carousel-viewport">
-					<div class="carousel" id="carousel-new">
-						</div>
-				</div>
-				<button class="carousel-control prev" id="prev-new" aria-label="prev">‹</button>
-				<button class="carousel-control next" id="next-new" aria-label="next">›</button>
-			</div>
-			<div class="section-footer">
-				<button class="view-more-btn">Xem Thêm</button>
-			</div>
-		</section>
+            <div class="carousel-container relative group">
+                <div class="carousel-viewport overflow-hidden rounded-3xl">
+                    <div class="carousel flex transition-transform duration-500 ease-in-out" id="carousel-new">
+                        <!-- Content loaded from API -->
+                    </div>
+                </div>
+                <button class="carousel-control prev absolute -left-6 top-1/2 -translate-y-1/2 w-12 h-12 bg-white shadow-xl rounded-full flex items-center justify-center text-gray-400 hover:text-primary hover:scale-110 opacity-0 group-hover:opacity-100 transition-all z-10" id="prev-new" aria-label="prev">
+                    <i class="fas fa-chevron-left text-sm"></i>
+                </button>
+                <button class="carousel-control next absolute -right-6 top-1/2 -translate-y-1/2 w-12 h-12 bg-white shadow-xl rounded-full flex items-center justify-center text-gray-400 hover:text-primary hover:scale-110 opacity-0 group-hover:opacity-100 transition-all z-10" id="next-new" aria-label="next">
+                    <i class="fas fa-chevron-right text-sm"></i>
+                </button>
+            </div>
+            
+            <div class="section-footer flex justify-center pt-8">
+                <button class="view-more-btn bg-white border-2 border-gray-100 hover:border-gray-200 text-gray-400 hover:text-gray-800 px-10 py-3 rounded-2xl font-black text-xs uppercase tracking-[0.2em] transition-all active:scale-95 shadow-sm">Xem Thêm</button>
+            </div>
+        </section>
 
-		<section class="products-section">
-			<img src="img/giamgia33/anh3.png" alt="Sách Quản Trị Kinh Doanh" class="section-banner" />
+        <!-- Biz Section -->
+        <section class="products-section space-y-12">
+            <div class="rounded-3xl overflow-hidden shadow-xl border border-border">
+                <img src="img/giamgia33/anh3.png" alt="Sách Quản Trị Kinh Doanh" class="section-banner w-full h-auto" />
+            </div>
 
-			<nav class="product-tabs" data-controls="grid-biz">
-				<button type="button" class="tab-btn active" data-api-endpoint="/api/product/category/1">Quốc Tế Lược Dịch - Sách Bán Chạy</button>
-				<button type="button" class="tab-btn" data-api-endpoint="/api/product/category/2">Quản Trị Lãnh Đạo</button>
-				<button type="button" class="tab-btn" data-api-endpoint="/api/product/category/3">Phân Tích Kinh Tế</button>
-			</nav>
+            <div class="space-y-10">
+                <nav class="product-tabs flex flex-wrap gap-3 border-b border-border pb-6" data-controls="grid-biz">
+                    <button type="button" class="tab-btn px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all bg-primary text-white shadow-lg shadow-primary/20 active" data-api-endpoint="/api/product/category/1">Quốc Tế Lược Dịch</button>
+                    <button type="button" class="tab-btn px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all bg-white border border-border text-gray-400 hover:text-gray-600 hover:bg-gray-50" data-api-endpoint="/api/product/category/2">Quản Trị Lãnh Đạo</button>
+                    <button type="button" class="tab-btn px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all bg-white border border-border text-gray-400 hover:text-gray-600 hover:bg-gray-50" data-api-endpoint="/api/product/category/3">Phân Tích Kinh Tế</button>
+                </nav>
 
-			<div class="product-grid" id="grid-biz">
-				</div>
+                <div class="product-grid grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6" id="grid-biz">
+                    <!-- Content loaded from API -->
+                </div>
 
-			<div class="section-footer">
-				<button class="view-more-btn">Xem Thêm</button>
-			</div>
-		</section>
+                <div class="section-footer flex justify-center pt-8">
+                    <button class="view-more-btn bg-white border-2 border-gray-100 hover:border-gray-200 text-gray-400 hover:text-gray-800 px-10 py-3 rounded-2xl font-black text-xs uppercase tracking-[0.2em] transition-all active:scale-95 shadow-sm">Xem Thêm</button>
+                </div>
+            </div>
+        </section>
 
-		<section class="products-section">
-			<nav class="product-tabs" data-controls="grid-other">
-				<button type="button" class="tab-btn active" data-api-endpoint="/api/product/category/4">Năm Dài Kinh Tế</button>
-				<button type="button" class="tab-btn" data-api-endpoint="/api/product/category/5">Nhân vật - Bài Học Kinh doanh</button>
-				<button type="button" class="tab-btn" data-api-endpoint="/api/product/category/6">Marketing - Bán Hàng</button>
-			</nav>
+        <!-- Other Section -->
+        <section class="products-section space-y-10">
+            <nav class="product-tabs flex flex-wrap gap-3 border-b border-border pb-6" data-controls="grid-other">
+                <button type="button" class="tab-btn px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all bg-primary text-white shadow-lg shadow-primary/20 active" data-api-endpoint="/api/product/category/4">Năm Dài Kinh Tế</button>
+                <button type="button" class="tab-btn px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all bg-white border border-border text-gray-400 hover:text-gray-600 hover:bg-gray-50" data-api-endpoint="/api/product/category/5">Bài Học Kinh doanh</button>
+                <button type="button" class="tab-btn px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all bg-white border border-border text-gray-400 hover:text-gray-600 hover:bg-gray-50" data-api-endpoint="/api/product/category/6">Marketing - Bán Hàng</button>
+            </nav>
 
-			<div class="product-grid" id="grid-other">
-				</div>
-			
-			<div class="section-footer">
-				<button class="view-more-btn">Xem Thêm</button>
-			</div>
-		</section>
+            <div class="product-grid grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6" id="grid-other">
+                <!-- Content loaded from API -->
+            </div>
+            
+            <div class="section-footer flex justify-center pt-8">
+                <button class="view-more-btn bg-white border-2 border-gray-100 hover:border-gray-200 text-gray-400 hover:text-gray-800 px-10 py-3 rounded-2xl font-black text-xs uppercase tracking-[0.2em] transition-all active:scale-95 shadow-sm">Xem Thêm</button>
+            </div>
+        </section>
 
+        <section class="promo-cta rounded-[2.5rem] overflow-hidden shadow-2xl border-4 border-white transform hover:scale-[1.01] transition-transform duration-700">
+            <img src="img/giamgia33/anh1.png" alt="promo" class="w-full h-auto" />
+        </section>
+    </main>
 
-		<section class="promo-cta">
-			<img src="img/giamgia33/anh1.png" alt="promo"/>
-		</section>
+    <!-- Recommend widget mount point -->
+    <div id="recommend-widget-container" class="container max-w-[1300px] mx-auto px-4 py-20 border-t border-border"></div>
 
-	</main>
+    <div id="load-footer"></div>
 
-	<!-- Recommend widget mount point -->
-	<div id="recommend-widget-container"></div>
+    <script src="js/config.js"></script>
+    <script src="js/api-patcher.js"></script>
+    <script src="js/giamgia5.js"></script>
+    <script src="js/loadHeader.js"></script>
+    <script src="js/loadFooter.js"></script>
+    <script src="js/recommend-widget.js"></script>
 
-	
-  <!-- API Configuration - MUST load first! -->
-  <script src="js/config.js"></script>
-  <script src="js/api-patcher.js"></script>
-
-<script src="js/giamgia5.js"></script>
-	<script src="js/loadHeader.js"></script>
-	<!-- Footer placeholder -->
-	<div id="load-footer"></div>
-	<script src="js/loadFooter.js"></script>
-	<script src="js/recommend-widget.js"></script>
+    <style>
+        /* Shared Styles for JS-rendered elements */
+        .offer-card {
+            @apply bg-white p-8 rounded-3xl border border-border shadow-sm flex flex-col gap-4 relative transition-all duration-300 hover:shadow-xl hover:-translate-y-2;
+        }
+        .product-card {
+            @apply bg-white rounded-3xl border border-border shadow-sm overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-2 cursor-pointer flex-shrink-0 w-[200px];
+        }
+        .product-grid .product-card {
+            @apply w-full;
+        }
+        .product-card img {
+            @apply w-full aspect-[3/4] object-cover transition-transform duration-700;
+        }
+        .product-card:hover img {
+            @apply scale-110;
+        }
+        .card-body {
+            @apply p-4 space-y-2;
+        }
+        .card-body h3 {
+            @apply text-sm font-black text-gray-800 uppercase tracking-tighter line-clamp-2 leading-tight;
+        }
+        .product-author {
+            @apply text-[10px] font-bold text-gray-400 uppercase tracking-widest truncate;
+        }
+        .product-price {
+            @apply text-base font-black text-primary tracking-tighter;
+        }
+    </style>
 </body>
 </html>

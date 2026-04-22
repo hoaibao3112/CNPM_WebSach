@@ -4,285 +4,337 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Lịch sử hoàn tiền - BookStore</title>
-    <link rel="stylesheet" href="styles/header.css" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <link rel="stylesheet" href="styles/refund-history.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+    <link rel="icon" href="favicon.ico" type="image/x-icon" />
+
+    <!-- Tailwind CSS CDN & Config -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="js/tailwind-config.js"></script>
+    
+    <!-- API Configuration - LOAD EARLY -->
+    <script src="js/config.js"></script>
+    <script src="js/api-patcher.js"></script>
 </head>
-<body>
-    <div class="container">
+
+<body class="bg-bg pt-14 font-body antialiased">
+    <div id="load-header"></div>
+
+    <div class="container max-w-[1300px] mx-auto px-4 py-8">
         <!-- Header Section -->
-        <header class="refund-header">
-            <div class="header-content">
-                <div class="header-left">
-                    <h1><i class="fas fa-history"></i> Lịch sử hoàn tiền</h1>
-                    <p class="subtitle">Theo dõi tất cả giao dịch hoàn tiền của bạn</p>
+        <header class="refund-header mb-8 bg-white p-6 md:p-8 rounded-3xl border border-border shadow-sm">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-6">
+                <div class="space-y-2 text-center md:text-left">
+                    <h1 class="text-2xl md:text-3xl font-black text-gray-800 uppercase tracking-tighter flex items-center justify-center md:justify-start gap-3">
+                        <i class="fas fa-history text-primary"></i> Lịch sử hoàn tiền
+                    </h1>
+                    <p class="text-xs font-bold text-gray-400 uppercase tracking-widest italic">Theo dõi tất cả giao dịch hoàn tiền của bạn</p>
                 </div>
-                <div class="header-actions">
-                    <a href="orders.html" class="btn btn-outline">
-                        <i class="fas fa-arrow-left"></i> Quay lại đơn hàng
+                <div class="flex justify-center">
+                    <a href="orders.html" class="bg-white border-2 border-gray-100 hover:border-gray-200 text-gray-600 px-6 py-3 rounded-xl font-bold text-sm shadow-sm transition-all active:scale-95 flex items-center gap-2">
+                        <i class="fas fa-arrow-left text-primary"></i> Quay lại đơn hàng
                     </a>
                 </div>
             </div>
         </header>
 
-        <!-- Summary Cards removed per request -->
-
         <!-- Filters and Search -->
-        <div class="filter-section">
-            <div class="filter-controls">
-                <div class="filter-group">
-                    <label>Trạng thái:</label>
-                    <select id="status-filter" class="filter-select">
-                        <option value="all">Tất cả</option>
-                        <option value="THANH_CONG">Thành công</option>
-                        <option value="DANG_XL">Đang xử lý</option>
-                        <option value="THAT_BAI">Thất bại</option>
-                    </select>
+        <div class="filter-section bg-white p-6 md:p-8 rounded-3xl border border-border shadow-sm space-y-8 mb-8">
+            <div class="filter-controls grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div class="filter-group space-y-2">
+                    <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Trạng thái:</label>
+                    <div class="relative">
+                        <select id="status-filter" class="w-full pl-4 pr-10 py-3 bg-gray-50 border border-border rounded-xl outline-none focus:border-primary transition-all text-sm font-bold text-gray-600 appearance-none">
+                            <option value="all">Tất cả trạng thái</option>
+                            <option value="THANH_CONG">Thành công</option>
+                            <option value="DANG_XL">Đang xử lý</option>
+                            <option value="THAT_BAI">Thất bại</option>
+                        </select>
+                        <i class="fas fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none text-[10px]"></i>
+                    </div>
                 </div>
 
-                <div class="filter-group">
-                    <label>Thời gian:</label>
-                    <select id="time-filter" class="filter-select">
-                        <option value="all">Tất cả thời gian</option>
-                        <option value="7d">7 ngày qua</option>
-                        <option value="30d">30 ngày qua</option>
-                        <option value="3m">3 tháng qua</option>
-                        <option value="6m">6 tháng qua</option>
-                        <option value="1y">1 năm qua</option>
-                    </select>
+                <div class="filter-group space-y-2">
+                    <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Thời gian:</label>
+                    <div class="relative">
+                        <select id="time-filter" class="w-full pl-4 pr-10 py-3 bg-gray-50 border border-border rounded-xl outline-none focus:border-primary transition-all text-sm font-bold text-gray-600 appearance-none">
+                            <option value="all">Tất cả thời gian</option>
+                            <option value="7d">7 ngày qua</option>
+                            <option value="30d">30 ngày qua</option>
+                            <option value="3m">3 tháng qua</option>
+                            <option value="6m">6 tháng qua</option>
+                            <option value="1y">1 năm qua</option>
+                        </select>
+                        <i class="fas fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none text-[10px]"></i>
+                    </div>
                 </div>
 
-                <div class="filter-group">
-                    <label>Số tiền:</label>
-                    <select id="amount-filter" class="filter-select">
-                        <option value="all">Tất cả</option>
-                        <option value="0-100k">Dưới 100.000đ</option>
-                        <option value="100k-500k">100.000đ - 500.000đ</option>
-                        <option value="500k-1m">500.000đ - 1.000.000đ</option>
-                        <option value="1m+">Trên 1.000.000đ</option>
-                    </select>
+                <div class="filter-group space-y-2">
+                    <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Số tiền:</label>
+                    <div class="relative">
+                        <select id="amount-filter" class="w-full pl-4 pr-10 py-3 bg-gray-50 border border-border rounded-xl outline-none focus:border-primary transition-all text-sm font-bold text-gray-600 appearance-none">
+                            <option value="all">Tất cả mức giá</option>
+                            <option value="0-100k">Dưới 100.000đ</option>
+                            <option value="100k-500k">100.000đ - 500.000đ</option>
+                            <option value="500k-1m">500.000đ - 1.000.000đ</option>
+                            <option value="1m+">Trên 1.000.000đ</option>
+                        </select>
+                        <i class="fas fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none text-[10px]"></i>
+                    </div>
                 </div>
 
-                <div class="search-group">
-                    <div class="search-box">
-                        <input type="text" id="search-input" placeholder="Tìm theo mã đơn hàng hoặc mã hoàn tiền...">
-                        <button id="search-btn">
-                            <i class="fas fa-search"></i>
+                <div class="search-group space-y-2">
+                    <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Tìm kiếm:</label>
+                    <div class="relative">
+                        <input type="text" id="search-input" placeholder="Mã đơn hàng..." class="w-full pl-4 pr-12 py-3 bg-gray-50 border border-border rounded-xl outline-none focus:border-primary transition-all text-sm font-bold text-gray-600">
+                        <button id="search-btn" class="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 bg-gray-800 text-white rounded-lg flex items-center justify-center hover:bg-black transition-all">
+                            <i class="fas fa-search text-xs"></i>
                         </button>
                     </div>
                 </div>
             </div>
 
-            <div class="filter-actions">
-                <button id="clear-filters-btn" class="btn btn-light">
-                    <i class="fas fa-times"></i> Xóa bộ lọc
-                </button>
-                <button id="refresh-btn" class="btn btn-outline">
-                    <i class="fas fa-sync-alt"></i> Làm mới
-                </button>
+            <div class="filter-actions flex flex-wrap items-center justify-between gap-4 pt-6 border-t border-gray-50">
+                <div class="flex gap-3">
+                    <button id="clear-filters-btn" class="bg-white border border-border hover:bg-gray-50 text-gray-400 hover:text-gray-600 px-4 py-2 rounded-xl font-bold text-xs transition-all flex items-center gap-2">
+                        <i class="fas fa-times"></i> Xóa bộ lọc
+                    </button>
+                    <button id="refresh-btn" class="bg-gray-50 hover:bg-gray-100 text-gray-600 px-4 py-2 rounded-xl font-bold text-xs transition-all flex items-center gap-2">
+                        <i class="fas fa-sync-alt"></i> Làm mới
+                    </button>
+                </div>
+                <div class="text-[10px] font-black text-gray-300 uppercase tracking-widest">
+                    Bookstore System &bull; Secure Refund Trace
+                </div>
             </div>
         </div>
 
         <!-- Refund List -->
-        <div class="refund-list-section">
-            <div class="section-header">
-                <h2>Danh sách giao dịch hoàn tiền</h2>
-                <div class="list-controls">
-                    <div class="view-toggle">
-                        <button class="view-btn active" data-view="card">
+        <div class="refund-list-section space-y-6">
+            <div class="section-header flex flex-col md:flex-row md:items-center justify-between gap-4 bg-gray-50/50 p-4 rounded-2xl">
+                <h2 class="text-sm font-black text-gray-800 uppercase tracking-widest flex items-center gap-2">
+                    <i class="fas fa-list text-primary"></i> Danh sách giao dịch
+                </h2>
+                <div class="list-controls flex items-center gap-4">
+                    <div class="view-toggle flex bg-white p-1 rounded-xl border border-border shadow-sm">
+                        <button class="view-btn w-10 h-8 flex items-center justify-center rounded-lg transition-all active:scale-95 text-gray-400 active text-primary bg-primary-light" data-view="card">
                             <i class="fas fa-th-large"></i>
                         </button>
-                        <button class="view-btn" data-view="table">
+                        <button class="view-btn w-10 h-8 flex items-center justify-center rounded-lg transition-all active:scale-95 text-gray-400" data-view="table">
                             <i class="fas fa-list"></i>
                         </button>
                     </div>
-                    <div class="sort-controls">
-                        <select id="sort-select">
+                    <div class="relative min-w-[140px]">
+                        <select id="sort-select" class="w-full pl-3 pr-8 py-2 bg-white border border-border rounded-xl text-xs font-bold text-gray-600 outline-none appearance-none">
                             <option value="date-desc">Mới nhất</option>
                             <option value="date-asc">Cũ nhất</option>
                             <option value="amount-desc">Số tiền cao</option>
                             <option value="amount-asc">Số tiền thấp</option>
                         </select>
+                        <i class="fas fa-sort-amount-down absolute right-3 top-1/2 -translate-y-1/2 text-gray-300 pointer-events-none text-[10px]"></i>
                     </div>
                 </div>
             </div>
 
             <!-- Card View -->
-            <div id="refund-list" class="refund-list card-view">
+            <div id="refund-list" class="refund-list card-view grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 min-h-[300px]">
                 <!-- Loading State -->
-                <div class="loading-state" id="loading-state">
-                    <div class="loading-spinner">
-                        <i class="fas fa-spinner fa-spin"></i>
-                        <p>Đang tải lịch sử hoàn tiền...</p>
-                    </div>
+                <div class="loading-state col-span-full flex flex-col items-center justify-center p-20 space-y-4" id="loading-state">
+                    <i class="fas fa-spinner fa-spin text-4xl text-primary"></i>
+                    <p class="text-xs font-black text-gray-400 uppercase tracking-widest animate-pulse">Đang tải lịch sử hoàn tiền...</p>
                 </div>
 
                 <!-- Empty State -->
-                <div class="empty-state" id="empty-state" style="display: none;">
-                    <div class="empty-icon">
+                <div class="empty-state col-span-full bg-white p-20 rounded-3xl border border-border shadow-sm text-center space-y-6 hidden" id="empty-state">
+                    <div class="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mx-auto text-gray-200 text-3xl">
                         <i class="fas fa-inbox"></i>
                     </div>
-                    <h3>Chưa có giao dịch hoàn tiền</h3>
-                    <p>Bạn chưa có giao dịch hoàn tiền nào. Khi bạn hủy đơn hàng VNPay, thông tin sẽ hiển thị ở đây.</p>
-                    <a href="orders.html" class="btn btn-primary">
-                        <i class="fas fa-shopping-cart"></i> Xem đơn hàng
+                    <div class="space-y-2">
+                        <h3 class="text-xl font-black text-gray-800 uppercase tracking-tighter">Chưa có giao dịch</h3>
+                        <p class="text-sm text-gray-400 italic font-medium max-w-md mx-auto leading-relaxed">Bạn chưa có giao dịch hoàn tiền nào. Khi bạn hủy đơn hàng đã thanh toán, thông tin sẽ hiển thị ở đây.</p>
+                    </div>
+                    <a href="orders.html" class="inline-block bg-primary hover:bg-primary-dark text-white px-8 py-3 rounded-xl font-black text-sm shadow-lg shadow-primary/20 transition-all active:scale-95 uppercase tracking-widest">
+                        <i class="fas fa-shopping-cart mr-2"></i> Xem đơn hàng
                     </a>
                 </div>
 
                 <!-- Error State -->
-                <div class="error-state" id="error-state" style="display: none;">
-                    <div class="error-icon">
+                <div class="error-state col-span-full bg-red-50 p-20 rounded-3xl border border-red-100 text-center space-y-6 hidden" id="error-state">
+                    <div class="w-20 h-20 bg-white rounded-full flex items-center justify-center mx-auto text-red-500 text-3xl shadow-sm">
                         <i class="fas fa-exclamation-triangle"></i>
                     </div>
-                    <h3>Có lỗi xảy ra</h3>
-                    <p id="error-message">Không thể tải danh sách hoàn tiền. Vui lòng thử lại.</p>
-                    <button class="btn btn-primary" onclick="loadRefundHistory()">
-                        <i class="fas fa-redo"></i> Thử lại
+                    <div class="space-y-2">
+                        <h3 class="text-xl font-black text-red-800 uppercase tracking-tighter">Có lỗi xảy ra</h3>
+                        <p id="error-message" class="text-sm text-red-600/70 font-medium italic">Không thể tải danh sách hoàn tiền. Vui lòng thử lại sau.</p>
+                    </div>
+                    <button class="bg-red-600 hover:bg-red-700 text-white px-8 py-3 rounded-xl font-black text-sm shadow-lg shadow-red-200 transition-all active:scale-95 uppercase tracking-widest" onclick="loadRefundHistory()">
+                        <i class="fas fa-redo mr-2"></i> Thử lại
                     </button>
                 </div>
 
-                <!-- Refund items sẽ được render ở đây -->
+                <!-- Refund items render here -->
             </div>
 
             <!-- Table View -->
-            <div class="refund-table-container" id="refund-table-container" style="display: none;">
-                <table class="refund-table">
-                    <thead>
-                        <tr>
-                            <th>Mã giao dịch</th>
-                            <th>Đơn hàng</th>
-                            <th>Ngày tạo</th>
-                            <th>Số tiền</th>
-                            <th>Lý do</th>
-                            <th>Trạng thái</th>
-                            <th>Thao tác</th>
-                        </tr>
-                    </thead>
-                    <tbody id="refund-table-body">
-                        <!-- Table rows sẽ được render ở đây -->
-                    </tbody>
-                </table>
+            <div class="refund-table-container bg-white rounded-3xl border border-border shadow-sm overflow-hidden hidden" id="refund-table-container">
+                <div class="overflow-x-auto">
+                    <table class="refund-table w-full text-left">
+                        <thead>
+                            <tr class="bg-gray-50 border-b border-border">
+                                <th class="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Mã giao dịch</th>
+                                <th class="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Đơn hàng</th>
+                                <th class="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Ngày tạo</th>
+                                <th class="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Số tiền</th>
+                                <th class="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Lý do</th>
+                                <th class="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Trạng thái</th>
+                                <th class="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest text-right">Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody id="refund-table-body" class="divide-y divide-gray-100 text-sm">
+                            <!-- Table rows render here -->
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
 
         <!-- Pagination -->
-        <div class="pagination-section" id="pagination-section" style="display: none;">
-            <div class="pagination-info">
+        <div class="pagination-section flex flex-col md:flex-row items-center justify-between gap-6 mt-12 pt-8 border-t border-border hidden" id="pagination-section">
+            <div class="pagination-info text-xs font-bold text-gray-400 uppercase tracking-widest italic">
                 <span id="pagination-info">Hiển thị <strong>1-10</strong> của <strong>50</strong> giao dịch</span>
             </div>
-            <div class="pagination-controls">
-                <button class="pagination-btn" id="prev-btn" disabled>
-                    <i class="fas fa-chevron-left"></i>
+            <div class="pagination-controls flex items-center gap-2">
+                <button class="pagination-btn w-10 h-10 flex items-center justify-center bg-white border border-border rounded-xl text-gray-400 hover:text-gray-800 disabled:opacity-30 disabled:cursor-not-allowed transition-all" id="prev-btn" disabled>
+                    <i class="fas fa-chevron-left text-xs"></i>
                 </button>
-                <div class="pagination-numbers" id="pagination-numbers">
-                    <!-- Page numbers sẽ được render ở đây -->
+                <div class="pagination-numbers flex items-center gap-2" id="pagination-numbers">
+                    <!-- Page numbers render here -->
                 </div>
-                <button class="pagination-btn" id="next-btn">
-                    <i class="fas fa-chevron-right"></i>
+                <button class="pagination-btn w-10 h-10 flex items-center justify-center bg-white border border-border rounded-xl text-gray-400 hover:text-gray-800 disabled:opacity-30 disabled:cursor-not-allowed transition-all" id="next-btn">
+                    <i class="fas fa-chevron-right text-xs"></i>
                 </button>
             </div>
         </div>
     </div>
 
     <!-- Refund Detail Modal -->
-    <div id="refund-detail-modal" class="modal">
-        <div class="modal-content refund-detail-content">
-            <div class="modal-header">
-                <h2><i class="fas fa-receipt"></i> Chi tiết hoàn tiền</h2>
-                <button class="close-btn" onclick="closeRefundDetailModal()">
+    <div id="refund-detail-modal" class="modal fixed inset-0 bg-black/60 backdrop-blur-sm z-[2000] hidden items-center justify-center p-4">
+        <div class="modal-content bg-white w-full max-w-3xl max-h-[90vh] rounded-[2rem] shadow-2xl overflow-hidden flex flex-col animate-in fade-in zoom-in duration-300">
+            <div class="modal-header p-8 bg-gray-50 border-b border-border flex items-center justify-between">
+                <div class="flex items-center gap-4">
+                    <div class="w-12 h-12 bg-primary-light text-primary rounded-2xl flex items-center justify-center text-xl shadow-inner">
+                        <i class="fas fa-receipt"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-2xl font-black text-gray-800 uppercase tracking-tighter">Chi tiết hoàn tiền</h2>
+                        <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest italic">Transaction Receipt Document</p>
+                    </div>
+                </div>
+                <button class="w-10 h-10 flex items-center justify-center bg-white border border-border text-gray-400 hover:text-red-500 rounded-full transition-all" onclick="closeRefundDetailModal()">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
 
-            <div class="modal-body">
+            <div class="modal-body p-8 overflow-y-auto flex-1 space-y-10" id="refund-detail-print-area">
                 <!-- Transaction Info -->
-                <div class="detail-section">
-                    <h3>Thông tin giao dịch</h3>
-                    <div class="detail-grid">
-                        <div class="detail-item">
-                            <label>Mã giao dịch:</label>
-                            <span id="detail-transaction-id" class="monospace"></span>
+                <div class="detail-section space-y-4">
+                    <h3 class="text-xs font-black text-gray-400 uppercase tracking-widest border-b border-gray-100 pb-2">1. Thông tin giao dịch</h3>
+                    <div class="detail-grid grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-4">
+                        <div class="detail-item space-y-1">
+                            <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest block">Mã giao dịch:</label>
+                            <span id="detail-transaction-id" class="text-sm font-black text-gray-800 tracking-tighter font-mono"></span>
                         </div>
-                        <div class="detail-item">
-                            <label>Mã đơn hàng:</label>
-                            <span id="detail-order-id" class="monospace"></span>
+                        <div class="detail-item space-y-1">
+                            <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest block">Mã đơn hàng:</label>
+                            <span id="detail-order-id" class="text-sm font-black text-gray-800 tracking-tighter font-mono"></span>
                         </div>
-                        <div class="detail-item">
-                            <label>Ngày tạo:</label>
-                            <span id="detail-created-date"></span>
+                        <div class="detail-item space-y-1">
+                            <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest block">Ngày tạo:</label>
+                            <span id="detail-created-date" class="text-sm font-bold text-gray-600"></span>
                         </div>
-                        <div class="detail-item">
-                            <label>Ngày xử lý:</label>
-                            <span id="detail-processed-date"></span>
+                        <div class="detail-item space-y-1">
+                            <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest block">Ngày xử lý:</label>
+                            <span id="detail-processed-date" class="text-sm font-bold text-gray-600 italic">---</span>
                         </div>
                     </div>
                 </div>
 
                 <!-- Amount Info -->
-                <div class="detail-section">
-                    <h3>Thông tin số tiền</h3>
-                    <div class="amount-breakdown">
-                        <div class="amount-item">
-                            <span class="amount-label">Số tiền hoàn:</span>
-                            <span class="amount-value" id="detail-refund-amount"></span>
+                <div class="detail-section space-y-4 bg-gray-50 p-6 rounded-2xl border border-border">
+                    <h3 class="text-xs font-black text-gray-400 uppercase tracking-widest border-b border-gray-200 pb-2">2. Thông tin số tiền</h3>
+                    <div class="amount-breakdown space-y-3">
+                        <div class="flex justify-between items-center text-sm">
+                            <span class="text-gray-500 font-medium">Số tiền hoàn:</span>
+                            <span class="font-bold text-gray-800" id="detail-refund-amount"></span>
                         </div>
-                        <div class="amount-item">
-                            <span class="amount-label">Phí xử lý:</span>
-                            <span class="amount-value" id="detail-fee">0đ</span>
+                        <div class="flex justify-between items-center text-sm">
+                            <span class="text-gray-500 font-medium">Phí xử lý hệ thống:</span>
+                            <span class="font-bold text-gray-400 italic" id="detail-fee">0đ</span>
                         </div>
-                        <div class="amount-item total">
-                            <span class="amount-label">Thực nhận:</span>
-                            <span class="amount-value" id="detail-net-amount"></span>
+                        <div class="border-t border-gray-200 pt-3 flex justify-between items-center">
+                            <span class="text-xs font-black text-gray-800 uppercase tracking-widest">Thực nhận (VND):</span>
+                            <span class="text-2xl font-black text-primary tracking-tighter" id="detail-net-amount"></span>
                         </div>
                     </div>
                 </div>
 
                 <!-- Status & Reason -->
-                <div class="detail-section">
-                    <h3>Chi tiết hoàn tiền</h3>
-                    <div class="detail-grid">
-                        <div class="detail-item full-width">
-                            <label>Trạng thái:</label>
-                            <span id="detail-status" class="status-badge"></span>
+                <div class="detail-section space-y-4">
+                    <h3 class="text-xs font-black text-gray-400 uppercase tracking-widest border-b border-gray-100 pb-2">3. Trạng thái & Lý do</h3>
+                    <div class="grid grid-cols-1 gap-6">
+                        <div class="detail-item space-y-2">
+                            <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest block">Trạng thái hiện tại:</label>
+                            <span id="detail-status" class="inline-block px-4 py-1 rounded-full text-[10px] font-black uppercase tracking-widest shadow-sm"></span>
                         </div>
-                        <div class="detail-item full-width">
-                            <label>Lý do hoàn tiền:</label>
-                            <p id="detail-reason" class="reason-text"></p>
+                        <div class="detail-item space-y-2">
+                            <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest block">Lý do hoàn tiền:</label>
+                            <p id="detail-reason" class="text-sm text-gray-600 italic leading-relaxed bg-gray-50 p-4 rounded-xl border border-gray-100"></p>
                         </div>
                     </div>
                 </div>
 
                 <!-- Timeline -->
-                <div class="detail-section">
-                    <h3>Lịch sử xử lý</h3>
-                    <div class="timeline" id="refund-timeline">
-                        <!-- Timeline items sẽ được render ở đây -->
+                <div class="detail-section space-y-6">
+                    <h3 class="text-xs font-black text-gray-400 uppercase tracking-widest border-b border-gray-100 pb-2">4. Tiến trình xử lý</h3>
+                    <div class="timeline space-y-4" id="refund-timeline">
+                        <!-- Timeline items render here -->
                     </div>
                 </div>
             </div>
 
-            <div class="modal-footer">
-                <button class="btn btn-outline" onclick="closeRefundDetailModal()">
+            <div class="modal-footer p-8 bg-gray-50 border-t border-border flex flex-wrap gap-3 justify-end">
+                <button class="bg-white border-2 border-gray-100 hover:border-gray-200 text-gray-500 px-6 py-3 rounded-xl font-bold text-sm transition-all flex items-center gap-2" onclick="closeRefundDetailModal()">
                     <i class="fas fa-times"></i> Đóng
                 </button>
-                <button class="btn btn-primary" onclick="printRefundDetail()">
+                <button class="bg-gray-800 hover:bg-black text-white px-6 py-3 rounded-xl font-bold text-sm transition-all flex items-center gap-2 shadow-md" onclick="printRefundDetail()">
                     <i class="fas fa-print"></i> In phiếu
                 </button>
-                <button class="btn btn-success" onclick="downloadRefundReceipt()">
-                    <i class="fas fa-download"></i> Tải về PDF
+                <button class="bg-primary hover:bg-primary-dark text-white px-8 py-3 rounded-xl font-black text-sm shadow-lg shadow-primary/20 transition-all active:scale-95 flex items-center gap-2" onclick="downloadRefundReceipt()">
+                    <i class="fas fa-download text-xs"></i> TẢI PDF
                 </button>
             </div>
         </div>
     </div>
 
-    
-  <!-- API Configuration - MUST load first! -->
-  <script src="js/config.js"></script>
-  <script src="js/api-patcher.js"></script>
+    <!-- API Configuration - MUST load first! -->
+    <script src="js/config.js"></script>
+    <script src="js/api-patcher.js"></script>
+    <script src="js/loadHeader.js"></script>
 
-  <!-- External Libraries -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <!-- External Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="js/refund-history.js"></script>
 
-  <script src="js/refund-history.js"></script>
+    <style>
+        .view-btn.active { @apply text-primary bg-primary-light border-primary; }
+        
+        @media print {
+            .pt-14, #load-header, .filter-section, .list-controls, .pagination-section, .modal-footer, .close-btn { display: none !important; }
+            body { background: white !important; padding-top: 0 !important; }
+            .container { max-width: 100% !important; padding: 0 !important; }
+            .modal { position: relative !important; display: block !important; opacity: 1 !important; visibility: visible !important; }
+            .modal-content { box-shadow: none !important; border: none !important; max-width: 100% !important; max-height: none !important; overflow: visible !important; }
+            #refund-detail-print-area { padding: 0 !important; }
+        }
+    </style>
 </body>
 </html>

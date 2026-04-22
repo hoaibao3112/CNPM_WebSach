@@ -1,76 +1,125 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="vi">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Flash Sale - Giảm Giá 50%</title>
-  <link rel="stylesheet" href="styles/giamgia2.css">
-  <link rel="stylesheet" href="styles/index.css">
-  <link rel="stylesheet" href="styles/header.css">
-  <link rel="stylesheet" href="styles/recommend-widget.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
-<body>
-   <div id="load-header"></div>
-  <!-- Banner Flash Sale -->
-  <div class="flashsale-banner">
-    <img src="img/anhnen2/anh1.jpg" alt="Flash Sale Banner" onerror="this.src='img/anhnen2/anh1.jpg';">
-  </div>
+    <link rel="icon" href="favicon.ico" type="image/x-icon" />
 
-  <!-- Nội dung khuyến mãi -->
-  <div class="flashsale-promotion">
-    <div class="promotion-item">
-      <img src="img/anhnen2/anh2.jpg" alt="Promotion Image" class="promo-image">
-      <div class="promo-text">
-        <h2>Cùng Đinh Tị Books</h2>
-        <p>Trang bị kỹ năng an toàn, con tự tin đón mùa hè vui</p>
-        <div class="promo-discount">GIẢM GIÁ LÊN ĐẾN <span>50%</span></div>
-      </div>
-    </div>
-    <div class="promo-offers">
-      <div class="offer-card">
-        <div class="offer-icon" style="font-size:28px; color:#00bbf9; padding-right:12px; display:flex; align-items:center;"><i class="fa-solid fa-truck"></i></div>
-        <div class="offer-details">
-          <p>Freeship 100% Tối đa 20K (Brand Day NCC)</p>
-          <p>HSD: 31/05/25</p>
-          <button>Lưu mã</button>
+    <!-- Tailwind CSS CDN & Config -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="js/tailwind-config.js"></script>
+    
+    <!-- API Configuration - LOAD EARLY -->
+    <script src="js/config.js"></script>
+    <script src="js/api-patcher.js"></script>
+</head>
+
+<body class="bg-bg pt-14 font-body antialiased">
+    <div id="load-header"></div>
+
+    <main class="container max-w-[1300px] mx-auto px-4 py-8 space-y-12">
+        <!-- Banner Flash Sale -->
+        <div class="flashsale-banner rounded-[2.5rem] overflow-hidden shadow-2xl border-4 border-white transform hover:scale-[1.01] transition-transform duration-700">
+            <img src="img/anhnen2/anh1.jpg" alt="Flash Sale Banner" class="w-full h-auto">
         </div>
-      </div>
-      <div class="offer-card">
-        <div class="offer-icon" style="font-size:28px; color:#ff6b6b; padding-right:12px; display:flex; align-items:center;"><i class="fa-solid fa-percent"></i></div>
-        <div class="offer-details">
-          <p>Giảm 12% Brand Day</p>
-          <p>Làm tối đa 30K cho Đơn hàng từ 199K</p>
-          <p>HSD: 31/05/25</p>
-          <button>Lưu mã</button>
+
+        <!-- Nội dung khuyến mãi -->
+        <div class="flashsale-promotion grid grid-cols-1 lg:grid-cols-2 gap-8 items-center bg-white p-8 rounded-3xl border border-border shadow-sm">
+            <div class="promotion-item flex flex-col md:flex-row items-center gap-8">
+                <div class="w-full md:w-1/2 aspect-square rounded-2xl overflow-hidden shadow-lg">
+                    <img src="img/anhnen2/anh2.jpg" alt="Promotion Image" class="w-full h-full object-cover">
+                </div>
+                <div class="promo-text text-center md:text-left space-y-4 flex-1">
+                    <h2 class="text-3xl font-black text-gray-800 uppercase tracking-tighter leading-none">Cùng Đinh Tị Books</h2>
+                    <p class="text-sm font-bold text-gray-400 italic">Trang bị kỹ năng an toàn, con tự tin đón mùa hè vui</p>
+                    <div class="promo-discount text-xs font-black text-gray-800 uppercase tracking-widest bg-primary-light px-4 py-2 rounded-xl inline-block">
+                        GIẢM GIÁ LÊN ĐẾN <span class="text-2xl text-primary block mt-1 tracking-tighter">50%</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="promo-offers grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-4">
+                <div class="offer-card bg-gray-50 p-6 rounded-2xl border border-border flex items-center gap-6 group hover:bg-white transition-all">
+                    <div class="offer-icon w-14 h-14 bg-blue-50 text-blue-500 rounded-xl flex items-center justify-center text-2xl group-hover:scale-110 transition-transform">
+                        <i class="fa-solid fa-truck"></i>
+                    </div>
+                    <div class="offer-details flex-1 space-y-1">
+                        <p class="text-xs font-black text-gray-800 uppercase tracking-tighter">Freeship 100%</p>
+                        <p class="text-[10px] font-bold text-gray-400">HSD: 31/05/25</p>
+                        <button class="mt-2 text-[10px] font-black text-white bg-blue-500 hover:bg-blue-600 px-4 py-1.5 rounded-lg transition-all active:scale-95 uppercase tracking-widest shadow-sm">Lưu mã</button>
+                    </div>
+                </div>
+                
+                <div class="offer-card bg-gray-50 p-6 rounded-2xl border border-border flex items-center gap-6 group hover:bg-white transition-all">
+                    <div class="offer-icon w-14 h-14 bg-red-50 text-red-500 rounded-xl flex items-center justify-center text-2xl group-hover:scale-110 transition-transform">
+                        <i class="fa-solid fa-percent"></i>
+                    </div>
+                    <div class="offer-details flex-1 space-y-1">
+                        <p class="text-xs font-black text-gray-800 uppercase tracking-tighter">Giảm 12% Brand Day</p>
+                        <p class="text-[10px] font-bold text-gray-400">HSD: 31/05/25</p>
+                        <button class="mt-2 text-[10px] font-black text-white bg-red-500 hover:bg-red-600 px-4 py-1.5 rounded-lg transition-all active:scale-95 uppercase tracking-widest shadow-sm">Lưu mã</button>
+                    </div>
+                </div>
+            </div>
         </div>
-      </div>
-    </div>
-  </div>
 
-  <!-- Top Sản phẩm bán chạy -->
-  <div class="top-products-container">
-    <div style="max-width:1100px; margin:0 auto;">
-      <div class="top-products-title-row">
-        <div class="section-title">Quốc Tế Lược Dịch - Sách Bán Chạy</div>
-        <div></div>
-      </div>
-      <h2 style="color:#e94b4b; margin:0 0 18px; font-size:28px; letter-spacing:1px;">TOP SẢN PHẨM BÁN CHẠY</h2>
-      <div class="product-slides"></div>
-    </div>
-  </div>
-  <!-- Recommend widget mount point -->
-  <div id="recommend-widget-container"></div>
-  
-  <!-- API Configuration - MUST load first! -->
-  <script src="js/config.js"></script>
-  <script src="js/api-patcher.js"></script>
+        <!-- Top Sản phẩm bán chạy -->
+        <div class="top-products-container space-y-10">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border pb-4">
+                <div class="space-y-1">
+                    <div class="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em]">Quốc Tế Lược Dịch - Sách Bán Chạy</div>
+                    <h2 class="text-2xl md:text-3xl font-black text-primary uppercase tracking-tighter">TOP SẢN PHẨM BÁN CHẠY</h2>
+                </div>
+                <div class="flex gap-2">
+                    <button class="w-10 h-10 bg-white border border-border rounded-xl text-gray-400 hover:text-primary transition-all"><i class="fas fa-chevron-left text-xs"></i></button>
+                    <button class="w-10 h-10 bg-white border border-border rounded-xl text-gray-400 hover:text-primary transition-all"><i class="fas fa-chevron-right text-xs"></i></button>
+                </div>
+            </div>
+            
+            <div class="product-slides grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+                <!-- Content loaded from API via giamgia2.js -->
+            </div>
+        </div>
 
-<script src="js/giamgia2.js"></script>
-  <script src="js/loadHeader.js"></script>
-  <!-- Footer placeholder -->
-  <div id="load-footer"></div>
-  <script src="js/loadFooter.js"></script>
-  <script src="js/recommend-widget.js"></script>
+        <!-- Recommend widget mount point -->
+        <div id="recommend-widget-container" class="pt-20 border-t border-border"></div>
+    </main>
+
+    <div id="load-footer"></div>
+
+    <script src="js/config.js"></script>
+    <script src="js/api-patcher.js"></script>
+    <script src="js/giamgia2.js"></script>
+    <script src="js/loadHeader.js"></script>
+    <script src="js/loadFooter.js"></script>
+    <script src="js/recommend-widget.js"></script>
+
+    <style>
+        /* Shared Styles for JS-rendered products */
+        .product-card {
+            @apply bg-white rounded-3xl border border-border shadow-sm overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-2 cursor-pointer;
+        }
+        .product-card img {
+            @apply w-full aspect-[3/4] object-cover transition-transform duration-700;
+        }
+        .product-card:hover img {
+            @apply scale-110;
+        }
+        .card-body {
+            @apply p-4 space-y-2;
+        }
+        .card-body h3 {
+            @apply text-sm font-black text-gray-800 uppercase tracking-tighter line-clamp-2 leading-tight;
+        }
+        .product-author {
+            @apply text-[10px] font-bold text-gray-400 uppercase tracking-widest truncate;
+        }
+        .product-price {
+            @apply text-base font-black text-primary tracking-tighter;
+        }
+    </style>
 </body>
 </html>

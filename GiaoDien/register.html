@@ -4,72 +4,104 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Đăng ký tài khoản</title>
-    <link rel="stylesheet" href="styles/register.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-     <link rel="stylesheet" href="styles/header.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
      
+    <link rel="icon" href="favicon.ico" type="image/x-icon" />
+
+    <!-- Tailwind CSS CDN & Config -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="js/tailwind-config.js"></script>
+    
     <!-- API Configuration - LOAD EARLY -->
     <script src="js/config.js"></script>
     <script src="js/api-patcher.js"></script>
 </head>
-<body>
+
+<body class="bg-bg pt-14 font-body antialiased">
     <div id="load-header"></div>
-    <div class="register-container">
-        <h2>Đăng ký tài khoản</h2>
-        <div id="step1">
-            <form id="registerForm">
-                <div class="form-group">
-                    <label for="username">Tên đăng nhập</label>
-                    <input type="text" id="username" name="username" required>
-                </div>
-                <div class="form-group">
-                    <label for="email">Email</label>
-                    <input type="email" id="email" name="email" required>
-                </div>
-                <button type="submit" id="sendOtpBtn">Gửi mã OTP</button>
-            </form>
-            <div id="registerMessage" style="display: none;"></div>
-        </div>
+    
+    <div class="register-container min-h-[80vh] flex items-center justify-center px-4 py-12">
+        <div class="w-full max-w-md bg-white p-8 rounded-2xl shadow-xl border border-border">
+            <h2 class="text-3xl font-display font-black text-center text-gray-800 mb-2 tracking-tight">ĐĂNG KÝ</h2>
+            <p class="text-center text-gray-400 text-sm mb-8">Trở thành thành viên của BaoStore ngay hôm nay</p>
 
-        <div id="step2" style="display: none;">
-            <form id="otpForm">
-                <div class="form-group">
-                    <label for="otpCode">Mã OTP</label>
-                    <input type="text" id="otpCode" name="otpCode" required>
-                </div>
-                <button type="submit" id="verifyOtpBtn">Xác nhận OTP</button>
-            </form>
-            <div id="otpMessage" style="display: none;"></div>
-        </div>
-
-        <div id="step3" style="display: none;">
-            <form id="passwordForm">
-                <div class="form-group">
-                    <label for="password">Mật khẩu</label>
-                    <input type="password" id="password" name="password" required>
-                </div>
-                <div class="form-group">
-                    <label for="confirmPassword">Nhập lại mật khẩu</label>
-                    <input type="password" id="confirmPassword" name="confirmPassword" required>
-                </div>
-                <button type="submit" id="setPasswordBtn">Đăng ký</button>
-            </form>
-            <div id="passwordMessage" style="display: none;"></div>
-        </div>
-
-            <!-- Google Sign-in button -->
-            <div id="googleSignIn" style="margin: 16px 0;"></div>
-
-            <div class="login-link">
-                Đã có tài khoản? <a href="login.html">Đăng nhập ngay</a>
+            <!-- Step 1: Username & Email -->
+            <div id="step1" class="space-y-6">
+                <div class="step-indicator text-[10px] font-bold text-primary bg-primary-light inline-block px-3 py-1 rounded-full uppercase tracking-wider mb-2">Bước 1 / 3</div>
+                <form id="registerForm" class="space-y-4">
+                    <div class="form-group relative">
+                        <i class="fa fa-user absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                        <input type="text" id="username" name="username" placeholder="Tên đăng nhập" required
+                            class="w-full pl-12 pr-4 py-3 bg-gray-50 border border-border rounded-xl outline-none focus:border-primary focus:bg-white transition-all text-sm">
+                    </div>
+                    <div class="form-group relative">
+                        <i class="fa fa-envelope absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                        <input type="email" id="email" name="email" placeholder="Email của bạn" required
+                            class="w-full pl-12 pr-4 py-3 bg-gray-50 border border-border rounded-xl outline-none focus:border-primary focus:bg-white transition-all text-sm">
+                    </div>
+                    <button type="submit" id="sendOtpBtn" class="w-full bg-primary hover:bg-primary-dark text-white py-3.5 rounded-xl font-black text-sm shadow-lg shadow-primary/30 transition-all active:scale-95">
+                        TIẾP TỤC & GỬI OTP
+                    </button>
+                </form>
+                <div id="registerMessage" class="hidden text-xs p-3 rounded-lg font-medium text-center"></div>
             </div>
-    </div>
-        <!-- Google Identity Services -->
-        
 
-<script src="https://accounts.google.com/gsi/client" async defer></script>
-        <script src="js/google-auth.js"></script>
-        <script src="js/register.js"></script>
-        <script src="js/loadHeader.js"></script>
+            <!-- Step 2: OTP Verification -->
+            <div id="step2" style="display: none;" class="space-y-6">
+                <div class="step-indicator text-[10px] font-bold text-primary bg-primary-light inline-block px-3 py-1 rounded-full uppercase tracking-wider mb-2">Bước 2 / 3</div>
+                <form id="otpForm" class="space-y-4">
+                    <div class="form-group relative text-center">
+                        <p class="text-xs text-gray-500 mb-4">Mã OTP đã được gửi về email của bạn</p>
+                        <input type="text" id="otpCode" name="otpCode" placeholder="Nhập mã OTP" required
+                            class="w-full p-4 bg-gray-50 border border-border rounded-xl outline-none focus:border-primary focus:bg-white transition-all text-2xl text-center font-black tracking-widest">
+                    </div>
+                    <button type="submit" id="verifyOtpBtn" class="w-full bg-primary hover:bg-primary-dark text-white py-3.5 rounded-xl font-black text-sm shadow-lg shadow-primary/30 transition-all active:scale-95">
+                        XÁC NHẬN MÃ OTP
+                    </button>
+                </form>
+                <div id="otpMessage" class="hidden text-xs p-3 rounded-lg font-medium text-center"></div>
+            </div>
+
+            <!-- Step 3: Password Setting -->
+            <div id="step3" style="display: none;" class="space-y-6">
+                <div class="step-indicator text-[10px] font-bold text-primary bg-primary-light inline-block px-3 py-1 rounded-full uppercase tracking-wider mb-2">Bước 3 / 3</div>
+                <form id="passwordForm" class="space-y-4">
+                    <div class="form-group relative">
+                        <i class="fa fa-lock absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                        <input type="password" id="password" name="password" placeholder="Mật khẩu mới" required
+                            class="w-full pl-12 pr-4 py-3 bg-gray-50 border border-border rounded-xl outline-none focus:border-primary focus:bg-white transition-all text-sm">
+                    </div>
+                    <div class="form-group relative">
+                        <i class="fa fa-lock absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                        <input type="password" id="confirmPassword" name="confirmPassword" placeholder="Nhập lại mật khẩu" required
+                            class="w-full pl-12 pr-4 py-3 bg-gray-50 border border-border rounded-xl outline-none focus:border-primary focus:bg-white transition-all text-sm">
+                    </div>
+                    <button type="submit" id="setPasswordBtn" class="w-full bg-green-600 hover:bg-green-700 text-white py-3.5 rounded-xl font-black text-sm shadow-lg shadow-green-200 transition-all active:scale-95">
+                        HOÀN TẤT ĐĂNG KÝ
+                    </button>
+                </form>
+                <div id="passwordMessage" class="hidden text-xs p-3 rounded-lg font-medium text-center"></div>
+            </div>
+
+            <div class="or-separator flex items-center gap-4 my-8 text-gray-300 text-[10px] font-bold uppercase tracking-widest">
+                <div class="h-px flex-1 bg-gray-200"></div>
+                <span>HOẶC</span>
+                <div class="h-px flex-1 bg-gray-200"></div>
+            </div>
+
+            <!-- Google Sign-in -->
+            <div id="googleSignIn" class="flex justify-center mb-8"></div>
+
+            <div class="login-link text-center text-sm text-gray-500">
+                Đã có tài khoản? <a href="login.html" class="text-primary font-bold hover:underline">Đăng nhập ngay</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Google Identity Services -->
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <script src="js/google-auth.js"></script>
+    <script src="js/register.js"></script>
+    <script src="js/loadHeader.js"></script>
 </body>
 </html>

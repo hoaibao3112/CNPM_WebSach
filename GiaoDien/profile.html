@@ -8,292 +8,234 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="styles/index.css">
-    <link rel="stylesheet" href="styles/profile.css">
-    <link rel="stylesheet" href="styles/header.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
-</head>
-<body>
-    <!-- <header>
-        <div class="navbar">
-            <a href="index.html" class="logo">
-                <img src="img/logo1.png" alt="Fahasa Logo">
-            </a>
-            <div class="search-container">
-                <form action="search.html" method="GET">
-                    <input type="text" name="q" placeholder="Tìm sách, tác giả, NXB...">
-                    <button type="submit"><i class="fas fa-search"></i></button>
-                </form>
-            </div>
-            <nav>
-                <ul class="top-links">
-                    <li id="loginLink" style="display: none;"><a href="login.html"><i class="fas fa-user"></i> Đăng nhập</a></li>
-                    <li class="logged-in-account">
-                        <a href="#" id="accountLink"><i class="fas fa-user"></i> Tên người dùng</a>
-                        <div class="dropdown-content">
-                            <a href="profile.html">Hồ sơ</a>
-                            <a href="#" id="logoutBtn">Đăng xuất</a>
-                        </div>
-                    </li>
-                    <li><a href="cart.html"><i class="fas fa-shopping-cart"></i> Giỏ hàng (0)</a></li>
-                </ul>
-            </nav>
-        </div>
-    </header> -->
+    <link rel="icon" href="favicon.ico" type="image/x-icon" />
 
-    <!-- Top bar -->
+    <!-- Tailwind CSS CDN & Config -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="js/tailwind-config.js"></script>
+    
+    <!-- API Configuration - LOAD EARLY -->
+    <script src="js/config.js"></script>
+    <script src="js/api-patcher.js"></script>
+</head>
+
+<body class="bg-bg pt-14 font-body antialiased">
     <div id="load-header"></div>
 
-    <div class="container">
-        <div class="main-content">
-            <div class="profile-container">
-                <div class="header">
-                    <!-- <img src="img/logo1.png" alt="Fahasa Logo" class="logo"> -->
-                    <div class="warning">
-                        Bạn vui lòng cập nhật thông tin tài khoản: <a href="#" class="update-link">Cập nhật thông tin ngay</a>
-                    </div>
-                </div style="display: flex">
-                <div>
-                <div class="sidebar">
-                    <div class="user-info-box">
-                        <div class="avatar-wrapper">
-                            <img id="user-avatar" src=".//img/profile/avater_Tam.jpg" alt="Ảnh đại diện" class="user-avatar">
+    <div class="container max-w-[1300px] mx-auto px-4 py-8">
+        <div class="main-content flex flex-col lg:flex-row gap-8">
+            <!-- Sidebar -->
+            <aside class="sidebar w-full lg:w-72 flex-shrink-0 space-y-6">
+                <div class="bg-white rounded-2xl border border-border shadow-sm overflow-hidden">
+                    <div class="user-info-box p-6 bg-gradient-to-br from-primary to-primary-dark text-white text-center">
+                        <div class="avatar-wrapper relative w-24 h-24 mx-auto mb-4 border-4 border-white/20 rounded-full overflow-hidden shadow-lg">
+                            <img id="user-avatar" src=".//img/profile/avater_Tam.jpg" alt="Ảnh đại diện" class="w-full h-full object-cover">
                         </div>
-                        <div class="user-name" id="user-name">Tên người dùng</div>
-                        <div class="user-email" id="user-email">Email người dùng</div>
+                        <div class="user-name text-lg font-black tracking-tight" id="user-name">Tên người dùng</div>
+                        <div class="user-email text-xs text-white/70 font-medium truncate" id="user-email">Email người dùng</div>
                     </div>
-                    <ul>
-                        <li data-section="user-profile"><i class="fas fa-user"></i> Thông tin tài khoản </li>
-                        <li data-section="address-book"><i class="fas fa-map-marker-alt"></i> Sổ địa chỉ</li>
-                        <li data-section="membership-card"><i class="fas fa-id-card"></i> Thẻ thành viên</li>
-                        <!-- <li><i class="fas fa-headset"></i> Hỗ trợ cá nhân</li> -->
-                        <!-- <li><i class="fas fa-phone"></i> Số điện thoại</li> -->
-                        <li data-section="change-password"><i class="fas fa-key"></i> Đổi mật khẩu</li>
-                        <li data-section="gtgt-info"><i class="fas fa-file-invoice"></i> TT xuất hóa đơn GTGT</li>
-                        <!-- <li data-section="order-history"><i class="fas fa-shopping-bag"></i> Đơn hàng của tôi</li> -->
-                         <li><i class="fas fa-shopping-bag"></i> <a href="orders.html"> Đơn hàng của tôi </a></li>
-                        <li data-section="reviewed-orders"><i class="fas fa-check-circle"></i> Đơn hàng đã đánh giá</li>
-                        <li><i class="fas fa-undo-alt"></i> <a href="refund-history.html"> Đơn hàng đã trả </a></li>
-                        <li data-section="promo-codes"><i class="fas fa-ticket-alt"></i> Các mã khuyến mãi</li>
-                        <li data-section="wishlist"><i class="fas fa-heart"></i> Sản phẩm yêu thích</li>
-                        <li id="logout-list-item"><i class="fas fa-sign-out-alt" ></i> Đăng xuất </li>
+                    
+                    <ul class="p-2 space-y-1">
+                        <li data-section="user-profile" class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold text-gray-600 hover:bg-primary-light hover:text-primary cursor-pointer transition-all active:bg-primary active:text-white group">
+                            <i class="fas fa-user w-5 text-center group-hover:scale-110 transition-transform"></i> Thông tin tài khoản
+                        </li>
+                        <li data-section="address-book" class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold text-gray-600 hover:bg-primary-light hover:text-primary cursor-pointer transition-all group">
+                            <i class="fas fa-map-marker-alt w-5 text-center group-hover:scale-110 transition-transform"></i> Sổ địa chỉ
+                        </li>
+                        <li data-section="membership-card" class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold text-gray-600 hover:bg-primary-light hover:text-primary cursor-pointer transition-all group">
+                            <i class="fas fa-id-card w-5 text-center group-hover:scale-110 transition-transform"></i> Thẻ thành viên
+                        </li>
+                        <li data-section="change-password" class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold text-gray-600 hover:bg-primary-light hover:text-primary cursor-pointer transition-all group">
+                            <i class="fas fa-key w-5 text-center group-hover:scale-110 transition-transform"></i> Đổi mật khẩu
+                        </li>
+                        <li data-section="gtgt-info" class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold text-gray-600 hover:bg-primary-light hover:text-primary cursor-pointer transition-all group">
+                            <i class="fas fa-file-invoice w-5 text-center group-hover:scale-110 transition-transform"></i> TT xuất hóa đơn GTGT
+                        </li>
+                        <li class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold text-gray-600 hover:bg-primary-light hover:text-primary cursor-pointer transition-all group">
+                            <i class="fas fa-shopping-bag w-5 text-center group-hover:scale-110 transition-transform"></i> <a href="orders.html" class="flex-1">Đơn hàng của tôi</a>
+                        </li>
+                        <li data-section="reviewed-orders" class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold text-gray-600 hover:bg-primary-light hover:text-primary cursor-pointer transition-all group">
+                            <i class="fas fa-check-circle w-5 text-center group-hover:scale-110 transition-transform"></i> Đơn hàng đã đánh giá
+                        </li>
+                        <li class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold text-gray-600 hover:bg-primary-light hover:text-primary cursor-pointer transition-all group">
+                            <i class="fas fa-undo-alt w-5 text-center group-hover:scale-110 transition-transform"></i> <a href="refund-history.html" class="flex-1">Đơn hàng đã trả</a>
+                        </li>
+                        <li data-section="promo-codes" class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold text-gray-600 hover:bg-primary-light hover:text-primary cursor-pointer transition-all group">
+                            <i class="fas fa-ticket-alt w-5 text-center group-hover:scale-110 transition-transform"></i> Các mã khuyến mãi
+                        </li>
+                        <li data-section="wishlist" class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold text-gray-600 hover:bg-primary-light hover:text-primary cursor-pointer transition-all group">
+                            <i class="fas fa-heart w-5 text-center group-hover:scale-110 transition-transform"></i> Sản phẩm yêu thích
+                        </li>
+                        <li id="logout-list-item" class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold text-red-500 hover:bg-red-50 cursor-pointer transition-all group mt-4 border-t border-gray-100">
+                            <i class="fas fa-sign-out-alt w-5 text-center group-hover:-translate-x-1 transition-transform"></i> Đăng xuất
+                        </li>
                     </ul>
                 </div>
-                <div class="content">
-                    <div id="account-info" class="section">
-                        <h2>Thông tin tài khoản</h2>
-                        <div class="info-grid">
-                            <div class="info-card">
-                                <h3>F-Point hiện có</h3>
-                                <p>0</p>
-                            </div>
-                            <div class="info-card">
-                                <h3>Freeship hiện có</h3>
-                                <p>0 Lần</p>
-                            </div>
-                            <div class="info-card">
-                                <h3>Thành tích năm 2025</h3>
-                                <p>Số đơn hàng: 0 đơn</p>
-                            </div>
-                            <div class="info-card">
-                                <h3>Đánh giá</h3>
-                                <p>0 đ</p>
-                            </div>
+
+                <div class="p-4 bg-yellow-50 rounded-xl border border-yellow-100 text-xs text-yellow-700 font-medium">
+                    <i class="fas fa-exclamation-triangle mr-1"></i> Bạn vui lòng cập nhật thông tin tài khoản: <a href="#" class="font-bold underline">Cập nhật ngay</a>
+                </div>
+            </aside>
+
+            <!-- Main Content Area -->
+            <main class="content flex-1 bg-white p-8 rounded-2xl border border-border shadow-sm min-h-[600px]">
+                <!-- Account Dashboard -->
+                <div id="account-info" class="section space-y-8">
+                    <h2 class="text-2xl font-black text-gray-800 uppercase tracking-tighter border-b border-border pb-4">Thông tin tài khoản</h2>
+                    <div class="info-grid grid grid-cols-2 lg:grid-cols-4 gap-4">
+                        <div class="info-card p-5 bg-gray-50 rounded-2xl border border-border hover:border-primary transition-all group">
+                            <h3 class="text-[10px] font-black text-gray-400 uppercase mb-2">F-Point hiện có</h3>
+                            <p class="text-3xl font-black text-gray-800 group-hover:text-primary transition-colors">0</p>
                         </div>
-                        <a href="#" class="detail-link">Khám phá hàng tháng viên. Xem chi tiết</a>
-                    </div>
-                    <div id="profile" class="section hide-section">
-                        <h2>Hồ sơ cá nhân</h2>
-                        <div class="form-group">
-                            <label for="hoten">Họ và Tên</label>
-                            <input type="text" id="hoten">
+                        <div class="info-card p-5 bg-gray-50 rounded-2xl border border-border hover:border-primary transition-all group">
+                            <h3 class="text-[10px] font-black text-gray-400 uppercase mb-2">Freeship hiện có</h3>
+                            <p class="text-3xl font-black text-gray-800 group-hover:text-primary transition-colors">0 <span class="text-xs">Lần</span></p>
                         </div>
-                        <div class="form-group">
-                            <label for="sodienthoai">Số điện thoại</label>
-                            <input type="text" id="sodienthoai">
+                        <div class="info-card p-5 bg-gray-50 rounded-2xl border border-border hover:border-primary transition-all group">
+                            <h3 class="text-[10px] font-black text-gray-400 uppercase mb-2">Thành tích 2025</h3>
+                            <p class="text-3xl font-black text-gray-800 group-hover:text-primary transition-colors">0 <span class="text-xs">đơn</span></p>
                         </div>
-                        <div class="form-group">
-                            <label for="email">Email</label>
-                            <input type="email" id="email">
-                        </div>
-                        <div class="form-group">
-                            <button id="updateBtn">Thay đổi</button>
+                        <div class="info-card p-5 bg-gray-50 rounded-2xl border border-border hover:border-primary transition-all group">
+                            <h3 class="text-[10px] font-black text-gray-400 uppercase mb-2">Đánh giá</h3>
+                            <p class="text-3xl font-black text-gray-800 group-hover:text-primary transition-colors">0 <span class="text-xs">đ</span></p>
                         </div>
                     </div>
-                    <div id="change-password" class="section hide-section">
-                        <h2>Đổi mật khẩu</h2>
+                    <a href="#" class="detail-link inline-block text-sm font-bold text-primary hover:underline">
+                        Khám phá quyền lợi thành viên. Xem chi tiết <i class="fas fa-chevron-right text-[10px]"></i>
+                    </a>
+                </div>
+
+                <!-- Personal Profile -->
+                <div id="profile" class="section space-y-6 hidden">
+                    <h2 class="text-2xl font-black text-gray-800 uppercase tracking-tighter border-b border-border pb-4">Hồ sơ cá nhân</h2>
+                    <div class="max-w-md space-y-4">
                         <div class="form-group">
-                            <label for="oldPassword">Mật khẩu hiện tại</label>
-                            <input type="password" id="oldPassword" placeholder="Nhập mật khẩu hiện tại">
+                            <label for="hoten" class="block text-xs font-bold text-gray-500 uppercase mb-2">Họ và Tên</label>
+                            <input type="text" id="hoten" class="w-full p-3 bg-gray-50 border border-border rounded-xl outline-none focus:border-primary focus:bg-white transition-all text-sm font-medium">
                         </div>
                         <div class="form-group">
-                            <label for="newPassword">Mật khẩu mới</label>
-                            <input type="password" id="newPassword" placeholder="Nhập mật khẩu mới">
+                            <label for="sodienthoai" class="block text-xs font-bold text-gray-500 uppercase mb-2">Số điện thoại</label>
+                            <input type="text" id="sodienthoai" class="w-full p-3 bg-gray-50 border border-border rounded-xl outline-none focus:border-primary focus:bg-white transition-all text-sm font-medium">
                         </div>
                         <div class="form-group">
-                            <label for="confirmPassword">Xác nhận mật khẩu mới</label>
-                            <input type="password" id="confirmPassword" placeholder="Nhập lại mật khẩu mới">
+                            <label for="email" class="block text-xs font-bold text-gray-500 uppercase mb-2">Email</label>
+                            <input type="email" id="email" class="w-full p-3 bg-gray-50 border border-border rounded-xl outline-none focus:border-primary focus:bg-white transition-all text-sm font-medium">
+                        </div>
+                        <button id="updateBtn" class="bg-primary hover:bg-primary-dark text-white px-8 py-3 rounded-xl font-bold text-sm shadow-lg shadow-primary/30 transition-all active:scale-95">Lưu thay đổi</button>
+                    </div>
+                </div>
+
+                <!-- Change Password -->
+                <div id="change-password" class="section space-y-6 hidden">
+                    <h2 class="text-2xl font-black text-gray-800 uppercase tracking-tighter border-b border-border pb-4">Đổi mật khẩu</h2>
+                    <div class="max-w-md space-y-4">
+                        <div class="form-group">
+                            <label for="oldPassword" class="block text-xs font-bold text-gray-500 uppercase mb-2">Mật khẩu hiện tại</label>
+                            <input type="password" id="oldPassword" placeholder="Nhập mật khẩu hiện tại" class="w-full p-3 bg-gray-50 border border-border rounded-xl outline-none focus:border-primary focus:bg-white transition-all text-sm">
                         </div>
                         <div class="form-group">
-                            <button id="changePasswordBtn">Thay đổi mật khẩu</button>
+                            <label for="newPassword" class="block text-xs font-bold text-gray-500 uppercase mb-2">Mật khẩu mới</label>
+                            <input type="password" id="newPassword" placeholder="Nhập mật khẩu mới" class="w-full p-3 bg-gray-50 border border-border rounded-xl outline-none focus:border-primary focus:bg-white transition-all text-sm">
+                        </div>
+                        <div class="form-group">
+                            <label for="confirmPassword" class="block text-xs font-bold text-gray-500 uppercase mb-2">Xác nhận mật khẩu mới</label>
+                            <input type="password" id="confirmPassword" placeholder="Nhập lại mật khẩu mới" class="w-full p-3 bg-gray-50 border border-border rounded-xl outline-none focus:border-primary focus:bg-white transition-all text-sm">
+                        </div>
+                        <button id="changePasswordBtn" class="bg-gray-800 hover:bg-black text-white px-8 py-3 rounded-xl font-bold text-sm shadow-lg transition-all active:scale-95">Thay đổi mật khẩu</button>
+                    </div>
+                </div>
+
+                <!-- Invoice Info -->
+                <div id="gtgt-info" class="section space-y-6 hidden">
+                    <h2 class="text-2xl font-black text-gray-800 uppercase tracking-tighter border-b border-border pb-4">Thông tin xuất hóa đơn GTGT</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="form-group">
+                            <label for="buyerName" class="block text-xs font-bold text-gray-500 uppercase mb-2">Họ tên người mua hàng</label>
+                            <input type="text" id="buyerName" placeholder="Nhập họ tên" class="w-full p-3 bg-gray-50 border border-border rounded-xl outline-none focus:border-primary focus:bg-white transition-all text-sm">
+                        </div>
+                        <div class="form-group">
+                            <label for="companyName" class="block text-xs font-bold text-gray-500 uppercase mb-2">Tên công ty</label>
+                            <input type="text" id="companyName" placeholder="Nhập tên công ty" class="w-full p-3 bg-gray-50 border border-border rounded-xl outline-none focus:border-primary focus:bg-white transition-all text-sm">
+                        </div>
+                        <div class="form-group md:col-span-2">
+                            <label for="companyAddress" class="block text-xs font-bold text-gray-500 uppercase mb-2">Địa chỉ công ty</label>
+                            <input type="text" id="companyAddress" placeholder="Nhập địa chỉ công ty" class="w-full p-3 bg-gray-50 border border-border rounded-xl outline-none focus:border-primary focus:bg-white transition-all text-sm">
+                        </div>
+                        <div class="form-group">
+                            <label for="taxCode" class="block text-xs font-bold text-gray-500 uppercase mb-2">Mã số thuế công ty</label>
+                            <input type="text" id="taxCode" placeholder="Nhập mã số thuế" class="w-full p-3 bg-gray-50 border border-border rounded-xl outline-none focus:border-primary focus:bg-white transition-all text-sm">
+                        </div>
+                        <div class="form-group">
+                            <label for="invoiceEmail" class="block text-xs font-bold text-gray-500 uppercase mb-2">Email nhận hóa đơn</label>
+                            <input type="email" id="invoiceEmail" placeholder="Nhập email nhận hóa đơn" class="w-full p-3 bg-gray-50 border border-border rounded-xl outline-none focus:border-primary focus:bg-white transition-all text-sm">
                         </div>
                     </div>
-                    <div id="gtgt-info" class="section hide-section">
-                        <h2>Thông tin xuất hóa đơn GTGT</h2>
-                        <div class="form-group">
-                            <label for="buyerName">Họ tên người mua hàng</label>
-                            <input type="text" id="buyerName" placeholder="Nhập họ tên người mua hàng">
-                        </div>
-                        <div class="form-group">
-                            <label for="companyName">Tên công ty</label>
-                            <input type="text" id="companyName" placeholder="Nhập tên công ty">
-                        </div>
-                        <div class="form-group">
-                            <label for="companyAddress">Địa chỉ công ty</label>
-                            <input type="text" id="companyAddress" placeholder="Nhập địa chỉ công ty">
-                        </div>
-                        <div class="form-group">
-                            <label for="taxCode">Mã số thuế công ty</label>
-                            <input type="text" id="taxCode" placeholder="Nhập mã số thuế">
-                        </div>
-                        <div class="form-group">
-                            <label for="invoiceEmail">Email nhận hóa đơn</label>
-                            <input type="email" id="invoiceEmail" placeholder="Nhập email nhận hóa đơn">
-                        </div>
-                        <div class="form-group">
-                            <button id="saveInvoiceBtn" style="background-color: #dc3545; color: white;">Lưu thay đổi</button>
-                        </div>
-                    </div>
-                    <div id="address-book" class="section hide-section">
-                        <h2>Sổ địa chỉ</h2>
+                    <button id="saveInvoiceBtn" class="bg-red-600 hover:bg-red-700 text-white px-8 py-3 rounded-xl font-bold text-sm shadow-lg transition-all active:scale-95">Lưu thay đổi</button>
+                </div>
 
-                        <!-- Địa chỉ giao hàng mặc định -->
-                        <div class="address-block default-address-block">
-                            <div class="address-block-header">
-                              <h3>Địa chỉ mặc định</h3>
-                              <a href="#" class="add-link">+ Thêm địa chỉ mới</a>
-                            </div>
-                            <div class="name-phone-row">
-                                <div class="address-info-item1">
-                                    <p><strong id="receive-name">Chưa có tên</strong></p>
-                                </div>
-                                <div class="address-info-item2">
-                                    <p id="receive-phone">Chưa có số điện thoại</p>
-                                </div>
-                            </div>
-                             <p id="receive-address" style="color: gray;">Chưa có địa chỉ</p>
-                            <a href="#" class="edit-link">Sửa</a>
+                <!-- Address Book -->
+                <div id="address-book" class="section space-y-6 hidden">
+                    <h2 class="text-2xl font-black text-gray-800 uppercase tracking-tighter border-b border-border pb-4">Sổ địa chỉ</h2>
+                    
+                    <div class="address-block bg-white border-2 border-primary-light rounded-2xl p-6 relative overflow-hidden group">
+                        <div class="absolute top-0 right-0 bg-primary text-white text-[10px] font-bold px-3 py-1 rounded-bl-xl uppercase tracking-widest">Mặc định</div>
+                        <div class="flex justify-between items-start mb-6">
+                            <h3 class="text-sm font-black text-gray-400 uppercase">Địa chỉ giao hàng</h3>
+                            <a href="#" class="add-link text-xs font-bold text-primary hover:underline">+ Thêm địa chỉ mới</a>
                         </div>
-
-                        <!-- Địa chỉ khác -->
-                        <div class="address-block">
-                            <h3>Địa chỉ khác</h3>
-                            <div id="other-receive-address">
-                                <p>Bạn không có địa chỉ khác trong Sổ địa chỉ.</p>
-                            </div>
+                        <div class="flex flex-col md:flex-row md:items-center gap-4 mb-4">
+                            <strong id="receive-name" class="text-lg font-black text-gray-800">Chưa có tên</strong>
+                            <span class="hidden md:block w-px h-4 bg-gray-300"></span>
+                            <span id="receive-phone" class="text-sm font-bold text-gray-500 italic">Chưa có số điện thoại</span>
                         </div>
+                        <p id="receive-address" class="text-sm text-gray-500 font-medium mb-6">Chưa có địa chỉ</p>
+                        <a href="#" class="edit-link inline-flex items-center gap-2 text-xs font-bold text-primary border border-primary px-4 py-2 rounded-lg hover:bg-primary hover:text-white transition-all">
+                            <i class="fas fa-edit"></i> Chỉnh sửa
+                        </a>
                     </div>
 
-                    <!-- Phần thẻ thành viên -->
-                    <div id="membership-card" class="section hide-section">
-                        <h2>Thẻ thành viên</h2>
-                        <div id="membershipCardContainer">
-                            <!-- Nội dung sẽ được render bằng JS -->
-                            <!-- Thêm phần hiển thị quyền lợi bên dưới -->
-                            <div id="membershipBenefits" class="membership-benefits" aria-live="polite">
-                              <!-- JS sẽ cập nhật nội dung ở đây -->
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- <div id="order-history" class="section hide-section">
-                        <h2>Đơn hàng của tôi</h2>
-
-                        <div class="order-status-filter">
-                            <div class="status-tabb active">
-                                <span id="count-all">0</span>
-                                <div class="status-btn">Tất cả</div>
-                            </div>
-                            <div class="status-tabb">
-                                <span id="count-pending">0</span>
-                                <div class="status-btn">Chờ thanh toán</div>
-                            </div>
-                            <div class="status-tabb">
-                                <span id="count-processing">0</span>
-                                <div class="status-btn">Đang xử lý</div>
-                            </div>
-                            <div class="status-tabb">
-                                <span id="count-shipping">0</span>
-                                <div class="status-btn">Đang giao</div>
-                            </div>
-                            <div class="status-tabb">
-                                <span id="count-completed">0</span>
-                                <div class="status-btn">Hoàn tất</div>
-                            </div>
-                            <div class="status-tabb">
-                                <span id="count-cancelled">0</span>
-                                <div class="status-btn">Bị hủy</div>
-                            </div>
-                            <div class="status-tabb">
-                                <span id="count-returned">0</span>
-                                <div class="status-btn">Trả hàng</div>
-                            </div>
-                        </div>
-
-                        <div class="order-list">
-                            <div class="order-card">
-                                <div class="order-header">
-                                    <div style="display: flex;">
-                                        <span class="order-id" style="margin-right: 10%;">#################</span>
-                                        <span class="order-status">Status</span>
-                                    </div>
-                                    <span class="order-date">27/08/2023 - 19:13</span>
-                                </div>
-
-                                <div class="order-body">
-                                    <img src="book-thumbnail.jpg" alt="Ảnh sản phẩm" class="order-thumb">
-                                    <div class="order-info">
-                                    <p class="product-name">Tên sản phẩm</p>
-                                    <p class="product-qty">Số lượng: <span id="count-returned">0</span></p>
-                                    <p class="order-total">Tổng tiền: <span id="count-returned">0</span>đ</p>
-                                    </div>
-                                </div>
-
-                                <div class="order-actions">
-                                    <button class="rate-btn">Đánh giá đơn hàng</button>
-                                    <button class="buy-again-btn">Mua lại</button>
-                                </div>
-                            </div>
-                            
-                        </div>
-                        
-                    </div> -->
-
-                    <!-- Phần đơn hàng đã đánh giá -->
-                    <div id="reviewed-orders" class="section hide-section">
-                        <h2>Đơn hàng đã đánh giá</h2>
-                        <div id="reviewed-orders-list" class="orders-grid">
-                            <!-- Danh sách đơn hàng đã đánh giá sẽ được JS render -->
-                        </div>
-                    </div>
-
-                    <!-- Phần mã khuyến mãi -->
-                    <div id="promo-codes" class="section hide-section">
-                        <h2>Các mã khuyến mãi của bạn</h2>
-                        <div id="promo-codes-list" class="promo-codes-list">
-                            <!-- Danh sách mã sẽ được JS render -->
-                        </div>
-                    </div>
-                    <!-- Phần sản phẩm yêu thích -->
-                    <div id="wishlist" class="section hide-section">
-                        <h2>Sản phẩm yêu thích</h2>
-                        <div id="wishlist-products" class="products-grid">
-                            <!-- Danh sách sản phẩm yêu thích sẽ được tải động -->
+                    <div class="address-block bg-gray-50 border border-border border-dashed rounded-2xl p-6">
+                        <h3 class="text-sm font-black text-gray-400 uppercase mb-4">Địa chỉ khác</h3>
+                        <div id="other-receive-address" class="text-center py-8">
+                            <i class="fas fa-map-marked-alt text-4xl text-gray-200 mb-4 block"></i>
+                            <p class="text-sm text-gray-400 font-medium italic">Bạn không có địa chỉ khác trong Sổ địa chỉ.</p>
                         </div>
                     </div>
                 </div>
+
+                <!-- Membership Card -->
+                <div id="membership-card" class="section space-y-6 hidden">
+                    <h2 class="text-2xl font-black text-gray-800 uppercase tracking-tighter border-b border-border pb-4">Thẻ thành viên</h2>
+                    <div id="membershipCardContainer" class="max-w-md mx-auto">
+                        <!-- JS renders card here -->
+                    </div>
+                    <div id="membershipBenefits" class="mt-8"></div>
                 </div>
-            </div>
+
+                <!-- Reviewed Orders -->
+                <div id="reviewed-orders" class="section space-y-6 hidden">
+                    <h2 class="text-2xl font-black text-gray-800 uppercase tracking-tighter border-b border-border pb-4">Đơn hàng đã đánh giá</h2>
+                    <div id="reviewed-orders-list" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <!-- JS renders orders here -->
+                    </div>
+                </div>
+
+                <!-- Promo Codes -->
+                <div id="promo-codes" class="section space-y-6 hidden">
+                    <h2 class="text-2xl font-black text-gray-800 uppercase tracking-tighter border-b border-border pb-4">Mã khuyến mãi của bạn</h2>
+                    <div id="promo-codes-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <!-- JS renders codes here -->
+                    </div>
+                </div>
+
+                <!-- Wishlist -->
+                <div id="wishlist" class="section space-y-6 hidden">
+                    <h2 class="text-2xl font-black text-gray-800 uppercase tracking-tighter border-b border-border pb-4">Sản phẩm yêu thích</h2>
+                    <div id="wishlist-products" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                        <!-- JS renders products here -->
+                    </div>
+                </div>
+            </main>
         </div>
     </div>
 

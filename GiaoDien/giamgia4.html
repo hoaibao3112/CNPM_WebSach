@@ -1,74 +1,115 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="vi">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Ưu Đãi Ngành Hàng Gấp Bội</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-  <link rel="stylesheet" href="styles/giamgia4.css">
-   <link rel="stylesheet" href="styles/header.css">
-   <link rel="stylesheet" href="styles/index.css">
-    <link rel="stylesheet" href="styles/recommend-widget.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
-<body>
-  <!-- header -->
-  <div id="load-header"></div>
+    <link rel="icon" href="favicon.ico" type="image/x-icon" />
 
-  <nav class="navi">
-      <a href="index.html">TRANG CHỦ</a>
-      <span>› SẢN PHẨM MỚI</span>
-  </nav>
-
-  <div class="wrapper">
+    <!-- Tailwind CSS CDN & Config -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="js/tailwind-config.js"></script>
     
-    <!-- Khung màu hồng -->
-    <div class="title">
-      <img src="img/anhnen4/icon_title.png" alt="Biểu tượng sản phẩm mới">
-      <span>SẢN PHẨM MỚI</span>
-    </div>
+    <!-- API Configuration - LOAD EARLY -->
+    <script src="js/config.js"></script>
+    <script src="js/api-patcher.js"></script>
+</head>
 
-    <!-- Khung thể loại -->
-    <ul class="category">
-    </ul>
+<body class="bg-bg pt-14 font-body antialiased">
+    <div id="load-header"></div>
 
-    <!-- List sản phẩm -->
-    <div class="product">
-      <div class="product-row">
+    <!-- Breadcrumb Navigation -->
+    <nav class="navi container max-w-[1300px] mx-auto px-4 py-6">
+        <div class="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-gray-400">
+            <a href="index.html" class="hover:text-primary transition-colors">TRANG CHỦ</a>
+            <span class="text-gray-200">/</span>
+            <span class="text-primary">SẢN PHẨM MỚI</span>
+        </div>
+    </nav>
 
-        <!-- <div class="product-item">
-          <img src="/product-images/sp01.jpg" alt="Sản phẩm" loading="lazy" onerror="this.src='img/default-book.jpg'">
-          <div class="item-new-name">
-            <span class="new">Mới</span>
-            <span class="name">Ehon - đón sinh ndddddddddddddddddddddddddddddddddddddddddddddddsdsddsdsdhật</span>
-          </div>
-          <div class="item-price">
-            <span class="price">31.500</span>
-            <span class="unit">đ</span>
-            <span class="discount">-10%</span>
-          </div>
-          <div class="origin-price">
-            <span class="price">31.500</span>
-            <span class="unit">đ</span>
-          </div>
-        </div> -->
+    <main class="wrapper container max-w-[1300px] mx-auto px-4 pb-20 space-y-12">
+        <!-- Page Header / Title -->
+        <div class="title bg-white p-8 rounded-3xl border border-border shadow-sm flex items-center gap-6 animate-in fade-in slide-in-from-top-4 duration-700">
+            <div class="w-16 h-16 bg-primary-light rounded-2xl flex items-center justify-center p-3 shadow-inner">
+                <img src="img/anhnen4/icon_title.png" alt="Biểu tượng sản phẩm mới" class="w-full h-full object-contain">
+            </div>
+            <div class="space-y-1">
+                <h1 class="text-3xl font-black text-gray-800 uppercase tracking-tighter">SẢN PHẨM MỚI</h1>
+                <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest italic">Cập nhật những tựa sách mới nhất mỗi ngày</p>
+            </div>
+        </div>
 
-      </div>
-    </div>
+        <!-- Khung thể loại -->
+        <ul class="category flex flex-wrap gap-3" id="category">
+            <!-- JS will render categories here -->
+        </ul>
 
-  </div>
+        <!-- List sản phẩm -->
+        <div class="product space-y-8">
+            <div class="product-row grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6" id="product-row">
+                <!-- JS will render products here -->
+                <div class="loading col-span-full py-20 text-center space-y-4">
+                    <i class="fas fa-spinner fa-spin text-3xl text-primary"></i>
+                    <p class="text-[10px] font-black text-gray-300 uppercase tracking-widest animate-pulse">Đang tải sản phẩm mới...</p>
+                </div>
+            </div>
+        </div>
 
-  <!-- Recommend widget mount point -->
-  <div id="recommend-widget-container"></div>
+        <!-- Recommend widget mount point -->
+        <div id="recommend-widget-container" class="pt-20 border-t border-border"></div>
+    </main>
 
-  
-  <!-- API Configuration - MUST load first! -->
-  <script src="js/config.js"></script>
-  <script src="js/api-patcher.js"></script>
+    <div id="load-footer"></div>
 
-<script src="js/giamgia4.js"></script>
-  <script src="js/loadHeader.js"></script>
+    <script src="js/config.js"></script>
+    <script src="js/api-patcher.js"></script>
+    <script src="js/giamgia4.js"></script>
+    <script src="js/loadHeader.js"></script>
+    <script src="js/loadFooter.js"></script>
+    <script src="js/recommend-widget.js"></script>
 
-  <script src="js/recommend-widget.js"></script>
-
+    <style>
+        /* Shared Styles for JS-rendered elements */
+        .category-item {
+            @apply px-6 py-2.5 bg-white border border-border rounded-xl text-xs font-black text-gray-400 uppercase tracking-widest transition-all cursor-pointer hover:border-primary-light hover:text-primary active:scale-95 [&.active]:bg-primary [&.active]:text-white [&.active]:border-primary [&.active]:shadow-lg [&.active]:shadow-primary/20;
+        }
+        
+        .product-item {
+            @apply bg-white rounded-3xl border border-border shadow-sm overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-2 cursor-pointer relative flex flex-col;
+        }
+        .product-item img {
+            @apply w-full aspect-[3/4] object-cover transition-transform duration-700;
+        }
+        .product-item:hover img {
+            @apply scale-110;
+        }
+        .item-new-name {
+            @apply p-4 space-y-2 flex-1;
+        }
+        .item-new-name .new {
+            @apply inline-block text-[8px] font-black bg-primary text-white px-2 py-0.5 rounded-full uppercase tracking-widest mb-1 shadow-sm;
+        }
+        .item-new-name .name {
+            @apply block text-sm font-black text-gray-800 uppercase tracking-tighter line-clamp-2 leading-tight;
+        }
+        .item-price {
+            @apply px-4 pb-4 flex items-baseline gap-1;
+        }
+        .item-price .price {
+            @apply text-lg font-black text-primary tracking-tighter;
+        }
+        .item-price .unit {
+            @apply text-[10px] font-black text-primary uppercase;
+        }
+        .item-price .discount {
+            @apply ml-auto text-[10px] font-black text-red-500 bg-red-50 px-2 py-0.5 rounded-lg;
+        }
+        .origin-price {
+            @apply px-4 pb-6 text-[10px] font-bold text-gray-300 line-through italic;
+        }
+    </style>
 </body>
 </html>

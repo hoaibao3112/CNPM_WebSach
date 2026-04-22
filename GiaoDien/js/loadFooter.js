@@ -39,28 +39,6 @@
           if (placeholder.attachShadow) {
             var shadow = placeholder.attachShadow({ mode: 'open' });
 
-            // Attempt to load footer-specific styles inside the shadow root to avoid global leakage.
-            // We add a few possible stylesheet hrefs (browser will ignore 404s).
-            var link1 = document.createElement('link');
-            link1.rel = 'stylesheet';
-            link1.href = 'styles/index.css';
-            shadow.appendChild(link1);
-
-            var link1b = document.createElement('link');
-            link1b.rel = 'stylesheet';
-            link1b.href = './styles/index.css';
-            shadow.appendChild(link1b);
-
-            var link2 = document.createElement('link');
-            link2.rel = 'stylesheet';
-            link2.href = 'styles/header.css';
-            shadow.appendChild(link2);
-
-            var link2b = document.createElement('link');
-            link2b.rel = 'stylesheet';
-            link2b.href = './styles/header.css';
-            shadow.appendChild(link2b);
-
             // Inject the footer HTML
             var container = document.createElement('div');
             container.innerHTML = html;

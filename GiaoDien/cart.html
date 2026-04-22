@@ -5,257 +5,296 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Giỏ hàng - Trung Phong</title>
-  <link rel="stylesheet" href="styles/header.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <link rel="stylesheet" href="styles/cart.css">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
-  <link rel="stylesheet" href="styles/map.css">
+  <style>
+    #map { width: 100%; height: 400px; border-radius: 12px; border: 1px solid #ddd; }
+    .map_container { margin-top: 20px; }
+    .calculation { display: flex; gap: 16px; margin-top: 16px; }
+    .calculation .item { flex: 1; padding: 12px; background: #f9f9f9; border-radius: 8px; text-align: center; }
+    .calculation .label { font-size: 12px; color: #666; margin-bottom: 4px; }
+    .calculation .value { font-size: 14px; font-weight: 700; color: #1a1a1a; }
+  </style>
+
+  <!-- Tailwind CSS CDN & Config -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="js/tailwind-config.js"></script>
   
   <!-- API Configuration - LOAD EARLY -->
   <script src="js/config.js"></script>
   <script src="js/api-patcher.js"></script>
 </head>
 
-<body>
+<body class="bg-bg pt-14 font-body antialiased">
   <div id="load-header"></div>
-  <div class="container">
-
-    <div class="top-right-button">
-      <a href="orders.html" class="my-orders-btn">
+  
+  <div class="container max-w-[1300px] mx-auto px-4 py-8">
+    <div class="flex justify-end mb-6">
+      <a href="orders.html" class="my-orders-btn inline-flex items-center gap-2 bg-white text-primary border border-primary px-4 py-2 rounded-full font-bold text-sm hover:bg-primary hover:text-white transition-all shadow-sm">
         <i class="fas fa-receipt"></i> Đơn hàng của tôi
       </a>
     </div>
-    <h1 class="page-title">GIỎ HÀNG CỦA BẠN</h1>
+
+    <h1 class="page-title text-3xl font-display font-black text-center text-gray-800 mb-10 tracking-tight">GIỎ HÀNG CỦA BẠN</h1>
     
-    <!-- Danh sách mã khuyến mãi của bạn -->
-    <div class="saved-promos-section" id="saved-promos-section" style="display: none;">
-      <div class="saved-promos-header">
-        <h3><i class="fas fa-tags"></i> Mã khuyến mãi của bạn</h3>
-        <button class="toggle-promos-btn" id="toggle-promos-btn">
-          <i class="fas fa-chevron-down"></i>
+    <!-- Saved Promos Section -->
+    <div class="saved-promos-section mb-8 bg-white rounded-lg border border-border shadow-sm overflow-hidden" id="saved-promos-section" style="display: none;">
+      <div class="saved-promos-header flex justify-between items-center p-4 bg-primary-light border-b border-border">
+        <h3 class="text-sm font-bold text-primary flex items-center gap-2">
+          <i class="fas fa-tags"></i> MÃ KHUYẾN MÃI CỦA BẠN
+        </h3>
+        <button class="toggle-promos-btn w-8 h-8 flex items-center justify-center rounded-full hover:bg-white transition-colors" id="toggle-promos-btn">
+          <i class="fas fa-chevron-down text-primary"></i>
         </button>
       </div>
-      <div class="saved-promos-list" id="saved-promos-list">
-        <!-- Các mã khuyến mãi sẽ được load bằng JavaScript -->
+      <div class="saved-promos-list p-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" id="saved-promos-list">
+        <!-- JS loads promos here -->
       </div>
     </div>
 
-    <div class="cart-section">
-      <div class="cart-items">
-        <table class="cart-table">
-          <thead>
-            <tr>
-              <th class="select-col">CHỌN</th>
-              <th class="product-col">SẢN PHẨM</th>
-              <th class="price-col">GIÁ</th>
-              <th class="quantity-col">SỐ LƯỢNG</th>
-              <th class="total-col">TỔNG</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody id="cart-items-body">
-            <!-- Cart items will be loaded by JavaScript -->
-          </tbody>
-        </table>
+    <div class="cart-section grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+      <!-- Left side: Cart Items -->
+      <div class="cart-items lg:col-span-2 space-y-6">
+        <div class="bg-white rounded-lg border border-border shadow-sm overflow-hidden">
+          <table class="cart-table w-full text-left border-collapse">
+            <thead class="bg-gray-50 border-b border-border">
+              <tr>
+                <th class="p-4 text-[10px] font-bold text-gray-400 uppercase tracking-wider">CHỌN</th>
+                <th class="p-4 text-[10px] font-bold text-gray-400 uppercase tracking-wider">SẢN PHẨM</th>
+                <th class="p-4 text-[10px] font-bold text-gray-400 uppercase tracking-wider">GIÁ</th>
+                <th class="p-4 text-[10px] font-bold text-gray-400 uppercase tracking-wider text-center">SỐ LƯỢNG</th>
+                <th class="p-4 text-[10px] font-bold text-gray-400 uppercase tracking-wider">TỔNG</th>
+                <th class="p-4"></th>
+              </tr>
+            </thead>
+            <tbody id="cart-items-body" class="divide-y divide-border">
+              <!-- JS loads cart items here -->
+            </tbody>
+          </table>
 
-        <div id="empty-cart" class="empty-cart-message">
-          <div class="empty-cart">
-            <i class="fas fa-shopping-cart"></i>
-            <p>Giỏ hàng của bạn đang trống</p>
+          <div id="empty-cart" class="empty-cart-message py-20 text-center hidden">
+            <div class="empty-cart flex flex-col items-center gap-4">
+              <i class="fas fa-shopping-cart text-6xl text-gray-200"></i>
+              <p class="text-lg text-gray-500 font-medium">Giỏ hàng của bạn đang trống</p>
+              <a href="book.html" class="text-sm text-primary font-bold hover:underline">Khám phá ngay</a>
+            </div>
           </div>
         </div>
 
-        <div class="cart-actions">
-          <a href="book.html" class="continue-btn">
+        <div class="cart-actions flex flex-wrap justify-between items-center gap-4">
+          <a href="book.html" class="continue-btn inline-flex items-center gap-2 text-sm font-bold text-gray-500 hover:text-primary transition-colors">
             <i class="fas fa-arrow-left"></i> TIẾP TỤC MUA SẮM
           </a>
-          <button class="update-btn" id="update-cart">
+          <button class="update-btn bg-white border border-border text-text px-6 py-2.5 rounded-lg text-sm font-bold hover:bg-gray-50 transition-all flex items-center gap-2 shadow-sm" id="update-cart">
             <i class="fas fa-sync-alt"></i> CẬP NHẬT GIỎ HÀNG
           </button>
         </div>
       </div>
 
-      <div class="checkout-section">
-        <div class="order-summary">
-          <h2>THANH TOÁN</h2>
+      <!-- Right side: Checkout Summary -->
+      <div class="checkout-section lg:sticky lg:top-20">
+        <div class="order-summary bg-white p-6 rounded-lg border border-border shadow-md">
+          <h2 class="text-lg font-black text-gray-800 mb-6 border-b border-border pb-3 uppercase tracking-tighter">THANH TOÁN</h2>
 
-          <div class="order-totals">
-            <div class="order-row">
-              <span>Tổng phụ</span>
-              <span id="subtotal">0đ</span>
+          <div class="order-totals space-y-4 mb-6">
+            <div class="order-row flex justify-between text-sm">
+              <span class="text-gray-500">Tổng phụ</span>
+              <span id="subtotal" class="font-bold">0đ</span>
             </div>
-            <div class="order-row" id="discount-row" style="display: none;">
+            <div class="order-row flex justify-between text-sm text-primary" id="discount-row" style="display: none;">
               <span>Giảm giá</span>
-              <span id="discount">-0đ</span>
+              <span id="discount" class="font-bold">-0đ</span>
             </div>
-            <!-- Thông tin mã khuyến mãi đã áp dụng -->
-            <div class="order-row" id="promo-code-row" style="display: none; background: #e8f5e9; padding: 10px; border-radius: 5px; margin: 5px 0;">
-              <span style="color: #27ae60; font-weight: 600;">
-                <i class="fas fa-tag"></i> Mã: <span id="promo-code-value"></span>
+            
+            <!-- Applied Promo Code -->
+            <div class="order-row flex justify-between items-center bg-green-50 p-3 rounded-md border border-green-100" id="promo-code-row" style="display: none;">
+              <span class="text-xs font-bold text-green-700 flex items-center gap-2">
+                <i class="fas fa-tag"></i> MÃ: <span id="promo-code-value"></span>
               </span>
-              <button id="remove-promo" style="background: transparent; border: none; color: #e74c3c; cursor: pointer; font-size: 18px;">
-                <i class="fas fa-times-circle"></i>
+              <button id="remove-promo" class="text-red-500 hover:text-red-700 transition-colors">
+                <i class="fas fa-times-circle text-lg"></i>
               </button>
             </div>
-            <div class="order-row" id="member-tier-row" style="display: none;">
-              <span id="member-tier-label">Thẻ thành viên</span>
-              <span id="member-tier-value"></span>
+
+            <div class="order-row flex justify-between text-sm" id="member-tier-row" style="display: none;">
+              <span id="member-tier-label" class="text-gray-500">Thẻ thành viên</span>
+              <span id="member-tier-value" class="font-bold text-primary"></span>
             </div>
-            <div class="order-row" id="shipping-original-row" style="display: none;">
-              <span>Phí ship gốc</span>
-              <span id="shipping-original" style="text-decoration: line-through; color: #999;">0đ</span>
+            
+            <div class="order-row flex justify-between text-sm" id="shipping-original-row" style="display: none;">
+              <span class="text-gray-500">Phí ship gốc</span>
+              <span id="shipping-original" class="line-through text-gray-400">0đ</span>
             </div>
-            <div class="order-row" id="shipping-discount-row" style="display: none;">
+            
+            <div class="order-row flex justify-between text-sm text-green-600" id="shipping-discount-row" style="display: none;">
               <span id="shipping-discount-label">Giảm giá ship</span>
-              <span id="shipping-discount" style="color: #27ae60;">-0đ</span>
+              <span id="shipping-discount" class="font-bold">-0đ</span>
             </div>
-            <!-- Thông tin mã Free Ship đã áp dụng -->
-            <div class="order-row" id="free-ship-code-row" style="display: none; background: #fff3cd; padding: 10px; border-radius: 5px; margin: 5px 0;">
-              <span style="color: #ff9800; font-weight: 600;">
-                <i class="fas fa-shipping-fast"></i> Free Ship: <span id="free-ship-code-value"></span>
+
+            <!-- Free Ship Code -->
+            <div class="order-row flex justify-between items-center bg-yellow-50 p-3 rounded-md border border-yellow-100" id="free-ship-code-row" style="display: none;">
+              <span class="text-xs font-bold text-yellow-700 flex items-center gap-2">
+                <i class="fas fa-shipping-fast"></i> FREE SHIP: <span id="free-ship-code-value"></span>
               </span>
-              <button id="remove-free-ship" style="background: transparent; border: none; color: #e74c3c; cursor: pointer; font-size: 18px;">
-                <i class="fas fa-times-circle"></i>
+              <button id="remove-free-ship" class="text-red-500 hover:text-red-700 transition-colors">
+                <i class="fas fa-times-circle text-lg"></i>
               </button>
             </div>
-            <div class="order-row">
-              <span>Phí vận chuyển</span>
-              <span id="shipping">Miễn phí</span>
+
+            <div class="order-row flex justify-between text-sm">
+              <span class="text-gray-500">Phí vận chuyển</span>
+              <span id="shipping" class="font-bold text-green-600">Miễn phí</span>
             </div>
-            <div class="order-row order-total">
-              <span>Tổng cộng</span>
-              <span id="total">0đ</span>
+
+            <div class="order-row order-total flex justify-between items-center pt-4 border-t-2 border-dashed border-border mt-4">
+              <span class="text-base font-bold text-gray-800">TỔNG CỘNG</span>
+              <span id="total" class="text-2xl font-black text-primary tracking-tighter">0đ</span>
             </div>
           </div>
 
-          <button class="checkout-btn" id="checkout-btn">
+          <button class="checkout-btn w-full bg-primary hover:bg-primary-dark text-white py-4 rounded-xl font-black text-base shadow-lg shadow-primary/30 transition-all active:scale-95 flex items-center justify-center gap-3" id="checkout-btn">
             <i class="fas fa-credit-card"></i> TIẾN HÀNH THANH TOÁN
           </button>
         </div>
       </div>
     </div>
 
-    <div class="customer-info-section">
-      <div class="form-group">
-  <label for="saved-addresses">Chọn địa chỉ đã dùng trước đó</label>
-  <select id="saved-addresses" class="form-input">
-    <option value="">-- Chọn địa chỉ đã lưu --</option>
-  </select>
-</div>
-
-      <h2>THÔNG TIN KHÁCH HÀNG</h2>
-
-      <div class="customer-form" id="customer-form">
-        <div class="form-group">
-          <label for="name">Họ và tên người nhận *</label>
-          <input type="text" id="name" class="form-input" required>
+    <!-- Customer Info Section -->
+    <div class="customer-info-section mt-12 grid grid-cols-1 lg:grid-cols-2 gap-12 bg-white p-8 rounded-lg border border-border shadow-sm">
+      <div class="space-y-8">
+        <div class="bg-gray-50 p-4 rounded-lg border border-border">
+          <label for="saved-addresses" class="block text-xs font-bold text-gray-500 uppercase mb-2">Chọn địa chỉ đã dùng trước đó</label>
+          <select id="saved-addresses" class="form-input w-full p-2.5 rounded-lg border border-border bg-white text-sm focus:border-primary outline-none transition-all">
+            <option value="">-- Chọn địa chỉ đã lưu --</option>
+          </select>
         </div>
 
-        <div class="form-group">
-          <label for="phone">Số điện thoại *</label>
-          <input type="tel" id="phone" class="form-input" required>
-        </div>
+        <h2 class="text-xl font-black text-gray-800 uppercase tracking-tighter flex items-center gap-3">
+          <span class="w-8 h-8 bg-primary text-white flex items-center justify-center rounded-full text-sm italic">1</span>
+          THÔNG TIN KHÁCH HÀNG
+        </h2>
 
-        <div class="form-group">
-          <label for="email">Email *</label>
-          <input type="email" id="email" class="form-input" required>
-        </div>
-
-        <!-- Phần địa chỉ chi tiết -->
-        <div class="address-section">
-          <div class="form-group">
-            <label for="tinhthanh">Tỉnh/Thành phố *</label>
-            <select id="tinhthanh" class="form-input" required>
-              <option value="">-- Chọn Tỉnh/TP --</option>
-              <!-- Will be populated by JavaScript -->
-            </select>
+        <div class="customer-form grid grid-cols-1 md:grid-cols-2 gap-4" id="customer-form">
+          <div class="form-group md:col-span-2">
+            <label for="name" class="block text-sm font-bold text-text-muted mb-2">Họ và tên người nhận *</label>
+            <input type="text" id="name" class="form-input w-full p-3 rounded-lg border border-border focus:border-primary outline-none transition-all bg-gray-50 focus:bg-white" required>
           </div>
 
           <div class="form-group">
-            <label for="quanhuyen">Quận/Huyện *</label>
-            <select id="quanhuyen" class="form-input" required disabled>
-              <option value="">-- Chọn Quận/Huyện --</option>
-            </select>
+            <label for="phone" class="block text-sm font-bold text-text-muted mb-2">Số điện thoại *</label>
+            <input type="tel" id="phone" class="form-input w-full p-3 rounded-lg border border-border focus:border-primary outline-none transition-all bg-gray-50 focus:bg-white" required>
           </div>
 
           <div class="form-group">
-            <label for="phuongxa">Phường/Xã *</label>
-            <select id="phuongxa" class="form-input" required disabled>
-              <option value="">-- Chọn Phường/Xã --</option>
-            </select>
+            <label for="email" class="block text-sm font-bold text-text-muted mb-2">Email *</label>
+            <input type="email" id="email" class="form-input w-full p-3 rounded-lg border border-border focus:border-primary outline-none transition-all bg-gray-50 focus:bg-white" required>
           </div>
 
-          <div class="form-group">
-            <label for="diachichitiet">Địa chỉ chi tiết (số nhà, tên đường) *</label>
-            <input type="text" id="diachichitiet" class="form-input" required placeholder="Ví dụ: 123 Đường Lê Lợi">
-          </div>
+          <div class="address-section md:col-span-2 grid grid-cols-1 md:grid-cols-3 gap-4 mt-4 bg-gray-50 p-6 rounded-xl border border-border">
+            <div class="form-group">
+              <label for="tinhthanh" class="block text-xs font-bold text-gray-500 uppercase mb-2">Tỉnh/Thành phố *</label>
+              <select id="tinhthanh" class="form-input w-full p-2.5 rounded-lg border border-border bg-white text-sm focus:border-primary outline-none transition-all" required>
+                <option value="">-- Chọn Tỉnh/TP --</option>
+              </select>
+            </div>
 
-          <div class="form-group checkbox-group">
-            <input type="checkbox" id="save-info">
-            <label for="save-info">Lưu thông tin cho lần mua sau</label>
-          </div>
+            <div class="form-group">
+              <label for="quanhuyen" class="block text-xs font-bold text-gray-500 uppercase mb-2">Quận/Huyện *</label>
+              <select id="quanhuyen" class="form-input w-full p-2.5 rounded-lg border border-border bg-white text-sm focus:border-primary outline-none transition-all" required disabled>
+                <option value="">-- Chọn Quận/Huyện --</option>
+              </select>
+            </div>
 
-          <!-- Thêm map html ở đây -->
-          <div class="map_container">
-        <div class="input">
-          <button type="button" id="input_button">Tìm</button>
-          <button type="button" id="delete_button">Xóa</button>
+            <div class="form-group">
+              <label for="phuongxa" class="block text-xs font-bold text-gray-500 uppercase mb-2">Phường/Xã *</label>
+              <select id="phuongxa" class="form-input w-full p-2.5 rounded-lg border border-border bg-white text-sm focus:border-primary outline-none transition-all" required disabled>
+                <option value="">-- Chọn Phường/Xã --</option>
+              </select>
+            </div>
+
+            <div class="form-group md:col-span-3">
+              <label for="diachichitiet" class="block text-sm font-bold text-text-muted mb-2">Địa chỉ chi tiết (số nhà, tên đường) *</label>
+              <input type="text" id="diachichitiet" class="form-input w-full p-3 rounded-lg border border-border focus:border-primary outline-none transition-all bg-white" required placeholder="Ví dụ: 123 Đường Lê Lợi">
+            </div>
+
+            <div class="form-group checkbox-group md:col-span-3 flex items-center gap-2">
+              <input type="checkbox" id="save-info" class="w-4 h-4 accent-primary">
+              <label for="save-info" class="text-sm text-text-muted font-medium cursor-pointer">Lưu thông tin cho lần mua sau</label>
+            </div>
+          </div>
         </div>
-              <div id="map"></div>
-              <div class="calculation">
-                  <div class="item">
-                      <span class="label">Khoảng cách:</span>
-                      <span class="value" id="distance">0 km</span>
-                  </div>
-                  <div class="item">
-                      <span class="label">Thời gian:</span>
-                      <span class="value" id="duration">0 phút</span>
-                  </div>
-              </div>
+      </div>
+
+      <div class="space-y-8">
+        <h2 class="text-xl font-black text-gray-800 uppercase tracking-tighter flex items-center gap-3">
+          <span class="w-8 h-8 bg-primary text-white flex items-center justify-center rounded-full text-sm italic">2</span>
+          BẢN ĐỒ VÀ VẬN CHUYỂN
+        </h2>
+
+        <div class="map_container space-y-4">
+          <div class="flex gap-2">
+            <button type="button" id="input_button" class="flex-1 bg-gray-800 text-white py-2.5 rounded-lg font-bold text-sm hover:bg-black transition-all">TÌM VỊ TRÍ</button>
+            <button type="button" id="delete_button" class="px-4 bg-gray-200 text-gray-600 py-2.5 rounded-lg font-bold text-sm hover:bg-gray-300 transition-all">XÓA</button>
+          </div>
+          <div id="map" class="h-64 rounded-lg border border-border shadow-inner z-0"></div>
+          <div class="calculation grid grid-cols-2 gap-4">
+            <div class="item bg-primary-light p-3 rounded-lg border border-primary/10">
+              <span class="label block text-[10px] font-bold text-primary uppercase">Khoảng cách:</span>
+              <span class="value text-lg font-black text-primary" id="distance">0 km</span>
+            </div>
+            <div class="item bg-primary-light p-3 rounded-lg border border-primary/10">
+              <span class="label block text-[10px] font-bold text-primary uppercase">Thời gian:</span>
+              <span class="value text-lg font-black text-primary" id="duration">0 phút</span>
+            </div>
           </div>
         </div>
 
-        <div class="form-group" id="payment-method-group" style="position: relative;">
-          <label>Phương thức thanh toán *</label>
-          <input type="hidden" id="payment-method" class="form-input" required>
-          <div class="payment-methods-grid">
-            <label class="payment-method-card" data-method="COD">
-              <input type="radio" name="paymentOption" value="COD" onchange="document.getElementById('payment-method').value = this.value; document.getElementById('payment-method').dispatchEvent(new Event('change'));">
-              <div class="payment-card-content">
-                <i class="fas fa-hand-holding-usd payment-icon cod-icon"></i>
-                <span>Thanh toán COD</span>
+        <div class="form-group space-y-4" id="payment-method-group">
+          <label class="text-sm font-bold text-text-muted block uppercase tracking-wider">3. PHƯƠNG THỨC THANH TOÁN *</label>
+          <input type="hidden" id="payment-method" required>
+          <div class="payment-methods-grid grid grid-cols-2 gap-3">
+            <label class="payment-method-card relative cursor-pointer group" data-method="COD">
+              <input type="radio" name="paymentOption" value="COD" class="peer absolute opacity-0" onchange="document.getElementById('payment-method').value = this.value; document.getElementById('payment-method').dispatchEvent(new Event('change'));">
+              <div class="payment-card-content p-4 rounded-xl border-2 border-border flex flex-col items-center gap-2 group-hover:border-primary-light transition-all peer-checked:border-primary peer-checked:bg-primary-light">
+                <i class="fas fa-hand-holding-usd text-2xl text-gray-400 peer-checked:text-primary transition-colors"></i>
+                <span class="text-xs font-bold text-gray-500 peer-checked:text-primary uppercase">Thanh toán COD</span>
               </div>
             </label>
-            <label class="payment-method-card" data-method="VNPAY">
-              <input type="radio" name="paymentOption" value="VNPAY" onchange="document.getElementById('payment-method').value = this.value; document.getElementById('payment-method').dispatchEvent(new Event('change'));">
-              <div class="payment-card-content">
-                <i class="fas fa-credit-card payment-icon vnpay-icon" style="color: #005A9E;"></i>
-                <span>Qua VNPay</span>
+            <label class="payment-method-card relative cursor-pointer group" data-method="VNPAY">
+              <input type="radio" name="paymentOption" value="VNPAY" class="peer absolute opacity-0" onchange="document.getElementById('payment-method').value = this.value; document.getElementById('payment-method').dispatchEvent(new Event('change'));">
+              <div class="payment-card-content p-4 rounded-xl border-2 border-border flex flex-col items-center gap-2 group-hover:border-primary-light transition-all peer-checked:border-primary peer-checked:bg-primary-light">
+                <i class="fas fa-credit-card text-2xl text-gray-400 peer-checked:text-primary transition-colors" style="color: #005A9E;"></i>
+                <span class="text-xs font-bold text-gray-500 peer-checked:text-primary uppercase">Qua VNPay</span>
               </div>
             </label>
-            <label class="payment-method-card" data-method="MOMO">
-              <input type="radio" name="paymentOption" value="MOMO" onchange="document.getElementById('payment-method').value = this.value; document.getElementById('payment-method').dispatchEvent(new Event('change'));">
-              <div class="payment-card-content">
-                <i class="fas fa-wallet payment-icon momo-icon" style="color: #A50064;"></i>
-                <span>Qua MoMo</span>
+            <label class="payment-method-card relative cursor-pointer group" data-method="MOMO">
+              <input type="radio" name="paymentOption" value="MOMO" class="peer absolute opacity-0" onchange="document.getElementById('payment-method').value = this.value; document.getElementById('payment-method').dispatchEvent(new Event('change'));">
+              <div class="payment-card-content p-4 rounded-xl border-2 border-border flex flex-col items-center gap-2 group-hover:border-primary-light transition-all peer-checked:border-primary peer-checked:bg-primary-light">
+                <i class="fas fa-wallet text-2xl text-gray-400 peer-checked:text-primary transition-colors" style="color: #A50064;"></i>
+                <span class="text-xs font-bold text-gray-500 peer-checked:text-primary uppercase">Qua MoMo</span>
               </div>
             </label>
-            <label class="payment-method-card" data-method="ZALOPAY">
-              <input type="radio" name="paymentOption" value="ZALOPAY" onchange="document.getElementById('payment-method').value = this.value; document.getElementById('payment-method').dispatchEvent(new Event('change'));">
-              <div class="payment-card-content">
-                <i class="fas fa-wallet payment-icon zalopay-icon" style="color: #FFC600; font-weight: bold;">ZP</i>
-                <span>Qua ZaloPay</span>
+            <label class="payment-method-card relative cursor-pointer group" data-method="ZALOPAY">
+              <input type="radio" name="paymentOption" value="ZALOPAY" class="peer absolute opacity-0" onchange="document.getElementById('payment-method').value = this.value; document.getElementById('payment-method').dispatchEvent(new Event('change'));">
+              <div class="payment-card-content p-4 rounded-xl border-2 border-border flex flex-col items-center gap-2 group-hover:border-primary-light transition-all peer-checked:border-primary peer-checked:bg-primary-light">
+                <span class="text-2xl font-black text-gray-400 peer-checked:text-primary transition-colors" style="color: #008fe5;">ZP</span>
+                <span class="text-xs font-bold text-gray-500 peer-checked:text-primary uppercase">Qua ZaloPay</span>
               </div>
             </label>
           </div>
         </div>
 
         <div class="form-group">
-          <label for="notes">Ghi chú đơn hàng (tuỳ chọn)</label>
-          <textarea id="notes" class="form-textarea" rows="4" placeholder="Ghi chú về đơn hàng của bạn..."></textarea>
+          <label for="notes" class="block text-sm font-bold text-text-muted mb-2 uppercase tracking-wider">Ghi chú đơn hàng (tuỳ chọn)</label>
+          <textarea id="notes" class="form-textarea w-full p-4 rounded-lg border border-border focus:border-primary outline-none transition-all bg-gray-50 focus:bg-white resize-none text-sm" rows="3" placeholder="Ghi chú về đơn hàng của bạn..."></textarea>
         </div>
       </div>
     </div>
+
+    <footer class="page-footer py-12 text-center text-gray-400 italic text-sm">
+      <p>Rất vui được phục vụ bạn.</p>
+    </footer>
+  </div>
 
     <footer class="page-footer">
       <p>Rất vui được phục vụ bạn .</p>

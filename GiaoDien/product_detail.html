@@ -4,187 +4,206 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chi tiết sản phẩm</title>
-    <link rel="stylesheet" href="styles/header.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Page-specific styles -->
-    <link rel="stylesheet" href="styles/product_detail.css">
-    <link rel="stylesheet" href="styles/products_sales.css" />
+    <link rel="icon" href="favicon.ico" type="image/x-icon" />
+
+    <!-- Tailwind CSS CDN & Config -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="js/tailwind-config.js"></script>
     
     <!-- API Configuration - LOAD EARLY -->
     <script src="js/config.js"></script>
     <script src="js/api-patcher.js"></script>
 </head>
-<body>
+
+<body class="bg-bg pt-14 font-body antialiased">
     <!-- Header -->
     <div id="load-header"></div>
     
     <!-- Main Content -->
-    <div class="container">
+    <div class="container max-w-[1300px] mx-auto px-4 py-8">
         <!-- Breadcrumb Navigation -->
-        <nav class="breadcrumb">
-            <a href="index.html">Trang chủ</a>
-            <span>›</span>
-            <a href="book.html">Danh sách sản phẩm</a>
-            <span>›</span>
-            <span id="product-title-breadcrumb">Chi tiết sản phẩm</span>
+        <nav class="breadcrumb flex items-center gap-2 text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-8">
+            <a href="index.html" class="hover:text-primary transition-colors">Trang chủ</a>
+            <span class="text-gray-300">/</span>
+            <a href="book.html" class="hover:text-primary transition-colors">Danh sách sản phẩm</a>
+            <span class="text-gray-300">/</span>
+            <span id="product-title-breadcrumb" class="text-gray-800">Chi tiết sản phẩm</span>
         </nav>
 
         <!-- Product Detail Section -->
-        <section class="product-detail-section">
-            <!-- CỘT TRÁI - Product Images + Promotions -->
-            <div class="product-left-column">
-                <!-- Product Images -->
-                <div class="product-images">
-                    <div class="main-image">
-                        <img id="main-product-image" src="" alt="Product Image">
+        <section class="product-detail-section bg-white p-8 rounded-2xl border border-border shadow-sm mb-12 flex flex-col lg:flex-row gap-12">
+            <!-- CỘT TRÁI - Product Images -->
+            <div class="product-left-column w-full lg:w-1/3 flex-shrink-0">
+                <div class="product-images sticky top-24 space-y-4">
+                    <div class="main-image aspect-square rounded-2xl border border-border overflow-hidden bg-white shadow-inner flex items-center justify-center p-8 group">
+                        <img id="main-product-image" src="" alt="Product Image" class="max-w-full max-h-full object-contain group-hover:scale-105 transition-transform duration-500">
                     </div>
-                    <!-- Thumbnails: will be populated by JS (id used in product_detail.js) -->
-                    <div class="product-thumbs" id="product-thumbs" aria-label="Hình ảnh phụ sản phẩm"></div>
+                    <!-- Thumbnails -->
+                    <div class="product-thumbs grid grid-cols-4 gap-3" id="product-thumbs" aria-label="Hình ảnh phụ sản phẩm">
+                        <!-- JS renders thumbnails here -->
+                    </div>
                 </div>
             </div>
 
             <!-- CỘT PHẢI - Product Information -->
-            <div class="product-info">
-                <h1 id="product-title">Đang tải...</h1>
-                
-                <div class="product-meta">
-                   <span><i class="fas fa-user"></i> Tác giả: <span id="product-author">Đang cập nhật</span></span>
-                   <span><i class="fas fa-calendar-alt"></i> Năm XB: <span id="product-year">Đang cập nhật</span></span>
-                </div>
-
-                <!-- Delivery Information -->
-                <div class="delivery-info">
-                    <div class="delivery-item">
-                        <i class="fas fa-check-circle"></i>
-                        Bọc Plastic theo yêu cầu
+            <div class="product-info flex-1 space-y-8">
+                <div class="space-y-4">
+                    <h1 id="product-title" class="text-3xl font-display font-black text-gray-800 leading-tight">Đang tải...</h1>
+                    <div class="product-meta flex flex-wrap gap-6 text-sm font-medium">
+                       <span class="flex items-center gap-2 text-gray-500">
+                           <i class="fas fa-user text-primary/60"></i> Tác giả: <span id="product-author" class="text-gray-800 font-bold hover:text-primary cursor-pointer">Đang cập nhật</span>
+                       </span>
+                       <span class="flex items-center gap-2 text-gray-500">
+                           <i class="fas fa-calendar-alt text-primary/60"></i> Năm XB: <span id="product-year" class="text-gray-800 font-bold">Đang cập nhật</span>
+                       </span>
                     </div>
-                    <div class="delivery-item">
-                        <i class="fas fa-shipping-fast"></i>
-                        Giao hàng miễn phí nội thành TP.HCM (đơn ≥ 200.000đ)
-                    </div>
-                    <div class="delivery-item">
-                        <i class="fas fa-shipping-fast"></i>
-                        Giao hàng miễn phí toàn quốc (đơn ≥ 350.000đ)
-                    </div>
-                </div>
-
-                <!-- Wishlist Button -->
-                <div class="wishlist">
-                    <button id="add-to-wishlist">
-                        <i class="far fa-heart"></i> Thêm vào yêu thích
-                    </button>
                 </div>
 
                 <!-- Price Section -->
-                <div class="price-section">
-                    <div class="current-price" id="product-price">0 đ</div>
-                    <div class="original-price hidden" id="product-original-price"></div>
-                    <div class="discount hidden" id="product-discount"></div>
+                <div class="price-section bg-gray-50 p-6 rounded-2xl border border-border flex items-baseline gap-4">
+                    <div class="current-price text-4xl font-black text-primary tracking-tighter" id="product-price">0 đ</div>
+                    <div class="original-price text-lg text-gray-400 line-through font-medium hidden" id="product-original-price"></div>
+                    <div class="discount bg-primary text-white text-[10px] font-black px-2 py-0.5 rounded-md uppercase hidden" id="product-discount"></div>
+                </div>
+
+                <!-- Delivery & Info -->
+                <div class="delivery-info grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="delivery-item flex items-start gap-3 p-4 bg-green-50/50 rounded-xl border border-green-100/50">
+                        <i class="fas fa-check-circle text-green-500 mt-1"></i>
+                        <span class="text-xs font-bold text-green-800 leading-relaxed">Bọc Plastic theo yêu cầu</span>
+                    </div>
+                    <div class="delivery-item flex items-start gap-3 p-4 bg-blue-50/50 rounded-xl border border-blue-100/50">
+                        <i class="fas fa-shipping-fast text-blue-500 mt-1"></i>
+                        <span class="text-xs font-bold text-blue-800 leading-relaxed">Giao hàng miễn phí nội thành TP.HCM (đơn ≥ 200k)</span>
+                    </div>
+                    <div class="delivery-item flex items-start gap-3 p-4 bg-blue-50/50 rounded-xl border border-blue-100/50">
+                        <i class="fas fa-shipping-fast text-blue-500 mt-1"></i>
+                        <span class="text-xs font-bold text-blue-800 leading-relaxed">Giao hàng miễn phí toàn quốc (đơn ≥ 350k)</span>
+                    </div>
                 </div>
 
                 <!-- Action Buttons -->
-                <div class="action-buttons">
-                    <button class="btn add-to-cart-btn" id="add-to-cart">
-                        <i class="fas fa-cart-plus"></i> Thêm vào giỏ hàng
+                <div class="action-buttons flex flex-wrap gap-4 pt-4 border-t border-border">
+                    <button class="btn add-to-cart-btn flex-1 min-w-[200px] bg-white border-2 border-primary text-primary hover:bg-primary hover:text-white px-8 py-4 rounded-2xl font-black text-base transition-all active:scale-95 flex items-center justify-center gap-3 shadow-md" id="add-to-cart">
+                        <i class="fas fa-cart-plus"></i> THÊM VÀO GIỎ
                     </button>
-                    <button class="btn buy-now-btn" id="buy-now">
-                        <i class="fas fa-bolt"></i> Mua ngay
+                    <button class="btn buy-now-btn flex-1 min-w-[200px] bg-primary hover:bg-primary-dark text-white px-8 py-4 rounded-2xl font-black text-base transition-all active:scale-95 flex items-center justify-center gap-3 shadow-lg shadow-primary/30" id="buy-now">
+                        <i class="fas fa-bolt"></i> MUA NGAY
                     </button>
                 </div>
 
+                <!-- Wishlist Button -->
+                <div class="wishlist text-center">
+                    <button id="add-to-wishlist" class="text-xs font-bold text-gray-400 hover:text-primary transition-all flex items-center justify-center gap-2 mx-auto px-4 py-2 rounded-full hover:bg-primary-light">
+                        <i class="far fa-heart"></i> Thêm vào danh sách yêu thích
+                    </button>
+                </div>
             </div>
         </section>
 
         <!-- Product Description -->
-        <section class="product-description">
-            <h2 class="section-title">
-                <span class="title-left"><i class="fas fa-book-open"></i> Giới thiệu sách</span>
-            </h2>
-            <div class="description-grid">
-                <!-- LEFT: details populated by JS -->
-                <div class="description-left">
-                    <!-- product-extra-info will be inserted here -->
-                </div>
-
-                <!-- RIGHT: intro / description (keep ID for existing JS) -->
-                <div class="description-right">
-                    <div class="description-box">
-                        <h3 class="description-title">Mô tả sản phẩm</h3>
-                        <div class="description-content" id="product-description">
-                            Đang tải mô tả sản phẩm...
+        <section class="product-description grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12">
+            <div class="lg:col-span-2 bg-white p-8 rounded-2xl border border-border shadow-sm">
+                <h2 class="text-xl font-black text-gray-800 uppercase tracking-tighter mb-8 flex items-center gap-3">
+                    <i class="fas fa-book-open text-primary"></i> GIỚI THIỆU SÁCH
+                </h2>
+                <div class="description-grid space-y-8">
+                    <div class="description-left grid grid-cols-1 sm:grid-cols-2 gap-x-12 gap-y-4 text-sm">
+                        <!-- JS renders details here -->
+                    </div>
+                    <div class="description-right pt-8 border-t border-dashed border-border">
+                        <div class="description-box">
+                            <h3 class="text-sm font-black text-gray-400 uppercase mb-4 tracking-widest">Mô tả chi tiết</h3>
+                            <div class="description-content text-gray-600 leading-loose prose max-w-none" id="product-description">
+                                Đang tải mô tả sản phẩm...
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
-        </section>
 
-        <section class="product-detail-section">
-            <!-- PROMOTION SECTION - DI CHUYỂN VÀO ĐÂY -->
-                <div class="product-promotions hidden" id="product-promotions">
-                    <h3><i class="fas fa-gift"></i> Khuyến mãi áp dụng</h3>
-                    <div class="promotions-container" id="promotions-container">
-                        <!-- Sẽ được điền bằng JavaScript -->
-                    </div>
+            <!-- Promotion Section -->
+            <div class="product-promotions bg-white p-8 rounded-2xl border border-border shadow-sm h-fit sticky top-24 hidden" id="product-promotions">
+                <h3 class="text-lg font-black text-gray-800 uppercase tracking-tighter mb-6 flex items-center gap-2">
+                    <i class="fas fa-gift text-primary"></i> KHUYẾN MÃI
+                </h3>
+                <div class="promotions-container space-y-4" id="promotions-container">
+                    <!-- JS renders promotions here -->
                 </div>
+            </div>
         </section>
 
         <!-- Product Ratings -->
-        <section class="product-ratings">
-            <h2><i class="fas fa-star"></i> Đánh giá sản phẩm</h2>
+        <section class="product-ratings bg-white p-8 rounded-2xl border border-border shadow-sm mb-12">
+            <h2 class="text-xl font-black text-gray-800 uppercase tracking-tighter mb-10 flex items-center gap-3">
+                <i class="fas fa-star text-yellow-400"></i> ĐÁNH GIÁ SẢN PHẨM
+            </h2>
             
-            <!-- Rating Summary -->
-            <div class="rating-summary">
-                <div class="average-rating" id="average-rating">0.0</div>
-                <div class="star-display" id="star-display">
-                    <i class="far fa-star"></i>
-                    <i class="far fa-star"></i>
-                    <i class="far fa-star"></i>
-                    <i class="far fa-star"></i>
-                    <i class="far fa-star"></i>
-                </div>
-                <div class="total-ratings" id="total-ratings">(0 đánh giá)</div>
-            </div>
-
-            <!-- Rating Form -->
-            <form id="rating-form">
-                <div class="rating-input">
-                    <div id="star-input">
-                        <i class="far fa-star" data-value="1"></i>
-                        <i class="far fa-star" data-value="2"></i>
-                        <i class="far fa-star" data-value="3"></i>
-                        <i class="far fa-star" data-value="4"></i>
-                        <i class="far fa-star" data-value="5"></i>
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-12 items-start">
+                <!-- Rating Summary -->
+                <div class="rating-summary bg-gray-50 p-8 rounded-3xl text-center space-y-3">
+                    <div class="average-rating text-6xl font-black text-gray-800 tracking-tighter" id="average-rating">0.0</div>
+                    <div class="star-display text-yellow-400 text-xl flex justify-center gap-1" id="star-display">
+                        <i class="far fa-star"></i><i class="far fa-star"></i><i class="far fa-star"></i><i class="far fa-star"></i><i class="far fa-star"></i>
                     </div>
-                    <textarea id="rating-comment" placeholder="Viết nhận xét của bạn về sản phẩm..." maxlength="500"></textarea>
-                    <div class="comment-form-footer">
-                        <span class="comment-char-count" id="rating-char-count">0/500</span>
-                        <button type="submit" id="submit-rating" disabled>Gửi đánh giá</button>
-                    </div>
-                    <div id="rating-message"></div>
+                    <div class="total-ratings text-xs font-bold text-gray-400 uppercase tracking-widest" id="total-ratings">(0 ĐÁNH GIÁ)</div>
                 </div>
-            </form>
 
-            <!-- Ratings List -->
-            <div class="ratings-list" id="ratings-list">
-                <p>Chưa có đánh giá nào.</p>
+                <!-- Rating Form -->
+                <div class="lg:col-span-2">
+                    <form id="rating-form" class="space-y-6">
+                        <div class="rating-input space-y-4">
+                            <div class="flex items-center gap-4">
+                                <span class="text-sm font-bold text-gray-600 uppercase">Đánh giá của bạn:</span>
+                                <div id="star-input" class="text-2xl text-gray-200 flex gap-2 cursor-pointer">
+                                    <i class="far fa-star hover:text-yellow-400 transition-colors" data-value="1"></i>
+                                    <i class="far fa-star hover:text-yellow-400 transition-colors" data-value="2"></i>
+                                    <i class="far fa-star hover:text-yellow-400 transition-colors" data-value="3"></i>
+                                    <i class="far fa-star hover:text-yellow-400 transition-colors" data-value="4"></i>
+                                    <i class="far fa-star hover:text-yellow-400 transition-colors" data-value="5"></i>
+                                </div>
+                            </div>
+                            <div class="relative">
+                                <textarea id="rating-comment" placeholder="Viết nhận xét của bạn về sản phẩm..." maxlength="500"
+                                    class="w-full p-4 bg-gray-50 border border-border rounded-2xl outline-none focus:border-primary focus:bg-white transition-all text-sm h-32 resize-none"></textarea>
+                                <span class="absolute bottom-4 right-4 text-[10px] font-bold text-gray-300" id="rating-char-count">0/500</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <div id="rating-message" class="text-xs font-medium"></div>
+                                <button type="submit" id="submit-rating" disabled 
+                                    class="bg-primary disabled:bg-gray-200 disabled:cursor-not-allowed text-white px-8 py-3 rounded-xl font-bold text-sm shadow-lg shadow-primary/20 transition-all active:scale-95">
+                                    GỬI ĐÁNH GIÁ
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+
+                    <!-- Ratings List -->
+                    <div class="ratings-list mt-12 space-y-8 border-t border-border pt-12" id="ratings-list">
+                        <p class="text-center text-gray-400 italic">Chưa có đánh giá nào.</p>
+                    </div>
+                </div>
             </div>
         </section>
 
-        <!-- Product Comments removed -->
-
         <!-- Related Authors -->
-        <section class="related-authors">
-            <h2><i class="fas fa-user-tie"></i> Tác giả liên quan</h2>
-            <div id="related-authors">
-                <div class="loading-authors">Đang tải thông tin tác giả...</div>
+        <section class="related-authors mb-12">
+            <h2 class="text-xl font-black text-gray-800 uppercase tracking-tighter mb-8 flex items-center gap-3">
+                <i class="fas fa-user-tie text-primary"></i> TÁC GIẢ LIÊN QUAN
+            </h2>
+            <div id="related-authors" class="flex flex-wrap gap-4">
+                <div class="text-sm text-gray-400 italic">Đang tải thông tin tác giả...</div>
             </div>
         </section>
 
         <!-- Related Products -->
         <section class="related-products">
-            <h2><i class="fas fa-books"></i> Sản phẩm liên quan</h2>
-            <div id="related-products" class="products-grid">
-                <div class="loading-related">Đang tải sản phẩm liên quan...</div>
+            <h2 class="text-xl font-black text-gray-800 uppercase tracking-tighter mb-8 flex items-center gap-3">
+                <i class="fas fa-layer-group text-primary"></i> SẢN PHẨM LIÊN QUAN
+            </h2>
+            <div id="related-products" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6">
+                <div class="text-sm text-gray-400 italic">Đang tải sản phẩm liên quan...</div>
             </div>
         </section>
     </div>

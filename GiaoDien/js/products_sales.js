@@ -1,8 +1,37 @@
-// products_sales.js
-// API-first implementation to load active promotion products into the product_sales component.
-// No hard-coded sample data. If the API can't be reached the UI shows a retry button and (optionally) uses a cached response from localStorage.
-
 (function () {
+    // Inject Styles
+    if (!document.getElementById('product-sales-styles')) {
+        const style = document.createElement('style');
+        style.id = 'product-sales-styles';
+        style.textContent = `
+            .flash-sale-container { background: #fff; border-radius: 24px; padding: 32px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); border: 1px solid #eee; margin-bottom: 40px; }
+            .flash-sale-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+            .flash-sale-left { display: flex; align-items: center; gap: 20px; }
+            .flash-sale-left h2 { font-family: 'Playfair Display', serif; font-size: 28px; font-weight: 900; color: #C0392B; margin: 0; letter-spacing: -1px; }
+            .countdown { display: flex; align-items: center; gap: 8px; font-family: 'Inter', sans-serif; }
+            .cd-box { background: #1a1a1a; color: #fff; padding: 4px 8px; border-radius: 6px; font-weight: 700; min-width: 32px; text-align: center; }
+            .cd-lbl { font-size: 12px; color: #666; font-weight: 600; margin-right: 4px; }
+            .flash-products { display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; }
+            .sale-item { background: #fff; border: 1px solid #eee; border-radius: 20px; overflow: hidden; transition: all 0.3s; display: flex; flex-direction: column; }
+            .sale-item:hover { transform: translateY(-5px); box-shadow: 0 10px 30px rgba(0,0,0,0.1); border-color: #C0392B; }
+            .sale-item-image-wrapper { width: 100%; aspect-ratio: 3/4; background: #f9f9f9; display: flex; align-items: center; justify-content: center; }
+            .sale-item-img { width: 100%; height: 100%; object-fit: contain; }
+            .sale-item-info { padding: 20px; flex: 1; display: flex; flex-direction: column; }
+            .sale-item-title { font-size: 15px; font-weight: 700; color: #1a1a1a; margin-bottom: 8px; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+            .sale-item-author { font-size: 13px; color: #666; margin-bottom: 4px; }
+            .sale-item-year { font-size: 12px; color: #999; margin-bottom: 12px; }
+            .sale-item-price { display: flex; justify-content: space-between; align-items: flex-end; margin-top: auto; }
+            .discount-price { font-size: 18px; font-weight: 800; color: #C0392B; }
+            .badge-percent { background: #C0392B; color: #fff; font-size: 10px; font-weight: 800; padding: 2px 6px; border-radius: 4px; margin-left: 6px; vertical-align: middle; }
+            .sale-item-quantity { font-size: 11px; color: #999; text-align: right; }
+            .sale-item-actions { display: flex; gap: 8px; margin-top: 16px; }
+            .btn-add-cart { flex: 1; background: #C0392B; color: #fff; border: none; padding: 10px; border-radius: 10px; font-weight: 700; cursor: pointer; }
+            .btn-detail { flex: 1; background: #fff; color: #555; border: 1px solid #ddd; padding: 10px; border-radius: 10px; font-weight: 700; cursor: pointer; }
+            @media (max-width: 1024px) { .flash-products { grid-template-columns: repeat(2, 1fr); } }
+            @media (max-width: 640px) { .flash-sale-header { flex-direction: column; align-items: flex-start; gap: 16px; } .view-all-btn { width: 100%; } }
+        `;
+        document.head.appendChild(style);
+    }
 	const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || window.API_CONFIG.BASE_URL;
 	const API_URL = `${_apiBase}/api/khuyenmai/active-products`;
 		const container = document.getElementById('flash-products');

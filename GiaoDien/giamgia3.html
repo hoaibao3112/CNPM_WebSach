@@ -1,74 +1,95 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="vi">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Ưu Đãi Ngành Hàng Gấp Bội</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-  <link rel="stylesheet" href="styles/giamgia3.css">
-   <link rel="stylesheet" href="styles/header.css">
-   <link rel="stylesheet" href="styles/index.css">
-    <link rel="stylesheet" href="styles/recommend-widget.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
-<body>
-  <!-- header -->
-  <div id="load-header"></div>
-  <div class="top-banner">
-    <img src="img/anhnen3/anh1.png" alt="5 tầng ưu đãi">
-  </div>
-  <div class="inner-banner">
-    <img src="img/anhnen3/anh2.png" alt="Ưu đãi ngành hàng gấp bội">
-  </div>
-  <div class="voucher-list" id="voucherList">
-    <!-- Các voucher sẽ được render bằng JS -->
-  </div>
+    <link rel="icon" href="favicon.ico" type="image/x-icon" />
 
-  <!-- Recommend widget mount point -->
-  <div id="recommend-widget-container"></div>
+    <!-- Tailwind CSS CDN & Config -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="js/tailwind-config.js"></script>
+    
+    <!-- API Configuration - LOAD EARLY -->
+    <script src="js/config.js"></script>
+    <script src="js/api-patcher.js"></script>
+</head>
 
-  <div class="inner-banner">
-    <img src="img/anhnen3/anh3.png" alt="Ưu đãi đối tác">
-  </div>
+<body class="bg-bg pt-14 font-body antialiased">
+    <div id="load-header"></div>
 
-  <div class="two-banner-wrapper">
-    <!-- Slider bên trái -->
-    <div class="slider left-slider">
-      <div class="slides">
-        <img src="img/anhnen3/slide1.jpg" alt="Ảnh 1">
-        <img src="img/anhnen3/slide2.jpg" alt="Ảnh 2">
-        <img src="img/anhnen3/slide3.png" alt="Ảnh 3">
-      </div>
-    </div>
+    <main class="container max-w-[1300px] mx-auto px-4 py-8 space-y-12">
+        <!-- Top Banner -->
+        <div class="top-banner rounded-[2.5rem] overflow-hidden shadow-2xl border-4 border-white transform hover:scale-[1.01] transition-transform duration-700">
+            <img src="img/anhnen3/anh1.png" alt="5 tầng ưu đãi" class="w-full h-auto">
+        </div>
 
-    <!-- Slider bên phải -->
-    <div class="slider right-slider">
-      <div class="slides">
-        <img src="img/anhnen3/slide4.png" alt="Ảnh 4">
-        <img src="img/anhnen3/slide5.png" alt="Ảnh 5">
-        <img src="img/anhnen3/slide6.png" alt="Ảnh 6">
-      </div>
-    </div>
+        <!-- Inner Banner -->
+        <div class="inner-banner rounded-3xl overflow-hidden shadow-lg border border-border">
+            <img src="img/anhnen3/anh2.png" alt="Ưu đãi ngành hàng gấp bội" class="w-full h-auto">
+        </div>
 
-    <!-- Nút điều khiển -->
-    <button class="prev">&#10094;</button>
-    <button class="next">&#10095;</button>
-  </div>
+        <!-- Voucher List -->
+        <div class="voucher-list grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8" id="voucherList">
+            <!-- Content loaded from API via giamgia3.js -->
+        </div>
 
+        <!-- Recommend widget mount point -->
+        <div id="recommend-widget-container" class="pt-20 border-t border-border"></div>
 
+        <!-- Partner Banner -->
+        <div class="inner-banner rounded-3xl overflow-hidden shadow-lg border border-border">
+            <img src="img/anhnen3/anh3.png" alt="Ưu đãi đối tác" class="w-full h-auto">
+        </div>
 
-  
-  <!-- API Configuration - MUST load first! -->
-  <script src="js/config.js"></script>
-  <script src="js/api-patcher.js"></script>
+        <!-- Sliders Wrapper -->
+        <div class="two-banner-wrapper relative grid grid-cols-1 md:grid-cols-2 gap-8">
+            <!-- Slider bên trái -->
+            <div class="slider left-slider relative aspect-[16/9] rounded-3xl overflow-hidden shadow-xl border border-border group">
+                <div class="slides flex w-full h-full transition-transform duration-700 ease-in-out">
+                    <img src="img/anhnen3/slide1.jpg" alt="Ảnh 1" class="w-full h-full object-cover flex-shrink-0">
+                    <img src="img/anhnen3/slide2.jpg" alt="Ảnh 2" class="w-full h-full object-cover flex-shrink-0">
+                    <img src="img/anhnen3/slide3.png" alt="Ảnh 3" class="w-full h-full object-cover flex-shrink-0">
+                </div>
+            </div>
 
-<script src="js/giamgia3.js"></script>
-  <script src="js/loadHeader.js"></script>
+            <!-- Slider bên phải -->
+            <div class="slider right-slider relative aspect-[16/9] rounded-3xl overflow-hidden shadow-xl border border-border group">
+                <div class="slides flex w-full h-full transition-transform duration-700 ease-in-out">
+                    <img src="img/anhnen3/slide4.png" alt="Ảnh 4" class="w-full h-full object-cover flex-shrink-0">
+                    <img src="img/anhnen3/slide5.png" alt="Ảnh 5" class="w-full h-full object-cover flex-shrink-0">
+                    <img src="img/anhnen3/slide6.png" alt="Ảnh 6" class="w-full h-full object-cover flex-shrink-0">
+                </div>
+            </div>
 
-  <script src="js/recommend-widget.js"></script>
+            <!-- Nút điều khiển -->
+            <div class="absolute inset-0 flex items-center justify-between px-4 pointer-events-none">
+                <button class="prev w-12 h-12 bg-white/90 backdrop-blur-sm border border-border rounded-full flex items-center justify-center text-gray-800 shadow-xl hover:bg-white hover:scale-110 transition-all pointer-events-auto">
+                    <i class="fas fa-chevron-left"></i>
+                </button>
+                <button class="next w-12 h-12 bg-white/90 backdrop-blur-sm border border-border rounded-full flex items-center justify-center text-gray-800 shadow-xl hover:bg-white hover:scale-110 transition-all pointer-events-auto">
+                    <i class="fas fa-chevron-right"></i>
+                </button>
+            </div>
+        </div>
+    </main>
 
-  <!-- Footer placeholder -->
-  <div id="load-footer"></div>
-  <script src="js/loadFooter.js"></script>
+    <div id="load-footer"></div>
 
+    <script src="js/config.js"></script>
+    <script src="js/api-patcher.js"></script>
+    <script src="js/giamgia3.js"></script>
+    <script src="js/loadHeader.js"></script>
+    <script src="js/loadFooter.js"></script>
+    <script src="js/recommend-widget.js"></script>
+
+    <style>
+        .voucher-card {
+            @apply bg-white p-8 rounded-3xl border border-border shadow-sm flex flex-col gap-4 relative transition-all duration-300 hover:shadow-xl hover:-translate-y-2;
+        }
+    </style>
 </body>
 </html>

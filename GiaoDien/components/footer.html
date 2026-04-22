@@ -1,80 +1,84 @@
-<!-- Footer partial: place this file in GiaoDien/components/footer.html and load it via JS -->
-<footer class="site-footer">
-  <div class="footer-container">
+<footer class="site-footer bg-[#1e1e1e] text-[#e0e0e0] pt-12 mt-10">
+  <div class="footer-container max-w-[1300px] mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 px-6 pb-8 border-b border-gray-800">
+    <!-- Brand Section -->
     <div class="footer-section">
-      <div class="footer-logo">
-        <img src="img/logo1.png" alt="Fahasa Logo" class="footer-logo-img">
-        <span class="site-name">Fahasa.com</span>
+      <div class="footer-logo flex items-center gap-3 mb-4">
+        <img src="img/logo1.png" alt="Logo" class="footer-logo-img h-10 w-auto">
+        <span class="site-name font-display text-xl font-bold text-primary">BaoStore.com</span>
       </div>
-      <p class="footer-description">
-        Fahasa.com nhận đặt hàng trực tuyến và giao hàng tận nơi. Không hỗ trợ đặt hàng qua điện thoại tại văn phòng công ty. Hãy đến Hệ thống Fahasa trên toàn quốc.
+      <p class="footer-description text-sm leading-relaxed text-gray-400 mb-6">
+        BaoStore.com nhận đặt hàng trực tuyến và giao hàng tận nơi. Không hỗ trợ đặt hàng qua điện thoại tại văn phòng công ty. Hãy đến Hệ thống BaoStore trên toàn quốc.
       </p>
-      <div class="social-media">
-        <a href="#" class="social-link" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
-        <a href="#" class="social-link" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
-        <a href="#" class="social-link" aria-label="YouTube"><i class="fab fa-youtube"></i></a>
-        <a href="#" class="social-link" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
-        <a href="#" class="social-link" aria-label="Google Plus"><i class="fab fa-google-plus-g"></i></a>
+      <div class="social-media flex gap-3 mb-6">
+        <a href="#" class="w-9 h-9 flex items-center justify-center rounded-full bg-gray-800 text-gray-400 hover:bg-primary hover:text-white transition-all"><i class="fab fa-facebook-f"></i></a>
+        <a href="#" class="w-9 h-9 flex items-center justify-center rounded-full bg-gray-800 text-gray-400 hover:bg-primary hover:text-white transition-all"><i class="fab fa-instagram"></i></a>
+        <a href="#" class="w-9 h-9 flex items-center justify-center rounded-full bg-gray-800 text-gray-400 hover:bg-primary hover:text-white transition-all"><i class="fab fa-youtube"></i></a>
+        <a href="#" class="w-9 h-9 flex items-center justify-center rounded-full bg-gray-800 text-gray-400 hover:bg-primary hover:text-white transition-all"><i class="fab fa-twitter"></i></a>
       </div>
-      <div class="app-links">
-        <a href="#"><img src="img/payment/anh8.jpg" alt="Google Play"></a>
-        <a href="#"><img src="img/payment/anh9.jpg" alt="App Store"></a>
+      <div class="app-links flex gap-3">
+        <a href="#" class="hover:opacity-80 transition-opacity"><img src="img/payment/anh8.jpg" alt="Google Play" class="h-8"></a>
+        <a href="#" class="hover:opacity-80 transition-opacity"><img src="img/payment/anh9.jpg" alt="App Store" class="h-8"></a>
       </div>
     </div>
 
+    <!-- Contact Section -->
     <div class="footer-section">
-      <h3 class="footer-title">LIÊN HỆ</h3>
-      <p class="contact-item">
-        <i class="fas fa-map-marker-alt contact-icon"></i>
-        <span>60-62 Lê Lợi, Q.1, TP. HCM</span>
-      </p>
-      <p class="contact-item">
-        <i class="fas fa-envelope contact-icon"></i>
-        <a href="mailto:info@fahasa.com" class="contact-link">info@fahasa.com</a>
-      </p>
-      <p class="contact-item">
-        <i class="fas fa-phone-alt contact-icon"></i>
-        <a href="tel:1900636467" class="contact-link">0374170367</a>
-      </p>
+      <h3 class="footer-title font-display text-lg font-bold text-primary mb-6 pb-2 border-b border-gray-800">LIÊN HỆ</h3>
+      <div class="space-y-4">
+        <p class="contact-item flex items-start gap-3 text-sm text-gray-400">
+          <i class="fas fa-map-marker-alt text-primary mt-1"></i>
+          <span>60-62 Lê Lợi, Q.1, TP. HCM</span>
+        </p>
+        <p class="contact-item flex items-start gap-3 text-sm text-gray-400">
+          <i class="fas fa-envelope text-primary mt-1"></i>
+          <a href="mailto:info@baostore.com" class="hover:text-primary transition-colors">info@baostore.com</a>
+        </p>
+        <p class="contact-item flex items-start gap-3 text-sm text-gray-400">
+          <i class="fas fa-phone-alt text-primary mt-1"></i>
+          <a href="tel:0374170367" class="hover:text-primary transition-colors">0374 170 367</a>
+        </p>
+      </div>
     </div>
 
+    <!-- Support Section -->
     <div class="footer-section">
-      <h3 class="footer-title">HỖ TRỢ</h3>
-      <ul class="footer-links">
-        <li><a href="#" class="footer-link">Chính sách đổi - trả</a></li>
-        <li><a href="#" class="footer-link">Chính sách bảo hành</a></li>
-        <li><a href="#" class="footer-link">Chính sách vận chuyển</a></li>
-        <li><a href="#" class="footer-link">Chính sách Khách sỉ</a></li>
+      <h3 class="footer-title font-display text-lg font-bold text-primary mb-6 pb-2 border-b border-gray-800">HỖ TRỢ</h3>
+      <ul class="footer-links space-y-3">
+        <li><a href="#" class="text-sm text-gray-400 hover:text-primary transition-colors">Chính sách đổi - trả</a></li>
+        <li><a href="#" class="text-sm text-gray-400 hover:text-primary transition-colors">Chính sách bảo hành</a></li>
+        <li><a href="#" class="text-sm text-gray-400 hover:text-primary transition-colors">Chính sách vận chuyển</a></li>
+        <li><a href="#" class="text-sm text-gray-400 hover:text-primary transition-colors">Chính sách Khách sỉ</a></li>
       </ul>
     </div>
 
+    <!-- Account Section -->
     <div class="footer-section">
-      <h3 class="footer-title">TÀI KHOẢN CỦA TÔI</h3>
-      <ul class="footer-links">
-        <li><a href="#" class="footer-link">Đăng nhập/Tạo mới tài khoản</a></li>
-        <li><a href="#" class="footer-link">Thay đổi địa chỉ</a></li>
-        <li><a href="#" class="footer-link">Chi tiết tài khoản</a></li>
-        <li><a href="#" class="footer-link">Lịch sử mua hàng</a></li>
+      <h3 class="footer-title font-display text-lg font-bold text-primary mb-6 pb-2 border-b border-gray-800">TÀI KHOẢN</h3>
+      <ul class="footer-links space-y-3">
+        <li><a href="login.html" class="text-sm text-gray-400 hover:text-primary transition-colors">Đăng nhập/Đăng ký</a></li>
+        <li><a href="profile.html" class="text-sm text-gray-400 hover:text-primary transition-colors">Thay đổi địa chỉ</a></li>
+        <li><a href="profile.html" class="text-sm text-gray-400 hover:text-primary transition-colors">Chi tiết tài khoản</a></li>
+        <li><a href="orders.html" class="text-sm text-gray-400 hover:text-primary transition-colors">Lịch sử mua hàng</a></li>
       </ul>
     </div>
   </div>
 
-  <div class="payment-methods">
-    <img src="img/payment/anh1.jpg" alt="VNPAY">
-    <img src="img/payment/anh2.jpg" alt="Momo">
-    <img src="img/payment/anh3.jpg" alt="ShopeePay">
-    <img src="img/payment/anh4.jpg" alt="ZaloPay">
-    <img src="img/payment/anh5.jpg" alt="ZaloPay">
-    <img src="img/payment/anh6.jpg" alt="ZaloPay">
-    <img src="img/payment/anh7.jpg" alt="ZaloPay">
+  <div class="payment-methods max-w-[1300px] mx-auto py-6 px-6 flex flex-wrap justify-center gap-4">
+    <img src="img/payment/anh1.jpg" alt="VNPAY" class="h-6 grayscale hover:grayscale-0 transition-all cursor-pointer">
+    <img src="img/payment/anh2.jpg" alt="Momo" class="h-6 grayscale hover:grayscale-0 transition-all cursor-pointer">
+    <img src="img/payment/anh3.jpg" alt="ShopeePay" class="h-6 grayscale hover:grayscale-0 transition-all cursor-pointer">
+    <img src="img/payment/anh4.jpg" alt="ZaloPay" class="h-6 grayscale hover:grayscale-0 transition-all cursor-pointer">
+    <img src="img/payment/anh5.jpg" alt="ZaloPay" class="h-6 grayscale hover:grayscale-0 transition-all cursor-pointer">
+    <img src="img/payment/anh6.jpg" alt="ZaloPay" class="h-6 grayscale hover:grayscale-0 transition-all cursor-pointer">
+    <img src="img/payment/anh7.jpg" alt="ZaloPay" class="h-6 grayscale hover:grayscale-0 transition-all cursor-pointer">
   </div>
 
   <!-- AI Chatbot injected globally via js/chatbot.js -->
   <script src="js/chatbot.js" defer></script>
 
-  <div class="footer-bottom">
-    <p>
-      Giấy chứng nhận Đăng ký Kinh doanh số 0304132047 do Sở Kế hoạch và Đầu tư Thành phố Hồ Chí Minh cấp ngày 20/12/2005, đăng ký thay đổi lần thứ 10, ngày 20/05/2022.
+  <div class="footer-bottom bg-black/30 py-4 px-6 text-center text-[10px] text-gray-500">
+    <p class="max-w-[1000px] mx-auto">
+      &copy; 2026 BaoStore. Giấy chứng nhận Đăng ký Kinh doanh số 0304132047 do Sở Kế hoạch và Đầu tư Thành phố Hồ Chí Minh cấp ngày 20/12/2005.
     </p>
   </div>
 </footer>

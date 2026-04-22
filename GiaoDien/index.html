@@ -11,173 +11,122 @@
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
   <!-- AOS — Animate On Scroll -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.css" />
-  <link rel="stylesheet" href="styles/header.css" />
-  <link rel="stylesheet" href="styles/index.css" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
-  <link rel="stylesheet" href="styles/book.css" />
-  <link rel="stylesheet" href="styles/recommend-widget.css" />
-  <link rel="stylesheet" href="styles/products_sales.css" />
-  <link rel="stylesheet" href="styles/preference-widget.css" />
-  <link rel="stylesheet" href="styles/personalized-recommendations.css" />
   <link rel="icon" href="favicon.ico" type="image/x-icon" />
+
+  <!-- Tailwind CSS CDN & Config -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="js/tailwind-config.js"></script>
   
   <!-- API Configuration - LOAD EARLY -->
   <script src="js/config.js"></script>
   <script src="js/api-patcher.js"></script>
 </head>
 
-<body>
+<body class="bg-bg pt-14 font-body antialiased">
   <!-- Top bar -->
   <div id="load-header"></div>
 
   <!-- Slideshow -->
-  <div class="grid-slideshow">
-    <div class="slide-large">
-      <img src="img/anhnen/17d.jpg" alt="Slide lớn">
+  <div class="grid-slideshow grid grid-cols-1 md:grid-cols-3 grid-rows-2 gap-3 w-[92%] mx-auto my-4 rounded-lg overflow-hidden shadow-md">
+    <div class="slide-large md:col-span-2 md:row-span-2 h-[30vh] md:h-[420px] overflow-hidden rounded-md">
+      <img src="img/anhnen/17d.jpg" alt="Slide lớn" class="w-full h-full object-cover transition-transform duration-500 hover:scale-105">
     </div>
-    <div class="slide-small">
-      <img src="img/anhnen/18d.jpg" alt="Slide nhỏ 1">
+    <div class="slide-small h-[15vh] md:h-[200px] overflow-hidden rounded-md">
+      <img src="img/anhnen/18d.jpg" alt="Slide nhỏ 1" class="w-full h-full object-cover transition-transform duration-500 hover:scale-105">
     </div>
-    <div class="slide-small">
-      <img src="img/anhnen/14d.jpg" alt="Slide nhỏ 2">
-    </div>
-  </div>
-
-
-
-
-
-  <!-- <header class="slideshow-container">
-  <div class="slideshow-column">
-    <div class="mySlides fade">
-      <img src="img/anhnen/17d.jpg" alt="Slide 1">
-    </div>
-    <div class="mySlides fade">
-      <img src="img/anhnen/14d.jpg" alt="Slide 3">
-    </div>
-    <div class="mySlides fade">
-      <img src="img/anhnen/15d.jpg" alt="Slide 5">
-    </div>
-    <div class="mySlides fade">
-      <img src="img/anhnen/9d.jpg" alt="Slide 7">
-    </div>
-    <div class="mySlides fade">
-      <img src="img/anhnen/11d.jpg" alt="Slide 9">
-    </div>
-  </div>
-  <div class="slideshow-column">
-    <div class="mySlides fade">
-      <img src="img/anhnen/18d.jpg" alt="Slide 2">
-    </div>
-    <div class="mySlides fade">
-      <img src="img/anhnen/13d.jpg" alt="Slide 4">
-    </div>
-    <div class="mySlides fade">
-      <img src="img/anhnen/16d.jpg" alt="Slide 6">
-    </div>
-    <div class="mySlides fade">
-      <img src="img/anhnen/10d.jpg" alt="Slide 8">
-    </div>
-    <div class="mySlides fade">
-      <img src="img/anhnen/12d.jpg" alt="Slide 10">
-    </div>
-  </div>
-</header> -->
-  <!-- <div class="promotion-buttons">
-    <img src="img/giamgia/anh1.jpg" alt="Khuyến mãi 1" class="promo-button" onclick="window.location.href='./giamgia.html'">
-    <img src="img/giamgia/anh2.jpg" alt="Khuyến mãi 2" class="promo-button" onclick="window.location.href='./giamgia1.html'">
-    <img src="img/giamgia/anh3.jpg" alt="Khuyến mãi 3" class="promo-button" onclick="window.location.href='./giamgia2.html'">
-    <img src="img/giamgia/anh4.jpg" alt="Khuyến mãi 4" class="promo-button" onclick="window.location.href='./giamgia5.html'">
-    <img src="img/giamgia/anh5.jpg" alt="Khuyến mãi 5" class="promo-button" onclick="window.location.href='./giamgia3.html'">
-    <img src="img/giamgia/anh6.jpg" alt="Khuyến mãi 5" class="promo-button" onclick="window.location.href='./giamgia4.html'">
-    <img src="img/giamgia/anh9.jpg" alt="Khuyến mãi 9" class="promo-button" onclick="window.location.href='./khuyenmai9.html'">
-  </div> -->
-
-  <div class="promotion-cards">
-    <div class="promo-card" onclick="window.location.href='./giamgia.html'">
-      <img src="img/giamgia/anh1.jpg" alt="Deal riêng 50% TikiVIP">
-      <p>Ưu đãi tháng 5</p>
-    </div>
-    <div class="promo-card" onclick="window.location.href='./giamgia1.html'">
-      <img src="img/giamgia/anh2.jpg" alt="Tiki sáng ngày rẻ">
-      <p>Flash Sale</p>
-    </div>
-    <div class="promo-card" onclick="window.location.href='./giamgia2.html'">
-      <img src="img/giamgia/anh3.jpg" alt="Combo siêu tiết kiệm">
-      <p>Đinh Tị Books</p>
-    </div>
-    <div class="promo-card" onclick="window.location.href='./giamgia5.html'">
-      <img src="img/giamgia/anh4.jpg" alt="Tiki Trading">
-      <p>Alpha Books</p>
-    </div>
-    <div class="promo-card" onclick="window.location.href='./giamgia3.html'">
-      <img src="img/giamgia/anh5.jpg" alt="Coupon siêu hot">
-      <p>Phiếu giảm giá</p>
-    </div>
-    <div class="promo-card" onclick="window.location.href='./giamgia4.html'">
-      <img src="img/giamgia/anh6.jpg" alt="Rộn ràng Halloween">
-      <p>Sản phẩm mới</p>
-    </div>
-    <div class="promo-card" onclick="window.location.href='./khuyenmai9.html'">
-      <img src="img/giamgia/anh9.jpg" alt="Xả kho giảm nửa giá">
-      <p>Truyện tranh</p>
+    <div class="slide-small h-[15vh] md:h-[200px] overflow-hidden rounded-md">
+      <img src="img/anhnen/14d.jpg" alt="Slide nhỏ 2" class="w-full h-full object-cover transition-transform duration-500 hover:scale-105">
     </div>
   </div>
 
+  <!-- Promotion Cards -->
+  <div class="promotion-cards flex gap-3 overflow-x-auto p-4 w-[92%] mx-auto bg-white rounded-lg border border-border shadow-sm scrollbar-hide">
+    <div class="promo-card flex-shrink-0 w-20 text-center cursor-pointer transition-transform hover:-translate-y-1" onclick="window.location.href='./giamgia.html'">
+      <img src="img/giamgia/anh1.jpg" alt="Deal riêng 50%" class="w-12 h-12 mx-auto rounded-full object-cover shadow-sm mb-2">
+      <p class="text-[10px] font-medium text-text-muted leading-tight">Ưu đãi tháng 5</p>
+    </div>
+    <div class="promo-card flex-shrink-0 w-20 text-center cursor-pointer transition-transform hover:-translate-y-1" onclick="window.location.href='./giamgia1.html'">
+      <img src="img/giamgia/anh2.jpg" alt="Flash Sale" class="w-12 h-12 mx-auto rounded-full object-cover shadow-sm mb-2">
+      <p class="text-[10px] font-medium text-text-muted leading-tight">Flash Sale</p>
+    </div>
+    <div class="promo-card flex-shrink-0 w-20 text-center cursor-pointer transition-transform hover:-translate-y-1" onclick="window.location.href='./giamgia2.html'">
+      <img src="img/giamgia/anh3.jpg" alt="Đinh Tị Books" class="w-12 h-12 mx-auto rounded-full object-cover shadow-sm mb-2">
+      <p class="text-[10px] font-medium text-text-muted leading-tight">Đinh Tị Books</p>
+    </div>
+    <div class="promo-card flex-shrink-0 w-20 text-center cursor-pointer transition-transform hover:-translate-y-1" onclick="window.location.href='./giamgia5.html'">
+      <img src="img/giamgia/anh4.jpg" alt="Alpha Books" class="w-12 h-12 mx-auto rounded-full object-cover shadow-sm mb-2">
+      <p class="text-[10px] font-medium text-text-muted leading-tight">Alpha Books</p>
+    </div>
+    <div class="promo-card flex-shrink-0 w-20 text-center cursor-pointer transition-transform hover:-translate-y-1" onclick="window.location.href='./giamgia3.html'">
+      <img src="img/giamgia/anh5.jpg" alt="Phiếu giảm giá" class="w-12 h-12 mx-auto rounded-full object-cover shadow-sm mb-2">
+      <p class="text-[10px] font-medium text-text-muted leading-tight">Phiếu giảm giá</p>
+    </div>
+    <div class="promo-card flex-shrink-0 w-20 text-center cursor-pointer transition-transform hover:-translate-y-1" onclick="window.location.href='./giamgia4.html'">
+      <img src="img/giamgia/anh6.jpg" alt="Sản phẩm mới" class="w-12 h-12 mx-auto rounded-full object-cover shadow-sm mb-2">
+      <p class="text-[10px] font-medium text-text-muted leading-tight">Sản phẩm mới</p>
+    </div>
+    <div class="promo-card flex-shrink-0 w-20 text-center cursor-pointer transition-transform hover:-translate-y-1" onclick="window.location.href='./khuyenmai9.html'">
+      <img src="img/giamgia/anh9.jpg" alt="Truyện tranh" class="w-12 h-12 mx-auto rounded-full object-cover shadow-sm mb-2">
+      <p class="text-[10px] font-medium text-text-muted leading-tight">Truyện tranh</p>
+    </div>
+  </div>
 
-  <!-- Flash Sale component placed here (outside Sách Mới) -->
-  <div id="flash-sale" class="flash-sale-container">
-    <div class="flash-sale-header">
-      <div class="flash-sale-left">
-        <h2>FLASH SALE</h2>
-        <div id="flash-countdown" class="countdown"> </div>
+  <!-- Flash Sale Section -->
+  <div id="flash-sale" class="flash-sale-container w-[92%] mx-auto mt-8 bg-white rounded-lg border border-border overflow-hidden shadow-sm">
+    <div class="flash-sale-header flex justify-between items-center p-4 bg-gradient-to-r from-primary to-[#e74c3c] text-white">
+      <div class="flash-sale-left flex items-center gap-4">
+        <h2 class="font-display text-xl font-extrabold tracking-tight">FLASH SALE</h2>
+        <div id="flash-countdown" class="countdown font-mono bg-black/20 px-3 py-1 rounded text-sm font-bold"> </div>
       </div>
-      <button id="flash-view-all" class="view-all-btn">Xem tất cả</button>
+      <button id="flash-view-all" class="view-all-btn text-xs font-bold uppercase tracking-wider bg-white/20 hover:bg-white/30 px-4 py-2 rounded-full transition-all">Xem tất cả</button>
     </div>
 
-    <div id="flash-products" class="flash-products">
-      <div class="loading">Đang tải khuyến mãi...</div>
+    <div id="flash-products" class="flash-products flex gap-4 overflow-x-auto p-4 scrollbar-hide">
+      <div class="loading text-sm text-gray-400 italic">Đang tải khuyến mãi...</div>
     </div>
   </div>
-  <!-- Main content -->
-  <div class="container">
 
-    <main class="main-content">
-      <div id="recommend-widget-container"></div>
+  <!-- Main Content -->
+  <div class="container max-w-[1300px] mx-auto px-4 mt-8 flex flex-col md:flex-row gap-6">
+    <main class="main-content flex-1 bg-white p-6 rounded-lg border border-border shadow-sm">
+      <div id="recommend-widget-container" class="mb-8"></div>
 
       <!-- Component: Có thể bạn thích -->
-      <div id="personalized-recommendations"></div>
+      <div id="personalized-recommendations" class="mb-10"></div>
 
-      <!-- Phần Sách Mới -->
-      <div class="product-section">
-        <h2>Sách Mới</h2>
-        <div class="view-all">
-          <!-- <a href="book.html">Xem tất cả <i class="fas fa-chevron-right"></i></a> -->
+      <!-- Section: Sách Mới -->
+      <div class="product-section mb-12">
+        <div class="flex justify-between items-end mb-6 border-b border-border pb-3">
+          <h2 class="font-display text-2xl font-bold text-gray-800 relative">
+            Sách Mới
+            <span class="absolute bottom-[-13px] left-0 w-12 h-1 bg-primary rounded-full"></span>
+          </h2>
+          <!-- <a href="book.html" class="text-sm font-bold text-primary hover:underline">Xem tất cả <i class="fas fa-chevron-right ml-1"></i></a> -->
         </div>
-
-        <!-- Flash Sale moved above (after promotion-buttons) -->
-
-        <div id="book-list" class="product-container"></div>
+        <div id="book-list" class="product-container grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4"></div>
       </div>
 
-      <!-- Phần Sách Giáo Khoa -->
-      <div class="product-section textbook-section">
-        <h2>Sách Giáo Khoa</h2>
-        <div class="view-all">
-          <!-- <a href="book.html?category=6">Xem tất cả <i class="fas fa-chevron-right"></i></a> -->
+      <!-- Section: Sách Giáo Khoa -->
+      <div class="product-section mb-12">
+        <div class="flex justify-between items-end mb-6 border-b border-border pb-3">
+          <h2 class="font-display text-2xl font-bold text-gray-800 relative">
+            Sách Giáo Khoa
+            <span class="absolute bottom-[-13px] left-0 w-12 h-1 bg-primary rounded-full"></span>
+          </h2>
         </div>
-        <div id="textbook-list" class="product-container"></div>
+        <div id="textbook-list" class="product-container grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4"></div>
       </div>
 
-      <!-- Phần Sách Chính Trị (đã loại bỏ) -->
-
-      <!-- Phần Sách Khoa Học -->
-      <div class="product-section science-section">
-        <h2>Sách Khoa Học</h2>
-        <div class="view-all">
-          <!-- <a href="book.html?category=4">Xem tất cả <i class="fas fa-chevron-right"></i></a> -->
+      <!-- Section: Sách Khoa Học -->
+      <div class="product-section mb-12">
+        <div class="flex justify-between items-end mb-6 border-b border-border pb-3">
+          <h2 class="font-display text-2xl font-bold text-gray-800 relative">
+            Sách Khoa Học
+            <span class="absolute bottom-[-13px] left-0 w-12 h-1 bg-primary rounded-full"></span>
+          </h2>
         </div>
-        <div id="science-book-list" class="product-container"></div>
+        <div id="science-book-list" class="product-container grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4"></div>
       </div>
     </main>
   </div>

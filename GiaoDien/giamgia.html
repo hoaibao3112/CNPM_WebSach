@@ -1,14 +1,10 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="vi">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Khuyến Mãi - Lịch Săn Deal Hấp Dẫn</title>
-  <link rel="stylesheet" href="styles/header.css" />
-    <link rel="stylesheet" href="styles/index.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-  <link rel="stylesheet" href="styles/giamgia.css">
-  <link rel="stylesheet" href="styles/recommend-widget.css">
   <style>
     .empty-state, .error-state {
       text-align: center;
@@ -23,33 +19,58 @@
     }
   </style>
 </head>
-<body>
-  <!-- header -->
-  <div id="load-header"></div>
-  
-  <div class="top-banner">
-    <img src="img/25_05/anh4.jpg" alt="Banner trên cùng">
-  </div>
-  
-  <div class="deal-banner">
-    <img src="img/25_05/anh1.jpg" alt="Lịch săn deal hấp dẫn">
-  </div>
-  
-  <div class="voucher-list">
-    <!-- Khuyến mãi sẽ được load từ API -->
-  </div>
+    <link rel="icon" href="favicon.ico" type="image/x-icon" />
 
-  <!-- Recommend widget mount point -->
-  <div id="recommend-widget-container"></div>
-  
-  
-  <!-- API Configuration - MUST load first! -->
-  <script src="js/config.js"></script>
-  <script src="js/api-patcher.js"></script>
+    <!-- Tailwind CSS CDN & Config -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="js/tailwind-config.js"></script>
+    
+    <!-- API Configuration - LOAD EARLY -->
+    <script src="js/config.js"></script>
+    <script src="js/api-patcher.js"></script>
+</head>
 
-<script src="js/giamgia.js"></script>
-  <script src="js/loadHeader.js"></script>
-  <!-- Recommend widget (suggested products) -->
-  <script src="js/recommend-widget.js"></script>
+<body class="bg-bg pt-14 font-body antialiased">
+    <div id="load-header"></div>
+  
+    <main class="container max-w-[1300px] mx-auto px-4 py-8 space-y-12">
+        <!-- Top Banner -->
+        <div class="top-banner rounded-[2.5rem] overflow-hidden shadow-2xl border-4 border-white transform hover:scale-[1.01] transition-transform duration-700">
+            <img src="img/25_05/anh4.jpg" alt="Banner trên cùng" class="w-full h-auto">
+        </div>
+        
+        <!-- Deal Banner -->
+        <div class="deal-banner rounded-3xl overflow-hidden shadow-lg border border-border">
+            <img src="img/25_05/anh1.jpg" alt="Lịch săn deal hấp dẫn" class="w-full h-auto">
+        </div>
+        
+        <!-- Voucher List -->
+        <div class="voucher-list grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8" id="voucher-list-container">
+            <!-- Content loaded from API via giamgia.js -->
+        </div>
+
+        <!-- Recommend widget mount point -->
+        <div id="recommend-widget-container" class="pt-20 border-t border-border"></div>
+    </main>
+
+    <!-- Footer -->
+    <div id="load-footer"></div>
+
+    <script src="js/config.js"></script>
+    <script src="js/api-patcher.js"></script>
+    <script src="js/giamgia.js"></script>
+    <script src="js/loadHeader.js"></script>
+    <script src="js/loadFooter.js"></script>
+    <script src="js/recommend-widget.js"></script>
+
+    <style>
+        /* Shared Styles for JS-rendered elements in giamgia pages */
+        .voucher-card {
+            @apply bg-white p-8 rounded-3xl border border-border shadow-sm flex flex-col gap-4 relative transition-all duration-300 hover:shadow-xl hover:-translate-y-2;
+        }
+        .empty-state, .error-state {
+            @apply col-span-full py-20 text-center text-gray-400 font-bold italic bg-white rounded-3xl border border-border;
+        }
+    </style>
 </body>
 </html>
