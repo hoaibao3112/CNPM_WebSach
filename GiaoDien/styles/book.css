@@ -92,20 +92,8 @@ body {
 
 /* ── Grid containers ────────────────────────────────────── */
 #book-list,
-#textbook-list {
-  display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: 20px;
-  padding: 10px 0;
-}
-
-#promotion-book-list {
-  display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: 20px;
-  padding: 10px 0;
-}
-
+#textbook-list,
+#promotion-book-list,
 #politics-book-list,
 #science-book-list,
 #search-book-list {
@@ -113,6 +101,26 @@ body {
   grid-template-columns: repeat(5, 1fr);
   gap: 20px;
   padding: 10px 0;
+}
+
+@media (max-width: 1200px) {
+  #book-list, #textbook-list, #promotion-book-list, #politics-book-list, #science-book-list, #search-book-list {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 15px;
+  }
+}
+
+@media (max-width: 900px) {
+  #book-list, #textbook-list, #promotion-book-list, #politics-book-list, #science-book-list, #search-book-list {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 600px) {
+  #book-list, #textbook-list, #promotion-book-list, #politics-book-list, #science-book-list, #search-book-list {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
 }
 
 /* ══════════════════════════════════════════════════════════
@@ -302,19 +310,35 @@ body {
 }
 
 .product-title {
-  font-family: 'Playfair Display', Georgia, serif;
+  font-family: var(--font-display, 'Playfair Display', Georgia, serif);
   font-size: 14px;
   font-weight: 600;
   margin-bottom: 5px;
   color: #1a1a1a;
   line-height: 1.35;
-  height: 39px;
+  height: 38px;
   overflow: hidden;
   text-overflow: ellipsis;
   display: -webkit-box;
   -webkit-line-clamp: 2;
-  line-clamp: 2;
   -webkit-box-orient: vertical;
+}
+
+@media (max-width: 600px) {
+  .product-title {
+    font-size: 12px;
+    height: 32px;
+  }
+  .product-info {
+    padding: 10px;
+  }
+  .price {
+    font-size: 14px;
+  }
+  .btn-detail, .btn-add-cart {
+    font-size: 11px;
+    padding: 7px 0;
+  }
 }
 
 .product-author {

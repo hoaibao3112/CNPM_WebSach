@@ -1,4 +1,4 @@
-﻿/* Flash Sale isolated styles: scoped under #flash-sale to avoid conflicts */
+/* Flash Sale isolated styles: scoped under #flash-sale to avoid conflicts */
 
 #flash-sale {
   width: 100%;
@@ -30,11 +30,11 @@
 
 #flash-sale .flash-sale-left h2 {
   margin: 0;
-  font-size: 40px;
+  font-size: 28px;
   font-style: italic;
   color: #c0392b;
   font-weight: 800;
-  line-height: 1;
+  line-height: 1.2;
 }
 
 #flash-sale .countdown {
@@ -265,7 +265,13 @@
 
 @media (max-width: 768px) {
   #flash-sale .flash-sale-header {
-    padding: 12px 14px;
+    padding: 12px 16px;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  #flash-sale .flash-sale-left h2 {
+    font-size: 22px;
   }
 
   #flash-sale .countdown::before {
@@ -273,12 +279,15 @@
   }
 
   #flash-products {
-    padding: 12px;
+    padding: 14px 12px;
+    width: calc(100% - 24px);
+    margin: 0 auto;
+    border-radius: 12px;
   }
 
   #flash-products .sale-track {
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 10px;
+    gap: 12px;
   }
 
   #flash-products .sale-item-image-wrapper {
