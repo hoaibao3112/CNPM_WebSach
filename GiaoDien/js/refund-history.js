@@ -259,7 +259,14 @@ async function loadRefundHistory() {
         console.log('📦 Refund history response:', result);
 
         if (result.success) {
-            refundData = result.data || [];
+            // Handle both nested object { refunds, summary } and flat array structure
+            if (result.data && result.data.refunds && Array.isArray(result.data.refunds)) {
+                refundData = result.data.refunds;
+                // Optional: Store summary if needed in the future
+                window.refundSummary = result.data.summary;
+            } else {
+                refundData = Array.isArray(result.data) ? result.data : [];
+            }
 
             // Apply current filters
             applyFilters();
