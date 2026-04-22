@@ -6,8 +6,12 @@
     const style = document.createElement('style');
     style.id = 'preference-widget-styles';
     style.textContent = `
-      .preference-floating-btn { position: fixed; bottom: 100px; right: 30px; background: linear-gradient(135deg, #C0392B 0%, #e74c3c 100%); color: white; padding: 15px 20px; border-radius: 50px; box-shadow: 0 10px 30px rgba(192, 57, 43, 0.3); cursor: pointer; z-index: 9998; opacity: 0; transform: translateY(20px); transition: all 0.4s; }
-      .preference-floating-btn.show { opacity: 1; transform: translateY(0); }
+      .preference-floating-btn { position: fixed; bottom: 30px; left: 30px; background: linear-gradient(135deg, #B03A2E 0%, #E74C3C 100%); color: white; padding: 12px 20px; border-radius: 16px; box-shadow: 0 10px 30px rgba(176, 58, 46, 0.3); cursor: pointer; z-index: 9998; opacity: 0; transform: translateX(-20px); transition: all 0.4s; display: flex; align-items: center; gap: 12px; }
+      .preference-floating-btn.show { opacity: 1; transform: translateX(0); }
+      .preference-floating-btn:hover { transform: scale(1.05) translateX(5px); box-shadow: 0 15px 40px rgba(176, 58, 46, 0.4); }
+      .prompt-icon { font-size: 20px; }
+      .prompt-text strong { display: block; font-size: 13px; line-height: 1.2; }
+      .prompt-text p { font-size: 11px; opacity: 0.9; margin: 0; }
       .preference-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 9999; opacity: 0; pointer-events: none; transition: opacity 0.3s; }
       .preference-modal.show { opacity: 1; pointer-events: all; }
       .preference-modal-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(5px); }
