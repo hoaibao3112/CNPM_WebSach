@@ -4,89 +4,73 @@
         const style = document.createElement('style');
         style.id = 'product-sales-styles';
         style.textContent = `
-            .flash-sale-container { background: #fff; border-radius: 24px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.08); border: 1px solid #eee; margin-bottom: 40px; }
-            .flash-sale-header { display: flex; justify-content: space-between; align-items: center; padding: 20px 32px; background: linear-gradient(90deg, #C0392B 0%, #e74c3c 100%); color: white; }
+            .flash-sale-container { background: #fff; border-radius: 24px; overflow: hidden; box-shadow: 0 10px 40px rgba(0,0,0,0.12); border: 1px solid #eee; margin-bottom: 40px; }
+            .flash-sale-header { display: flex; justify-content: space-between; align-items: center; padding: 24px 32px; background: linear-gradient(135deg, #B03A2E 0%, #8E2920 100%); color: white; }
             .flash-sale-left { display: flex; align-items: center; gap: 24px; }
-            .flash-sale-left h2 { font-family: 'Playfair Display', serif; font-size: 26px; font-weight: 900; color: #ffffff; margin: 0; letter-spacing: 1px; text-transform: uppercase; }
-            .countdown { display: flex; align-items: center; gap: 6px; font-family: 'Inter', sans-serif; background: rgba(0,0,0,0.2); padding: 8px 16px; border-radius: 50px; }
-            .cd-box { background: #fff; color: #C0392B; padding: 2px 8px; border-radius: 6px; font-weight: 800; min-width: 32px; text-align: center; font-size: 14px; }
-            .cd-lbl { font-size: 11px; color: rgba(255,255,255,0.9); font-weight: 600; margin-right: 2px; }
-            .flash-products { display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; padding: 32px; }
-            .sale-item { background: #fff; border: 1px solid #eee; border-radius: 20px; overflow: hidden; transition: all 0.3s; display: flex; flex-direction: column; }
-            .sale-item:hover { transform: translateY(-5px); box-shadow: 0 10px 30px rgba(0,0,0,0.1); border-color: #C0392B; }
-            .sale-item-image-wrapper { width: 100%; aspect-ratio: 3/4; background: #f9f9f9; display: flex; align-items: center; justify-content: center; }
-            .sale-item-img { width: 100%; height: 100%; object-fit: contain; }
-            .sale-item-info { padding: 20px; flex: 1; display: flex; flex-direction: column; }
-            .sale-item-title { font-size: 15px; font-weight: 700; color: #1a1a1a; margin-bottom: 8px; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-            .sale-item-author { font-size: 13px; color: #666; margin-bottom: 4px; }
-            .sale-item-year { font-size: 12px; color: #999; margin-bottom: 12px; }
-            .sale-item-price { display: flex; justify-content: space-between; align-items: flex-end; margin-top: auto; }
-            .discount-price { font-size: 18px; font-weight: 800; color: #C0392B; }
-            .badge-percent { background: #C0392B; color: #fff; font-size: 10px; font-weight: 800; padding: 2px 6px; border-radius: 4px; margin-left: 6px; vertical-align: middle; }
-            .sale-item-quantity { font-size: 11px; color: #999; text-align: right; }
-            .sale-item-actions { display: flex; gap: 8px; margin-top: 16px; }
-            .btn-add-cart { flex: 1; background: #C0392B; color: #fff; border: none; padding: 10px; border-radius: 10px; font-weight: 700; cursor: pointer; }
-            .btn-detail { flex: 1; background: #fff; color: #555; border: 1px solid #ddd; padding: 10px; border-radius: 10px; font-weight: 700; cursor: pointer; }
-            .view-all-btn { background: rgba(255,255,255,0.2); color: white; border: 1px solid rgba(255,255,255,0.4); padding: 8px 24px; border-radius: 50px; font-weight: 700; font-size: 13px; cursor: pointer; transition: all 0.3s; text-transform: uppercase; }
-            .view-all-btn:hover { background: #fff; color: #C0392B; }
+            .flash-sale-left h2 { font-family: 'Playfair Display', serif; font-size: 28px; font-weight: 950; color: #ffffff; margin: 0; letter-spacing: 2px; text-transform: uppercase; text-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+            .countdown { display: flex; align-items: center; gap: 10px; font-family: 'Inter', sans-serif; background: rgba(0,0,0,0.3); padding: 10px 20px; border-radius: 16px; backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); }
+            .cd-box { background: #fff; color: #B03A2E; padding: 4px 10px; border-radius: 8px; font-weight: 900; min-width: 38px; text-align: center; font-size: 16px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
+            .cd-lbl { font-size: 10px; color: rgba(255,255,255,0.8); font-weight: 800; text-transform: uppercase; letter-spacing: 1px; }
+            .flash-products { display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; padding: 32px; width: 100%; }
+            .sale-item { background: #fff; border: 1px solid #eee; border-radius: 20px; overflow: hidden; transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); display: flex; flex-direction: column; height: 100%; position: relative; }
+            .sale-item:hover { transform: translateY(-10px); box-shadow: 0 20px 40px rgba(176,58,46,0.15); border-color: #B03A2E; }
+            .sale-item-image-wrapper { width: 100%; aspect-ratio: 3/4; background: #fcfcfc; display: flex; align-items: center; justify-content: center; overflow: hidden; max-height: 280px; padding: 20px; }
+            .sale-item-img { width: 100%; height: 100%; object-fit: contain; transition: transform 0.6s cubic-bezier(0.33, 1, 0.68, 1); filter: drop-shadow(0 10px 15px rgba(0,0,0,0.1)); }
+            .sale-item:hover .sale-item-img { transform: scale(1.08) rotate(2deg); }
+            .sale-item-info { padding: 20px; flex: 1; display: flex; flex-direction: column; gap: 10px; }
+            .sale-item-title { font-size: 14px; font-weight: 900; color: #1e293b; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; text-transform: uppercase; tracking-tight; }
+            .sale-item-author { font-size: 11px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.1em; }
+            .sale-item-price { display: flex; flex-direction: column; gap: 2px; margin-top: auto; }
+            .discount-price { font-size: 18px; font-weight: 950; color: #B03A2E; letter-spacing: -1px; }
+            .badge-percent { background: #B03A2E; color: #fff; font-size: 10px; font-weight: 900; padding: 3px 10px; border-radius: 8px; box-shadow: 0 4px 10px rgba(176,58,46,0.3); }
+            .sale-item-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px; }
+            .btn-add-cart { background: #B03A2E; color: #fff; border: none; padding: 12px; border-radius: 14px; font-size: 10px; font-weight: 950; cursor: pointer; text-transform: uppercase; transition: all 0.3s; box-shadow: 0 4px 12px rgba(176,58,46,0.2); }
+            .btn-add-cart:hover:not(:disabled) { background: #8E2920; transform: scale(1.05); box-shadow: 0 6px 15px rgba(176,58,46,0.3); }
+            .btn-add-cart:disabled { background: #e2e8f0; color: #94a3b8; box-shadow: none; }
+            .btn-detail { background: #f8fafc; color: #64748b; border: 1px solid #e2e8f0; padding: 12px; border-radius: 14px; font-size: 10px; font-weight: 950; cursor: pointer; text-transform: uppercase; transition: all 0.3s; }
+            .btn-detail:hover { background: #fff; color: #B03A2E; border-color: #B03A2E; }
             @media (max-width: 1024px) { .flash-products { grid-template-columns: repeat(3, 1fr); } }
-            @media (max-width: 768px) { .flash-products { grid-template-columns: repeat(2, 1fr); padding: 20px; } }
-            @media (max-width: 640px) { .flash-sale-header { flex-direction: column; gap: 16px; align-items: center; text-align: center; } .flash-sale-left { flex-direction: column; gap: 12px; } }
+            @media (max-width: 768px) { .flash-products { grid-template-columns: repeat(2, 1fr); padding: 16px; gap: 16px; } }
+            @media (max-width: 480px) { .flash-products { grid-template-columns: repeat(1, 1fr); } }
         `;
         document.head.appendChild(style);
     }
 	const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || window.API_CONFIG.BASE_URL;
 	const API_URL = `${_apiBase}/api/khuyenmai/active-products`;
-		const container = document.getElementById('flash-products');
+	const container = document.getElementById('flash-products');
 	const countdownEl = document.getElementById('flash-countdown');
-	const CACHE_KEY = 'flash_sale_products_v1';
-		// Backend image base (served by server.js at /product-images)
-		const IMAGE_BASE = `${_apiBase}/product-images`;
+	const CACHE_KEY = 'flash_sale_products_v2';
+	const IMAGE_BASE = `${_apiBase}/product-images`;
 
 	function formatCurrency(v) {
-		return Number(v).toLocaleString('vi-VN') + ' ₫';
+		return new Intl.NumberFormat('vi-VN').format(v || 0) + ' ₫';
 	}
 
-	// Escape HTML để tránh XSS
+	// Escape HTML
 	function escapeHtml(unsafe) {
 		if (!unsafe) return '';
-		return String(unsafe)
-			.replace(/&/g, '&amp;')
-			.replace(/</g, '&lt;')
-			.replace(/>/g, '&gt;')
-			.replace(/"/g, '&quot;')
-			.replace(/'/g, '&#039;');
+		return String(unsafe).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#039;"}[m]));
 	}
 
 	// Toast notification
 	function showToast(message) {
+        if (window.showToastNotification) {
+            window.showToastNotification(message);
+            return;
+        }
 		const toast = document.createElement('div');
-		toast.className = 'toast-notification';
-		toast.innerHTML = `
-			<span>${escapeHtml(message)}</span>
-			<button class="toast-close">&times;</button>
-		`;
+		toast.className = 'fixed bottom-8 right-8 bg-white border-l-4 border-primary p-4 rounded-xl shadow-2xl z-[99999] animate-bounce-in flex items-center gap-4';
+		toast.innerHTML = `<span class="text-sm font-bold text-gray-800">${escapeHtml(message)}</span>`;
 		document.body.appendChild(toast);
-
-		const autoHide = setTimeout(() => {
-			toast.classList.add('hide');
-			setTimeout(() => toast.remove(), 300);
-		}, 3000);
-
-		toast.querySelector('.toast-close').addEventListener('click', () => {
-			clearTimeout(autoHide);
-			toast.classList.add('hide');
-			setTimeout(() => toast.remove(), 300);
-		});
+		setTimeout(() => { toast.classList.add('opacity-0'); setTimeout(() => toast.remove(), 500); }, 3000);
 	}
 
-	// Hàm thêm sản phẩm vào giỏ hàng (giống book.js)
+	// Add to cart
 	async function addToCart(productId, productName, price, image) {
 		const user = JSON.parse(localStorage.getItem('user') || localStorage.getItem('loggedInUser') || '{}');
 		const token = localStorage.getItem('token');
 
 		if (user && (user.makh || user.tenkh) && token) {
-			// Nếu đã đăng nhập, sử dụng API
 			try {
 				const response = await fetch(`${_apiBase}/api/client/cart/add`, {
 					method: 'POST',
@@ -98,22 +82,15 @@
 				});
 
 				if (response.ok) {
-					const data = await response.json();
 					showToast(`Đã thêm ${productName} vào giỏ hàng!`);
-					if (typeof updateCartCount === 'function') {
-						updateCartCount(); // Cập nhật UI từ index.js nếu có
-					}
+					if (typeof updateCartCount === 'function') updateCartCount();
 					return;
-				} else {
-					const errorData = await response.json();
-					showToast(errorData.error || 'Lỗi khi thêm vào giỏ hàng');
 				}
 			} catch (error) {
 				console.error('Lỗi thêm vào giỏ hàng:', error);
-				showToast('Lỗi kết nối. Vui lòng thử lại!');
 			}
 		} else {
-			// Nếu chưa đăng nhập, sử dụng localStorage (fallback)
+			// Guest cart fallback
 			let cart = JSON.parse(localStorage.getItem('cart') || '[]');
 			const existingItem = cart.find(item => item.id === productId);
 
@@ -130,224 +107,131 @@
 			}
 
 			localStorage.setItem('cart', JSON.stringify(cart));
-			showToast(`Đã thêm ${productName} vào giỏ hàng! (Vui lòng đăng nhập để lưu vĩnh viễn)`);
-			if (typeof updateCartCount === 'function') {
-				updateCartCount(); // Cập nhật UI
-			}
+			showToast(`Đã thêm ${productName} vào giỏ hàng!`);
+			if (typeof updateCartCount === 'function') updateCartCount();
 		}
 	}
 
 	function createProductCard(p) {
 		const wrapper = document.createElement('div');
-		wrapper.className = 'sale-item';
+		wrapper.className = 'sale-item group';
 
-		// Image wrapper (with aspect ratio) - clickable to view detail
 		const imageWrapper = document.createElement('div');
-		imageWrapper.className = 'sale-item-image-wrapper';
+		imageWrapper.className = 'sale-item-image-wrapper relative';
 		imageWrapper.style.cursor = 'pointer';
 
 		const img = document.createElement('img');
 		img.alt = p.TenSP || 'product';
 		img.className = 'sale-item-img';
-		// Primary: load from backend static product-images route
-		const candidates = [];
-		if (p.HinhAnh) {
-			candidates.push(`${IMAGE_BASE}/${p.HinhAnh}`); // backend
-			candidates.push(`../img/product/${p.HinhAnh}`); // local fallback (relative)
-			candidates.push(`img/product/${p.HinhAnh}`); // another local fallback
-		}
-		candidates.push('../img/logo/no-image.png');
-
-		let tried = 0;
-		img.src = candidates[0];
-		img.addEventListener('error', () => {
-			tried += 1;
-			if (tried < candidates.length) {
-				img.src = candidates[tried];
-			} else {
-				img.src = '../img/logo/no-image.png';
-			}
-		});
-
-		// Discount badge
-		// We remove the hardcoded 'KHUYẾN MÃI' badge from imageWrapper
-		// because the screenshot shows the percentage next to the price instead!
+        const imgSrc = p.HinhAnh ? `${IMAGE_BASE}/${p.HinhAnh}` : 'img/product/default-book.jpg';
+		img.src = imgSrc;
+		img.onerror = () => { img.src = 'img/product/default-book.jpg'; };
 
 		imageWrapper.appendChild(img);
+        
+        // Add absolute badge for ID
+        const idBadge = document.createElement('div');
+        idBadge.className = 'absolute top-2 left-2 bg-primary text-white text-[8px] font-black px-2 py-0.5 rounded shadow-sm opacity-0 group-hover:opacity-100 transition-opacity';
+        idBadge.textContent = `ID: ${p.MaSP}`;
+        imageWrapper.appendChild(idBadge);
 
-		// Click image to view detail
 		imageWrapper.addEventListener('click', () => {
-			try {
-				localStorage.setItem('selectedProductId', String(p.MaSP));
-				localStorage.setItem('currentProduct', JSON.stringify(p));
-				window.location.href = 'product_detail.html';
-			} catch (e) {
-				console.error('Error navigating to product detail', e);
-				window.location.href = 'product_detail.html';
-			}
+			localStorage.setItem('selectedProductId', String(p.MaSP));
+			window.location.href = 'product_detail.html';
 		});
 
-		// Info section
 		const infoDiv = document.createElement('div');
 		infoDiv.className = 'sale-item-info';
 
-		const title = document.createElement('div');
-		title.className = 'sale-item-title';
+		const title = document.createElement('h3');
+		title.className = 'sale-item-title cursor-pointer hover:text-primary transition-colors';
 		title.textContent = p.TenSP || '';
-		title.style.cursor = 'pointer';
-		
-		// Click title to view detail
 		title.addEventListener('click', () => {
-			try {
-				localStorage.setItem('selectedProductId', String(p.MaSP));
-				localStorage.setItem('currentProduct', JSON.stringify(p));
-				window.location.href = 'product_detail.html';
-			} catch (e) {
-				console.error('Error navigating to product detail', e);
-				window.location.href = 'product_detail.html';
-			}
+			localStorage.setItem('selectedProductId', String(p.MaSP));
+			window.location.href = 'product_detail.html';
 		});
 
 		const author = document.createElement('div');
 		author.className = 'sale-item-author';
-		author.textContent = p.TacGia ? `Tác giả: ${p.TacGia}` : '';
+		author.textContent = p.TacGia || 'Đang cập nhật';
 
-		const year = document.createElement('div');
-		year.className = 'sale-item-year';
-		year.textContent = p.NamXB ? `Năm XB: ${p.NamXB}` : '';
+		const metaDiv = document.createElement('div');
+		metaDiv.className = 'flex justify-between items-center text-[10px] text-gray-400 font-bold uppercase tracking-wider';
+		metaDiv.innerHTML = `
+			<span>Năm: ${p.NamXB || 'N/A'}</span>
+			<span>Còn: ${p.SoLuong || 0} cuốn</span>
+		`;
 
 		const priceWrap = document.createElement('div');
 		priceWrap.className = 'sale-item-price';
 
-		const priceLeft = document.createElement('div');
-		const discounted = document.createElement('span');
-		discounted.className = 'discount-price';
-
+		let discountedPrice = p.DonGia;
 		let percentValue = 0;
 		if (p.LoaiKM === 'giam_tien_mat') {
-			const discount = Number(p.GiaTriGiam) || 0;
-			const d = Math.max(0, Number(p.DonGia) - discount);
-			discounted.textContent = formatCurrency(d);
-			if (p.DonGia > 0) percentValue = Math.round((discount / p.DonGia) * 100);
+			discountedPrice = Math.max(0, p.DonGia - (p.GiaTriGiam || 0));
+			percentValue = Math.round(((p.DonGia - discountedPrice) / p.DonGia) * 100);
 		} else if (p.LoaiKM === 'giam_phan_tram') {
-			const percent = Number(p.GiaTriGiam) || 0;
-			const d = Math.round(Number(p.DonGia) * (1 - percent / 100));
-			discounted.textContent = formatCurrency(d);
-			percentValue = Math.round(percent);
-		} else {
-			discounted.textContent = formatCurrency(p.DonGia || 0);
+			percentValue = Math.round(p.GiaTriGiam || 0);
+			discountedPrice = Math.round(p.DonGia * (1 - percentValue / 100));
 		}
 
-		priceLeft.appendChild(discounted);
-		priceLeft.appendChild(document.createTextNode(' '));
-		
-		// Insert percentage badge next to discount price
-		if (percentValue > 0) {
-			const percentBadge = document.createElement('span');
-			percentBadge.className = 'badge-percent';
-			percentBadge.textContent = `-${percentValue}%`;
-			priceLeft.appendChild(percentBadge);
-		}
+		priceWrap.innerHTML = `
+            <div class="flex items-center gap-2">
+                <span class="discount-price">${formatCurrency(discountedPrice)}</span>
+                ${percentValue > 0 ? `<span class="badge-percent">-${percentValue}%</span>` : ''}
+            </div>
+            ${percentValue > 0 ? `<span class="text-[10px] text-gray-300 line-through italic font-bold">${formatCurrency(p.DonGia)}</span>` : ''}
+        `;
 
-		const original = document.createElement('div');
-		original.className = 'orig-price';
-		original.textContent = formatCurrency(p.DonGia || 0);
-
-		const quantity = document.createElement('div');
-		quantity.className = 'sale-item-quantity';
-		quantity.innerHTML = `<span>Đã bán (0)</span><div class="sold-fill" style="width: 10%"></div>`;
-
-		priceWrap.appendChild(priceLeft);
-		priceWrap.appendChild(quantity);
-
-		// Action buttons
 		const actionsDiv = document.createElement('div');
 		actionsDiv.className = 'sale-item-actions';
 
 		const btnAddCart = document.createElement('button');
 		btnAddCart.className = 'btn-add-cart';
-		btnAddCart.textContent = 'Thêm vào giỏ';
-		btnAddCart.type = 'button'; // Explicitly set type
-		// Only disable if no stock
+		btnAddCart.innerHTML = '<i class="fas fa-cart-plus mr-1"></i> GIỎ HÀNG';
 		const hasStock = p.SoLuong && p.SoLuong > 0;
-		if (!hasStock) {
-			btnAddCart.disabled = true;
-		}
+		if (!hasStock) { btnAddCart.disabled = true; btnAddCart.textContent = 'HẾT HÀNG'; }
 
 		const btnDetail = document.createElement('button');
 		btnDetail.className = 'btn-detail';
-		btnDetail.textContent = 'Chi tiết';
-		btnDetail.type = 'button'; // Explicitly set type
+		btnDetail.textContent = 'CHI TIẾT';
 
 		actionsDiv.appendChild(btnAddCart);
 		actionsDiv.appendChild(btnDetail);
 
 		infoDiv.appendChild(title);
 		infoDiv.appendChild(author);
-		infoDiv.appendChild(year);
+		infoDiv.appendChild(metaDiv);
 		infoDiv.appendChild(priceWrap);
 		infoDiv.appendChild(actionsDiv);
 
 		wrapper.appendChild(imageWrapper);
 		wrapper.appendChild(infoDiv);
 
-		// Add to cart button action - sử dụng hàm addToCart giống book.js
 		btnAddCart.addEventListener('click', (ev) => {
-			ev.preventDefault();
 			ev.stopPropagation();
-			if (!hasStock) {
-				showToast('Sản phẩm đã hết hàng!');
-				return;
-			}
-			console.log('Adding to cart:', {
-				MaSP: p.MaSP,
-				TenSP: p.TenSP,
-				DonGia: p.DonGia,
-				HinhAnh: p.HinhAnh,
-				SoLuong: p.SoLuong
-			});
-			addToCart(p.MaSP, p.TenSP, p.DonGia, p.HinhAnh || 'default-book.jpg');
+			addToCart(p.MaSP, p.TenSP, discountedPrice, p.HinhAnh);
 		});
 
-		// Detail button action
 		btnDetail.addEventListener('click', (ev) => {
-			ev.preventDefault();
 			ev.stopPropagation();
-			try {
-				localStorage.setItem('selectedProductId', String(p.MaSP));
-				localStorage.setItem('currentProduct', JSON.stringify(p));
-				window.location.href = 'product_detail.html';
-			} catch (e) {
-				console.error('Error navigating to product detail', e);
-				window.location.href = 'product_detail.html';
-			}
+			localStorage.setItem('selectedProductId', String(p.MaSP));
+			window.location.href = 'product_detail.html';
 		});
 
 		return wrapper;
 	}
 
-		// Render products (chỉ hiển thị đúng 4 sản phẩm)
-		function renderProducts(list) {
-			container.innerHTML = '';
-			if (!list || !list.length) {
-				container.innerHTML = '<div class="no-products">Không có sản phẩm khuyến mãi.</div>';
-				return;
-			}
-
-			// Chỉ lấy tối đa 4 sản phẩm
-			const displayList = list.slice(0, 4);
-
-			const trackWrap = document.createElement('div');
-			trackWrap.className = 'sale-track-wrap';
-
-			const track = document.createElement('div');
-			track.className = 'sale-track';
-			
-			displayList.forEach(p => track.appendChild(createProductCard(p)));
-
-			trackWrap.appendChild(track);
-			container.appendChild(trackWrap);
-		}
+    function renderProducts(list) {
+        if (!container) return;
+        container.innerHTML = '';
+        if (!list || !list.length) {
+            container.innerHTML = '<div class="col-span-full py-12 text-center text-gray-400 italic">Không có sản phẩm khuyến mãi nào hiện khả dụng.</div>';
+            return;
+        }
+        const displayList = list.slice(0, 4);
+        displayList.forEach(p => container.appendChild(createProductCard(p)));
+    }
 
 	let countdownInterval = null;
 	function startCountdown(products) {

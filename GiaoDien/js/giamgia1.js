@@ -163,7 +163,7 @@ function displayProducts(products, containerId = 'multi-category-list', limit = 
       <div class="relative aspect-[3/4] overflow-hidden">
         <img loading="lazy" src="${imageSrc}"
              alt="${product.TenSP}"
-             class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+             class="w-full h-full object-contain transition-transform duration-700 group-hover:scale-110"
              onerror="this.src='img/product/default-book.jpg'">
         ${isOutOfStock ? '<div class="absolute inset-0 bg-black/60 flex items-center justify-center text-white font-black text-xs uppercase tracking-widest">HẾT HÀNG</div>' : ''}
         <div class="absolute top-2 left-2 bg-primary text-white text-[8px] font-black px-2 py-0.5 rounded shadow-sm">MÃ: ${product.MaSP}</div>
