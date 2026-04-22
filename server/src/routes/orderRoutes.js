@@ -1,5 +1,6 @@
 import express from 'express';
 import OrderController from '../controllers/OrderController.js';
+import RefundController from '../controllers/RefundController.js';
 import { authenticateToken } from '../middlewares/auth.js';
 
 const router = express.Router();
@@ -38,6 +39,9 @@ router.get('/customer-orders/detail/:orderId', authenticateToken, OrderControlle
 
 // Cancel order
 router.put('/customer-orders/cancel/:orderId', authenticateToken, OrderController.cancelOrder);
+
+// Get customer's refund history
+router.get('/customer-refunds/:customerId', authenticateToken, RefundController.getCustomerRefunds);
 
 // ===== ADDRESS MANAGEMENT =====
 // Get customer addresses
