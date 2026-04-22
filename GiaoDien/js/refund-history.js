@@ -1,6 +1,7 @@
 // ===== GLOBAL VARIABLES =====
 let refundData = [];
 let filteredData = [];
+let currentItem = null;
 let currentPage = 1;
 let itemsPerPage = 10;
 let currentView = 'card';
@@ -758,6 +759,7 @@ function showRefundDetail(item) {
     }
 
     console.log('📋 Showing refund detail for:', item);
+    currentItem = item; // Store for print/download
 
     const modal = document.getElementById('refund-detail-modal');
     if (!modal) return;
@@ -912,57 +914,66 @@ function exportRefundData() {
     }
 }
 
-function downloadRefundReceipt(refundId) {
-    console.log('📄 Downloading refund receipt for ID:', refundId);
-    
-    // Mock function - in real app, this would call an API to generate PDF
-    showSuccessToast('Tính năng tải biên lai đang được phát triển');
+function downloadRefundReceipt() {
+    if (!currentItem) {
+        showErrorToast('Không có dữ liệu để tải về');
+        return;
+    }
+
+    console.log('📄 Generating PDF for:', currentItem.refundRequestId);
+    showSuccessToast('Đang tạo PDF, vui lòng đợi...');
+
+    const element = document.querySelector('.refund-detail-content');
+    const options = {
+        margin: [10, 10, 10, 10],
+        filename: `bien-lai-hoan-tien-${currentItem.refundRequestId}.pdf`,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    };
+
+    // Temporarily hide buttons for PDF
+    const footer = element.querySelector('.modal-footer');
+    if (footer) footer.style.display = 'none';
+
+    html2pdf().set(options).from(element).save().then(() => {
+        if (footer) footer.style.display = 'flex';
+        showSuccessToast('Đã tải biên lai thành công');
+    }).catch(err => {
+        console.error('PDF Generation Error:', err);
+        if (footer) footer.style.display = 'flex';
+        showErrorToast('Lỗi khi tạo PDF');
+    });
 }
 
 function printRefundDetail() {
+    if (!currentItem) return;
     console.log('🖨️ Printing refund detail...');
     
-    // Get modal content
-    const modalBody = document.querySelector('#refund-detail-modal .modal-body');
-    if (!modalBody) return;
-
-    // Create print window
-    const printWindow = window.open('', '_blank');
-    printWindow.document.write(`
-        <html>
-        <head>
-            <title>Chi tiết hoàn tiền</title>
-            <style>
-                body { font-family: Arial, sans-serif; padding: 20px; }
-                .detail-section { margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 15px; }
-                .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-                .detail-item { margin-bottom: 10px; }
-                .detail-item label { font-weight: bold; }
-                .status-badge { padding: 4px 8px; border-radius: 4px; font-size: 12px; }
-                .status-success { background: #d4edda; color: #155724; }
-                .status-pending { background: #fff3cd; color: #856404; }
-                .status-failed { background: #f8d7da; color: #721c24; }
-                .timeline-item { margin-bottom: 15px; padding: 10px; border-left: 3px solid #ddd; }
-                .timeline-header { font-weight: bold; margin-bottom: 5px; }
-                @media print { body { margin: 0; } }
-            </style>
-        </head>
-        <body>
-            <h1>Chi tiết hoàn tiền - BookStore</h1>
-            ${modalBody.innerHTML}
-        </body>
-        </html>
-    `);
+    // Create a temporary print stylesheet
+    const printStyle = document.createElement('style');
+    printStyle.innerHTML = `
+        @media print {
+            body * { visibility: hidden; }
+            .refund-detail-content, .refund-detail-content * { visibility: visible; }
+            .refund-detail-content { 
+                position: absolute; 
+                left: 0; 
+                top: 0; 
+                width: 100%;
+                box-shadow: none !important;
+                padding: 0 !important;
+                margin: 0 !important;
+            }
+            .modal-footer, .close-btn, .action-btn { display: none !important; }
+            .status-badge { border: 1px solid #ccc; -webkit-print-color-adjust: exact; }
+        }
+    `;
+    document.head.appendChild(printStyle);
     
-    printWindow.document.close();
-    printWindow.focus();
+    window.print();
     
-    setTimeout(() => {
-        printWindow.print();
-        printWindow.close();
-    }, 250);
-    
-    showSuccessToast('Đang chuẩn bị in...');
+    document.head.removeChild(printStyle);
 }
 
 // ===== GLOBAL FUNCTIONS FOR HTML ONCLICK =====
