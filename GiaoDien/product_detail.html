@@ -14,6 +14,33 @@
     <!-- API Configuration - LOAD EARLY -->
     <script src="js/config.js"></script>
     <script src="js/api-patcher.js"></script>
+
+    <style>
+        /* Toast Notifications */
+        .toast-container { position: fixed; top: 80px; right: 24px; z-index: 10000; display: flex; flex-direction: column; gap: 12px; pointer-events: none; }
+        .toast-notification { padding: 16px 24px; background: white; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); border-left: 4px solid #C0392B; color: #1e1e1e; font-size: 14px; font-weight: 700; opacity: 0; transform: translateX(50px); transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55); pointer-events: auto; }
+        .toast-notification.show { opacity: 1; transform: translateX(0); }
+        .toast-success { border-left-color: #10b981; }
+        .toast-error { border-left-color: #ef4444; }
+        .toast-info { border-left-color: #3b82f6; }
+
+        /* Promotion Modal */
+        .promotion-detail-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(8px); z-index: 11000; display: none; align-items: center; justify-content: center; padding: 20px; }
+        .promotion-detail-content { background: white; width: 100%; max-width: 500px; border-radius: 24px; overflow: hidden; animation: modalIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        @keyframes modalIn { from { opacity: 0; transform: scale(0.9) translateY(20px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+        .promotion-detail-header { background: #C0392B; color: white; padding: 24px; display: flex; justify-content: space-between; align-items: center; }
+        .promotion-detail-body { padding: 32px; max-height: 70vh; overflow-y: auto; }
+        .promotion-detail-section { margin-bottom: 24px; }
+        .promotion-detail-section h4 { font-size: 12px; font-weight: 900; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+        .promotion-detail-item { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 14px; }
+        .promotion-detail-label { color: #64748b; font-weight: 500; }
+        .promotion-detail-value { color: #1e293b; font-weight: 700; text-align: right; }
+        .promotion-detail-close { width: 32px; height: 32px; border-radius: 50%; background: rgba(255,255,255,0.2); border: none; color: white; cursor: pointer; transition: all 0.2s; }
+        .promotion-detail-close:hover { background: rgba(255,255,255,0.4); transform: rotate(90deg); }
+
+        /* Stock Status Animation */
+        @keyframes pulse-soft { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.6; transform: scale(0.9); } }
+    </style>
 </head>
 
 <body class="bg-bg pt-14 font-body antialiased">
@@ -60,43 +87,84 @@
                     </div>
                 </div>
 
-                <!-- Price Section -->
-                <div class="price-section bg-gray-50 p-6 rounded-2xl border border-border flex items-baseline gap-4">
-                    <div class="current-price text-4xl font-black text-primary tracking-tighter" id="product-price">0 đ</div>
-                    <div class="original-price text-lg text-gray-400 line-through font-medium hidden" id="product-original-price"></div>
-                    <div class="discount bg-primary text-white text-[10px] font-black px-2 py-0.5 rounded-md uppercase hidden" id="product-discount"></div>
+                <!-- Price & Status -->
+                <div class="price-section bg-gray-50 p-8 rounded-3xl border border-border flex flex-col md:flex-row md:items-center justify-between gap-6 shadow-inner">
+                    <div class="flex items-baseline gap-4">
+                        <div class="current-price text-5xl font-black text-[#C0392B] tracking-tighter" id="product-price">0 đ</div>
+                        <div class="original-price text-xl text-gray-400 line-through font-medium hidden" id="product-original-price"></div>
+                        <div class="discount bg-[#C0392B] text-white text-[10px] font-black px-2 py-0.5 rounded-md uppercase hidden" id="product-discount"></div>
+                    </div>
+                    <div class="stock-status px-4 py-2 bg-green-100 text-green-700 rounded-full text-xs font-black uppercase tracking-widest flex items-center gap-2">
+                        <span class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span> Còn hàng
+                    </div>
                 </div>
 
-                <!-- Delivery & Info -->
+                <!-- Quantity & Actions -->
+                <div class="action-section space-y-6">
+                    <div class="quantity-selector flex items-center gap-6">
+                        <span class="text-sm font-black text-gray-400 uppercase tracking-widest">Số lượng:</span>
+                        <div class="flex items-center border-2 border-border rounded-xl overflow-hidden bg-white shadow-sm">
+                            <button id="qty-minus" class="px-5 py-3 hover:bg-gray-50 text-gray-400 hover:text-[#C0392B] transition-colors"><i class="fas fa-minus"></i></button>
+                            <input type="number" id="qty-input" value="1" min="1" max="99" class="w-16 text-center font-black text-gray-800 outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none">
+                            <button id="qty-plus" class="px-5 py-3 hover:bg-gray-50 text-gray-400 hover:text-[#C0392B] transition-colors"><i class="fas fa-plus"></i></button>
+                        </div>
+                    </div>
+
+                <!-- Delivery & Publisher Info -->
                 <div class="delivery-info grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div class="delivery-item flex items-start gap-3 p-4 bg-green-50/50 rounded-xl border border-green-100/50">
-                        <i class="fas fa-check-circle text-green-500 mt-1"></i>
-                        <span class="text-xs font-bold text-green-800 leading-relaxed">Bọc Plastic theo yêu cầu</span>
+                    <div class="info-card flex items-center gap-4 p-4 bg-gray-50 rounded-2xl border border-border">
+                        <div class="w-10 h-10 rounded-xl bg-white flex items-center justify-center text-[#C0392B] shadow-sm">
+                            <i class="fas fa-building"></i>
+                        </div>
+                        <div class="space-y-0.5">
+                            <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Nhà xuất bản</p>
+                            <p id="product-publisher" class="text-sm font-bold text-gray-800">Đang cập nhật</p>
+                        </div>
                     </div>
-                    <div class="delivery-item flex items-start gap-3 p-4 bg-blue-50/50 rounded-xl border border-blue-100/50">
-                        <i class="fas fa-shipping-fast text-blue-500 mt-1"></i>
-                        <span class="text-xs font-bold text-blue-800 leading-relaxed">Giao hàng miễn phí nội thành TP.HCM (đơn ≥ 200k)</span>
-                    </div>
-                    <div class="delivery-item flex items-start gap-3 p-4 bg-blue-50/50 rounded-xl border border-blue-100/50">
-                        <i class="fas fa-shipping-fast text-blue-500 mt-1"></i>
-                        <span class="text-xs font-bold text-blue-800 leading-relaxed">Giao hàng miễn phí toàn quốc (đơn ≥ 350k)</span>
+                    <div class="info-card flex items-center gap-4 p-4 bg-gray-50 rounded-2xl border border-border">
+                        <div class="w-10 h-10 rounded-xl bg-white flex items-center justify-center text-green-600 shadow-sm">
+                            <i class="fas fa-shield-alt"></i>
+                        </div>
+                        <div class="space-y-0.5">
+                            <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Bảo hành</p>
+                            <p class="text-sm font-bold text-gray-800">Chính hãng 100%</p>
+                        </div>
                     </div>
                 </div>
 
-                <!-- Action Buttons -->
-                <div class="action-buttons flex flex-wrap gap-4 pt-4 border-t border-border">
-                    <button class="btn add-to-cart-btn flex-1 min-w-[200px] bg-white border-2 border-primary text-primary hover:bg-primary hover:text-white px-8 py-4 rounded-2xl font-black text-base transition-all active:scale-95 flex items-center justify-center gap-3 shadow-md" id="add-to-cart">
-                        <i class="fas fa-cart-plus"></i> THÊM VÀO GIỎ
-                    </button>
-                    <button class="btn buy-now-btn flex-1 min-w-[200px] bg-primary hover:bg-primary-dark text-white px-8 py-4 rounded-2xl font-black text-base transition-all active:scale-95 flex items-center justify-center gap-3 shadow-lg shadow-primary/30" id="buy-now">
-                        <i class="fas fa-bolt"></i> MUA NGAY
-                    </button>
+                <div class="delivery-perks space-y-3">
+                    <div class="flex items-center gap-3 text-xs font-bold text-gray-500">
+                        <i class="fas fa-truck-moving text-[#C0392B]"></i>
+                        <span>Giao hàng nội thành TP.HCM (đơn ≥ 200k)</span>
+                    </div>
+                    <div class="flex items-center gap-3 text-xs font-bold text-gray-500">
+                        <i class="fas fa-globe-asia text-[#C0392B]"></i>
+                        <span>Miễn phí giao hàng toàn quốc (đơn ≥ 350k)</span>
+                    </div>
                 </div>
 
-                <!-- Wishlist Button -->
-                <div class="wishlist text-center">
-                    <button id="add-to-wishlist" class="text-xs font-bold text-gray-400 hover:text-primary transition-all flex items-center justify-center gap-2 mx-auto px-4 py-2 rounded-full hover:bg-primary-light">
-                        <i class="far fa-heart"></i> Thêm vào danh sách yêu thích
+                    <div class="action-buttons flex flex-wrap gap-4">
+                        <button class="btn add-to-cart-btn flex-1 min-w-[200px] bg-white border-2 border-[#C0392B] text-[#C0392B] hover:bg-[#C0392B] hover:text-white px-8 py-5 rounded-2xl font-black text-base transition-all active:scale-95 flex items-center justify-center gap-3 shadow-md group" id="add-to-cart">
+                            <i class="fas fa-cart-plus group-hover:rotate-12 transition-transform"></i> THÊM VÀO GIỎ
+                        </button>
+                        <button class="btn buy-now-btn flex-1 min-w-[200px] bg-[#C0392B] hover:bg-[#962d22] text-white px-8 py-5 rounded-2xl font-black text-base transition-all active:scale-95 flex items-center justify-center gap-3 shadow-lg shadow-[#C0392B]/20" id="buy-now">
+                            <i class="fas fa-bolt animate-pulse"></i> MUA NGAY
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Social & Wishlist -->
+                <div class="flex items-center justify-between pt-6 border-t border-border">
+                    <div class="share-links flex items-center gap-4">
+                        <span class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Chia sẻ:</span>
+                        <div class="flex gap-2">
+                            <a href="#" class="w-8 h-8 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center text-xs hover:bg-blue-600 hover:text-white transition-all"><i class="fab fa-facebook-f"></i></a>
+                            <a href="#" class="w-8 h-8 rounded-full bg-red-50 text-red-600 flex items-center justify-center text-xs hover:bg-red-600 hover:text-white transition-all"><i class="fab fa-pinterest"></i></a>
+                            <a href="#" class="w-8 h-8 rounded-full bg-sky-50 text-sky-600 flex items-center justify-center text-xs hover:bg-sky-600 hover:text-white transition-all"><i class="fab fa-twitter"></i></a>
+                        </div>
+                    </div>
+                    <button id="add-to-wishlist" class="text-xs font-black text-gray-400 hover:text-[#C0392B] transition-all flex items-center gap-2 group">
+                        <i class="far fa-heart group-hover:scale-125 transition-transform"></i> Yêu thích
                     </button>
                 </div>
             </div>

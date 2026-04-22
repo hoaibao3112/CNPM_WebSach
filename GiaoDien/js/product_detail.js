@@ -26,6 +26,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     setupEventListeners();
+    setupQuantitySelector();
     setupRatingSection(productInfo.data.MaSP || productInfo.data);
 
 
@@ -103,6 +104,43 @@ function setupEventListeners() {
     } else {
         console.error('Error: add-to-wishlist button not found');
     }
+
+    // Author click handler
+    const authorEl = document.getElementById('product-author');
+    if (authorEl) {
+        authorEl.addEventListener('click', () => {
+            const currentProduct = JSON.parse(localStorage.getItem('currentProduct') || '{}');
+            const maTG = currentProduct.MaTG || currentProduct.matg;
+            if (maTG) viewAuthorDetail(maTG);
+        });
+    }
+}
+
+/**
+ * Thiết lập bộ chọn số lượng
+ */
+function setupQuantitySelector() {
+    const minusBtn = document.getElementById('qty-minus');
+    const plusBtn = document.getElementById('qty-plus');
+    const qtyInput = document.getElementById('qty-input');
+
+    if (!minusBtn || !plusBtn || !qtyInput) return;
+
+    minusBtn.addEventListener('click', () => {
+        let val = parseInt(qtyInput.value) || 1;
+        if (val > 1) qtyInput.value = val - 1;
+    });
+
+    plusBtn.addEventListener('click', () => {
+        let val = parseInt(qtyInput.value) || 1;
+        if (val < 99) qtyInput.value = val + 1;
+    });
+
+    qtyInput.addEventListener('change', () => {
+        let val = parseInt(qtyInput.value) || 1;
+        if (val < 1) qtyInput.value = 1;
+        if (val > 99) qtyInput.value = 99;
+    });
 }
 
 /**
@@ -1218,14 +1256,26 @@ function addToCart() {
 
     try {
         const productData = JSON.parse(addToCartBtn.dataset.product);
+        const qtyInput = document.getElementById('qty-input');
+        const quantity = qtyInput ? (parseInt(qtyInput.value) || 1) : 1;
+        
         let cart = JSON.parse(localStorage.getItem('cart')) || [];
         
         const existingItem = cart.find(item => item.id === productData.id);
-        existingItem ? existingItem.quantity++ : cart.push({...productData, quantity: 1});
+        if (existingItem) {
+            existingItem.quantity += quantity;
+        } else {
+            cart.push({...productData, quantity: quantity});
+        }
         
-        console.log('Updated cart:', cart);
+        console.log(`Added ${quantity} of ${productData.name} to cart`);
         localStorage.setItem('cart', JSON.stringify(cart));
-        showAlert(`Đã thêm "${productData.name}" vào giỏ hàng!`, 'success');
+        showAlert(`Đã thêm ${quantity} "${productData.name}" vào giỏ hàng!`, 'success');
+        
+        // Cập nhật số lượng giỏ hàng trên header nếu có hàm updateCartCount
+        if (typeof window.updateCartCount === 'function') {
+            window.updateCartCount();
+        }
     } catch (error) {
         console.error('Error in addToCart:', error);
         showAlert('Lỗi: Không thể thêm sản phẩm vào giỏ hàng.', 'error');
