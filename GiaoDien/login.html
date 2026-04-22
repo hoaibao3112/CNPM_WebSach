@@ -12,6 +12,10 @@
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
   
+  <!-- Tailwind CSS CDN & Config -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="js/tailwind-config.js"></script>
+
   <!-- API Configuration - LOAD EARLY -->
   <script src="js/config.js"></script>
   <script src="js/api-patcher.js"></script>
@@ -19,29 +23,7 @@
 
 <body>
   <div id="load-header"></div>
-  <div class="login-container">
-    <form id="loginForm" class="login-form">
-      <h1>Classy Login Form</h1>
-      <div id="errorMessage" class="error-message"></div>
 
-      <div class="form-group">
-        <i class="fa fa-user"></i>
-        <input type="text" id="email" placeholder="Email" required>
-      </div>
-
-      <div class="form-group">
-        <i class="fa fa-lock"></i>
-        <input type="password" id="password" placeholder="Password" required>
-      </div>
-
-      <div class="options">
-        <label><input type="checkbox"> Remember me</label>
-        <a href="#" onclick="document.getElementById('forgotPasswordModal').classList.add('active'); return false;">Forgot Password?</a>
-      </div>
-
-      <button type="submit" id="btnSubmit" class="login-btn">Login</button>
-
-  
   <div class="login-container min-h-[80vh] flex items-center justify-center px-4 py-12">
     <form id="loginForm" class="login-form w-full max-w-md bg-white p-8 rounded-2xl shadow-xl border border-border">
       <h1 class="text-3xl font-display font-black text-center text-gray-800 mb-2 tracking-tight">ĐĂNG NHẬP</h1>
