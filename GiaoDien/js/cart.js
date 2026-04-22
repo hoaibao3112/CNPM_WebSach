@@ -5,11 +5,33 @@ function formatPrice(price) {
   return new Intl.NumberFormat('vi-VN').format(price) + 'đ';
 }
 
+function getStoredUser() {
+  try {
+    const rawUser = localStorage.getItem('user') || localStorage.getItem('loggedInUser') || '{}';
+    const parsed = JSON.parse(rawUser);
+    return parsed && typeof parsed === 'object' ? parsed : {};
+  } catch (error) {
+    console.warn('Could not parse user from storage:', error);
+    return {};
+  }
+}
+
+function resolveUserId(user) {
+  if (!user || typeof user !== 'object') return null;
+  const candidates = [user.makh, user.MaKH, user.customerId, user.id, localStorage.getItem('customerId')];
+  for (const candidate of candidates) {
+    if (candidate === 0 || candidate) {
+      const normalized = String(candidate).trim();
+      if (normalized) return normalized;
+    }
+  }
+  return null;
+}
+
 // Check if user is logged in
 function isLoggedIn() {
-  const user = JSON.parse(localStorage.getItem('user') || '{}');
   const token = localStorage.getItem('token');
-  return user?.makh && token;
+  return Boolean(token);
 }
 
 // Get token
@@ -19,10 +41,7 @@ function getToken() {
 
 // Get user ID
 function getUserId() {
-  const user = JSON.parse(localStorage.getItem('user') || '{}');
-  const makh = user?.makh;
-  // Ensure return is string or number, never null/undefined/object
-  return makh ? String(makh).trim() : null;
+  return resolveUserId(getStoredUser());
 }
 
 // Get cart from backend or localStorage
