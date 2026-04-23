@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Khám phá phong cách đọc sách | Trung Phong Books</title>
+    
+    <!-- API Configuration - LOAD EARLY -->
+    <script src="js/config.js"></script>
+    <script src="js/api-patcher.js"></script>
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- React & ReactDOM CDN -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <!-- Babel for JSX -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Playfair+Display:wght@700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#B03A2E',
+                        'primary-dark': '#8E2920',
+                        bg: '#FDFCFB',
+                        text: '#1E293B',
+                        'text-light': '#64748B',
+                        border: '#E2E8F0',
+                    },
+                    fontFamily: {
+                        display: ['Playfair Display', 'serif'],
+                        body: ['Inter', 'sans-serif'],
+                    },
+                    animation: {
+                        'pulse-soft': 'pulse-soft 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'fade-in': 'fade-in 0.6s ease-out forwards',
+                        'slide-up': 'slide-up 0.6s ease-out forwards',
+                    },
+                    keyframes: {
+                        'pulse-soft': {
+                            '0%, 100%': { opacity: 1, transform: 'scale(1)' },
+                            '50%': { opacity: 0.8, transform: 'scale(1.05)' },
+                        },
+                        'fade-in': {
+                            '0%': { opacity: 0 },
+                            '100%': { opacity: 1 },
+                        },
+                        'slide-up': {
+                            '0%': { opacity: 0, transform: 'translateY(20px)' },
+                            '100%': { opacity: 1, transform: 'translateY(0)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #FDFCFB; }
+        .quiz-card { transform-origin: center; transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1); }
+        .answer-option { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .progress-bar-inner { transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1); }
+    </style>
+</head>
+<body class="antialiased text-text overflow-x-hidden">
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        const questions = [
+            {
+                id: 1,
+                text: "Bạn thích đọc sách trong không gian như thế nào?",
+                options: [
+                    { id: 'extrovert', text: "Quán cà phê náo nhiệt, đầy sức sống", icon: "fa-coffee" },
+                    { id: 'introvert', text: "Góc phòng yên tĩnh với nến thơm", icon: "fa-couch" },
+                    { id: 'classic', text: "Thư viện cổ kính, trang nghiêm", icon: "fa-university" },
+                    { id: 'nature', text: "Ngoài trời, dưới tán cây xanh mát", icon: "fa-tree" }
+                ]
+            },
+            {
+                id: 2,
+                text: "Thể loại phim nào thường khiến bạn bị thu hút nhất?",
+                options: [
+                    { id: 'mystery', text: "Trinh thám, giật gân, cân não", icon: "fa-user-secret" },
+                    { id: 'romance', text: "Lãng mạn, nhẹ nhàng, sâu lắng", icon: "fa-heart" },
+                    { id: 'action', text: "Hành động, phiêu lưu, kịch tính", icon: "fa-mountain" },
+                    { id: 'science', text: "Phim tài liệu, kiến thức, thực tế", icon: "fa-lightbulb" }
+                ]
+            },
+            {
+                id: 3,
+                text: "Khi gặp một vấn đề khó, bạn thường làm gì?",
+                options: [
+                    { id: 'logic', text: "Phân tích logic và tìm giải pháp", icon: "fa-microchip" },
+                    { id: 'emotional', text: "Lắng nghe cảm xúc của bản thân", icon: "fa-leaf" },
+                    { id: 'social', text: "Hỏi ý kiến từ những người xung quanh", icon: "fa-users" },
+                    { id: 'research', text: "Tự mình tìm tòi qua sách vở, tài liệu", icon: "fa-book" }
+                ]
+            }
+        ];
+
+        const QuizApp = () => {
+            const [step, setStep] = useState('intro'); // intro, quiz, result
+            const [currentQuestion, setCurrentQuestion] = useState(0);
+            const [answers, setAnswers] = useState([]);
+            const [animating, setAnimating] = useState(false);
+            const [categories, setCategories] = useState([]);
+            const [recommendedBooks, setRecommendedBooks] = useState([]);
+            const [resultCategory, setResultCategory] = useState(null);
+            const [loading, setLoading] = useState(false);
+
+            useEffect(() => {
+                fetchCategories();
+            }, []);
+
+            const fetchCategories = async () => {
+                try {
+                    const _apiBase = window.API_CONFIG.BASE_URL;
+                    const response = await fetch(`${_apiBase}/api/product/categories`);
+                    const data = await response.json();
+                    setCategories(data.data || data);
+                } catch (error) {
+                    console.error("Lỗi lấy danh mục:", error);
+                }
+            };
+
+            const handleStart = () => {
+                setStep('quiz');
+            };
+
+            const handleAnswer = async (optionId) => {
+                if (animating) return;
+                
+                const newAnswers = [...answers, optionId];
+                setAnswers(newAnswers);
+                
+                if (currentQuestion < questions.length - 1) {
+                    setAnimating(true);
+                    setTimeout(() => {
+                        setCurrentQuestion(currentQuestion + 1);
+                        setAnimating(false);
+                    }, 400);
+                } else {
+                    await calculateResult(newAnswers);
+                }
+            };
+
+            const calculateResult = async (finalAnswers) => {
+                setLoading(true);
+                setStep('result');
+                
+                // Logic đơn giản để chọn thể loại dựa trên câu trả lời
+                // Trong thực tế có thể phức tạp hơn
+                let targetCategoryId = 1; // Mặc định
+                
+                if (finalAnswers.includes('science') || finalAnswers.includes('logic')) targetCategoryId = 4; // Khoa học
+                else if (finalAnswers.includes('mystery')) targetCategoryId = 2; // Trinh thám/Chính trị
+                else if (finalAnswers.includes('romance')) targetCategoryId = 3; // Kinh tế/Văn học (tùy data)
+                else targetCategoryId = 6; // Thiếu nhi/Khác
+                
+                const matchedCat = categories.find(c => String(c.MaTL) === String(targetCategoryId)) || categories[0];
+                setResultCategory(matchedCat);
+
+                try {
+                    const _apiBase = window.API_CONFIG.BASE_URL;
+                    const response = await fetch(`${_apiBase}/api/product/category/${targetCategoryId}`);
+                    const data = await response.json();
+                    const books = data.data || data;
+                    setRecommendedBooks(books.slice(0, 2)); // Lấy 2 cuốn gợi ý
+                } catch (error) {
+                    console.error("Lỗi lấy sản phẩm gợi ý:", error);
+                } finally {
+                    setLoading(false);
+                }
+            };
+
+            const progress = ((currentQuestion + 1) / questions.length) * 100;
+
+            if (step === 'intro') {
+                return (
+                    <div className="min-h-screen flex items-center justify-center p-6 bg-gradient-to-br from-bg to-white">
+                        <div className="max-w-md w-full text-center space-y-8 animate-slide-up">
+                            <div className="inline-flex items-center justify-center w-20 h-20 rounded-3xl bg-primary/10 text-primary text-4xl mb-6 shadow-sm">
+                                <i className="fas fa-magic"></i>
+                            </div>
+                            <h1 className="text-4xl font-display font-black tracking-tight text-text">
+                                Tìm cuốn sách <br/> "định mệnh" của bạn
+                            </h1>
+                            <p className="text-text-light leading-relaxed">
+                                Trả lời các câu hỏi tâm lý để chúng tôi tìm ra những cuốn sách thật sự dành cho bạn từ thư viện của Trung Phong Books.
+                            </p>
+                            <button 
+                                onClick={handleStart}
+                                className="w-full h-16 bg-primary text-white rounded-2xl font-black uppercase tracking-widest text-sm shadow-xl shadow-primary/20 hover:bg-primary-dark transition-all active:scale-95 animate-pulse-soft"
+                            >
+                                Bắt đầu khám phá <i className="fas fa-sparkles ml-2"></i>
+                            </button>
+                        </div>
+                    </div>
+                );
+            }
+
+            if (step === 'quiz') {
+                const q = questions[currentQuestion];
+                return (
+                    <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-bg">
+                        <div className="fixed top-0 left-0 w-full h-1.5 bg-gray-100 z-50">
+                            <div 
+                                className="progress-bar-inner h-full bg-primary shadow-[0_0_10px_rgba(176,58,46,0.5)]" 
+                                style={{ width: `${progress}%` }}
+                            ></div>
+                        </div>
+
+                        <div className="max-w-lg w-full">
+                            <div className="mb-10 flex justify-between items-end">
+                                <div>
+                                    <span className="text-[10px] font-black uppercase tracking-widest text-primary mb-1 block">Câu hỏi {currentQuestion + 1} / {questions.length}</span>
+                                    <h2 className="text-2xl md:text-3xl font-display font-black text-text leading-tight">
+                                        {q.text}
+                                    </h2>
+                                </div>
+                            </div>
+
+                            <div className={`space-y-4 transition-all duration-500 ${animating ? 'opacity-0 translate-x-10' : 'opacity-100 translate-x-0'}`}>
+                                {q.options.map((opt, idx) => (
+                                    <div 
+                                        key={opt.id}
+                                        onClick={() => handleAnswer(opt.id)}
+                                        className="answer-option group relative bg-white border border-border p-5 rounded-2xl cursor-pointer hover:border-primary hover:shadow-xl hover:shadow-primary/5 active:scale-95 flex items-center gap-4 animate-slide-up"
+                                        style={{ animationDelay: `${idx * 100}ms` }}
+                                    >
+                                        <div className="w-12 h-12 rounded-xl bg-gray-50 flex items-center justify-center text-text-light group-hover:bg-primary/10 group-hover:text-primary transition-colors">
+                                            <i className={`fas ${opt.icon}`}></i>
+                                        </div>
+                                        <span className="text-sm font-bold text-text group-hover:text-primary transition-colors">{opt.text}</span>
+                                        <div className="ml-auto w-6 h-6 rounded-full border-2 border-border group-hover:border-primary transition-colors flex items-center justify-center">
+                                            <div className="w-2.5 h-2.5 bg-primary rounded-full scale-0 group-hover:scale-100 transition-transform"></div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                );
+            }
+
+            if (step === 'result') {
+                if (loading) {
+                    return (
+                        <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-bg">
+                            <div className="w-16 h-16 border-4 border-primary/20 border-t-primary rounded-full animate-spin mb-4"></div>
+                            <p className="text-xs font-black uppercase tracking-widest text-primary animate-pulse">Đang tìm kiếm sách phù hợp...</p>
+                        </div>
+                    );
+                }
+
+                return (
+                    <div className="min-h-screen flex items-center justify-center p-6 bg-gradient-to-br from-bg to-white animate-fade-in">
+                        <div className="max-w-2xl w-full text-center space-y-8">
+                            <div className="space-y-4">
+                                <h2 className="text-sm font-black uppercase tracking-[0.3em] text-primary">Chúng tôi đã tìm thấy!</h2>
+                                <h1 className="text-4xl font-display font-black tracking-tight text-text">
+                                    Phong cách: {resultCategory ? resultCategory.TenTL : 'Độc giả Thông thái'}
+                                </h1>
+                                <p className="text-text-light leading-relaxed max-w-md mx-auto">
+                                    Dựa trên tính cách của bạn, chúng tôi gợi ý những cuốn sách thuộc thể loại <strong>{resultCategory?.TenTL}</strong>. Đây là những lựa chọn tốt nhất dành cho bạn:
+                                </p>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 py-4">
+                                {recommendedBooks.map((book, idx) => (
+                                    <div 
+                                        key={book.MaSP}
+                                        className="bg-white p-4 rounded-3xl border border-border shadow-sm hover:shadow-xl transition-all group cursor-pointer text-left flex gap-4 items-center"
+                                        onClick={() => {
+                                            localStorage.setItem('selectedProductId', book.MaSP);
+                                            window.location.href = 'product_detail.html';
+                                        }}
+                                    >
+                                        <div className="w-24 h-32 bg-gray-50 rounded-xl overflow-hidden flex-shrink-0">
+                                            <img 
+                                                src={`img/product/${book.HinhAnh || 'sp01.jpg'}`} 
+                                                className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                                                onerror="this.src='img/product/sp01.jpg'"
+                                            />
+                                        </div>
+                                        <div className="flex-1">
+                                            <h3 className="text-sm font-bold text-text line-clamp-2 mb-1 group-hover:text-primary transition-colors">{book.TenSP}</h3>
+                                            <p className="text-[10px] text-text-light font-bold uppercase tracking-tight mb-2">{book.TacGia || 'Đang cập nhật'}</p>
+                                            <span className="text-sm font-black text-primary">{new Intl.NumberFormat('vi-VN').format(book.DonGia)}đ</span>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+
+                            <div className="pt-6 flex flex-col sm:flex-row gap-4 justify-center">
+                                <button 
+                                    onClick={() => window.location.href = 'index.html'}
+                                    className="h-14 px-8 bg-white border-2 border-border text-text font-black uppercase tracking-widest text-[10px] rounded-2xl hover:border-primary hover:text-primary transition-all active:scale-95"
+                                >
+                                    Về trang chủ
+                                </button>
+                                <button 
+                                    onClick={() => window.location.href = `book.html?category=${resultCategory?.MaTL}`}
+                                    className="h-14 px-8 bg-primary text-white font-black uppercase tracking-widest text-[10px] rounded-2xl shadow-xl shadow-primary/20 hover:bg-primary-dark transition-all active:scale-95"
+                                >
+                                    Xem thêm cùng thể loại <i className="fas fa-arrow-right ml-2"></i>
+                                </button>
+                            </div>
+                            
+                            <button 
+                                onClick={() => { setStep('intro'); setCurrentQuestion(0); setAnswers([]); }}
+                                className="text-xs font-bold text-text-light hover:text-primary transition-colors underline underline-offset-4"
+                            >
+                                Làm lại khảo sát
+                            </button>
+                        </div>
+                    </div>
+                );
+            }
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<QuizApp />);
+    </script>
+</body>
+</html>
