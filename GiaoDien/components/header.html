@@ -8,73 +8,73 @@
 
 <body>
     <!-- Top bar -->
-    <div class="top-bar fixed top-0 left-0 right-0 z-[9999] bg-[#B03A2E] shadow-[0_4px_20px_rgba(176,58,46,0.3)] h-14">
-        <div class="top-bar-container max-w-[1300px] mx-auto h-full flex items-center justify-between px-4 gap-4">
+    <div class="top-bar fixed top-0 left-0 right-0 z-[9999] bg-[#B03A2E] shadow-[0_4px_20px_rgba(176,58,46,0.3)] h-14 md:h-16">
+        <div class="top-bar-container max-w-[1300px] mx-auto h-full flex items-center justify-between px-2 sm:px-4 gap-2 md:gap-4">
             <!-- Logo -->
-            <a href="index.html" class="flex items-center group transition-all">
-                <img src="img/logo1.png" alt="Fahasa.com" class="h-10 w-auto object-contain drop-shadow-md group-hover:scale-105 transition-transform">
+            <a href="index.html" class="flex items-center group transition-all shrink-0">
+                <img src="img/logo1.png" alt="Fahasa.com" class="h-8 md:h-10 w-auto object-contain drop-shadow-md group-hover:scale-105 transition-transform">
             </a>
 
             <!-- Search Container -->
-            <div class="search-container relative flex-1 max-w-xl mx-4">
-                <form id="search-form" class="relative flex items-center bg-white/10 hover:bg-white/15 focus-within:bg-white border border-white/20 focus-within:border-white rounded-xl transition-all h-10 overflow-hidden">
+            <div class="search-container relative flex-1 max-w-xl mx-1 md:mx-4">
+                <form id="search-form" class="relative flex items-center bg-white/10 hover:bg-white/15 focus-within:bg-white border border-white/20 focus-within:border-white rounded-lg md:rounded-xl transition-all h-9 md:h-10 overflow-hidden">
                     <input id="search-input" type="text" autocomplete="off" 
-                        placeholder="Tìm kiếm sách, tác giả..." name="search"
-                        class="w-full h-full px-5 outline-none text-sm text-white placeholder:text-white/50 focus:text-gray-800 bg-transparent">
-                    <button type="submit" class="h-full px-5 text-white focus:text-primary hover:bg-white/10 transition-all">
-                        <i class="fas fa-search text-xs"></i>
+                        placeholder="Tìm kiếm..." name="search"
+                        class="w-full h-full px-3 md:px-5 outline-none text-[11px] md:text-sm text-white placeholder:text-white/50 focus:text-gray-800 bg-transparent">
+                    <button type="submit" class="h-full px-3 md:px-5 text-white focus:text-primary hover:bg-white/10 transition-all">
+                        <i class="fas fa-search text-[10px] md:text-xs"></i>
                     </button>
                 </form>
 
                 <!-- Suggestion Box -->
                 <div class="suggestion-box absolute top-full left-0 right-0 mt-2 bg-white shadow-2xl rounded-2xl border border-border overflow-hidden hidden z-[10000] animate-in fade-in slide-in-from-top-2 duration-300">
-                    <div class="search-history-container p-4 border-b border-border">
+                    <div class="search-history-container p-3 md:p-4 border-b border-border">
                         <div class="flex justify-between items-center mb-3">
-                            <span class="text-[10px] font-black uppercase text-gray-400 tracking-widest">Lịch sử</span>
-                            <span class="text-[10px] font-black uppercase text-primary cursor-pointer hover:underline" onclick="clearHistory()">Xóa tất cả</span>
+                            <span class="text-[9px] md:text-[10px] font-black uppercase text-gray-400 tracking-widest">Lịch sử</span>
+                            <span class="text-[9px] md:text-[10px] font-black uppercase text-primary cursor-pointer hover:underline" onclick="clearHistory()">Xóa tất cả</span>
                         </div>
                         <div class="search-history flex flex-wrap gap-2" id="history"></div>
                     </div>
-                    <div class="p-4">
-                        <span class="text-[10px] font-black uppercase text-gray-400 tracking-widest block mb-3">Gợi ý sản phẩm</span>
+                    <div class="p-3 md:p-4">
+                        <span class="text-[9px] md:text-[10px] font-black uppercase text-gray-400 tracking-widest block mb-3">Gợi ý sản phẩm</span>
                         <div id="products-fond" class="grid grid-cols-1 gap-2"></div>
                     </div>
                 </div>
             </div>
 
             <!-- Nav Links -->
-            <ul class="top-links flex items-center gap-4 list-none m-0 p-0">
-                <!-- Danh mục -->
-                <li class="relative group">
-                    <a href="#" class="h-10 px-4 flex items-center gap-2 text-xs font-bold text-white/80 hover:text-white hover:bg-white/10 rounded-xl transition-all">
+            <ul class="top-links flex items-center gap-1 sm:gap-4 list-none m-0 p-0 shrink-0">
+                <!-- Danh mục - Hidden on mobile -->
+                <li class="relative group hidden sm:block">
+                    <a href="#" class="h-9 md:h-10 px-2 md:px-4 flex items-center gap-2 text-[10px] md:text-xs font-bold text-white/80 hover:text-white hover:bg-white/10 rounded-lg md:rounded-xl transition-all">
                         <i class="fas fa-grid-2"></i> <span>Danh mục</span>
                     </a>
                 </li>
 
                 <!-- Account -->
                 <li class="account-dropdown relative group" id="accountDropdownContainer">
-                    <div id="loginLinkDiv" class="flex h-10">
-                        <a href="login.html" id="loginLink" class="px-4 flex items-center gap-2 text-xs font-bold text-white hover:bg-white/10 rounded-xl transition-all">
-                            <i class="fas fa-user-circle"></i> <span>Đăng nhập</span>
+                    <div id="loginLinkDiv" class="flex h-9 md:h-10">
+                        <a href="login.html" id="loginLink" class="px-2 md:px-4 flex items-center gap-2 text-[10px] md:text-xs font-bold text-white hover:bg-white/10 rounded-lg md:rounded-xl transition-all">
+                            <i class="fas fa-user-circle text-sm md:text-base"></i> <span class="hidden md:inline">Đăng nhập</span>
                         </a>
                     </div>
 
                     <!-- Logged In State -->
-                    <div class="logged-in-account hidden h-10 flex items-center">
-                        <div class="accountLinkDiv flex items-center gap-2 px-4 h-full cursor-pointer hover:bg-white/10 rounded-xl transition-all">
-                            <i class="fas fa-user-circle text-white/80"></i>
-                            <span class="username text-xs font-bold text-white">Tên người dùng</span>
-                            <i class="fas fa-chevron-down text-[8px] text-white/50"></i>
+                    <div class="logged-in-account hidden h-9 md:h-10 flex items-center">
+                        <div class="accountLinkDiv flex items-center gap-2 px-2 md:px-4 h-full cursor-pointer hover:bg-white/10 rounded-lg md:rounded-xl transition-all">
+                            <i class="fas fa-user-circle text-white/80 text-sm md:text-base"></i>
+                            <span class="username text-[10px] md:text-xs font-bold text-white hidden md:inline">Người dùng</span>
+                            <i class="fas fa-chevron-down text-[7px] md:text-[8px] text-white/50"></i>
                         </div>
-                        <div class="dropdown-content absolute top-full right-0 w-48 mt-2 bg-white shadow-2xl rounded-2xl border border-border py-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-[10001] translate-y-2 group-hover:translate-y-0">
-                            <a href="profile.html" class="flex items-center gap-3 px-4 py-3 text-xs font-bold text-text hover:bg-primary/5 hover:text-primary transition-all">
-                                <i class="fas fa-user-circle text-primary/40"></i> Hồ sơ của tôi
+                        <div class="dropdown-content absolute top-full right-0 w-40 md:w-48 mt-2 bg-white shadow-2xl rounded-2xl border border-border py-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-[10001] translate-y-2 group-hover:translate-y-0">
+                            <a href="profile.html" class="flex items-center gap-3 px-4 py-2.5 md:py-3 text-[10px] md:text-xs font-bold text-text hover:bg-primary/5 hover:text-primary transition-all">
+                                <i class="fas fa-user-circle text-primary/40"></i> Hồ sơ
                             </a>
-                            <a href="orders.html" class="flex items-center gap-3 px-4 py-3 text-xs font-bold text-text hover:bg-primary/5 hover:text-primary transition-all">
+                            <a href="orders.html" class="flex items-center gap-3 px-4 py-2.5 md:py-3 text-[10px] md:text-xs font-bold text-text hover:bg-primary/5 hover:text-primary transition-all">
                                 <i class="fas fa-shopping-bag text-primary/40"></i> Đơn hàng
                             </a>
                             <div class="h-[1px] bg-border mx-4 my-2"></div>
-                            <a href="#" id="logoutBtn" class="flex items-center gap-3 px-4 py-3 text-xs font-bold text-red-600 hover:bg-red-50 transition-all">
+                            <a href="#" id="logoutBtn" class="flex items-center gap-3 px-4 py-2.5 md:py-3 text-[10px] md:text-xs font-bold text-red-600 hover:bg-red-50 transition-all">
                                 <i class="fas fa-sign-out-alt opacity-40"></i> Đăng xuất
                             </a>
                         </div>
@@ -83,9 +83,9 @@
 
                 <!-- Cart -->
                 <li>
-                    <a href="cart.html" class="h-10 pl-4 pr-5 flex items-center gap-3 bg-white text-primary rounded-xl font-black text-[10px] uppercase tracking-widest hover:scale-105 active:scale-95 transition-all shadow-lg shadow-black/10">
+                    <a href="cart.html" class="h-9 md:h-10 px-2 sm:pl-4 sm:pr-5 flex items-center gap-2 md:gap-3 bg-white text-primary rounded-lg md:rounded-xl font-black text-[9px] md:text-[10px] uppercase tracking-widest hover:scale-105 active:scale-95 transition-all shadow-lg shadow-black/10">
                         <i class="fas fa-shopping-cart text-xs"></i>
-                        <span>Giỏ hàng <span id="cart-count" class="bg-primary/10 px-1.5 py-0.5 rounded-md ml-1">0</span></span>
+                        <span class="hidden sm:inline">Giỏ hàng</span> <span id="cart-count" class="bg-primary/10 px-1.5 py-0.5 rounded-md">0</span>
                     </a>
                 </li>
             </ul>

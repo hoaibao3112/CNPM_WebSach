@@ -23,63 +23,63 @@
   <script src="js/api-patcher.js"></script>
 </head>
 
-<body class="bg-bg pt-14 font-body antialiased">
+<body class="bg-bg pt-14 md:pt-16 font-body antialiased">
   <!-- Top bar -->
   <div id="load-header"></div>
 
   <!-- Slideshow -->
-  <div class="grid-slideshow grid grid-cols-1 md:grid-cols-3 grid-rows-2 gap-3 w-[92%] mx-auto my-4 rounded-lg overflow-hidden shadow-md">
-    <div class="slide-large md:col-span-2 md:row-span-2 h-[30vh] md:h-[420px] overflow-hidden rounded-md">
+  <div class="grid-slideshow grid grid-cols-1 md:grid-cols-3 grid-rows-2 gap-2 md:gap-3 w-[94%] md:w-[92%] mx-auto my-4 rounded-xl md:rounded-2xl overflow-hidden shadow-sm">
+    <div class="slide-large md:col-span-2 md:row-span-2 h-[220px] sm:h-[300px] md:h-[420px] overflow-hidden">
       <img src="img/anhnen/17d.jpg" alt="Slide lớn" class="w-full h-full object-cover transition-transform duration-500 hover:scale-105">
     </div>
-    <div class="slide-small h-[15vh] md:h-[200px] overflow-hidden rounded-md">
+    <div class="slide-small h-[100px] sm:h-[140px] md:h-[200px] overflow-hidden">
       <img src="img/anhnen/18d.jpg" alt="Slide nhỏ 1" class="w-full h-full object-cover transition-transform duration-500 hover:scale-105">
     </div>
-    <div class="slide-small h-[15vh] md:h-[200px] overflow-hidden rounded-md">
+    <div class="slide-small h-[100px] sm:h-[140px] md:h-[200px] overflow-hidden">
       <img src="img/anhnen/14d.jpg" alt="Slide nhỏ 2" class="w-full h-full object-cover transition-transform duration-500 hover:scale-105">
     </div>
   </div>
 
   <!-- Promotion Cards -->
-  <div class="promotion-cards flex gap-3 overflow-x-auto p-4 w-[92%] mx-auto bg-white rounded-lg border border-border shadow-sm scrollbar-hide">
-    <div class="promo-card flex-shrink-0 w-20 text-center cursor-pointer transition-transform hover:-translate-y-1" onclick="window.location.href='./giamgia.html'">
-      <img src="img/giamgia/anh1.jpg" alt="Deal riêng 50%" class="w-12 h-12 mx-auto rounded-full object-cover shadow-sm mb-2">
-      <p class="text-[10px] font-medium text-text-muted leading-tight">Ưu đãi tháng 5</p>
+  <div class="promotion-cards flex gap-2 md:gap-4 overflow-x-auto p-3 md:p-5 w-[94%] md:w-[92%] mx-auto bg-white rounded-xl md:rounded-2xl border border-border shadow-sm scrollbar-hide">
+    <div class="promo-card flex-shrink-0 w-16 md:w-20 text-center cursor-pointer transition-transform hover:-translate-y-1" onclick="window.location.href='./giamgia.html'">
+      <img src="img/giamgia/anh1.jpg" alt="Deal riêng 50%" class="w-10 h-10 md:w-12 md:h-12 mx-auto rounded-full object-cover shadow-sm mb-2">
+      <p class="text-[9px] md:text-[10px] font-bold text-text-muted leading-tight uppercase tracking-tighter">Ưu đãi</p>
     </div>
-    <div class="promo-card flex-shrink-0 w-20 text-center cursor-pointer transition-transform hover:-translate-y-1" onclick="window.location.href='./giamgia1.html'">
-      <img src="img/giamgia/anh2.jpg" alt="Flash Sale" class="w-12 h-12 mx-auto rounded-full object-cover shadow-sm mb-2">
-      <p class="text-[10px] font-medium text-text-muted leading-tight">Flash Sale</p>
+    <div class="promo-card flex-shrink-0 w-16 md:w-20 text-center cursor-pointer transition-transform hover:-translate-y-1" onclick="window.location.href='./giamgia1.html'">
+      <img src="img/giamgia/anh2.jpg" alt="Flash Sale" class="w-10 h-10 md:w-12 md:h-12 mx-auto rounded-full object-cover shadow-sm mb-2">
+      <p class="text-[9px] md:text-[10px] font-bold text-text-muted leading-tight uppercase tracking-tighter">Flash Sale</p>
     </div>
-    <div class="promo-card flex-shrink-0 w-20 text-center cursor-pointer transition-transform hover:-translate-y-1" onclick="window.location.href='./giamgia2.html'">
-      <img src="img/giamgia/anh3.jpg" alt="Đinh Tị Books" class="w-12 h-12 mx-auto rounded-full object-cover shadow-sm mb-2">
-      <p class="text-[10px] font-medium text-text-muted leading-tight">Đinh Tị Books</p>
+    <div class="promo-card flex-shrink-0 w-16 md:w-20 text-center cursor-pointer transition-transform hover:-translate-y-1" onclick="window.location.href='./giamgia2.html'">
+      <img src="img/giamgia/anh3.jpg" alt="Đinh Tị Books" class="w-10 h-10 md:w-12 md:h-12 mx-auto rounded-full object-cover shadow-sm mb-2">
+      <p class="text-[9px] md:text-[10px] font-bold text-text-muted leading-tight uppercase tracking-tighter">Đinh Tị</p>
     </div>
-    <div class="promo-card flex-shrink-0 w-20 text-center cursor-pointer transition-transform hover:-translate-y-1" onclick="window.location.href='./giamgia5.html'">
-      <img src="img/giamgia/anh4.jpg" alt="Alpha Books" class="w-12 h-12 mx-auto rounded-full object-cover shadow-sm mb-2">
-      <p class="text-[10px] font-medium text-text-muted leading-tight">Alpha Books</p>
+    <div class="promo-card flex-shrink-0 w-16 md:w-20 text-center cursor-pointer transition-transform hover:-translate-y-1" onclick="window.location.href='./giamgia5.html'">
+      <img src="img/giamgia/anh4.jpg" alt="Alpha Books" class="w-10 h-10 md:w-12 md:h-12 mx-auto rounded-full object-cover shadow-sm mb-2">
+      <p class="text-[9px] md:text-[10px] font-bold text-text-muted leading-tight uppercase tracking-tighter">Alpha</p>
     </div>
-    <div class="promo-card flex-shrink-0 w-20 text-center cursor-pointer transition-transform hover:-translate-y-1" onclick="window.location.href='./giamgia3.html'">
-      <img src="img/giamgia/anh5.jpg" alt="Phiếu giảm giá" class="w-12 h-12 mx-auto rounded-full object-cover shadow-sm mb-2">
-      <p class="text-[10px] font-medium text-text-muted leading-tight">Phiếu giảm giá</p>
+    <div class="promo-card flex-shrink-0 w-16 md:w-20 text-center cursor-pointer transition-transform hover:-translate-y-1" onclick="window.location.href='./giamgia3.html'">
+      <img src="img/giamgia/anh5.jpg" alt="Phiếu giảm giá" class="w-10 h-10 md:w-12 md:h-12 mx-auto rounded-full object-cover shadow-sm mb-2">
+      <p class="text-[9px] md:text-[10px] font-bold text-text-muted leading-tight uppercase tracking-tighter">Voucher</p>
     </div>
-    <div class="promo-card flex-shrink-0 w-20 text-center cursor-pointer transition-transform hover:-translate-y-1" onclick="window.location.href='./giamgia4.html'">
-      <img src="img/giamgia/anh6.jpg" alt="Sản phẩm mới" class="w-12 h-12 mx-auto rounded-full object-cover shadow-sm mb-2">
-      <p class="text-[10px] font-medium text-text-muted leading-tight">Sản phẩm mới</p>
+    <div class="promo-card flex-shrink-0 w-16 md:w-20 text-center cursor-pointer transition-transform hover:-translate-y-1" onclick="window.location.href='./giamgia4.html'">
+      <img src="img/giamgia/anh6.jpg" alt="Sản phẩm mới" class="w-10 h-10 md:w-12 md:h-12 mx-auto rounded-full object-cover shadow-sm mb-2">
+      <p class="text-[9px] md:text-[10px] font-bold text-text-muted leading-tight uppercase tracking-tighter">Mới nhất</p>
     </div>
-    <div class="promo-card flex-shrink-0 w-20 text-center cursor-pointer transition-transform hover:-translate-y-1" onclick="window.location.href='./khuyenmai9.html'">
-      <img src="img/giamgia/anh9.jpg" alt="Truyện tranh" class="w-12 h-12 mx-auto rounded-full object-cover shadow-sm mb-2">
-      <p class="text-[10px] font-medium text-text-muted leading-tight">Truyện tranh</p>
+    <div class="promo-card flex-shrink-0 w-16 md:w-20 text-center cursor-pointer transition-transform hover:-translate-y-1" onclick="window.location.href='./khuyenmai9.html'">
+      <img src="img/giamgia/anh9.jpg" alt="Truyện tranh" class="w-10 h-10 md:w-12 md:h-12 mx-auto rounded-full object-cover shadow-sm mb-2">
+      <p class="text-[9px] md:text-[10px] font-bold text-text-muted leading-tight uppercase tracking-tighter">Truyện</p>
     </div>
   </div>
 
   <!-- Flash Sale Section -->
-  <div id="flash-sale" class="flash-sale-container w-[92%] mx-auto mt-8 bg-white rounded-lg border border-border overflow-hidden shadow-sm">
-    <div class="flash-sale-header flex justify-between items-center p-4 bg-gradient-to-r from-primary to-[#e74c3c] text-white">
-      <div class="flash-sale-left flex items-center gap-4">
-        <h2 class="font-display text-xl font-extrabold tracking-tight">FLASH SALE</h2>
-        <div id="flash-countdown" class="countdown font-mono bg-black/20 px-3 py-1 rounded text-sm font-bold"> </div>
+  <div id="flash-sale" class="flash-sale-container w-[94%] md:w-[92%] mx-auto mt-6 md:mt-8 bg-white rounded-xl md:rounded-2xl border border-border overflow-hidden shadow-sm">
+    <div class="flash-sale-header flex justify-between items-center p-3 md:p-4 bg-gradient-to-r from-primary to-[#e74c3c] text-white">
+      <div class="flash-sale-left flex items-center gap-2 md:gap-4">
+        <h2 class="font-display text-lg md:text-xl font-black tracking-tight italic">FLASH SALE</h2>
+        <div id="flash-countdown" class="countdown"> </div>
       </div>
-      <button id="flash-view-all" class="view-all-btn text-xs font-black uppercase tracking-widest bg-white/10 hover:bg-white text-white hover:text-primary px-6 py-2.5 rounded-xl transition-all border border-white/20 shadow-sm active:scale-95">Xem tất cả</button>
+      <button id="flash-view-all" class="view-all-btn text-[10px] md:text-xs font-black uppercase tracking-widest bg-white/10 hover:bg-white text-white hover:text-primary px-4 md:px-6 py-2 md:py-2.5 rounded-lg md:rounded-xl transition-all border border-white/20 shadow-sm active:scale-95">Tất cả</button>
     </div>
 
     <div id="flash-products" class="flash-products">
@@ -88,8 +88,8 @@
   </div>
 
   <!-- Main Content -->
-  <div class="container max-w-[1300px] mx-auto px-4 mt-8 flex flex-col md:flex-row gap-6">
-    <main class="main-content flex-1 bg-white p-6 rounded-lg border border-border shadow-sm">
+  <div class="container max-w-[1300px] mx-auto px-2 sm:px-4 mt-6 md:mt-8 flex flex-col md:flex-row gap-6">
+    <main class="main-content flex-1 bg-white p-4 md:p-8 rounded-xl md:rounded-[32px] border border-border shadow-sm">
       <div id="recommend-widget-container" class="mb-8"></div>
 
       <!-- Component: Có thể bạn thích -->

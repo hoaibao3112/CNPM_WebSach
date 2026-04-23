@@ -72,87 +72,44 @@ function formatDate(dateString) {
 }
 
 function showErrorToast(message) {
-    // Tạo toast notification
     const toast = document.createElement('div');
-    toast.className = 'toast error-toast';
-    toast.style.cssText = `
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        background: #dc3545;
-        color: white;
-        padding: 15px 20px;
-        border-radius: 8px;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-        z-index: 10000;
-        max-width: 400px;
-        opacity: 0;
-        transform: translateX(100%);
-        transition: all 0.3s ease;
-    `;
+    toast.className = 'fixed top-6 right-6 bg-white border-l-4 border-red-500 shadow-lg p-4 rounded-xl flex items-center gap-4 z-[10000] animate-in slide-in-from-right duration-300';
     toast.innerHTML = `
-        <i class="fas fa-exclamation-circle" style="margin-right: 8px;"></i>
-        ${message}
+        <div class="w-10 h-10 rounded-full bg-red-50 flex items-center justify-center text-red-500">
+            <i class="fas fa-exclamation-circle"></i>
+        </div>
+        <div>
+            <p class="text-xs font-black text-gray-800 uppercase tracking-widest">Lỗi hệ thống</p>
+            <p class="text-[11px] text-gray-500 italic">${message}</p>
+        </div>
     `;
     
     document.body.appendChild(toast);
     
-    // Show animation
     setTimeout(() => {
-        toast.style.opacity = '1';
-        toast.style.transform = 'translateX(0)';
-    }, 100);
-    
-    // Auto remove
-    setTimeout(() => {
-        toast.style.opacity = '0';
-        toast.style.transform = 'translateX(100%)';
-        setTimeout(() => {
-            if (toast.parentNode) {
-                toast.parentNode.removeChild(toast);
-            }
-        }, 300);
+        toast.classList.add('animate-out', 'fade-out', 'slide-out-to-right');
+        setTimeout(() => toast.remove(), 300);
     }, 5000);
 }
 
 function showSuccessToast(message) {
     const toast = document.createElement('div');
-    toast.className = 'toast success-toast';
-    toast.style.cssText = `
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        background: #28a745;
-        color: white;
-        padding: 15px 20px;
-        border-radius: 8px;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-        z-index: 10000;
-        max-width: 400px;
-        opacity: 0;
-        transform: translateX(100%);
-        transition: all 0.3s ease;
-    `;
+    toast.className = 'fixed top-6 right-6 bg-white border-l-4 border-green-500 shadow-lg p-4 rounded-xl flex items-center gap-4 z-[10000] animate-in slide-in-from-right duration-300';
     toast.innerHTML = `
-        <i class="fas fa-check-circle" style="margin-right: 8px;"></i>
-        ${message}
+        <div class="w-10 h-10 rounded-full bg-green-50 flex items-center justify-center text-green-500">
+            <i class="fas fa-check-circle"></i>
+        </div>
+        <div>
+            <p class="text-xs font-black text-gray-800 uppercase tracking-widest">Thành công</p>
+            <p class="text-[11px] text-gray-500 italic">${message}</p>
+        </div>
     `;
     
     document.body.appendChild(toast);
     
     setTimeout(() => {
-        toast.style.opacity = '1';
-        toast.style.transform = 'translateX(0)';
-    }, 100);
-    
-    setTimeout(() => {
-        toast.style.opacity = '0';
-        toast.style.transform = 'translateX(100%)';
-        setTimeout(() => {
-            if (toast.parentNode) {
-                toast.parentNode.removeChild(toast);
-            }
-        }, 300);
+        toast.classList.add('animate-out', 'fade-out', 'slide-out-to-right');
+        setTimeout(() => toast.remove(), 300);
     }, 3000);
 }
 
@@ -564,55 +521,78 @@ function renderTableView(data) {
 
 function createRefundCard(item) {
     const card = document.createElement('div');
-    card.className = 'refund-card';
+    card.className = 'refund-card bg-white rounded-3xl border border-border shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden group cursor-pointer';
     card.style.opacity = '0';
     card.style.transform = 'translateY(20px)';
-    card.style.transition = 'all 0.6s ease';
 
     const statusClass = getStatusClass(item.status);
     const statusText = getStatusText(item.status);
 
     card.innerHTML = `
-        <div class="refund-card-header">
-            <div class="refund-id">
-                <i class="fas fa-receipt"></i>
-                ${item.refundRequestId || 'N/A'}
+        <div class="p-6 space-y-5">
+            <div class="flex justify-between items-start">
+                <div class="space-y-1">
+                    <div class="flex items-center gap-2 text-primary font-black text-[10px] uppercase tracking-widest">
+                        <i class="fas fa-receipt"></i>
+                        <span>${item.refundRequestId || 'N/A'}</span>
+                    </div>
+                    <div class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">${formatDate(item.createdAt)}</div>
+                </div>
+                <span class="px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border shadow-sm ${statusClass}">
+                    ${statusText}
+                </span>
             </div>
-            <div class="refund-date">${formatDate(item.createdAt)}</div>
+
+            <div class="space-y-1">
+                <div class="text-2xl font-black text-gray-800 tracking-tighter">${formatPrice(item.refundAmount)}</div>
+                <div class="text-[10px] font-bold text-gray-400 uppercase tracking-widest italic">Số tiền hoàn trả</div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4 py-4 border-y border-gray-50">
+                <div class="space-y-1">
+                    <span class="text-[9px] font-black text-gray-300 uppercase tracking-widest block">Đơn hàng</span>
+                    <span class="text-xs font-bold text-gray-600">#${item.orderId || 'N/A'}</span>
+                </div>
+                <div class="space-y-1">
+                    <span class="text-[9px] font-black text-gray-300 uppercase tracking-widest block">Ngày xử lý</span>
+                    <span class="text-xs font-bold text-gray-600 italic">${item.processedAt ? formatDate(item.processedAt) : '---'}</span>
+                </div>
+            </div>
+
+            <div class="space-y-2">
+                <span class="text-[9px] font-black text-gray-300 uppercase tracking-widest block">Lý do hoàn tiền</span>
+                <p class="text-xs text-gray-500 italic line-clamp-2 leading-relaxed">
+                    <i class="fas fa-quote-left text-[8px] mr-1 opacity-30"></i>
+                    ${item.refundReason || 'Không có lý do cụ thể'}
+                </p>
+            </div>
         </div>
 
-        <div class="refund-amount">${formatPrice(item.refundAmount)}</div>
-
-        <div class="refund-details">
-            <p><span>Đơn hàng:</span> <span>#${item.orderId || 'N/A'}</span></p>
-            <p><span>Khách hàng:</span> <span>${item.customerName || 'N/A'}</span></p>
-            <p><span>Ngày xử lý:</span> <span>${formatDate(item.processedAt)}</span></p>
-        </div>
-
-        <div class="refund-reason">
-            <i class="fas fa-comment-alt"></i>
-            ${item.refundReason || 'Không có lý do cụ thể'}
-        </div>
-
-        <div class="refund-card-footer">
-            <span class="status-badge ${statusClass}">${statusText}</span>
-            <div class="refund-actions">
-                <button class="action-btn" onclick="showRefundDetail(${item.id})" title="Xem chi tiết">
-                    <i class="fas fa-eye"></i>
+        <div class="bg-gray-50/50 px-6 py-4 flex items-center justify-between border-t border-gray-100">
+            <div class="flex items-center gap-2">
+                <div class="w-8 h-8 rounded-full bg-white border border-border flex items-center justify-center text-[10px] font-black text-gray-400">
+                    ${(item.customerName || 'N').charAt(0)}
+                </div>
+                <span class="text-[10px] font-bold text-gray-500 uppercase tracking-tight truncate max-w-[120px]">
+                    ${item.customerName || 'Khách hàng'}
+                </span>
+            </div>
+            <div class="flex items-center gap-2">
+                <button class="w-8 h-8 flex items-center justify-center bg-white border border-border text-gray-400 hover:text-primary hover:border-primary rounded-lg transition-all active:scale-95 shadow-sm" 
+                        onclick="event.stopPropagation(); showRefundDetail('${JSON.stringify(item).replace(/'/g, "\\'")}')" title="Xem chi tiết">
+                    <i class="fas fa-eye text-xs"></i>
                 </button>
-                <button class="action-btn" onclick="downloadRefundReceipt(${item.id})" title="Tải biên lai">
-                    <i class="fas fa-download"></i>
+                <button class="w-8 h-8 flex items-center justify-center bg-gray-800 text-white hover:bg-black rounded-lg transition-all active:scale-95 shadow-sm" 
+                        onclick="event.stopPropagation(); downloadRefundReceipt(${item.id})" title="Tải biên lai">
+                    <i class="fas fa-download text-xs"></i>
                 </button>
             </div>
         </div>
     `;
 
     // Add click event to show detail
-    card.addEventListener('click', (e) => {
-        // Don't trigger if clicking on action buttons
-        if (!e.target.closest('.action-btn')) {
-            showRefundDetail(item);
-        }
+    card.addEventListener('click', () => {
+        showRefundDetail(item);
     });
 
     return card;
@@ -620,39 +600,52 @@ function createRefundCard(item) {
 
 function createRefundTableRow(item) {
     const row = document.createElement('tr');
+    row.className = 'hover:bg-gray-50/50 transition-colors cursor-pointer group';
     
     const statusClass = getStatusClass(item.status);
     const statusText = getStatusText(item.status);
 
     row.innerHTML = `
-        <td>
-            <span class="monospace">${item.refundRequestId || 'N/A'}</span>
+        <td class="px-6 py-4">
+            <div class="flex items-center gap-2">
+                <div class="w-2 h-2 rounded-full bg-primary/20 flex items-center justify-center">
+                    <div class="w-1 h-1 rounded-full bg-primary"></div>
+                </div>
+                <span class="text-[11px] font-black text-gray-800 tracking-tighter font-mono">${item.refundRequestId || 'N/A'}</span>
+            </div>
         </td>
-        <td>
-            <span class="monospace">#${item.orderId || 'N/A'}</span>
+        <td class="px-6 py-4">
+            <span class="text-xs font-bold text-gray-600">#${item.orderId || 'N/A'}</span>
         </td>
-        <td>${formatDateTime(item.createdAt)}</td>
-        <td class="text-success font-weight-bold">${formatPrice(item.refundAmount)}</td>
-        <td>
-            <div style="max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" 
-                 title="${item.refundReason || 'Không có lý do'}">
+        <td class="px-6 py-4 text-xs text-gray-500 font-medium">${formatDateTime(item.createdAt)}</td>
+        <td class="px-6 py-4">
+            <span class="text-sm font-black text-gray-800 tracking-tighter">${formatPrice(item.refundAmount)}</span>
+        </td>
+        <td class="px-6 py-4">
+            <div class="max-w-[180px] text-[11px] text-gray-500 italic truncate" title="${item.refundReason || 'Không có lý do'}">
                 ${item.refundReason || 'Không có lý do'}
             </div>
         </td>
-        <td>
-            <span class="status-badge ${statusClass}">${statusText}</span>
+        <td class="px-6 py-4">
+            <span class="px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border shadow-sm ${statusClass}">
+                ${statusText}
+            </span>
         </td>
-        <td>
-            <div class="refund-actions">
-                <button class="action-btn" onclick="showRefundDetail(${JSON.stringify(item).replace(/"/g, '&quot;')})" title="Xem chi tiết">
-                    <i class="fas fa-eye"></i>
+        <td class="px-6 py-4 text-right">
+            <div class="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                <button class="w-8 h-8 flex items-center justify-center bg-white border border-border text-gray-400 hover:text-primary hover:border-primary rounded-lg transition-all active:scale-95 shadow-sm" 
+                        onclick="event.stopPropagation(); showRefundDetail('${JSON.stringify(item).replace(/'/g, "\\'")}')" title="Xem chi tiết">
+                    <i class="fas fa-eye text-xs"></i>
                 </button>
-                <button class="action-btn" onclick="downloadRefundReceipt(${item.id})" title="Tải biên lai">
-                    <i class="fas fa-download"></i>
+                <button class="w-8 h-8 flex items-center justify-center bg-gray-800 text-white hover:bg-black rounded-lg transition-all active:scale-95 shadow-sm" 
+                        onclick="event.stopPropagation(); downloadRefundReceipt(${item.id})" title="Tải biên lai">
+                    <i class="fas fa-download text-xs"></i>
                 </button>
             </div>
         </td>
     `;
+
+    row.addEventListener('click', () => showRefundDetail(item));
 
     return row;
 }
@@ -661,13 +654,13 @@ function createRefundTableRow(item) {
 function getStatusClass(status) {
     switch (status) {
         case 'THANH_CONG':
-            return 'status-success';
+            return 'bg-green-50 text-green-600 border-green-100';
         case 'DANG_XL':
-            return 'status-pending';
+            return 'bg-blue-50 text-blue-600 border-blue-100';
         case 'THAT_BAI':
-            return 'status-failed';
+            return 'bg-red-50 text-red-600 border-red-100';
         default:
-            return 'status-pending';
+            return 'bg-gray-50 text-gray-500 border-gray-100';
     }
 }
 
@@ -768,7 +761,8 @@ function showRefundDetail(item) {
     fillRefundDetailModal(item);
 
     // Show modal
-    modal.style.display = 'block';
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
 }
 
 function fillRefundDetailModal(item) {
@@ -833,6 +827,7 @@ function createRefundTimeline(item) {
             title: 'Yêu cầu hoàn tiền được tạo',
             time: item.createdAt,
             completed: true,
+            icon: 'fa-paper-plane',
             content: 'Yêu cầu hoàn tiền đã được gửi và đang chờ xử lý'
         }
     ];
@@ -843,22 +838,42 @@ function createRefundTimeline(item) {
             time: item.processedAt,
             completed: item.status === 'THANH_CONG',
             failed: item.status === 'THAT_BAI',
+            icon: item.status === 'THANH_CONG' ? 'fa-check-circle' : 'fa-times-circle',
             content: item.status === 'THANH_CONG' 
                 ? 'Tiền đã được hoàn về tài khoản của bạn'
-                : 'Có lỗi xảy ra trong quá trình hoàn tiền'
+                : 'Có lỗi xảy ra trong quá trình hoàn tiền. Vui lòng liên hệ hỗ trợ.'
+        });
+    } else {
+        timelineData.push({
+            title: 'Đang xử lý',
+            time: null,
+            completed: false,
+            icon: 'fa-clock',
+            content: 'Hệ thống đang kiểm tra và xử lý yêu cầu của bạn'
         });
     }
 
-    timelineData.forEach(timelineItem => {
+    timelineData.forEach((timelineItem, idx) => {
+        const isLast = idx === timelineData.length - 1;
         const timelineElement = document.createElement('div');
-        timelineElement.className = `timeline-item ${timelineItem.completed ? 'completed' : ''} ${timelineItem.failed ? 'failed' : ''}`;
+        timelineElement.className = 'flex gap-4 group';
+        
+        const dotClass = timelineItem.failed ? 'bg-red-500 shadow-red-200' : (timelineItem.completed ? 'bg-primary shadow-primary/20' : 'bg-gray-200');
         
         timelineElement.innerHTML = `
-            <div class="timeline-header">
-                <div class="timeline-title">${timelineItem.title}</div>
-                <div class="timeline-time">${formatDateTime(timelineItem.time)}</div>
+            <div class="flex flex-col items-center">
+                <div class="w-8 h-8 rounded-xl ${dotClass} flex items-center justify-center text-white shadow-lg z-10">
+                    <i class="fas ${timelineItem.icon} text-[10px]"></i>
+                </div>
+                ${!isLast ? '<div class="w-0.5 flex-1 bg-gray-100 my-1"></div>' : ''}
             </div>
-            <div class="timeline-content">${timelineItem.content}</div>
+            <div class="pb-8 flex-1">
+                <div class="flex items-center justify-between gap-2 mb-1">
+                    <h4 class="text-xs font-black text-gray-800 uppercase tracking-widest">${timelineItem.title}</h4>
+                    ${timelineItem.time ? `<span class="text-[9px] font-bold text-gray-400 italic">${formatDateTime(timelineItem.time)}</span>` : ''}
+                </div>
+                <p class="text-xs text-gray-500 font-medium italic leading-relaxed">${timelineItem.content}</p>
+            </div>
         `;
 
         timeline.appendChild(timelineElement);
@@ -868,7 +883,8 @@ function createRefundTimeline(item) {
 function closeRefundDetailModal() {
     const modal = document.getElementById('refund-detail-modal');
     if (modal) {
-        modal.style.display = 'none';
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
     }
 }
 

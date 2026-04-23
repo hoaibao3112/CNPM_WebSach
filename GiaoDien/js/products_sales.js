@@ -8,9 +8,12 @@
             .flash-sale-header { display: flex; justify-content: space-between; align-items: center; padding: 24px 32px; background: linear-gradient(135deg, #B03A2E 0%, #8E2920 100%); color: white; }
             .flash-sale-left { display: flex; align-items: center; gap: 24px; }
             .flash-sale-left h2 { font-family: 'Playfair Display', serif; font-size: 28px; font-weight: 950; color: #ffffff; margin: 0; letter-spacing: 2px; text-transform: uppercase; text-shadow: 0 2px 4px rgba(0,0,0,0.2); }
-            .countdown { display: flex; align-items: center; gap: 10px; font-family: 'Inter', sans-serif; background: rgba(0,0,0,0.3); padding: 10px 20px; border-radius: 16px; backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); }
-            .cd-box { background: #fff; color: #B03A2E; padding: 4px 10px; border-radius: 8px; font-weight: 900; min-width: 38px; text-align: center; font-size: 16px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
-            .cd-lbl { font-size: 10px; color: rgba(255,255,255,0.8); font-weight: 800; text-transform: uppercase; letter-spacing: 1px; }
+            .countdown { display: flex; align-items: center; gap: 4px; font-family: 'Inter', sans-serif; background: rgba(0,0,0,0.3); padding: 6px 12px; border-radius: 12px; backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); }
+            @media (min-width: 768px) { .countdown { gap: 10px; padding: 10px 20px; border-radius: 16px; } }
+            .cd-box { background: #fff; color: #B03A2E; padding: 2px 6px; border-radius: 6px; font-weight: 900; min-width: 28px; text-align: center; font-size: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
+            @media (min-width: 768px) { .cd-box { padding: 4px 10px; border-radius: 8px; min-width: 38px; font-size: 16px; } }
+            .cd-lbl { font-size: 8px; color: rgba(255,255,255,0.8); font-weight: 800; text-transform: uppercase; letter-spacing: 1px; }
+            @media (min-width: 768px) { .cd-lbl { font-size: 10px; } }
             .flash-products { display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; padding: 32px; width: 100%; }
             .sale-item { background: #fff; border: 1px solid #eee; border-radius: 20px; overflow: hidden; transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); display: flex; flex-direction: column; height: 100%; position: relative; }
             .sale-item:hover { transform: translateY(-10px); box-shadow: 0 20px 40px rgba(176,58,46,0.15); border-color: #B03A2E; }

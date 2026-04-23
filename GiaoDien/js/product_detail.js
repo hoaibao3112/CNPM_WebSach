@@ -459,7 +459,7 @@ async function fetchRelatedAuthor(authorId) {
 function displayRelatedAuthor(author) {
     const container = document.getElementById('related-authors');
     if (!author || !author.MaTG || author.MaTG === 'null' || !author.TenTG) {
-        container.innerHTML = '<p>Không có thông tin tác giả</p>';
+        container.innerHTML = '<p class="text-xs text-text-light italic">Không có thông tin tác giả</p>';
         return;
     }
   
@@ -467,14 +467,40 @@ function displayRelatedAuthor(author) {
     const fallbackSrc = `img/author/tg${author.MaTG}.png`;
   
     container.innerHTML = `
-        <div class="author-card">
-            <img src="${imageSrc}" alt="${escapeHtml(author.TenTG)}" 
-                 onerror="this.src='${fallbackSrc}'; this.onerror=() => this.src='https://via.placeholder.com/200?text=Author'">
-            <h3>${escapeHtml(author.TenTG)}</h3>
-            <p>Quốc tịch: ${escapeHtml(author.QuocTich || 'Không rõ')}</p>
-            <p>Ngày sinh: ${author.NgaySinh ? new Date(author.NgaySinh).toLocaleDateString('vi-VN') : 'Không rõ'}</p>
-            <p class="author-bio">${escapeHtml(author.TieuSu || 'Không có tiểu sử')}</p>
-            <button class="view-author-detail-btn" onclick="viewAuthorDetail('${author.MaTG}')">Xem chi tiết</button>
+        <div class="group w-full space-y-6 bg-white rounded-3xl overflow-hidden transition-all duration-300">
+            <div class="relative aspect-[3/4] rounded-2xl overflow-hidden shadow-sm border border-border bg-gray-50">
+                <img src="${imageSrc}" alt="${escapeHtml(author.TenTG)}" 
+                     class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                     onerror="this.src='${fallbackSrc}'; this.onerror=() => this.src='https://via.placeholder.com/200?text=Author'">
+                <div class="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+            </div>
+            
+            <div class="space-y-4 px-1">
+                <div class="space-y-2">
+                    <h3 class="text-lg font-black text-text uppercase tracking-tighter leading-tight group-hover:text-primary transition-colors">${escapeHtml(author.TenTG)}</h3>
+                    <div class="flex flex-wrap gap-x-4 gap-y-2">
+                        <div class="flex items-center gap-2 text-[9px] font-black text-text-light uppercase tracking-widest">
+                            <i class="fas fa-globe text-primary opacity-70"></i>
+                            <span>${escapeHtml(author.QuocTich || 'Không rõ')}</span>
+                        </div>
+                        <div class="flex items-center gap-2 text-[9px] font-black text-text-light uppercase tracking-widest">
+                            <i class="fas fa-calendar-alt text-primary opacity-70"></i>
+                            <span>${author.NgaySinh ? new Date(author.NgaySinh).toLocaleDateString('vi-VN') : 'Không rõ'}</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="relative border-l-2 border-primary/20 pl-4 py-1">
+                    <p class="text-xs text-text-muted italic leading-relaxed line-clamp-4">
+                        ${escapeHtml(author.TieuSu || 'Không có tiểu sử hiện dụng cho tác giả này.')}
+                    </p>
+                </div>
+                
+                <button onclick="viewAuthorDetail('${author.MaTG}')" 
+                        class="w-full py-3.5 bg-gray-50 hover:bg-primary hover:text-white text-text font-black text-[9px] uppercase tracking-widest rounded-xl transition-all border border-border flex items-center justify-center gap-2 group/btn active:scale-95 shadow-sm">
+                    Thông tin tác giả <i class="fas fa-arrow-right text-[8px] group-hover/btn:translate-x-1 transition-transform"></i>
+                </button>
+            </div>
         </div>
     `;
 }

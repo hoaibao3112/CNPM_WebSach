@@ -325,16 +325,31 @@
     <script src="js/refund-history.js"></script>
 
     <style>
-        .view-btn.active { @apply text-primary bg-primary-light border-primary; }
+        .view-btn.active { 
+            color: #B03A2E;
+            background-color: rgba(176, 58, 46, 0.1);
+            border-color: #B03A2E;
+        }
+        
+        .refund-card {
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
         
         @media print {
-            .pt-14, #load-header, .filter-section, .list-controls, .pagination-section, .modal-footer, .close-btn { display: none !important; }
-            body { background: white !important; padding-top: 0 !important; }
-            .container { max-width: 100% !important; padding: 0 !important; }
-            .modal { position: relative !important; display: block !important; opacity: 1 !important; visibility: visible !important; }
+            .pt-14, #load-header, .filter-section, .list-controls, .pagination-section, .modal-footer, .close-btn, button { display: none !important; }
+            body { background: white !important; padding-top: 0 !important; color: black !important; }
+            .container { max-width: 100% !important; padding: 0 !important; margin: 0 !important; }
+            .modal { position: static !important; display: block !important; opacity: 1 !important; visibility: visible !important; background: transparent !important; }
             .modal-content { box-shadow: none !important; border: none !important; max-width: 100% !important; max-height: none !important; overflow: visible !important; }
             #refund-detail-print-area { padding: 0 !important; }
+            .detail-section { break-inside: avoid; }
         }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #ccc; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #b03a2e; }
     </style>
 </body>
 </html>
