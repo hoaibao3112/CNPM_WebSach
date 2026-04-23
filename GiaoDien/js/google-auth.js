@@ -119,7 +119,13 @@
       // Render the button
       google.accounts.id.renderButton(
         document.getElementById('googleSignIn'),
-        { theme: 'outline', size: 'large', text: 'continue_with' }
+        { 
+          theme: 'filled_blue', 
+          size: 'large', 
+          text: 'continue_with',
+          shape: 'rectangular',
+          width: '384' // Matches the width of other buttons in the max-w-md container
+        }
       );
 
       console.log('✅ Google Sign-In button rendered successfully');
