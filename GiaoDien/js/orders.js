@@ -457,27 +457,39 @@ async function renderOrders(customerId, statusFilter = 'all') {
             ` : '';
 
             return `
-                <div class="order-card" data-order-id="${order.id}">
-                    <div class="order-card-header">
-                            <div>
-                                <span class="order-id">Đơn hàng #${order.id}</span>
-                                <span class="order-date">${formatDateTime(order.createdAt)}</span>
+                <div class="bg-white rounded-[32px] border border-border p-8 hover:shadow-xl hover:-translate-y-1 transition-all duration-500 cursor-pointer group order-card" data-order-id="${order.id}">
+                    <div class="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8 pb-8 border-b border-dashed border-border">
+                        <div class="space-y-1">
+                            <div class="flex items-center gap-3">
+                                <span class="text-xs font-black text-primary uppercase tracking-[0.2em]">Đơn hàng</span>
+                                <span class="text-lg font-black text-text">#${order.id}</span>
                             </div>
-                            <div style="display:flex; align-items:center; gap:8px;">
-                                <span class="order-status ${status.class}">
-                                    ${status.text}
-                                </span>
-                                ${reorderBtnHtml}
+                            <p class="text-[10px] font-bold text-text-light uppercase tracking-widest">${formatDateTime(order.createdAt)}</p>
+                        </div>
+                        <div class="flex items-center gap-4">
+                            <span class="order-status-badge ${status.class}">
+                                ${status.text}
+                            </span>
+                            ${reorderBtnHtml}
+                        </div>
+                    </div>
+                    <div class="flex flex-col md:flex-row md:items-end justify-between gap-6">
+                        <div class="flex flex-wrap gap-8">
+                            <div class="space-y-1">
+                                <p class="text-[9px] font-black text-text-light uppercase tracking-widest">Thanh toán</p>
+                                <p class="text-sm font-bold text-text">${getPaymentMethodName(order.paymentMethod)}</p>
+                            </div>
+                            <div class="space-y-1">
+                                <p class="text-[9px] font-black text-text-light uppercase tracking-widest">Trạng thái</p>
+                                <p class="text-xs font-black uppercase text-primary">${order.paymentStatus || 'Chờ thanh toán'}</p>
                             </div>
                         </div>
-                    <div class="order-summary">
-                        <div class="order-info">
-                            <span class="payment-method">${getPaymentMethodName(order.paymentMethod)}</span>
-                            ${order.paymentStatus ? `<span class="payment-status">${order.paymentStatus}</span>` : ''}
-                        </div>
-                        <span class="order-total">${formatPrice(order.totalAmount)}</span>
-                        <!-- Review button placeholder (injected by JS after render) -->
-                        <div class="order-actions" style="margin-top:8px; display:flex; gap:8px; justify-content:flex-end;">
+                        <div class="flex flex-col items-end gap-4">
+                            <div class="text-right">
+                                <p class="text-[9px] font-black text-text-light uppercase tracking-widest mb-1">Tổng cộng</p>
+                                <p class="text-2xl font-black text-text tracking-tighter">${formatPrice(order.totalAmount)}</p>
+                            </div>
+                            <div class="order-actions flex gap-3"></div>
                         </div>
                     </div>
                 </div>
@@ -1006,22 +1018,28 @@ async function submitReturnRequest(order) {
 
         const control = document.createElement('div');
         control.id = 'edit-address-control';
-        control.style.marginTop = '8px';
+        control.className = 'mt-6 pt-6 border-t border-dashed border-border';
         control.innerHTML = `
-            <button id="edit-address-btn" class="btn" style="background:#ffc107;color:#222;">
-                <i class="fas fa-edit"></i> Chọn địa chỉ giao hàng đã lưu
+            <button id="edit-address-btn" class="flex items-center gap-3 bg-bg hover:bg-primary/5 text-primary px-6 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all border border-primary/20 shadow-sm group">
+                <i class="fas fa-map-marker-alt group-hover:scale-110 transition-transform"></i> Thay đổi địa chỉ giao hàng
             </button>
-            <div id="edit-address-form" style="display:none; margin-top:12px; border-top:1px dashed #eee; padding-top:12px;">
-                <div style="display:flex; gap:8px; align-items:center;">
-                    <select id="saved-address-select" style="flex:1; padding:8px;">
-                        <option value="">Đang tải địa chỉ...</option>
-                    </select>
-                    <div style="display:flex; gap:8px;">
-                        <button id="cancel-edit-address" class="btn btn-secondary">Hủy</button>
-                        <button id="save-edit-address" class="btn btn-danger">Lưu thay đổi</button>
+            <div id="edit-address-form" style="display:none;" class="space-y-6 animate-in fade-in slide-in-from-top-4 duration-500">
+                <div class="space-y-3">
+                    <p class="text-[10px] font-black text-text-light uppercase tracking-widest">Chọn địa chỉ từ danh sách đã lưu</p>
+                    <div class="relative">
+                        <select id="saved-address-select" class="w-full pl-6 pr-12 py-4 bg-bg border border-border rounded-2xl outline-none focus:border-primary transition-all text-sm font-bold text-text appearance-none cursor-pointer">
+                            <option value="">Đang tải địa chỉ...</option>
+                        </select>
+                        <i class="fas fa-chevron-down absolute right-6 top-1/2 -translate-y-1/2 text-text-light text-[10px] pointer-events-none"></i>
                     </div>
                 </div>
-                <div id="saved-address-preview" style="margin-top:8px;color:#333"></div>
+                
+                <div id="saved-address-preview" class="p-6 bg-primary/5 rounded-2xl border border-primary/10 text-xs font-bold text-primary leading-relaxed hidden"></div>
+                
+                <div class="flex items-center gap-4">
+                    <button id="save-edit-address" class="flex-1 bg-primary text-white py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all">Lưu thay đổi</button>
+                    <button id="cancel-edit-address" class="px-8 py-4 bg-white border border-border text-text-light rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-gray-50 transition-all">Hủy</button>
+                </div>
             </div>
         `;
         shippingSection.appendChild(control);
@@ -1061,9 +1079,14 @@ async function submitReturnRequest(order) {
 
                 selectEl.onchange = () => {
                     const sel = selectEl.options[selectEl.selectedIndex];
-                    if (!sel || !sel.value) return previewEl.textContent = '';
+                    if (!sel || !sel.value) {
+                        previewEl.textContent = '';
+                        previewEl.classList.add('hidden');
+                        return;
+                    }
                     const addr = addresses.find(d => String(d.id || d.MaDiaChi) === String(sel.value)) || {};
                     previewEl.textContent = `${addr.name || addr.TenNguoiNhan || ''} | ${addr.phone || addr.SDT || ''} — ${addr.detail || addr.DiaChiChiTiet || ''} ${addr.province || addr.TinhThanh || ''}`;
+                    previewEl.classList.remove('hidden');
                 };
             } catch (err) {
                 console.error('Load saved addresses failed', err);
