@@ -816,99 +816,60 @@ function displayPromotions(promotions) {
         const endDate = new Date(promotion.NgayKetThuc);
         const isExpired = endDate < now;
 
-        // Xác định loại và icon khuyến mãi
-        const typeConfig = {
-            'giam_phan_tram': { 
-                icon: '<i class="fas fa-percent"></i>', 
-                label: 'Giảm %',
-                color: '#FF6B6B'
-            },
-            'giam_tien_mat': { 
-                icon: '<i class="fas fa-money-bill-wave"></i>', 
-                label: 'Giảm tiền',
-                color: '#4ECDC4'
-            }
-        };
-
-        const config = typeConfig[promotion.LoaiKM] || typeConfig['giam_phan_tram'];
-
-        // Tạo text giá trị giảm
-        let discountText = '';
-        let maxDiscountText = '';
+        // Discount value formatting
+        let discountVal = '';
+        let discountLbl = '';
         
         if (promotion.LoaiKM === 'giam_phan_tram') {
-            discountText = `-${promotion.GiaTriGiam}%`;
-            if (promotion.GiamToiDa) {
-                maxDiscountText = `Tối đa ${formatPrice(promotion.GiamToiDa)}`;
-            }
+            discountVal = `${promotion.GiaTriGiam}%`;
+            discountLbl = 'GIẢM GIÁ';
         } else if (promotion.LoaiKM === 'giam_tien_mat') {
-            discountText = `-${formatPrice(promotion.GiaTriGiam)}`;
+            const val = promotion.GiaTriGiam;
+            if (val >= 1000) {
+                discountVal = `${Math.round(val/1000)}K`;
+            } else {
+                discountVal = val;
+            }
+            discountLbl = 'GIẢM TIỀN';
         }
 
-        // Tạo text điều kiện
-        let conditionsHtml = '';
-        const conditions = [];
-        
-        if (promotion.GiaTriDonToiThieu > 0) {
-            conditions.push(`Đơn tối thiểu: <strong>${formatPrice(promotion.GiaTriDonToiThieu)}</strong>`);
-        }
-        if (promotion.SoLuongToiThieu > 1) {
-            conditions.push(`Số lượng tối thiểu: <strong>${promotion.SoLuongToiThieu}</strong>`);
-        }
-        
-        if (conditions.length > 0) {
-            conditionsHtml = `
-                <div class="promotion-conditions">
-                    ${conditions.join(' • ')}
-                </div>
-            `;
-        }
-
-        // Determine if this promotion has already been saved/claimed locally or in profile
         const promoIdStr = String(promotion.MaKM || promotion.MaPhieu || '');
         const promoCodeStr = String(promotion.Code || promotion.MaPhieu || '');
         const isSaved = myPromoIds.includes(promoIdStr) || myPromoCodes.includes(promoCodeStr) || savedLocalIds.includes(promoIdStr) || savedLocalCodes.includes(promoCodeStr);
 
+        const expiryDate = endDate.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' });
+
         return `
-            <div class="promotion-card ${isExpired ? 'promotion-expired' : ''}" data-promotion-id="${promotion.MaKM}">
-                <div class="promotion-header">
-                    <div class="promotion-icon">
-                        ${config.icon}
-                        <span>${config.label}</span>
-                    </div>
-                    <div class="promotion-type">${isExpired ? 'Hết hạn' : 'Đang áp dụng'}</div>
-                    <div class="promotion-title">${escapeHtml(promotion.TenKM)}</div>
+            <div class="promotion-card ${isExpired ? 'opacity-50 grayscale' : ''}" data-promotion-id="${promotion.MaKM}">
+                <div class="promotion-left">
+                    <div class="promotion-discount-val">${discountVal}</div>
+                    <div class="promotion-discount-lbl">${discountLbl}</div>
                 </div>
                 
-                <div class="promotion-content">
+                <div class="promotion-right">
                     <div class="promotion-info">
-                        <div class="promotion-desc">${promotion.MoTa ? escapeHtml(promotion.MoTa) : 'Khuyến mãi đặc biệt'}</div>
-                        ${conditionsHtml}
+                        <div class="promotion-title">${escapeHtml(promotion.TenKM)}</div>
+                        <div class="promotion-desc">${promotion.MoTa ? escapeHtml(promotion.MoTa) : 'Ưu đãi đặc biệt khi mua hàng'}</div>
                     </div>
                     
-                    <div class="promotion-value">
-                        <div class="promotion-discount">${discountText}</div>
-                        ${maxDiscountText ? `<div class="promotion-max-discount">${maxDiscountText}</div>` : ''}
-                        ${promotion.Code ? `<div class="promotion-code" onclick="copyPromotionCode('${promotion.Code}')" title="Click để copy mã">${promotion.Code}</div>` : ''}
+                    <div class="promotion-footer">
+                        <div class="flex flex-col">
+                            <span class="promotion-expiry">HSD: ${expiryDate}</span>
+                            ${promotion.Code ? `
+                                <div class="promotion-code-tag mt-1" onclick="copyPromotionCode('${promotion.Code}')" title="Click để sao chép">
+                                    ${promotion.Code} <i class="far fa-copy ml-1 opacity-50"></i>
+                                </div>
+                            ` : ''}
+                        </div>
+                        
+                        ${!isExpired ? `
+                            <button class="promotion-save-btn ${isSaved ? 'saved' : ''}" 
+                                    onclick="${isSaved ? '' : `savePromotion('${promotion.Code || ''}', ${promotion.MaKM})`}"
+                                    title="${isSaved ? 'Đã lưu' : 'Lưu mã'}">
+                                <i class="fas ${isSaved ? 'fa-check' : 'fa-bookmark'}"></i>
+                            </button>
+                        ` : ''}
                     </div>
-                </div>
-                
-                <div class="promotion-actions">
-                    <button class="promotion-detail-btn" onclick="showPromotionDetail(${promotion.MaKM})">
-                        <i class="fas fa-info-circle"></i>
-                        Chi tiết
-                    </button>
-                    ${!isExpired ? (isSaved ? `
-                        <button class="promotion-save-btn saved" aria-pressed="true" disabled>
-                            <i class="fas fa-bookmark"></i>
-                            Đã lưu
-                        </button>
-                    ` : `
-                        <button class="promotion-save-btn" onclick="savePromotion('${promotion.Code || ''}', ${promotion.MaKM})">
-                            <i class="fas fa-bookmark"></i>
-                            Lưu mã
-                        </button>
-                    `) : ''}
                 </div>
             </div>
         `;

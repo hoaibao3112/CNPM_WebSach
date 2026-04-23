@@ -82,6 +82,139 @@
         /* Floating Animation */
         @keyframes float { 0% { transform: translateY(0px); } 50% { transform: translateY(-5px); } 100% { transform: translateY(0px); } }
         .animate-float { animation: float 3s ease-in-out infinite; }
+
+        /* Premium Promotion Ticket Styling */
+        .promotion-card {
+            background: white;
+            border-radius: 20px;
+            overflow: hidden;
+            display: flex;
+            border: 1px solid #eee;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            min-height: 140px;
+        }
+        .promotion-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 15px 35px rgba(176, 58, 46, 0.12);
+            border-color: rgba(176, 58, 46, 0.2);
+        }
+        .promotion-left {
+            width: 110px;
+            background: linear-gradient(135deg, #B03A2E 0%, #8E2920 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            padding: 15px;
+            position: relative;
+            flex-shrink: 0;
+        }
+        .promotion-left::after {
+            content: '';
+            position: absolute;
+            right: -5px;
+            top: 0;
+            bottom: 0;
+            width: 10px;
+            background-image: radial-gradient(circle at center, #f7f3f0 3px, transparent 0);
+            background-size: 10px 15px;
+            background-repeat: repeat-y;
+        }
+        .promotion-discount-val {
+            font-size: 24px;
+            font-weight: 900;
+            letter-spacing: -1px;
+            line-height: 1;
+            margin-bottom: 4px;
+        }
+        .promotion-discount-lbl {
+            font-size: 9px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            opacity: 0.8;
+        }
+        .promotion-right {
+            flex: 1;
+            padding: 20px 24px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            background: white;
+        }
+        .promotion-title {
+            font-size: 15px;
+            font-weight: 800;
+            color: #1e1e1e;
+            line-height: 1.3;
+            margin-bottom: 6px;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        .promotion-desc {
+            font-size: 11px;
+            color: #666;
+            line-height: 1.5;
+            margin-bottom: 12px;
+        }
+        .promotion-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: auto;
+            gap: 12px;
+        }
+        .promotion-code-tag {
+            background: #f8fafc;
+            border: 1px dashed #cbd5e1;
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-family: monospace;
+            font-size: 12px;
+            font-weight: 700;
+            color: #475569;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .promotion-code-tag:hover {
+            background: #f1f5f9;
+            border-color: #B03A2E;
+            color: #B03A2E;
+        }
+        .promotion-save-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+            background: #f8fafc;
+            color: #64748b;
+            border: 1px solid #e2e8f0;
+        }
+        .promotion-save-btn:hover {
+            background: #fff5f5;
+            color: #B03A2E;
+            border-color: #B03A2E;
+        }
+        .promotion-save-btn.saved {
+            background: #B03A2E;
+            color: white;
+            border-color: #B03A2E;
+        }
+        .promotion-expiry {
+            font-size: 9px;
+            font-weight: 700;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
     </style>
 </head>
 
