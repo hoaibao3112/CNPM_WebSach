@@ -33,8 +33,11 @@ function checkLoginStatus() {
   if (user && (user.tenkh || user.hoten || user.username || user.makh)) {
     if (loggedInAccount) {
       loggedInAccount.classList.remove('hidden');
-      if (accountLink) {
-        accountLink.innerHTML = `<i class="fas fa-user text-xs"></i> ${user.tenkh || user.hoten || user.username}`;
+      loggedInAccount.style.display = 'flex';
+      
+      const usernameEl = loggedInAccount.querySelector('.username');
+      if (usernameEl) {
+        usernameEl.textContent = user.tenkh || user.hoten || user.username || 'Người dùng';
       }
     }
     if (loginLinkDiv) loginLinkDiv.style.display = 'none';
