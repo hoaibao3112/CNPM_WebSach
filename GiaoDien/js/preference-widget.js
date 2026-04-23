@@ -6,12 +6,63 @@
     const style = document.createElement('style');
     style.id = 'preference-widget-styles';
     style.textContent = `
-      .preference-floating-btn { position: fixed; bottom: 30px; left: 30px; background: linear-gradient(135deg, #B03A2E 0%, #E74C3C 100%); color: white; padding: 12px 20px; border-radius: 16px; box-shadow: 0 10px 30px rgba(176, 58, 46, 0.3); cursor: pointer; z-index: 9998; opacity: 0; transform: translateX(-20px); transition: all 0.4s; display: flex; align-items: center; gap: 12px; }
-      .preference-floating-btn.show { opacity: 1; transform: translateX(0); }
-      .preference-floating-btn:hover { transform: scale(1.05) translateX(5px); box-shadow: 0 15px 40px rgba(176, 58, 46, 0.4); }
-      .prompt-icon { font-size: 20px; }
-      .prompt-text strong { display: block; font-size: 13px; line-height: 1.2; }
-      .prompt-text p { font-size: 11px; opacity: 0.9; margin: 0; }
+      .preference-floating-btn { 
+        position: fixed; 
+        bottom: 30px; 
+        left: 30px; 
+        background: rgba(176, 58, 46, 0.98); 
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        color: white; 
+        padding: 14px 24px; 
+        border-radius: 24px; 
+        box-shadow: 0 20px 50px rgba(176, 58, 46, 0.4); 
+        cursor: pointer; 
+        z-index: 2147482900; 
+        opacity: 0; 
+        transform: translateX(-40px) scale(0.9); 
+        transition: all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1); 
+        display: flex; 
+        align-items: center; 
+        gap: 14px; 
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        max-width: calc(100vw - 60px);
+      }
+      .preference-floating-btn.show { opacity: 1; transform: translateX(0) scale(1); }
+      .preference-floating-btn:hover { transform: scale(1.03) translateY(-5px); box-shadow: 0 25px 60px rgba(176, 58, 46, 0.5); }
+      .prompt-icon { 
+        font-size: 22px; 
+        background: rgba(255, 255, 255, 0.2); 
+        width: 40px; 
+        height: 40px; 
+        display: flex; 
+        align-items: center; 
+        justify-content: center; 
+        border-radius: 14px;
+        animation: float 3s ease-in-out infinite;
+      }
+      @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+      .prompt-text strong { display: block; font-size: 14px; font-weight: 800; letter-spacing: -0.01em; margin-bottom: 1px; white-space: nowrap; }
+      .prompt-text p { font-size: 11px; font-weight: 500; opacity: 0.9; margin: 0; white-space: nowrap; }
+      .prompt-close {
+        position: absolute;
+        top: -8px;
+        right: -8px;
+        width: 22px;
+        height: 22px;
+        background: #B03A2E;
+        border: 2px solid white;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 10px;
+        color: white;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        opacity: 0;
+        transition: opacity 0.3s;
+      }
+      .preference-floating-btn:hover .prompt-close { opacity: 1; }
       .preference-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 9999; opacity: 0; pointer-events: none; transition: opacity 0.3s; }
       .preference-modal.show { opacity: 1; pointer-events: all; }
       .preference-modal-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(5px); }
@@ -81,7 +132,7 @@
       }
 
       // Nếu chưa điền form active (hoặc đã điền nhưng cho form cũ) -> hiển thị widget mời điền
-      showPreferencePrompt();
+      // showPreferencePrompt();
     } catch (error) {
       console.error('Lỗi khi kiểm tra sở thích:', error);
     }
@@ -96,18 +147,32 @@
     floatingBtn.id = 'preference-prompt';
     floatingBtn.className = 'preference-floating-btn';
     floatingBtn.innerHTML = `
-      <div class="preference-prompt-content">
-        <div class="prompt-icon">🎁</div>
-        <div class="prompt-text">
-          <strong>Nhận ngay mã Freeship!</strong>
-          <p>Trả lời 6 câu hỏi nhanh</p>
-        </div>
+      <div class="prompt-icon">🎁</div>
+      <div class="prompt-text">
+        <strong>Nhận ngay mã Freeship!</strong>
+        <p>Trả lời 3 câu hỏi nhanh</p>
+      </div>
+      <div class="prompt-close" id="preference-prompt-close">
+        <i class="fas fa-times"></i>
       </div>
     `;
 
-    floatingBtn.addEventListener('click', () => {
-      floatingBtn.remove();
-      loadAndShowPreferenceForm();
+    floatingBtn.addEventListener('click', (e) => {
+      // Nếu click vào nút đóng
+      if (e.target.closest('#preference-prompt-close')) {
+        e.stopPropagation();
+        floatingBtn.style.transform = 'scale(0.8) translateX(-50px)';
+        floatingBtn.style.opacity = '0';
+        setTimeout(() => floatingBtn.remove(), 400);
+        return;
+      }
+
+      // Redirect to quiz
+      floatingBtn.style.transform = 'scale(0.9) translateX(-20px)';
+      floatingBtn.style.opacity = '0';
+      setTimeout(() => {
+        window.location.href = 'quiz.html';
+      }, 400);
     });
 
     document.body.appendChild(floatingBtn);
