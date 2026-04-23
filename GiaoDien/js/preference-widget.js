@@ -123,23 +123,155 @@
         animation: blink 1.5s infinite;
       }
       @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
-      .preference-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 9999; opacity: 0; pointer-events: none; transition: opacity 0.3s; }
+      .preference-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 9999; opacity: 0; pointer-events: none; transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
       .preference-modal.show { opacity: 1; pointer-events: all; }
-      .preference-modal-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(5px); }
-      .preference-modal-content { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.9); width: 90%; max-width: 700px; max-height: 90vh; background: white; border-radius: 24px; overflow: hidden; display: flex; flex-direction: column; transition: transform 0.3s; }
+      .preference-modal-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.75); backdrop-filter: blur(8px); }
+      .preference-modal-content { 
+        position: absolute; 
+        top: 50%; 
+        left: 50%; 
+        transform: translate(-50%, -45%) scale(0.95); 
+        width: 95%; 
+        max-width: 750px; 
+        max-height: 85vh; 
+        background: #fdfdfd; 
+        border-radius: 32px; 
+        overflow: hidden; 
+        display: flex; 
+        flex-direction: column; 
+        transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1); 
+        box-shadow: 0 30px 100px rgba(0,0,0,0.5);
+      }
       .preference-modal.show .preference-modal-content { transform: translate(-50%, -50%) scale(1); }
-      .preference-header { padding: 40px 30px; text-align: center; background: linear-gradient(135deg, #C0392B 0%, #e74c3c 100%); color: white; }
-      .preference-form { flex: 1; overflow-y: auto; padding: 30px; }
-      .question-block { margin-bottom: 24px; padding-bottom: 24px; border-bottom: 1px solid #eee; }
-      .question-title { font-size: 18px; font-weight: 700; margin-bottom: 16px; color: #1a1a1a; }
-      .option-item { display: flex; align-items: center; padding: 14px; border: 1px solid #eee; border-radius: 12px; cursor: pointer; margin-bottom: 8px; transition: all 0.2s; }
-      .option-item:hover { border-color: #C0392B; background: #fff5f5; }
-      .preference-submit-btn { width: 100%; padding: 16px; background: #C0392B; color: white; border: none; border-radius: 30px; font-weight: 700; cursor: pointer; }
-      .preference-success-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 10000; display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 0.3s; }
+      
+      .preference-header { 
+        padding: 50px 40px; 
+        text-align: center; 
+        background: linear-gradient(135deg, #ff416c 0%, #ff4b2b 100%); 
+        color: white; 
+        position: relative;
+        overflow: hidden;
+      }
+      .preference-header::after {
+        content: '';
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: radial-gradient(circle, rgba(255,255,255,0.15) 0%, transparent 60%);
+        animation: rotate-bg 20s linear infinite;
+      }
+      @keyframes rotate-bg { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+      
+      .preference-header h2 { font-size: 28px; font-weight: 850; margin: 15px 0 10px; letter-spacing: -0.5px; position: relative; z-index: 1; }
+      .preference-header p { font-size: 15px; opacity: 0.9; max-width: 500px; margin: 0 auto; line-height: 1.5; position: relative; z-index: 1; }
+      .header-icon { font-size: 44px; margin-bottom: 10px; display: inline-block; animation: bounce-slow 3s infinite; position: relative; z-index: 1; }
+      @keyframes bounce-slow { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+
+      .preference-close-top {
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        width: 36px;
+        height: 36px;
+        background: rgba(255, 255, 255, 0.2);
+        border: none;
+        border-radius: 50%;
+        color: white;
+        font-size: 20px;
+        cursor: pointer;
+        z-index: 10;
+        transition: all 0.3s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .preference-close-top:hover { background: rgba(255, 255, 255, 0.3); transform: rotate(90deg); }
+
+      .progress-container { height: 6px; background: rgba(255, 255, 255, 0.2); position: relative; z-index: 2; }
+      .progress-bar { height: 100%; background: #fff; width: 0%; transition: width 0.4s ease; box-shadow: 0 0 15px rgba(255,255,255,0.5); }
+
+      .preference-form { flex: 1; overflow-y: auto; padding: 40px; scrollbar-width: thin; scrollbar-color: #ff416c #f0f0f0; }
+      .question-block { margin-bottom: 40px; animation: slide-in-q 0.5s ease-out both; }
+      @keyframes slide-in-q { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+      
+      .question-title { font-size: 20px; font-weight: 800; margin-bottom: 20px; color: #1e272e; display: flex; align-items: flex-start; gap: 12px; line-height: 1.4; }
+      .q-number { background: #ff416c; color: white; width: 28px; height: 28px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; margin-top: 2px; }
+
+      .options-grid { display: grid; grid-template-columns: 1fr; gap: 12px; }
+      .option-item { 
+        position: relative;
+        display: flex; 
+        align-items: center; 
+        padding: 18px 22px; 
+        background: white;
+        border: 2px solid #f0f0f0; 
+        border-radius: 20px; 
+        cursor: pointer; 
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
+        box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+      }
+      .option-item:hover { border-color: #ff416c; background: #fffafa; transform: scale(1.02); box-shadow: 0 10px 20px rgba(255, 65, 108, 0.1); }
+      .option-item.selected { border-color: #ff416c; background: #fff0f3; box-shadow: 0 10px 25px rgba(255, 65, 108, 0.15); }
+      
+      .option-item input { display: none; }
+      .option-check { width: 22px; height: 22px; border: 2px solid #ddd; border-radius: 50%; margin-right: 15px; position: relative; transition: all 0.3s; flex-shrink: 0; }
+      .option-item.selected .option-check { border-color: #ff416c; background: #ff416c; }
+      .option-item.selected .option-check::after { content: '✓'; color: white; font-size: 12px; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); }
+
+      .preference-footer { padding: 30px 40px; background: white; border-top: 1px solid #f0f0f0; display: flex; flex-direction: column; gap: 20px; }
+      .preference-consent { display: flex; align-items: center; gap: 12px; font-size: 14px; color: #636e72; cursor: pointer; }
+      .preference-consent input { width: 18px; height: 18px; accent-color: #ff416c; }
+      
+      .preference-submit-btn { 
+        width: 100%; 
+        padding: 20px; 
+        background: linear-gradient(135deg, #ff416c 0%, #ff4b2b 100%); 
+        color: white; 
+        border: none; 
+        border-radius: 24px; 
+        font-size: 18px;
+        font-weight: 800; 
+        cursor: pointer; 
+        transition: all 0.3s;
+        box-shadow: 0 10px 30px rgba(255, 65, 108, 0.3);
+      }
+      .preference-submit-btn:hover { transform: translateY(-3px); box-shadow: 0 15px 40px rgba(255, 65, 108, 0.5); }
+      .preference-submit-btn:disabled { background: #ccc; box-shadow: none; cursor: not-allowed; }
+
+      .preference-success-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 10000; display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 0.4s; }
       .preference-success-modal.show { opacity: 1; pointer-events: all; }
-      .success-content { background: white; padding: 40px; border-radius: 24px; max-width: 450px; text-align: center; }
-      .coupon-box { background: #C0392B; color: white; padding: 24px; border-radius: 16px; margin: 24px 0; }
-      .coupon-code { font-size: 28px; font-weight: 800; letter-spacing: 2px; }
+      .success-content { 
+        background: white; 
+        padding: 50px 40px; 
+        border-radius: 36px; 
+        max-width: 500px; 
+        width: 90%;
+        text-align: center; 
+        position: relative;
+        animation: pop-up 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+      }
+      @keyframes pop-up { from { transform: scale(0.8) translateY(50px); } to { transform: scale(1) translateY(0); } }
+      .success-icon { font-size: 64px; margin-bottom: 20px; }
+      
+      .coupon-card { 
+        background: #fdf2f4; 
+        border: 3px dashed #ff416c; 
+        padding: 30px 20px; 
+        border-radius: 24px; 
+        margin: 30px 0; 
+        position: relative;
+      }
+      .coupon-card::before, .coupon-card::after { content: ''; position: absolute; width: 20px; height: 20px; background: white; border-radius: 50%; top: 50%; transform: translateY(-50%); }
+      .coupon-card::before { left: -12px; } .coupon-card::after { right: -12px; }
+
+      .coupon-code-text { font-size: 32px; font-weight: 900; color: #ff416c; letter-spacing: 2px; font-family: monospace; }
+      .copy-btn { margin-top: 15px; background: #ff416c; color: white; border: none; padding: 10px 20px; border-radius: 12px; font-weight: 700; cursor: pointer; transition: all 0.2s; }
+      .copy-btn:hover { background: #ef315b; transform: scale(1.05); }
+      
+      .close-btn { width: 100%; padding: 16px; background: #2f3640; color: white; border: none; border-radius: 20px; font-weight: 700; cursor: pointer; transition: all 0.2s; margin-top: 10px; }
+      .close-btn:hover { background: #1e272e; }
     `;
     document.head.appendChild(style);
   }
@@ -283,12 +415,16 @@
     modal.innerHTML = `
       <div class="preference-modal-overlay"></div>
       <div class="preference-modal-content">
-        <button class="preference-close" onclick="closePreferenceModal()">×</button>
+        <button class="preference-close-top" onclick="closePreferenceModal()">×</button>
         
         <div class="preference-header">
-          <div class="preference-icon">🎁</div>
-          <h2>${escapeHtml(form.TenForm || 'Khảo sát sở thích')}</h2>
-          <p class="preference-subtitle">${escapeHtml(form.MoTa || 'Trả lời ngắn gọn để nhận mã Freeship!')}</p>
+          <div class="header-icon">🎁</div>
+          <h2>${escapeHtml(form.TenForm || 'Khám phá sách dành cho bạn')}</h2>
+          <p>${escapeHtml(form.MoTa || 'Hãy chia sẻ sở thích của bạn để chúng tôi có thể gợi ý những cuốn sách phù hợp nhất!')}</p>
+        </div>
+
+        <div class="progress-container">
+          <div class="progress-bar" id="survey-progress"></div>
         </div>
 
         <div class="preference-form" id="preference-form">
@@ -296,14 +432,12 @@
         </div>
 
         <div class="preference-footer">
-          <div class="preference-consent">
-            <label>
-              <input type="checkbox" id="consent-checkbox" checked>
-              <span>Tôi đồng ý cho phép sử dụng dữ liệu để cá nhân hóa trải nghiệm</span>
-            </label>
-          </div>
+          <label class="preference-consent">
+            <input type="checkbox" id="consent-checkbox" checked>
+            <span>Tôi đồng ý sử dụng dữ liệu này để nhận gợi ý sách cá nhân hóa</span>
+          </label>
           <button class="preference-submit-btn" onclick="submitPreferenceForm()">
-            🎉 Hoàn thành & Nhận mã Freeship
+            ✨ Hoàn thành & Nhận mã Freeship
           </button>
         </div>
       </div>
@@ -332,13 +466,29 @@
       return `
         <div class="question-block" data-question-id="${q.MaCauHoi}">
           <h3 class="question-title">
-            ${index + 1}. ${escapeHtml(q.NoiDungCauHoi)}
-            ${q.BatBuoc ? '<span class="required">*</span>' : ''}
+            <span class="q-number">${index + 1}</span>
+            <span>${escapeHtml(q.NoiDungCauHoi)}</span>
+            ${q.BatBuoc ? '<span class="required" style="color: #ff416c; margin-left: 5px;">*</span>' : ''}
           </h3>
           ${renderQuestionInput(q)}
         </div>
       `;
     }).join('');
+  }
+
+  /**
+   * Cập nhật thanh tiến trình
+   */
+  function updateProgressBar() {
+    const questions = currentForm.questions || [];
+    const total = questions.length;
+    if (total === 0) return;
+    
+    const answered = questions.filter(q => selectedAnswers[q.MaCauHoi]).length;
+    const progress = (answered / total) * 100;
+    
+    const bar = document.getElementById('survey-progress');
+    if (bar) bar.style.width = `${progress}%`;
   }
 
   /**
@@ -383,12 +533,13 @@
     return `
       <div class="options-grid single-choice">
         ${question.options.map(opt => `
-          <label class="option-item">
+          <label class="option-item" data-q-id="${question.MaCauHoi}">
             <input type="radio" 
                    name="question-${question.MaCauHoi}" 
                    value="${opt.MaLuaChon}"
                    data-question="${question.MaCauHoi}"
                    data-option="${opt.MaLuaChon}">
+            <div class="option-check"></div>
             <span class="option-label">${escapeHtml(opt.NoiDungLuaChon)}</span>
           </label>
         `).join('')}
@@ -457,6 +608,13 @@
         const qId = e.target.dataset.question;
         const optId = e.target.dataset.option;
         selectedAnswers[qId] = [{ optionId: parseInt(optId) }];
+        
+        // Update visual
+        document.querySelectorAll(`.option-item[data-q-id="${qId}"]`).forEach(item => {
+          item.classList.toggle('selected', item.querySelector('input').checked);
+        });
+        
+        updateProgressBar();
       });
     });
 
@@ -604,25 +762,23 @@
     successModal.className = 'preference-success-modal show';
     successModal.innerHTML = `
       <div class="success-content">
-        <div class="success-icon">🎉</div>
-        <h2>Chúc mừng bạn!</h2>
-        <p>Bạn đã hoàn thành khảo sát sở thích</p>
+        <div class="success-icon">🎊</div>
+        <h2 style="font-weight: 900; color: #1e272e; margin-bottom: 10px;">Tuyệt vời!</h2>
+        <p style="color: #636e72; font-size: 16px;">Bạn đã nhận được mã Freeship độc quyền</p>
         
-        <div class="coupon-box">
-          <div class="coupon-label">Mã Freeship của bạn:</div>
-          <div class="coupon-code">${escapeHtml(couponCode || 'FREESHIP2025')}</div>
-          <button class="copy-coupon-btn" onclick="copyCouponCode('${couponCode}')">
-            📋 Sao chép mã
+        <div class="coupon-card">
+          <div class="coupon-code-text">${escapeHtml(couponCode || 'SURVEY2026')}</div>
+          <button class="copy-btn" onclick="copyCouponCode('${couponCode}')">
+            📋 Sao chép mã ngay
           </button>
         </div>
 
-        <p class="success-note">
-          ✨ Mã đã được lưu vào tài khoản của bạn<br>
-          💡 Sử dụng ngay khi đặt hàng để nhận Freeship!
+        <p style="font-size: 14px; color: #2ecc71; font-weight: 700; margin-bottom: 30px;">
+          ✓ Mã đã được lưu vào hồ sơ của bạn
         </p>
 
-        <button class="close-success-btn" onclick="closeSuccessModal()">
-          Đóng
+        <button class="close-btn" onclick="closeSuccessModal()">
+          Bắt đầu mua sắm ngay 🛍️
         </button>
       </div>
     `;
