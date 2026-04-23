@@ -354,36 +354,36 @@ async function renderCart() {
     const row = document.createElement('tr');
     row.className = 'group hover:bg-bg/20 transition-all';
     row.innerHTML = `
-      <td class="select-col p-6 align-middle">
+      <td class="select-col px-4 py-6 align-middle">
         <input type="checkbox" class="select-item h-5 w-5 accent-primary rounded-md cursor-pointer" data-index="${index}" ${item.selected ? 'checked' : ''}>
       </td>
-      <td class="p-6 align-middle">
-        <div class="product-item flex items-center gap-6">
-          <div class="relative w-20 h-24 flex-shrink-0 group-hover:scale-105 transition-transform duration-500">
+      <td class="px-4 py-6 align-middle">
+        <div class="product-item flex items-center gap-4">
+          <div class="relative w-16 h-20 flex-shrink-0 group-hover:scale-105 transition-transform duration-500">
             <img src="img/product/${item.image}" alt="${item.name}" class="w-full h-full object-cover rounded-xl shadow-sm border border-border" onerror="this.src='img/product/default.jpg'">
           </div>
-          <div class="min-w-0">
-            <h3 class="text-sm font-black text-text mb-1 truncate">${item.name}</h3>
-            <p class="text-[10px] font-bold text-text-light uppercase tracking-widest">Mã SP: ${item.id}</p>
+          <div class="min-w-0 flex-1">
+            <h3 class="text-xs font-black text-text mb-1 truncate leading-tight">${item.name}</h3>
+            <p class="text-[9px] font-bold text-text-light uppercase tracking-widest">ID: ${item.id}</p>
           </div>
         </div>
       </td>
-      <td class="p-6 text-center align-middle">
-        <span class="text-sm font-bold text-text-light">${formatPrice(item.price)}</span>
+      <td class="px-4 py-6 text-center align-middle">
+        <span class="text-xs font-bold text-text-light whitespace-nowrap">${formatPrice(item.price)}</span>
       </td>
-      <td class="p-6 text-center align-middle">
-        <div class="inline-flex items-center bg-bg rounded-xl p-1 border border-border">
-          <button class="qty-btn minus w-8 h-8 flex items-center justify-center text-text-light hover:text-primary transition-colors" data-index="${index}"><i class="fas fa-minus text-[10px]"></i></button>
-          <input type="number" class="qty-input w-10 text-center font-black text-xs bg-transparent outline-none" value="${item.quantity}" min="1" data-index="${index}">
-          <button class="qty-btn plus w-8 h-8 flex items-center justify-center text-text-light hover:text-primary transition-colors" data-index="${index}"><i class="fas fa-plus text-[10px]"></i></button>
+      <td class="px-4 py-6 text-center align-middle">
+        <div class="inline-flex items-center bg-bg rounded-xl p-0.5 border border-border">
+          <button class="qty-btn minus w-7 h-7 flex items-center justify-center text-text-light hover:text-primary transition-colors" data-index="${index}"><i class="fas fa-minus text-[8px]"></i></button>
+          <input type="number" class="qty-input w-8 text-center font-black text-[11px] bg-transparent outline-none" value="${item.quantity}" min="1" data-index="${index}">
+          <button class="qty-btn plus w-7 h-7 flex items-center justify-center text-text-light hover:text-primary transition-colors" data-index="${index}"><i class="fas fa-plus text-[8px]"></i></button>
         </div>
       </td>
-      <td class="p-6 text-right align-middle">
-        <span class="text-base font-black text-primary tracking-tighter">${formatPrice(itemTotal)}</span>
+      <td class="px-4 py-4 text-right align-middle">
+        <span class="text-sm font-black text-primary tracking-tighter whitespace-nowrap">${formatPrice(itemTotal)}</span>
       </td>
-      <td class="p-6 text-center align-middle">
-        <button class="remove-btn w-10 h-10 flex items-center justify-center rounded-xl bg-bg text-text-light hover:bg-red-50 hover:text-red-500 transition-all" data-index="${index}">
-          <i class="fas fa-trash-alt text-xs"></i>
+      <td class="pl-2 pr-4 py-4 text-center align-middle">
+        <button class="remove-btn w-9 h-9 flex items-center justify-center rounded-xl bg-bg text-text-light hover:bg-red-50 hover:text-red-500 transition-all" data-index="${index}">
+          <i class="fas fa-trash-alt text-[10px]"></i>
         </button>
       </td>
     `;
