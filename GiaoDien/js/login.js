@@ -57,6 +57,11 @@ async function handleLogin(e) {
             // Cập nhật giao diện
             updateAccountDisplay(data.user.tenkh);
             
+            // Đồng bộ giỏ hàng khách sang giỏ hàng tài khoản (nếu có cart.js)
+            if (typeof syncLocalCartToServer === 'function') {
+                await syncLocalCartToServer();
+            }
+            
             // Chuyển hướng về trang chủ
             window.location.href = 'index.html';
         } else {

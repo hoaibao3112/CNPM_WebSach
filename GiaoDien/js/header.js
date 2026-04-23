@@ -57,22 +57,12 @@ function setupLogout() {
   if (logoutBtn) {
     logoutBtn.addEventListener('click', async (e) => {
       e.preventDefault();
-      const token = localStorage.getItem('token');
-      if (token) {
-        try {
-          const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || window.API_CONFIG.BASE_URL;
-          await fetch(`${_apiBase}/api/client/cart/clear`, {
-            method: 'DELETE',
-            headers: { 'Authorization': `Bearer ${token}` }
-          });
-        } catch (error) {
-          console.error('Lỗi xóa giỏ hàng khi logout:', error);
-        }
-      }
       localStorage.removeItem('user');
       localStorage.removeItem('loggedInUser');
       localStorage.removeItem('token');
       localStorage.removeItem('cart');
+      localStorage.removeItem('customerId');
+      localStorage.removeItem('reorder_address');
       window.location.href = 'index.html';
     });
   }
