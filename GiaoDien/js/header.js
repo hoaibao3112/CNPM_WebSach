@@ -148,43 +148,40 @@ const renderProductSearch = (productsFond, data) => {
   const products = normalizeSearchProducts(data);
   productsFond.innerHTML = "";
 
-  if (products.length === 0) return;
+  if (products.length === 0) {
+    productsFond.innerHTML = `<div class="p-4 text-center text-gray-400 text-xs italic">Không tìm thấy sản phẩm phù hợp</div>`;
+    return;
+  }
 
   const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || window.API_CONFIG.BASE_URL;
 
-  products.slice(0, 6).forEach((itemData) => {
+  products.slice(0, 5).forEach((itemData) => {
     const item = document.createElement("div");
-    const img = document.createElement("img");
-    const p = document.createElement("p");
-
-    item.classList.add("item");
+    item.className = "flex items-center gap-3 p-2 hover:bg-gray-50 rounded-xl cursor-pointer transition-all border border-transparent hover:border-gray-100 group";
+    
     const imageName = itemData.HinhAnh || itemData.Anh || '';
-    const imageCandidates = imageName
-      ? [
-          `${_apiBase}/product-images/${imageName}`,
-          `img/product/${imageName}`,
-          `../img/product/${imageName}`
-        ]
-      : ['img/default-book.jpg'];
+    const imageUrl = imageName ? `${_apiBase}/product-images/${imageName}` : 'img/default-book.jpg';
+    
+    item.innerHTML = `
+      <div class="w-12 h-16 rounded-lg overflow-hidden flex-shrink-0 bg-gray-100 shadow-sm group-hover:scale-105 transition-transform">
+        <img src="${imageUrl}" class="w-full h-full object-cover" onerror="this.src='img/default-book.jpg'">
+      </div>
+      <div class="flex-1 min-w-0">
+        <h4 class="text-xs font-bold text-gray-800 truncate mb-0.5 group-hover:text-primary transition-colors">${itemData.TenSP}</h4>
+        <div class="flex items-center gap-2">
+          <span class="text-[10px] font-black text-primary">${(itemData.GiaBan || 0).toLocaleString('vi-VN')}đ</span>
+          ${itemData.GiaGoc > itemData.GiaBan ? `<span class="text-[9px] text-gray-400 line-through">${(itemData.GiaGoc).toLocaleString('vi-VN')}đ</span>` : ''}
+        </div>
+      </div>
+      <div class="opacity-0 group-hover:opacity-100 transition-opacity">
+        <i class="fas fa-chevron-right text-[10px] text-gray-300"></i>
+      </div>
+    `;
 
-    let imageIndex = 0;
-    img.src = imageCandidates[imageIndex];
-    img.onerror = () => {
-      imageIndex += 1;
-      if (imageIndex < imageCandidates.length) {
-        img.src = imageCandidates[imageIndex];
-      } else {
-        img.onerror = null;
-        img.src = 'img/default-book.jpg';
-      }
-    };
-
-    p.textContent = itemData.TenSP;
     item.addEventListener("click", () => {
       loadProductDetailOnHeader(itemData.MaSP);
     });
-    item.appendChild(img);
-    item.appendChild(p);
+    
     productsFond.appendChild(item);
   });
 };
@@ -217,31 +214,48 @@ function renderHistory() {
   const productsFond = document.getElementById("products-fond");
   const historyContainer = document.getElementById("history");
   const searchInput = document.getElementById("search-input");
-  if (!searchInput) return;
+  if (!searchInput || !historyContainer) return;
 
   historyContainer.innerHTML = "";
-  // duyệt qua từng tag 
+  
+  if (searchHistory.length === 0) {
+    historyContainer.innerHTML = `<span class="text-[10px] text-gray-400 italic font-medium">Trống</span>`;
+    return;
+  }
+
   searchHistory.forEach((word, index) => {
-    let tag = document.createElement("div");
-    tag.classList.add("tag");
+    const tag = document.createElement("div");
+    tag.className = "flex items-center gap-2 px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-full cursor-pointer transition-all group";
+    
+    tag.innerHTML = `
+      <i class="fas fa-history text-[9px] text-gray-400"></i>
+      <span class="text-[10px] font-bold">${word}</span>
+      <button class="w-4 h-4 flex items-center justify-center rounded-full hover:bg-white text-gray-400 hover:text-red-500 transition-all opacity-0 group-hover:opacity-100 ml-1">
+        <i class="fas fa-times text-[8px]"></i>
+      </button>
+    `;
 
-    let name = document.createElement("p");
-    name.textContent = word;
-    // nơi render ra sản phẩm
-    name.addEventListener("click", async () => {
+    // Click on name to search
+    tag.querySelector('span').addEventListener("click", async (e) => {
+      e.stopPropagation();
       searchInput.value = word;
-      const resulut = await searchProduct(word)
-      renderProductSearch(productsFond, resulut);
+      const result = await searchProduct(word);
+      renderProductSearch(productsFond, result);
     });
 
-    let removeBtn = document.createElement("span");
-    removeBtn.innerHTML = "&times;";
-    removeBtn.addEventListener("click", () => {
-      removeHistory(index)
+    // Click on tag to search (if not on close button)
+    tag.addEventListener("click", async (e) => {
+      if (e.target.closest('button')) return;
+      searchInput.value = word;
+      const result = await searchProduct(word);
+      renderProductSearch(productsFond, result);
     });
 
-    tag.appendChild(name);
-    tag.appendChild(removeBtn);
+    // Click on close button to remove
+    tag.querySelector('button').addEventListener("click", (e) => {
+      e.stopPropagation();
+      removeHistory(index);
+    });
 
     historyContainer.appendChild(tag);
   });
