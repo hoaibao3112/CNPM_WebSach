@@ -348,7 +348,9 @@ function ensureFilterBar() {
     bar.className = 'active-filter-bar';
     bar.innerHTML = `
       <div class="filter-chips" id="filterChips"></div>
-      <button class="clear-filters-btn" id="clearFiltersBtn">Xóa bộ lọc</button>
+      <button class="clear-filters-btn" id="clearFiltersBtn">
+        <i class="fas fa-trash-alt mr-2"></i> Xóa bộ lọc
+      </button>
     `;
     // insert before main product list if possible
     const ref = document.getElementById('search-book-list') || document.getElementById('book-list');
@@ -965,15 +967,57 @@ async function fetchCategoreisbyInvoice() {
 async function renderCategoryToFil() {
   const categoryData = await fetchCategoreisbyInvoice();
   const container = document.getElementById("category-content");
-  if(!container) return;
+  if(!container || !categoryData) return;
+
+  const currentCat = getStoredFilterValue('category');
+
+  // Clear existing content except for maybe a "Tất cả" option if desired
+  container.innerHTML = '';
+  
+  const allA = document.createElement("a");
+  allA.href = "#";
+  allA.className = `dropdown-item ${!currentCat ? 'active' : ''}`;
+  allA.innerHTML = `<span>Tất cả danh mục</span> ${!currentCat ? '<i class="fas fa-check text-[10px]"></i>' : ''}`;
+  allA.onclick = (e) => {
+    e.preventDefault();
+    localStorage.removeItem(storageKeyForGroup('category'));
+    triggerFilterFetchFromUI();
+    document.querySelector('#categoryDropdown .dropdown-header span').textContent = 'Tất cả danh mục';
+    document.getElementById('categoryDropdown').classList.remove('dropdown-active');
+  };
+  container.appendChild(allA);
 
   categoryData.forEach(cat => {
+    const isSelected = String(currentCat) === String(cat.matl);
     const a = document.createElement("a");
-      a.href = "#";
-      a.textContent = cat.TenTL;
-      a.onclick = () => filterProductsByCategory(cat.matl);
-      container.appendChild(a);
-  })
+    a.href = "#";
+    a.className = `dropdown-item ${isSelected ? 'active' : ''}`;
+    a.innerHTML = `<span>${cat.TenTL}</span> ${isSelected ? '<i class="fas fa-check text-[10px]"></i>' : ''}`;
+    
+    if (isSelected) {
+        const headerSpan = document.querySelector('#categoryDropdown .dropdown-header span');
+        if (headerSpan) headerSpan.textContent = cat.TenTL;
+    }
+
+    a.onclick = (e) => {
+      e.preventDefault();
+      // Use triggerFilterFetchFromUI by updating localStorage
+      localStorage.setItem(storageKeyForGroup('category'), cat.matl);
+      triggerFilterFetchFromUI();
+      
+      // Update UI
+      container.querySelectorAll('.dropdown-item').forEach(i => i.classList.remove('active'));
+      container.querySelectorAll('.dropdown-item i').forEach(i => i.remove());
+      a.classList.add('active');
+      a.insertAdjacentHTML('beforeend', '<i class="fas fa-check text-[10px]"></i>');
+      
+      const headerSpan = document.querySelector('#categoryDropdown .dropdown-header span');
+      if (headerSpan) headerSpan.textContent = cat.TenTL;
+      
+      document.getElementById('categoryDropdown').classList.remove('dropdown-active');
+    };
+    container.appendChild(a);
+  });
 }
 
 // Tải danh sách khuyến mãi

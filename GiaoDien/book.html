@@ -15,6 +15,141 @@
     <!-- API Configuration - LOAD EARLY -->
     <script src="js/config.js"></script>
     <script src="js/api-patcher.js"></script>
+
+    <style>
+        /* Modern Filter Styles */
+        .filter-btn {
+            font-size: 10px;
+            font-weight: 800;
+            padding: 8px 16px;
+            border-radius: 12px;
+            background: #f8fafc;
+            color: #64748b;
+            border: 1px solid #e2e8f0;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .filter-btn:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+            background: #fff;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(176, 58, 46, 0.08);
+        }
+        .filter-btn.active {
+            background: var(--primary);
+            color: #fff;
+            border-color: var(--primary);
+            box-shadow: 0 8px 16px rgba(176, 58, 46, 0.2);
+        }
+
+        /* Active Filter Bar & Chips */
+        .active-filter-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            padding: 16px 24px;
+            background: #fff;
+            border-radius: 20px;
+            border: 1px solid #eee;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.03);
+            flex-wrap: wrap;
+        }
+        .filter-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            align-items: center;
+        }
+        .filter-chip {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 12px;
+            background: #fff5f5;
+            border: 1px solid #fed7d7;
+            border-radius: 10px;
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--primary);
+            transition: all 0.2s;
+        }
+        .filter-chip:hover {
+            background: #fff;
+            box-shadow: 0 4px 12px rgba(176, 58, 46, 0.1);
+        }
+        .chip-label {
+            max-width: 150px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .chip-remove {
+            width: 18px;
+            height: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--primary);
+            color: #fff;
+            border-radius: 50%;
+            font-size: 12px;
+            line-height: 1;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .chip-remove:hover {
+            transform: rotate(90deg);
+        }
+        .clear-filters-btn {
+            font-size: 10px;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: #94a3b8;
+            padding: 8px 16px;
+            border-radius: 10px;
+            transition: all 0.2s;
+            border: 1px solid transparent;
+        }
+        .clear-filters-btn:hover {
+            color: var(--primary);
+            background: #fff5f5;
+            border-color: #fed7d7;
+        }
+
+        /* Dropdown enhancements */
+        .dropdown-active .dropdown-content {
+            display: block !important;
+        }
+        .dropdown-active .dropdown-header i {
+            transform: rotate(180deg);
+        }
+        .dropdown-item {
+            padding: 12px 16px;
+            font-size: 13px;
+            font-weight: 600;
+            color: #475569;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .dropdown-item:hover {
+            background: #f8fafc;
+            color: var(--primary);
+            padding-left: 20px;
+        }
+        .dropdown-item.active {
+            background: #fff5f5;
+            color: var(--primary);
+            font-weight: 800;
+        }
+    </style>
 </head>
 
 <body class="books-page bg-bg pt-14 font-body antialiased">
@@ -23,75 +158,92 @@
 
     <div class="container max-w-[1300px] mx-auto px-4 py-8 flex flex-col lg:flex-row gap-8">
         <!-- Sidebar -->
-        <aside class="sidebar w-full lg:w-64 flex-shrink-0 space-y-6">
-            <div class="bg-white p-5 rounded-lg border border-border shadow-sm">
-                <h3 class="text-sm font-bold text-gray-800 uppercase tracking-wider mb-4 flex items-center gap-2">
-                    <i class="fas fa-list text-primary"></i> DANH MỤC
+        <aside class="sidebar w-full lg:w-[280px] flex-shrink-0 space-y-6">
+            <!-- Category Filter -->
+            <div class="filter-card bg-white p-6 rounded-[2rem] border border-border shadow-sm hover:shadow-md transition-shadow">
+                <h3 class="text-xs font-black text-text-light uppercase tracking-[0.2em] mb-5 flex items-center gap-3">
+                    <div class="w-8 h-8 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
+                        <i class="fas fa-list-ul text-xs"></i>
+                    </div>
+                    Danh mục
                 </h3>
                 <div class="category-dropdown relative" id="categoryDropdown">
-                    <div class="dropdown-header flex justify-between items-center p-3 bg-gray-50 rounded-md cursor-pointer hover:bg-gray-100 transition-colors border border-transparent hover:border-border" onclick="toggleDropdown()">
-                        <span class="text-sm font-medium">Nổi bật</span>
-                        <i class="fas fa-chevron-down text-[10px] transition-transform duration-200"></i>
+                    <div class="dropdown-header flex justify-between items-center p-4 bg-gray-50 rounded-2xl cursor-pointer hover:bg-gray-100 transition-all border border-transparent hover:border-border group" onclick="toggleDropdown()">
+                        <span class="text-sm font-bold text-text group-hover:text-primary transition-colors">Nổi bật</span>
+                        <i class="fas fa-chevron-down text-[10px] text-text-light transition-transform duration-300"></i>
                     </div>
-                    <div class="dropdown-content absolute top-full left-0 right-0 mt-1 bg-white shadow-xl rounded-lg border border-border overflow-hidden hidden z-10" id="category-content">
+                    <div class="dropdown-content absolute top-full left-0 right-0 mt-2 bg-white shadow-2xl rounded-2xl border border-border overflow-hidden hidden z-30 animate-in fade-in slide-in-from-top-2 duration-200" id="category-content">
                         <!-- JS renders categories here -->
                     </div>
                 </div>
             </div>
 
             <!-- Price Filter -->
-            <div class="bg-white p-5 rounded-lg border border-border shadow-sm">
-                <h3 class="text-sm font-bold text-gray-800 uppercase tracking-wider mb-4 flex items-center gap-2">
-                    <i class="fas fa-tag text-primary"></i> LỌC THEO GIÁ
+            <div class="filter-card bg-white p-6 rounded-[2rem] border border-border shadow-sm hover:shadow-md transition-shadow">
+                <h3 class="text-xs font-black text-text-light uppercase tracking-[0.2em] mb-5 flex items-center gap-3">
+                    <div class="w-8 h-8 rounded-xl bg-green-50 flex items-center justify-center text-green-600">
+                        <i class="fas fa-tags text-xs"></i>
+                    </div>
+                    Lọc theo giá
                 </h3>
                 <div class="price-buttons flex flex-wrap gap-2" id="priceButtons">
-                    <button class="filter-btn text-xs px-3 py-1.5 rounded-full border border-border bg-white hover:border-primary hover:text-primary transition-all [&.active]:bg-primary [&.active]:text-white [&.active]:border-primary" data-value="">Tất cả</button>
-                    <button class="filter-btn text-xs px-3 py-1.5 rounded-full border border-border bg-white hover:border-primary hover:text-primary transition-all [&.active]:bg-primary [&.active]:text-white [&.active]:border-primary" data-value="0-50000">Dưới 50.000đ</button>
-                    <button class="filter-btn text-xs px-3 py-1.5 rounded-full border border-border bg-white hover:border-primary hover:text-primary transition-all [&.active]:bg-primary [&.active]:text-white [&.active]:border-primary" data-value="50000-100000">50k - 100k</button>
-                    <button class="filter-btn text-xs px-3 py-1.5 rounded-full border border-border bg-white hover:border-primary hover:text-primary transition-all [&.active]:bg-primary [&.active]:text-white [&.active]:border-primary" data-value="100000-200000">100k - 200k</button>
-                    <button class="filter-btn text-xs px-3 py-1.5 rounded-full border border-border bg-white hover:border-primary hover:text-primary transition-all [&.active]:bg-primary [&.active]:text-white [&.active]:border-primary" data-value="200000">Trên 200.000đ</button>
+                    <button class="filter-btn active" data-value="">Tất cả</button>
+                    <button class="filter-btn" data-value="0-50000">Dưới 50k</button>
+                    <button class="filter-btn" data-value="50000-100000">50k - 100k</button>
+                    <button class="filter-btn" data-value="100000-200000">100k - 200k</button>
+                    <button class="filter-btn" data-value="200000">Trên 200k</button>
                 </div>
             </div>
 
             <!-- Supplier Filter -->
-            <div class="bg-white p-5 rounded-lg border border-border shadow-sm">
-                <h3 class="text-sm font-bold text-gray-800 uppercase tracking-wider mb-4 flex items-center gap-2">
-                    <i class="fas fa-building text-primary"></i> NHÀ CUNG CẤP
+            <div class="filter-card bg-white p-6 rounded-[2rem] border border-border shadow-sm hover:shadow-md transition-shadow">
+                <h3 class="text-xs font-black text-text-light uppercase tracking-[0.2em] mb-5 flex items-center gap-3">
+                    <div class="w-8 h-8 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600">
+                        <i class="fas fa-building text-xs"></i>
+                    </div>
+                    Nhà cung cấp
                 </h3>
                 <div class="supplier-buttons flex flex-wrap gap-2" id="supplierButtons">
-                    <button class="filter-btn active text-xs px-3 py-1.5 rounded-full border border-border bg-white hover:border-primary hover:text-primary transition-all [&.active]:bg-primary [&.active]:text-white [&.active]:border-primary" data-value="">Tất cả</button>
+                    <button class="filter-btn active" data-value="">Tất cả</button>
                 </div>
             </div>
 
             <!-- Author Filter -->
-            <div class="bg-white p-5 rounded-lg border border-border shadow-sm">
-                <h3 class="text-sm font-bold text-gray-800 uppercase tracking-wider mb-4 flex items-center gap-2">
-                    <i class="fas fa-pen-nib text-primary"></i> TÁC GIẢ
+            <div class="filter-card bg-white p-6 rounded-[2rem] border border-border shadow-sm hover:shadow-md transition-shadow">
+                <h3 class="text-xs font-black text-text-light uppercase tracking-[0.2em] mb-5 flex items-center gap-3">
+                    <div class="w-8 h-8 rounded-xl bg-orange-50 flex items-center justify-center text-orange-600">
+                        <i class="fas fa-pen-nib text-xs"></i>
+                    </div>
+                    Tác giả
                 </h3>
                 <div class="author-buttons flex flex-wrap gap-2" id="authorButtons">
-                    <button class="filter-btn active text-xs px-3 py-1.5 rounded-full border border-border bg-white hover:border-primary hover:text-primary transition-all [&.active]:bg-primary [&.active]:text-white [&.active]:border-primary" data-value="">Tất cả</button>
+                    <button class="filter-btn active" data-value="">Tất cả</button>
                 </div>
-                <button id="authorToggleBtn" class="view-more-btn mt-3 w-full text-xs font-bold text-primary py-2 border border-primary-light rounded hover:bg-primary hover:text-white transition-all hidden">Xem thêm</button>
+                <button id="authorToggleBtn" class="view-more-btn mt-4 w-full text-[10px] font-black uppercase tracking-widest text-primary py-3 border border-primary/20 rounded-xl hover:bg-primary/5 transition-all hidden">Xem thêm</button>
             </div>
 
             <!-- Deal Hot Section -->
-            <div class="bg-gradient-to-br from-primary to-primary-dark p-5 rounded-lg shadow-md text-white">
-                <h4 class="text-sm font-black uppercase tracking-widest mb-4 flex items-center gap-2">
-                    <i class="fas fa-fire"></i> DEAL HOT - GIẢM SỐC
-                </h4>
-                <div class="discount-filter mb-4" id="discountButtons">
-                    <button class="filter-btn active bg-white/20 hover:bg-white/30 text-xs px-3 py-1 rounded-full transition-all" data-id="">Tất cả deal</button>
+            <div class="bg-gradient-to-br from-primary via-primary to-primary-dark p-6 rounded-[2.5rem] shadow-xl shadow-primary/20 text-white relative overflow-hidden group">
+                <div class="absolute -right-10 -top-10 w-32 h-32 bg-white/10 rounded-full group-hover:scale-125 transition-transform duration-700"></div>
+                <div class="relative z-10">
+                    <h4 class="text-xs font-black uppercase tracking-[0.2em] mb-5 flex items-center gap-3">
+                        <i class="fas fa-fire animate-pulse text-yellow-400"></i> DEAL HOT GIẢM SỐC
+                    </h4>
+                    <div class="discount-filter mb-5" id="discountButtons">
+                        <button class="text-[10px] font-black uppercase tracking-widest bg-white/20 hover:bg-white/30 px-4 py-2 rounded-xl transition-all" data-id="">Tất cả deal</button>
+                    </div>
+                    <ul id="promotions-list" class="space-y-3 mb-6"></ul>
+                    <div id="deal-hot-list" class="space-y-4"></div>
+                    <a href="#" class="inline-flex items-center gap-3 text-[10px] font-black uppercase tracking-widest hover:gap-5 transition-all mt-4 border-b border-white/30 pb-1">
+                        Xem thêm deal hot <i class="fas fa-arrow-right"></i>
+                    </a>
                 </div>
-                <ul id="promotions-list" class="space-y-3 mb-4"></ul>
-                <div id="deal-hot-list"></div>
-                <a href="#" class="text-xs font-bold flex items-center justify-center gap-2 hover:translate-x-1 transition-transform">
-                    Xem thêm deal hot <i class="fas fa-chevron-right text-[10px]"></i>
-                </a>
             </div>
 
-            <div class="p-4 text-center bg-gray-100 rounded-lg border-2 border-dashed border-gray-300">
-                <p class="text-xs font-bold text-gray-500 mb-1 uppercase tracking-tighter">Hỗ trợ đặt hàng</p>
-                <div class="hotline text-lg font-black text-primary tracking-wider">0374 170 367</div>
+            <!-- Support Box -->
+            <div class="p-6 text-center bg-gray-50 rounded-[2rem] border border-border shadow-inner group">
+                <p class="text-[10px] font-black text-text-light mb-2 uppercase tracking-widest opacity-60">Hỗ trợ đặt hàng</p>
+                <div class="hotline text-xl font-black text-primary tracking-tight group-hover:scale-110 transition-transform">0374 170 367</div>
             </div>
         </aside>
 

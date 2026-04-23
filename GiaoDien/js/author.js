@@ -35,9 +35,11 @@ async function fetchAuthorsByNationality(page = 1, nationality = '', search = ''
       console.warn('⚠️ No authors returned from API:', data);
     }
 
-    const { page = 1, totalPages = 1 } = pagination;
-    currentPage = page;
-    totalPages = totalPages;
+    const respPage = pagination.page || 1;
+    const respTotalPages = pagination.totalPages || 1;
+    
+    currentPage = respPage;
+    totalPages = respTotalPages;
 
     renderAuthors(authors);
     updatePagination();
