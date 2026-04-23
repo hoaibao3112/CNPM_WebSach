@@ -132,7 +132,7 @@
       }
 
       // Nếu chưa điền form active (hoặc đã điền nhưng cho form cũ) -> hiển thị widget mời điền
-      // showPreferencePrompt();
+      showPreferencePrompt();
     } catch (error) {
       console.error('Lỗi khi kiểm tra sở thích:', error);
     }
