@@ -230,7 +230,15 @@
 
                 <!-- Wishlist -->
                 <div id="wishlist" class="section space-y-6 hidden">
-                    <h2 class="text-2xl font-black text-gray-800 uppercase tracking-tighter border-b border-border pb-4">Sản phẩm yêu thích</h2>
+                    <div class="space-y-4">
+                        <a href="#" onclick="showSection('membership-card'); return false;" class="block bg-primary/5 border border-primary/10 p-4 rounded-2xl hover:bg-primary/10 transition-all group">
+                            <p class="text-xs font-black text-primary uppercase tracking-widest flex items-center gap-2">
+                                Khám phá quyền lợi thành viên. Xem chi tiết 
+                                <i class="fas fa-chevron-right text-[10px] group-hover:translate-x-1 transition-transform"></i>
+                            </p>
+                        </a>
+                        <h2 class="text-2xl font-black text-gray-800 uppercase tracking-tighter border-b border-border pb-4">Sản phẩm yêu thích</h2>
+                    </div>
                     <div id="wishlist-products" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
                         <!-- JS renders products here -->
                     </div>
@@ -245,44 +253,84 @@
         <button class="close-btn_khan" onclick="closeNotification_khan()"><i class="fas fa-times"></i></button>
     </div>
 
-        <!-- Modal form for add/edit address -->
-        <div id="addressModal" class="modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);align-items:center;justify-content:center;z-index:1001">
-            <div class="modal-content" style="background:#fff;padding:20px;border-radius:8px;max-width:520px;width:100%;box-shadow:0 8px 24px rgba(0,0,0,0.2);position:relative">
-                <button id="addressModalClose" style="position:absolute;right:12px;top:10px;border:none;background:none;font-size:20px;cursor:pointer">&times;</button>
-                <h3 id="addressModalTitle">Thêm địa chỉ</h3>
-                <div style="margin-top:8px">
-                    <div class="form-group">
-                        <label for="addr_name">Họ và tên</label>
-                        <input id="addr_name" type="text" placeholder="Họ tên người nhận" />
+    <!-- Modal form for add/edit address (Modernized) -->
+    <div id="addressModal" class="modal fixed inset-0 z-[2000] bg-black/40 backdrop-blur-sm hidden items-center justify-center p-4">
+        <div class="modal-content bg-white w-full max-w-2xl rounded-[40px] shadow-2xl p-10 relative overflow-y-auto max-h-[90vh] no-scrollbar space-y-8 animate-in fade-in zoom-in duration-300">
+            <!-- Close Button -->
+            <button id="addressModalClose" class="absolute top-8 right-8 w-12 h-12 flex items-center justify-center rounded-full bg-gray-50 text-gray-400 hover:text-primary hover:bg-primary-light transition-all">
+                <i class="fas fa-times text-lg"></i>
+            </button>
+
+            <!-- Header -->
+            <div class="space-y-2">
+                <h3 id="addressModalTitle" class="text-3xl font-display font-black text-gray-800 tracking-tight uppercase">Thêm địa chỉ</h3>
+                <div class="h-1.5 w-20 bg-primary rounded-full"></div>
+            </div>
+
+            <!-- Form -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Name -->
+                <div class="space-y-2 md:col-span-2">
+                    <label for="addr_name" class="block text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Họ và tên người nhận</label>
+                    <input id="addr_name" type="text" placeholder="Ví dụ: Nguyễn Văn A" class="w-full h-14 px-6 bg-gray-50 border border-border rounded-2xl text-sm font-bold text-gray-800 outline-none focus:border-primary focus:bg-white transition-all">
+                </div>
+
+                <!-- Phone -->
+                <div class="space-y-2 md:col-span-2">
+                    <label for="addr_phone" class="block text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Số điện thoại</label>
+                    <input id="addr_phone" type="text" placeholder="0123 456 789" class="w-full h-14 px-6 bg-gray-50 border border-border rounded-2xl text-sm font-bold text-gray-800 outline-none focus:border-primary focus:bg-white transition-all">
+                </div>
+
+                <!-- Detail -->
+                <div class="space-y-2 md:col-span-2">
+                    <label for="addr_detail" class="block text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Địa chỉ chi tiết</label>
+                    <input id="addr_detail" type="text" placeholder="Số nhà, tên đường..." class="w-full h-14 px-6 bg-gray-50 border border-border rounded-2xl text-sm font-bold text-gray-800 outline-none focus:border-primary focus:bg-white transition-all">
+                </div>
+
+                <!-- Province -->
+                <div class="space-y-2">
+                    <label for="addr_province" class="block text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Tỉnh / Thành phố</label>
+                    <div class="relative">
+                        <select id="addr_province" class="w-full h-14 pl-6 pr-12 bg-gray-50 border border-border rounded-2xl text-sm font-bold text-gray-800 outline-none focus:border-primary focus:bg-white appearance-none transition-all">
+                            <option value="">Chọn Tỉnh/Thành</option>
+                        </select>
+                        <i class="fas fa-chevron-down absolute right-6 top-1/2 -translate-y-1/2 text-primary pointer-events-none text-[10px]"></i>
                     </div>
-                    <div class="form-group">
-                        <label for="addr_phone">Số điện thoại</label>
-                        <input id="addr_phone" type="text" placeholder="Số điện thoại" />
+                </div>
+
+                <!-- District -->
+                <div class="space-y-2">
+                    <label for="addr_district" class="block text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Quận / Huyện</label>
+                    <div class="relative">
+                        <select id="addr_district" class="w-full h-14 pl-6 pr-12 bg-gray-50 border border-border rounded-2xl text-sm font-bold text-gray-800 outline-none focus:border-primary focus:bg-white appearance-none transition-all">
+                            <option value="">Chọn Quận/Huyện</option>
+                        </select>
+                        <i class="fas fa-chevron-down absolute right-6 top-1/2 -translate-y-1/2 text-primary pointer-events-none text-[10px]"></i>
                     </div>
-                    <div class="form-group">
-                        <label for="addr_detail">Địa chỉ chi tiết</label>
-                        <input type="text" id="addr_detail" placeholder="Số nhà, đường, phường">
-                    </div>
-                    <div class="form-group">
-                        <label for="addr_province">Tỉnh/Thành</label>
-                        <select id="addr_province"><option value="">Tỉnh/Thành</option></select>
-                    </div>
-                    <div class="form-group">
-                        <label for="addr_district">Quận/Huyện</label>
-                        <select id="addr_district"><option value="">Quận/Huyện</option></select>
-                    </div>
-                    <div class="form-group">
-                        <label for="addr_ward">Phường/Xã</label>
-                        <select id="addr_ward"><option value="">Phường/Xã</option></select>
-                    </div>
-                    <div id="addr_form_error" style="color:#c00;margin-top:6px;display:none"></div>
-                    <div style="margin-top:12px;text-align:right">
-                        <button id="addr_cancel" style="margin-right:8px">Hủy</button>
-                        <button id="addr_save" style="background:#28a745;color:#fff">Lưu</button>
+                </div>
+
+                <!-- Ward -->
+                <div class="space-y-2 md:col-span-2">
+                    <label for="addr_ward" class="block text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Phường / Xã</label>
+                    <div class="relative">
+                        <select id="addr_ward" class="w-full h-14 pl-6 pr-12 bg-gray-50 border border-border rounded-2xl text-sm font-bold text-gray-800 outline-none focus:border-primary focus:bg-white appearance-none transition-all">
+                            <option value="">Chọn Phường/Xã</option>
+                        </select>
+                        <i class="fas fa-chevron-down absolute right-6 top-1/2 -translate-y-1/2 text-primary pointer-events-none text-[10px]"></i>
                     </div>
                 </div>
             </div>
+
+            <!-- Error Message -->
+            <div id="addr_form_error" class="hidden p-4 bg-red-50 border border-red-100 rounded-2xl text-xs font-bold text-red-500 animate-bounce"></div>
+
+            <!-- Actions -->
+            <div class="flex gap-4 pt-4">
+                <button id="addr_cancel" class="flex-1 h-14 bg-gray-50 text-gray-500 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-gray-100 transition-all">Hủy bỏ</button>
+                <button id="addr_save" class="flex-1 h-14 bg-primary text-white rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-xl shadow-primary/20 hover:scale-[1.02] transition-all">Lưu địa chỉ</button>
+            </div>
         </div>
+    </div>
 
 
     <!-- Shared footer will be injected here -->

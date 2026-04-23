@@ -98,27 +98,53 @@ function renderReceiveAddress() {
 function loadWishlist() {
   const wishlist = JSON.parse(localStorage.getItem('wishlist')) || [];
   const container = document.getElementById('wishlist-products');
+  if (!container) return;
 
   if (!wishlist.length) {
-    container.innerHTML = '<p class="empty-wishlist">Danh sách yêu thích của bạn đang trống.</p>';
+    container.className = 'flex flex-col items-center justify-center py-20 w-full col-span-full';
+    container.innerHTML = `
+      <div class="w-24 h-24 bg-gray-50 rounded-full flex items-center justify-center mb-6">
+        <i class="fas fa-heart text-4xl text-gray-200"></i>
+      </div>
+      <p class="text-lg font-black text-gray-800 uppercase tracking-tighter mb-2">Danh sách trống</p>
+      <p class="text-sm text-gray-400 font-medium italic mb-8">Hãy chọn cho mình những cuốn sách yêu thích nhé!</p>
+      <a href="book.html" class="bg-primary text-white px-8 py-3 rounded-xl font-bold text-xs uppercase tracking-widest shadow-lg shadow-primary/20 hover:scale-105 transition-all">Khám phá ngay</a>
+    `;
     return;
   }
 
+  container.className = 'grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 pt-4';
   container.innerHTML = wishlist.map(product => `
-    <div class="product-card">
+    <div class="product-card group bg-white border border-border rounded-2xl p-4 transition-all hover:shadow-xl hover:shadow-primary/5 hover:border-primary/20 relative">
+      <button class="absolute top-3 right-3 w-8 h-8 flex items-center justify-center rounded-full bg-white/80 backdrop-blur-sm text-gray-400 hover:text-red-500 hover:bg-red-50 transition-all z-10 shadow-sm opacity-0 group-hover:opacity-100" 
+              onclick="removeFromWishlist('${product.id}')" title="Xóa khỏi yêu thích">
+        <i class="fas fa-trash-alt text-xs"></i>
+      </button>
+      
       <a href="product_detail.html?id=${product.id}" 
-         onclick="saveProductBeforeRedirect(${JSON.stringify(product)})">
-        <img src="img/product/${product.image || 'default-book.jpg'}" 
-             alt="${product.name}" 
-             onerror="this.src='https://via.placeholder.com/300x400?text=Book'">
-        <h3>${product.name}</h3>
-        <div class="price-wrapper">
-          <div class="final-price">${formatPrice(product.price)}</div>
+         onclick="saveProductBeforeRedirect(${JSON.stringify(product).replace(/"/g, '&quot;')})"
+         class="block space-y-4">
+        <div class="aspect-[3/4] rounded-xl overflow-hidden bg-gray-50 border border-border/50">
+          <img src="img/product/${product.image || 'default-book.jpg'}" 
+               alt="${product.name}" 
+               class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+               onerror="this.src='https://via.placeholder.com/300x400?text=Book'">
+        </div>
+        <div class="space-y-1">
+          <h3 class="text-xs font-black text-gray-800 line-clamp-2 leading-tight min-h-[2.5rem] group-hover:text-primary transition-colors">${product.name}</h3>
+          <div class="flex items-center justify-between pt-2">
+            <span class="text-sm font-black text-primary tracking-tighter">${formatPrice(product.price)}</span>
+            <span class="text-[9px] font-bold text-gray-400 uppercase tracking-widest">ID: ${product.id}</span>
+          </div>
         </div>
       </a>
-      <button class="remove-btn" onclick="removeFromWishlist('${product.id}')">
-        <i class="fas fa-trash"></i> Xóa
-      </button>
+      
+      <div class="pt-4 border-t border-gray-50 mt-4">
+         <button onclick="addToCart('${product.id}', 1, '${product.name.replace(/'/g, "\\'")}', ${product.price}, '${product.image}')" 
+                 class="w-full py-2.5 bg-gray-50 hover:bg-primary hover:text-white rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2">
+           <i class="fas fa-shopping-cart text-[9px]"></i> Thêm vào giỏ
+         </button>
+      </div>
     </div>
   `).join('');
 }
@@ -546,33 +572,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
 
 function displayWishlist() {
-  showSection('wishlist'); // Hiển thị section sản phẩm yêu thích
-
-  const wishlist = JSON.parse(localStorage.getItem('wishlist')) || [];
-  const container = document.getElementById('wishlist-products');
-
-  if (!wishlist.length) {
-    container.innerHTML = '<p class="empty-wishlist">Danh sách yêu thích của bạn đang trống.</p>';
-    return;
-  }
-
-  container.innerHTML = wishlist.map(product => `
-    <div class="product-card">
-      <a href="product_detail.html?id=${product.id}" 
-         onclick="saveProductBeforeRedirect(${JSON.stringify(product)})">
-        <img src="img/product/${product.image || 'default-book.jpg'}" 
-             alt="${product.name}" 
-             onerror="this.src='https://via.placeholder.com/300x400?text=Book'">
-        <h3>${product.name}</h3>
-        <div class="price-wrapper">
-          <div class="final-price">${formatPrice(product.price)}</div>
-        </div>
-      </a>
-      <button class="remove-btn" onclick="removeFromWishlist('${product.id}')">
-        <i class="fas fa-trash"></i> Xóa
-      </button>
-    </div>
-  `).join('');
+  showSection('wishlist');
+  loadWishlist(); // Use the refined loadWishlist function
 }
 
 
