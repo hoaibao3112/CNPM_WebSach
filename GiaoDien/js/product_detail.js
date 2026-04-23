@@ -1189,31 +1189,34 @@ async function fetchRelatedProducts(currentProductId) {
 function displayRelatedProducts(products) {
     const container = document.getElementById('related-products');
     if (!products?.length) {
-        container.innerHTML = '<p>Không có sản phẩm liên quan</p>';
+        container.innerHTML = '<p class="text-center py-10 text-text-light italic">Không có sản phẩm liên quan</p>';
         return;
     }
     container.innerHTML = products.map(product => {
-        // Show only publication year under the title (fallbacks for different field names)
-        const year = product.NamXB || product.NamXb || product.Nam || product.Year || '';
-        const smallMeta = year && String(year).trim() !== ''
-            ? `<p class="product-small-meta">Năm XB: ${escapeHtml(String(year))}</p>`
-            : '';
+        const year = product.NamXB || product.NamXb || product.Nam || product.Year || 'Đang cập nhật';
+        const originalPrice = product.GiaBia || (product.DonGia * 1.25);
+        const discountPercent = product.PhanTramGiam || (product.GiaBia > product.DonGia ? Math.round((1 - product.DonGia/product.GiaBia)*100) : 0);
 
         return `
-        <div class="product-card">
-            <a href="product_detail.html?id=${product.MaSP}" 
-               onclick="saveProductBeforeRedirect(${JSON.stringify(product)})">
-                <img src="img/product/${product.HinhAnh || 'default-book.jpg'}" 
+        <div class="group bg-white rounded-2xl border border-border p-4 hover:shadow-lg transition-all duration-300 flex flex-col h-full cursor-pointer" 
+             onclick="saveProductBeforeRedirect(${JSON.stringify(product).replace(/"/g, '&quot;')}); window.location.href='product_detail.html?id=${product.MaSP}'">
+            <div class="relative aspect-[3/4] mb-4 bg-gray-50 rounded-xl overflow-hidden flex items-center justify-center p-3 group-hover:scale-[1.02] transition-transform duration-500">
+                <img src="img/product/${product.HinhAnh || 'sp01.jpg'}" 
                      alt="${escapeHtml(product.TenSP)}" 
-                     onerror="this.src='https://via.placeholder.com/300x400?text=Book'">
-                <h3>${escapeHtml(product.TenSP)}</h3>
-                ${smallMeta}
-                <div class="price-wrapper">
-                    <div class="final-price">${formatPrice(product.DonGia)}</div>
-                    ${product.GiaBia > product.DonGia ? 
-                      `<div class="original-price">${formatPrice(product.GiaBia)}</div>` : ''}
+                     class="max-w-full max-h-full object-contain drop-shadow-md"
+                     onerror="this.src='img/product/sp01.jpg'">
+                ${discountPercent ? `<div class="absolute top-2 right-2 bg-primary text-white text-[9px] font-black px-1.5 py-0.5 rounded-md shadow-md">-${discountPercent}%</div>` : ''}
+            </div>
+            <div class="flex-1 flex flex-col">
+                <h3 class="text-xs font-bold text-text mb-1 line-clamp-2 min-h-[32px] group-hover:text-primary transition-colors">${escapeHtml(product.TenSP)}</h3>
+                <p class="text-[9px] font-bold text-text-light uppercase tracking-tighter mb-3">Năm XB: ${escapeHtml(String(year))}</p>
+                <div class="mt-auto">
+                    <div class="flex flex-col">
+                        <span class="text-sm font-black text-primary">${formatPrice(product.DonGia)}</span>
+                        ${product.GiaBia > product.DonGia ? `<span class="text-[9px] text-text-light line-through font-bold">${formatPrice(product.GiaBia)}</span>` : ''}
+                    </div>
                 </div>
-            </a>
+            </div>
         </div>
     `}).join('');
 }

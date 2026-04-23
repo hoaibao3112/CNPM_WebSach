@@ -33,14 +33,12 @@ function checkLoginStatus() {
   if (user && (user.tenkh || user.hoten || user.username || user.makh)) {
     if (loggedInAccount) {
       loggedInAccount.classList.remove('hidden');
-      loggedInAccount.style.display = 'flex';
       if (accountLink) {
-        accountLink.innerHTML = `<i class="fas fa-user"></i> ${user.tenkh || user.hoten || user.username}`;
+        accountLink.innerHTML = `<i class="fas fa-user text-xs"></i> ${user.tenkh || user.hoten || user.username}`;
       }
     }
     if (loginLinkDiv) loginLinkDiv.style.display = 'none';
     if (loginLink) loginLink.style.display = 'none';
-    if (accountDropdown) accountDropdown.style.display = 'none';
   } else {
     // Guest
     if (loginLinkDiv) loginLinkDiv.style.display = 'flex';
