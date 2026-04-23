@@ -659,42 +659,25 @@ function displayProductDetail(product) {
         descriptionElement.innerHTML = product.MoTa || 'Không có mô tả';
     }
 
-    // Tạo thông tin chi tiết dùng data của product đã có sẵn thay vì gọi API thừa
+    // Tạo thông tin chi tiết dùng data của product đã có sẵn
     try {
         const info = product;
-
-        // Xử lý các bí danh trường dữ liệu thông dụng trong DB
         const nxb = info.NhaXuatBan || info.NhaXB || info.NhaSanXuat || '';
         const nhaCungCap = info.NhaCungCap || info.TenNCC || '';
         const tacGia = info.TacGia || info.TenTG || '';
 
-        // Build list
-        const infoHtml = document.createElement('div');
-        infoHtml.className = 'product-extra-info';
-        infoHtml.innerHTML = `
-            <h3>Thông tin chi tiết</h3>
-            <ul class="detail-list">
-                ${nhaCungCap ? `<li><strong>Nhà cung cấp:</strong> ${escapeHtml(nhaCungCap)}</li>` : ''}
-                ${nxb ? `<li><strong>Nhà xuất bản:</strong> ${escapeHtml(nxb)}</li>` : ''}
-                ${tacGia ? `<li><strong>Tác giả:</strong> ${escapeHtml(tacGia)}</li>` : ''}
-                ${info.NamXB ? `<li><strong>Năm XB:</strong> ${escapeHtml(String(info.NamXB))}</li>` : ''}
-                ${info.TrongLuong ? `<li><strong>Trọng lượng:</strong> ${escapeHtml(String(info.TrongLuong))} g</li>` : ''}
-                ${info.KichThuoc ? `<li><strong>Kích thước:</strong> ${escapeHtml(info.KichThuoc)}</li>` : ''}
-                ${info.SoTrang ? `<li><strong>Số trang:</strong> ${escapeHtml(String(info.SoTrang))}</li>` : ''}
-                ${info.HinhThuc ? `<li><strong>Hình thức:</strong> ${escapeHtml(info.HinhThuc)}</li>` : ''}
-            </ul>
-        `;
-
-        // Thêm vào phần details bên trái nếu có, còn không fallback vào cuối phần mô tả
-        const leftContainer = document.querySelector('.product-description .description-left');
-        if (leftContainer) {
-            const existing = leftContainer.querySelector('.product-extra-info');
-            if (existing) existing.remove();
-            leftContainer.appendChild(infoHtml);
-        } else if (descriptionElement) {
-            const existing = descriptionElement.querySelector('.product-extra-info');
-            if (existing) existing.remove();
-            descriptionElement.appendChild(infoHtml);
+        const detailsGrid = document.getElementById('product-details-grid');
+        if (detailsGrid) {
+            detailsGrid.innerHTML = `
+                ${nhaCungCap ? `<div class="flex flex-col gap-1"><span class="text-[10px] font-black text-text-light uppercase tracking-widest">Nhà cung cấp</span><span class="text-sm font-bold text-text">${escapeHtml(nhaCungCap)}</span></div>` : ''}
+                ${nxb ? `<div class="flex flex-col gap-1"><span class="text-[10px] font-black text-text-light uppercase tracking-widest">Nhà xuất bản</span><span class="text-sm font-bold text-text">${escapeHtml(nxb)}</span></div>` : ''}
+                ${tacGia ? `<div class="flex flex-col gap-1"><span class="text-[10px] font-black text-text-light uppercase tracking-widest">Tác giả</span><span class="text-sm font-bold text-text">${escapeHtml(tacGia)}</span></div>` : ''}
+                ${info.NamXB ? `<div class="flex flex-col gap-1"><span class="text-[10px] font-black text-text-light uppercase tracking-widest">Năm XB</span><span class="text-sm font-bold text-text">${escapeHtml(String(info.NamXB))}</span></div>` : ''}
+                ${info.TrongLuong ? `<div class="flex flex-col gap-1"><span class="text-[10px] font-black text-text-light uppercase tracking-widest">Trọng lượng</span><span class="text-sm font-bold text-text">${escapeHtml(String(info.TrongLuong))} g</span></div>` : ''}
+                ${info.KichThuoc ? `<div class="flex flex-col gap-1"><span class="text-[10px] font-black text-text-light uppercase tracking-widest">Kích thước</span><span class="text-sm font-bold text-text">${escapeHtml(info.KichThuoc)}</span></div>` : ''}
+                ${info.SoTrang ? `<div class="flex flex-col gap-1"><span class="text-[10px] font-black text-text-light uppercase tracking-widest">Số trang</span><span class="text-sm font-bold text-text">${escapeHtml(String(info.SoTrang))}</span></div>` : ''}
+                ${info.HinhThuc ? `<div class="flex flex-col gap-1"><span class="text-[10px] font-black text-text-light uppercase tracking-widest">Hình thức</span><span class="text-sm font-bold text-text">${escapeHtml(info.HinhThuc)}</span></div>` : ''}
+            `;
         }
     } catch (err) {
         console.error('Lỗi khi tải thông tin bổ sung sản phẩm:', err);

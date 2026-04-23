@@ -332,18 +332,19 @@ async function renderCart() {
   const customerInfoSection = document.querySelector('.customer-info-section');
 
   if (cart.length === 0) {
-    emptyCartMessage.style.display = 'block';
+    emptyCartMessage.classList.remove('hidden');
     updateSummary(0);
-    cartActions?.classList.add('hidden');
-    checkoutSection?.classList.add('hidden');
-    customerInfoSection?.classList.add('hidden');
+    // Hide sections when empty
+    const mainGrid = document.querySelector('.cart-section') || document.querySelector('.grid-cols-1.lg\\:grid-cols-12');
+    if (mainGrid) mainGrid.classList.add('hidden');
+    const promoSection = document.getElementById('saved-promos-section');
+    if (promoSection) promoSection.classList.add('hidden');
     return;
   }
 
-  emptyCartMessage.style.display = 'none';
-  cartActions?.classList.remove('hidden');
-  checkoutSection?.classList.remove('hidden');
-  customerInfoSection?.classList.remove('hidden');
+  emptyCartMessage.classList.add('hidden');
+  const mainGrid = document.querySelector('.cart-section') || document.querySelector('.grid-cols-1.lg\\:grid-cols-12');
+  if (mainGrid) mainGrid.classList.remove('hidden');
 
   let subtotal = 0;
   cart.forEach((item, index) => {
@@ -351,31 +352,38 @@ async function renderCart() {
     if (item.selected) subtotal += itemTotal;
 
     const row = document.createElement('tr');
+    row.className = 'group hover:bg-bg/20 transition-all';
     row.innerHTML = `
-      <td class="select-col w-12 p-4 text-center align-middle">
-        <input type="checkbox" class="select-item h-4 w-4 accent-primary" data-index="${index}" ${item.selected ? 'checked' : ''}>
+      <td class="select-col p-6 align-middle">
+        <input type="checkbox" class="select-item h-5 w-5 accent-primary rounded-md cursor-pointer" data-index="${index}" ${item.selected ? 'checked' : ''}>
       </td>
-      <td class="product-col w-[44%] p-4 align-middle">
-        <div class="product-item flex min-w-0 items-center gap-4">
-          <img src="img/product/${item.image}" alt="${item.name}" class="product-img h-28 w-20 flex-shrink-0 rounded-lg border border-border object-cover bg-gray-50 md:h-32 md:w-24" onerror="this.src='img/product/default.jpg'">
-          <div class="product-info min-w-0">
-            <h3 class="mb-1 truncate text-base font-bold text-gray-800 md:whitespace-normal md:break-words">${item.name}</h3>
-            <p class="text-sm text-gray-500">Mã SP: ${item.id}</p>
+      <td class="p-6 align-middle">
+        <div class="product-item flex items-center gap-6">
+          <div class="relative w-20 h-24 flex-shrink-0 group-hover:scale-105 transition-transform duration-500">
+            <img src="img/product/${item.image}" alt="${item.name}" class="w-full h-full object-cover rounded-xl shadow-sm border border-border" onerror="this.src='img/product/default.jpg'">
+          </div>
+          <div class="min-w-0">
+            <h3 class="text-sm font-black text-text mb-1 truncate">${item.name}</h3>
+            <p class="text-[10px] font-bold text-text-light uppercase tracking-widest">Mã SP: ${item.id}</p>
           </div>
         </div>
       </td>
-      <td class="price-col w-32 p-4 text-right align-middle text-base font-bold text-gray-800 whitespace-nowrap">${formatPrice(item.price)}</td>
-      <td class="quantity-col w-36 p-4 text-center align-middle">
-        <div class="quantity-control inline-flex items-center overflow-hidden rounded-lg border border-border bg-white">
-          <button class="qty-btn minus h-9 w-8 border-0 bg-gray-50 font-bold text-gray-700 transition-colors hover:bg-gray-100" data-index="${index}">-</button>
-          <input type="number" class="qty-input h-9 w-12 border-0 border-x border-border text-center font-bold outline-none" value="${item.quantity}" min="1" data-index="${index}">
-          <button class="qty-btn plus h-9 w-8 border-0 bg-gray-50 font-bold text-gray-700 transition-colors hover:bg-gray-100" data-index="${index}">+</button>
+      <td class="p-6 text-center align-middle">
+        <span class="text-sm font-bold text-text-light">${formatPrice(item.price)}</span>
+      </td>
+      <td class="p-6 text-center align-middle">
+        <div class="inline-flex items-center bg-bg rounded-xl p-1 border border-border">
+          <button class="qty-btn minus w-8 h-8 flex items-center justify-center text-text-light hover:text-primary transition-colors" data-index="${index}"><i class="fas fa-minus text-[10px]"></i></button>
+          <input type="number" class="qty-input w-10 text-center font-black text-xs bg-transparent outline-none" value="${item.quantity}" min="1" data-index="${index}">
+          <button class="qty-btn plus w-8 h-8 flex items-center justify-center text-text-light hover:text-primary transition-colors" data-index="${index}"><i class="fas fa-plus text-[10px]"></i></button>
         </div>
       </td>
-      <td class="total-col w-32 p-4 text-right align-middle text-base font-bold text-gray-900 whitespace-nowrap">${formatPrice(itemTotal)}</td>
-      <td class="action-col w-14 p-4 text-center align-middle">
-        <button class="remove-btn inline-flex h-9 w-9 items-center justify-center rounded-lg border-0 bg-red-50 text-red-600 transition-colors hover:bg-red-100" data-index="${index}" title="Xóa sản phẩm">
-          <i class="fas fa-trash"></i>
+      <td class="p-6 text-right align-middle">
+        <span class="text-base font-black text-primary tracking-tighter">${formatPrice(itemTotal)}</span>
+      </td>
+      <td class="p-6 text-center align-middle">
+        <button class="remove-btn w-10 h-10 flex items-center justify-center rounded-xl bg-bg text-text-light hover:bg-red-50 hover:text-red-500 transition-all" data-index="${index}">
+          <i class="fas fa-trash-alt text-xs"></i>
         </button>
       </td>
     `;

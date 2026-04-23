@@ -1083,21 +1083,25 @@ async function submitReturnRequest(order) {
 
     // Hiển thị danh sách sản phẩm
     const orderItemsElement = document.getElementById('order-items');
-    orderItemsElement.innerHTML = order.items.map(item => `
-        <div class="order-item">
-            <div class="item-image">
-                <img src="img/product/${item.productImage}" alt="${item.productName}" class="order-item-img">
-            </div>
-            <div class="item-info">
-                <h4 class="item-name">${item.productName}</h4>
-                <div class="item-details">
-                    <span class="item-price">${formatPrice(item.price)}</span>
-                    <span class="item-quantity">x ${item.quantity}</span>
+    if (orderItemsElement) {
+        orderItemsElement.innerHTML = order.items.map(item => `
+            <div class="flex items-center gap-6 p-6 border-b border-border last:border-b-0 group">
+                <div class="w-16 h-20 flex-shrink-0 bg-bg rounded-lg overflow-hidden border border-border group-hover:scale-105 transition-transform duration-500">
+                    <img src="img/product/${item.productImage}" alt="${item.productName}" class="w-full h-full object-cover" onerror="this.src='img/product/default.jpg'">
                 </div>
-                <div class="item-total">${formatPrice(item.price * item.quantity)}</div>
+                <div class="flex-1 min-w-0">
+                    <h4 class="text-sm font-black text-text mb-1 truncate">${item.productName}</h4>
+                    <div class="flex items-center gap-4 text-[10px] font-bold text-text-light uppercase tracking-widest">
+                        <span>Giá: ${formatPrice(item.price)}</span>
+                        <span>Số lượng: ${item.quantity}</span>
+                    </div>
+                </div>
+                <div class="text-right">
+                    <p class="text-base font-black text-primary tracking-tighter">${formatPrice(item.price * item.quantity)}</p>
+                </div>
             </div>
-        </div>
-    `).join('');
+        `).join('');
+    }
 
     // ✅ Hiển thị nút hủy với logic mới
     const cancelBtn = document.getElementById('cancel-order-btn');
