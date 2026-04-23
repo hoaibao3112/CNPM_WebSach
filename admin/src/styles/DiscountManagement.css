@@ -19,16 +19,15 @@ body.sidebar-closed .discount-management-container {
   margin-bottom: 16px !important;
 }
 
-/* Di chuyển phần controls sang phải */
+/* Căn chỉnh controls cân đối hơn */
 .controls-section {
   display: flex;
-  justify-content: flex-end; /* Đẩy tất cả về phía phải */
+  justify-content: center; /* Căn giữa để đều hơn */
   align-items: center;
-  gap: 16px;
+  gap: 20px;
   flex-wrap: wrap;
-  margin-right: 40px; /* Tăng margin phải để di chuyển xa hơn */
-  margin-left: auto; /* Thêm margin-left auto để đẩy sang phải */
-  width: fit-content; /* Chỉ chiếm không gian cần thiết */
+  margin: 16px auto; /* Căn giữa block */
+  width: 100%;
 }
 
 /* Thu phần statistics cards */
