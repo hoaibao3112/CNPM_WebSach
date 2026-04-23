@@ -1,4 +1,4 @@
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
   loadUserProfile();
   loadWishlist();
   loadPromoCodes();
@@ -6,7 +6,7 @@ document.addEventListener('DOMContentLoaded', function() {
   setupSidebarNavigation();
   setupChangePasswordButton();
   setupLogoutHandler();
-  
+
   // Hiển thị thông tin tài khoản mặc định khi vào trang
   displayUserProfile();
 });
@@ -21,7 +21,7 @@ async function loadUserProfile() {
   }
 
   try {
-    const response = await fetch(`${window.API_CONFIG.BASE_URL}/api/client/profile` , {
+    const response = await fetch(`${window.API_CONFIG.BASE_URL}/api/client/profile`, {
       method: 'GET',
       headers: {
         'Authorization': `Bearer ${token}`
@@ -178,7 +178,7 @@ async function loadPromoCodes() {
         }));
 
         // Persist to localStorage so other pages can use cached copy
-        try { localStorage.setItem('myPromos', JSON.stringify(promoList)); } catch(e) { /* ignore */ }
+        try { localStorage.setItem('myPromos', JSON.stringify(promoList)); } catch (e) { /* ignore */ }
       }
     } catch (e) {
       console.warn('Failed to fetch my-coupons from server, falling back to localStorage', e);
@@ -224,7 +224,7 @@ function setupSidebarNavigation() {
   // Handle external links (orders.html, refund-history.html)
   const externalLinkItems = document.querySelectorAll('.sidebar ul li:not([data-section])');
   externalLinkItems.forEach(item => {
-    item.addEventListener('mouseenter', function() {
+    item.addEventListener('mouseenter', function () {
       // Remove active from other items when hovering external links
       sidebarItems.forEach(i => i.classList.remove('active'));
     });
@@ -430,15 +430,15 @@ async function loadReviewedOrders() {
       const rating = rv.rating || rv.SoSao || rv.so_diem || rv.SoDiem || 0;
       const comment = rv.NhanXet || rv.comment || rv.noi_dung || '';
       const created = new Date(o.createdAt || o.NgayTao || o.NgayDat || Date.now()).toLocaleString('vi-VN');
-            return `
+      return `
         <div class="reviewed-order-card" data-order-id="${o.id}" style="border:1px solid #eee;padding:12px;border-radius:8px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:flex-start;gap:12px">
           <div style="flex:1">
             <div style="font-weight:600">Đơn hàng #${o.id} <small style="color:#666;margin-left:8px">${created}</small></div>
             <div style="color:#333;margin-top:6px">Tổng: <strong>${formatPrice(o.totalAmount || o.TongTien || o.TongTienThanhToan || 0)}</strong></div>
-            <div style="margin-top:8px;color:#444">${comment ? escapeHtml(comment).slice(0,200) : '<em>Không có nhận xét</em>'}</div>
+            <div style="margin-top:8px;color:#444">${comment ? escapeHtml(comment).slice(0, 200) : '<em>Không có nhận xét</em>'}</div>
           </div>
           <div style="width:160px;text-align:right">
-            <div style="font-size:14px;color:#ffb400;margin-bottom:6px">${'★'.repeat(Math.min(5, Math.max(0, Number(rating)))) + '☆'.repeat(Math.max(0,5 - Math.min(5, Math.max(0, Number(rating)))))}</div>
+            <div style="font-size:14px;color:#ffb400;margin-bottom:6px">${'★'.repeat(Math.min(5, Math.max(0, Number(rating)))) + '☆'.repeat(Math.max(0, 5 - Math.min(5, Math.max(0, Number(rating)))))}</div>
             <div><a href="#" onclick="openOrderDetailFromProfile('${o.id}'); return false;" class="btn" style="text-decoration:none">Xem chi tiết</a></div>
           </div>
         </div>
@@ -455,7 +455,7 @@ async function loadReviewedOrders() {
 
 // Review modal logic for profile page
 // Helper: open order detail from profile page. Tries to call global showOrderDetail(order).
-window.openOrderDetailFromProfile = async function(orderId) {
+window.openOrderDetailFromProfile = async function (orderId) {
   try {
     // If showOrderDetail is available, try to obtain the full order object then call it
     if (typeof window.showOrderDetail === 'function') {
@@ -514,7 +514,7 @@ function openProfileReviewModal(orderId) {
     if (!rv) return;
     document.getElementById('review-rating').value = String(rv.rating || rv.so_diem || 5);
     document.getElementById('review-comment').value = rv.comment || rv.noi_dung || '';
-  }).catch(()=>{});
+  }).catch(() => { });
 
   modal.style.display = 'block';
 }
@@ -541,7 +541,7 @@ async function submitProfileReview() {
       },
       body: JSON.stringify({ rating, comment })
     });
-    const payload = await resp.json().catch(()=>({}));
+    const payload = await resp.json().catch(() => ({}));
     if (!resp.ok) throw new Error(payload.error || payload.message || 'Lỗi khi gửi đánh giá');
     // success
     alert('Gửi đánh giá thành công');
@@ -653,7 +653,7 @@ async function renderMembershipCard() {
   const token = localStorage.getItem('token');
   if (token) {
     try {
-      const res = await fetch(`${window.API_CONFIG.BASE_URL}/api/client/profile` , {
+      const res = await fetch(`${window.API_CONFIG.BASE_URL}/api/client/profile`, {
         method: 'GET',
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -669,99 +669,175 @@ async function renderMembershipCard() {
     }
   }
 
-  const points = Number(user.loyalty_points || user.points || 0);
-  const tier = user.loyalty_tier || computeTier(points);
-  const customerId = user.makh || user.id || '';
+  // Define tier-specific styling
+  const tierConfigs = {
+    'Đồng': {
+      gradient: 'from-[#804A00] to-[#B08D57]',
+      textColor: 'text-orange-100',
+      icon: 'fa-medal',
+      benefits: 'Giảm giá 0%',
+      nextLabel: 'Bạc'
+    },
+    'Bạc': {
+      gradient: 'from-[#757F9A] to-[#D7DDE8]',
+      textColor: 'text-blue-100',
+      icon: 'fa-award',
+      benefits: 'Giảm giá 3%',
+      nextLabel: 'Vàng'
+    },
+    'Vàng': {
+      gradient: 'from-[#F2994A] to-[#F2C94C]',
+      textColor: 'text-yellow-100',
+      icon: 'fa-crown',
+      benefits: 'Giảm giá 7%',
+      nextLabel: 'Tối đa'
+    }
+  };
 
-  // next thresholds: Đồng -> 5000, Bạc -> 20000, Vàng -> already max
-  const nextThreshold = tier === 'Đồng' ? 5000 : (tier === 'Bạc' ? 20000 : points);
-  const progress = nextThreshold > 0 ? Math.min(100, Math.round((points / nextThreshold) * 100)) : 100;
+  const config = tierConfigs[tier] || tierConfigs['Đồng'];
 
   container.innerHTML = `
-    <div class="membership-card">
-      <div class="card-left">
-        <span class="tier">${tier}</span>
-        <span class="label">Thành viên</span>
-      </div>
-      <div class="card-right">
-        <div class="membership-stats">
-          <div class="points">${new Intl.NumberFormat('vi-VN').format(points)} điểm</div>
-          <div style="flex:1">
-            <div class="progress-bar" aria-hidden>
-              <div class="fill" style="width:${progress}%"></div>
-            </div>
-            <div style="font-size:12px;color:#666;margin-top:6px">${progress}% tới mốc tiếp theo (${new Intl.NumberFormat('vi-VN').format(nextThreshold)} điểm)</div>
+    <div class="membership-card-v2 relative w-full overflow-hidden bg-gradient-to-br ${config.gradient} p-8 rounded-[32px] shadow-2xl text-white group">
+      <!-- Decorative Elements -->
+      <div class="absolute -right-10 -top-10 w-40 h-40 bg-white/10 rounded-full blur-3xl group-hover:scale-110 transition-transform duration-700"></div>
+      <div class="absolute -left-10 -bottom-10 w-40 h-40 bg-black/10 rounded-full blur-3xl group-hover:scale-110 transition-transform duration-700"></div>
+      
+      <div class="relative z-10 flex flex-col h-full justify-between gap-8">
+        <div class="flex justify-between items-start">
+          <div class="space-y-1">
+            <p class="text-[10px] font-black uppercase tracking-[0.3em] opacity-80">THẺ THÀNH VIÊN</p>
+            <h3 class="text-3xl font-display font-black tracking-tight">${tier}</h3>
+          </div>
+          <div class="w-14 h-14 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center shadow-inner border border-white/30">
+            <i class="fas ${config.icon} text-2xl"></i>
           </div>
         </div>
-        <div class="membership-actions">
-          <button id="viewBenefitsBtn">Xem quyền lợi</button>
+
+        <div class="space-y-4">
+          <div class="flex justify-between items-end">
+            <div class="space-y-1">
+              <p class="text-[10px] font-black uppercase tracking-widest opacity-80">ĐIỂM TÍCH LŨY</p>
+              <p class="text-4xl font-black tracking-tighter">${new Intl.NumberFormat('vi-VN').format(points)} <span class="text-sm font-medium opacity-80">điểm</span></p>
+            </div>
+            <button id="viewBenefitsBtn" class="px-5 py-2.5 bg-white/20 backdrop-blur-md border border-white/30 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-white hover:text-gray-800 transition-all shadow-lg active:scale-95">Quyền lợi</button>
+          </div>
+
+          <div class="space-y-2">
+            <div class="w-full h-3 bg-black/20 rounded-full overflow-hidden p-0.5 border border-white/10">
+              <div class="h-full bg-white rounded-full transition-all duration-1000 shadow-[0_0_10px_rgba(255,255,255,0.5)]" style="width: 0%" id="membership-progress-fill"></div>
+            </div>
+            <div class="flex justify-between text-[9px] font-black uppercase tracking-widest opacity-80">
+              <span>Hạng hiện tại</span>
+              <span>Tới hạng ${config.nextLabel}: ${new Intl.NumberFormat('vi-VN').format(nextThreshold)} điểm</span>
+            </div>
+          </div>
         </div>
-        <div class="membership-notes">Mã khách hàng: <strong>${customerId}</strong></div>
+
+        <div class="pt-6 border-t border-white/10 flex justify-between items-center">
+          <div class="space-y-0.5">
+            <p class="text-[8px] font-black uppercase tracking-widest opacity-60">MÃ KHÁCH HÀNG</p>
+            <p class="text-sm font-bold tracking-widest">${customerId}</p>
+          </div>
+          <img src="img/logo-white.png" alt="Logo" class="h-6 opacity-40" onerror="this.style.display='none'">
+        </div>
       </div>
     </div>
   `;
 
-  requestAnimationFrame(() => {
-    const fill = container.querySelector('.fill');
+  // Animate progress bar
+  setTimeout(() => {
+    const fill = document.getElementById('membership-progress-fill');
     if (fill) fill.style.width = progress + '%';
-  });
+  }, 100);
 
   const btn = document.getElementById('viewBenefitsBtn');
   if (btn) btn.addEventListener('click', () => {
     const modalContent = `
-      <div style="padding:6px 12px">
-        <h3>Quyền lợi ${tier}</h3>
-        <p><strong>Giảm giá theo phần trăm trên tổng đơn:</strong> <strong>Đồng: 0% / Bạc: 3% / Vàng: 7%</strong></p>
-        <ul style="margin-top:8px">
-          <li><strong>Áp dụng tự động:</strong> Mức giảm được áp dụng trực tiếp trên tổng tiền khi tạo đơn (server tính toán).</li>
-          <li><strong>Freeship:</strong> Bạc: freeship cho đơn ≥ 200.000₫. Vàng: freeship mọi đơn.</li>
-          <li><strong>Tích điểm:</strong> Điểm được tính trên số tiền sau khi đã giảm; Bạc nhận nhân x1.2, Vàng nhận nhân x1.5.</li>
-        </ul>
-        <p style="margin-top:8px;color:#444">Ví dụ: Đơn hàng 1.000.000₫ — nếu bạn là <strong>Bạc</strong> thì sẽ được giảm 3% = 30.000₫ → Số tiền cần thanh toán là 970.000₫. Mọi quyền lợi và số tiền cuối cùng sẽ hiển thị trên hóa đơn sau khi đặt hàng.</p>
-        <p style="margin-top:8px;color:#777;font-size:13px">Lưu ý: để quyền lợi được áp dụng, hãy đăng nhập trước khi đặt hàng. Nếu có thắc mắc liên hệ bộ phận CSKH.</p>
+      <div class="space-y-6">
+        <div class="flex items-center gap-4 border-b border-border pb-4">
+          <div class="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center text-primary">
+            <i class="fas ${config.icon} text-xl"></i>
+          </div>
+          <div>
+            <h3 class="text-xl font-display font-black text-gray-800 uppercase">Hạng ${tier}</h3>
+            <p class="text-xs font-bold text-primary tracking-widest uppercase">${config.benefits}</p>
+          </div>
+        </div>
+        
+        <div class="space-y-4">
+          <div class="flex gap-4 p-4 bg-gray-50 rounded-2xl border border-border">
+            <div class="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-primary shadow-sm flex-shrink-0">
+                <i class="fas fa-percent"></i>
+            </div>
+            <div>
+                <p class="text-xs font-black text-gray-800 uppercase mb-1">Giảm giá trực tiếp</p>
+                <p class="text-xs text-gray-500 leading-relaxed font-medium">Mức giảm giá được áp dụng tự động trên tổng tiền đơn hàng khi thanh toán.</p>
+            </div>
+          </div>
+          <div class="flex gap-4 p-4 bg-gray-50 rounded-2xl border border-border">
+            <div class="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-primary shadow-sm flex-shrink-0">
+                <i class="fas fa-truck-fast"></i>
+            </div>
+            <div>
+                <p class="text-xs font-black text-gray-800 uppercase mb-1">Ưu đãi vận chuyển</p>
+                <p class="text-xs text-gray-500 leading-relaxed font-medium">${tier === 'Vàng' ? 'Miễn phí vận chuyển cho mọi đơn hàng.' : (tier === 'Bạc' ? 'Freeship cho đơn hàng từ 200.000₫.' : 'Tích điểm để nhận ưu đãi freeship.')}</p>
+            </div>
+          </div>
+          <div class="flex gap-4 p-4 bg-gray-50 rounded-2xl border border-border">
+            <div class="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-primary shadow-sm flex-shrink-0">
+                <i class="fas fa-star-half-stroke"></i>
+            </div>
+            <div>
+                <p class="text-xs font-black text-gray-800 uppercase mb-1">Hệ số tích điểm</p>
+                <p class="text-xs text-gray-500 leading-relaxed font-medium">Tích điểm dựa trên số tiền thực tế đã thanh toán: ${tier === 'Vàng' ? 'Nhân hệ số x1.5' : (tier === 'Bạc' ? 'Nhân hệ số x1.2' : 'Hệ số mặc định x1.0')}.</p>
+            </div>
+          </div>
+        </div>
+        
+        <p class="text-[10px] text-gray-400 font-medium italic text-center">Các quyền lợi được áp dụng tự động trên hệ thống khi bạn đăng nhập và đặt hàng.</p>
       </div>
     `;
     showPromoDetailModal(modalContent);
   });
 
-  // Render human-friendly benefits summary inside #membershipBenefits
+  // Render detailed benefits summary below the card
   const benefitsEl = document.getElementById('membershipBenefits');
   if (benefitsEl) {
-    // set tier class on container for color theme
-    const root = container; // membershipCardContainer
-    root.classList.remove('tier-dong', 'tier-bac', 'tier-vang');
-    root.classList.add(tier === 'Vàng' ? 'tier-vang' : (tier === 'Bạc' ? 'tier-bac' : 'tier-dong'));
-
     benefitsEl.innerHTML = `
-      <h3>Quyền lợi hội viên</h3>
-      <p style="margin:6px 0 8px 0;color:#444">Giảm giá theo phần trăm trên tổng đơn: <strong>Đồng: 0% / Bạc: 3% / Vàng: 7%</strong></p>
-      <div class="benefit-list">
-        <div class="benefit-item">
-          <div class="benefit-icon"><i class="fas fa-percent"></i></div>
-          <div>
-            <div class="benefit-title">Giảm giá trên tổng đơn</div>
-            <div class="benefit-desc">Áp dụng tự động khi thanh toán: Đồng 0% · Bạc 3% · Vàng 7%.</div>
-          </div>
+      <div class="mt-12 space-y-8">
+        <div class="flex items-center gap-4">
+            <h3 class="text-xl font-display font-black text-gray-800 tracking-tight uppercase">Quyền lợi của bạn</h3>
+            <div class="h-px flex-1 bg-border"></div>
         </div>
-        <div class="benefit-item">
-          <div class="benefit-icon"><i class="fas fa-shipping-fast"></i></div>
-          <div>
-            <div class="benefit-title">Ưu đãi vận chuyển</div>
-            <div class="benefit-desc">Bạc: freeship cho đơn ≥200.000₫ · Vàng: freeship mọi đơn.</div>
-          </div>
-        </div>
-        <div class="benefit-item">
-          <div class="benefit-icon"><i class="fas fa-star"></i></div>
-          <div>
-            <div class="benefit-title">Tích điểm</div>
-            <div class="benefit-desc">Điểm tích theo số tiền thanh toán (sau khi giảm). Bạc x1.2 · Vàng x1.5.</div>
-          </div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="p-6 bg-white border border-border rounded-3xl hover:border-primary/30 transition-all group">
+                <div class="w-12 h-12 bg-primary/5 rounded-2xl flex items-center justify-center text-primary mb-6 group-hover:scale-110 transition-transform">
+                    <i class="fas fa-percent text-lg"></i>
+                </div>
+                <h4 class="text-xs font-black text-gray-800 uppercase tracking-widest mb-3">Giảm giá đơn hàng</h4>
+                <p class="text-xs text-gray-500 leading-relaxed font-medium">Hạng ${tier} được giảm giá trực tiếp <strong>${config.benefits}</strong> khi mua sắm.</p>
+            </div>
+            <div class="p-6 bg-white border border-border rounded-3xl hover:border-primary/30 transition-all group">
+                <div class="w-12 h-12 bg-primary/5 rounded-2xl flex items-center justify-center text-primary mb-6 group-hover:scale-110 transition-transform">
+                    <i class="fas fa-shipping-fast text-lg"></i>
+                </div>
+                <h4 class="text-xs font-black text-gray-800 uppercase tracking-widest mb-3">Vận chuyển ưu tiên</h4>
+                <p class="text-xs text-gray-500 leading-relaxed font-medium">${tier === 'Vàng' ? 'Miễn phí 100% phí vận chuyển cho mọi đơn hàng.' : (tier === 'Bạc' ? 'Miễn phí vận chuyển cho đơn hàng trên 200.000đ.' : 'Giảm phí ship theo từng khu vực.')}</p>
+            </div>
+            <div class="p-6 bg-white border border-border rounded-3xl hover:border-primary/30 transition-all group">
+                <div class="w-12 h-12 bg-primary/5 rounded-2xl flex items-center justify-center text-primary mb-6 group-hover:scale-110 transition-transform">
+                    <i class="fas fa-coins text-lg"></i>
+                </div>
+                <h4 class="text-xs font-black text-gray-800 uppercase tracking-widest mb-3">Tích lũy điểm thưởng</h4>
+                <p class="text-xs text-gray-500 leading-relaxed font-medium">Hệ số tích điểm ${tier === 'Vàng' ? 'x1.5' : (tier === 'Bạc' ? 'x1.2' : 'x1.0')} giúp bạn nhanh chóng thăng hạng.</p>
+            </div>
         </div>
       </div>
-      <div style="margin-top:10px;font-size:13px;color:#555">Lưu ý: các quyền lợi được áp dụng tự động trên server khi tạo đơn. Mức giảm giá thể hiện ở trang thanh toán và hóa đơn.</div>
     `;
   }
 }
+
 
 function computeTier(points) {
   const p = Number(points || 0);
@@ -992,7 +1068,7 @@ function showPromoDetailModal(content) {
 function setupPromoDetailEvents() {
   const promoCards = document.querySelectorAll('.promo-code-card');
   promoCards.forEach(card => {
-    card.addEventListener('click', async function() {
+    card.addEventListener('click', async function () {
       let makm = this.getAttribute('data-makm');
       // guard against literal strings 'undefined' or 'null'
       if (!makm || makm === 'undefined' || makm === 'null') return;
@@ -1005,8 +1081,8 @@ function setupPromoDetailEvents() {
           let html = `<h3>${data.TenKM}</h3>
             <div><b>Mô tả:</b> ${data.MoTa || ''}</div>
             <div><b>Loại:</b> ${data.LoaiKM}</div>
-            <div><b>Ngày bắt đầu:</b> ${data.NgayBatDau ? data.NgayBatDau.slice(0,10) : ''}</div>
-            <div><b>Ngày kết thúc:</b> ${data.NgayKetThuc ? data.NgayKetThuc.slice(0,10) : ''}</div>
+            <div><b>Ngày bắt đầu:</b> ${data.NgayBatDau ? data.NgayBatDau.slice(0, 10) : ''}</div>
+            <div><b>Ngày kết thúc:</b> ${data.NgayKetThuc ? data.NgayKetThuc.slice(0, 10) : ''}</div>
             <div><b>Trạng thái:</b> ${data.TrangThai ? 'Đang hoạt động' : 'Ngừng'}</div>
             <div style="margin-top:8px"><b>Điều kiện áp dụng:</b>
               <ul>
@@ -1019,8 +1095,8 @@ function setupPromoDetailEvents() {
             <div style="margin-top:8px"><b>Sản phẩm áp dụng:</b>
               <ul>
                 ${(data.SanPhamApDung && data.SanPhamApDung.length)
-                  ? data.SanPhamApDung.map(sp => `<li>${sp.TenSP} (ID: ${sp.MaSP})</li>`).join('')
-                  : '<li>Áp dụng cho tất cả sản phẩm</li>'}
+              ? data.SanPhamApDung.map(sp => `<li>${sp.TenSP} (ID: ${sp.MaSP})</li>`).join('')
+              : '<li>Áp dụng cho tất cả sản phẩm</li>'}
               </ul>
             </div>
           `;
@@ -1082,210 +1158,210 @@ sidebarItems.forEach(item => {
 // Frontend quản lý địa chỉ: lấy / tạo / sửa / xóa
 (
   function setupAddressFrontend() {
-  const addLink = document.querySelector('.add-link'); // link 'Thêm địa chỉ'
-  const otherAddrContainer = document.getElementById('other-receive-address');
-  const defaultReceiveEl = document.getElementById('receive-address');
-  const token = () => localStorage.getItem('token');
-  const customerId = () => localStorage.getItem('customerId');
-  function extractStreet(fullAddress) {
-    if (!fullAddress) return '';
-    // tách theo dấu phẩy, gạch ngang hoặc nhiều khoảng trắng
-    const parts = fullAddress.split(',').map(p => p.trim()).filter(Boolean);
-    if (parts.length) return parts[0];
-    // fallback: lấy tới ký tự số thứ hai nếu không có dấu phẩy
-    return fullAddress.split(/\s{2,}| - |; /)[0].trim();
-  }
-  
-  // Phân tích chuỗi địa chỉ đầy đủ thành các phần: street, ward, district, province
-  function extractAddressParts(fullAddress) {
-    if (!fullAddress) return { street: '', ward: '', district: '', province: '' };
-    // split and trim
-    const rawParts = fullAddress.split(',').map(p => p.trim()).filter(Boolean);
-    if (!rawParts.length) return { street: '', ward: '', district: '', province: '' };
-
-    // Remove obvious postal-code segments (pure digits, length 3-6)
-    const parts = rawParts.filter(p => !/^\d{3,6}$/.test(p));
-
-    let street = '';
-    let ward = '';
-    let district = '';
-    let province = '';
-
-    // helper to find part containing keyword
-    const findPart = (kwRegex) => parts.find(p => kwRegex.test(p.toLowerCase())) || '';
-
-    // If there are >=3 meaningful parts, assume last is province, second-last district, third-last ward (if present)
-    if (parts.length >= 3) {
-      province = parts[parts.length - 1] || '';
-      district = parts[parts.length - 2] || '';
-      ward = parts[parts.length - 3] || '';
-      street = parts.slice(0, parts.length - 3).join(', ') || '';
-
-      // If street ended up empty, maybe original first part is the street
-      if (!street && rawParts.length) street = rawParts[0];
-    } else if (parts.length === 2) {
-      // try keyword detection
-      const p1 = parts[0], p2 = parts[1];
-      if (/quận|huyện|q\.|quan/.test(p2.toLowerCase()) || /quận|huyện|q\.|quan/.test(p1.toLowerCase())) {
-        street = p1;
-        district = p2;
-      } else if (/thành phố|tỉnh|tp\./.test(p2.toLowerCase())) {
-        street = p1;
-        province = p2;
-      } else {
-        street = p1;
-        province = p2;
-      }
-    } else if (parts.length === 1) {
-      // single part: try to extract keywords inside
-      const single = parts[0];
-      const wardMatch = single.match(/(phường\s*[^,\-]+|xã\s*[^,\-]+)/i);
-      const districtMatch = single.match(/(quận\s*[^,\-]+|huyện\s*[^,\-]+|q\.\s*[^,\-]+)/i);
-      const provinceMatch = single.match(/(thành phố\s*[^,\-]+|tp\.|tỉnh\s*[^,\-]+)/i);
-      if (wardMatch) ward = wardMatch[0].trim();
-      if (districtMatch) district = districtMatch[0].trim();
-      if (provinceMatch) province = provinceMatch[0].trim();
-      // street = everything before the first keyword or the whole string if none
-      const firstKeywordIndex = single.search(/(phường|xã|quận|huyện|thành phố|tp\.|tỉnh)/i);
-      street = firstKeywordIndex > 0 ? single.slice(0, firstKeywordIndex).trim() : single;
+    const addLink = document.querySelector('.add-link'); // link 'Thêm địa chỉ'
+    const otherAddrContainer = document.getElementById('other-receive-address');
+    const defaultReceiveEl = document.getElementById('receive-address');
+    const token = () => localStorage.getItem('token');
+    const customerId = () => localStorage.getItem('customerId');
+    function extractStreet(fullAddress) {
+      if (!fullAddress) return '';
+      // tách theo dấu phẩy, gạch ngang hoặc nhiều khoảng trắng
+      const parts = fullAddress.split(',').map(p => p.trim()).filter(Boolean);
+      if (parts.length) return parts[0];
+      // fallback: lấy tới ký tự số thứ hai nếu không có dấu phẩy
+      return fullAddress.split(/\s{2,}| - |; /)[0].trim();
     }
 
-    // final cleanup: trim and return
-    return { street: (street || '').trim(), ward: (ward || '').trim(), district: (district || '').trim(), province: (province || '').trim() };
-  }
+    // Phân tích chuỗi địa chỉ đầy đủ thành các phần: street, ward, district, province
+    function extractAddressParts(fullAddress) {
+      if (!fullAddress) return { street: '', ward: '', district: '', province: '' };
+      // split and trim
+      const rawParts = fullAddress.split(',').map(p => p.trim()).filter(Boolean);
+      if (!rawParts.length) return { street: '', ward: '', district: '', province: '' };
 
-  function buildFullAddress(street, ward, district, province) {
-    const parts = [];
-    if (street) parts.push(street.trim());
-    if (ward) parts.push(ward.trim());
-    if (district) parts.push(district.trim());
-    if (province) parts.push(province.trim());
-    return parts.join(', ');
-  }
-  // location helpers: fetch lists from local JSON files via backend API
-  async function loadProvinces() {
-    try {
-      const res = await fetch(`${window.API_CONFIG.BASE_URL}/api/address/cities`);
-      const cities = await res.json();
-      // Transform to match expected format: { code: city_id, name: city_name }
-      return cities.map(city => ({
-        code: city.city_id,
-        name: city.city_name
-      }));
-    } catch (e) {
-      console.error('loadProvinces', e);
+      // Remove obvious postal-code segments (pure digits, length 3-6)
+      const parts = rawParts.filter(p => !/^\d{3,6}$/.test(p));
+
+      let street = '';
+      let ward = '';
+      let district = '';
+      let province = '';
+
+      // helper to find part containing keyword
+      const findPart = (kwRegex) => parts.find(p => kwRegex.test(p.toLowerCase())) || '';
+
+      // If there are >=3 meaningful parts, assume last is province, second-last district, third-last ward (if present)
+      if (parts.length >= 3) {
+        province = parts[parts.length - 1] || '';
+        district = parts[parts.length - 2] || '';
+        ward = parts[parts.length - 3] || '';
+        street = parts.slice(0, parts.length - 3).join(', ') || '';
+
+        // If street ended up empty, maybe original first part is the street
+        if (!street && rawParts.length) street = rawParts[0];
+      } else if (parts.length === 2) {
+        // try keyword detection
+        const p1 = parts[0], p2 = parts[1];
+        if (/quận|huyện|q\.|quan/.test(p2.toLowerCase()) || /quận|huyện|q\.|quan/.test(p1.toLowerCase())) {
+          street = p1;
+          district = p2;
+        } else if (/thành phố|tỉnh|tp\./.test(p2.toLowerCase())) {
+          street = p1;
+          province = p2;
+        } else {
+          street = p1;
+          province = p2;
+        }
+      } else if (parts.length === 1) {
+        // single part: try to extract keywords inside
+        const single = parts[0];
+        const wardMatch = single.match(/(phường\s*[^,\-]+|xã\s*[^,\-]+)/i);
+        const districtMatch = single.match(/(quận\s*[^,\-]+|huyện\s*[^,\-]+|q\.\s*[^,\-]+)/i);
+        const provinceMatch = single.match(/(thành phố\s*[^,\-]+|tp\.|tỉnh\s*[^,\-]+)/i);
+        if (wardMatch) ward = wardMatch[0].trim();
+        if (districtMatch) district = districtMatch[0].trim();
+        if (provinceMatch) province = provinceMatch[0].trim();
+        // street = everything before the first keyword or the whole string if none
+        const firstKeywordIndex = single.search(/(phường|xã|quận|huyện|thành phố|tp\.|tỉnh)/i);
+        street = firstKeywordIndex > 0 ? single.slice(0, firstKeywordIndex).trim() : single;
+      }
+
+      // final cleanup: trim and return
+      return { street: (street || '').trim(), ward: (ward || '').trim(), district: (district || '').trim(), province: (province || '').trim() };
+    }
+
+    function buildFullAddress(street, ward, district, province) {
+      const parts = [];
+      if (street) parts.push(street.trim());
+      if (ward) parts.push(ward.trim());
+      if (district) parts.push(district.trim());
+      if (province) parts.push(province.trim());
+      return parts.join(', ');
+    }
+    // location helpers: fetch lists from local JSON files via backend API
+    async function loadProvinces() {
+      try {
+        const res = await fetch(`${window.API_CONFIG.BASE_URL}/api/address/cities`);
+        const cities = await res.json();
+        // Transform to match expected format: { code: city_id, name: city_name }
+        return cities.map(city => ({
+          code: city.city_id,
+          name: city.city_name
+        }));
+      } catch (e) {
+        console.error('loadProvinces', e);
+        return [];
+      }
+    }
+    async function loadDistricts(provinceCodeOrName) {
+      if (!provinceCodeOrName) return [];
+      try {
+        // Use city_id to fetch districts
+        const res = await fetch(`${window.API_CONFIG.BASE_URL}/api/address/districts/${encodeURIComponent(provinceCodeOrName)}`);
+        const districts = await res.json();
+        // Transform to match expected format: { code: district_id, name: district_name }
+        return districts.map(district => ({
+          code: district.district_id,
+          name: district.district_name
+        }));
+      } catch (e) {
+        console.warn('loadDistricts failed for code', provinceCodeOrName, e);
+      }
       return [];
     }
-  }
-  async function loadDistricts(provinceCodeOrName) {
-    if (!provinceCodeOrName) return [];
-    try {
-      // Use city_id to fetch districts
-      const res = await fetch(`${window.API_CONFIG.BASE_URL}/api/address/districts/${encodeURIComponent(provinceCodeOrName)}`);
-      const districts = await res.json();
-      // Transform to match expected format: { code: district_id, name: district_name }
-      return districts.map(district => ({
-        code: district.district_id,
-        name: district.district_name
-      }));
-    } catch (e) {
-      console.warn('loadDistricts failed for code', provinceCodeOrName, e);
-    }
-    return [];
-  }
-  async function loadWards(districtCodeOrName) {
-    if (!districtCodeOrName) return [];
-    try {
-      const res = await fetch(`${window.API_CONFIG.BASE_URL}/api/address/wards/${encodeURIComponent(districtCodeOrName)}`);
-      const wards = await res.json();
-      // Transform to match expected format: { code: ward_name (use name as code), name: ward_name }
-      return wards.map(ward => ({
-        code: ward.ward_name, // Use ward_name as code since ward_id doesn't exist
-        name: ward.ward_name
-      }));
-    } catch (e) {
-      console.warn('loadWards failed for code', districtCodeOrName, e);
-    }
-    return [];
-  }
-  async function fetchAddresses() {
-    const cid = customerId();
-    if (!cid || !token()) return;
-    try {
-      const res = await fetch(`${window.API_CONFIG.BASE_URL}/api/orders/customer-addresses/${cid}`, {
-        headers: { Authorization: `Bearer ${token()}` }
-      });
-      const json = await res.json();
-      if (!res.ok) throw new Error(json.error || 'Lỗi khi lấy địa chỉ');
-      renderAddresses(json.data || json);
-    } catch (e) {
-      console.error('fetchAddresses error', e);
-      if (typeof showNotification_khan === 'function') showNotification_khan('error', 'Không tải được danh sách địa chỉ');
-    }
-  }
-
-  async function renderAddresses(addresses = []) {
-    if (!otherAddrContainer) return;
-    if (!addresses.length) {
-      otherAddrContainer.innerHTML = '<p>Chưa có địa chỉ khác.</p>';
-      if (defaultReceiveEl) defaultReceiveEl.textContent = 'Chưa có địa chỉ';
-      return;
-    }
-
-    // Helper function to get address names from IDs
-    async function getAddressNames(provinceId, districtId, wardIdentifier) {
+    async function loadWards(districtCodeOrName) {
+      if (!districtCodeOrName) return [];
       try {
-        const response = await fetch(`${window.API_CONFIG.BASE_URL}/api/address/full/${provinceId}/${districtId}/${encodeURIComponent(wardIdentifier)}`);
-        if (!response.ok) return null;
-        const data = await response.json();
-        return data; // { city: "...", district: "...", ward: "..." }
+        const res = await fetch(`${window.API_CONFIG.BASE_URL}/api/address/wards/${encodeURIComponent(districtCodeOrName)}`);
+        const wards = await res.json();
+        // Transform to match expected format: { code: ward_name (use name as code), name: ward_name }
+        return wards.map(ward => ({
+          code: ward.ward_name, // Use ward_name as code since ward_id doesn't exist
+          name: ward.ward_name
+        }));
       } catch (e) {
-        console.warn('Failed to fetch address names', e);
-        return null;
+        console.warn('loadWards failed for code', districtCodeOrName, e);
+      }
+      return [];
+    }
+    async function fetchAddresses() {
+      const cid = customerId();
+      if (!cid || !token()) return;
+      try {
+        const res = await fetch(`${window.API_CONFIG.BASE_URL}/api/orders/customer-addresses/${cid}`, {
+          headers: { Authorization: `Bearer ${token()}` }
+        });
+        const json = await res.json();
+        if (!res.ok) throw new Error(json.error || 'Lỗi khi lấy địa chỉ');
+        renderAddresses(json.data || json);
+      } catch (e) {
+        console.error('fetchAddresses error', e);
+        if (typeof showNotification_khan === 'function') showNotification_khan('error', 'Không tải được danh sách địa chỉ');
       }
     }
 
-    // Convert IDs to names for each address
-    const addressesWithNames = await Promise.all(addresses.map(async (addr) => {
-      let provinceVal = addr.province || '';
-      let districtVal = addr.district || '';
-      let wardVal = addr.ward || '';
-      
-      // Check if province and district are numeric
-      const isProvinceNumeric = /^\d+$/.test(String(provinceVal));
-      const isDistrictNumeric = /^\d+$/.test(String(districtVal));
-      
-      // If province and district are numeric, fetch the names (ward can be name or ID)
-      if (isProvinceNumeric && isDistrictNumeric) {
-        const names = await getAddressNames(provinceVal, districtVal, wardVal);
-        if (names) {
-          return {
-            ...addr,
-            provinceName: names.city || provinceVal,
-            districtName: names.district || districtVal,
-            wardName: names.ward || wardVal
-          };
+    async function renderAddresses(addresses = []) {
+      if (!otherAddrContainer) return;
+      if (!addresses.length) {
+        otherAddrContainer.innerHTML = '<p>Chưa có địa chỉ khác.</p>';
+        if (defaultReceiveEl) defaultReceiveEl.textContent = 'Chưa có địa chỉ';
+        return;
+      }
+
+      // Helper function to get address names from IDs
+      async function getAddressNames(provinceId, districtId, wardIdentifier) {
+        try {
+          const response = await fetch(`${window.API_CONFIG.BASE_URL}/api/address/full/${provinceId}/${districtId}/${encodeURIComponent(wardIdentifier)}`);
+          if (!response.ok) return null;
+          const data = await response.json();
+          return data; // { city: "...", district: "...", ward: "..." }
+        } catch (e) {
+          console.warn('Failed to fetch address names', e);
+          return null;
         }
       }
-      
-      return {
-        ...addr,
-        provinceName: provinceVal,
-        districtName: districtVal,
-        wardName: wardVal
-      };
-    }));
 
-    // Find the primary address (is_default flag), fallback to first item
-    let primary = addressesWithNames.find(a => a.is_default == 1 || a.is_default === true) || addressesWithNames[0];
-    if (primary && defaultReceiveEl) {
-      const primaryFullAddr = `${extractStreet(primary.detail) || ''}${primary.wardName ? ', ' + primary.wardName : ''}${primary.districtName ? ', ' + primary.districtName : ''}${primary.provinceName ? ', ' + primary.provinceName : ''}`;
-      defaultReceiveEl.textContent = `${primary.name || ''} • ${primary.phone || ''} — ${primaryFullAddr}`;
-    }
+      // Convert IDs to names for each address
+      const addressesWithNames = await Promise.all(addresses.map(async (addr) => {
+        let provinceVal = addr.province || '';
+        let districtVal = addr.district || '';
+        let wardVal = addr.ward || '';
 
-    otherAddrContainer.innerHTML = addressesWithNames.map((addr, idx) => {
-      const fullAddr = `${extractStreet(addr.detail) || ''}${addr.wardName ? ', ' + addr.wardName : ''}${addr.districtName ? ', ' + addr.districtName : ''}${addr.provinceName ? ', ' + addr.provinceName : ''}`;
-      return `
+        // Check if province and district are numeric
+        const isProvinceNumeric = /^\d+$/.test(String(provinceVal));
+        const isDistrictNumeric = /^\d+$/.test(String(districtVal));
+
+        // If province and district are numeric, fetch the names (ward can be name or ID)
+        if (isProvinceNumeric && isDistrictNumeric) {
+          const names = await getAddressNames(provinceVal, districtVal, wardVal);
+          if (names) {
+            return {
+              ...addr,
+              provinceName: names.city || provinceVal,
+              districtName: names.district || districtVal,
+              wardName: names.ward || wardVal
+            };
+          }
+        }
+
+        return {
+          ...addr,
+          provinceName: provinceVal,
+          districtName: districtVal,
+          wardName: wardVal
+        };
+      }));
+
+      // Find the primary address (is_default flag), fallback to first item
+      let primary = addressesWithNames.find(a => a.is_default == 1 || a.is_default === true) || addressesWithNames[0];
+      if (primary && defaultReceiveEl) {
+        const primaryFullAddr = `${extractStreet(primary.detail) || ''}${primary.wardName ? ', ' + primary.wardName : ''}${primary.districtName ? ', ' + primary.districtName : ''}${primary.provinceName ? ', ' + primary.provinceName : ''}`;
+        defaultReceiveEl.textContent = `${primary.name || ''} • ${primary.phone || ''} — ${primaryFullAddr}`;
+      }
+
+      otherAddrContainer.innerHTML = addressesWithNames.map((addr, idx) => {
+        const fullAddr = `${extractStreet(addr.detail) || ''}${addr.wardName ? ', ' + addr.wardName : ''}${addr.districtName ? ', ' + addr.districtName : ''}${addr.provinceName ? ', ' + addr.provinceName : ''}`;
+        return `
         <div class="address-item" data-id="${addr.id}" data-detail="${encodeURIComponent(addr.detail || '')}" data-province="${encodeURIComponent(addr.province || '')}" data-district="${encodeURIComponent(addr.district || '')}" data-ward="${encodeURIComponent(addr.ward || '')}">
           <div class="address-info">
             <div class="addr-top">
@@ -1301,336 +1377,336 @@ sidebarItems.forEach(item => {
           </div>
         </div>
       `;
-    }).join('');
-  }
-
-  async function createAddress(payload) {
-    try {
-      const res = await fetch(`${window.API_CONFIG.BASE_URL}/api/orders/customer-addresses` , {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${token()}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(payload)
-      });
-      const j = await res.json();
-      if (!res.ok) throw new Error(j.error || j.message || 'Tạo địa chỉ thất bại');
-      if (typeof showNotification_khan === 'function') showNotification_khan('success', 'Tạo địa chỉ thành công');
-      await fetchAddresses();
-    } catch (e) {
-      console.error('createAddress error', e);
-      if (typeof showNotification_khan === 'function') showNotification_khan('error', e.message || 'Lỗi tạo địa chỉ');
+      }).join('');
     }
-  }
 
-  async function updateAddress(id, payload) {
-    try {
-      const res = await fetch(`${window.API_CONFIG.BASE_URL}/api/orders/customer-addresses/${id}`, {
-        method: 'PUT',
-        headers: {
-          Authorization: `Bearer ${token()}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(payload)
-      });
-      const j = await res.json();
-      if (!res.ok) throw new Error(j.error || j.message || 'Cập nhật thất bại');
-      if (typeof showNotification_khan === 'function') showNotification_khan('success', 'Cập nhật địa chỉ thành công');
-      await fetchAddresses();
-    } catch (e) {
-      console.error('updateAddress error', e);
-      if (typeof showNotification_khan === 'function') showNotification_khan('error', e.message || 'Lỗi cập nhật địa chỉ');
-    }
-  }
-
-  async function deleteAddress(id) {
-    if (!confirm('Bạn có chắc muốn xóa địa chỉ này?')) return;
-    try {
-      const res = await fetch(`${window.API_CONFIG.BASE_URL}/api/orders/customer-addresses/${id}`, {
-        method: 'DELETE',
-        headers: { Authorization: `Bearer ${token()}` }
-      });
-      const j = await res.json();
-      if (!res.ok) throw new Error(j.error || j.message || 'Xóa thất bại');
-      if (typeof showNotification_khan === 'function') showNotification_khan('success', 'Xóa địa chỉ thành công');
-      await fetchAddresses();
-    } catch (e) {
-      console.error('deleteAddress error', e);
-      if (typeof showNotification_khan === 'function') showNotification_khan('error', e.message || 'Lỗi xóa địa chỉ');
-    }
-  }
-
-  // Modal-based form for add/edit address. Returns Promise which resolves to payload or null if cancelled
- function openAddressPrompt(existing = {}) {
-    return new Promise((resolve) => {
-      const modal = document.getElementById('addressModal');
-      const titleEl = document.getElementById('addressModalTitle');
-      const nameEl = document.getElementById('addr_name');
-      const phoneEl = document.getElementById('addr_phone');
-      const detailEl = document.getElementById('addr_detail');
-      const provinceEl = document.getElementById('addr_province');
-      const districtEl = document.getElementById('addr_district');
-      const wardEl = document.getElementById('addr_ward');
-      const errorEl = document.getElementById('addr_form_error');
-      const btnSave = document.getElementById('addr_save');
-      const btnCancel = document.getElementById('addr_cancel');
-      const btnClose = document.getElementById('addressModalClose');
-
-      if (!modal) {
-        // fallback to prompts
-        const name = prompt('Họ tên người nhận:', existing.name || '');
-        if (name === null) return resolve(null);
-        const phone = prompt('Số điện thoại:', existing.phone || '');
-        if (phone === null) return resolve(null);
-        const detail = prompt('Địa chỉ chi tiết:', existing.detail || '');
-        if (detail === null) return resolve(null);
-        const province = prompt('Tỉnh/Thành (tên hoặc mã):', existing.province || '');
-        if (province === null) return resolve(null);
-        const district = prompt('Quận/Huyện (tên hoặc mã):', existing.district || '');
-        if (district === null) return resolve(null);
-        const ward = prompt('Phường/Xã (tên hoặc mã):', existing.ward || '');
-        if (ward === null) return resolve(null);
-        return resolve({ name: name.trim(), phone: phone.trim(), detail: detail.trim(), province: province.trim() || null, district: district.trim() || null, ward: ward.trim() || null });
-      }
-
-      // fill values: chỉ để phần tên đường vào addr_detail, và cố gắng tách ra tỉnh/quận/phường nếu có
-      titleEl.textContent = existing && existing.name ? 'Sửa địa chỉ' : 'Thêm địa chỉ';
-      nameEl.value = existing.name || '';
-      phoneEl.value = existing.phone || '';
-      // nếu server trả các trường riêng thì ưu tiên dùng, ngược lại tách từ existing.detail
-      detailEl.value = extractStreet(existing.detail) || existing.detail || '';
-
-      // Populate selects: provinces -> districts -> wards. Prefill using existing.province/district/ward which may be names or codes.
-      (async () => {
-        // load provinces into select
-        const provinces = await loadProvinces();
-        provinceEl.innerHTML = '<option value="">Tỉnh/Thành</option>' + provinces.map(p => `<option value="${p.code}">${p.name}</option>`).join('');
-
-        // try to pre-select province by matching name or code
-        let selectedProvinceCode = '';
-        if (existing.province) {
-          // if existing.province looks numeric, use as code
-          if (/^\d+$/.test(String(existing.province))) selectedProvinceCode = String(existing.province);
-          else {
-            const found = provinces.find(p => p.name.toLowerCase() === String(existing.province).toLowerCase());
-            if (found) selectedProvinceCode = String(found.code);
-          }
-        }
-        if (!selectedProvinceCode && provinces.length === 1) selectedProvinceCode = String(provinces[0].code);
-        if (selectedProvinceCode) provinceEl.value = selectedProvinceCode;
-
-        // load districts for selected province
-        const districts = selectedProvinceCode ? await loadDistricts(selectedProvinceCode) : [];
-        districtEl.innerHTML = '<option value="">Quận/Huyện</option>' + districts.map(d => `<option value="${d.code}">${d.name}</option>`).join('');
-
-        // try preselect district
-        let selectedDistrictCode = '';
-        if (existing.district) {
-          if (/^\d+$/.test(String(existing.district))) selectedDistrictCode = String(existing.district);
-          else {
-            const foundD = districts.find(d => d.name.toLowerCase() === String(existing.district).toLowerCase());
-            if (foundD) selectedDistrictCode = String(foundD.code);
-          }
-        }
-        if (selectedDistrictCode) districtEl.value = selectedDistrictCode;
-
-        // load wards for selected district
-        const wards = selectedDistrictCode ? await loadWards(selectedDistrictCode) : [];
-        wardEl.innerHTML = '<option value="">Phường/Xã</option>' + wards.map(w => `<option value="${w.code}">${w.name}</option>`).join('');
-
-        // try preselect ward
-        if (existing.ward) {
-          if (/^\d+$/.test(String(existing.ward))) wardEl.value = String(existing.ward);
-          else {
-            const foundW = wards.find(w => w.name.toLowerCase() === String(existing.ward).toLowerCase());
-            if (foundW) wardEl.value = String(foundW.code);
-          }
-        }
-      })();
-      errorEl.style.display = 'none';
-
-      function cleanup() {
-        btnSave.removeEventListener('click', onSave);
-        btnCancel.removeEventListener('click', onCancel);
-        btnClose.removeEventListener('click', onCancel);
-        provinceEl.removeEventListener('change', onProvinceChange);
-        districtEl.removeEventListener('change', onDistrictChange);
-        modal.style.display = 'none';
-      }
-
-      function validate() {
-        const name = nameEl.value.trim();
-        const phone = phoneEl.value.trim();
-        const detail = detailEl.value.trim();
-        if (!name) return 'Vui lòng nhập họ tên người nhận';
-        if (!phone) return 'Vui lòng nhập số điện thoại';
-        if (!detail) return 'Vui lòng nhập địa chỉ chi tiết';
-        return null;
-      }
-
-      async function onProvinceChange(e) {
-        const code = provinceEl.value;
-        // clear district & ward
-        districtEl.innerHTML = '<option value="">Quận/Huyện</option>';
-        wardEl.innerHTML = '<option value="">Phường/Xã</option>';
-        if (!code) return;
-        const districts = await loadDistricts(code);
-        districtEl.innerHTML = '<option value="">Quận/Huyện</option>' + (districts || []).map(d => `<option value="${d.code}">${d.name}</option>`).join('');
-      }
-
-      async function onDistrictChange(e) {
-        const code = districtEl.value;
-        wardEl.innerHTML = '<option value="">Phường/Xã</option>';
-        if (!code) return;
-        const wards = await loadWards(code);
-        wardEl.innerHTML = '<option value="">Phường/Xã</option>' + (wards || []).map(w => `<option value="${w.code}">${w.name}</option>`).join('');
-      }
-
-      provinceEl.addEventListener('change', onProvinceChange);
-      districtEl.addEventListener('change', onDistrictChange);
-
-      function onSave(e) {
-        e.preventDefault();
-        const v = validate();
-        if (v) {
-          errorEl.textContent = v;
-          errorEl.style.display = 'block';
-          return;
-        }
-        // build full detail from components so server has consistent full address
-        const street = nameEl ? detailEl.value.trim() : detailEl.value.trim();
-        // For selects we store the selected code; if user typed names (fallback) take the select text
-        const provinceV = provinceEl.value ? provinceEl.options[provinceEl.selectedIndex].text.trim() : (provinceEl.value || null);
-        const districtV = districtEl.value ? districtEl.options[districtEl.selectedIndex].text.trim() : (districtEl.value || null);
-        const wardV = wardEl.value ? wardEl.options[wardEl.selectedIndex].text.trim() : (wardEl.value || null);
-        const fullDetail = buildFullAddress(detailEl.value.trim(), wardV, districtV, provinceV);
-
-        const payload = {
-          name: nameEl.value.trim(),
-          phone: phoneEl.value.trim(),
-          detail: fullDetail,
-          province: provinceV,
-          district: districtV,
-          ward: wardV
-        };
-        cleanup();
-        resolve(payload);
-      }
-
-      function onCancel(e) {
-        if (e) e.preventDefault();
-        cleanup();
-        resolve(null);
-      }
-
-      btnSave.addEventListener('click', onSave);
-      btnCancel.addEventListener('click', onCancel);
-      btnClose.addEventListener('click', onCancel);
-
-      // show modal
-      modal.style.display = 'flex';
-      nameEl.focus();
-    });
-  }
-
-  // Event bindings
-  if (addLink) {
-    addLink.addEventListener('click', async (e) => {
-      e.preventDefault();
-      const payload = await openAddressPrompt(); // <-- await thêm ở đây
-      if (!payload) return;
-      await createAddress({ name: payload.name, phone: payload.phone, detail: payload.detail, province: payload.province, district: payload.district, ward: payload.ward });
-    });
-  }
-
-  // Delegate edit/delete clicks
-  if (otherAddrContainer) {
-    otherAddrContainer.addEventListener('click', async (e) => {
-      const editEl = e.target.closest('.edit-address');
-      const delEl = e.target.closest('.delete-address');
-      const setDefaultEl = e.target.closest('.set-default');
-      if (setDefaultEl) {
-        e.preventDefault();
-        const id = setDefaultEl.dataset.id;
-        try {
-          // Try dedicated endpoint to set default address
-          let res = await fetch(`${window.API_CONFIG.BASE_URL}/api/orders/customer-addresses/${id}/set-default`, {
-            method: 'POST',
-            headers: { Authorization: `Bearer ${token()}` }
-          });
-          if (!res.ok) {
-            // fallback: update addresses by setting is_default flag on server via PUT
-            await updateAddress(id, { is_default: true });
-          } else {
-            const j = await res.json();
-            if (!res.ok) throw new Error(j.error || j.message || 'Không thể đặt mặc định');
-            if (typeof showNotification_khan === 'function') showNotification_khan('success', 'Đã đặt địa chỉ này làm mặc định');
-            await fetchAddresses();
-          }
-        } catch (err) {
-          console.error('set-default error', err);
-          if (typeof showNotification_khan === 'function') showNotification_khan('error', err.message || 'Không thể đặt mặc định');
-        }
-        return;
-      }
-
-      if (editEl) {
-        e.preventDefault();
-        const id = editEl.dataset.id;
-        // find current values on DOM
-        const root = otherAddrContainer.querySelector(`.address-item[data-id="${id}"]`);
-  const name = root?.querySelector('.addr-top strong')?.textContent?.trim() || '';
-  const phone = root?.querySelector('.phone')?.textContent?.trim() || '';
-  // read encoded full-detail and parts from data attributes (set when rendering)
-  const encodedDetail = root?.dataset.detail || '';
-  const encodedProvince = root?.dataset.province || '';
-  const encodedDistrict = root?.dataset.district || '';
-  const encodedWard = root?.dataset.ward || '';
-  const detailFull = encodedDetail ? decodeURIComponent(encodedDetail) : (root?.querySelector('.addr-detail')?.textContent?.trim() || '');
-  const provinceVal = encodedProvince ? decodeURIComponent(encodedProvince) : '';
-  const districtVal = encodedDistrict ? decodeURIComponent(encodedDistrict) : '';
-  const wardVal = encodedWard ? decodeURIComponent(encodedWard) : '';
-  const payload = await openAddressPrompt({ name, phone, detail: detailFull, province: provinceVal, district: districtVal, ward: wardVal });
-        if (!payload) return;
-        await updateAddress(id, { name: payload.name, phone: payload.phone, detail: payload.detail, province: payload.province, district: payload.district, ward: payload.ward });
-      } else if (delEl) {
-        e.preventDefault();
-        const id = delEl.dataset.id;
-        await deleteAddress(id);
-      }
-    });
-  }
-
-
-// also bind global "Sửa" link in default address block (has class .edit-link)
-  const defaultEdit = document.querySelector('.address-block .edit-link');
-  if (defaultEdit) {
-    defaultEdit.addEventListener('click', async (e) => {
-      e.preventDefault();
+    async function createAddress(payload) {
       try {
-        const cid = customerId();
-        const res = await fetch(`${window.API_CONFIG.BASE_URL}/api/orders/customer-addresses/${cid}`, {
+        const res = await fetch(`${window.API_CONFIG.BASE_URL}/api/orders/customer-addresses`, {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${token()}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(payload)
+        });
+        const j = await res.json();
+        if (!res.ok) throw new Error(j.error || j.message || 'Tạo địa chỉ thất bại');
+        if (typeof showNotification_khan === 'function') showNotification_khan('success', 'Tạo địa chỉ thành công');
+        await fetchAddresses();
+      } catch (e) {
+        console.error('createAddress error', e);
+        if (typeof showNotification_khan === 'function') showNotification_khan('error', e.message || 'Lỗi tạo địa chỉ');
+      }
+    }
+
+    async function updateAddress(id, payload) {
+      try {
+        const res = await fetch(`${window.API_CONFIG.BASE_URL}/api/orders/customer-addresses/${id}`, {
+          method: 'PUT',
+          headers: {
+            Authorization: `Bearer ${token()}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(payload)
+        });
+        const j = await res.json();
+        if (!res.ok) throw new Error(j.error || j.message || 'Cập nhật thất bại');
+        if (typeof showNotification_khan === 'function') showNotification_khan('success', 'Cập nhật địa chỉ thành công');
+        await fetchAddresses();
+      } catch (e) {
+        console.error('updateAddress error', e);
+        if (typeof showNotification_khan === 'function') showNotification_khan('error', e.message || 'Lỗi cập nhật địa chỉ');
+      }
+    }
+
+    async function deleteAddress(id) {
+      if (!confirm('Bạn có chắc muốn xóa địa chỉ này?')) return;
+      try {
+        const res = await fetch(`${window.API_CONFIG.BASE_URL}/api/orders/customer-addresses/${id}`, {
+          method: 'DELETE',
           headers: { Authorization: `Bearer ${token()}` }
         });
         const j = await res.json();
-        if (!res.ok) throw new Error(j.error || 'Lỗi');
-        const first = (j.data || j)[0];
-        if (!first) {
-          if (typeof showNotification_khan === 'function') showNotification_khan('error', 'Chưa có địa chỉ để sửa');
+        if (!res.ok) throw new Error(j.error || j.message || 'Xóa thất bại');
+        if (typeof showNotification_khan === 'function') showNotification_khan('success', 'Xóa địa chỉ thành công');
+        await fetchAddresses();
+      } catch (e) {
+        console.error('deleteAddress error', e);
+        if (typeof showNotification_khan === 'function') showNotification_khan('error', e.message || 'Lỗi xóa địa chỉ');
+      }
+    }
+
+    // Modal-based form for add/edit address. Returns Promise which resolves to payload or null if cancelled
+    function openAddressPrompt(existing = {}) {
+      return new Promise((resolve) => {
+        const modal = document.getElementById('addressModal');
+        const titleEl = document.getElementById('addressModalTitle');
+        const nameEl = document.getElementById('addr_name');
+        const phoneEl = document.getElementById('addr_phone');
+        const detailEl = document.getElementById('addr_detail');
+        const provinceEl = document.getElementById('addr_province');
+        const districtEl = document.getElementById('addr_district');
+        const wardEl = document.getElementById('addr_ward');
+        const errorEl = document.getElementById('addr_form_error');
+        const btnSave = document.getElementById('addr_save');
+        const btnCancel = document.getElementById('addr_cancel');
+        const btnClose = document.getElementById('addressModalClose');
+
+        if (!modal) {
+          // fallback to prompts
+          const name = prompt('Họ tên người nhận:', existing.name || '');
+          if (name === null) return resolve(null);
+          const phone = prompt('Số điện thoại:', existing.phone || '');
+          if (phone === null) return resolve(null);
+          const detail = prompt('Địa chỉ chi tiết:', existing.detail || '');
+          if (detail === null) return resolve(null);
+          const province = prompt('Tỉnh/Thành (tên hoặc mã):', existing.province || '');
+          if (province === null) return resolve(null);
+          const district = prompt('Quận/Huyện (tên hoặc mã):', existing.district || '');
+          if (district === null) return resolve(null);
+          const ward = prompt('Phường/Xã (tên hoặc mã):', existing.ward || '');
+          if (ward === null) return resolve(null);
+          return resolve({ name: name.trim(), phone: phone.trim(), detail: detail.trim(), province: province.trim() || null, district: district.trim() || null, ward: ward.trim() || null });
+        }
+
+        // fill values: chỉ để phần tên đường vào addr_detail, và cố gắng tách ra tỉnh/quận/phường nếu có
+        titleEl.textContent = existing && existing.name ? 'Sửa địa chỉ' : 'Thêm địa chỉ';
+        nameEl.value = existing.name || '';
+        phoneEl.value = existing.phone || '';
+        // nếu server trả các trường riêng thì ưu tiên dùng, ngược lại tách từ existing.detail
+        detailEl.value = extractStreet(existing.detail) || existing.detail || '';
+
+        // Populate selects: provinces -> districts -> wards. Prefill using existing.province/district/ward which may be names or codes.
+        (async () => {
+          // load provinces into select
+          const provinces = await loadProvinces();
+          provinceEl.innerHTML = '<option value="">Tỉnh/Thành</option>' + provinces.map(p => `<option value="${p.code}">${p.name}</option>`).join('');
+
+          // try to pre-select province by matching name or code
+          let selectedProvinceCode = '';
+          if (existing.province) {
+            // if existing.province looks numeric, use as code
+            if (/^\d+$/.test(String(existing.province))) selectedProvinceCode = String(existing.province);
+            else {
+              const found = provinces.find(p => p.name.toLowerCase() === String(existing.province).toLowerCase());
+              if (found) selectedProvinceCode = String(found.code);
+            }
+          }
+          if (!selectedProvinceCode && provinces.length === 1) selectedProvinceCode = String(provinces[0].code);
+          if (selectedProvinceCode) provinceEl.value = selectedProvinceCode;
+
+          // load districts for selected province
+          const districts = selectedProvinceCode ? await loadDistricts(selectedProvinceCode) : [];
+          districtEl.innerHTML = '<option value="">Quận/Huyện</option>' + districts.map(d => `<option value="${d.code}">${d.name}</option>`).join('');
+
+          // try preselect district
+          let selectedDistrictCode = '';
+          if (existing.district) {
+            if (/^\d+$/.test(String(existing.district))) selectedDistrictCode = String(existing.district);
+            else {
+              const foundD = districts.find(d => d.name.toLowerCase() === String(existing.district).toLowerCase());
+              if (foundD) selectedDistrictCode = String(foundD.code);
+            }
+          }
+          if (selectedDistrictCode) districtEl.value = selectedDistrictCode;
+
+          // load wards for selected district
+          const wards = selectedDistrictCode ? await loadWards(selectedDistrictCode) : [];
+          wardEl.innerHTML = '<option value="">Phường/Xã</option>' + wards.map(w => `<option value="${w.code}">${w.name}</option>`).join('');
+
+          // try preselect ward
+          if (existing.ward) {
+            if (/^\d+$/.test(String(existing.ward))) wardEl.value = String(existing.ward);
+            else {
+              const foundW = wards.find(w => w.name.toLowerCase() === String(existing.ward).toLowerCase());
+              if (foundW) wardEl.value = String(foundW.code);
+            }
+          }
+        })();
+        errorEl.style.display = 'none';
+
+        function cleanup() {
+          btnSave.removeEventListener('click', onSave);
+          btnCancel.removeEventListener('click', onCancel);
+          btnClose.removeEventListener('click', onCancel);
+          provinceEl.removeEventListener('change', onProvinceChange);
+          districtEl.removeEventListener('change', onDistrictChange);
+          modal.style.display = 'none';
+        }
+
+        function validate() {
+          const name = nameEl.value.trim();
+          const phone = phoneEl.value.trim();
+          const detail = detailEl.value.trim();
+          if (!name) return 'Vui lòng nhập họ tên người nhận';
+          if (!phone) return 'Vui lòng nhập số điện thoại';
+          if (!detail) return 'Vui lòng nhập địa chỉ chi tiết';
+          return null;
+        }
+
+        async function onProvinceChange(e) {
+          const code = provinceEl.value;
+          // clear district & ward
+          districtEl.innerHTML = '<option value="">Quận/Huyện</option>';
+          wardEl.innerHTML = '<option value="">Phường/Xã</option>';
+          if (!code) return;
+          const districts = await loadDistricts(code);
+          districtEl.innerHTML = '<option value="">Quận/Huyện</option>' + (districts || []).map(d => `<option value="${d.code}">${d.name}</option>`).join('');
+        }
+
+        async function onDistrictChange(e) {
+          const code = districtEl.value;
+          wardEl.innerHTML = '<option value="">Phường/Xã</option>';
+          if (!code) return;
+          const wards = await loadWards(code);
+          wardEl.innerHTML = '<option value="">Phường/Xã</option>' + (wards || []).map(w => `<option value="${w.code}">${w.name}</option>`).join('');
+        }
+
+        provinceEl.addEventListener('change', onProvinceChange);
+        districtEl.addEventListener('change', onDistrictChange);
+
+        function onSave(e) {
+          e.preventDefault();
+          const v = validate();
+          if (v) {
+            errorEl.textContent = v;
+            errorEl.style.display = 'block';
+            return;
+          }
+          // build full detail from components so server has consistent full address
+          const street = nameEl ? detailEl.value.trim() : detailEl.value.trim();
+          // For selects we store the selected code; if user typed names (fallback) take the select text
+          const provinceV = provinceEl.value ? provinceEl.options[provinceEl.selectedIndex].text.trim() : (provinceEl.value || null);
+          const districtV = districtEl.value ? districtEl.options[districtEl.selectedIndex].text.trim() : (districtEl.value || null);
+          const wardV = wardEl.value ? wardEl.options[wardEl.selectedIndex].text.trim() : (wardEl.value || null);
+          const fullDetail = buildFullAddress(detailEl.value.trim(), wardV, districtV, provinceV);
+
+          const payload = {
+            name: nameEl.value.trim(),
+            phone: phoneEl.value.trim(),
+            detail: fullDetail,
+            province: provinceV,
+            district: districtV,
+            ward: wardV
+          };
+          cleanup();
+          resolve(payload);
+        }
+
+        function onCancel(e) {
+          if (e) e.preventDefault();
+          cleanup();
+          resolve(null);
+        }
+
+        btnSave.addEventListener('click', onSave);
+        btnCancel.addEventListener('click', onCancel);
+        btnClose.addEventListener('click', onCancel);
+
+        // show modal
+        modal.style.display = 'flex';
+        nameEl.focus();
+      });
+    }
+
+    // Event bindings
+    if (addLink) {
+      addLink.addEventListener('click', async (e) => {
+        e.preventDefault();
+        const payload = await openAddressPrompt(); // <-- await thêm ở đây
+        if (!payload) return;
+        await createAddress({ name: payload.name, phone: payload.phone, detail: payload.detail, province: payload.province, district: payload.district, ward: payload.ward });
+      });
+    }
+
+    // Delegate edit/delete clicks
+    if (otherAddrContainer) {
+      otherAddrContainer.addEventListener('click', async (e) => {
+        const editEl = e.target.closest('.edit-address');
+        const delEl = e.target.closest('.delete-address');
+        const setDefaultEl = e.target.closest('.set-default');
+        if (setDefaultEl) {
+          e.preventDefault();
+          const id = setDefaultEl.dataset.id;
+          try {
+            // Try dedicated endpoint to set default address
+            let res = await fetch(`${window.API_CONFIG.BASE_URL}/api/orders/customer-addresses/${id}/set-default`, {
+              method: 'POST',
+              headers: { Authorization: `Bearer ${token()}` }
+            });
+            if (!res.ok) {
+              // fallback: update addresses by setting is_default flag on server via PUT
+              await updateAddress(id, { is_default: true });
+            } else {
+              const j = await res.json();
+              if (!res.ok) throw new Error(j.error || j.message || 'Không thể đặt mặc định');
+              if (typeof showNotification_khan === 'function') showNotification_khan('success', 'Đã đặt địa chỉ này làm mặc định');
+              await fetchAddresses();
+            }
+          } catch (err) {
+            console.error('set-default error', err);
+            if (typeof showNotification_khan === 'function') showNotification_khan('error', err.message || 'Không thể đặt mặc định');
+          }
           return;
         }
-        const payload = await openAddressPrompt(first); // <-- await thêm ở đây
-        if (!payload) return;
-        await updateAddress(first.id, { name: payload.name, phone: payload.phone, detail: payload.detail, province: payload.province, district: payload.district, ward: payload.ward });
-      } catch (e) {
-        console.error('defaultEdit error', e);
-        if (typeof showNotification_khan === 'function') showNotification_khan('error', 'Lỗi khi sửa địa chỉ mặc định');
-      }
-    });
-  }
 
-  // initial load (delay nhỏ để đảm bảo customerId đã được set khi loadUserProfile trước đó)
-  setTimeout(fetchAddresses, 300);
-})();
+        if (editEl) {
+          e.preventDefault();
+          const id = editEl.dataset.id;
+          // find current values on DOM
+          const root = otherAddrContainer.querySelector(`.address-item[data-id="${id}"]`);
+          const name = root?.querySelector('.addr-top strong')?.textContent?.trim() || '';
+          const phone = root?.querySelector('.phone')?.textContent?.trim() || '';
+          // read encoded full-detail and parts from data attributes (set when rendering)
+          const encodedDetail = root?.dataset.detail || '';
+          const encodedProvince = root?.dataset.province || '';
+          const encodedDistrict = root?.dataset.district || '';
+          const encodedWard = root?.dataset.ward || '';
+          const detailFull = encodedDetail ? decodeURIComponent(encodedDetail) : (root?.querySelector('.addr-detail')?.textContent?.trim() || '');
+          const provinceVal = encodedProvince ? decodeURIComponent(encodedProvince) : '';
+          const districtVal = encodedDistrict ? decodeURIComponent(encodedDistrict) : '';
+          const wardVal = encodedWard ? decodeURIComponent(encodedWard) : '';
+          const payload = await openAddressPrompt({ name, phone, detail: detailFull, province: provinceVal, district: districtVal, ward: wardVal });
+          if (!payload) return;
+          await updateAddress(id, { name: payload.name, phone: payload.phone, detail: payload.detail, province: payload.province, district: payload.district, ward: payload.ward });
+        } else if (delEl) {
+          e.preventDefault();
+          const id = delEl.dataset.id;
+          await deleteAddress(id);
+        }
+      });
+    }
+
+
+    // also bind global "Sửa" link in default address block (has class .edit-link)
+    const defaultEdit = document.querySelector('.address-block .edit-link');
+    if (defaultEdit) {
+      defaultEdit.addEventListener('click', async (e) => {
+        e.preventDefault();
+        try {
+          const cid = customerId();
+          const res = await fetch(`${window.API_CONFIG.BASE_URL}/api/orders/customer-addresses/${cid}`, {
+            headers: { Authorization: `Bearer ${token()}` }
+          });
+          const j = await res.json();
+          if (!res.ok) throw new Error(j.error || 'Lỗi');
+          const first = (j.data || j)[0];
+          if (!first) {
+            if (typeof showNotification_khan === 'function') showNotification_khan('error', 'Chưa có địa chỉ để sửa');
+            return;
+          }
+          const payload = await openAddressPrompt(first); // <-- await thêm ở đây
+          if (!payload) return;
+          await updateAddress(first.id, { name: payload.name, phone: payload.phone, detail: payload.detail, province: payload.province, district: payload.district, ward: payload.ward });
+        } catch (e) {
+          console.error('defaultEdit error', e);
+          if (typeof showNotification_khan === 'function') showNotification_khan('error', 'Lỗi khi sửa địa chỉ mặc định');
+        }
+      });
+    }
+
+    // initial load (delay nhỏ để đảm bảo customerId đã được set khi loadUserProfile trước đó)
+    setTimeout(fetchAddresses, 300);
+  })();
 
