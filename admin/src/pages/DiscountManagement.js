@@ -1154,7 +1154,7 @@ const DiscountManagement = () => {
                     <Tooltip title="Chỉnh sửa">
                       <Button
                         icon={<EditOutlined />}
-                        size="middle"
+                        size="small"
                         type="primary"
                         onClick={() => handleEditCoupon(record)}
                       />
@@ -1162,7 +1162,7 @@ const DiscountManagement = () => {
                     <Tooltip title="Xóa">
                       <Button
                         icon={<DeleteOutlined />}
-                        size="middle"
+                        size="small"
                         danger
                         onClick={() => handleDeleteCoupon(record.MaPhieu)}
                       />
@@ -1245,7 +1245,7 @@ const DiscountManagement = () => {
                     <Tooltip title="Quản lý câu hỏi">
                       <Button
                         icon={<BarChartOutlined />}
-                        size="middle"
+                        size="small"
                         type="default"
                         onClick={() => handleManageQuestions(record.MaForm)}
                       >
@@ -1255,7 +1255,7 @@ const DiscountManagement = () => {
                     <Tooltip title="Chỉnh sửa">
                       <Button
                         icon={<EditOutlined />}
-                        size="middle"
+                        size="small"
                         type="primary"
                         onClick={() => handleEditPreferenceForm(record)}
                       />
@@ -1263,7 +1263,7 @@ const DiscountManagement = () => {
                     <Tooltip title="Xóa">
                       <Button
                         icon={<DeleteOutlined />}
-                        size="middle"
+                        size="small"
                         danger
                         onClick={() => handleDeletePreferenceForm(record.MaForm)}
                       />
