@@ -10,59 +10,119 @@
         position: fixed; 
         bottom: 30px; 
         left: 30px; 
-        background: rgba(176, 58, 46, 0.98); 
-        backdrop-filter: blur(12px);
-        -webkit-backdrop-filter: blur(12px);
+        background: linear-gradient(135deg, #ff416c 0%, #ff4b2b 100%);
+        backdrop-filter: blur(15px);
+        -webkit-backdrop-filter: blur(15px);
         color: white; 
-        padding: 14px 24px; 
-        border-radius: 24px; 
-        box-shadow: 0 20px 50px rgba(176, 58, 46, 0.4); 
+        padding: 16px 28px; 
+        border-radius: 50px; 
+        box-shadow: 0 15px 35px rgba(255, 65, 108, 0.4); 
         cursor: pointer; 
         z-index: 2147482900; 
         opacity: 0; 
-        transform: translateX(-40px) scale(0.9); 
-        transition: all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1); 
+        transform: translateY(100px) scale(0.8); 
+        transition: all 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
         display: flex; 
         align-items: center; 
-        gap: 14px; 
-        border: 1px solid rgba(255, 255, 255, 0.2);
+        gap: 16px; 
+        border: 2px solid rgba(255, 255, 255, 0.3);
         max-width: calc(100vw - 60px);
+        user-select: none;
       }
-      .preference-floating-btn.show { opacity: 1; transform: translateX(0) scale(1); }
-      .preference-floating-btn:hover { transform: scale(1.03) translateY(-5px); box-shadow: 0 25px 60px rgba(176, 58, 46, 0.5); }
-      .prompt-icon { 
-        font-size: 22px; 
-        background: rgba(255, 255, 255, 0.2); 
-        width: 40px; 
-        height: 40px; 
-        display: flex; 
-        align-items: center; 
-        justify-content: center; 
-        border-radius: 14px;
-        animation: float 3s ease-in-out infinite;
+      .preference-floating-btn.show { opacity: 1; transform: translateY(0) scale(1); }
+      .preference-floating-btn:hover { 
+        transform: translateY(-8px) scale(1.05); 
+        box-shadow: 0 25px 50px rgba(255, 65, 108, 0.6);
+        background: linear-gradient(135deg, #ff4b2b 0%, #ff416c 100%);
       }
-      @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
-      .prompt-text strong { display: block; font-size: 14px; font-weight: 800; letter-spacing: -0.01em; margin-bottom: 1px; white-space: nowrap; }
-      .prompt-text p { font-size: 11px; font-weight: 500; opacity: 0.9; margin: 0; white-space: nowrap; }
-      .prompt-close {
+      .preference-floating-btn::before {
+        content: '';
         position: absolute;
-        top: -8px;
-        right: -8px;
-        width: 22px;
-        height: 22px;
-        background: #B03A2E;
-        border: 2px solid white;
+        inset: 0;
+        border-radius: 50px;
+        padding: 2px;
+        background: linear-gradient(to right, rgba(255,255,255,0.8), rgba(255,255,255,0.1));
+        -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+        mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+        -webkit-mask-composite: xor;
+        mask-composite: exclude;
+      }
+      .prompt-icon-container {
+        position: relative;
+        width: 46px;
+        height: 46px;
+        background: rgba(255, 255, 255, 0.25);
+        border-radius: 18px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+        flex-shrink: 0;
+        box-shadow: inset 0 0 10px rgba(255,255,255,0.2);
+        animation: pulse-ring 2s cubic-bezier(0.455, 0.03, 0.515, 0.955) infinite;
+      }
+      @keyframes pulse-ring {
+        0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.4); }
+        70% { transform: scale(1.05); box-shadow: 0 0 0 15px rgba(255, 255, 255, 0); }
+        100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 255, 255, 0); }
+      }
+      .prompt-icon-inner {
+        animation: bounce-icon 3s ease-in-out infinite;
+      }
+      @keyframes bounce-icon {
+        0%, 100% { transform: translateY(0) rotate(0deg); }
+        25% { transform: translateY(-4px) rotate(-5deg); }
+        75% { transform: translateY(-2px) rotate(5deg); }
+      }
+      .prompt-text-content { display: flex; flex-direction: column; gap: 2px; }
+      .prompt-text-content strong { 
+        font-size: 16px; 
+        font-weight: 800; 
+        letter-spacing: -0.3px; 
+        text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        white-space: nowrap; 
+      }
+      .prompt-text-content p { 
+        font-size: 13px; 
+        font-weight: 500; 
+        opacity: 0.95; 
+        margin: 0; 
+        white-space: nowrap; 
+      }
+      .prompt-close-btn {
+        position: absolute;
+        top: -10px;
+        right: 10px;
+        width: 26px;
+        height: 26px;
+        background: white;
         border-radius: 50%;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 10px;
-        color: white;
-        box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        font-size: 12px;
+        color: #ff416c;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.2);
         opacity: 0;
-        transition: opacity 0.3s;
+        transform: scale(0.5);
+        transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        z-index: 10;
       }
-      .preference-floating-btn:hover .prompt-close { opacity: 1; }
+      .preference-floating-btn:hover .prompt-close-btn { opacity: 1; transform: scale(1); }
+      .prompt-close-btn:hover { background: #f0f0f0; transform: scale(1.1) !important; }
+      
+      .notification-dot {
+        position: absolute;
+        top: -2px;
+        right: -2px;
+        width: 12px;
+        height: 12px;
+        background: #4cd137;
+        border: 2px solid #ff416c;
+        border-radius: 50%;
+        animation: blink 1.5s infinite;
+      }
+      @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
       .preference-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 9999; opacity: 0; pointer-events: none; transition: opacity 0.3s; }
       .preference-modal.show { opacity: 1; pointer-events: all; }
       .preference-modal-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(5px); }
@@ -147,31 +207,35 @@
     floatingBtn.id = 'preference-prompt';
     floatingBtn.className = 'preference-floating-btn';
     floatingBtn.innerHTML = `
-      <div class="prompt-icon">🎁</div>
-      <div class="prompt-text">
-        <strong>Nhận ngay mã Freeship!</strong>
-        <p>Trả lời 3 câu hỏi nhanh</p>
+      <div class="prompt-icon-container">
+        <div class="prompt-icon-inner">🎁</div>
+        <div class="notification-dot"></div>
       </div>
-      <div class="prompt-close" id="preference-prompt-close">
+      <div class="prompt-text-content">
+        <strong>Nhận mã Freeship ngay! 🎁</strong>
+        <p>Tham gia khảo sát chỉ 30 giây</p>
+      </div>
+      <div class="prompt-close-btn" id="preference-prompt-close">
         <i class="fas fa-times"></i>
       </div>
     `;
 
     floatingBtn.addEventListener('click', (e) => {
-      // Nếu click vào nút đóng
-      if (e.target.closest('#preference-prompt-close')) {
+      const closeBtn = e.target.closest('#preference-prompt-close');
+      if (closeBtn) {
         e.stopPropagation();
-        floatingBtn.style.transform = 'scale(0.8) translateX(-50px)';
+        floatingBtn.style.transform = 'translateY(20px) scale(0.9)';
         floatingBtn.style.opacity = '0';
         setTimeout(() => floatingBtn.remove(), 400);
         return;
       }
 
-      // Redirect to quiz
-      floatingBtn.style.transform = 'scale(0.9) translateX(-20px)';
+      // Mở modal khảo sát ngay tại chỗ
+      floatingBtn.style.transform = 'translateY(20px) scale(0.9)';
       floatingBtn.style.opacity = '0';
       setTimeout(() => {
-        window.location.href = 'quiz.html';
+        floatingBtn.remove();
+        loadAndShowPreferenceForm();
       }, 400);
     });
 
