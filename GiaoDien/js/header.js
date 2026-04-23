@@ -169,8 +169,7 @@ const renderProductSearch = (productsFond, data) => {
       <div class="flex-1 min-w-0">
         <h4 class="text-xs font-bold text-gray-800 truncate mb-0.5 group-hover:text-primary transition-colors">${itemData.TenSP}</h4>
         <div class="flex items-center gap-2">
-          <span class="text-[10px] font-black text-primary">${(itemData.GiaBan || 0).toLocaleString('vi-VN')}đ</span>
-          ${itemData.GiaGoc > itemData.GiaBan ? `<span class="text-[9px] text-gray-400 line-through">${(itemData.GiaGoc).toLocaleString('vi-VN')}đ</span>` : ''}
+          <span class="text-[10px] font-black text-primary">${(itemData.DonGia || 0).toLocaleString('vi-VN')}đ</span>
         </div>
       </div>
       <div class="opacity-0 group-hover:opacity-100 transition-opacity">
