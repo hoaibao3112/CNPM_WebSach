@@ -32,7 +32,8 @@ function checkLoginStatus() {
 
   if (user && (user.tenkh || user.hoten || user.username || user.makh)) {
     if (loggedInAccount) {
-      loggedInAccount.style.display = 'inline-block';
+      loggedInAccount.classList.remove('hidden');
+      loggedInAccount.style.display = 'flex';
       if (accountLink) {
         accountLink.innerHTML = `<i class="fas fa-user"></i> ${user.tenkh || user.hoten || user.username}`;
       }
@@ -42,9 +43,12 @@ function checkLoginStatus() {
     if (accountDropdown) accountDropdown.style.display = 'none';
   } else {
     // Guest
-    if (loginLinkDiv) loginLinkDiv.style.display = 'block';
-    if (loginLink) loginLink.style.display = 'inline-block';
-    if (loggedInAccount) loggedInAccount.style.display = 'none';
+    if (loginLinkDiv) loginLinkDiv.style.display = 'flex';
+    if (loginLink) loginLink.style.display = 'flex';
+    if (loggedInAccount) {
+      loggedInAccount.classList.add('hidden');
+      loggedInAccount.style.display = 'none';
+    }
     if (accountDropdown) accountDropdown.style.display = ''; // Revert to CSS hover logic
   }
 }
@@ -78,8 +82,10 @@ function setupLogout() {
 // Cập nhật số lượng giỏ hàng
 async function updateCartCount() {
   const user = JSON.parse(localStorage.getItem('user') || localStorage.getItem('loggedInUser') || '{}');
-  const cartLink = document.querySelector('.top-links li a[href="cart.html"]');
-  if (!cartLink) return;
+  const cartCountEl = document.getElementById('cart-count');
+  if (!cartCountEl) return;
+
+  let totalQuantity = 0;
 
   if (user && (user.makh || user.tenkh)) {
     try {
@@ -94,19 +100,19 @@ async function updateCartCount() {
       if (response.ok) {
         const responseData = await response.json();
         const cart = responseData.data || responseData;
-        if (!Array.isArray(cart)) throw new Error('Dữ liệu giỏ hàng không hợp lệ');
-        const cartCount = cart.reduce((total, item) => total + item.quantity, 0);
-        cartLink.innerHTML = `<i class="fas fa-shopping-cart"></i> Giỏ hàng (${cartCount})`;
-        return;
+        if (Array.isArray(cart)) {
+          totalQuantity = cart.reduce((total, item) => total + item.quantity, 0);
+        }
       }
     } catch (error) {
       console.error('Lỗi cập nhật giỏ hàng:', error);
     }
+  } else {
+    const localCart = JSON.parse(localStorage.getItem('cart') || '[]');
+    totalQuantity = localCart.reduce((total, item) => total + item.quantity, 0);
   }
 
-  const localCart = JSON.parse(localStorage.getItem('cart') || '[]');
-  const localCartCount = localCart.reduce((total, item) => total + item.quantity, 0);
-  cartLink.innerHTML = `<i class="fas fa-shopping-cart"></i> Giỏ hàng (${localCartCount})`;
+  cartCountEl.textContent = totalQuantity;
 }
 
 

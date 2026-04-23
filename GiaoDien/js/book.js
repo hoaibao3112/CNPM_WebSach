@@ -249,41 +249,53 @@ function displayProducts(productsData, containerId = 'book-list', limit = null) 
         </div>
       `;
     } 
-    // OTHER SECTIONS: Giữ nguyên HTML structure cũ
+    // OTHER SECTIONS: Modernized Tailwind structure
     else {
-      productElement.className = 'product-item';
+      productElement.className = 'group bg-white rounded-3xl border border-border p-4 hover:shadow-xl transition-all duration-500 flex flex-col h-full';
       const progressPercent = product.DaBan && product.SoLuong
         ? Math.min((product.DaBan / (product.SoLuong + product.DaBan)) * 100, 100)
         : 0;
 
       productElement.innerHTML = `
-        <div class="product-image">
+        <div class="relative aspect-[3/4] mb-4 bg-gray-50 rounded-2xl overflow-hidden flex items-center justify-center p-4 group-hover:scale-[1.02] transition-transform duration-500">
             <img src="img/product/${product.HinhAnh || 'sp01.jpg'}"
                  alt="${escapeHtml(product.TenSP)}"
+                 class="max-w-full max-h-full object-contain drop-shadow-xl"
                  onerror="this.src='img/product/sp01.jpg'">
-          ${isOutOfStock ? '<span class="stock-status">HẾT HÀNG</span>' : ''}
+          ${isOutOfStock ? '<div class="absolute inset-0 bg-black/40 backdrop-blur-[2px] flex items-center justify-center"><span class="px-3 py-1 bg-white/90 rounded-full text-[10px] font-black uppercase tracking-widest text-gray-800">Hết hàng</span></div>' : ''}
+          ${discountPercent ? `<div class="absolute top-2 right-2 bg-primary text-white text-[10px] font-black px-2 py-0.5 rounded-lg shadow-lg">-${discountPercent}%</div>` : ''}
         </div>
-        <div class="product-info">
-          <h3 class="product-title">${escapeHtml(product.TenSP)}</h3>
-          <p class="product-author">Tác giả: ${escapeHtml(authorName)}</p>
-          <p class="product-year">Năm XB: ${product.NamXB || 'Đang cập nhật'}</p>
-          <div class="product-price">
-            <span class="original-price">${formatPrice(originalPrice)}đ</span>
-            <span class="price">${formatPrice(product.DonGia)}đ</span>
-            ${discountPercent ? `<span class="discount">-${discountPercent}%</span>` : ''}
-          </div>
-          <div class="progress-bar">
-            <div class="progress" style="width: ${progressPercent}%;"></div>
-          </div>
-          <small>Còn ${product.SoLuong || 0} cuốn sách</small>
-          <div class="product-actions">
-            <button class="btn-add-cart" ${isOutOfStock ? 'disabled' : ''}
-                    onclick="addToCart(${product.MaSP}, '${escapeHtml(product.TenSP)}', ${product.DonGia}, '${product.HinhAnh || 'sp01.jpg'}')">
-              Thêm giỏ hàng
-            </button>
-            <button class="btn-detail" onclick="viewDetail(${product.MaSP})">
-              <i class="fas fa-info-circle"></i> Chi tiết
-            </button>
+        <div class="flex-1 flex flex-col">
+          <h3 class="text-sm font-bold text-text mb-1 line-clamp-2 min-h-[40px] group-hover:text-primary transition-colors cursor-pointer" onclick="viewDetail(${product.MaSP})">${escapeHtml(product.TenSP)}</h3>
+          <p class="text-[10px] font-bold text-text-light uppercase tracking-tighter mb-4">${escapeHtml(authorName)}</p>
+          
+          <div class="mt-auto space-y-4">
+            <div class="flex flex-col">
+              <span class="text-lg font-black text-primary">${formatPrice(product.DonGia)}đ</span>
+              ${discountPercent ? `<span class="text-[10px] text-text-light line-through font-bold">${formatPrice(originalPrice)}đ</span>` : ''}
+            </div>
+
+            <div class="space-y-1.5">
+              <div class="h-1.5 w-full bg-gray-100 rounded-full overflow-hidden">
+                <div class="h-full bg-primary rounded-full" style="width: ${progressPercent}%;"></div>
+              </div>
+              <div class="flex justify-between items-center text-[9px] font-bold text-text-light uppercase tracking-widest">
+                <span>Đã bán ${product.DaBan || 0}</span>
+                <span>Còn ${product.SoLuong || 0}</span>
+              </div>
+            </div>
+
+            <div class="flex gap-2">
+              <button class="flex-[2] h-10 bg-primary text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-primary-dark transition-all active:scale-95 shadow-lg shadow-primary/20"
+                      ${isOutOfStock ? 'disabled' : ''}
+                      onclick="addToCart(${product.MaSP}, '${escapeHtml(product.TenSP)}', ${product.DonGia}, '${product.HinhAnh || 'sp01.jpg'}')">
+                Mua ngay
+              </button>
+              <button class="flex-1 h-10 bg-white border border-border text-text-light rounded-xl flex items-center justify-center hover:bg-gray-50 transition-all active:scale-95" 
+                      onclick="viewDetail(${product.MaSP})">
+                <i class="fas fa-info-circle"></i>
+              </button>
+            </div>
           </div>
         </div>
       `;

@@ -23,6 +23,50 @@
         ::-webkit-scrollbar-thumb { background: #B03A2E; border-radius: 10px; }
         ::-webkit-scrollbar-thumb:hover { background: #8E2920; }
 
+        /* Thumbnails Styling */
+        #product-thumbs img {
+            width: 80px;
+            height: 80px;
+            object-fit: contain;
+            border-radius: 16px;
+            border: 2px solid #ede8e3;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: white;
+            padding: 8px;
+            flex-shrink: 0;
+        }
+        #product-thumbs img:hover {
+            border-color: #B03A2E;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+        #product-thumbs img.active {
+            border-color: #B03A2E;
+            background: #fff5f5;
+            box-shadow: 0 4px 12px rgba(176, 58, 46, 0.1);
+        }
+        .thumb-more {
+            width: 80px;
+            height: 80px;
+            background: #f8fafc;
+            border: 2px dashed #e2e8f0;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: 800;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .thumb-more:hover {
+            background: #f1f5f9;
+            border-color: #cbd5e1;
+            color: #475569;
+        }
+
         /* Toast Notifications */
         .toast-container { position: fixed; top: 80px; right: 24px; z-index: 10000; display: flex; flex-direction: column; gap: 12px; pointer-events: none; }
         .toast-notification { padding: 16px 24px; background: white; border-radius: 16px; box-shadow: 0 20px 40px rgba(0,0,0,0.1); border-left: 6px solid var(--primary); color: #1e1e1e; font-size: 14px; font-weight: 700; opacity: 0; transform: translateX(50px); transition: all 0.5s cubic-bezier(0.23, 1, 0.32, 1); pointer-events: auto; }
