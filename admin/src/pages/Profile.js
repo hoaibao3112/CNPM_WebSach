@@ -49,7 +49,7 @@ const Profile = () => {
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        const token = localStorage.getItem('authToken');
+        const token = (document.cookie.split('; ').find(row => row.startsWith('authToken='))?.split('=')[1] || null);
         const userInfoStr = localStorage.getItem('userInfo');
         if (!token || !userInfoStr) {
           message.error('Không tìm thấy thông tin đăng nhập!');

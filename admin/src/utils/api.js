@@ -7,7 +7,7 @@ const api = axios.create({
 // Request interceptor to add token
 api.interceptors.request.use(
     (config) => {
-        const token = localStorage.getItem('authToken');
+        const token = (document.cookie.split('; ').find(row => row.startsWith('authToken='))?.split('=')[1] || null);
         if (token) {
             config.headers.Authorization = `Bearer ${token}`;
         }
@@ -24,7 +24,7 @@ api.interceptors.response.use(
     (error) => {
         if (error.response?.status === 401) {
             // Handle unauthorized (e.g., redirect to login)
-            localStorage.removeItem('authToken');
+            document.cookie = "authToken=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
             localStorage.removeItem('userInfo');
             // window.location.href = '/admin/login'; 
         }

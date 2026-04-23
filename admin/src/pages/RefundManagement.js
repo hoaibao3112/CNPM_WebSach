@@ -102,7 +102,7 @@ const RefundManagement = () => {
         processForm,
         {
           headers: {
-            Authorization: `Bearer ${localStorage.getItem('authToken')}`,
+            Authorization: `Bearer ${(document.cookie.split('; ').find(row => row.startsWith('authToken='))?.split('=')[1] || null)}`,
             'Content-Type': 'application/json'
           }
         }

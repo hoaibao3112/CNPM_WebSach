@@ -49,7 +49,7 @@ const Login = () => {
 
       const responseData = res.data.data;
       if (responseData && responseData.token) {
-        localStorage.setItem('authToken', responseData.token);
+        document.cookie = "authToken=" + (responseData.token) + "; path=/; max-age=" + (7*24*60*60);
         localStorage.setItem('userInfo', JSON.stringify(responseData.user));
 
         const permissionRes = await api.get('/roles/user/permissions');

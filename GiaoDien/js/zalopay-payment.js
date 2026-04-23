@@ -17,7 +17,7 @@ async function createZaloPayPayment(orderId, amount, orderInfo = '') {
       throw new Error('Thông tin đơn hàng không hợp lệ');
     }
 
-    const token = localStorage.getItem('token');
+    const token = (document.cookie.split('; ').find(row => row.startsWith('token='))?.split('=')[1] || null);
     if (!token) {
       alert('Vui lòng đăng nhập để thanh toán');
       window.location.href = 'login.html';
@@ -178,7 +178,7 @@ function handleZaloPayReturn(params) {
  */
 async function queryZaloPayStatus(appTransId) {
   try {
-    const token = localStorage.getItem('token');
+    const token = (document.cookie.split('; ').find(row => row.startsWith('token='))?.split('=')[1] || null);
     const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'https://your-backend-url.com';
     
     const response = await fetch(`${_apiBase}/api/payments/zalopay/query`, {

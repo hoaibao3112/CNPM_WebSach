@@ -62,7 +62,7 @@ function setupLogout() {
       e.preventDefault();
       localStorage.removeItem('user');
       localStorage.removeItem('loggedInUser');
-      localStorage.removeItem('token');
+      document.cookie = "token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
       localStorage.removeItem('cart');
       localStorage.removeItem('customerId');
       localStorage.removeItem('reorder_address');
@@ -81,7 +81,7 @@ async function updateCartCount() {
   if (user && (user.makh || user.tenkh)) {
     try {
       const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || window.API_CONFIG.BASE_URL;
-      const token = localStorage.getItem('token');
+      const token = (document.cookie.split('; ').find(row => row.startsWith('token='))?.split('=')[1] || null);
       const response = await fetch(`${_apiBase}/api/client/cart`, {
         headers: {
           'Authorization': `Bearer ${token}`,

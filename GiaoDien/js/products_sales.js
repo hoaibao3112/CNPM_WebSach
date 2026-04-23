@@ -100,7 +100,7 @@
 	// Add to cart
 	async function addToCart(productId, productName, price, image) {
 		const user = JSON.parse(localStorage.getItem('user') || localStorage.getItem('loggedInUser') || '{}');
-		const token = localStorage.getItem('token');
+		const token = (document.cookie.split('; ').find(row => row.startsWith('token='))?.split('=')[1] || null);
 
 		if (user && (user.makh || user.tenkh) && token) {
 			try {

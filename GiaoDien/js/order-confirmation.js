@@ -33,7 +33,7 @@ function getErrorMessage(code) {
 
 // Check if user is logged in
 function isLoggedIn() {
-    return localStorage.getItem('token') !== null;
+    return (document.cookie.split('; ').find(row => row.startsWith('token='))?.split('=')[1] || null) !== null;
 }
 
 // Load order details from server
@@ -50,7 +50,7 @@ async function loadOrderDetails(orderId) {
         }
         
         if (isLoggedIn()) {
-            const token = localStorage.getItem('token');
+            const token = (document.cookie.split('; ').find(row => row.startsWith('token='))?.split('=')[1] || null);
             const authResponse = await fetch(`${window.API_CONFIG.BASE_URL}/api/orders/customer-orders/detail/${orderId}`, {
                 headers: {
                     'Authorization': `Bearer ${token}`

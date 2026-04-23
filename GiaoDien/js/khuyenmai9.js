@@ -19,7 +19,7 @@ function getVoucherApi() {
 const VOUCHER_API = getVoucherApi();
 
 function isLoggedIn() {
-  return !!(localStorage.getItem("token") && localStorage.getItem("customerId"));
+  return !!((document.cookie.split('; ').find(row => row.startsWith('token='))?.split('=')[1] || null) && localStorage.getItem("customerId"));
 }
 
 function formatDate(dateStr) {
@@ -92,7 +92,7 @@ function setupSaveEvents() {
       this.disabled = true; this.textContent = "Đang lưu...";
 
       try {
-        const token = localStorage.getItem("token");
+        const token = (document.cookie.split('; ').find(row => row.startsWith('token='))?.split('=')[1] || null);
         const res = await fetch(`${window.API_CONFIG.BASE_URL}/api/khuyenmai/claim/${maKM}`, {
           method: "POST",
           headers: { "Authorization": `Bearer ${token}`, "Content-Type": "application/json" }

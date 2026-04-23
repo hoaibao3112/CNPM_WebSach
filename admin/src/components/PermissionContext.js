@@ -9,7 +9,7 @@ export const PermissionProvider = ({ children }) => {
 
   const fetchPermissions = async () => {
     try {
-      const token = localStorage.getItem('authToken');
+      const token = (document.cookie.split('; ').find(row => row.startsWith('authToken='))?.split('=')[1] || null);
       if (!token) {
         console.log('No authToken found');
         setPermissions([]);

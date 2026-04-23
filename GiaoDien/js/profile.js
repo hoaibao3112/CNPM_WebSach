@@ -14,7 +14,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
 /*---------------------------------Load section---------------------------------*/
 async function loadUserProfile() {
-  const token = localStorage.getItem('token');
+  const token = (document.cookie.split('; ').find(row => row.startsWith('token='))?.split('=')[1] || null);
   if (!token) {
     window.location.href = 'login.html';
     return;
@@ -152,7 +152,7 @@ function loadWishlist() {
 
 async function loadPromoCodes() {
   // If user is logged in, prefer server list to keep data authoritative
-  const token = localStorage.getItem('token');
+  const token = (document.cookie.split('; ').find(row => row.startsWith('token='))?.split('=')[1] || null);
   const user = JSON.parse(localStorage.getItem('user') || '{}');
   let promoList = [];
 
@@ -368,7 +368,7 @@ function escapeHtml(text) {
 
 // Lấy review cho một đơn hàng
 async function fetchOrderReview(orderId) {
-  const token = localStorage.getItem('token');
+  const token = (document.cookie.split('; ').find(row => row.startsWith('token='))?.split('=')[1] || null);
   if (!token) return null;
   try {
     const resp = await fetch(`${window.API_CONFIG.BASE_URL}/api/orderreview/${orderId}`, {
@@ -393,7 +393,7 @@ async function loadReviewedOrders() {
 
   const user = JSON.parse(localStorage.getItem('user') || '{}');
   const customerId = user.makh || user.id || localStorage.getItem('customerId');
-  const token = localStorage.getItem('token');
+  const token = (document.cookie.split('; ').find(row => row.startsWith('token='))?.split('=')[1] || null);
   if (!customerId || !token) {
     listEl.innerHTML = '<p>Vui lòng đăng nhập để xem danh sách.</p>';
     return;
@@ -472,7 +472,7 @@ window.openOrderDetailFromProfile = async function (orderId) {
       // Fallback: call API directly
       if (!orderObj) {
         try {
-          const token = localStorage.getItem('token');
+          const token = (document.cookie.split('; ').find(row => row.startsWith('token='))?.split('=')[1] || null);
           const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
           const resp = await fetch(`${window.API_CONFIG.BASE_URL}/api/orders/${orderId}`, { headers });
           if (resp.ok) orderObj = await resp.json();
@@ -530,7 +530,7 @@ async function submitProfileReview() {
   const orderId = _currentProfileReviewOrderId;
   const rating = Number(document.getElementById('review-rating').value || 5);
   const comment = document.getElementById('review-comment').value || '';
-  const token = localStorage.getItem('token');
+  const token = (document.cookie.split('; ').find(row => row.startsWith('token='))?.split('=')[1] || null);
   if (!token) { alert('Vui lòng đăng nhập'); return; }
   try {
     const resp = await fetch(`${window.API_CONFIG.BASE_URL}/api/orderreview/${orderId}`, {
@@ -650,7 +650,7 @@ async function renderMembershipCard() {
 
   // Try to fetch fresh profile (so we get loyalty_points) if token present
   let user = JSON.parse(localStorage.getItem('user') || '{}');
-  const token = localStorage.getItem('token');
+  const token = (document.cookie.split('; ').find(row => row.startsWith('token='))?.split('=')[1] || null);
   if (token) {
     try {
       const res = await fetch(`${window.API_CONFIG.BASE_URL}/api/client/profile`, {
@@ -873,7 +873,7 @@ function setupUpdateButton() {
       updateBtn.disabled = true;
       updateBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang lưu...';
 
-      const token = localStorage.getItem('token');
+      const token = (document.cookie.split('; ').find(row => row.startsWith('token='))?.split('=')[1] || null);
 
       const response = await fetch(`${window.API_CONFIG.BASE_URL}/api/client/profile`, {
         method: 'PUT',
@@ -975,7 +975,7 @@ function setupChangePasswordButton() {
       changePasswordBtn.disabled = true;
       changePasswordBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang xử lý...';
 
-      const token = localStorage.getItem('token');
+      const token = (document.cookie.split('; ').find(row => row.startsWith('token='))?.split('=')[1] || null);
       const response = await fetch(`${window.API_CONFIG.BASE_URL}/api/client/profile/change-password`, {
         method: 'PUT',
         headers: {
@@ -1017,7 +1017,7 @@ function setupLogoutHandler() {
     e.preventDefault();
     // Clear authentication-related localStorage
     try {
-      localStorage.removeItem('token');
+      document.cookie = "token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
       localStorage.removeItem('user');
       localStorage.removeItem('customerId');
       // optional: clear cart/wishlist session data if desired
@@ -1161,7 +1161,7 @@ sidebarItems.forEach(item => {
     const addLink = document.querySelector('.add-link'); // link 'Thêm địa chỉ'
     const otherAddrContainer = document.getElementById('other-receive-address');
     const defaultReceiveEl = document.getElementById('receive-address');
-    const token = () => localStorage.getItem('token');
+    const token = () => (document.cookie.split('; ').find(row => row.startsWith('token='))?.split('=')[1] || null);
     const customerId = () => localStorage.getItem('customerId');
     function extractStreet(fullAddress) {
       if (!fullAddress) return '';

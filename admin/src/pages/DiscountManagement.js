@@ -146,7 +146,7 @@ const DiscountManagement = () => {
         `${process.env.REACT_APP_API_BASE || 'https://cnpm-customer.onrender.com'}/api/khuyenmai?search=${encodeURIComponent(search)}`,
         {
           headers: {
-            Authorization: `Bearer ${localStorage.getItem('authToken')}`,
+            Authorization: `Bearer ${(document.cookie.split('; ').find(row => row.startsWith('authToken='))?.split('=')[1] || null)}`,
           },
         }
       );
@@ -196,7 +196,7 @@ const DiscountManagement = () => {
     try {
       const response = await axios.get((process.env.REACT_APP_API_BASE || 'https://cnpm-customer.onrender.com') + '/api/product', {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem('authToken')}`,
+          Authorization: `Bearer ${(document.cookie.split('; ').find(row => row.startsWith('authToken='))?.split('=')[1] || null)}`,
         },
       });
 
@@ -220,7 +220,7 @@ const DiscountManagement = () => {
     setCouponLoading(true);
     try {
       const response = await axios.get((process.env.REACT_APP_API_BASE || 'https://cnpm-customer.onrender.com') + '/api/coupons/admin/all', {
-        headers: { Authorization: `Bearer ${localStorage.getItem('authToken')}` }
+        headers: { Authorization: `Bearer ${(document.cookie.split('; ').find(row => row.startsWith('authToken='))?.split('=')[1] || null)}` }
       });
       setCoupons(response.data.data || []);
     } catch (err) {
@@ -274,12 +274,12 @@ const DiscountManagement = () => {
       };
       if (couponFormType === 'add') {
         await axios.post((process.env.REACT_APP_API_BASE || 'https://cnpm-customer.onrender.com') + '/api/coupons/admin/create', payload, {
-          headers: { Authorization: `Bearer ${localStorage.getItem('authToken')}` }
+          headers: { Authorization: `Bearer ${(document.cookie.split('; ').find(row => row.startsWith('authToken='))?.split('=')[1] || null)}` }
         });
         message.success('Tạo coupon thành công!');
       } else {
         await axios.put(`${process.env.REACT_APP_API_BASE || 'https://cnpm-customer.onrender.com'}/api/coupons/admin/${editingCoupon.MaPhieu}`, payload, {
-          headers: { Authorization: `Bearer ${localStorage.getItem('authToken')}` }
+          headers: { Authorization: `Bearer ${(document.cookie.split('; ').find(row => row.startsWith('authToken='))?.split('=')[1] || null)}` }
         });
         message.success('Cập nhật coupon thành công!');
       }
@@ -302,7 +302,7 @@ const DiscountManagement = () => {
       onOk: async () => {
         try {
           await axios.delete(`${process.env.REACT_APP_API_BASE || 'https://cnpm-customer.onrender.com'}/api/coupons/admin/${maPhieu}`, {
-            headers: { Authorization: `Bearer ${localStorage.getItem('authToken')}` }
+            headers: { Authorization: `Bearer ${(document.cookie.split('; ').find(row => row.startsWith('authToken='))?.split('=')[1] || null)}` }
           });
           message.success('Xóa coupon thành công!');
           fetchCoupons();
@@ -319,7 +319,7 @@ const DiscountManagement = () => {
     setPreferenceLoading(true);
     try {
       const response = await axios.get((process.env.REACT_APP_API_BASE || 'https://cnpm-customer.onrender.com') + '/api/preferences/admin/forms', {
-        headers: { Authorization: `Bearer ${localStorage.getItem('authToken')}` }
+        headers: { Authorization: `Bearer ${(document.cookie.split('; ').find(row => row.startsWith('authToken='))?.split('=')[1] || null)}` }
       });
       setPreferenceForms(response.data.data || []);
     } catch (err) {
@@ -370,12 +370,12 @@ const DiscountManagement = () => {
 
       if (preferenceFormType === 'add') {
         await axios.post((process.env.REACT_APP_API_BASE || 'https://cnpm-customer.onrender.com') + '/api/preferences/admin/forms', payload, {
-          headers: { Authorization: `Bearer ${localStorage.getItem('authToken')}` }
+          headers: { Authorization: `Bearer ${(document.cookie.split('; ').find(row => row.startsWith('authToken='))?.split('=')[1] || null)}` }
         });
         message.success('Tạo form thành công!');
       } else {
         await axios.put(`${process.env.REACT_APP_API_BASE || 'https://cnpm-customer.onrender.com'}/api/preferences/admin/forms/${editingPreferenceForm.MaForm}`, payload, {
-          headers: { Authorization: `Bearer ${localStorage.getItem('authToken')}` }
+          headers: { Authorization: `Bearer ${(document.cookie.split('; ').find(row => row.startsWith('authToken='))?.split('=')[1] || null)}` }
         });
         message.success('Cập nhật form thành công!');
       }
@@ -398,7 +398,7 @@ const DiscountManagement = () => {
       onOk: async () => {
         try {
           await axios.delete(`${process.env.REACT_APP_API_BASE || 'https://cnpm-customer.onrender.com'}/api/preferences/admin/forms/${formId}`, {
-            headers: { Authorization: `Bearer ${localStorage.getItem('authToken')}` }
+            headers: { Authorization: `Bearer ${(document.cookie.split('; ').find(row => row.startsWith('authToken='))?.split('=')[1] || null)}` }
           });
           message.success('Xóa form thành công!');
           fetchPreferenceForms();
@@ -429,10 +429,10 @@ const DiscountManagement = () => {
     try {
       const [catRes, authRes] = await Promise.all([
         axios.get((process.env.REACT_APP_API_BASE || 'https://cnpm-customer.onrender.com') + '/api/product/categories', {
-          headers: { Authorization: `Bearer ${localStorage.getItem('authToken')}` }
+          headers: { Authorization: `Bearer ${(document.cookie.split('; ').find(row => row.startsWith('authToken='))?.split('=')[1] || null)}` }
         }),
         axios.get((process.env.REACT_APP_API_BASE || 'https://cnpm-customer.onrender.com') + '/api/author', {
-          headers: { Authorization: `Bearer ${localStorage.getItem('authToken')}` }
+          headers: { Authorization: `Bearer ${(document.cookie.split('; ').find(row => row.startsWith('authToken='))?.split('=')[1] || null)}` }
         })
       ]);
       setCategories(catRes.data || []);
@@ -447,7 +447,7 @@ const DiscountManagement = () => {
     try {
       setCurrentFormForQuestions(formId);
       const response = await axios.get(`${process.env.REACT_APP_API_BASE || 'https://cnpm-customer.onrender.com'}/api/preferences/admin/forms/${formId}`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('authToken')}` }
+        headers: { Authorization: `Bearer ${(document.cookie.split('; ').find(row => row.startsWith('authToken='))?.split('=')[1] || null)}` }
       });
       setQuestions(response.data.data.questions || []);
       setShowQuestionManager(true);
@@ -463,7 +463,7 @@ const DiscountManagement = () => {
     try {
       // Lấy tất cả form để có thể query responses
       const formsResponse = await axios.get((process.env.REACT_APP_API_BASE || 'https://cnpm-customer.onrender.com') + '/api/preferences/admin/forms', {
-        headers: { Authorization: `Bearer ${localStorage.getItem('authToken')}` }
+        headers: { Authorization: `Bearer ${(document.cookie.split('; ').find(row => row.startsWith('authToken='))?.split('=')[1] || null)}` }
       });
 
       const forms = formsResponse.data.data || [];
@@ -475,7 +475,7 @@ const DiscountManagement = () => {
           const responsesRes = await axios.get(
             `${process.env.REACT_APP_API_BASE || 'https://cnpm-customer.onrender.com'}/api/preferences/admin/forms/${form.MaForm}/responses`,
             {
-              headers: { Authorization: `Bearer ${localStorage.getItem('authToken')}` }
+              headers: { Authorization: `Bearer ${(document.cookie.split('; ').find(row => row.startsWith('authToken='))?.split('=')[1] || null)}` }
             }
           );
 
@@ -519,7 +519,7 @@ const DiscountManagement = () => {
       const detailRes = await axios.get(
         `${process.env.REACT_APP_API_BASE || 'https://cnpm-customer.onrender.com'}/api/preferences/admin/responses/${response.MaPhanHoi}`,
         {
-          headers: { Authorization: `Bearer ${localStorage.getItem('authToken')}` }
+          headers: { Authorization: `Bearer ${(document.cookie.split('; ').find(row => row.startsWith('authToken='))?.split('=')[1] || null)}` }
         }
       );
 
@@ -575,7 +575,7 @@ const DiscountManagement = () => {
       };
 
       await axios.post((process.env.REACT_APP_API_BASE || 'https://cnpm-customer.onrender.com') + '/api/preferences/admin/questions', payload, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('authToken')}` }
+        headers: { Authorization: `Bearer ${(document.cookie.split('; ').find(row => row.startsWith('authToken='))?.split('=')[1] || null)}` }
       });
 
       message.success('Thêm câu hỏi thành công!');
@@ -598,7 +598,7 @@ const DiscountManagement = () => {
       onOk: async () => {
         try {
           await axios.delete(`${process.env.REACT_APP_API_BASE || 'https://cnpm-customer.onrender.com'}/api/preferences/admin/questions/${questionId}`, {
-            headers: { Authorization: `Bearer ${localStorage.getItem('authToken')}` }
+            headers: { Authorization: `Bearer ${(document.cookie.split('; ').find(row => row.startsWith('authToken='))?.split('=')[1] || null)}` }
           });
           message.success('Xóa câu hỏi thành công!');
           handleManageQuestions(currentFormForQuestions);
@@ -629,7 +629,7 @@ const DiscountManagement = () => {
       };
 
       await axios.post((process.env.REACT_APP_API_BASE || 'https://cnpm-customer.onrender.com') + '/api/preferences/admin/options', payload, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('authToken')}` }
+        headers: { Authorization: `Bearer ${(document.cookie.split('; ').find(row => row.startsWith('authToken='))?.split('=')[1] || null)}` }
       });
 
       message.success('Thêm lựa chọn thành công!');
@@ -653,7 +653,7 @@ const DiscountManagement = () => {
       onOk: async () => {
         try {
           await axios.delete(`${process.env.REACT_APP_API_BASE || 'https://cnpm-customer.onrender.com'}/api/preferences/admin/options/${optionId}`, {
-            headers: { Authorization: `Bearer ${localStorage.getItem('authToken')}` }
+            headers: { Authorization: `Bearer ${(document.cookie.split('; ').find(row => row.startsWith('authToken='))?.split('=')[1] || null)}` }
           });
           message.success('Xóa lựa chọn thành công!');
           handleManageQuestions(currentFormForQuestions);
@@ -672,7 +672,7 @@ const DiscountManagement = () => {
     try {
       const response = await axios.get(`${process.env.REACT_APP_API_BASE || 'https://cnpm-customer.onrender.com'}/api/khuyenmai/${id}`, {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem('authToken')}`,
+          Authorization: `Bearer ${(document.cookie.split('; ').find(row => row.startsWith('authToken='))?.split('=')[1] || null)}`,
         },
       });
       setDetail(response.data);
@@ -729,14 +729,14 @@ const DiscountManagement = () => {
       if (formType === 'add') {
         await axios.post((process.env.REACT_APP_API_BASE || 'https://cnpm-customer.onrender.com') + '/api/khuyenmai', values, {
           headers: {
-            Authorization: `Bearer ${localStorage.getItem('authToken')}`,
+            Authorization: `Bearer ${(document.cookie.split('; ').find(row => row.startsWith('authToken='))?.split('=')[1] || null)}`,
           },
         });
         message.success('Thêm khuyến mãi thành công!');
       } else {
         await axios.put(`${process.env.REACT_APP_API_BASE || 'https://cnpm-customer.onrender.com'}/api/khuyenmai/${values.MaKM}`, values, {
           headers: {
-            Authorization: `Bearer ${localStorage.getItem('authToken')}`,
+            Authorization: `Bearer ${(document.cookie.split('; ').find(row => row.startsWith('authToken='))?.split('=')[1] || null)}`,
           },
         });
         message.success('Cập nhật khuyến mãi thành công!');
@@ -768,7 +768,7 @@ const DiscountManagement = () => {
         try {
           await axios.delete(`${process.env.REACT_APP_API_BASE || 'https://cnpm-customer.onrender.com'}/api/khuyenmai/${id}`, {
             headers: {
-              Authorization: `Bearer ${localStorage.getItem('authToken')}`,
+              Authorization: `Bearer ${(document.cookie.split('; ').find(row => row.startsWith('authToken='))?.split('=')[1] || null)}`,
             },
           });
           message.success('Đã xóa khuyến mãi thành công!');
@@ -797,7 +797,7 @@ const DiscountManagement = () => {
         { trangThai: newStatus },
         {
           headers: {
-            Authorization: `Bearer ${localStorage.getItem('authToken')}`,
+            Authorization: `Bearer ${(document.cookie.split('; ').find(row => row.startsWith('authToken='))?.split('=')[1] || null)}`,
           },
         }
       );

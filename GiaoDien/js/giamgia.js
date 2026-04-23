@@ -1,6 +1,6 @@
 // Kiểm tra đã đăng nhập (có khách hàng trong localStorage)
 function isLoggedIn() {
-  return !!(localStorage.getItem('token') && localStorage.getItem('customerId'));
+  return !!((document.cookie.split('; ').find(row => row.startsWith('token='))?.split('=')[1] || null) && localStorage.getItem('customerId'));
 }
 
 // Trả về nhãn hiển thị cho loại khuyến mãi
@@ -142,7 +142,7 @@ function setupClaimEvents() {
       this.disabled = true;
       this.textContent = 'Đang lưu...';
 
-      const token = localStorage.getItem('token');
+      const token = (document.cookie.split('; ').find(row => row.startsWith('token='))?.split('=')[1] || null);
       try {
         const response = await fetch(`${window.API_CONFIG.BASE_URL}/api/khuyenmai/claim/${maKM}`, {
           method: 'POST',

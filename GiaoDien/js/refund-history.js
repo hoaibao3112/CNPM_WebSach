@@ -23,7 +23,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // ===== AUTHENTICATION =====
 function checkAuth() {
-    const token = localStorage.getItem('token');
+    const token = (document.cookie.split('; ').find(row => row.startsWith('token='))?.split('=')[1] || null);
     const user = JSON.parse(localStorage.getItem('user') || 'null');
     
     if (!token || !user || !user.makh) {
@@ -37,7 +37,7 @@ function checkAuth() {
 }
 
 function getToken() {
-    return localStorage.getItem('token');
+    return (document.cookie.split('; ').find(row => row.startsWith('token='))?.split('=')[1] || null);
 }
 
 function getCustomerId() {

@@ -32,7 +32,7 @@
 //     axios
 //       .get(`${process.env.REACT_APP_API_BASE || 'https://cnpm-customer.onrender.com'}/api/khuyenmai?search=${encodeURIComponent(search)}`, {
 //         headers: {
-//           Authorization: `Bearer ${localStorage.getItem('authToken')}`,
+//           Authorization: `Bearer ${(document.cookie.split('; ').find(row => row.startsWith('authToken='))?.split('=')[1] || null)}`,
 //         },
 //       })
 //       .then((res) => {
@@ -52,7 +52,7 @@
 //     try {
 //       const res = await axios.get(`${process.env.REACT_APP_API_BASE || 'https://cnpm-customer.onrender.com'}/api/khuyenmai/${id}`, {
 //         headers: {
-//           Authorization: `Bearer ${localStorage.getItem('authToken')}`,
+//           Authorization: `Bearer ${(document.cookie.split('; ').find(row => row.startsWith('authToken='))?.split('=')[1] || null)}`,
 //         },
 //       });
 //       setDetail(res.data);
@@ -112,13 +112,13 @@
 //       if (formType === 'add') {
 //         await axios.post((process.env.REACT_APP_API_BASE || 'https://cnpm-customer.onrender.com') + '/api/khuyenmai', form, {
 //           headers: {
-//             Authorization: `Bearer ${localStorage.getItem('authToken')}`,
+//             Authorization: `Bearer ${(document.cookie.split('; ').find(row => row.startsWith('authToken='))?.split('=')[1] || null)}`,
 //           },
 //         });
 //       } else {
 //         await axios.put(`${process.env.REACT_APP_API_BASE || 'https://cnpm-customer.onrender.com'}/api/khuyenmai/${form.MaKM}`, form, {
 //           headers: {
-//             Authorization: `Bearer ${localStorage.getItem('authToken')}`,
+//             Authorization: `Bearer ${(document.cookie.split('; ').find(row => row.startsWith('authToken='))?.split('=')[1] || null)}`,
 //           },
 //         });
 //       }
@@ -137,7 +137,7 @@
 //     try {
 //       await axios.delete(`${process.env.REACT_APP_API_BASE || 'https://cnpm-customer.onrender.com'}/api/khuyenmai/${id}`, {
 //         headers: {
-//           Authorization: `Bearer ${localStorage.getItem('authToken')}`,
+//           Authorization: `Bearer ${(document.cookie.split('; ').find(row => row.startsWith('authToken='))?.split('=')[1] || null)}`,
 //         },
 //       });
 //       setReload(r => !r);
@@ -153,7 +153,7 @@
 //     try {
 //       await axios.patch(`${process.env.REACT_APP_API_BASE || 'https://cnpm-customer.onrender.com'}/api/khuyenmai/${id}/toggle-status`, {}, {
 //         headers: {
-//           Authorization: `Bearer ${localStorage.getItem('authToken')}`,
+//           Authorization: `Bearer ${(document.cookie.split('; ').find(row => row.startsWith('authToken='))?.split('=')[1] || null)}`,
 //         },
 //       });
 //       setReload(r => !r);

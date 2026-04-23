@@ -17,7 +17,7 @@ async function createMoMoPayment(orderId, amount, orderInfo = '') {
       throw new Error('Thông tin đơn hàng không hợp lệ');
     }
 
-    const token = localStorage.getItem('token');
+    const token = (document.cookie.split('; ').find(row => row.startsWith('token='))?.split('=')[1] || null);
     if (!token) {
       alert('Vui lòng đăng nhập để thanh toán');
       window.location.href = 'login.html';

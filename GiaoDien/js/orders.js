@@ -277,7 +277,7 @@ function getCustomerId() {
 
 // Lấy token từ localStorage
 function getToken() {
-    return localStorage.getItem('token');
+    return (document.cookie.split('; ').find(row => row.startsWith('token='))?.split('=')[1] || null);
 }
 
 // Kiểm tra trạng thái đăng nhập

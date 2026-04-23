@@ -200,7 +200,7 @@ function renderPromotions(promos) {
 			claimBtn.innerText = 'Lưu mã';
 			claimBtn.addEventListener('click', async () => {
 				// require token
-				const token = localStorage.getItem('token');
+				const token = (document.cookie.split('; ').find(row => row.startsWith('token='))?.split('=')[1] || null);
 				if (!token) {
 					alert('Bạn cần đăng nhập để lưu mã');
 					return;

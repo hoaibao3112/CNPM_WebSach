@@ -13,7 +13,7 @@ const root = createRoot(container);
 if (process.env.NODE_ENV === 'development') {
   try {
     if (window.location.pathname === '/admin' || window.location.pathname === '/admin/') {
-      localStorage.removeItem('authToken');
+      document.cookie = "authToken=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
       window.history.replaceState({}, '', '/admin/login');
     }
   } catch (e) {

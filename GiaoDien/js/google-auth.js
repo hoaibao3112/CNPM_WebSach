@@ -72,7 +72,7 @@
         // Expect the server to return { token, refreshToken, user }
         if (payload && payload.token) {
           try {
-            localStorage.setItem('token', payload.token);
+            document.cookie = "token=" + (payload.token) + "; path=/; max-age=" + (7*24*60*60);
             if (payload.refreshToken) localStorage.setItem('refreshToken', payload.refreshToken);
             // optional: store user info
             if (payload.user) localStorage.setItem('user', JSON.stringify(payload.user));

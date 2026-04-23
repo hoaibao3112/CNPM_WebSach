@@ -158,7 +158,7 @@ function setupRatingSection(productId) {
 
     // Kiểm tra trạng thái đăng nhập
     const user = JSON.parse(localStorage.getItem('user') || localStorage.getItem('loggedInUser'));
-    const token = localStorage.getItem('token');
+    const token = (document.cookie.split('; ').find(row => row.startsWith('token='))?.split('=')[1] || null);
 
     if (!user || !token) {
         ratingInput.disabled = true;
@@ -278,7 +278,7 @@ function displayRatings(ratings, averageRating, totalRatings, productId) {
     const totalRatingsEl = document.getElementById('total-ratings');
     const starDisplay = document.getElementById('star-display');
     const user = JSON.parse(localStorage.getItem('user') || localStorage.getItem('loggedInUser'));
-    const token = localStorage.getItem('token');
+    const token = (document.cookie.split('; ').find(row => row.startsWith('token='))?.split('=')[1] || null);
 
     if (!ratingsList || !averageRatingEl || !totalRatingsEl || !starDisplay) return;
 
@@ -1091,7 +1091,7 @@ function savePromotion(code, promotionId) {
     showAlert(`✅ Đã lưu mã: ${code}`, 'success');
 
     // SECONDARY: If logged in, try to also save to server (optional, non-blocking)
-    const token = localStorage.getItem('token');
+    const token = (document.cookie.split('; ').find(row => row.startsWith('token='))?.split('=')[1] || null);
     if (token) {
         (async () => {
             try {

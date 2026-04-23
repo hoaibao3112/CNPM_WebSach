@@ -1,6 +1,6 @@
 // Kiểm tra đã đăng nhập (có khách hàng trong localStorage)
 function isLoggedIn() {
-  const token = localStorage.getItem('token');
+  const token = (document.cookie.split('; ').find(row => row.startsWith('token='))?.split('=')[1] || null);
   const user = JSON.parse(localStorage.getItem('user') || '{}');
   return !!(token && user.makh);
 }
@@ -102,7 +102,7 @@ function setupClaimEvents() {
       this.disabled = true;
       this.textContent = 'Đang lưu...';
 
-      const token = localStorage.getItem('token');
+      const token = (document.cookie.split('; ').find(row => row.startsWith('token='))?.split('=')[1] || null);
       const user = JSON.parse(localStorage.getItem('user') || '{}');
       
       console.log('🔍 DEBUG Claim Promo:');

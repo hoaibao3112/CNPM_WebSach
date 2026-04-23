@@ -285,7 +285,7 @@ const ProductManagement = () => {
 
       if (error.response?.status === 401) {
         message.error('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại!');
-        localStorage.removeItem('authToken');
+        document.cookie = "authToken=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
         window.location.href = '/admin/login';
         return;
       }

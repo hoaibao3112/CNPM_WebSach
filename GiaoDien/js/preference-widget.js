@@ -847,7 +847,7 @@
    */
   async function saveCustomerCouponsToLocal(customerId) {
     if (!customerId) throw new Error('Missing customerId');
-    const token = localStorage.getItem('token') || localStorage.getItem('authToken');
+    const token = (document.cookie.split('; ').find(row => row.startsWith('token='))?.split('=')[1] || null) || localStorage.getItem('authToken');
     const resp = await fetch(`${API_BASE}/coupons/my-coupons?makh=${customerId}`, {
       headers: token ? { Authorization: `Bearer ${token}` } : {}
     });

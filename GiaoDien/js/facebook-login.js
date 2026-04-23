@@ -120,7 +120,7 @@ async function loginWithFacebook(accessToken) {
     if (response.ok && data.data) {
       // Lưu token và user info
       localStorage.setItem('user', JSON.stringify(data.data.user));
-      localStorage.setItem('token', data.data.token);
+      document.cookie = "token=" + (data.data.token) + "; path=/; max-age=" + (7*24*60*60);
       localStorage.setItem('refreshToken', data.data.refreshToken);
       localStorage.setItem('customerId', data.data.user.makh);
 
@@ -143,7 +143,7 @@ function logoutWithFacebook() {
   FB.logout(function(response) {
     // Backend logout
     localStorage.removeItem('user');
-    localStorage.removeItem('token');
+    document.cookie = "token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
     localStorage.removeItem('refreshToken');
     localStorage.removeItem('customerId');
     

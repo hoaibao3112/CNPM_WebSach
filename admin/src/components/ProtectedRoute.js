@@ -2,7 +2,7 @@ import React from 'react';
 import { Navigate, Outlet } from 'react-router-dom';
 
 const ProtectedRoute = () => {
-  const authToken = localStorage.getItem('authToken');
+  const authToken = (document.cookie.split('; ').find(row => row.startsWith('authToken='))?.split('=')[1] || null);
   
   if (!authToken) {
     // Xóa các item còn sót lại (nếu có)

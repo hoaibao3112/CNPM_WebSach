@@ -82,14 +82,14 @@ const Sidebar = () => {
         {},
         {
           headers: {
-            Authorization: `Bearer ${localStorage.getItem('authToken')}`,
+            Authorization: `Bearer ${(document.cookie.split('; ').find(row => row.startsWith('authToken='))?.split('=')[1] || null)}`,
           },
         }
       );
     } catch (error) {
       console.error('Lỗi đăng xuất:', error);
     } finally {
-      localStorage.removeItem('authToken');
+      document.cookie = "authToken=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
       localStorage.removeItem('userInfo');
       navigate('/admin/login', { replace: true });
     }

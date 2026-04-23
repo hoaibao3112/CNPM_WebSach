@@ -51,7 +51,7 @@ async function handleLogin(e) {
         if (response.ok) {
             // Lưu thông tin user và token
             localStorage.setItem('user', JSON.stringify(data.user));
-            localStorage.setItem('token', data.token);
+            document.cookie = "token=" + (data.token) + "; path=/; max-age=" + (7*24*60*60);
             localStorage.setItem('customerId', data.user.makh); // Lưu ID khách hàng
             
             // Cập nhật giao diện
@@ -329,7 +329,7 @@ function setupLogout() {
         logoutBtn.addEventListener('click', function(e) {
             e.preventDefault();
             localStorage.removeItem('user');
-            localStorage.removeItem('token');
+            document.cookie = "token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
             window.location.href = 'index.html';
         });
     }
