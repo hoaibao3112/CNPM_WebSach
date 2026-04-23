@@ -5,10 +5,11 @@ class ProductService {
                 const normalizedSearch = typeof filters.search === 'string' ? filters.search.trim() : '';
 
         let query = `
-      SELECT sp.*, ncc.TenNCC, tl.TenTL 
+      SELECT sp.*, ncc.TenNCC, tl.TenTL, tg.TenTG 
       FROM sanpham sp
       LEFT JOIN nhacungcap ncc ON sp.MaNCC = ncc.MaNCC
       LEFT JOIN theloai tl ON sp.MaTL = tl.MaTL
+      LEFT JOIN tacgia tg ON sp.MaTG = tg.MaTG
       WHERE 1=1
     `;
         const params = [];
@@ -39,10 +40,11 @@ class ProductService {
 
     async findProductsByFuzzySearch(searchText, filters = {}) {
         let query = `
-            SELECT sp.*, ncc.TenNCC, tl.TenTL
+            SELECT sp.*, ncc.TenNCC, tl.TenTL, tg.TenTG
             FROM sanpham sp
             LEFT JOIN nhacungcap ncc ON sp.MaNCC = ncc.MaNCC
             LEFT JOIN theloai tl ON sp.MaTL = tl.MaTL
+            LEFT JOIN tacgia tg ON sp.MaTG = tg.MaTG
             WHERE CAST(COALESCE(sp.TinhTrang, 1) AS UNSIGNED) = 1
         `;
 
@@ -170,10 +172,11 @@ class ProductService {
 
     async getProductById(id) {
         const [[product]] = await pool.query(`
-      SELECT sp.*, ncc.TenNCC, tl.TenTL 
+      SELECT sp.*, ncc.TenNCC, tl.TenTL, tg.TenTG 
       FROM sanpham sp
       LEFT JOIN nhacungcap ncc ON sp.MaNCC = ncc.MaNCC
       LEFT JOIN theloai tl ON sp.MaTL = tl.MaTL
+      LEFT JOIN tacgia tg ON sp.MaTG = tg.MaTG
       WHERE sp.MaSP = ?
     `, [id]);
 
@@ -269,10 +272,11 @@ class ProductService {
 
     async getLowStockProducts() {
         const [products] = await pool.query(`
-            SELECT sp.*, ncc.TenNCC, tl.TenTL 
+            SELECT sp.*, ncc.TenNCC, tl.TenTL, tg.TenTG 
             FROM sanpham sp
             LEFT JOIN nhacungcap ncc ON sp.MaNCC = ncc.MaNCC
             LEFT JOIN theloai tl ON sp.MaTL = tl.MaTL
+            LEFT JOIN tacgia tg ON sp.MaTG = tg.MaTG
             WHERE sp.SoLuong <= sp.MinSoLuong AND CAST(sp.TinhTrang AS UNSIGNED) = 1
         `);
         return products;
@@ -310,10 +314,11 @@ class ProductService {
         }
 
         const query = `
-            SELECT sp.*, ncc.TenNCC, tl.TenTL, sp.DonGia as GiaBan
+            SELECT sp.*, ncc.TenNCC, tl.TenTL, tg.TenTG, sp.DonGia as GiaBan
             FROM sanpham sp
             LEFT JOIN nhacungcap ncc ON sp.MaNCC = ncc.MaNCC
             LEFT JOIN theloai tl ON sp.MaTL = tl.MaTL
+            LEFT JOIN tacgia tg ON sp.MaTG = tg.MaTG
             WHERE CAST(sp.TinhTrang AS UNSIGNED) = 1
             ORDER BY ${orderBy}
         `;
@@ -324,10 +329,11 @@ class ProductService {
 
     async getProductsByCategory(categoryId) {
         const [products] = await pool.query(`
-            SELECT sp.*, ncc.TenNCC, tl.TenTL, sp.DonGia as GiaBan
+            SELECT sp.*, ncc.TenNCC, tl.TenTL, tg.TenTG, sp.DonGia as GiaBan
             FROM sanpham sp
             LEFT JOIN nhacungcap ncc ON sp.MaNCC = ncc.MaNCC
             LEFT JOIN theloai tl ON sp.MaTL = tl.MaTL
+            LEFT JOIN tacgia tg ON sp.MaTG = tg.MaTG
             WHERE sp.MaTL = ? AND CAST(sp.TinhTrang AS UNSIGNED) = 1
             ORDER BY sp.MaSP DESC
         `, [categoryId]);
