@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import api from '../utils/api';
-import { Table, Button, Modal, Form, Select, Input, notification, DatePicker, Alert, Tooltip, Tag, Statistic, Card, Divider, InputNumber } from 'antd';
-import { PlusOutlined, EyeOutlined, SyncOutlined, SearchOutlined, Inventory2Outlined, LocalShippingOutlined, PersonOutlineOutlined, TrendingUpOutlined, ReceiptLongOutlined, CloseCircleFilled } from '@ant-design/icons';
+import { Table, Button, Modal, Form, Select, Input, notification, DatePicker, Alert, Tag, InputNumber } from 'antd';
+import { PlusOutlined, EyeOutlined, SyncOutlined, SearchOutlined, CarOutlined, UserOutlined, FileTextOutlined, CloseCircleFilled } from '@ant-design/icons';
 
 const { Column } = Table;
 const { Option } = Select;
@@ -133,7 +133,7 @@ const NhapHang = () => {
       key: 'ncc',
       render: (ncc) => (
         <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center text-slate-400"><LocalShippingOutlined style={{ fontSize: '14px' }} /></div>
+          <div className="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center text-slate-400"><CarOutlined style={{ fontSize: '14px' }} /></div>
           <span className="text-sm font-bold text-slate-600">{ncc}</span>
         </div>
       )
@@ -254,7 +254,7 @@ const NhapHang = () => {
       <Modal open={modalVisible} title={null} onCancel={() => setModalVisible(false)} footer={null} width={1000} className="modern-modal" centered destroyOnClose>
         <div className="mb-8 flex items-center justify-between">
           <div>
-            <h2 className="text-2xl font-black text-slate-800 flex items-center gap-3"><ReceiptLongOutlined className="text-indigo-500" /> Lập phiếu nhập kho</h2>
+            <h2 className="text-2xl font-black text-slate-800 flex items-center gap-3"><FileTextOutlined className="text-indigo-500" /> Lập phiếu nhập kho</h2>
             <p className="text-slate-400 text-sm mt-1 font-medium">Thiết lập thông tin nhà cung cấp và danh mục hàng nhập</p>
           </div>
           <div className="text-right">
@@ -271,7 +271,7 @@ const NhapHang = () => {
               </Select>
             </Form.Item>
             <Form.Item label={<span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Người lập phiếu</span>} name="TenTK" rules={[{ required: true }]}>
-              <Input prefix={<PersonOutlineOutlined className="text-slate-400" />} className="h-11 rounded-xl font-bold" />
+              <Input prefix={<UserOutlined className="text-slate-400" />} className="h-11 rounded-xl font-bold" />
             </Form.Item>
           </div>
 
@@ -370,7 +370,7 @@ const NhapHang = () => {
           <div className="space-y-8">
             <div className="p-8 bg-slate-50 rounded-[2.5rem] border border-slate-100 grid grid-cols-1 md:grid-cols-2 gap-8">
               <div className="flex items-start gap-4">
-                <div className="w-12 h-12 rounded-2xl bg-white flex items-center justify-center text-indigo-600 shadow-sm"><LocalShippingOutlined /></div>
+                <div className="w-12 h-12 rounded-2xl bg-white flex items-center justify-center text-indigo-600 shadow-sm"><CarOutlined /></div>
                 <div>
                   <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Nhà cung cấp</h4>
                   <p className="text-lg font-black text-slate-800 mt-0.5">{selectedPhieu.TenNCC}</p>
@@ -378,7 +378,7 @@ const NhapHang = () => {
                 </div>
               </div>
               <div className="flex items-start gap-4">
-                <div className="w-12 h-12 rounded-2xl bg-white flex items-center justify-center text-emerald-600 shadow-sm"><PersonOutlineOutlined /></div>
+                <div className="w-12 h-12 rounded-2xl bg-white flex items-center justify-center text-emerald-600 shadow-sm"><UserOutlined /></div>
                 <div>
                   <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Người tiếp nhận</h4>
                   <p className="text-lg font-black text-slate-800 mt-0.5">{selectedPhieu.TenNV || 'Hệ thống'}</p>

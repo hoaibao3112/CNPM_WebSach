@@ -9,7 +9,7 @@ import {
   SearchOutlined,
   CloudUploadOutlined,
   CloseCircleFilled,
-  Inventory2Outlined
+  ContainerOutlined
 } from '@ant-design/icons';
 
 const { Search } = Input;
@@ -358,7 +358,7 @@ const ProductManagement = () => {
           <Tooltip title="Ngưỡng tồn">
             <Button 
               className="w-10 h-10 rounded-xl flex items-center justify-center border-slate-200 text-slate-600 hover:text-orange-600 hover:border-orange-600 transition-all"
-              icon={<Inventory2Outlined />} 
+              icon={<ContainerOutlined />} 
               onClick={() => {
                 setEditingProduct(record);
                 setMinValue(record.MinSoLuong || 0);

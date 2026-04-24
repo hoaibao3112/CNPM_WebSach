@@ -1,19 +1,13 @@
 import React, { useEffect, useState, useRef, useCallback } from 'react';
 import api from '../utils/api';
-import { Button, Input, message, Table, Modal, Space, Select, Tooltip, Avatar, Form } from 'antd';
+import { Button, Input, message, Table, Modal, Select, Avatar, Form, Tooltip } from 'antd';
 import { 
   EditOutlined, 
   DeleteOutlined, 
-  ExclamationCircleFilled, 
-  LockOutlined, 
-  UnlockOutlined, 
   SearchOutlined, 
   PlusOutlined, 
   HomeOutlined, 
-  PhoneOutlined, 
-  CheckCircleOutlined, 
-  StopOutlined,
-  BusinessOutlined
+  PhoneOutlined
 } from '@ant-design/icons';
 
 const { Option } = Select;
@@ -82,16 +76,21 @@ const CompanyManagement = () => {
   };
 
   const validate = (data, isEditing) => {
-    if (!data.MaNCC || !data.TenNCC || !data.SDT || !data.DiaChi) return message.error('Vui lòng nhập đầy đủ thông tin!'), false;
+    if (!data.MaNCC || !data.TenNCC || !data.SDT || !data.DiaChi) {
+        message.error('Vui lòng nhập đầy đủ thông tin!');
+        return false;
+    }
     
-    // Vietnamese phone number validation (simple check for 10 digits starting with 0)
     const phoneRegex = /^(0[3|5|7|8|9])[0-9]{8}$/;
     if (!phoneRegex.test(data.SDT)) {
       message.error('Số điện thoại không hợp lệ (Phải có 10 chữ số và bắt đầu bằng 03, 05, 07, 08 hoặc 09)!');
       return false;
     }
 
-    if (!isEditing && companies.some(c => c.MaNCC === data.MaNCC)) return message.error('Mã NCC đã tồn tại!'), false;
+    if (!isEditing && companies.some(c => c.MaNCC === data.MaNCC)) {
+        message.error('Mã NCC đã tồn tại!');
+        return false;
+    }
     return true;
   };
 

@@ -9,7 +9,7 @@ import {
   UnlockOutlined,
   PlusOutlined,
   UserOutlined,
-  ShieldOutlined,
+  SafetyOutlined,
   KeyOutlined,
 } from '@ant-design/icons';
 import { PermissionContext } from '../components/PermissionContext';
@@ -459,7 +459,7 @@ const AccountManagement = () => {
           </TabPane>
 
           {editingAccount && (
-            <TabPane tab={<span className="flex items-center gap-2 px-2"><ShieldOutlined /> Phân quyền</span>} key="2">
+            <TabPane tab={<span className="flex items-center gap-2 px-2"><SafetyOutlined /> Phân quyền</span>} key="2">
               <div className="pt-4 space-y-6">
                 <div className="p-6 bg-slate-50 rounded-2xl border border-slate-100">
                   <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">

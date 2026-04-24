@@ -8,7 +8,7 @@ import {
   ExclamationCircleFilled, 
   PlusOutlined, 
   SearchOutlined,
-  ShieldOutlined,
+  SafetyOutlined,
   SettingOutlined,
   CloseCircleFilled,
   LockOutlined

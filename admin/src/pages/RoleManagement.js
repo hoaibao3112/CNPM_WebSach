@@ -7,7 +7,7 @@ import {
   ExclamationCircleFilled, 
   PlusOutlined, 
   SearchOutlined,
-  ShieldOutlined,
+  SafetyOutlined,
   SettingOutlined,
   CloseCircleFilled
 } from '@ant-design/icons';
@@ -151,7 +151,7 @@ const RoleManagement = () => {
       render: (_, record) => (
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-indigo-50 flex items-center justify-center text-indigo-600 font-black">
-            <ShieldOutlined />
+            <SafetyOutlined />
           </div>
           <div>
             <div className="font-bold text-slate-700">{record.TenNQ}</div>
