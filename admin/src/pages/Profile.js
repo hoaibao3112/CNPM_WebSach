@@ -1,10 +1,20 @@
-import React, { useEffect, useState } from 'react';
-import {
-  Card, Spin, message, Button, Modal, Form, Input, Row, Col, Avatar, Typography, Table, Upload
-} from 'antd';
+import React, { useEffect, useState, useCallback } from 'react';
+import { Card, Spin, message, Button, Modal, Form, Input, Row, Col, Avatar, Typography, Table, Upload, Tag, Space, Divider, Tooltip } from 'antd';
 import api from '../utils/api';
-import {
-  UserOutlined, LockOutlined, CheckCircleOutlined, LogoutOutlined, DollarCircleOutlined, EyeOutlined
+import { 
+  UserOutlined, 
+  LockOutlined, 
+  CheckCircleOutlined, 
+  LogoutOutlined, 
+  DollarCircleOutlined, 
+  EyeOutlined,
+  MailOutlined,
+  PhoneOutlined,
+  HomeOutlined,
+  CalendarOutlined,
+  CameraOutlined,
+  SafetyCertificateOutlined,
+  EnvironmentOutlined
 } from '@ant-design/icons';
 import dayjs from 'dayjs';
 
@@ -24,556 +34,251 @@ const Profile = () => {
   const [showAvatarModal, setShowAvatarModal] = useState(false);
   const [avatarFile, setAvatarFile] = useState(null);
   const [avatarUploading, setAvatarUploading] = useState(false);
-  // computed avatar src
-  const apiBase = process.env.REACT_APP_API_BASE || (process.env.REACT_APP_API_BASE || 'https://cnpm-customer.onrender.com') + '';
+  
+  const apiBase = process.env.REACT_APP_API_BASE || 'https://cnpm-customer.onrender.com';
   const [avatarSrc, setAvatarSrc] = useState(undefined);
 
-  const buildAvatarSrc = React.useCallback((anh) => {
+  const buildAvatarSrc = useCallback((anh) => {
     if (!anh) return undefined;
     if (anh.startsWith('http')) return anh;
-    // remove leading slashes
     const clean = anh.replace(/^\/+/, '');
-    // if path already contains uploads, use it
     if (clean.startsWith('uploads/')) return `${apiBase}/${clean}`;
-    // otherwise assume it's a filename stored in nhanvien and prefix uploads/nhanvien/
     return `${apiBase}/uploads/nhanvien/${clean}`;
   }, [apiBase]);
 
-  // Chi tiết ngày công
   const [detailModal, setDetailModal] = useState(false);
   const [detailLoading, setDetailLoading] = useState(false);
   const [attendanceDetail, setAttendanceDetail] = useState([]);
   const [detailMonth, setDetailMonth] = useState(null);
   const [detailYear, setDetailYear] = useState(null);
 
-  useEffect(() => {
-    const fetchProfile = async () => {
-      try {
-        const token = (document.cookie.split('; ').find(row => row.startsWith('authToken='))?.split('=')[1] || null);
-        const userInfoStr = localStorage.getItem('userInfo');
-        if (!token || !userInfoStr) {
-          message.error('Không tìm thấy thông tin đăng nhập!');
-          return;
-        }
-        const { MaTK } = JSON.parse(userInfoStr);
-        const res = await api.get(`/users/by-matk/${MaTK}`);
-        setUserInfo(res.data);
-        // compute avatar src if present
-        const anh = res.data?.Anh;
-        setAvatarSrc(buildAvatarSrc(anh));
-      } catch (error) {
-        message.error('Lỗi khi tải thông tin cá nhân!');
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchProfile();
-  }, [buildAvatarSrc]);
-
-  // update avatarSrc whenever userInfo changes (helps when refreshed after upload)
-  useEffect(() => {
-    if (!userInfo) return;
-    console.log('Profile loaded:', userInfo);
-    const anh = userInfo?.Anh;
-    setAvatarSrc(buildAvatarSrc(anh));
-  }, [userInfo, buildAvatarSrc]);
-
-  const fetchSalary = async () => {
-    setSalaryLoading(true);
+  const fetchProfile = async () => {
     try {
+      setLoading(true);
       const userInfoStr = localStorage.getItem('userInfo');
-      if (!userInfoStr) {
-        message.error('Không tìm thấy thông tin đăng nhập!');
-        setSalaryLoading(false);
-        return;
-      }
+      if (!userInfoStr) return;
       const { MaTK } = JSON.parse(userInfoStr);
-      const salaryRes = await api.get(`/salary/history/${MaTK}`);
-      setSalaryList(salaryRes.data.data || salaryRes.data);
-      setShowSalaryModal(true);
-    } catch (error) {
-      message.error('Lỗi khi tải thông tin lương!');
-    } finally {
-      setSalaryLoading(false);
-    }
+      const res = await api.get(`/users/by-matk/${MaTK}`);
+      setUserInfo(res.data);
+      setAvatarSrc(buildAvatarSrc(res.data?.Anh));
+    } catch (error) { message.error('Lỗi khi tải thông tin!'); }
+    finally { setLoading(false); }
   };
 
-  const handlePwdChange = async (values) => {
-    setPwdLoading(true);
-    try {
-      await api.put(
-        `/users/change-password`,
-        { oldPassword: values.oldPassword, newPassword: values.newPassword }
-      );
-      message.success('Đổi mật khẩu thành công!');
-      setShowPwdModal(false);
-    } catch (error) {
-      message.error(error.response?.data?.error || 'Đổi mật khẩu thất bại!');
-    } finally {
-      setPwdLoading(false);
-    }
-  };
+  useEffect(() => { fetchProfile(); }, [buildAvatarSrc]);
 
   const handleCheckIn = async () => {
     setAttendanceLoading(true);
     try {
-      const userInfoStr = localStorage.getItem('userInfo');
-      if (!userInfoStr) {
-        message.error('Không tìm thấy thông tin đăng nhập!');
-        setAttendanceLoading(false);
-        return;
-      }
-      const { MaTK } = JSON.parse(userInfoStr);
-      if (!MaTK) {
-        message.error('Không tìm thấy mã tài khoản!');
-        setAttendanceLoading(false);
-        return;
-      }
+      const { MaTK } = JSON.parse(localStorage.getItem('userInfo'));
       const now = new Date();
-      const today = now.toISOString().slice(0, 10);
-      const gioVao = now.toTimeString().slice(0, 8);
       await api.post('/attendance', {
-        MaTK,
-        ngay: today,
-        gio_vao: gioVao,
-        gio_ra: "17:00:00",
-        trang_thai: "Di_lam",
-        ghi_chu: "Chấm công thành công"
+        MaTK, ngay: now.toISOString().slice(0, 10), gio_vao: now.toTimeString().slice(0, 8), gio_ra: "17:00:00",
+        trang_thai: "Di_lam", ghi_chu: "Chấm công qua Profile"
       });
-      message.success('Chấm công hôm nay thành công!');
-    } catch (error) {
-      if (error.response?.data?.error) {
-        if (error.response.data.error.includes('đã chấm công')) {
-          message.warning('Bạn đã chấm công trong ngày hôm nay rồi!');
-        } else {
-          message.error(error.response.data.error);
-        }
-      } else {
-        message.error('Chấm công thất bại!');
-      }
-    } finally {
-      setAttendanceLoading(false);
-    }
+      message.success('Chấm công thành công!');
+    } catch (error) { message.error(error.response?.data?.error || 'Chấm công thất bại!'); }
+    finally { setAttendanceLoading(false); }
   };
-
-  const handleResign = async (values) => {
-    setResignLoading(true);
-    try {
-      const userInfoStr = localStorage.getItem('userInfo');
-      if (!userInfoStr) {
-        message.error('Không tìm thấy thông tin đăng nhập!');
-        setResignLoading(false);
-        return;
-      }
-      const { MaTK } = JSON.parse(userInfoStr);
-      if (!MaTK) {
-        message.error('Không tìm thấy mã tài khoản!');
-        setResignLoading(false);
-        return;
-      }
-      await api.post('/leave', {
-        MaTK,
-        ngay_bat_dau: dayjs().format('YYYY-MM-DD'),
-        ngay_ket_thuc: dayjs().format('YYYY-MM-DD'),
-        ly_do: values.ly_do || 'Xin nghỉ việc'
-      });
-      message.success('Gửi đơn xin nghỉ việc thành công!');
-      setShowResignModal(false);
-    } catch (error) {
-      message.error('Gửi đơn xin nghỉ việc thất bại!');
-    } finally {
-      setResignLoading(false);
-    }
-  };
-
-  // Xem chi tiết ngày công
-  const handleShowDetail = async (thang, nam) => {
-    setDetailLoading(true);
-    setDetailModal(true);
-    try {
-      // get MaTK from in-memory userInfo if available, otherwise from localStorage
-      let MaTK;
-      if (userInfo && userInfo.MaTK) {
-        MaTK = userInfo.MaTK;
-      } else {
-        const userInfoStr = localStorage.getItem('userInfo');
-        if (!userInfoStr) throw new Error('Không tìm thấy thông tin người dùng');
-        MaTK = JSON.parse(userInfoStr).MaTK;
-      }
-      const res = await api.get(`/attendance/detail/${MaTK}/${thang}/${nam}`);
-      setAttendanceDetail(res.data.data || res.data);
-      setDetailMonth(thang);
-      setDetailYear(nam);
-    } catch (error) {
-      message.error('Không lấy được chi tiết ngày công!');
-      setAttendanceDetail([]);
-    } finally {
-      setDetailLoading(false);
-    }
-  };
-
-  // Cột bảng lương (thêm nút xem chi tiết)
-  const salaryColumns = [
-    { title: 'Tháng', dataIndex: 'thang', responsive: ['xs', 'sm', 'md', 'lg', 'xl'] },
-    { title: 'Năm', dataIndex: 'nam', responsive: ['xs', 'sm', 'md', 'lg', 'xl'] },
-    { title: 'Lương cơ bản', dataIndex: 'luong_co_ban', render: v => v?.toLocaleString(), responsive: ['md', 'lg', 'xl'] },
-    { title: 'Phụ cấp', dataIndex: 'phu_cap', render: v => v?.toLocaleString(), responsive: ['lg', 'xl'] },
-    { title: 'Thưởng', dataIndex: 'thuong', render: v => v?.toLocaleString(), responsive: ['lg', 'xl'] },
-    { title: 'Phạt', dataIndex: 'phat', render: v => v?.toLocaleString(), responsive: ['lg', 'xl'] },
-    { title: 'Tổng lương', dataIndex: 'tong_luong', render: v => v?.toLocaleString(), responsive: ['xs', 'sm', 'md', 'lg', 'xl'] },
-    {
-      title: 'Trạng thái',
-      dataIndex: 'trang_thai',
-      render: v => v === 'Da_tra'
-        ? <span style={{ color: 'green' }}>Đã trả</span>
-        : <span style={{ color: 'orange' }}>Chưa trả</span>,
-      responsive: ['xs', 'sm', 'md', 'lg', 'xl']
-    },
-    {
-      title: 'Chi tiết',
-      key: 'detail',
-      render: (_, record) => (
-        <Button
-          size="small"
-          icon={<EyeOutlined />}
-          onClick={() => handleShowDetail(record.thang, record.nam)}
-        >
-          Xem chi tiết
-        </Button>
-      ),
-      responsive: ['xs', 'sm', 'md', 'lg', 'xl']
-    }
-  ];
-
-  if (loading) return <Spin tip="Đang tải thông tin..." style={{ width: '100%', marginTop: 100 }} />;
-  if (!userInfo) return <div>Không tìm thấy thông tin nhân viên!</div>;
 
   return (
-    <div className="thongke-page">
-      <div className="thongke-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <h1>
-          <i className="fas fa-user"></i> Thông tin cá nhân
-        </h1>
-      </div>
-
-      <div className="thongke-content">
-        <div className="thongke-table">
-          <Row
-            justify="center"
-            align="middle"
-            style={{
-              minHeight: '70vh',
-              background: '#f4f6fb',
-              paddingBottom: 40,
-              paddingLeft: 24,
-              paddingRight: 24,
-            }}
-          >
-            <Col xs={24} md={20} lg={16} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', maxWidth: 900 }}>
-              <Card
-                bordered={false}
-                style={{
-                  width: '100%',
-                  maxWidth: 900, // Tăng chiều rộng form thông tin nhân viên
-                  padding: 28,
-                  boxShadow: '0 8px 32px rgba(16,24,40,0.08)',
-                  borderRadius: 24,
-                  background: 'linear-gradient(135deg, #eef4ff 0%, #fff 100%)',
-                  marginTop: 40,
-                }}
-                actions={[
-                  <div key="card-actions" style={{ width: '100%', display: 'flex', justifyContent: 'center' }}>
-                    <div style={{ maxWidth: 980, width: '100%', display: 'flex', gap: 10, justifyContent: 'center', padding: '6px 8px' }}>
-                      <Button
-                        icon={<LockOutlined />}
-                        type="primary"
-                        onClick={() => setShowPwdModal(true)}
-                        key="changepwd"
-                        style={{ borderRadius: 8, padding: '6px 12px', minHeight: 38, fontSize: 14 }}
-                      >
-                        Đổi mật khẩu
-                      </Button>
-                      <Button
-                        icon={<CheckCircleOutlined />}
-                        type="default"
-                        loading={attendanceLoading}
-                        onClick={handleCheckIn}
-                        key="checkin"
-                        style={{ borderRadius: 8, color: '#52c41a', borderColor: '#52c41a', padding: '6px 12px', minHeight: 38, fontSize: 14 }}
-                      >
-                        Chấm công hôm nay
-                      </Button>
-                      <Button
-                        icon={<LogoutOutlined />}
-                        danger
-                        type="primary"
-                        onClick={() => setShowResignModal(true)}
-                        key="resign"
-                        style={{ borderRadius: 8, padding: '6px 12px', minHeight: 38, fontSize: 14 }}
-                      >
-                        Xin nghỉ việc
-                      </Button>
-                      <Button
-                        icon={<DollarCircleOutlined />}
-                        type="dashed"
-                        onClick={fetchSalary}
-                        key="salary"
-                        style={{ borderRadius: 8, color: '#2563eb', borderColor: '#2563eb', padding: '6px 12px', minHeight: 38, fontSize: 14 }}
-                        loading={salaryLoading}
-                      >
-                        Xem lương cá nhân
-                      </Button>
-                    </div>
-                  </div>
-                ]}
+    <div className="p-4 md:p-8 min-h-screen bg-slate-50 font-sans">
+      <div className="max-w-5xl mx-auto space-y-8">
+        <div className="bg-white rounded-[3rem] p-8 md:p-12 shadow-2xl shadow-slate-200/50 border border-slate-100 relative overflow-hidden group">
+          <div className="absolute top-0 right-0 w-80 h-80 bg-indigo-50/50 rounded-full blur-3xl -mr-20 -mt-20"></div>
+          
+          <div className="relative z-10 flex flex-col md:flex-row items-center gap-10">
+            <div className="relative group/avatar">
+              <Avatar size={160} src={avatarSrc} icon={<UserOutlined />} className="shadow-2xl border-4 border-white bg-indigo-100 text-indigo-600 font-black text-4xl" />
+              <div 
+                className="absolute bottom-2 right-2 w-12 h-12 bg-indigo-600 rounded-2xl flex items-center justify-center text-white cursor-pointer shadow-lg hover:scale-110 transition-transform"
+                onClick={() => setShowAvatarModal(true)}
               >
-                <div style={{ textAlign: 'center', marginBottom: 24 }}>
-                  <Avatar
-                    size={120}
-                    icon={<UserOutlined />}
-                    src={avatarSrc}
-                    style={{
-                      background: avatarSrc ? undefined : 'linear-gradient(135deg, #6366f1 0%, #60a5fa 100%)',
-                      marginBottom: 14,
-                      boxShadow: '0 6px 18px rgba(99,123,241,0.18)',
-                    }}
-                  />
-                  <div style={{ marginTop: 8 }}>
-                    <Button size="small" onClick={() => setShowAvatarModal(true)}>Thay ảnh</Button>
-                  </div>
-                  <Title level={2} style={{ marginBottom: 4, color: '#0f172a' }}>{userInfo.TenNV || userInfo.TenTK}</Title>
-                  <Text type="secondary" style={{ fontSize: 15 }}>{userInfo.TenNQ}</Text>
-                </div>
-                <Row gutter={[16, 8]}>
-                  <Col span={12}><Text strong>Mã tài khoản:</Text></Col>
-                  <Col span={12}><Text>{userInfo.MaTK}</Text></Col>
-                  <Col span={12}><Text strong>Tên tài khoản:</Text></Col>
-                  <Col span={12}><Text>{userInfo.TenTK}</Text></Col>
-                  <Col span={12}><Text strong>Mã nhân viên:</Text></Col>
-                  <Col span={12}><Text>{userInfo.MaNV}</Text></Col>
-                  <Col span={12}><Text strong>Số điện thoại:</Text></Col>
-                  <Col span={12}><Text>{userInfo.SDT}</Text></Col>
-                  <Col span={12}><Text strong>Giới tính:</Text></Col>
-                  <Col span={12}><Text>{userInfo.GioiTinh}</Text></Col>
-                  <Col span={12}><Text strong>Địa chỉ:</Text></Col>
-                  <Col span={12}><Text>{userInfo.DiaChi}</Text></Col>
-                  <Col span={12}><Text strong>Email:</Text></Col>
-                  <Col span={12}><Text>{userInfo.Email}</Text></Col>
-                  <Col span={12}><Text strong>Ngày tạo:</Text></Col>
-                  <Col span={12}><Text>{userInfo.NgayTao ? new Date(userInfo.NgayTao).toLocaleDateString('vi-VN') : ''}</Text></Col>
-                  <Col span={12}><Text strong>Tình trạng:</Text></Col>
-                  <Col span={12}><Text>{userInfo.TinhTrang ? 'Hoạt động' : 'Không hoạt động'}</Text></Col>
-                </Row>
-              </Card>
-            </Col>
-            {/* Modal lương cá nhân */}
-            {/* Modal thay ảnh đại diện */}
-            <Modal
-              title="Thay ảnh đại diện"
-              open={showAvatarModal}
-              onCancel={() => { setShowAvatarModal(false); setAvatarFile(null); }}
-              footer={null}
-            >
-              <div style={{ textAlign: 'center' }}>
-                <Upload
-                  beforeUpload={(file) => {
-                    const isImage = /image\/(jpeg|png|gif|jpg)/.test(file.type);
-                    if (!isImage) {
-                      message.error('Chỉ cho phép file ảnh!');
-                      return Upload.LIST_IGNORE;
-                    }
-                    setAvatarFile(file);
-                    return false; // prevent auto upload
-                  }}
-                  maxCount={1}
-                  showUploadList={{ showPreviewIcon: false }}
-                >
-                  <Button>Chọn ảnh</Button>
-                </Upload>
-                <div style={{ marginTop: 12 }}>
-                  <Button
-                    type="primary"
-                    loading={avatarUploading}
-                    onClick={async () => {
-                      if (!avatarFile) return message.warning('Vui lòng chọn ảnh trước khi tải lên');
-                      setAvatarUploading(true);
-                      try {
-                        const form = new FormData();
-                        // Backend requires TenNV, SDT, Email - include existing values so validation passes
-                        form.append('TenNV', userInfo.TenNV || '');
-                        form.append('SDT', userInfo.SDT || '');
-                        form.append('Email', userInfo.Email || '');
-                        form.append('GioiTinh', userInfo.GioiTinh || '');
-                        form.append('DiaChi', userInfo.DiaChi || '');
-                        form.append('TinhTrang', userInfo.TinhTrang ? '1' : '0');
-                        form.append('Anh', avatarFile);
+                <CameraOutlined className="text-xl" />
+              </div>
+            </div>
 
-                        const res = await api.put(
-                          `/users/${userInfo.MaNV}`,
-                          form,
-                          { headers: { 'Content-Type': 'multipart/form-data' } }
-                        );
-                        message.success(res.data?.message || 'Cập nhật ảnh thành công');
-                        // refresh profile info
-                        const { MaTK } = JSON.parse(localStorage.getItem('userInfo') || '{}');
-                        const profileRes = await api.get(`/users/by-matk/${MaTK}`);
-                        setUserInfo(profileRes.data);
-                        setShowAvatarModal(false);
-                        setAvatarFile(null);
-                      } catch (err) {
-                        console.error(err);
-                        message.error(err.response?.data?.error || 'Tải ảnh thất bại');
-                      } finally {
-                        setAvatarUploading(false);
-                      }
-                    }}
-                    style={{ marginLeft: 8 }}
-                  >
-                    Tải lên
-                  </Button>
+            <div className="flex-1 text-center md:text-left space-y-4">
+              <div>
+                <Tag className="bg-indigo-50 text-indigo-600 border-0 rounded-full font-black text-[10px] uppercase tracking-widest px-4 py-1 mb-2">
+                  {userInfo?.TenNQ}
+                </Tag>
+                <h1 className="text-4xl font-black text-slate-800 tracking-tighter">{userInfo?.TenNV || userInfo?.TenTK}</h1>
+                <p className="text-slate-400 font-bold uppercase tracking-widest text-xs mt-1">ID NHÂN VIÊN: #{userInfo?.MaNV}</p>
+              </div>
+
+              <div className="flex flex-wrap justify-center md:justify-start gap-3">
+                <Button type="primary" icon={<CheckCircleOutlined />} loading={attendanceLoading} onClick={handleCheckIn} className="h-12 px-8 rounded-2xl bg-emerald-600 border-0 shadow-lg shadow-emerald-100 font-black text-[11px] uppercase tracking-widest">Chấm công nhanh</Button>
+                <Button icon={<LockOutlined />} onClick={() => setShowPwdModal(true)} className="h-12 px-8 rounded-2xl font-black text-[11px] uppercase tracking-widest border-slate-200">Đổi mật khẩu</Button>
+                <Button danger icon={<LogoutOutlined />} onClick={() => setShowResignModal(true)} className="h-12 px-8 rounded-2xl font-black text-[11px] uppercase tracking-widest bg-rose-50 border-0 text-rose-600 shadow-none">Xin nghỉ việc</Button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <Card className="rounded-[2.5rem] border-0 shadow-sm p-4 md:col-span-2">
+            <div className="mb-8 flex items-center justify-between">
+              <h2 className="text-xl font-black text-slate-800 flex items-center gap-3"><SafetyCertificateOutlined className="text-indigo-500" /> Thông tin hồ sơ</h2>
+              <Tag color={userInfo?.TinhTrang ? 'green' : 'red'} className="rounded-full font-black px-4">{userInfo?.TinhTrang ? 'ĐANG LÀM VIỆC' : 'ĐÃ NGHỈ'}</Tag>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div className="space-y-6">
+                <div className="flex items-start gap-4">
+                  <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400 shrink-0"><MailOutlined /></div>
+                  <div><span className="text-[10px] font-black text-slate-400 uppercase block">Email cá nhân</span><span className="text-sm font-bold text-slate-700">{userInfo?.Email || 'Chưa cập nhật'}</span></div>
+                </div>
+                <div className="flex items-start gap-4">
+                  <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400 shrink-0"><PhoneOutlined /></div>
+                  <div><span className="text-[10px] font-black text-slate-400 uppercase block">Số điện thoại</span><span className="text-sm font-bold text-slate-700">{userInfo?.SDT || 'Chưa cập nhật'}</span></div>
+                </div>
+                <div className="flex items-start gap-4">
+                  <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400 shrink-0"><UserOutlined /></div>
+                  <div><span className="text-[10px] font-black text-slate-400 uppercase block">Giới tính</span><span className="text-sm font-bold text-slate-700">{userInfo?.GioiTinh || 'Không rõ'}</span></div>
                 </div>
               </div>
-            </Modal>
-            <Modal
-              title="Lịch sử lương cá nhân"
-              open={showSalaryModal}
-              onCancel={() => setShowSalaryModal(false)}
-              footer={null}
-              width={800}
-              styles={{ body: { borderRadius: 16, padding: 0, overflow: 'hidden' } }}
-            >
-              <Table
-                columns={salaryColumns}
-                dataSource={salaryList}
-                rowKey={(record, idx) => `${record.nam}-${record.thang}-${idx}`}
-                pagination={{ pageSize: 5 }}
-                locale={{ emptyText: 'Chưa có dữ liệu lương' }}
-                style={{ borderRadius: 16, overflow: 'hidden', fontSize: 13, margin: 0 }}
-                bordered
-              />
-            </Modal>
-            {/* Modal chi tiết ngày công */}
-            <Modal
-              title={`Chi tiết ngày công tháng ${detailMonth}/${detailYear}`}
-              open={detailModal}
-              onCancel={() => setDetailModal(false)}
-              footer={null}
-              width={500}
-              styles={{ body: { borderRadius: 16, padding: 0, overflow: 'hidden' } }}
-            >
-              <Spin spinning={detailLoading}>
-                <Table
-                  columns={[
-                    { title: 'Ngày', dataIndex: 'ngay', render: v => dayjs(v).format('DD/MM/YYYY') },
-                    {
-                      title: 'Trạng thái', dataIndex: 'trang_thai',
-                      render: v => {
-                        if (v === 'Di_lam') return <span style={{ color: '#52c41a' }}>Đi làm</span>;
-                        if (v === 'Nghi_phep') return <span style={{ color: '#1890ff' }}>Nghỉ phép</span>;
-                        if (v === 'Nghi_khong_phep') return <span style={{ color: '#f5222d' }}>Nghỉ KP</span>;
-                        if (v === 'Lam_them') return <span style={{ color: '#faad14' }}>Tăng ca</span>;
-                        if (v === 'Di_tre') return <span style={{ color: '#faad14' }}>Đi trễ</span>;
-                        return v;
-                      }
-                    }
-                  ]}
-                  dataSource={attendanceDetail}
-                  rowKey={(r, idx) => r.ngay + idx}
-                  pagination={false}
-                  size="small"
-                  bordered
-                  style={{ margin: 16 }}
-                  locale={{ emptyText: 'Không có dữ liệu ngày công' }}
-                />
-              </Spin>
-            </Modal>
-            {/* Modal đổi mật khẩu */}
-            <Modal
-              title="Đổi mật khẩu"
-              open={showPwdModal}
-              onCancel={() => setShowPwdModal(false)}
-              footer={null}
-              destroyOnHidden
-              styles={{ body: { padding: 24, borderRadius: 12 } }}
-            >
-              <Form
-                layout="vertical"
-                onFinish={handlePwdChange}
-              >
-                <Form.Item
-                  name="oldPassword"
-                  label="Mật khẩu cũ"
-                  rules={[{ required: true, message: 'Vui lòng nhập mật khẩu cũ!' }]}
-                >
-                  <Input.Password placeholder="Nhập mật khẩu cũ" />
-                </Form.Item>
-                <Form.Item
-                  name="newPassword"
-                  label="Mật khẩu mới"
-                  rules={[
-                    { required: true, message: 'Vui lòng nhập mật khẩu mới!' },
-                    { min: 6, message: 'Mật khẩu phải có ít nhất 6 ký tự!' },
-                  ]}
-                >
-                  <Input.Password placeholder="Nhập mật khẩu mới" />
-                </Form.Item>
-                <Form.Item
-                  name="confirmPassword"
-                  label="Xác nhận mật khẩu mới"
-                  dependencies={['newPassword']}
-                  rules={[
-                    { required: true, message: 'Vui lòng xác nhận mật khẩu mới!' },
-                    ({ getFieldValue }) => ({
-                      validator(_, value) {
-                        if (!value || getFieldValue('newPassword') === value) {
-                          return Promise.resolve();
-                        }
-                        return Promise.reject(new Error('Mật khẩu xác nhận không khớp!'));
-                      },
-                    }),
-                  ]}
-                >
-                  <Input.Password placeholder="Nhập lại mật khẩu mới" />
-                </Form.Item>
-                <Form.Item>
-                  <Button type="primary" htmlType="submit" loading={pwdLoading} block style={{ borderRadius: 8 }}>
-                    Đổi mật khẩu
-                  </Button>
-                </Form.Item>
-              </Form>
-            </Modal>
-            {/* Modal xin nghỉ việc */}
-            <Modal
-              title="Xin nghỉ việc"
-              open={showResignModal}
-              onCancel={() => setShowResignModal(false)}
-              footer={null}
-              destroyOnHidden
-              styles={{ body: { padding: 24, borderRadius: 12 } }}
-            >
-              <Form
-                layout="vertical"
-                onFinish={handleResign}
-              >
-                <Form.Item
-                  name="ly_do"
-                  label="Lý do nghỉ việc"
-                  rules={[{ required: true, message: 'Vui lòng nhập lý do nghỉ việc!' }]}
-                >
-                  <Input.TextArea placeholder="Nhập lý do nghỉ việc..." />
-                </Form.Item>
-                <Form.Item>
-                  <Button type="primary" htmlType="submit" loading={resignLoading} block style={{ borderRadius: 8 }}>
-                    Gửi đơn xin nghỉ việc
-                  </Button>
-                </Form.Item>
-              </Form>
-            </Modal>
-          </Row>
+              <div className="space-y-6">
+                <div className="flex items-start gap-4">
+                  <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400 shrink-0"><EnvironmentOutlined /></div>
+                  <div><span className="text-[10px] font-black text-slate-400 uppercase block">Địa chỉ liên hệ</span><span className="text-sm font-bold text-slate-700">{userInfo?.DiaChi || 'Chưa cập nhật'}</span></div>
+                </div>
+                <div className="flex items-start gap-4">
+                  <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400 shrink-0"><CalendarOutlined /></div>
+                  <div><span className="text-[10px] font-black text-slate-400 uppercase block">Ngày gia nhập</span><span className="text-sm font-bold text-slate-700">{dayjs(userInfo?.NgayTao).format('DD/MM/YYYY')}</span></div>
+                </div>
+                <div className="flex items-start gap-4">
+                  <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400 shrink-0"><HomeOutlined /></div>
+                  <div><span className="text-[10px] font-black text-slate-400 uppercase block">Mã tài khoản</span><span className="text-sm font-bold text-slate-700">ACC-{userInfo?.MaTK}</span></div>
+                </div>
+              </div>
+            </div>
+          </Card>
+
+          <Card className="rounded-[2.5rem] border-0 shadow-sm p-4 bg-gradient-to-br from-slate-900 to-slate-800 text-white relative overflow-hidden">
+            <DollarCircleOutlined className="absolute -right-8 -bottom-8 text-[12rem] text-white/5" />
+            <div className="relative z-10 h-full flex flex-col">
+              <h2 className="text-xl font-black text-white flex items-center gap-3 mb-8"><DollarCircleOutlined className="text-indigo-400" /> Tiền lương</h2>
+              <div className="flex-1 flex flex-col justify-center text-center space-y-4">
+                <p className="text-slate-400 font-bold uppercase tracking-widest text-[10px]">Thu nhập dự tính</p>
+                <div className="text-4xl font-black text-indigo-400 tracking-tighter">LIÊN HỆ HR</div>
+                <p className="text-xs text-slate-500 font-medium">Bảo mật thông tin thu nhập cá nhân</p>
+              </div>
+              <Button type="primary" icon={<EyeOutlined />} onClick={() => { setShowSalaryModal(true); fetchSalary(); }} className="mt-8 h-12 rounded-2xl bg-indigo-600 border-0 font-black text-[11px] uppercase tracking-widest">Chi tiết lịch sử lương</Button>
+            </div>
+          </Card>
         </div>
       </div>
+
+      <Modal open={showSalaryModal} onCancel={() => setShowSalaryModal(false)} footer={null} width={850} className="modern-modal" centered title={null}>
+        <div className="mb-8 flex items-center gap-4">
+          <div className="p-3 bg-indigo-50 rounded-2xl text-indigo-600"><DollarCircleOutlined /></div>
+          <div>
+            <h2 className="text-2xl font-black text-slate-800">Lịch sử thu nhập</h2>
+            <p className="text-slate-400 text-sm mt-1 font-medium">Dữ liệu quyết toán các tháng gần nhất</p>
+          </div>
+        </div>
+        <Table
+          columns={[
+            { title: 'THỜI GIAN', key: 'time', render: (_, r) => <span className="font-bold text-slate-700">T{r.thang}/{r.nam}</span> },
+            { title: 'TỔNG LƯƠNG', dataIndex: 'tong_luong', render: v => <span className="font-black text-indigo-600">{v?.toLocaleString()}đ</span> },
+            { title: 'TRẠNG THÁI', dataIndex: 'trang_thai', render: v => <Tag color={v === 'Da_tra' ? 'green' : 'orange'} className="font-black text-[10px] rounded-full px-3">{v === 'Da_tra' ? 'HOÀN TẤT' : 'CHỜ XỬ LÝ'}</Tag> },
+            { title: 'HÀNH ĐỘNG', key: 'op', render: (_, r) => <Button size="small" icon={<EyeOutlined />} onClick={() => { setDetailMonth(r.thang); setDetailYear(r.nam); setDetailModal(true); setAttendanceDetail([]); fetchAttendanceDetail(r.thang, r.nam); }} className="rounded-lg font-bold">CHI TIẾT CÔNG</Button> }
+          ]}
+          dataSource={salaryList}
+          loading={salaryLoading}
+          rowKey={(r, i) => i}
+          pagination={{ pageSize: 5 }}
+          className="modern-table"
+        />
+      </Modal>
+
+      <Modal open={showAvatarModal} onCancel={() => setShowAvatarModal(false)} footer={null} className="modern-modal" centered title="Thay ảnh hồ sơ">
+        <div className="p-8 text-center space-y-6">
+          <Upload 
+            beforeUpload={f => { setAvatarFile(f); return false; }} 
+            maxCount={1}
+            showUploadList={{ showRemoveIcon: true }}
+            className="avatar-uploader"
+          >
+            <div className="w-full h-40 border-2 border-dashed border-slate-200 rounded-[2rem] flex flex-col items-center justify-center bg-slate-50 hover:bg-indigo-50 hover:border-indigo-200 transition-all cursor-pointer">
+              <CameraOutlined className="text-4xl text-slate-300 mb-2" />
+              <span className="text-xs font-black text-slate-400 uppercase tracking-widest">Chọn tệp hình ảnh</span>
+            </div>
+          </Upload>
+          <Button 
+            type="primary" 
+            block 
+            size="large" 
+            loading={avatarUploading} 
+            onClick={async () => {
+              if (!avatarFile) return message.warning('Vui lòng chọn ảnh');
+              setAvatarUploading(true);
+              try {
+                const form = new FormData();
+                form.append('TenNV', userInfo.TenNV || '');
+                form.append('SDT', userInfo.SDT || '');
+                form.append('Email', userInfo.Email || '');
+                form.append('GioiTinh', userInfo.GioiTinh || '');
+                form.append('DiaChi', userInfo.DiaChi || '');
+                form.append('TinhTrang', userInfo.TinhTrang ? '1' : '0');
+                form.append('Anh', avatarFile);
+                await api.put(`/users/${userInfo.MaNV}`, form, { headers: { 'Content-Type': 'multipart/form-data' } });
+                message.success('Cập nhật ảnh thành công!');
+                fetchProfile(); setShowAvatarModal(false);
+              } catch { message.error('Lỗi khi tải ảnh'); }
+              finally { setAvatarUploading(false); }
+            }}
+            className="h-12 rounded-2xl bg-indigo-600 border-0 font-black"
+          >
+            Lưu thay đổi
+          </Button>
+        </div>
+      </Modal>
+
+      <Modal open={showPwdModal} onCancel={() => setShowPwdModal(false)} footer={null} className="modern-modal" centered title="Bảo mật tài khoản">
+        <Form layout="vertical" onFinish={async v => {
+          setPwdLoading(true);
+          try {
+            await api.put(`/users/change-password`, { oldPassword: v.oldPassword, newPassword: v.newPassword });
+            message.success('Đổi mật khẩu thành công!'); setShowPwdModal(false);
+          } catch (e) { message.error(e.response?.data?.error || 'Lỗi xử lý'); }
+          finally { setPwdLoading(false); }
+        }} className="p-4 space-y-4">
+          <Form.Item name="oldPassword" label={<span className="text-[10px] font-black text-slate-400 uppercase">Mật khẩu hiện tại</span>} rules={[{ required: true }]}><Input.Password className="h-12 rounded-xl" /></Form.Item>
+          <Form.Item name="newPassword" label={<span className="text-[10px] font-black text-slate-400 uppercase">Mật khẩu mới</span>} rules={[{ required: true, min: 6 }]}><Input.Password className="h-12 rounded-xl" /></Form.Item>
+          <Button type="primary" htmlType="submit" block size="large" loading={pwdLoading} className="h-12 rounded-2xl bg-indigo-600 border-0 font-black">Xác nhận thay đổi</Button>
+        </Form>
+      </Modal>
+
+      <style dangerouslySetInnerHTML={{ __html: `
+        .modern-table .ant-table-thead > tr > th { background: #f8fafc !important; color: #94a3b8 !important; font-size: 11px !important; font-weight: 900 !important; text-transform: uppercase !important; letter-spacing: 0.1em !important; padding: 20px 24px !important; border-bottom: 1px solid #f1f5f9 !important; }
+        .modern-table .ant-table-tbody > tr > td { padding: 16px 24px !important; border-bottom: 1px solid #f8fafc !important; }
+        .modern-modal .ant-modal-content { border-radius: 40px !important; padding: 40px !important; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.1) !important; }
+        .avatar-uploader .ant-upload { width: 100% !important; }
+      `}} />
     </div>
   );
+
+  async function fetchSalary() {
+    setSalaryLoading(true);
+    try {
+      const { MaTK } = JSON.parse(localStorage.getItem('userInfo'));
+      const res = await api.get(`/salary/history/${MaTK}`);
+      setSalaryList(res.data.data || res.data);
+    } catch { message.error('Lỗi tải dữ liệu lương'); }
+    finally { setSalaryLoading(false); }
+  }
+
+  async function fetchAttendanceDetail(thang, nam) {
+    setDetailLoading(true);
+    try {
+      const { MaTK } = JSON.parse(localStorage.getItem('userInfo'));
+      const res = await api.get(`/attendance/detail/${MaTK}/${thang}/${nam}`);
+      setAttendanceDetail(res.data.data || res.data);
+    } catch { message.error('Không lấy được chi tiết'); }
+    finally { setDetailLoading(false); }
+  }
 };
 
 export default Profile;

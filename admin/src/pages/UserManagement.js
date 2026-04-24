@@ -266,66 +266,76 @@ const UserManagement = () => {
   ];
 
   return (
-    <div className="thongke-page">
-      <div className="thongke-header">
-        <h1>
-          <i className="fas fa-user-friends"></i> Quản lý Người dùng
-        </h1>
+    <div className="p-4 md:p-8 min-h-screen bg-slate-50 font-sans">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+        <div>
+          <h1 className="text-2xl font-black text-slate-800 flex items-center gap-3">
+            <span className="material-icons text-indigo-500">badge</span>
+            Quản lý Nhân viên
+          </h1>
+          <p className="text-slate-400 text-sm mt-1">Danh sách và thông tin nhân viên hệ thống</p>
+        </div>
         <Button
           type="primary"
-          size="small"
+          icon={<span className="material-icons text-sm">person_add</span>}
           onClick={() => {
             setState(prev => ({
               ...prev,
               editingUser: null,
               newUser: {
-                MaNV: '',
-                TenNV: '',
-                SDT: '',
-                GioiTinh: '',
-                DiaChi: '',
-                Email: '',
-                TinhTrang: 'Active',
+                MaNV: '', TenNV: '', SDT: '', GioiTinh: '', DiaChi: '', Email: '', TinhTrang: 'Active',
               },
               isModalVisible: true,
             }));
           }}
+          className="h-12 px-6 rounded-xl bg-indigo-600 shadow-lg shadow-indigo-200 flex items-center gap-2 border-none font-bold self-start md:self-center"
         >
-          Thêm người dùng
+          Thêm nhân viên
         </Button>
       </div>
 
-      <div className="thongke-content">
-        <div className="thongke-filters">
-          <div className="filter-group">
-            <label>Tìm kiếm:</label>
+      <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 mb-8 transition-all duration-300">
+        <div className="flex flex-col lg:flex-row gap-6 mb-6">
+          <div className="flex-1">
+            <label className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-2 block ml-1">Tìm kiếm</label>
             <Input
-              placeholder="Tìm người dùng..."
+              placeholder="Mã, tên, SĐT hoặc email..."
               value={searchTerm}
               onChange={(e) => setState(prev => ({ ...prev, searchTerm: e.target.value }))}
-              style={{ width: 200, marginRight: 16 }}
+              prefix={<span className="material-icons text-slate-400 text-sm">search</span>}
+              className="rounded-xl h-12 border-slate-200"
             />
           </div>
-          <div className="filter-group">
-            <label>Trạng thái:</label>
-            <Select value={statusFilter} onChange={(value) => setState(prev => ({ ...prev, statusFilter: value }))} style={{ width: 120, marginRight: 8 }}>
-              <Select.Option value="">Tất cả</Select.Option>
-              <Select.Option value="Active">Hoạt động</Select.Option>
-              <Select.Option value="Inactive">Không hoạt động</Select.Option>
-            </Select>
-          </div>
-          <div className="filter-group">
-            <label>Giới tính:</label>
-            <Select value={genderFilter} onChange={(value) => setState(prev => ({ ...prev, genderFilter: value }))} style={{ width: 120 }}>
-              <Select.Option value="">Tất cả</Select.Option>
-              <Select.Option value="Nam">Nam</Select.Option>
-              <Select.Option value="Nữ">Nữ</Select.Option>
-              <Select.Option value="Khác">Khác</Select.Option>
-            </Select>
+          <div className="flex flex-col sm:flex-row gap-4">
+            <div className="w-full sm:w-48">
+              <label className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-2 block ml-1">Trạng thái</label>
+              <Select 
+                value={statusFilter} 
+                onChange={(value) => setState(prev => ({ ...prev, statusFilter: value }))} 
+                className="w-full h-12 modern-select"
+              >
+                <Select.Option value="">Tất cả trạng thái</Select.Option>
+                <Select.Option value="Active">Hoạt động</Select.Option>
+                <Select.Option value="Inactive">Không hoạt động</Select.Option>
+              </Select>
+            </div>
+            <div className="w-full sm:w-48">
+              <label className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-2 block ml-1">Giới tính</label>
+              <Select 
+                value={genderFilter} 
+                onChange={(value) => setState(prev => ({ ...prev, genderFilter: value }))} 
+                className="w-full h-12 modern-select"
+              >
+                <Select.Option value="">Tất cả giới tính</Select.Option>
+                <Select.Option value="Nam">Nam</Select.Option>
+                <Select.Option value="Nữ">Nữ</Select.Option>
+                <Select.Option value="Khác">Khác</Select.Option>
+              </Select>
+            </div>
           </div>
         </div>
 
-        <div className="thongke-table">
+        <div className="overflow-hidden rounded-2xl border border-slate-100">
           <Table
             columns={columns}
             dataSource={filteredUsers}
@@ -335,171 +345,151 @@ const UserManagement = () => {
             pagination={{
               pageSize: 10,
               showSizeChanger: false,
-              size: 'small',
+              className: 'px-6 py-4'
             }}
-            size="small"
+            className="modern-table"
           />
         </div>
       </div>
 
       <Modal
-        title={editingUser ? 'Chỉnh sửa người dùng' : 'Thêm người dùng mới'}
+        title={
+          <div className="flex items-center gap-3 text-xl font-black text-slate-800">
+            <div className={`p-2 rounded-lg bg-indigo-50 text-indigo-600`}>
+              <span className="material-icons leading-none">
+                {editingUser ? 'edit' : 'person_add'}
+              </span>
+            </div>
+            {editingUser ? 'Cập nhật nhân viên' : 'Thêm nhân viên mới'}
+          </div>
+        }
         open={isModalVisible}
         onCancel={() => {
-          setState(prev => ({
-            ...prev,
-            isModalVisible: false,
-            editingUser: null,
-          }));
+          setState(prev => ({ ...prev, isModalVisible: false, editingUser: null }));
         }}
         footer={[
           <Button
             key="cancel"
-            onClick={() => {
-              setState(prev => ({
-                ...prev,
-                isModalVisible: false,
-                editingUser: null,
-              }));
-            }}
+            onClick={() => setState(prev => ({ ...prev, isModalVisible: false, editingUser: null }))}
+            className="h-12 px-8 rounded-xl font-bold border-slate-200"
           >
-            Hủy
+            Hủy bỏ
           </Button>,
           <Button
             key="submit"
             type="primary"
             onClick={editingUser ? handleUpdateUser : handleAddUser}
+            className="h-12 px-10 rounded-xl font-bold bg-indigo-600 border-none shadow-lg shadow-indigo-200"
           >
-            {editingUser ? 'Lưu' : 'Thêm'}
+            {editingUser ? 'Lưu thay đổi' : 'Tạo mới'}
           </Button>,
         ]}
-        width={600}
-        styles={{ body: { padding: '16px' } }}
+        width={700}
+        centered
+        className="modern-modal"
       >
-        <div className="info-section">
-          <div className="info-grid">
-            <div className="info-item">
-              <p className="info-label">Mã nhân viên:</p>
-              <Input
-                size="small"
-                value={editingUser ? editingUser.MaNV : newUser.MaNV}
-                onChange={(e) => handleInputChange('MaNV', e.target.value)}
-                disabled={!!editingUser}
-              />
-            </div>
-            <div className="info-item">
-              <p className="info-label">Tên nhân viên:</p>
-              <Input
-                size="small"
-                value={editingUser ? editingUser.TenNV : newUser.TenNV}
-                onChange={(e) => handleInputChange('TenNV', e.target.value)}
-              />
-            </div>
-            <div className="info-item">
-              <p className="info-label">Số điện thoại:</p>
-              <Input
-                size="small"
-                value={editingUser ? editingUser.SDT : newUser.SDT}
-                onChange={(e) => handleInputChange('SDT', e.target.value)}
-              />
-            </div>
-            <div className="info-item">
-              <p className="info-label">Giới tính:</p>
-              <Select
-                size="small"
-                value={editingUser ? editingUser.GioiTinh : newUser.GioiTinh}
-                onChange={(value) => handleInputChange('GioiTinh', value)}
-                style={{ width: '100%' }}
-              >
-                <Option value="">Chọn giới tính</Option>
-                <Option value="Nam">Nam</Option>
-                <Option value="Nữ">Nữ</Option>
-                <Option value="Khác">Khác</Option>
-              </Select>
-            </div>
-            <div className="info-item">
-              <p className="info-label">Địa chỉ:</p>
-              <Input
-                size="small"
-                value={editingUser ? editingUser.DiaChi : newUser.DiaChi}
-                onChange={(e) => handleInputChange('DiaChi', e.target.value)}
-              />
-            </div>
-            <div className="info-item">
-              <p className="info-label">Email:</p>
-              <Input
-                size="small"
-                type="email"
-                value={editingUser ? editingUser.Email : newUser.Email}
-                onChange={(e) => handleInputChange('Email', e.target.value)}
-              />
-            </div>
-            <div className="info-item">
-              <p className="info-label">Tình trạng:</p>
-              <Select
-                size="small"
-                value={editingUser ? editingUser.TinhTrang : newUser.TinhTrang}
-                onChange={(value) => handleInputChange('TinhTrang', value)}
-                style={{ width: '100%' }}
-              >
-                <Option value="Active">Hoạt động</Option>
-                <Option value="Inactive">Không hoạt động</Option>
-              </Select>
-            </div>
+        <div className="py-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="space-y-1">
+            <label className="text-xs font-bold text-slate-400 uppercase tracking-widest ml-1">Mã nhân viên</label>
+            <Input
+              placeholder="Ví dụ: NV001"
+              value={editingUser ? editingUser.MaNV : newUser.MaNV}
+              onChange={(e) => handleInputChange('MaNV', e.target.value)}
+              disabled={!!editingUser}
+              className="h-12 rounded-xl bg-slate-50 border-slate-200"
+            />
+          </div>
+          <div className="space-y-1">
+            <label className="text-xs font-bold text-slate-400 uppercase tracking-widest ml-1">Tên nhân viên</label>
+            <Input
+              placeholder="Nhập họ và tên..."
+              value={editingUser ? editingUser.TenNV : newUser.TenNV}
+              onChange={(e) => handleInputChange('TenNV', e.target.value)}
+              className="h-12 rounded-xl"
+            />
+          </div>
+          <div className="space-y-1">
+            <label className="text-xs font-bold text-slate-400 uppercase tracking-widest ml-1">Số điện thoại</label>
+            <Input
+              placeholder="Nhập số điện thoại..."
+              value={editingUser ? editingUser.SDT : newUser.SDT}
+              onChange={(e) => handleInputChange('SDT', e.target.value)}
+              className="h-12 rounded-xl"
+            />
+          </div>
+          <div className="space-y-1">
+            <label className="text-xs font-bold text-slate-400 uppercase tracking-widest ml-1">Giới tính</label>
+            <Select
+              value={editingUser ? editingUser.GioiTinh : newUser.GioiTinh}
+              onChange={(value) => handleInputChange('GioiTinh', value)}
+              className="w-full h-12"
+            >
+              <Option value="">Chọn giới tính</Option>
+              <Option value="Nam">Nam</Option>
+              <Option value="Nữ">Nữ</Option>
+              <Option value="Khác">Khác</Option>
+            </Select>
+          </div>
+          <div className="space-y-1 md:col-span-2">
+            <label className="text-xs font-bold text-slate-400 uppercase tracking-widest ml-1">Địa chỉ</label>
+            <Input
+              placeholder="Nhập địa chỉ cư trú..."
+              value={editingUser ? editingUser.DiaChi : newUser.DiaChi}
+              onChange={(e) => handleInputChange('DiaChi', e.target.value)}
+              className="h-12 rounded-xl"
+            />
+          </div>
+          <div className="space-y-1">
+            <label className="text-xs font-bold text-slate-400 uppercase tracking-widest ml-1">Email</label>
+            <Input
+              type="email"
+              placeholder="email@example.com"
+              value={editingUser ? editingUser.Email : newUser.Email}
+              onChange={(e) => handleInputChange('Email', e.target.value)}
+              className="h-12 rounded-xl"
+            />
+          </div>
+          <div className="space-y-1">
+            <label className="text-xs font-bold text-slate-400 uppercase tracking-widest ml-1">Tình trạng</label>
+            <Select
+              value={editingUser ? editingUser.TinhTrang : newUser.TinhTrang}
+              onChange={(value) => handleInputChange('TinhTrang', value)}
+              className="w-full h-12"
+            >
+              <Option value="Active">Hoạt động</Option>
+              <Option value="Inactive">Tạm khóa</Option>
+            </Select>
           </div>
         </div>
       </Modal>
 
       <style>{`
-        .thongke-page {
-          min-height: 100vh;
+        .modern-table .ant-table-thead > tr > th {
+          background: #f8fafc;
+          color: #64748b;
+          font-weight: 700;
+          text-transform: uppercase;
+          font-size: 11px;
+          letter-spacing: 0.05em;
+          border-bottom: 1px solid #f1f5f9;
         }
-        .thongke-header {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          margin-bottom: 16px;
-          flex-wrap: wrap;
-          gap: 16px;
-        }
-        .thongke-content {
-          background: #fff;
+        .modern-table .ant-table-tbody > tr > td {
+          border-bottom: 1px solid #f1f5f9;
           padding: 16px;
-          border-radius: 8px;
-          box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         }
-        .thongke-filters {
-          display: flex;
-          gap: 16px;
-          margin-bottom: 16px;
-          flex-wrap: wrap;
+        .modern-table .ant-table-tbody > tr:hover > td {
+          background: #f1f5f9 !important;
         }
-        .filter-group {
-          display: flex;
-          align-items: center;
-          gap: 8px;
+        .modern-modal .ant-modal-content {
+          border-radius: 24px !important;
+          padding: 12px !important;
         }
-        .thongke-table {
-          margin-top: 16px;
-        }
-        .info-section {
-          background: #f8f8f8;
-          padding: 12px;
-          border-radius: 4px;
-          margin-bottom: 16px;
-        }
-        .info-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-          gap: 12px;
-        }
-        .info-item {
-          margin-bottom: 4px;
-        }
-        .info-label {
-          color: #666;
-          font-size: 12px;
-          margin: 0;
+        .modern-select .ant-select-selector {
+          border-radius: 12px !important;
+          height: 48px !important;
+          display: flex !important;
+          align-items: center !important;
+          border-color: #e2e8f0 !important;
         }
       `}</style>
     </div>

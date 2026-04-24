@@ -47,11 +47,36 @@ axios.interceptors.response.use(
 );
 
 const PrivateRoute = ({ component: Component }) => {
+  const [isSidebarOpen, setIsSidebarOpen] = React.useState(false);
   const isAuthenticated = !!(document.cookie.split('; ').find(row => row.startsWith('authToken='))?.split('=')[1] || null);
+
+  React.useEffect(() => {
+    document.body.classList.toggle('sidebar-mobile-open', isSidebarOpen);
+  }, [isSidebarOpen]);
+
   return isAuthenticated ? (
-    <div className="app-admin">
+    <div className="app-admin min-h-screen bg-slate-50">
+      {/* Mobile Top Bar */}
+      <div className="lg:hidden flex items-center justify-between p-4 bg-slate-900 text-white sticky top-0 z-[1000] shadow-md">
+        <div className="flex items-center gap-2">
+          <span className="material-icons text-indigo-400">admin_panel_settings</span>
+          <span className="font-bold tracking-tight">ADMIN PANEL</span>
+        </div>
+        <button 
+          onClick={() => {
+            // We need to trigger the Sidebar's state. 
+            // Since we don't have a global state, we can use a custom event or just lift state.
+            // For now, let's use a simple approach: dispatch a custom event.
+            window.dispatchEvent(new CustomEvent('toggle-sidebar'));
+          }}
+          className="p-2 hover:bg-slate-800 rounded-lg transition-colors"
+        >
+          <span className="material-icons">menu</span>
+        </button>
+      </div>
+
       <Sidebar />
-      <div className="main-content">
+      <div className="main-content min-h-screen transition-all duration-300">
         <Component />
       </div>
     </div>

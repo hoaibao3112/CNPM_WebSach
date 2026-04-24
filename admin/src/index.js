@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
 import App from './App';
 import { PermissionProvider } from './components/PermissionContext';
+import './index.css';
 
 const container = document.getElementById('root');
 const root = createRoot(container);

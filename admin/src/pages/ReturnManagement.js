@@ -1,470 +1,298 @@
 import React, { useEffect, useState } from 'react';
 import api from '../utils/api';
-import '../styles/ReturnManagement.css';
+import { 
+  Table, 
+  Button, 
+  Modal, 
+  Input, 
+  Select, 
+  Tag, 
+  Space, 
+  Avatar, 
+  Card, 
+  Statistic, 
+  Tooltip, 
+  Divider, 
+  message, 
+  Timeline,
+  Checkbox,
+  InputNumber
+} from 'antd';
+import { 
+  InboxOutlined, 
+  SyncOutlined, 
+  SearchOutlined, 
+  CheckCircleOutlined, 
+  CloseCircleOutlined, 
+  CarOutlined, 
+  LoadingOutlined,
+  EyeOutlined,
+  HistoryOutlined,
+  DollarOutlined,
+  RestOutlined,
+  FileImageOutlined
+} from '@ant-design/icons';
+import moment from 'moment';
 
+const { Option } = Select;
 
 const STATUS_LABELS = {
-  da_bao_cao: { text: 'Đã báo cáo', color: 'orange' },
-  dang_van_chuyen: { text: 'Đang vận chuyển', color: 'blue' },
-  da_nhan: { text: 'Đã nhận', color: 'green' },
-  chap_thuan: { text: 'Chấp thuận', color: 'green' },
-  da_hoan_tien: { text: 'Đã hoàn tiền', color: 'purple' },
-  tu_choi: { text: 'Từ chối', color: 'red' },
-  huy: { text: 'Hủy', color: 'gray' },
+  da_bao_cao: { text: 'Đã báo cáo', color: 'orange', icon: <HistoryOutlined /> },
+  dang_van_chuyen: { text: 'Đang vận chuyển', color: 'blue', icon: <CarOutlined /> },
+  da_nhan: { text: 'Đã nhận', color: 'green', icon: <CheckCircleOutlined /> },
+  chap_thuan: { text: 'Chấp thuận', color: 'green', icon: <CheckCircleOutlined /> },
+  da_hoan_tien: { text: 'Đã hoàn tiền', color: 'purple', icon: <DollarOutlined /> },
+  tu_choi: { text: 'Từ chối', color: 'red', icon: <CloseCircleOutlined /> },
+  huy: { text: 'Hủy', color: 'gray', icon: <CloseCircleOutlined /> },
 };
 
 const ReturnManagement = () => {
-  const API = process.env.REACT_APP_API_BASE || (process.env.REACT_APP_API_BASE || 'https://cnpm-customer.onrender.com') + '';
   const [returnsList, setReturnsList] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
-  const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize] = useState(10);
   const [selectedReturn, setSelectedReturn] = useState(null);
-  const [showModal, setShowModal] = useState(false);
+  const [detailModal, setDetailModal] = useState(false);
   const [processing, setProcessing] = useState(false);
-  const [showReceiveConfirm, setShowReceiveConfirm] = useState(false);
   const [receiveOptions, setReceiveOptions] = useState({ restock: true, so_tien_hoan: '', phuong_thuc_hoan: '' });
 
   useEffect(() => {
     fetchReturns();
-    // eslint-disable-next-line
-  }, [currentPage, statusFilter]);
+  }, [statusFilter]);
 
   const fetchReturns = async () => {
     setLoading(true);
     try {
-      const params = { page: currentPage, pageSize };
-      if (statusFilter !== 'all') params.trang_thai = statusFilter;
+      const params = { trang_thai: statusFilter === 'all' ? undefined : statusFilter };
       const { data } = await api.get(`/tra-hang`, { params });
       setReturnsList(Array.isArray(data) ? data : []);
-    } catch (err) {
-      console.error('Lỗi khi lấy danh sách trả hàng', err?.response?.data || err.message);
-      setReturnsList([]);
-    } finally {
-      setLoading(false);
-    }
+    } catch (err) { message.error('Lỗi tải danh sách trả hàng'); }
+    finally { setLoading(false); }
   };
 
   const openDetail = async (id) => {
     try {
       setProcessing(true);
       const { data } = await api.get(`/tra-hang/${id}`);
-      // Debug: log raw attachments and normalized attachments so we can see what frontend receives
-      console.log('[ReturnManagement] openDetail loaded id=', id, 'raw tep_dinh_kem=', data.tep_dinh_kem);
-      try {
-        console.log('[ReturnManagement] normalized attachments=', parseAttachments(data));
-      } catch (e) {
-        console.error('[ReturnManagement] parseAttachments error', e);
-      }
       setSelectedReturn(data);
-      setShowModal(true);
-    } catch (err) {
-      alert('Không thể tải chi tiết yêu cầu: ' + (err?.response?.data?.error || err.message));
-    } finally {
-      setProcessing(false);
-    }
-  };
-
-  const closeModal = () => {
-    setSelectedReturn(null);
-    setShowModal(false);
+      setDetailModal(true);
+    } catch (err) { message.error('Không thể tải chi tiết'); }
+    finally { setProcessing(false); }
   };
 
   const handleAction = async (id, action, opts = {}) => {
-    if (!window.confirm('Bạn có chắc muốn ' + action + ' yêu cầu này?')) return;
     try {
       setProcessing(true);
       const payload = { action, ...opts };
-      const { data } = await api.put(`/tra-hang/${id}/action`, payload);
-      alert('Cập nhật trạng thái: ' + (data.trang_thai || action));
-      // refresh list and detail
-      await fetchReturns();
-      if (selectedReturn && selectedReturn.id === id) openDetail(id);
-    } catch (err) {
-      console.error('Lỗi cập nhật trạng thái', err?.response?.data || err.message);
-      alert('Lỗi: ' + (err?.response?.data?.error || err.message));
-    } finally {
-      setProcessing(false);
-    }
+      await api.put(`/tra-hang/${id}/action`, payload);
+      message.success('Đã cập nhật trạng thái');
+      fetchReturns();
+      if (selectedReturn) openDetail(id);
+    } catch (err) { message.error(err.response?.data?.error || 'Lỗi xử lý'); }
+    finally { setProcessing(false); }
   };
 
-  const onReceiveClick = () => {
-    // open a small confirmation area to choose next steps
-    setShowReceiveConfirm(true);
-  };
-
-  const submitReceiveMark = async (mode = 'mark') => {
-    // mode: 'mark' => just da_nhan; 'approve' => chap_thuan with options
-    if (!selectedReturn) return;
-    try {
-      setProcessing(true);
-      if (mode === 'mark') {
-        await handleAction(selectedReturn.id, 'da_nhan');
-      } else if (mode === 'approve') {
-        const opts = {
-          restock: !!receiveOptions.restock,
-          so_tien_hoan: receiveOptions.so_tien_hoan || null,
-          phuong_thuc_hoan: receiveOptions.phuong_thuc_hoan || null,
-          ghi_chu: `Đã nhận hàng — ${receiveOptions.phuong_thuc_hoan || ''}`
-        };
-        await handleAction(selectedReturn.id, 'chap_thuan', opts);
-      }
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setProcessing(false);
-      setShowReceiveConfirm(false);
-    }
-  };
-
-  const filtered = returnsList.filter((r) => {
-    if (searchTerm) {
-      const q = searchTerm.toLowerCase();
-      const hay = `${r.id || ''} ${r.ma_don_hang || ''} ${r.nguoi_tao || ''}`.toLowerCase();
-      if (!hay.includes(q)) return false;
-    }
-    return true;
-  });
-
-  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
-
-  // summary
-  const summary = returnsList.reduce(
-    (acc, r) => {
-      acc.total += 1;
-      const st = r.trang_thai;
-      if (st === 'da_bao_cao' || st === 'dang_van_chuyen') acc.pending += 1;
-      if (st === 'chap_thuan' || st === 'da_hoan_tien') acc.approved += 1;
-      if (st === 'tu_choi') acc.rejected += 1;
-      return acc;
+  const columns = [
+    {
+      title: 'YÊU CẦU',
+      dataIndex: 'id',
+      key: 'id',
+      fixed: 'left',
+      width: 150,
+      render: (id) => <span className="font-black text-slate-400">#RTN{String(id).padStart(3, '0')}</span>
     },
-    { total: 0, pending: 0, approved: 0, rejected: 0 }
-  );
-
-  const getMatHangCount = (r) => {
-    if (!r) return '';
-    const arr = parseMatHang(r);
-    return Array.isArray(arr) ? arr.length : '';
-  };
-
-  // Helper: safely obtain mat_hang as an array from a record
-  const parseMatHang = (r) => {
-    if (!r) return [];
-    const v = r.mat_hang;
-    if (Array.isArray(v)) return v;
-    if (typeof v === 'string') {
-      try {
-        const parsed = JSON.parse(v);
-        return Array.isArray(parsed) ? parsed : [];
-      } catch (e) {
-        // try to handle single-item JSON-like string (fallback)
-        return [];
-      }
-    }
-    return [];
-  };
-
-  // Helper: normalize tep_dinh_kem into an array of attachment objects { url, isImage, label }
-  const parseAttachments = (r) => {
-    if (!r) return [];
-    let atts = r.tep_dinh_kem || r.tepDinhKem || r.attachments || null;
-    const normalize = (item) => {
-      if (!item) return null;
-      if (typeof item === 'string') {
-        const raw = item.trim();
-        const url = raw.startsWith('/') ? `${API}${raw}` : raw;
-        const isImage = /\.(jpe?g|png|gif|webp|bmp|svg)$/i.test(raw);
-        return { url, isImage, label: raw.split('/').pop() };
-      }
-      if (typeof item === 'object') {
-        // try common fields
-        const p = item.path || item.url || item.file || item.link || item.location || item.filepath;
-        const name = item.name || item.filename || item.fileName || item.label || '';
-        if (p) {
-          const raw = ('' + p).trim();
-          const url = raw.startsWith('/') ? `${API}${raw}` : raw;
-          const isImage = /\.(jpe?g|png|gif|webp|bmp|svg)$/i.test(raw);
-          return { url, isImage, label: name || raw.split('/').pop() };
-        }
-        // fallback: stringify
-        return { url: JSON.stringify(item), isImage: false, label: name || 'file' };
-      }
-      return null;
-    };
-
-    if (!atts) return [];
-    // If it's already an array
-    if (Array.isArray(atts)) {
-      return atts.map(normalize).filter(Boolean);
-    }
-    // If it's an object (single attachment stored as object)
-    if (typeof atts === 'object') {
-      const a = normalize(atts);
-      return a ? [a] : [];
-    }
-    // If it's a string: try JSON parse, otherwise split by common separators
-    if (typeof atts === 'string') {
-      const s = atts.trim();
-      // Try JSON
-      try {
-        const parsed = JSON.parse(s);
-        if (Array.isArray(parsed)) return parsed.map(normalize).filter(Boolean);
-        if (typeof parsed === 'object') {
-          const a = normalize(parsed);
-          return a ? [a] : [];
-        }
-      } catch (e) {
-        // not JSON, try separators
-        const parts = s.split(/[,;|\n]+/).map((p) => p.trim()).filter(Boolean);
-        if (parts.length > 1) return parts.map(normalize).filter(Boolean);
-        // single token string -- treat as one url/path
-        return [normalize(s)].filter(Boolean);
-      }
-    }
-    return [];
-  };
-
-  return (
-    <div className="return-page">
-      <div className="container">
-        <div className="return-header">
-          <div className="header-content">
-            <div className="header-left">
-              <h1>Quản lý trả hàng</h1>
-              <p className="subtitle">Xem, xử lý và theo dõi các yêu cầu trả hàng từ khách</p>
-            </div>
-            <div className="header-actions">
-              <div className="filter-controls">
-                <div className="search-box">
-                  <input
-                    className="search-input"
-                    placeholder="Tìm theo mã đơn / id / người tạo"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                  />
-                </div>
-                <select className="filter-select" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
-                  <option value="all">Tất cả trạng thái</option>
-                  {Object.keys(STATUS_LABELS).map((k) => (
-                    <option key={k} value={k}>{STATUS_LABELS[k].text}</option>
-                  ))}
-                </select>
-              </div>
-            </div>
-          </div>
-          <div className="summary-section">
-            <div className="summary-cards">
-              <div className="summary-card total-card">
-                <div className="card-icon">📦</div>
-                <div className="card-content">
-                  <h3>{summary.total}</h3>
-                  <p>Tổng yêu cầu</p>
-                </div>
-              </div>
-              <div className="summary-card pending-card">
-                <div className="card-icon">⏳</div>
-                <div className="card-content">
-                  <h3>{summary.pending}</h3>
-                  <p>Đang chờ xử lý</p>
-                </div>
-              </div>
-              <div className="summary-card success-card">
-                <div className="card-icon">✅</div>
-                <div className="card-content">
-                  <h3>{summary.approved}</h3>
-                  <p>Đã chấp thuận</p>
-                </div>
-              </div>
-              <div className="summary-card failed-card">
-                <div className="card-icon">❌</div>
-                <div className="card-content">
-                  <h3>{summary.rejected}</h3>
-                  <p>Đã từ chối</p>
-                </div>
-              </div>
-            </div>
-          </div>
+    {
+      title: 'ĐƠN HÀNG',
+      dataIndex: 'ma_don_hang',
+      key: 'order',
+      width: 120,
+      render: (t) => <Tag className="m-0 font-black text-[10px] rounded-lg">ĐƠN #{t}</Tag>
+    },
+    {
+      title: 'NGƯỜI TẠO',
+      dataIndex: 'nguoi_tao',
+      key: 'creator',
+      width: 200,
+      render: (t, r) => (
+        <div className="flex flex-col">
+          <span className="font-bold text-slate-700">{t || r.loai_nguoi_tao}</span>
+          <span className="text-[9px] font-black text-slate-400 uppercase">{r.loai_nguoi_tao}</span>
         </div>
-
-        <div className="page-body">
-          {loading ? (
-            <div>Đang tải...</div>
-          ) : (
-            <div>
-              <table className="table">
-                <thead>
-                  <tr>
-                    <th>ID</th>
-                    <th>Mã đơn</th>
-                    <th>Người tạo</th>
-                    <th>Số mặt hàng</th>
-                    <th>Trạng thái</th>
-                    <th>Ngày tạo</th>
-                    <th>Hành động</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filtered.slice((currentPage - 1) * pageSize, currentPage * pageSize).map((r) => (
-                    <tr key={r.id}>
-                      <td>{r.id}</td>
-                      <td>{r.ma_don_hang}</td>
-                      <td>{r.nguoi_tao || r.loai_nguoi_tao}</td>
-                      <td>{getMatHangCount(r)}</td>
-                      <td>
-                        <span className={`badge badge-${r.trang_thai || 'unknown'}`} style={{ background: STATUS_LABELS[r.trang_thai]?.color || '#ccc' }}>
-                          {STATUS_LABELS[r.trang_thai]?.text || r.trang_thai}
-                        </span>
-                      </td>
-                      <td>{new Date(r.created_at || r.createdAt || Date.now()).toLocaleString()}</td>
-                      <td>
-                        <button className="btn btn-light" onClick={() => openDetail(r.id)}>Chi tiết</button>
-                        {r.trang_thai !== 'chap_thuan' && r.trang_thai !== 'da_hoan_tien' && (
-                          <button className="btn btn-accept" onClick={() => handleAction(r.id, 'chap_thuan', { restock: true })} disabled={processing}>Chấp thuận</button>
-                        )}
-                        {r.trang_thai !== 'tu_choi' && (
-                          <button className="btn btn-reject" onClick={() => handleAction(r.id, 'tu_choi')} disabled={processing}>Từ chối</button>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-
-              <div className="pagination">
-                <button onClick={() => setCurrentPage((p) => Math.max(1, p - 1))} disabled={currentPage === 1}>Prev</button>
-                <span>Trang {currentPage} / {totalPages}</span>
-                <button onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages}>Next</button>
-              </div>
-            </div>
+      )
+    },
+    {
+      title: 'TRẠNG THÁI',
+      dataIndex: 'trang_thai',
+      key: 'status',
+      width: 150,
+      render: (v) => {
+        const c = STATUS_LABELS[v] || { text: v, color: 'default' };
+        return <Tag color={c.color} icon={c.icon} className="font-black text-[10px] rounded-full px-3">{c.text.toUpperCase()}</Tag>;
+      }
+    },
+    {
+      title: 'NGÀY TẠO',
+      dataIndex: 'created_at',
+      key: 'date',
+      width: 150,
+      render: (v) => <span className="text-xs font-bold text-slate-500 uppercase">{moment(v).format('DD/MM/YYYY')}</span>
+    },
+    {
+      title: 'THAO TÁC',
+      key: 'action',
+      fixed: 'right',
+      width: 150,
+      render: (_, record) => (
+        <div className="flex gap-2">
+          <Tooltip title="Chi tiết">
+            <Button className="w-10 h-10 rounded-xl flex items-center justify-center border-slate-200 text-slate-400 hover:text-indigo-600 hover:border-indigo-600 transition-all" icon={<EyeOutlined />} onClick={() => openDetail(record.id)} />
+          </Tooltip>
+          {['da_bao_cao', 'dang_van_chuyen'].includes(record.trang_thai) && (
+            <Tooltip title="Phê duyệt">
+              <Button type="primary" className="w-10 h-10 rounded-xl flex items-center justify-center bg-emerald-600 border-0" icon={<CheckCircleOutlined />} onClick={() => handleAction(record.id, 'chap_thuan', { restock: true })} />
+            </Tooltip>
           )}
         </div>
+      )
+    }
+  ];
 
-        {showModal && selectedReturn && (
-          <div className="modal-overlay" onClick={closeModal}>
-            <div className="modal portal-modal" onClick={(e) => e.stopPropagation()}>
-              <div className="panel">
-                <div className="title-pill">Chi tiết yêu cầu trả hàng #{selectedReturn.id} <button className="close" onClick={closeModal}>×</button></div>
-                <div className="modal-header"><h3>Chi tiết</h3></div>
-                <div className="modal-body">
-                  <div className="content">
-                    <p className="meta"><strong>Mã đơn:</strong> {selectedReturn.ma_don_hang}</p>
-                    <p className="meta"><strong>Người tạo:</strong> {selectedReturn.nguoi_tao} ({selectedReturn.loai_nguoi_tao})</p>
-                    <p className="meta"><strong>Lý do:</strong> {selectedReturn.ly_do}</p>
-                    <p className="meta"><strong>Trạng thái:</strong> {STATUS_LABELS[selectedReturn.trang_thai]?.text || selectedReturn.trang_thai}</p>
+  return (
+    <div className="p-4 md:p-8 min-h-screen bg-slate-50 font-sans">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
+        <div>
+          <h1 className="text-3xl font-black text-slate-800 flex items-center gap-3">
+            <InboxOutlined className="text-indigo-500" />
+            Quản lý Trả hàng
+          </h1>
+          <p className="text-slate-400 text-sm mt-1 font-medium uppercase tracking-tighter">Tiếp nhận và xử lý hàng lỗi/hoàn trả</p>
+        </div>
+        
+        <div className="flex gap-3">
+          <Button icon={<SyncOutlined spin={loading} />} onClick={fetchReturns} className="h-12 w-12 flex items-center justify-center rounded-2xl bg-white border-0 shadow-sm text-slate-600" />
+          <div className="bg-white p-2 rounded-2xl shadow-sm border border-slate-100 flex items-center gap-2">
+            <SearchOutlined className="text-slate-400 ml-2" />
+            <Input placeholder="Tìm kiếm nhanh..." className="border-0 shadow-none font-bold w-48" value={searchTerm} onChange={e => setSearchTerm(e.target.value)} />
+          </div>
+        </div>
+      </div>
 
-                    <h4>Danh sách mặt hàng</h4>
-                    <ul className="items-list">
-                      {parseMatHang(selectedReturn).map((it, idx) => {
-                        // determine display name and image
-                        const name = it.ten_san_pham || it.TenSP || it.name || it.MaSP || it.productId || 'Sản phẩm không rõ';
-                        // HinhAnh or hinh_anh may be a relative path stored like 'img/products/...' or '/img/products/...'
-                        let img = it.hinh_anh || it.HinhAnh || it.image || null;
-                        if (img) {
-                          const raw = ('' + img).trim();
-                          if (/^https?:\/\//i.test(raw)) {
-                            img = raw; // absolute URL
-                          } else if (raw.startsWith('/')) {
-                            img = raw; // relative to frontend origin, keep leading slash
-                          } else if (raw.toLowerCase().includes('img/products')) {
-                            // make sure it starts with a slash
-                            img = '/' + raw.replace(/^\/+/, '');
-                          } else {
-                            // assume filename or partial path stored in DB, point to public products folder
-                            img = `/img/products/${raw.split('/').pop()}`;
-                          }
-                        }
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <Card className="rounded-[2.5rem] border-0 shadow-sm bg-gradient-to-br from-indigo-600 to-indigo-700 text-white relative overflow-hidden">
+          <Statistic title={<span className="text-[10px] font-black text-indigo-100 uppercase">Tổng yêu cầu</span>} value={returnsList.length} valueStyle={{ color: 'white', fontWeight: 900 }} prefix={<InboxOutlined />} />
+          <InboxOutlined className="absolute -right-4 -bottom-4 text-8xl text-white/10" />
+        </Card>
+        <Card className="rounded-[2.5rem] border-0 shadow-sm">
+          <Statistic title={<span className="text-[10px] font-black text-amber-500 uppercase tracking-widest">Đang chờ xử lý</span>} value={returnsList.filter(r => r.trang_thai === 'da_bao_cao').length} valueStyle={{ fontWeight: 900, color: '#f59e0b' }} prefix={<ClockCircleOutlined />} />
+        </Card>
+        <Card className="rounded-[2.5rem] border-0 shadow-sm">
+          <Statistic title={<span className="text-[10px] font-black text-blue-500 uppercase tracking-widest">Đang vận chuyển</span>} value={returnsList.filter(r => r.trang_thai === 'dang_van_chuyen').length} valueStyle={{ fontWeight: 900, color: '#3b82f6' }} prefix={<CarOutlined />} />
+        </Card>
+        <Card className="rounded-[2.5rem] border-0 shadow-sm">
+          <Statistic title={<span className="text-[10px] font-black text-emerald-500 uppercase tracking-widest">Đã chấp thuận</span>} value={returnsList.filter(r => ['chap_thuan', 'da_hoan_tien'].includes(r.trang_thai)).length} valueStyle={{ fontWeight: 900, color: '#10b981' }} prefix={<CheckCircleOutlined />} />
+        </Card>
+      </div>
 
-                        return (
-                          <li key={idx} className="item-row">
-                            <div className="item-thumb">
-                              {img ? (
-                                <img src={img} alt={name} className="item-thumb-img" />
-                              ) : (
-                                <div className="item-thumb-placeholder">No Image</div>
-                              )}
-                            </div>
-                            <div className="item-meta">
-                              <div className="item-name">{name}</div>
-                              <div className="item-qty">SL: {it.so_luong || it.qty || 1}</div>
-                            </div>
-                          </li>
-                        );
-                      })}
-                    </ul>
+      <div className="bg-white p-6 rounded-[2.5rem] border border-slate-100 shadow-sm mb-8">
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3 bg-slate-50 px-4 py-2 rounded-xl border border-slate-100">
+            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Bộ lọc trạng thái:</span>
+            <Select className="w-48 modern-select border-0 shadow-none bg-transparent" value={statusFilter} onChange={setStatusFilter}>
+              <Option value="all">TẤT CẢ PHIẾU</Option>
+              {Object.keys(STATUS_LABELS).map(k => <Option key={k} value={k}>{STATUS_LABELS[k].text.toUpperCase()}</Option>)}
+            </Select>
+          </div>
+        </div>
+      </div>
 
-                    {(() => {
-                      const norm = parseAttachments(selectedReturn);
-                      if (Array.isArray(norm) && norm.length > 0) {
-                        return (
-                          <>
-                            <h4>File đính kèm (ảnh khách gửi)</h4>
-                            <div className="attachments">
-                              <div className="attachment-grid">
-                                {norm.map((a, i) => (
-                                  <div key={i} className="attachment-item">
-                                    {a.isImage ? (
-                                      <a href={a.url} target="_blank" rel="noreferrer">
-                                        <img src={a.url} alt={a.label || `Đính kèm ${i + 1}`} className="attachment-thumb" />
-                                      </a>
-                                    ) : (
-                                      <a className="attachment-link" href={a.url} target="_blank" rel="noreferrer">{a.label || `Tệp ${i + 1}`}</a>
-                                    )}
-                                  </div>
-                                ))}
-                              </div>
-                            </div>
-                          </>
-                        );
-                      }
-                      return null;
-                    })()}
+      <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden">
+        <Table columns={columns} dataSource={returnsList.filter(r => r.ma_don_hang?.toString().includes(searchTerm) || r.nguoi_tao?.toLowerCase().includes(searchTerm.toLowerCase()))} rowKey="id" loading={loading} pagination={{ pageSize: 8, className: "px-8 py-6" }} className="modern-table" scroll={{ x: 1000 }} />
+      </div>
 
-                    <h4>Lịch sử</h4>
-                    <ul>
-                      {(selectedReturn.history || []).map((h) => (
-                        <li key={h.id || Math.random()}>{new Date(h.created_at || h.createdAt || Date.now()).toLocaleString()} — {h.trang_thai_cu} → {h.trang_thai_moi} — {h.ghi_chu || ''}</li>
-                      ))}
-                    </ul>
-                  </div>
-                </div>
-                <div className="modal-actions-floating">
-                  {selectedReturn.trang_thai !== 'chap_thuan' && (
-                    <button className="btn btn-accept" onClick={() => handleAction(selectedReturn.id, 'chap_thuan', { restock: true })} disabled={processing}>Chấp thuận & Restock</button>
-                  )}
-
-                  {/* If the package is currently in transit, allow admin to mark as received */}
-                  {selectedReturn.trang_thai === 'dang_van_chuyen' && (
-                    <>
-                      <button className="btn btn-light" onClick={onReceiveClick} disabled={processing}>Xác nhận đã nhận</button>
-                      {showReceiveConfirm && (
-                        <div className="receive-confirm" style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                          <label style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                            <input type="checkbox" checked={receiveOptions.restock} onChange={(e) => setReceiveOptions(s => ({ ...s, restock: e.target.checked }))} /> Restock
-                          </label>
-                          <input type="number" placeholder="Số tiền hoàn (nếu có)" value={receiveOptions.so_tien_hoan} onChange={(e) => setReceiveOptions(s => ({ ...s, so_tien_hoan: e.target.value }))} style={{ minWidth: 140 }} />
-                          <select value={receiveOptions.phuong_thuc_hoan} onChange={(e) => setReceiveOptions(s => ({ ...s, phuong_thuc_hoan: e.target.value }))}>
-                            <option value="">Phương thức hoàn</option>
-                            <option value="tien_mat">Tiền mặt</option>
-                            <option value="chuyen_khoan">Chuyển khoản</option>
-                          </select>
-                          <button className="btn btn-accept" onClick={() => submitReceiveMark('approve')} disabled={processing}>Chấp thuận (sau nhận)</button>
-                          <button className="btn btn-light" onClick={() => submitReceiveMark('mark')} disabled={processing}>Chỉ đánh dấu đã nhận</button>
-                        </div>
-                      )}
-                    </>
-                  )}
-                  {selectedReturn.trang_thai !== 'tu_choi' && (
-                    <button className="btn btn-reject" onClick={() => handleAction(selectedReturn.id, 'tu_choi')} disabled={processing}>Từ chối</button>
-                  )}
-                  <button className="btn btn-light" onClick={closeModal}>Đóng</button>
+      <Modal open={detailModal} onCancel={() => setDetailModal(false)} footer={null} width={900} className="modern-modal" centered title={null}>
+        {selectedReturn && (
+          <div className="space-y-8">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className="p-3 bg-indigo-50 rounded-2xl text-indigo-600"><InboxOutlined /></div>
+                <div>
+                  <h2 className="text-2xl font-black text-slate-800">Chi tiết Yêu cầu Trả hàng</h2>
+                  <p className="text-slate-400 text-sm mt-1 font-medium uppercase tracking-tight">Mã phiếu: #RTN{selectedReturn.id} • Đơn hàng: #{selectedReturn.ma_don_hang}</p>
                 </div>
               </div>
+              <Tag color={STATUS_LABELS[selectedReturn.trang_thai]?.color} className="font-black px-4 py-1 rounded-full">{STATUS_LABELS[selectedReturn.trang_thai]?.text.toUpperCase()}</Tag>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              <div className="md:col-span-2 space-y-6">
+                <div className="bg-slate-50 p-6 rounded-[2rem] border border-slate-100">
+                  <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-4">Lý do từ khách hàng</span>
+                  <div className="flex items-start gap-3">
+                    <HistoryOutlined className="text-slate-300 mt-1" />
+                    <p className="text-sm font-medium text-slate-600 italic">"{selectedReturn.ly_do}"</p>
+                  </div>
+                </div>
+
+                <div>
+                  <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-4 ml-1">Danh sách mặt hàng hoàn trả</span>
+                  <div className="space-y-3">
+                    {(() => {
+                      const items = Array.isArray(selectedReturn.mat_hang) ? selectedReturn.mat_hang : (typeof selectedReturn.mat_hang === 'string' ? JSON.parse(selectedReturn.mat_hang) : []);
+                      return items.map((it, idx) => (
+                        <div key={idx} className="flex items-center justify-between p-4 bg-white rounded-2xl border border-slate-100 shadow-sm">
+                          <div className="flex items-center gap-4">
+                            <Avatar size={50} src={it.hinh_anh || it.HinhAnh} className="rounded-xl border border-slate-50" icon={<InboxOutlined />} />
+                            <div>
+                              <div className="font-black text-slate-800 text-sm">{it.ten_san_pham || it.TenSP}</div>
+                              <div className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">SL: {it.so_luong || 1}</div>
+                            </div>
+                          </div>
+                        </div>
+                      ));
+                    })()}
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-6">
+                <div className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm">
+                  <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-6">Lịch sử xử lý</span>
+                  <Timeline 
+                    mode="left"
+                    items={(selectedReturn.history || []).map(h => ({
+                      color: 'indigo',
+                      children: (
+                        <div className="pb-4">
+                          <div className="text-[10px] font-black text-indigo-600 uppercase mb-1">{moment(h.created_at).format('DD/MM/YYYY HH:mm')}</div>
+                          <div className="text-xs font-bold text-slate-700">{h.trang_thai_moi === 'chap_thuan' ? 'ĐÃ CHẤP THUẬN' : h.trang_thai_moi.toUpperCase()}</div>
+                          {h.ghi_chu && <div className="text-[10px] text-slate-400 font-medium italic mt-1">{h.ghi_chu}</div>}
+                        </div>
+                      )
+                    }))}
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-3 pt-8 border-t border-slate-100">
+              <Button onClick={() => setDetailModal(false)} className="h-12 px-8 rounded-2xl font-bold border-slate-200">Đóng</Button>
+              {['da_bao_cao', 'dang_van_chuyen'].includes(selectedReturn.trang_thai) && (
+                <>
+                  <Button danger className="h-12 px-8 rounded-2xl font-black text-xs uppercase" onClick={() => handleAction(selectedReturn.id, 'tu_choi')}>Từ chối</Button>
+                  <Button type="primary" className="h-12 px-12 rounded-2xl font-black text-xs uppercase bg-emerald-600 border-0 shadow-lg" onClick={() => handleAction(selectedReturn.id, 'chap_thuan', { restock: true })}>Chấp thuận & Nhập kho</Button>
+                </>
+              )}
             </div>
           </div>
         )}
-      </div>
+      </Modal>
+
+      <style dangerouslySetInnerHTML={{ __html: `
+        .modern-table .ant-table-thead > tr > th { background: #f8fafc !important; color: #94a3b8 !important; font-size: 11px !important; font-weight: 900 !important; text-transform: uppercase !important; letter-spacing: 0.1em !important; padding: 20px 24px !important; border-bottom: 1px solid #f1f5f9 !important; }
+        .modern-table .ant-table-tbody > tr > td { padding: 16px 24px !important; border-bottom: 1px solid #f8fafc !important; }
+        .modern-modal .ant-modal-content { border-radius: 40px !important; padding: 40px !important; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.1) !important; }
+        .modern-select .ant-select-selector { border-radius: 12px !important; border: 0 !important; box-shadow: none !important; font-weight: 900 !important; text-transform: uppercase !important; font-size: 10px !important; }
+      `}} />
     </div>
   );
 };

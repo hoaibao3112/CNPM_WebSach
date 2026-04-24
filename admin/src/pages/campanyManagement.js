@@ -1,22 +1,28 @@
 import React, { useEffect, useState, useRef, useCallback } from 'react';
 import api from '../utils/api';
-import { Button, Input, message, Table, Modal, Space, Select } from 'antd';
-import { EditOutlined, DeleteOutlined, ExclamationCircleFilled, LockOutlined, UnlockOutlined } from '@ant-design/icons';
+import { Button, Input, message, Table, Modal, Space, Select, Tooltip, Avatar } from 'antd';
+import { 
+  EditOutlined, 
+  DeleteOutlined, 
+  ExclamationCircleFilled, 
+  LockOutlined, 
+  UnlockOutlined, 
+  SearchOutlined, 
+  PlusOutlined, 
+  HomeOutlined, 
+  PhoneOutlined, 
+  CheckCircleOutlined, 
+  StopOutlined,
+  BusinessOutlined
+} from '@ant-design/icons';
 
-const { Search: SearchInput } = Input;
-const { confirm } = Modal;
 const { Option } = Select;
+const { confirm } = Modal;
 
 const CompanyManagement = () => {
   const [state, setState] = useState({
     companies: [],
-    newCompany: {
-      MaNCC: '',
-      TenNCC: '',
-      SDT: '',
-      DiaChi: '',
-      TinhTrang: '1',
-    },
+    newCompany: { MaNCC: '', TenNCC: '', SDT: '', DiaChi: '', TinhTrang: '1' },
     editingCompany: null,
     searchTerm: '',
     isModalVisible: false,
@@ -26,9 +32,8 @@ const CompanyManagement = () => {
 
   const { companies, newCompany, editingCompany, searchTerm, isModalVisible, loading } = state;
   const API_URL = '/company';
-  const debounceRef = useRef(null); // Để debounce search
+  const debounceRef = useRef(null);
 
-  // Helper để convert Buffer to string nếu cần (fallback)
   const convertStatusIfBuffer = useCallback((company) => {
     let statusValue = company.TinhTrang;
     if (statusValue && typeof statusValue === 'object' && statusValue.type === 'Buffer' && statusValue.data && statusValue.data.length > 0) {
@@ -40,476 +45,210 @@ const CompanyManagement = () => {
   const fetchCompanies = useCallback(async (keyword = '') => {
     try {
       setState(prev => ({ ...prev, loading: true, error: null }));
-      let url = API_URL;
-      if (keyword) {
-        url = `${API_URL}/search?keyword=${encodeURIComponent(keyword)}`;
-      }
-      const response = await api.get(url);
-
+      const response = await api.get(keyword ? `${API_URL}/search?keyword=${encodeURIComponent(keyword)}` : API_URL);
       const resData = response.data.data || response.data;
       const companiesData = Array.isArray(resData) ? resData : (resData?.data || []);
-
       if (Array.isArray(companiesData)) {
-        const processedCompanies = companiesData.map(company => {
-          const statusValue = convertStatusIfBuffer(company);
-          return {
-            ...company,
-            TinhTrang: statusValue === '1' ? 'Hoạt động' : 'Ngừng hoạt động',
-            TinhTrangValue: statusValue,
-          };
+        const processed = companiesData.map(c => {
+          const statusValue = convertStatusIfBuffer(c);
+          return { ...c, TinhTrang: statusValue === '1' ? 'Hoạt động' : 'Ngừng hoạt động', TinhTrangValue: statusValue };
         });
-        setState(prev => ({ ...prev, companies: processedCompanies }));
-      } else {
-        throw new Error('Dữ liệu nhà cung cấp không hợp lệ');
+        setState(prev => ({ ...prev, companies: processed }));
       }
-    } catch (error) {
-      setState(prev => ({ ...prev, error: error.message }));
-      message.error(`Lỗi khi tải dữ liệu: ${error.message}`);
-    } finally {
-      setState(prev => ({ ...prev, loading: false }));
-    }
+    } catch (error) { message.error(`Lỗi tải dữ liệu: ${error.message}`); }
+    finally { setState(prev => ({ ...prev, loading: false })); }
   }, [convertStatusIfBuffer]);
 
-  useEffect(() => {
-    fetchCompanies();
-  }, [fetchCompanies]);
+  useEffect(() => { fetchCompanies(); }, [fetchCompanies]);
 
-  // Debounce search khi type
   useEffect(() => {
-    if (debounceRef.current) {
-      clearTimeout(debounceRef.current);
-    }
-    debounceRef.current = setTimeout(() => {
-      fetchCompanies(searchTerm);
-    }, 500); // Delay 500ms sau khi ngừng type
-
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => { fetchCompanies(searchTerm); }, 500);
     return () => clearTimeout(debounceRef.current);
   }, [searchTerm, fetchCompanies]);
 
-  // Gợi ý MaNCC tự động khi thêm mới (max +1, giả sử MaNCC là số)
   const suggestMaNCC = () => {
     if (companies.length === 0) return '1';
     const maxId = Math.max(...companies.map(c => parseInt(c.MaNCC) || 0));
     return (maxId + 1).toString();
   };
 
-  const handleSearchChange = (e) => {
-    setState(prev => ({ ...prev, searchTerm: e.target.value }));
-  };
-
-  const onSearch = (value) => {
-    setState(prev => ({ ...prev, searchTerm: value }));
-    fetchCompanies(value); // Gọi ngay khi nhấn Enter/button
-  };
-
   const handleInputChange = (field, value) => {
     if (editingCompany) {
-      setState(prev => ({
-        ...prev,
-        editingCompany: {
-          ...prev.editingCompany,
-          [field]: value,
-          ...(field === 'TinhTrang' && { TinhTrangValue: value }),
-        },
-      }));
+      setState(prev => ({ ...prev, editingCompany: { ...prev.editingCompany, [field]: value, ...(field === 'TinhTrang' && { TinhTrangValue: value }) } }));
     } else {
-      setState(prev => ({
-        ...prev,
-        newCompany: {
-          ...prev.newCompany,
-          [field]: value,
-        },
-      }));
+      setState(prev => ({ ...prev, newCompany: { ...prev.newCompany, [field]: value } }));
     }
   };
 
-  const validateCompanyData = (data, isEditing = false) => {
-    if (!data.MaNCC || !data.TenNCC || !data.SDT || !data.DiaChi) {
-      message.error('Vui lòng nhập đầy đủ thông tin bắt buộc (Mã NCC, Tên NCC, SĐT, Địa chỉ)!');
-      return false;
-    }
-    if (!/^\d{1,10}$/.test(data.MaNCC)) { // Giả sử MaNCC là số, điều chỉnh nếu cần
-      message.error('Mã NCC không hợp lệ (chỉ số)!');
-      return false;
-    }
-    if (!isEditing) {
-      // Kiểm tra duplicate client-side
-      const exists = companies.some(c => c.MaNCC === data.MaNCC);
-      if (exists) {
-        message.error('Mã NCC đã tồn tại! Vui lòng chọn mã khác.');
-        return false;
-      }
-    }
-    if (!/^\d{10,11}$/.test(data.SDT)) {
-      message.error('Số điện thoại không hợp lệ (10-11 số)!');
-      return false;
-    }
-    if (!['1', '0'].includes(data.TinhTrang)) {
-      message.error('Trạng thái không hợp lệ!');
-      return false;
-    }
+  const validate = (data, isEditing) => {
+    if (!data.MaNCC || !data.TenNCC || !data.SDT || !data.DiaChi) return message.error('Vui lòng nhập đầy đủ thông tin!'), false;
+    if (!isEditing && companies.some(c => c.MaNCC === data.MaNCC)) return message.error('Mã NCC đã tồn tại!'), false;
     return true;
   };
 
-  const handleAddCompany = async () => {
-    if (!validateCompanyData(newCompany, false)) return;
-
+  const handleSave = async () => {
+    const data = editingCompany || newCompany;
+    if (!validate(data, !!editingCompany)) return;
     try {
-      const payload = {
-        ...newCompany,
-        TinhTrang: newCompany.TinhTrang, // Đảm bảo là string '1' or '0'
-      };
-
-      await api.post(API_URL, payload);
-      await fetchCompanies(searchTerm); // Giữ nguyên search term sau khi thêm
-      setState(prev => ({
-        ...prev,
-        newCompany: {
-          MaNCC: suggestMaNCC(), // Reset với gợi ý mới
-          TenNCC: '',
-          SDT: '',
-          DiaChi: '',
-          TinhTrang: '1',
-        },
-        isModalVisible: false,
-      }));
-      message.success('Thêm nhà cung cấp thành công!');
-    } catch (error) {
-      console.error('Add error:', error); // Log để debug
-      const errorMsg = error.response?.data?.error || error.message;
-      message.error(`Lỗi khi thêm nhà cung cấp: ${errorMsg}`);
-    }
+      if (editingCompany) await api.put(`${API_URL}/${data.MaNCC}`, data);
+      else await api.post(API_URL, data);
+      message.success(editingCompany ? 'Cập nhật thành công' : 'Thêm mới thành công');
+      fetchCompanies(searchTerm);
+      setState(prev => ({ ...prev, isModalVisible: false, editingCompany: null }));
+    } catch (error) { message.error(`Lỗi: ${error.message}`); }
   };
 
-  const handleUpdateCompany = async () => {
-    if (!validateCompanyData(editingCompany, true)) return;
-
-    try {
-      const payload = {
-        ...editingCompany,
-        TinhTrang: editingCompany.TinhTrang, // Đảm bảo là string '1' or '0'
-      };
-
-      await api.put(`${API_URL}/${editingCompany.MaNCC}`, payload);
-      await fetchCompanies(searchTerm); // Giữ nguyên search term sau khi cập nhật
-      setState(prev => ({
-        ...prev,
-        editingCompany: null,
-        isModalVisible: false,
-      }));
-      message.success('Cập nhật nhà cung cấp thành công!');
-    } catch (error) {
-      console.error('Update error:', error); // Log để debug
-      const errorMsg = error.response?.data?.error || error.message;
-      message.error(`Lỗi khi cập nhật nhà cung cấp: ${errorMsg}`);
-    }
-  };
-
-  const handleDeleteCompany = (MaNCC) => {
+  const handleDelete = (MaNCC) => {
     confirm({
-      title: 'Bạn có chắc muốn xóa nhà cung cấp này?',
-      icon: <ExclamationCircleFilled />,
-      content: 'Hành động này sẽ không thể hoàn tác',
+      title: 'Xóa nhà cung cấp?',
       okText: 'Xóa',
       okType: 'danger',
-      cancelText: 'Thoát',
-      async onOk() {
-        try {
-          await api.delete(`${API_URL}/${MaNCC}`);
-          await fetchCompanies(searchTerm); // Giữ nguyên search term sau khi xóa
-          message.success('Xóa nhà cung cấp thành công!');
-        } catch (error) {
-          console.error('Delete error:', error); // Log để debug
-          const errorMsg = error.response?.data?.error || error.message;
-          message.error(`Lỗi khi xóa nhà cung cấp: ${errorMsg}`);
-        }
-      },
-    });
-  };
-
-  const handleToggleStatus = (company) => {
-    confirm({
-      title: `Bạn có muốn ${company.TinhTrang === 'Hoạt động' ? 'ngừng' : 'kích hoạt'} nhà cung cấp này?`,
-      icon: <ExclamationCircleFilled />,
-      okText: 'Xác nhận',
-      cancelText: 'Hủy',
-      async onOk() {
-        try {
-          const newStatus = company.TinhTrangValue === '1' ? '0' : '1';
-          await api.put(`${API_URL}/${company.MaNCC}`, {
-            ...company,
-            TinhTrang: newStatus,
-          });
-          await fetchCompanies(searchTerm); // Giữ nguyên search term sau khi toggle
-          message.success(`Đã ${newStatus === '1' ? 'kích hoạt' : 'ngừng'} nhà cung cấp!`);
-        } catch (error) {
-          console.error('Toggle error:', error); // Log để debug
-          const errorMsg = error.response?.data?.error || error.message;
-          message.error(`Lỗi khi đổi trạng thái: ${errorMsg}`);
-        }
-      },
+      onOk: async () => {
+        try { await api.delete(`${API_URL}/${MaNCC}`); fetchCompanies(searchTerm); message.success('Đã xóa thành công'); }
+        catch (e) { message.error('Lỗi khi xóa'); }
+      }
     });
   };
 
   const columns = [
     {
-      title: 'Mã NCC',
-      dataIndex: 'MaNCC',
-      key: 'MaNCC',
-      width: 100,
+      title: 'ĐỐI TÁC',
+      key: 'company',
       fixed: 'left',
-    },
-    {
-      title: 'Tên NCC',
-      dataIndex: 'TenNCC',
-      key: 'TenNCC',
-      width: 200,
-    },
-    {
-      title: 'SĐT',
-      dataIndex: 'SDT',
-      key: 'SDT',
-      width: 120,
-    },
-    {
-      title: 'Địa chỉ',
-      dataIndex: 'DiaChi',
-      key: 'DiaChi',
-      width: 250,
-    },
-    {
-      title: 'Trạng thái',
-      dataIndex: 'TinhTrang',
-      key: 'TinhTrang',
-      width: 150,
-      render: (status) => (
-        <span
-          className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${status === 'Hoạt động' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-            }`}
-        >
-          {status}
-        </span>
-      ),
-    },
-    {
-      title: 'Thao tác',
-      key: 'action',
+      width: 300,
       render: (_, record) => (
-        <Space size="small">
-          <Button
-            size="small"
-            icon={<EditOutlined />}
-            onClick={() => {
-              setState(prev => ({
-                ...prev,
-                editingCompany: {
-                  ...record,
-                  TinhTrang: record.TinhTrangValue, // Đảm bảo dùng value string
-                },
-                isModalVisible: true,
-              }));
-            }}
-          />
-          <Button
-            size="small"
-            icon={record.TinhTrang === 'Hoạt động' ? <LockOutlined /> : <UnlockOutlined />}
-            onClick={() => handleToggleStatus(record)}
-          />
-          <Button
-            size="small"
-            danger
-            icon={<DeleteOutlined />}
-            onClick={() => handleDeleteCompany(record.MaNCC)}
-          />
-        </Space>
-      ),
-      fixed: 'right',
-      width: 120,
+        <div className="flex items-center gap-3">
+          <Avatar size={44} icon={<HomeOutlined />} className="bg-indigo-50 text-indigo-600 flex-shrink-0 rounded-xl" />
+          <div>
+            <div className="font-black text-slate-800 leading-tight">{record.TenNCC}</div>
+            <div className="text-[10px] text-slate-400 font-black uppercase tracking-tighter">Mã: #{record.MaNCC}</div>
+          </div>
+        </div>
+      )
     },
+    {
+      title: 'THÔNG TIN LIÊN HỆ',
+      key: 'contact',
+      width: 250,
+      render: (_, record) => (
+        <div className="space-y-1">
+          <div className="flex items-center gap-2 text-xs font-bold text-slate-600"><PhoneOutlined className="text-slate-300" /> {record.SDT}</div>
+          <div className="flex items-center gap-2 text-xs font-bold text-slate-500 truncate max-w-[200px]" title={record.DiaChi}><HomeOutlined className="text-slate-300" /> {record.DiaChi}</div>
+        </div>
+      )
+    },
+    {
+      title: 'TRẠNG THÁI',
+      dataIndex: 'TinhTrang',
+      key: 'status',
+      width: 150,
+      render: (s) => (
+        <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${s === 'Hoạt động' ? 'bg-emerald-100 text-emerald-600' : 'bg-rose-100 text-rose-600'}`}>
+          {s}
+        </span>
+      )
+    },
+    {
+      title: 'THAO TÁC',
+      key: 'action',
+      fixed: 'right',
+      width: 150,
+      render: (_, record) => (
+        <div className="flex gap-2">
+          <Tooltip title="Chỉnh sửa">
+            <Button className="w-10 h-10 rounded-xl flex items-center justify-center border-slate-200 text-slate-600 hover:text-indigo-600 hover:border-indigo-600 transition-all" icon={<EditOutlined />} onClick={() => setState(prev => ({ ...prev, editingCompany: { ...record, TinhTrang: record.TinhTrangValue }, isModalVisible: true }))} />
+          </Tooltip>
+          <Tooltip title="Xóa">
+            <Button danger className="w-10 h-10 rounded-xl flex items-center justify-center" icon={<DeleteOutlined />} onClick={() => handleDelete(record.MaNCC)} />
+          </Tooltip>
+        </div>
+      )
+    }
   ];
 
-  // Current form data cho modal
-  const currentCompany = editingCompany || newCompany;
-  const isEditing = !!editingCompany;
-
   return (
-    <div className="thongke-page">
-      <div className="thongke-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <h1>
-          <i className="fas fa-building"></i> Quản lý Nhà Cung Cấp
-        </h1>
+    <div className="p-4 md:p-8 min-h-screen bg-slate-50 font-sans">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
+        <div>
+          <h1 className="text-3xl font-black text-slate-800 flex items-center gap-3">
+            <span className="material-icons text-indigo-500">business</span>
+            Mạng lưới Nhà cung cấp
+          </h1>
+          <p className="text-slate-400 text-sm mt-1 font-medium">Quản lý các đơn vị đối tác cung ứng hàng hóa</p>
+        </div>
         <Button
           type="primary"
-          size="small"
-          onClick={() => {
-            const suggestedId = suggestMaNCC();
-            setState(prev => ({
-              ...prev,
-              editingCompany: null,
-              newCompany: {
-                MaNCC: suggestedId, // Gợi ý MaNCC tự động
-                TenNCC: '',
-                SDT: '',
-                DiaChi: '',
-                TinhTrang: '1',
-              },
-              isModalVisible: true,
-            }));
-          }}
+          icon={<PlusOutlined />}
+          onClick={() => setState(prev => ({ ...prev, editingCompany: null, newCompany: { MaNCC: suggestMaNCC(), TenNCC: '', SDT: '', DiaChi: '', TinhTrang: '1' }, isModalVisible: true }))}
+          className="h-12 px-8 rounded-2xl bg-indigo-600 hover:bg-indigo-700 border-0 shadow-lg shadow-indigo-100 font-bold flex items-center gap-2"
         >
           Thêm nhà cung cấp
         </Button>
       </div>
 
-      <div className="thongke-content">
-        <div className="thongke-filters">
-          <div className="filter-group" style={{ display: 'flex', alignItems: 'baseline', gap: '8px' }}>
-            <label style={{ margin: 0, whiteSpace: 'nowrap', fontWeight: 500, color: '#666' }}>Tìm kiếm:</label>
-            <SearchInput
-              placeholder="Tìm nhà cung cấp theo tên, mã, SĐT hoặc địa chỉ..."
-              allowClear
-              enterButton
-              size="small"
-              value={searchTerm}
-              onChange={handleSearchChange} // Thêm onChange để input responsive
-              onSearch={onSearch} // Giữ onSearch cho Enter/button
-              style={{ width: 400 }}
-            />
-          </div>
-        </div>
-
-        <div className="thongke-table">
-          <Table
-            columns={columns}
-            dataSource={companies}
-            rowKey="MaNCC"
-            loading={loading}
-            scroll={{ x: 1000 }}
-            pagination={{
-              pageSize: 10,
-              showSizeChanger: false,
-              size: 'small',
-            }}
-            size="small"
-            className="compact-company-table"
-            style={{ fontSize: '13px' }}
+      <div className="bg-white p-6 rounded-[2.5rem] border border-slate-100 shadow-sm mb-8">
+        <div className="relative group max-w-2xl">
+          <SearchOutlined className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 z-10" />
+          <Input 
+            placeholder="Tìm theo tên, mã, số điện thoại hoặc địa chỉ..." 
+            className="h-12 pl-12 pr-4 w-full rounded-2xl border-slate-100 bg-slate-50 font-bold text-slate-600 focus:ring-2 focus:ring-indigo-500/20 transition-all"
+            value={searchTerm}
+            onChange={(e) => setState(prev => ({ ...prev, searchTerm: e.target.value }))}
           />
         </div>
       </div>
 
-      <Modal
-        title={isEditing ? 'Chỉnh sửa nhà cung cấp' : 'Thêm nhà cung cấp mới'}
-        open={isModalVisible}
-        onCancel={() => {
-          setState(prev => ({
-            ...prev,
-            isModalVisible: false,
-            editingCompany: null,
-          }));
-        }}
-        footer={[
-          <Button
-            key="cancel"
-            onClick={() => {
-              setState(prev => ({
-                ...prev,
-                isModalVisible: false,
-                editingCompany: null,
-              }));
-            }}
-          >
-            Hủy
-          </Button>,
-          <Button
-            key="submit"
-            type="primary"
-            onClick={isEditing ? handleUpdateCompany : handleAddCompany}
-          >
-            {isEditing ? 'Lưu' : 'Thêm'}
-          </Button>,
-        ]}
-        width={600}
-        styles={{ body: { padding: '16px' } }}
-      >
-        <div className="info-section">
-          <div className="info-grid">
-            <div className="info-item">
-              <p className="info-label">Mã NCC:</p>
-              <Input
-                size="small"
-                value={currentCompany.MaNCC}
-                onChange={(e) => handleInputChange('MaNCC', e.target.value)}
-                disabled={isEditing}
-                placeholder={isEditing ? '' : `Gợi ý: ${suggestMaNCC()}`}
-              />
-            </div>
-            <div className="info-item">
-              <p className="info-label">Tên NCC:</p>
-              <Input
-                size="small"
-                value={currentCompany.TenNCC}
-                onChange={(e) => handleInputChange('TenNCC', e.target.value)}
-              />
-            </div>
-            <div className="info-item">
-              <p className="info-label">SĐT:</p>
-              <Input
-                size="small"
-                value={currentCompany.SDT}
-                onChange={(e) => handleInputChange('SDT', e.target.value)}
-              />
-            </div>
-            <div className="info-item">
-              <p className="info-label">Địa chỉ:</p>
-              <Input
-                size="small"
-                value={currentCompany.DiaChi}
-                onChange={(e) => handleInputChange('DiaChi', e.target.value)}
-              />
-            </div>
-            <div className="info-item">
-              <p className="info-label">Trạng thái:</p>
-              <Select
-                size="small"
-                value={currentCompany.TinhTrang}
-                onChange={(value) => handleInputChange('TinhTrang', value)}
-                style={{ width: '100%' }}
-              >
-                <Option value="1">Hoạt động</Option>
-                <Option value="0">Ngừng hoạt động</Option>
-              </Select>
-            </div>
+      <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden">
+        <Table
+          columns={columns}
+          dataSource={companies}
+          rowKey="MaNCC"
+          loading={loading}
+          pagination={{ pageSize: 10, className: "px-8 py-6" }}
+          className="modern-table"
+          scroll={{ x: 1000 }}
+        />
+      </div>
+
+      <Modal open={isModalVisible} title={null} onCancel={() => setState(prev => ({ ...prev, isModalVisible: false, editingCompany: null }))} footer={null} width={650} className="modern-modal" centered>
+        <div className="mb-8"><h2 className="text-2xl font-black text-slate-800 flex items-center gap-3"><span className="material-icons text-indigo-500">{editingCompany ? 'edit' : 'add_business'}</span> {editingCompany ? 'Cập nhật đối tác' : 'Đăng ký nhà cung cấp'}</h2><p className="text-slate-400 text-sm mt-1 font-medium">Thiết lập thông tin định danh và liên hệ chính thức</p></div>
+        <Form layout="vertical" className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <Form.Item label={<span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Mã định danh</span>} required>
+              <Input className="h-11 rounded-xl font-black" value={editingCompany ? editingCompany.MaNCC : newCompany.MaNCC} disabled={!!editingCompany} onChange={(e) => handleInputChange('MaNCC', e.target.value)} />
+            </Form.Item>
+            <Form.Item label={<span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Tên nhà cung cấp</span>} required>
+              <Input className="h-11 rounded-xl font-bold" value={editingCompany ? editingCompany.TenNCC : newCompany.TenNCC} onChange={(e) => handleInputChange('TenNCC', e.target.value)} />
+            </Form.Item>
           </div>
-        </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <Form.Item label={<span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Số điện thoại</span>} required>
+              <Input prefix={<PhoneOutlined className="text-slate-300" />} className="h-11 rounded-xl font-bold" value={editingCompany ? editingCompany.SDT : newCompany.SDT} onChange={(e) => handleInputChange('SDT', e.target.value)} />
+            </Form.Item>
+            <Form.Item label={<span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Trạng thái hợp tác</span>}>
+              <Select className="h-11 modern-select" value={editingCompany ? editingCompany.TinhTrang : newCompany.TinhTrang} onChange={(v) => handleInputChange('TinhTrang', v)}>
+                <Option value="1">Đang hoạt động</Option>
+                <Option value="0">Tạm ngừng</Option>
+              </Select>
+            </Form.Item>
+          </div>
+          <Form.Item label={<span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Địa chỉ trụ sở</span>} required>
+            <Input.TextArea rows={3} className="rounded-xl font-medium p-4" value={editingCompany ? editingCompany.DiaChi : newCompany.DiaChi} onChange={(e) => handleInputChange('DiaChi', e.target.value)} />
+          </Form.Item>
+          <div className="flex justify-end gap-3 pt-6 border-t border-slate-100">
+            <Button onClick={() => setState(prev => ({ ...prev, isModalVisible: false, editingCompany: null }))} className="h-12 px-8 rounded-2xl font-bold border-slate-200">Hủy</Button>
+            <Button type="primary" onClick={handleSave} className="h-12 px-12 rounded-2xl font-black uppercase tracking-widest text-xs bg-indigo-600 border-0 shadow-lg shadow-indigo-100">{editingCompany ? 'Lưu thay đổi' : 'Xác nhận thêm'}</Button>
+          </div>
+        </Form>
       </Modal>
 
-      <style>{`
-        .info-section {
-          background: #f8f8f8;
-          padding: 12px;
-          border-radius: 4px;
-          margin-bottom: 16px;
-        }
-        .info-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-          gap: 12px;
-        }
-        .info-item {
-          margin-bottom: 4px;
-        }
-        .info-label {
-          color: #666;
-          font-size: 12px;
-          margin: 0 0 4px 0;
-        }
-        .compact-company-table .ant-table-thead > tr > th {
-          padding: 8px 12px;
-        }
-        .compact-company-table .ant-table-tbody > tr > td {
-          padding: 8px 12px;
-        }
-      `}</style>
+      <style dangerouslySetInnerHTML={{ __html: `
+        .modern-table .ant-table-thead > tr > th { background: #f8fafc !important; color: #94a3b8 !important; font-size: 11px !important; font-weight: 900 !important; text-transform: uppercase !important; letter-spacing: 0.1em !important; padding: 20px 24px !important; border-bottom: 1px solid #f1f5f9 !important; }
+        .modern-table .ant-table-tbody > tr > td { padding: 16px 24px !important; border-bottom: 1px solid #f8fafc !important; }
+        .modern-modal .ant-modal-content { border-radius: 40px !important; padding: 40px !important; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.1) !important; }
+        .modern-select .ant-select-selector { border-radius: 12px !important; height: 44px !important; display: flex !important; align-items: center !important; background: #f8fafc !important; border-color: #f1f5f9 !important; }
+      `}} />
     </div>
   );
 };

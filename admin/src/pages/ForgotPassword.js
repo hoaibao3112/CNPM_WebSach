@@ -1,221 +1,121 @@
 import React, { useState } from 'react';
 import api from '../utils/api';
 import { Link, useNavigate } from 'react-router-dom';
-import { toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
-import '../styles/ForgotPassword.css';
+import { Form, Input, Button, Steps, message, Card, Typography } from 'antd';
+import { MailOutlined, LockOutlined, SafetyOutlined, ArrowLeftOutlined, KeyOutlined, CheckCircleOutlined } from '@ant-design/icons';
+
+const { Title, Text } = Typography;
+
 const ForgotPassword = () => {
-  const [step, setStep] = useState(1); // 1: Nhập email, 2: Nhập OTP, 3: Đặt mật khẩu mới
+  const [current, setCurrent] = useState(0);
   const [email, setEmail] = useState('');
-  const [otp, setOtp] = useState('');
-  const [newPassword, setNewPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
   const [otpToken, setOtpToken] = useState('');
   const [resetToken, setResetToken] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  const handleSendOtp = async (e) => {
-    e.preventDefault();
+  const onEmailSubmit = async (values) => {
     setLoading(true);
     try {
-      const response = await api.post('/forgot-password/send-otp', { email });
-      toast.success(response.data.message);
+      const response = await api.post('/forgot-password/send-otp', { email: values.email });
+      message.success('Mã OTP đã được gửi đến email của bạn');
+      setEmail(values.email);
       setOtpToken(response.data?.data?.token || '');
-      setStep(2);
-    } catch (error) {
-      toast.error(error.response?.data?.error || 'Lỗi khi gửi OTP');
-    } finally {
-      setLoading(false);
-    }
+      setCurrent(1);
+    } catch (error) { message.error(error.response?.data?.error || 'Lỗi khi gửi OTP'); }
+    finally { setLoading(false); }
   };
 
-  const handleVerifyOtp = async (e) => {
-    e.preventDefault();
+  const onOtpVerify = async (values) => {
     setLoading(true);
     try {
-      const response = await api.post('/forgot-password/verify-otp', { email, otp, token: otpToken });
-      toast.success(response.data.message);
+      const response = await api.post('/forgot-password/verify-otp', { email, otp: values.otp, token: otpToken });
+      message.success('Xác thực OTP thành công');
       setResetToken(response.data?.data?.resetToken || '');
-      setStep(3);
-    } catch (error) {
-      toast.error(error.response?.data?.error || 'Lỗi khi xác thực OTP');
-    } finally {
-      setLoading(false);
-    }
+      setCurrent(2);
+    } catch (error) { message.error('Mã OTP không chính xác'); }
+    finally { setLoading(false); }
   };
 
-  const handleResetPassword = async (e) => {
-    e.preventDefault();
-
-    if (newPassword !== confirmPassword) {
-      toast.error('Mật khẩu mới và xác nhận mật khẩu không khớp');
-      return;
-    }
-
+  const onPasswordReset = async (values) => {
     setLoading(true);
     try {
-      const response = await api.post('/forgot-password/reset', {
-        email,
-        resetToken,
-        matkhau: newPassword
-      });
-      toast.success(response.data.message);
-      navigate('/admin/login');
-    } catch (error) {
-      toast.error(error.response?.data?.error || 'Lỗi khi đặt lại mật khẩu');
-    } finally {
-      setLoading(false);
-    }
+      await api.post('/forgot-password/reset', { email, resetToken, matkhau: values.newPassword });
+      message.success('Đã khôi phục mật khẩu thành công!');
+      setTimeout(() => navigate('/admin/login'), 2000);
+    } catch (error) { message.error('Không thể đặt lại mật khẩu'); }
+    finally { setLoading(false); }
   };
 
   return (
-    <div className="forgot-password-container">
-      <div className="forgot-password-card">
-        <h2 className="forgot-password-title">
-          {step === 1 && 'Quên mật khẩu'}
-          {step === 2 && 'Nhập mã OTP'}
-          {step === 3 && 'Đặt lại mật khẩu'}
-        </h2>
+    <div className="min-h-screen flex items-center justify-center bg-slate-50 p-6 font-sans relative overflow-hidden">
+      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-indigo-500/10 blur-3xl rounded-full -mr-20 -mt-20"></div>
+      <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-purple-500/10 blur-3xl rounded-full -ml-20 -mb-20"></div>
 
-        {/* Step indicator */}
-        <div className="step-indicator">
-          <div className={`step ${step >= 1 ? 'active' : ''} ${step > 1 ? 'completed' : ''}`}>1</div>
-          <div className={`step ${step >= 2 ? 'active' : ''} ${step > 2 ? 'completed' : ''}`}>2</div>
-          <div className={`step ${step >= 3 ? 'active' : ''}`}>3</div>
-          <div className="step-line">
-            <div
-              className="step-line-progress"
-              style={{ width: step === 1 ? '0%' : step === 2 ? '50%' : '100%' }}
-            ></div>
+      <Card className="w-full max-w-[500px] rounded-[3rem] border-0 shadow-2xl shadow-slate-200/50 p-6 md:p-10 relative z-10 overflow-hidden">
+        <div className="text-center mb-10">
+          <div className="w-20 h-20 bg-indigo-600 rounded-[1.5rem] flex items-center justify-center text-white text-3xl mx-auto mb-6 shadow-xl shadow-indigo-200">
+            <KeyOutlined />
           </div>
+          <Title level={2} className="font-black tracking-tighter text-slate-800 mb-2">Khôi phục truy cập</Title>
+          <Text className="text-slate-400 font-medium">Bảo mật tài khoản là ưu tiên hàng đầu của chúng tôi</Text>
         </div>
 
-        {/* Step 1: Nhập email */}
-        {step === 1 && (
-          <form className="forgot-password-form" onSubmit={handleSendOtp}>
-            <div className="form-group">
-              <label htmlFor="email">Email đăng ký</label>
-              <input
-                id="email"
-                type="email"
-                placeholder="Nhập email của bạn"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-              />
-            </div>
+        <Steps 
+          current={current} 
+          className="mb-10" 
+          items={[
+            { title: 'Email', icon: <MailOutlined /> },
+            { title: 'Xác thực', icon: <SafetyOutlined /> },
+            { title: 'Mật khẩu', icon: <CheckCircleOutlined /> }
+          ]} 
+        />
 
-            <button type="submit" className="forgot-password-btn" disabled={loading}>
-              {loading ? 'Đang gửi...' : 'Gửi mã OTP'}
-            </button>
-          </form>
+        {current === 0 && (
+          <Form layout="vertical" onFinish={onEmailSubmit} className="space-y-6">
+            <Form.Item name="email" label={<span className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Địa chỉ Email đăng ký</span>} rules={[{ required: true, type: 'email' }]}>
+              <Input prefix={<MailOutlined className="text-indigo-500 mr-2" />} placeholder="name@company.com" className="h-14 rounded-2xl bg-slate-50 border-2 border-slate-50 hover:border-indigo-100 focus:bg-white transition-all text-base font-medium" />
+            </Form.Item>
+            <Button type="primary" htmlType="submit" block loading={loading} className="h-14 rounded-2xl bg-indigo-600 border-0 shadow-lg shadow-indigo-100 font-black uppercase text-xs tracking-widest">Gửi mã xác nhận</Button>
+          </Form>
         )}
 
-        {/* Step 2: Nhập OTP */}
-        {step === 2 && (
-          <form className="forgot-password-form" onSubmit={handleVerifyOtp}>
-            <div className="otp-instructions">
-              Chúng tôi đã gửi mã OTP đến email <strong>{email}</strong>.
-              Vui lòng kiểm tra và nhập mã bên dưới.
+        {current === 1 && (
+          <Form layout="vertical" onFinish={onOtpVerify} className="space-y-6">
+            <div className="p-4 bg-indigo-50/50 rounded-2xl border border-indigo-100/50 mb-6">
+              <p className="text-xs font-bold text-indigo-600 leading-relaxed text-center">Chúng tôi đã gửi mã 6 chữ số đến <strong>{email}</strong>. Vui lòng kiểm tra hộp thư đến.</p>
             </div>
-
-            <div className="form-group">
-              <label htmlFor="otp">Mã OTP</label>
-              <input
-                id="otp"
-                type="text"
-                placeholder="Nhập mã OTP 6 chữ số"
-                value={otp}
-                onChange={(e) => setOtp(e.target.value)}
-                required
-              />
+            <Form.Item name="otp" label={<span className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Mã xác thực OTP</span>} rules={[{ required: true, len: 6 }]}>
+              <Input placeholder="0 0 0 0 0 0" maxLength={6} className="h-16 rounded-2xl bg-slate-50 border-2 border-slate-50 text-center text-3xl font-black tracking-[0.5em] focus:bg-white transition-all" />
+            </Form.Item>
+            <div className="flex gap-4">
+              <Button onClick={() => setCurrent(0)} className="h-14 flex-1 rounded-2xl font-black border-slate-200 uppercase text-[10px]">Quay lại</Button>
+              <Button type="primary" htmlType="submit" block loading={loading} className="h-14 flex-[2] rounded-2xl bg-indigo-600 border-0 shadow-lg font-black uppercase text-[10px]">Tiếp tục xác thực</Button>
             </div>
-
-            <div className="navigation-buttons">
-              <button
-                type="button"
-                onClick={() => setStep(1)}
-                className="secondary-btn"
-              >
-                Quay lại
-              </button>
-              <button
-                type="submit"
-                className="forgot-password-btn"
-                disabled={loading}
-              >
-                {loading ? 'Đang xác thực...' : 'Xác thực'}
-              </button>
-            </div>
-          </form>
+          </Form>
         )}
 
-        {/* Step 3: Đặt mật khẩu mới */}
-        {step === 3 && (
-          <form className="forgot-password-form" onSubmit={handleResetPassword}>
-            <div className="form-group">
-              <label htmlFor="newPassword">Mật khẩu mới</label>
-              <input
-                id="newPassword"
-                type="password"
-                placeholder="Nhập mật khẩu mới (tối thiểu 6 ký tự)"
-                value={newPassword}
-                onChange={(e) => {
-                  setNewPassword(e.target.value);
-                  // Có thể thêm logic kiểm tra độ mạnh mật khẩu ở đây
-                }}
-                required
-                minLength="6"
-              />
-              <div className="password-strength">
-                <div className="password-strength-bar" style={{
-                  width: newPassword.length === 0 ? '0%' :
-                    newPassword.length < 6 ? '30%' :
-                      newPassword.length < 8 ? '60%' : '100%',
-                  backgroundColor: newPassword.length === 0 ? '#e74c3c' :
-                    newPassword.length < 6 ? '#e74c3c' :
-                      newPassword.length < 8 ? '#f39c12' : '#2ecc71'
-                }}></div>
-              </div>
-              <div className="password-strength-text">
-                {newPassword.length === 0 ? 'Vui lòng nhập mật khẩu' :
-                  newPassword.length < 6 ? 'Mật khẩu yếu' :
-                    newPassword.length < 8 ? 'Mật khẩu trung bình' : 'Mật khẩu mạnh'}
-              </div>
-            </div>
-
-            <div className="form-group">
-              <label htmlFor="confirmPassword">Xác nhận mật khẩu</label>
-              <input
-                id="confirmPassword"
-                type="password"
-                placeholder="Nhập lại mật khẩu mới"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                required
-                minLength="6"
-              />
-              {confirmPassword && newPassword !== confirmPassword && (
-                <div className="error-message">Mật khẩu không khớp</div>
-              )}
-            </div>
-
-            <button
-              type="submit"
-              className="forgot-password-btn"
-              disabled={loading || (newPassword && newPassword !== confirmPassword)}
-            >
-              {loading ? 'Đang xử lý...' : 'Đặt lại mật khẩu'}
-            </button>
-          </form>
+        {current === 2 && (
+          <Form layout="vertical" onFinish={onPasswordReset} className="space-y-6">
+            <Form.Item name="newPassword" label={<span className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Mật khẩu mới</span>} rules={[{ required: true, min: 6 }]}>
+              <Input.Password prefix={<LockOutlined className="text-indigo-500 mr-2" />} className="h-14 rounded-2xl bg-slate-50 border-2 border-slate-50" />
+            </Form.Item>
+            <Form.Item name="confirmPassword" label={<span className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Xác nhận mật khẩu</span>} dependencies={['newPassword']} rules={[{ required: true }, ({ getFieldValue }) => ({ validator(_, v) { return !v || getFieldValue('newPassword') === v ? Promise.resolve() : Promise.reject('Mật khẩu không khớp!'); } })]}>
+              <Input.Password prefix={<LockOutlined className="text-indigo-500 mr-2" />} className="h-14 rounded-2xl bg-slate-50 border-2 border-slate-50" />
+            </Form.Item>
+            <Button type="primary" htmlType="submit" block loading={loading} className="h-14 rounded-2xl bg-indigo-600 border-0 shadow-lg font-black uppercase text-xs tracking-widest">Hoàn tất đặt lại</Button>
+          </Form>
         )}
 
-        <div className="back-to-login">
-          <Link to="/login">Quay lại trang đăng nhập</Link>
+        <div className="mt-10 text-center">
+          <Link to="/admin/login" className="text-xs font-black text-slate-400 hover:text-indigo-600 transition-colors uppercase tracking-widest flex items-center justify-center gap-2 group">
+            <ArrowLeftOutlined className="group-hover:-translate-x-1 transition-transform" />
+            Về trang đăng nhập
+          </Link>
         </div>
-      </div>
+      </Card>
     </div>
   );
 };
+
 export default ForgotPassword;

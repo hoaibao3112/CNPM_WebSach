@@ -1,7 +1,6 @@
 import React, { useState, useContext } from 'react';
 import { NavLink, useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
-import '../styles/sidebar.css';
 import logo from '../assets/logo.png';
 import UserInfo from './UserInfo';
 import { PermissionContext } from './PermissionContext';
@@ -10,13 +9,16 @@ const Sidebar = () => {
   const [isOpen, setIsOpen] = useState(true);
   // sync a body-level class so portal/popover/modal elements can react when sidebar toggles
   React.useEffect(() => {
+    const handleToggle = () => setIsOpen(prev => !prev);
+    window.addEventListener('toggle-sidebar', handleToggle);
+
     try {
       document.body.classList.toggle('sidebar-open', isOpen);
       document.body.classList.toggle('sidebar-closed', !isOpen);
-    } catch (e) {
-      // ignore non-browser env
-    }
+    } catch (e) {}
+
     return () => {
+      window.removeEventListener('toggle-sidebar', handleToggle);
       try {
         document.body.classList.remove('sidebar-open', 'sidebar-closed');
       } catch {}
@@ -96,58 +98,103 @@ const Sidebar = () => {
   };
 
   return (
-    <div className={`sidebar ${isOpen ? 'open' : 'closed'}`}>
-      <div className="sidebar-header">
-        <div className="sidebar-logo">
-          <img src={logo} alt="Logo" className="logo-image" />
-        </div>
-        <button
-          className="btn-toggle"
-          onClick={() => setIsOpen(!isOpen)}
-          aria-label="Toggle sidebar"
-        >
-          {isOpen ? '‹' : '›'}
-        </button>
-      </div>
+    <>
+      {/* Mobile Overlay */}
+      {isOpen && (
+        <div 
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[1100] lg:hidden transition-all duration-500 ease-in-out"
+          onClick={() => setIsOpen(false)}
+        />
+      )}
 
-      <ul className="sidebar-menu">
-        {filteredMenuItems.map((item) => {
-          // Check if current path matches
-          const isActive = location.pathname === item.to;
-          
-          return (
-            <li key={item.to}>
-              <NavLink
-                to={item.to}
-                className={isActive ? 'active' : ''}
-                end={item.to === '/admin'}
-              >
-                <span className="material-icons">{item.icon}</span>
-                {isOpen && <span className="menu-text">{item.text}</span>}
-              </NavLink>
-            </li>
-          );
-        })}
-      </ul>
-
-      <div className="sidebar-footer">
-        <UserInfo isSidebarOpen={isOpen} />
-        {localStorage.getItem('showPerms') === '1' && (
-          <div style={{ padding: '8px', maxHeight: 180, overflow: 'auto', background: '#0b2233', color: '#fff', marginTop: 8 }}>
-            <div style={{ fontSize: 12, marginBottom: 6 }}>DEBUG Permissions (showPerms=1)</div>
-            <pre style={{ fontSize: 11, whiteSpace: 'pre-wrap' }}>{JSON.stringify(permissions, null, 2)}</pre>
+      <div className={`fixed inset-y-0 left-0 z-[1200] flex flex-col bg-slate-900 border-r border-slate-800 text-slate-100 transition-all duration-300 ease-in-out shadow-2xl overflow-hidden
+        ${isOpen ? 'w-64 translate-x-0' : 'w-20 -translate-x-full lg:translate-x-0'}`}>
+        
+        {/* Header */}
+        <div className="flex items-center justify-between p-5 border-b border-slate-800/50 bg-slate-900/50 backdrop-blur-md sticky top-0 z-20">
+          <div className={`flex items-center gap-3 transition-all duration-300 ${isOpen ? 'opacity-100' : 'opacity-0 lg:opacity-100'}`}>
+            <img src={logo} alt="Logo" className={`transition-all duration-300 ${isOpen ? 'h-10 w-auto' : 'h-8 w-8 object-cover rounded-lg'}`} />
           </div>
-        )}
-        <button
-          className="logout-btn logged-in"
-          onClick={handleLogout}
-          aria-label="Đăng xuất"
-        >
-          <span className="material-icons">logout</span>
-          {isOpen && <span className="menu-text">Đăng xuất</span>}
-        </button>
+          <button
+            className="w-10 h-10 flex items-center justify-center rounded-xl bg-slate-800/50 hover:bg-slate-700 text-slate-400 hover:text-white transition-all transform hover:scale-105 active:scale-95 border border-slate-700/50"
+            onClick={() => setIsOpen(!isOpen)}
+            aria-label="Toggle sidebar"
+          >
+            <span className="material-icons text-xl">
+              {isOpen ? 'chevron_left' : 'menu'}
+            </span>
+          </button>
+        </div>
+
+        {/* Menu Items */}
+        <nav className="flex-1 overflow-y-auto overflow-x-hidden py-6 px-3 scrollbar-hide space-y-1">
+          {filteredMenuItems.map((item) => {
+            const isActive = location.pathname === item.to;
+            
+            return (
+              <li key={item.to} className="list-none">
+                <NavLink
+                  to={item.to}
+                  className={({ isActive }) => `flex items-center gap-4 p-3 rounded-xl transition-all duration-200 group relative
+                    ${isActive 
+                      ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/20' 
+                      : 'text-slate-400 hover:bg-slate-800/50 hover:text-slate-100'}`}
+                  end={item.to === '/admin'}
+                  onClick={() => {
+                    if (window.innerWidth < 1024) setIsOpen(false);
+                  }}
+                >
+                  <span className={`material-icons transition-transform duration-300 group-hover:scale-110 ${isActive ? 'text-white' : 'text-slate-500 group-hover:text-indigo-400'}`}>
+                    {item.icon}
+                  </span>
+                  <span className={`font-medium transition-all duration-300 whitespace-nowrap ${isOpen ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-10 pointer-events-none'}`}>
+                    {item.text}
+                  </span>
+                  
+                  {/* Active Indicator Line */}
+                  {isActive && !isOpen && (
+                    <div className="absolute right-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-indigo-500 rounded-l-full shadow-[0_0_10px_#6366f1]" />
+                  )}
+
+                  {/* Tooltip for closed state */}
+                  {!isOpen && (
+                    <div className="absolute left-full ml-4 px-3 py-2 bg-slate-800 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-50 border border-slate-700 shadow-xl">
+                      {item.text}
+                    </div>
+                  )}
+                </NavLink>
+              </li>
+            );
+          })}
+        </nav>
+
+        {/* Footer */}
+        <div className="p-4 bg-slate-900/80 backdrop-blur-md border-t border-slate-800 space-y-3">
+          <UserInfo isSidebarOpen={isOpen} />
+          
+          {localStorage.getItem('showPerms') === '1' && isOpen && (
+            <div className="p-3 max-h-40 overflow-auto bg-black/40 rounded-xl text-[10px] text-slate-500 font-mono border border-slate-800 transition-all animate-in fade-in zoom-in duration-300">
+              <div className="mb-2 uppercase font-bold text-indigo-400 opacity-80 border-b border-slate-800 pb-1">Debug Permissions</div>
+              <pre className="whitespace-pre-wrap leading-relaxed">{JSON.stringify(permissions, null, 2)}</pre>
+            </div>
+          )}
+
+          <button
+            className={`w-full flex items-center gap-4 p-3 rounded-xl transition-all duration-200 group
+              ${isOpen 
+                ? 'bg-red-500/10 text-red-400 hover:bg-red-500 hover:text-white' 
+                : 'text-slate-500 hover:bg-red-500 hover:text-white'}`}
+            onClick={handleLogout}
+            aria-label="Đăng xuất"
+          >
+            <span className="material-icons transition-transform group-hover:rotate-12">logout</span>
+            <span className={`font-semibold transition-all duration-300 ${isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+              Đăng xuất
+            </span>
+          </button>
+        </div>
       </div>
-    </div>
+    </>
   );
 };
 

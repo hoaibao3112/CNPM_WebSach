@@ -1,10 +1,20 @@
 import React, { useEffect, useState, useContext } from 'react';
-import { Table, Button, Modal, Form, Input, DatePicker, message, Tag, Space, Select } from 'antd';
+import { Table, Button, Modal, Form, Input, DatePicker, message, Tag, Space, Select, Avatar, Card, Statistic, Divider, Tooltip } from 'antd';
 import api from '../utils/api';
 import moment from 'moment';
-import { CheckCircleOutlined, CloseCircleOutlined, PlusOutlined, CalendarOutlined, FilterOutlined, ClockCircleOutlined } from '@ant-design/icons';
+import { 
+  CheckCircleOutlined, 
+  CloseCircleOutlined, 
+  PlusOutlined, 
+  CalendarOutlined, 
+  FilterOutlined, 
+  ClockCircleOutlined,
+  UserOutlined,
+  SolutionOutlined,
+  SafetyCertificateOutlined,
+  HistoryOutlined
+} from '@ant-design/icons';
 import { PermissionContext } from '../components/PermissionContext';
-import '../styles/LeavePage.css';
 
 const { RangePicker } = DatePicker;
 const { TextArea } = Input;
@@ -18,333 +28,218 @@ const LeavePage = () => {
   const [loading, setLoading] = useState(false);
   const [form] = Form.useForm();
 
-  // Lấy danh sách đơn nghỉ phép
   const fetchLeave = async () => {
     setLoading(true);
     try {
       const res = await api.get('/leave');
-      const resData = res.data.data || res.data;
-      const leaveList = Array.isArray(resData) ? resData : (resData?.data || []);
-      // Sắp xếp theo id giảm dần (mới nhất trên cùng)
-      const sortedData = leaveList.sort((a, b) => b.id - a.id);
-      setData(sortedData);
-    } catch {
-      message.error('Lỗi khi tải dữ liệu nghỉ phép');
-    } finally {
-      setLoading(false);
-    }
+      const list = Array.isArray(res.data.data) ? res.data.data : (res.data || []);
+      setData(list.sort((a, b) => b.id - a.id));
+    } catch { message.error('Lỗi khi tải dữ liệu nghỉ phép'); }
+    finally { setLoading(false); }
   };
 
   useEffect(() => {
-    if (hasPermission('Nghĩ Phép', 'Đọc')) {
-      fetchLeave();
-    } else {
-      message.error('Bạn không có quyền xem danh sách nghỉ phép!');
-    }
+    if (hasPermission('Nghĩ Phép', 'Đọc')) fetchLeave();
   }, [hasPermission]);
 
-  // Duyệt đơn nghỉ phép
-  const handleApprove = async (id) => {
-    if (!hasPermission('Nghĩ Phép', 'Sửa')) {
-      message.error('Bạn không có quyền duyệt đơn nghỉ phép!');
-      return;
-    }
+  const handleAction = async (id, action) => {
+    if (!hasPermission('Nghĩ Phép', 'Sửa')) return message.error('Không có quyền!');
     setProcessingId(id);
     try {
       const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
-      await api.put(`/leave/${id}/approve`, {
-        nguoi_duyet: userInfo.TenTK || 'admin'
-      });
-      message.success('Đã duyệt đơn nghỉ phép');
+      await api.put(`/leave/${id}/${action}`, { nguoi_duyet: userInfo.TenTK || 'admin' });
+      message.success(`Đã ${action === 'approve' ? 'duyệt' : 'từ chối'} đơn`);
       fetchLeave();
-    } catch {
-      message.error('Duyệt đơn thất bại');
-    } finally {
-      setProcessingId(null);
-    }
+    } catch { message.error('Thao tác thất bại'); }
+    finally { setProcessingId(null); }
   };
 
-  // Từ chối đơn nghỉ phép
-  const handleReject = async (id) => {
-    if (!hasPermission('Nghĩ Phép', 'Sửa')) {
-      message.error('Bạn không có quyền từ chối đơn nghỉ phép!');
-      return;
-    }
-    setProcessingId(id);
-    try {
-      const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
-      await api.put(`/leave/${id}/reject`, {
-        nguoi_duyet: userInfo.TenTK || 'admin'
-      });
-      message.success('Đã từ chối đơn nghỉ phép');
-      fetchLeave();
-    } catch {
-      message.error('Từ chối đơn thất bại');
-    } finally {
-      setProcessingId(null);
-    }
-  };
-
-  // Cột bảng
   const columns = [
     {
-      title: 'Mã TK',
-      dataIndex: 'MaTK',
-      width: 90,
+      title: 'NHÂN VIÊN',
+      key: 'employee',
       fixed: 'left',
-      render: (text) => <span className="font-semibold text-indigo-600">{text}</span>
+      width: 250,
+      render: (_, record) => (
+        <div className="flex items-center gap-3">
+          <Avatar className="bg-indigo-100 text-indigo-600 font-bold" icon={<UserOutlined />} />
+          <div className="truncate">
+            <div className="font-black text-slate-800 leading-tight truncate">{record.TenTK}</div>
+            <div className="text-[10px] text-slate-400 font-black uppercase tracking-tighter">ID: #{record.MaTK}</div>
+          </div>
+        </div>
+      )
     },
     {
-      title: 'Tên tài khoản',
-      dataIndex: 'TenTK',
-      width: 150,
-      render: (text) => <span className="font-medium">{text}</span>
-    },
-    {
-      title: 'Từ ngày',
-      dataIndex: 'ngay_bat_dau',
-      render: d => (
-        <span className="flex items-center gap-1">
-          <CalendarOutlined className="text-blue-500" />
-          {moment(d).format('DD/MM/YYYY')}
-        </span>
-      ),
-      width: 120
-    },
-    {
-      title: 'Đến ngày',
-      dataIndex: 'ngay_ket_thuc',
-      render: d => (
-        <span className="flex items-center gap-1">
-          <CalendarOutlined className="text-blue-500" />
-          {moment(d).format('DD/MM/YYYY')}
-        </span>
-      ),
-      width: 120
-    },
-    {
-      title: 'Số ngày',
-      key: 'so_ngay',
+      title: 'THỜI GIAN',
+      key: 'period',
+      width: 280,
       render: (_, record) => {
         const days = moment(record.ngay_ket_thuc).diff(moment(record.ngay_bat_dau), 'days') + 1;
-        return <Tag color="purple">{days} ngày</Tag>;
-      },
-      width: 90
+        return (
+          <div className="flex items-center gap-3">
+            <div className="flex flex-col">
+              <span className="text-[10px] font-black text-slate-400 uppercase">Từ {moment(record.ngay_bat_dau).format('DD/MM/YYYY')}</span>
+              <span className="text-[10px] font-black text-slate-400 uppercase">Đến {moment(record.ngay_ket_thuc).format('DD/MM/YYYY')}</span>
+            </div>
+            <Tag color="purple" className="m-0 px-3 py-0.5 rounded-full font-black text-[10px]">{days} NGÀY</Tag>
+          </div>
+        );
+      }
     },
     {
-      title: 'Lý do',
+      title: 'LÝ DO',
       dataIndex: 'ly_do',
+      key: 'reason',
       width: 200,
       ellipsis: true,
+      render: (t) => <span className="text-sm font-medium text-slate-600">{t}</span>
     },
     {
-      title: 'Trạng thái',
+      title: 'TRẠNG THÁI',
       dataIndex: 'trang_thai',
-      render: v => {
-        if (v === 'Da_duyet') return <Tag color="success" icon={<CheckCircleOutlined />}>Đã duyệt</Tag>;
-        if (v === 'Tu_choi') return <Tag color="error" icon={<CloseCircleOutlined />}>Từ chối</Tag>;
-        return <Tag color="warning" icon={<ClockCircleOutlined />}>Chờ duyệt</Tag>;
-      },
-      width: 120
+      key: 'status',
+      width: 150,
+      render: (v) => {
+        const config = {
+          Da_duyet: { color: 'bg-emerald-100 text-emerald-600', label: 'ĐÃ DUYỆT', icon: <CheckCircleOutlined /> },
+          Tu_choi: { color: 'bg-rose-100 text-rose-600', label: 'TỪ CHỐI', icon: <CloseCircleOutlined /> },
+          Cho_duyet: { color: 'bg-amber-100 text-amber-600', label: 'CHỜ DUYỆT', icon: <ClockCircleOutlined /> }
+        };
+        const c = config[v] || config.Cho_duyet;
+        return <span className={`px-3 py-1 rounded-full text-[10px] font-black flex items-center gap-1 w-fit ${c.color}`}>{c.icon} {c.label}</span>;
+      }
     },
     {
-      title: 'Người duyệt',
-      dataIndex: 'nguoi_duyet',
-      width: 120,
-      render: (text) => text || <span className="text-gray-400">-</span>
+      title: 'PHÊ DUYỆT BỞI',
+      key: 'approver',
+      width: 200,
+      render: (_, record) => record.nguoi_duyet ? (
+        <div className="flex flex-col">
+          <span className="text-xs font-bold text-slate-700">{record.nguoi_duyet}</span>
+          <span className="text-[9px] font-black text-slate-400 uppercase">{moment(record.ngay_duyet).format('DD/MM/YYYY HH:mm')}</span>
+        </div>
+      ) : <span className="text-slate-300">---</span>
     },
     {
-      title: 'Ngày duyệt',
-      dataIndex: 'ngay_duyet',
-      render: d => d ? moment(d).format('DD/MM/YYYY HH:mm') : <span className="text-gray-400">-</span>,
-      width: 150
-    },
-    {
-      title: 'Thao tác',
+      title: 'THAO TÁC',
       key: 'action',
       fixed: 'right',
-      width: 180,
-      render: (_, record) =>
-        record.trang_thai === 'Cho_duyet' && hasPermission('Nghĩ Phép', 'Sửa') ? (
-          <Space size="small">
-            <Button
-              icon={<CheckCircleOutlined />}
-              type="primary"
-              size="small"
-              loading={processingId === record.id}
-              onClick={() => handleApprove(record.id)}
-            >
-              Duyệt
-            </Button>
-            <Button
-              icon={<CloseCircleOutlined />}
-              danger
-              size="small"
-              loading={processingId === record.id}
-              onClick={() => handleReject(record.id)}
-            >
-              Từ chối
-            </Button>
-          </Space>
-        ) : null,
-    },
+      width: 150,
+      render: (_, record) => record.trang_thai === 'Cho_duyet' && (
+        <div className="flex gap-2">
+          <Tooltip title="Chấp thuận">
+            <Button className="w-9 h-9 rounded-xl flex items-center justify-center bg-emerald-50 text-emerald-600 border-emerald-100 hover:bg-emerald-100 transition-all" icon={<CheckCircleOutlined />} onClick={() => handleAction(record.id, 'approve')} loading={processingId === record.id} />
+          </Tooltip>
+          <Tooltip title="Từ chối">
+            <Button className="w-9 h-9 rounded-xl flex items-center justify-center bg-rose-50 text-rose-600 border-rose-100 hover:bg-rose-100 transition-all" icon={<CloseCircleOutlined />} onClick={() => handleAction(record.id, 'reject')} loading={processingId === record.id} />
+          </Tooltip>
+        </div>
+      )
+    }
   ];
 
-  // Gửi đơn nghỉ phép
-  const onFinish = async (values) => {
-    if (!hasPermission('Nghĩ Phép', 'Thêm')) {
-      message.error('Bạn không có quyền gửi đơn nghỉ phép!');
-      return;
-    }
-    try {
-      const userInfoStr = localStorage.getItem('userInfo');
-      const MaTK = userInfoStr ? JSON.parse(userInfoStr).MaTK : null;
-      if (!MaTK) {
-        message.error('Không tìm thấy mã tài khoản!');
-        return;
-      }
-      await api.post('/leave', {
-        MaTK,
-        ngay_bat_dau: values.date_range[0].format('YYYY-MM-DD'),
-        ngay_ket_thuc: values.date_range[1].format('YYYY-MM-DD'),
-        ly_do: values.ly_do,
-      });
-      message.success('Gửi đơn nghỉ phép thành công');
-      setOpen(false);
-      form.resetFields();
-      fetchLeave();
-    } catch {
-      message.error('Lỗi khi gửi đơn nghỉ phép');
-    }
-  };
-
-  // Filter data
-  const filteredData = filterStatus
-    ? data.filter(item => item.trang_thai === filterStatus)
-    : data;
-
-  if (!hasPermission('Nghĩ Phép', 'Đọc')) {
-    return <div className="no-permission">Bạn không có quyền truy cập trang này!</div>;
-  }
-
   return (
-    <div className="leave-page">
-      <div className="leave-header">
-        <h1>
-          <CalendarOutlined /> Quản lý nghỉ phép
-        </h1>
+    <div className="p-4 md:p-8 min-h-screen bg-slate-50 font-sans">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
+        <div>
+          <h1 className="text-3xl font-black text-slate-800 flex items-center gap-3">
+            <CalendarOutlined className="text-indigo-500" />
+            Đơn xin nghỉ phép
+          </h1>
+          <p className="text-slate-400 text-sm mt-1 font-medium uppercase tracking-tighter">Quản lý và phê duyệt thời gian vắng mặt</p>
+        </div>
+        <Button 
+          type="primary" 
+          icon={<PlusOutlined />} 
+          onClick={() => setOpen(true)}
+          className="h-12 px-8 rounded-2xl bg-indigo-600 border-0 shadow-lg shadow-indigo-100 font-bold flex items-center gap-2"
+        >
+          Gửi đơn mới
+        </Button>
       </div>
 
-      <div className="leave-content">
-        <div className="leave-filters">
-          <div className="filter-group">
-            <label><FilterOutlined /> Lọc theo trạng thái:</label>
-            <Select
-              value={filterStatus}
-              onChange={setFilterStatus}
-              style={{ width: 200 }}
-              placeholder="Tất cả trạng thái"
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <Card className="rounded-[2rem] border-0 shadow-sm bg-amber-50/50 overflow-hidden relative">
+          <div className="relative z-10">
+            <Statistic title={<span className="text-[10px] font-black text-amber-600 uppercase tracking-widest">Đang chờ duyệt</span>} value={data.filter(d => d.trang_thai === 'Cho_duyet').length} valueStyle={{ fontWeight: 900, color: '#d97706' }} prefix={<ClockCircleOutlined className="mr-2" />} />
+          </div>
+          <ClockCircleOutlined className="absolute -right-4 -bottom-4 text-8xl text-amber-500/10" />
+        </Card>
+        <Card className="rounded-[2rem] border-0 shadow-sm bg-emerald-50/50 overflow-hidden relative">
+          <div className="relative z-10">
+            <Statistic title={<span className="text-[10px] font-black text-emerald-600 uppercase tracking-widest">Đã chấp thuận</span>} value={data.filter(d => d.trang_thai === 'Da_duyet').length} valueStyle={{ fontWeight: 900, color: '#059669' }} prefix={<CheckCircleOutlined className="mr-2" />} />
+          </div>
+          <CheckCircleOutlined className="absolute -right-4 -bottom-4 text-8xl text-emerald-500/10" />
+        </Card>
+        <Card className="rounded-[2rem] border-0 shadow-sm bg-rose-50/50 overflow-hidden relative">
+          <div className="relative z-10">
+            <Statistic title={<span className="text-[10px] font-black text-rose-600 uppercase tracking-widest">Đã từ chối</span>} value={data.filter(d => d.trang_thai === 'Tu_choi').length} valueStyle={{ fontWeight: 900, color: '#e11d48' }} prefix={<CloseCircleOutlined className="mr-2" />} />
+          </div>
+          <CloseCircleOutlined className="absolute -right-4 -bottom-4 text-8xl text-rose-500/10" />
+        </Card>
+      </div>
+
+      <div className="bg-white p-6 rounded-[2.5rem] border border-slate-100 shadow-sm mb-8">
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3 bg-slate-50 px-4 py-2 rounded-xl border border-slate-100">
+            <FilterOutlined className="text-slate-400" />
+            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Lọc theo:</span>
+            <Select 
+              className="w-44 modern-select border-0 shadow-none bg-transparent" 
+              value={filterStatus} 
+              onChange={setFilterStatus} 
+              placeholder="Tất cả đơn" 
               allowClear
             >
-              <Select.Option value="">Tất cả</Select.Option>
-              <Select.Option value="Cho_duyet">Chờ duyệt</Select.Option>
-              <Select.Option value="Da_duyet">Đã duyệt</Select.Option>
-              <Select.Option value="Tu_choi">Từ chối</Select.Option>
+              <Option value="Cho_duyet">Đang chờ</Option>
+              <Option value="Da_duyet">Thành công</Option>
+              <Option value="Tu_choi">Từ chối</Option>
             </Select>
           </div>
-          <div className="stats-summary">
-            <div className="stat-card pending">
-              <span className="stat-number">{data.filter(d => d.trang_thai === 'Cho_duyet').length}</span>
-              <span className="stat-label">Chờ duyệt</span>
-            </div>
-            <div className="stat-card approved">
-              <span className="stat-number">{data.filter(d => d.trang_thai === 'Da_duyet').length}</span>
-              <span className="stat-label">Đã duyệt</span>
-            </div>
-            <div className="stat-card rejected">
-              <span className="stat-number">{data.filter(d => d.trang_thai === 'Tu_choi').length}</span>
-              <span className="stat-label">Từ chối</span>
-            </div>
-          </div>
-        </div>
-
-        <div className="leave-table">
-          <Table
-            columns={columns}
-            dataSource={filteredData}
-            rowKey="id"
-            loading={loading}
-            scroll={{ x: 1200 }}
-            pagination={{
-              pageSize: 10,
-              showSizeChanger: true,
-              showTotal: (total) => `Tổng ${total} đơn`,
-              pageSizeOptions: ['10', '20', '50']
-            }}
-            size="middle"
-          />
+          <Button icon={<HistoryOutlined />} onClick={fetchLeave} className="h-10 px-6 rounded-xl font-bold border-slate-200">Làm mới dữ liệu</Button>
         </div>
       </div>
 
-      <Modal
-        open={open}
-        onCancel={() => {
-          setOpen(false);
-          form.resetFields();
-        }}
-        footer={null}
-        title={
-          <div className="modal-title">
-            <CalendarOutlined /> Gửi đơn xin nghỉ phép
+      <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden">
+        <Table columns={columns} dataSource={filterStatus ? data.filter(d => d.trang_thai === filterStatus) : data} rowKey="id" loading={loading} pagination={{ pageSize: 8, className: "px-8 py-6" }} className="modern-table" scroll={{ x: 1200 }} />
+      </div>
+
+      <Modal open={open} onCancel={() => { setOpen(false); form.resetFields(); }} footer={null} title={null} width={600} className="modern-modal" centered>
+        <div className="mb-8 flex items-center gap-4">
+          <div className="p-3 bg-indigo-50 rounded-2xl text-indigo-600"><SolutionOutlined /></div>
+          <div>
+            <h2 className="text-2xl font-black text-slate-800">Tạo đơn nghỉ phép</h2>
+            <p className="text-slate-400 text-sm mt-1 font-medium">Cung cấp lý do và thời gian dự kiến</p>
           </div>
-        }
-        width={600}
-        destroyOnHidden
-      >
-        <Form
-          form={form}
-          layout="vertical"
-          onFinish={onFinish}
-          className="leave-form"
-        >
-          <Form.Item
-            name="date_range"
-            label="Thời gian nghỉ"
-            rules={[{ required: true, message: 'Vui lòng chọn thời gian nghỉ!' }]}
-          >
-            <RangePicker
-              style={{ width: '100%' }}
-              format="DD/MM/YYYY"
-              placeholder={['Từ ngày', 'Đến ngày']}
-            />
+        </div>
+        <Form form={form} layout="vertical" onFinish={async (v) => {
+          try {
+            const tk = JSON.parse(localStorage.getItem('userInfo')).MaTK;
+            await api.post('/leave', { MaTK: tk, ngay_bat_dau: v.date_range[0].format('YYYY-MM-DD'), ngay_ket_thuc: v.date_range[1].format('YYYY-MM-DD'), ly_do: v.ly_do });
+            message.success('Đã gửi đơn thành công');
+            setOpen(false); fetchLeave(); form.resetFields();
+          } catch { message.error('Lỗi khi gửi đơn'); }
+        }} className="space-y-6">
+          <Form.Item name="date_range" label={<span className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Khoảng thời gian nghỉ</span>} rules={[{ required: true }]}>
+            <RangePicker className="w-full h-12 rounded-xl" format="DD/MM/YYYY" />
           </Form.Item>
-          <Form.Item
-            name="ly_do"
-            label="Lý do nghỉ"
-            rules={[{ required: true, message: 'Vui lòng nhập lý do nghỉ!' }]}
-          >
-            <TextArea
-              rows={4}
-              placeholder="Nhập lý do xin nghỉ phép..."
-              maxLength={500}
-              showCount
-            />
+          <Form.Item name="ly_do" label={<span className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Lý do cụ thể</span>} rules={[{ required: true }]}>
+            <TextArea rows={4} placeholder="Nhập lý do xin nghỉ..." className="rounded-xl p-4 font-medium" />
           </Form.Item>
-          <Form.Item className="form-actions">
-            <Space>
-              <Button onClick={() => {
-                setOpen(false);
-                form.resetFields();
-              }}>
-                Hủy
-              </Button>
-              <Button type="primary" htmlType="submit" icon={<PlusOutlined />}>
-                Gửi đơn
-              </Button>
-            </Space>
-          </Form.Item>
+          <div className="flex justify-end gap-3 pt-6 border-t border-slate-100">
+            <Button onClick={() => setOpen(false)} className="h-12 px-8 rounded-2xl font-bold border-slate-200">Hủy bỏ</Button>
+            <Button type="primary" htmlType="submit" className="h-12 px-12 rounded-2xl font-black uppercase tracking-widest text-xs bg-indigo-600 border-0 shadow-lg shadow-indigo-100">Gửi đơn phê duyệt</Button>
+          </div>
         </Form>
       </Modal>
+
+      <style dangerouslySetInnerHTML={{ __html: `
+        .modern-table .ant-table-thead > tr > th { background: #f8fafc !important; color: #94a3b8 !important; font-size: 11px !important; font-weight: 900 !important; text-transform: uppercase !important; letter-spacing: 0.1em !important; padding: 20px 24px !important; border-bottom: 1px solid #f1f5f9 !important; }
+        .modern-table .ant-table-tbody > tr > td { padding: 16px 24px !important; border-bottom: 1px solid #f8fafc !important; }
+        .modern-modal .ant-modal-content { border-radius: 40px !important; padding: 40px !important; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.1) !important; }
+        .modern-select .ant-select-selector { border-radius: 12px !important; display: flex !important; align-items: center !important; }
+      `}} />
     </div>
   );
 };

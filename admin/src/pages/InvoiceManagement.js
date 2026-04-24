@@ -909,7 +909,6 @@ const InvoiceManagement = () => {
             type="primary"
             icon={<MessageOutlined />}
             onClick={() => {
-              console.log('🎯 Chat button clicked for customer:', record.makh);
               handleChatWithCustomer(record.makh);
             }}
             loading={chatLoading}
@@ -940,319 +939,316 @@ const InvoiceManagement = () => {
   };
 
   return (
-    <div className="thongke-page">
-      <div className="thongke-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <h1>
-          <i className="fas fa-file-invoice-dollar"></i> Quản lý Hóa đơn
-        </h1>
+    <div className="p-4 md:p-8 min-h-screen bg-slate-50 font-sans">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+        <div>
+          <h1 className="text-2xl font-black text-slate-800 flex items-center gap-3">
+            <span className="material-icons text-indigo-500">receipt_long</span>
+            Quản lý Hóa đơn
+          </h1>
+          <p className="text-slate-400 text-sm mt-1">Theo dõi đơn hàng và tương tác khách hàng</p>
+        </div>
+        
+        <div className="flex items-center gap-3">
+          <Button 
+            onClick={fetchInvoices} 
+            loading={loading}
+            icon={<span className="material-icons text-sm">refresh</span>}
+            className="h-11 px-6 rounded-xl flex items-center gap-2 font-bold border-slate-200"
+          >
+            Tải lại
+          </Button>
+          
+          <Dropdown
+            overlay={notificationMenu}
+            trigger={['click']}
+            open={notificationVisible}
+            onVisibleChange={setNotificationVisible}
+            placement="bottomRight"
+          >
+            <Badge count={unreadCount} size="small">
+              <button className="w-11 h-11 rounded-xl bg-white border border-slate-200 flex items-center justify-center text-slate-500 hover:text-indigo-600 hover:border-indigo-100 transition-all shadow-sm">
+                <span className="material-icons">notifications</span>
+              </button>
+            </Badge>
+          </Dropdown>
+        </div>
       </div>
 
-      <div className="thongke-content">
-        <div className="thongke-filters">
-          <div className="filter-group" style={{ display: 'flex', alignItems: 'baseline', gap: '16px', flexWrap: 'wrap' }}>
-            <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px', flex: 1, maxWidth: '400px' }}>
-              <label style={{ margin: 0, whiteSpace: 'nowrap', fontWeight: 500, color: '#666' }}>Tìm kiếm:</label>
-              <Search
-                placeholder="Tìm kiếm theo mã HĐ, tên KH hoặc SĐT"
-                onSearch={handleSearch}
-                style={{ flex: 1 }}
-                allowClear
-              />
-            </div>
-            <div style={{ display: 'flex', alignItems: 'baseline', gap: '12px', marginLeft: 'auto' }}>
-              <Button onClick={fetchInvoices} loading={loading}>
-                Tải lại
-              </Button>
-              {/* ✨ NOTIFICATION BELL */}
-              <Dropdown
-                overlay={notificationMenu}
-                trigger={['click']}
-                open={notificationVisible}
-                onVisibleChange={setNotificationVisible}
-                placement="bottomRight"
-                overlayClassName="notification-dropdown"
-              >
-                <Button
-                  type="text"
-                  className="notification-bell"
-                  icon={
-                    <Badge count={unreadCount} size="small" offset={[0, 0]}>
-                      <BellOutlined style={{ fontSize: '18px' }} />
-                    </Badge>
-                  }
-                />
-              </Dropdown>
-            </div>
-          </div>
+      <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 mb-8 transition-all duration-300">
+        <div className="max-w-md mb-6">
+          <label className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-2 block ml-1">Tìm kiếm hóa đơn</label>
+          <Search
+            placeholder="Tìm theo mã HĐ, tên KH hoặc SĐT..."
+            onSearch={(v) => setSearchTerm(v)}
+            allowClear
+            size="large"
+            className="modern-search"
+          />
         </div>
 
-        <div className="thongke-table">
+        <div className="overflow-hidden rounded-2xl border border-slate-100">
           <Table
             columns={columns}
             dataSource={filteredInvoices}
             rowKey="id"
             loading={loading}
             scroll={{ x: 1000 }}
-            pagination={{ pageSize: 10 }}
-            className="compact-invoice-table"
+            pagination={{ 
+              pageSize: 10,
+              className: 'px-6 py-4'
+            }}
+            className="modern-table"
           />
         </div>
       </div>
 
       {/* Modal chi tiết hóa đơn */}
       <Modal
-        title={`Chi tiết hóa đơn #${selectedInvoice?.id || ''}`}
+        title={
+          <div className="flex items-center gap-3 text-xl font-black text-slate-800">
+            <div className="p-2 rounded-lg bg-indigo-50 text-indigo-600">
+              <span className="material-icons leading-none">description</span>
+            </div>
+            Chi tiết hóa đơn #{selectedInvoice?.id || ''}
+          </div>
+        }
         open={isModalVisible}
         onCancel={() => setIsModalVisible(false)}
         footer={[
-          <Button key="close" onClick={() => setIsModalVisible(false)}>
+          <Button key="close" onClick={() => setIsModalVisible(false)} className="h-11 px-8 rounded-xl font-bold">
             Đóng
           </Button>,
         ]}
-        width={700}
-        styles={{ body: { padding: '16px' } }}
+        width={800}
+        centered
+        className="modern-modal"
       >
         {selectedInvoice && (
-          <div className="invoice-detail-content">
-            <div className="info-section">
-              <h3 className="section-title">Thông tin khách hàng</h3>
-              <div className="info-grid">
-                <div className="info-item">
-                  <p className="info-label">Tên khách hàng:</p>
-                  <p className="info-value">{selectedInvoice.customerName}</p>
+          <div className="py-4 space-y-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div className="bg-slate-50 p-6 rounded-2xl border border-slate-100">
+                <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+                  <span className="material-icons text-sm">person</span>
+                  Thông tin khách hàng
+                </h3>
+                <div className="space-y-4">
+                  <div>
+                    <p className="text-xs text-slate-500 mb-1">Tên khách hàng</p>
+                    <p className="font-bold text-slate-800">{selectedInvoice.customerName}</p>
+                  </div>
+                  <div className="flex gap-8">
+                    <div>
+                      <p className="text-xs text-slate-500 mb-1">Số điện thoại</p>
+                      <p className="font-bold text-slate-800">{selectedInvoice.customerPhone}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-slate-500 mb-1">Email</p>
+                      <p className="font-bold text-slate-800">{selectedInvoice.customerEmail || 'N/A'}</p>
+                    </div>
+                  </div>
+                  <div>
+                    <p className="text-xs text-slate-500 mb-1">Địa chỉ giao hàng</p>
+                    <p className="text-sm font-medium text-slate-700 leading-relaxed italic">
+                      {selectedInvoice.formattedAddress || 'Đang tải địa chỉ...'}
+                    </p>
+                  </div>
                 </div>
-                <div className="info-item">
-                  <p className="info-label">Số điện thoại:</p>
-                  <p className="info-value">{selectedInvoice.customerPhone}</p>
-                </div>
-                <div className="info-item">
-                  <p className="info-label">Email:</p>
-                  <p className="info-value">{selectedInvoice.customerEmail || 'Không có'}</p>
-                </div>
-                <div className="info-item">
-                  <p className="info-label">Người nhận:</p>
-                  <p className="info-value">{selectedInvoice.recipientName} - {selectedInvoice.recipientPhone}</p>
-                </div>
-                <div className="info-item full-width">
-                  <p className="info-label">Địa chỉ giao hàng:</p>
-                  <p className="info-value">
-                    {selectedInvoice.formattedAddress || 'Đang tải địa chỉ...'}
-                  </p>
+              </div>
+
+              <div className="bg-slate-50 p-6 rounded-2xl border border-slate-100">
+                <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+                  <span className="material-icons text-sm">info</span>
+                  Thông tin đơn hàng
+                </h3>
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center">
+                    <p className="text-xs text-slate-500">Ngày tạo</p>
+                    <p className="font-bold text-slate-800">{formatDate(selectedInvoice.NgayTao)}</p>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <p className="text-xs text-slate-500">Tổng tiền</p>
+                    <p className="text-lg font-black text-indigo-600">
+                      {selectedInvoice?.TongTien !== undefined ? formatCurrency(selectedInvoice.TongTien) : 'N/A'}
+                    </p>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <p className="text-xs text-slate-500">Trạng thái</p>
+                    <Tag className="rounded-full px-4 border-none font-bold" color={orderStatuses.find(s => s.value === selectedInvoice.status)?.color || 'default'}>
+                      {selectedInvoice.status}
+                    </Tag>
+                  </div>
+                  <div>
+                    <p className="text-xs text-slate-500 mb-1">Ghi chú</p>
+                    <p className="text-sm text-slate-600 bg-white p-3 rounded-xl border border-slate-100 min-h-[60px]">
+                      {selectedInvoice.note || 'Không có ghi chú'}
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>
 
-            <div className="info-section">
-              <h3 className="section-title">Thông tin hóa đơn</h3>
-              <div className="info-grid">
-                <div>
-                  <p className="text-gray-600 text-sm">Ngày tạo:</p>
-                  <p className="font-medium">{formatDate(selectedInvoice.NgayTao)}</p>
-                </div>
-                <div className="info-item">
-                  <p className="text-gray-600 text-sm">Tổng tiền:</p>
-                  <p className="font-medium">
-                    {selectedInvoice?.TongTien !== undefined
-                      ? formatCurrency(selectedInvoice.TongTien)
-                      : 'Chưa có dữ liệu'}
-                  </p>
-                </div>
-                <div className="info-item">
-                  <p className="info-label">Phương thức TT:</p>
-                  <p className="info-value">COD</p>
-                </div>
-                <div className="info-item">
-                  <p className="info-label">Trạng thái:</p>
-                  <Tag color={orderStatuses.find(s => s.value === selectedInvoice.status)?.color || 'default'}>
-                    {selectedInvoice.status}
-                  </Tag>
-                </div>
-                <div className="info-item full-width">
-                  <p className="info-label">Ghi chú:</p>
-                  <p className="info-value">{selectedInvoice.note || 'Không có ghi chú'}</p>
-                </div>
+            <div>
+              <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4 ml-1">Danh sách sản phẩm</h3>
+              <div className="rounded-2xl border border-slate-100 overflow-hidden">
+                <Table
+                  columns={[
+                    {
+                      title: 'Sản phẩm',
+                      dataIndex: 'productName',
+                      key: 'productName',
+                      render: (text, record) => (
+                        <div className="flex items-center gap-4">
+                          <img
+                            src={`/img/products/${record.productImage}`}
+                            alt={text}
+                            className="w-12 h-12 rounded-xl object-cover border border-slate-100 shadow-sm"
+                            onError={(e) => { e.target.src = 'https://via.placeholder.com/50'; }}
+                          />
+                          <span className="font-bold text-slate-700">{text}</span>
+                        </div>
+                      ),
+                    },
+                    {
+                      title: 'Đơn giá',
+                      dataIndex: 'unitPrice',
+                      key: 'unitPrice',
+                      render: (price) => formatCurrency(price),
+                      align: 'right',
+                    },
+                    {
+                      title: 'Số lượng',
+                      dataIndex: 'quantity',
+                      key: 'quantity',
+                      align: 'center',
+                    },
+                    {
+                      title: 'Thành tiền',
+                      key: 'total',
+                      render: (_, record) => (
+                        <span className="font-bold text-slate-900">{formatCurrency(record.unitPrice * record.quantity)}</span>
+                      ),
+                      align: 'right',
+                    },
+                  ]}
+                  dataSource={selectedInvoice.items || []}
+                  rowKey="productId"
+                  pagination={false}
+                  size="small"
+                  className="modern-table"
+                />
               </div>
-            </div>
-
-            <div className="products-section">
-              <h3 className="section-title">Danh sách sản phẩm</h3>
-              <Table
-                columns={[
-                  {
-                    title: 'Sản phẩm',
-                    dataIndex: 'productName',
-                    key: 'productName',
-                    render: (text, record) => (
-                      <div style={{ display: 'flex', alignItems: 'center' }}>
-                        <img
-                          src={`/img/products/${record.productImage}`}
-                          alt={text}
-                          style={{
-                            width: 32,
-                            height: 32,
-                            objectFit: 'cover',
-                            marginRight: 8,
-                            borderRadius: 2
-                          }}
-                          onError={(e) => {
-                            e.target.onerror = null;
-                            e.target.src = 'https://via.placeholder.com/50';
-                          }}
-                        />
-                        <span>{text}</span>
-                      </div>
-                    ),
-                    width: 200,
-                  },
-                  {
-                    title: 'Đơn giá',
-                    dataIndex: 'unitPrice',
-                    key: 'unitPrice',
-                    render: (price) => formatCurrency(price),
-                    align: 'right',
-                    width: 120,
-                  },
-                  {
-                    title: 'Số lượng',
-                    dataIndex: 'quantity',
-                    key: 'quantity',
-                    align: 'center',
-                    width: 80,
-                  },
-                  {
-                    title: 'Thành tiền',
-                    key: 'total',
-                    render: (_, record) => formatCurrency(record.unitPrice * record.quantity),
-                    align: 'right',
-                    width: 120,
-                  },
-                ]}
-                dataSource={selectedInvoice.items || []}
-                rowKey="productId"
-                pagination={false}
-                bordered
-                size="small"
-                scroll={{ x: 400 }}
-              />
             </div>
           </div>
         )}
       </Modal>
 
-      {/* Modal xem đánh giá (giao diện mới đẹp hơn) */}
+      {/* Modal Xem đánh giá */}
       <Modal
         title={null}
         open={reviewModalVisible}
         onCancel={() => { setReviewModalVisible(false); setReviewData(null); }}
         footer={[
-          <Button key="close-review" onClick={() => { setReviewModalVisible(false); setReviewData(null); }}>
+          <Button key="close-review" onClick={() => { setReviewModalVisible(false); setReviewData(null); }} className="h-11 px-8 rounded-xl font-bold">
             Đóng
           </Button>
         ]}
-        width={640}
-        bodyStyle={{ padding: 0 }}
+        width={550}
+        centered
+        className="modern-modal"
       >
         {reviewLoading ? (
-          <div style={{ padding: 24 }}>Đang tải...</div>
+          <div className="py-10 text-center">
+            <span className="material-icons animate-spin text-indigo-500 text-3xl">refresh</span>
+            <p className="mt-2 text-slate-400 font-medium">Đang tải đánh giá...</p>
+          </div>
         ) : reviewData ? (
-          <div className="review-modal-root">
-            <div className="review-modal-header">
-              <div className="review-title">Đánh giá đơn hàng #{selectedInvoice?.id || ''}</div>
+          <div className="py-4">
+            <div className="flex items-center gap-4 mb-6">
+              <Avatar size={64} className="bg-indigo-600 text-xl font-black">
+                {reviewData.customerName ? reviewData.customerName[0].toUpperCase() : 'C'}
+              </Avatar>
+              <div>
+                <h4 className="text-xl font-black text-slate-800">{reviewData.customerName || 'Khách hàng'}</h4>
+                <p className="text-sm text-slate-400">{reviewData.NgayDanhGia ? new Date(reviewData.NgayDanhGia).toLocaleString('vi-VN') : ''}</p>
+              </div>
+              <div className="ml-auto">
+                <Rate allowHalf value={Number(reviewData.SoSao || 0)} disabled className="text-amber-400" />
+              </div>
             </div>
-
-            <div className="review-modal-body">
-              <div className="review-top">
-                <Avatar size={56} style={{ backgroundColor: '#7265e6', marginRight: 12 }} icon={<UserOutlined />}>
-                  {reviewData.customerName ? reviewData.customerName.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase() : ''}
-                </Avatar>
-
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
-                    <div style={{ minWidth: 0 }}>
-                      <div className="review-customer-name">{reviewData.customerName || `Khách hàng ${reviewData.MaKH || ''}`}</div>
-                      <div className="review-date">{reviewData.NgayDanhGia ? new Date(reviewData.NgayDanhGia).toLocaleString('vi-VN') : ''}</div>
-                    </div>
-                    <div className="review-rating">
-                      <Rate allowHalf value={Number(reviewData.SoSao || reviewData.rating || reviewData.so_diem || 0)} disabled />
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <Divider style={{ margin: '12px 0' }} />
-
-              <div className="review-comment-box">
-                <div className="comment-label">Nhận xét</div>
-                <div className="comment-content">{reviewData.NhanXet || reviewData.comment || reviewData.noi_dung || <i>Chưa có nhận xét</i>}</div>
-              </div>
+            
+            <div className="bg-slate-50 p-6 rounded-2xl border border-slate-100">
+              <p className="text-xs font-black text-slate-400 uppercase tracking-widest mb-2">Nhận xét của khách hàng</p>
+              <p className="text-slate-700 leading-relaxed italic">
+                "{reviewData.NhanXet || reviewData.comment || 'Khách hàng không để lại nhận xét.'}"
+              </p>
             </div>
           </div>
         ) : (
-          <div style={{ padding: 24 }}>Không có đánh giá cho đơn hàng này.</div>
+          <div className="py-10 text-center text-slate-400">Không có dữ liệu đánh giá.</div>
         )}
       </Modal>
 
-      {/* ✨ CHAT MODAL HOÀN TOÀN MỚI */}
+      {/* Chat Modal */}
       <Modal
         title={null}
         open={chatVisible}
         onCancel={handleCloseChat}
         footer={null}
-        width={650}
-        styles={{ body: { padding: 0, height: '650px' } }}
-        className="modern-chat-modal"
+        width={700}
+        centered
+        className="chat-modal-tailwind"
         maskClosable={false}
-        destroyOnHidden={true}
       >
-        <div className="chat-container">
+        <div className="flex flex-col h-[700px] bg-white rounded-[2rem] overflow-hidden">
           {/* Chat Header */}
-          <div className="chat-header">
-            <div className="chat-header-info">
-              <Avatar
-                size={44}
-                icon={<UserOutlined />}
-                style={{ backgroundColor: '#1890ff' }}
-              />
-              <div className="chat-customer-info">
-                <h4>{customerInfo?.tenkh || 'Khách hàng'}</h4>
-                <span className="customer-status">
-                  <span className="online-dot"></span>
-                  Đang hoạt động
-                </span>
+          <div className="bg-indigo-600 p-6 text-white flex items-center justify-between shadow-lg">
+            <div className="flex items-center gap-4">
+              <div className="relative">
+                <Avatar size={48} className="bg-white/20 border border-white/30" icon={<span className="material-icons">person</span>} />
+                <span className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-green-400 border-2 border-indigo-600 rounded-full animate-pulse"></span>
+              </div>
+              <div>
+                <h4 className="font-black text-lg m-0">{customerInfo?.tenkh || 'Khách hàng'}</h4>
+                <p className="text-xs text-indigo-100 m-0 opacity-80">Đang trực tuyến</p>
               </div>
             </div>
-            <Button
-              type="text"
-              icon={<CloseOutlined />}
-              onClick={handleCloseChat}
-              className="chat-close-btn"
-            />
+            <button onClick={handleCloseChat} className="w-10 h-10 rounded-full hover:bg-white/10 flex items-center justify-center transition-colors">
+              <span className="material-icons">close</span>
+            </button>
           </div>
 
-          {/* Messages Area với Custom Scrollbar */}
-          <div
-            className="messages-container"
-            ref={messagesContainerRef}
-          >
+          {/* Messages Area */}
+          <div className="flex-1 overflow-y-auto p-6 bg-slate-50 space-y-4" ref={messagesContainerRef}>
             {messages.length === 0 ? (
-              <div className="empty-chat">
-                <CustomerServiceOutlined style={{ fontSize: 64, color: '#d9d9d9', marginBottom: '16px' }} />
-                <h3 style={{ color: '#8c8c8c', marginBottom: '8px' }}>Chưa có tin nhắn nào</h3>
-                <p style={{ color: '#bfbfbf', fontSize: '14px', margin: 0 }}>
-                  Hãy gửi tin nhắn đầu tiên để bắt đầu cuộc trò chuyện
-                </p>
+              <div className="h-full flex flex-col items-center justify-center text-slate-300">
+                <span className="material-icons text-6xl mb-4">forum</span>
+                <p className="font-bold">Chưa có tin nhắn</p>
               </div>
             ) : (
               <>
-                {renderMessages()}
+                {messages.map((msg) => (
+                  <div key={msg.id} className={`flex ${msg.sender_type === 'staff' ? 'justify-end' : 'justify-start'}`}>
+                    <div className={`max-w-[80%] rounded-2xl p-4 shadow-sm ${
+                      msg.sender_type === 'staff' 
+                        ? 'bg-indigo-600 text-white rounded-br-none' 
+                        : 'bg-white text-slate-700 rounded-bl-none border border-slate-100'
+                    }`}>
+                      <p className="m-0 leading-relaxed text-[15px]">{msg.content}</p>
+                      <p className={`text-[10px] mt-2 mb-0 opacity-60 ${msg.sender_type === 'staff' ? 'text-right' : 'text-left'}`}>
+                        {formatTime(msg.created_at)}
+                      </p>
+                    </div>
+                  </div>
+                ))}
                 <div ref={messagesEndRef} />
               </>
             )}
           </div>
 
           {/* Input Area */}
-          <div className="chat-input-container">
-            <div className="chat-input-wrapper">
+          <div className="p-6 bg-white border-t border-slate-100">
+            <div className="flex gap-3 bg-slate-50 p-2 rounded-2xl border border-slate-200 focus-within:border-indigo-400 focus-within:bg-white transition-all">
               <TextArea
                 value={newMessage}
                 onChange={(e) => setNewMessage(e.target.value)}
@@ -1264,608 +1260,44 @@ const InvoiceManagement = () => {
                     handleSendMessage();
                   }
                 }}
-                disabled={sendingMessage}
-                className="chat-input"
+                className="bg-transparent border-none shadow-none focus:ring-0 text-slate-700 placeholder:text-slate-400 p-2"
               />
-              <Button
-                type="primary"
-                icon={<SendOutlined />}
+              <button 
                 onClick={handleSendMessage}
                 disabled={!newMessage.trim() || sendingMessage}
-                loading={sendingMessage}
-                className="send-button"
+                className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all shadow-md ${
+                  newMessage.trim() && !sendingMessage 
+                    ? 'bg-indigo-600 text-white hover:bg-indigo-700' 
+                    : 'bg-slate-200 text-slate-400 cursor-not-allowed'
+                }`}
               >
-                {sendingMessage ? 'Đang gửi...' : 'Gửi'}
-              </Button>
+                <span className="material-icons">send</span>
+              </button>
             </div>
           </div>
         </div>
       </Modal>
 
       <style>{`
-        .invoice-management-container {
-     
-          min-height: 100vh;
-        }
-        
-        .header-section {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          margin-bottom: 16px;
-          flex-wrap: wrap;
-          gap: 16px;
-        }
-        
-        /* ✨ THÊM STYLES CHO HEADER ACTIONS VÀ NOTIFICATION */
-        .header-actions {
-          display: flex;
-          align-items: center;
-          gap: 16px;
-        }
-        
-        .notification-bell {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          width: 40px;
-          height: 40px;
-          border-radius: 50%;
-          transition: all 0.3s ease;
-          position: relative;
-        }
-        
-        .notification-bell:hover {
-          background: #f0f2ff !important;
-          transform: scale(1.05);
-        }
-        
-        .notification-bell .ant-badge {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-        }
-        
-        .notification-dropdown {
-          margin-top: 8px;
-        }
-        
-        .notification-dropdown .ant-dropdown-menu {
-          padding: 0;
-          border-radius: 8px;
-          box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-          max-width: 400px;
-          min-width: 320px;
-          max-height: 400px;
-          overflow-y: auto;
-        }
-        
-        .notification-header {
-          background: #f0f2ff;
-          margin: 0;
-          border-radius: 8px 8px 0 0;
-        }
-        
-        .notification-item {
-          padding: 0;
-          height: auto;
-          line-height: normal;
-        }
-        
-        .notification-item:hover {
-          background: #f8f9fa;
-        }
-        
-        .notification-content {
-          padding: 12px 16px;
-          display: flex;
-          justify-content: space-between;
-          align-items: flex-start;
-          gap: 12px;
-        }
-        
-        .notification-customer {
-          display: flex;
-          align-items: flex-start;
-          gap: 12px;
-          flex: 1;
-          min-width: 0;
-        }
-        
-        .notification-info {
-          flex: 1;
-          min-width: 0;
-        }
-        
-        .customer-name {
-          font-weight: 600;
-          font-size: 14px;
-          color: #262626;
-          margin-bottom: 4px;
-        }
-        
-        .last-message {
-          font-size: 12px;
-          color: #8c8c8c;
-          line-height: 1.4;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-        }
-        
-        .notification-meta {
-          display: flex;
-          flex-direction: column;
-          align-items: flex-end;
-          gap: 4px;
-          flex-shrink: 0;
-        }
-        
-        .notification-time {
-          font-size: 11px;
-          color: #bfbfbf;
-        }
-        
-        /* Animation cho notification bell */
-        @keyframes ring {
-          0% { transform: rotate(0deg); }
-          10% { transform: rotate(15deg); }
-          20% { transform: rotate(-10deg); }
-          30% { transform: rotate(15deg); }
-          40% { transform: rotate(-10deg); }
-          50% { transform: rotate(5deg); }
-          60% { transform: rotate(-5deg); }
-          70% { transform: rotate(0deg); }
-          100% { transform: rotate(0deg); }
-        }
-        
-        .notification-bell.has-unread {
-          animation: ring 2s ease-in-out infinite;
-        }
-        
-        /* Pulse effect cho badge */
-        .ant-badge-count {
-          animation: pulse 2s infinite;
-        }
-        
-        @keyframes pulse {
-          0% {
-            box-shadow: 0 0 0 0 rgba(255, 77, 79, 0.7);
-          }
-          70% {
-            box-shadow: 0 0 0 10px rgba(255, 77, 79, 0);
-          }
-          100% {
-            box-shadow: 0 0 0 0 rgba(255, 77, 79, 0);
-          }
-        }
-        
-        .page-title {
-          font-size: 18px;
-          font-weight: 600;
-          margin: 0;
-        }
-        
-        .search-box {
-          width: 250px;
-        }
-        
-        .customer-cell {
-          min-width: 120px;
-        }
-        
-        .info-section {
-          background: #f8f8f8;
-          padding: 12px;
-          border-radius: 4px;
-          margin-bottom: 16px;
-        }
-        
-        .section-title {
-          font-size: 15px;
-          font-weight: 500;
-          margin-bottom: 12px;
-        }
-        
-        .info-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-          gap: 12px;
-        }
-        
-        .info-item {
-          margin-bottom: 4px;
-        }
-        
-        .full-width {
-          grid-column: 1 / -1;
-        }
-        
-        .info-label {
-          color: #666;
-          font-size: 12px;
-          margin: 0;
-        }
-        
-        .info-value {
-          font-weight: 500;
-          margin: 4px 0 0 0;
-          font-size: 13px;
-        }
-        
-        .compact-invoice-table :global(.ant-table-thead > tr > th) {
-          padding: 8px 12px;
-        }
-        
-        .compact-invoice-table :global(.ant-table-tbody > tr > td) {
-          padding: 8px 12px;
-        }
-
-        /* ✨ MODERN CHAT STYLES */
-        .chat-container {
-          height: 650px;
-          display: flex;
-          flex-direction: column;
-          background: #fff;
-          border-radius: 8px;
-          overflow: hidden;
-        }
-
-        .chat-header {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          padding: 20px 24px;
-          background: linear-gradient(135deg, #1890ff 0%, #40a9ff 100%);
-          color: white;
-          box-shadow: 0 2px 8px rgba(24, 144, 255, 0.2);
-        }
-
-        .chat-header-info {
-          display: flex;
-          align-items: center;
-          gap: 16px;
-        }
-
-        .chat-customer-info h4 {
-          margin: 0 0 4px 0;
-          font-size: 17px;
-          font-weight: 600;
-          color: white;
-        }
-
-        .customer-status {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          font-size: 13px;
-          opacity: 0.9;
-          color: rgba(255, 255, 255, 0.9);
-        }
-
-        .online-dot {
-          width: 10px;
-          height: 10px;
-          background: #52c41a;
-          border-radius: 50%;
-          display: inline-block;
-          box-shadow: 0 0 0 2px rgba(82, 196, 26, 0.3);
-          animation: pulse 2s infinite;
-        }
-
-        @keyframes pulse {
-          0% { box-shadow: 0 0 0 0 rgba(82, 196, 26, 0.7); }
-          70% { box-shadow: 0 0 0 8px rgba(82, 196, 26, 0); }
-          100% { box-shadow: 0 0 0 0 rgba(82, 196, 26, 0); }
-        }
-
-        .chat-close-btn {
-          color: white !important;
-          width: 36px;
-          height: 36px;
-          border-radius: 50%;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-size: 18px;
-        }
-
-        .chat-close-btn:hover {
-          background: rgba(255, 255, 255, 0.15) !important;
-          transform: scale(1.05);
-          transition: all 0.2s ease;
-        }
-
-        .messages-container {
-          flex: 1;
-          overflow-y: auto;
-          padding: 24px;
-          background: linear-gradient(180deg, #f0f2ff 0%, #f8f9fa 100%);
-          display: flex;
-          flex-direction: column;
-          gap: 16px;
-          scroll-behavior: smooth;
-        }
-
-        /* Custom Scrollbar */
-        .messages-container::-webkit-scrollbar {
-          width: 8px;
-        }
-
-        .messages-container::-webkit-scrollbar-track {
-          background: rgba(0, 0, 0, 0.05);
-          border-radius: 10px;
-          margin: 4px;
-        }
-
-        .messages-container::-webkit-scrollbar-thumb {
-          background: linear-gradient(180deg, #1890ff, #40a9ff);
-          border-radius: 10px;
-          transition: all 0.3s ease;
-        }
-
-        .messages-container::-webkit-scrollbar-thumb:hover {
-          background: linear-gradient(180deg, #0050b3, #1890ff);
-          box-shadow: 0 2px 8px rgba(24, 144, 255, 0.3);
-        }
-
-        /* Firefox scrollbar */
-        .messages-container {
-          scrollbar-width: thin;
-          scrollbar-color: #1890ff rgba(0, 0, 0, 0.05);
-        }
-
-        .empty-chat {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          justify-content: center;
-          height: 100%;
-          text-align: center;
-          background: rgba(255, 255, 255, 0.7);
-          border-radius: 16px;
-          padding: 40px 20px;
-          border: 2px dashed #d9d9d9;
-        }
-
-        .message-wrapper {
-          display: flex;
-          margin-bottom: 16px;
-          animation: slideIn 0.3s ease-out;
-        }
-
-        @keyframes slideIn {
-          from {
-            opacity: 0;
-            transform: translateY(20px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-
-        .staff-message {
-          justify-content: flex-end;
-        }
-
-        .customer-message {
-          justify-content: flex-start;
-        }
-
-        .message-bubble {
-          max-width: 75%;
-          min-width: 80px;
-          padding: 14px 18px;
-          border-radius: 20px;
-          position: relative;
-          word-wrap: break-word;
-          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-          backdrop-filter: blur(10px);
-          transition: all 0.2s ease;
-        }
-
-        .message-bubble:hover {
-          transform: translateY(-2px);
-          box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
-        }
-
-        .message-bubble.staff {
-          background: linear-gradient(135deg, #1890ff 0%, #40a9ff 100%);
-          color: white;
-          border-bottom-right-radius: 8px;
-          position: relative;
-        }
-
-        .message-bubble.staff::before {
-          content: '';
-          position: absolute;
-          top: 0;
-          left: 0;
-          right: 0;
-          bottom: 0;
-          border-radius: 20px;
-          border-bottom-right-radius: 8px;
-          background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%);
-          pointer-events: none;
-        }
-
-        .message-bubble.customer {
-          background: rgba(255, 255, 255, 0.95);
-          color: #333;
-          border: 1px solid rgba(217, 217, 217, 0.3);
-          border-bottom-left-radius: 8px;
-          backdrop-filter: blur(10px);
-        }
-
-        .message-bubble.temporary {
-          opacity: 0.8;
-          background: linear-gradient(135deg, #40a9ff 0%, #69c0ff 100%);
-        }
-
-        .message-content {
-          font-size: 15px;
-          line-height: 1.5;
-          margin-bottom: 8px;
-          white-space: pre-wrap;
-          word-break: break-word;
-        }
-
-        .message-time {
-          font-size: 11px;
-          opacity: 0.8;
-          text-align: right;
-          display: flex;
-          align-items: center;
-          justify-content: flex-end;
-          gap: 4px;
-        }
-
-        .message-bubble.staff .message-time {
-          color: rgba(255, 255, 255, 0.9);
-        }
-
-        .message-bubble.customer .message-time {
-          color: #999;
-        }
-
-        .sending-indicator {
-          font-size: 10px;
-          opacity: 0.9;
-          animation: blink 1s infinite;
-        }
-
-        @keyframes blink {
-          0%, 50% { opacity: 0.9; }
-          51%, 100% { opacity: 0.4; }
-        }
-
-        .chat-input-container {
-          padding: 20px 24px;
-          background: white;
-          border-top: 1px solid #f0f0f0;
-          box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.06);
-        }
-
-        .chat-input-wrapper {
-          display: flex;
-          gap: 16px;
-          align-items: flex-end;
-        }
-
-        .chat-input {
-          flex: 1;
-          border-radius: 24px !important;
-          padding: 12px 20px !important;
-          font-size: 15px;
-          border: 2px solid #f0f0f0 !important;
-          background: #fafafa;
-          transition: all 0.3s ease;
-        }
-
-        .chat-input:focus {
-          border-color: #1890ff !important;
-          box-shadow: 0 0 0 3px rgba(24, 144, 255, 0.1) !important;
-          background: white;
-        }
-
-        .chat-input:disabled {
-          background: #f5f5f5;
-          opacity: 0.7;
-        }
-
-        .send-button {
-          border-radius: 24px !important;
-          height: auto !important;
-          min-height: 44px;
-          padding: 0 24px !important;
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          font-weight: 600;
-          background: linear-gradient(135deg, #1890ff, #40a9ff) !important;
-          border: none !important;
-          box-shadow: 0 4px 12px rgba(24, 144, 255, 0.3);
-          transition: all 0.3s ease;
-        }
-
-        .send-button:hover:not(:disabled) {
-          transform: translateY(-2px);
-          box-shadow: 0 6px 20px rgba(24, 144, 255, 0.4) !important;
-          background: linear-gradient(135deg, #0050b3, #1890ff) !important;
-        }
-
-        .send-button:disabled {
-          opacity: 0.6;
-          transform: none;
-          box-shadow: none;
-        }
-
-        /* Responsive */
-        @media (max-width: 768px) {
-          .invoice-management-container {
-            padding: 16px;
-          }
-          
-          :global(.modern-chat-modal .ant-modal) {
-            max-width: 95vw !important;
-            margin: 10px auto;
-          }
-          
-          .chat-container {
-            height: 80vh;
-          }
-          
-          .chat-header {
-            padding: 16px 20px;
-          }
-          
-          .messages-container {
-            padding: 16px;
-          }
-          
-          .chat-input-container {
-            padding: 16px 20px;
-          }
-        }
-        /* Review modal styles */
-        .review-modal-root {
-          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
-        }
-
-        .review-modal-header {
-          background: linear-gradient(90deg, #1890ff 0%, #40a9ff 100%);
-          padding: 18px 24px;
-          color: #ffffff;
-          border-top-left-radius: 6px;
-          border-top-right-radius: 6px;
-        }
-
-        .review-title {
+        .modern-table .ant-table-thead > tr > th {
+          background: #f8fafc;
+          color: #64748b;
           font-weight: 700;
-          font-size: 16px;
+          text-transform: uppercase;
+          font-size: 11px;
+          letter-spacing: 0.05em;
+          border-bottom: 1px solid #f1f5f9;
         }
-
-        .review-modal-body {
-          padding: 20px 24px 24px 24px;
-          background: #fff;
-          border-bottom-left-radius: 6px;
-          border-bottom-right-radius: 6px;
+        .modern-table .ant-table-tbody > tr > td {
+          border-bottom: 1px solid #f1f5f9;
+          padding: 16px;
         }
-
-        .review-top {
-          display: flex;
-          align-items: center;
-          gap: 12px;
+        .modern-table .ant-table-tbody > tr:hover > td {
+          background: #f1f5f9 !important;
         }
-
-        .review-customer-name {
-          font-size: 15px;
-          font-weight: 700;
-          color: #222;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
+        .modern-modal .ant-modal-content {
+          border-radius: 2rem !important;
+          padding: 1.5rem !important;
         }
 
         .review-date {

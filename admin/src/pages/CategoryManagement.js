@@ -228,14 +228,15 @@ const CategoryManagement = () => {
   ];
 
   return (
-    <div className="thongke-page">
-      <div className="thongke-header">
-        <h1>
-          <i className="fas fa-tags"></i> Quản lý Thể loại
+    <div className="p-4 md:p-6 min-h-screen bg-slate-50">
+      <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
+        <h1 className="text-2xl font-extrabold text-slate-800 flex items-center gap-3">
+          <span className="material-icons text-indigo-500">category</span>
+          Quản lý Thể loại
         </h1>
         <Button
           type="primary"
-          size="small"
+          icon={<span className="material-icons text-sm">add</span>}
           onClick={() => {
             setState(prev => ({
               ...prev,
@@ -244,25 +245,31 @@ const CategoryManagement = () => {
               isModalVisible: true,
             }));
           }}
+          className="h-10 px-6 rounded-lg shadow-lg shadow-indigo-200 flex items-center gap-2"
         >
           Thêm thể loại
         </Button>
       </div>
 
-      <div className="thongke-content">
-        <div className="thongke-filters">
-          <div className="filter-group">
-            <label>Tìm kiếm:</label>
+      <div className="bg-white p-4 md:p-6 rounded-2xl shadow-sm border border-slate-100 transition-all duration-300">
+        <div className="flex flex-col sm:flex-row gap-4 mb-6">
+          <div className="flex-1">
+            <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2 block">Tìm kiếm</label>
             <Input
-              placeholder="Tìm thể loại..."
+              placeholder="Tìm theo mã hoặc tên..."
               value={searchTerm}
               onChange={(e) => setState(prev => ({ ...prev, searchTerm: e.target.value }))}
-              style={{ width: 200 }}
+              prefix={<span className="material-icons text-slate-400 text-sm">search</span>}
+              className="rounded-lg h-10"
             />
           </div>
-          <div className="filter-group">
-            <label>Trạng thái:</label>
-            <Select value={statusFilter} onChange={(value) => setState(prev => ({ ...prev, statusFilter: value }))} style={{ width: 120 }}>
+          <div className="w-full sm:w-48">
+            <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2 block">Trạng thái</label>
+            <Select 
+              value={statusFilter} 
+              onChange={(value) => setState(prev => ({ ...prev, statusFilter: value }))} 
+              className="w-full h-10"
+            >
               <Select.Option value="">Tất cả</Select.Option>
               <Select.Option value="1">Hoạt động</Select.Option>
               <Select.Option value="0">Không hoạt động</Select.Option>
@@ -270,25 +277,33 @@ const CategoryManagement = () => {
           </div>
         </div>
 
-        <div className="thongke-table">
+        <div className="overflow-hidden rounded-xl border border-slate-100">
           <Table
             columns={columns}
             dataSource={filteredCategories}
             rowKey="MaTL"
             loading={loading}
-            scroll={{ x: 1000 }}
+            scroll={{ x: 800 }}
             pagination={{
               pageSize: 10,
               showSizeChanger: false,
               size: 'small',
+              className: 'px-4'
             }}
-            size="small"
+            className="modern-table"
           />
         </div>
       </div>
 
       <Modal
-        title={editingCategory ? 'Chỉnh sửa thể loại' : 'Thêm thể loại mới'}
+        title={
+          <div className="flex items-center gap-2 text-lg font-bold text-slate-800">
+            <span className="material-icons text-indigo-500">
+              {editingCategory ? 'edit' : 'add_circle'}
+            </span>
+            {editingCategory ? 'Chỉnh sửa thể loại' : 'Thêm thể loại mới'}
+          </div>
+        }
         open={isModalVisible}
         onCancel={() => {
           setState(prev => ({
@@ -307,6 +322,7 @@ const CategoryManagement = () => {
                 editingCategory: null,
               }));
             }}
+            className="rounded-lg h-10 px-6"
           >
             Hủy
           </Button>,
@@ -314,99 +330,64 @@ const CategoryManagement = () => {
             key="submit"
             type="primary"
             onClick={editingCategory ? handleUpdateCategory : handleAddCategory}
+            className="rounded-lg h-10 px-8 bg-indigo-600 shadow-md shadow-indigo-100"
           >
-            {editingCategory ? 'Lưu' : 'Thêm'}
+            {editingCategory ? 'Lưu thay đổi' : 'Tạo mới'}
           </Button>,
         ]}
-        width={600}
-        styles={{ body: { padding: '16px' } }}
+        width={500}
+        centered
       >
-        <div className="info-section">
-          <div className="info-grid">
-            {editingCategory && (
-              <div className="info-item">
-                <p className="info-label">Mã thể loại:</p>
-                <Input
-                  size="small"
-                  value={editingCategory.MaTL}
-                  disabled
-                />
-              </div>
-            )}
-            <div className="info-item">
-              <p className="info-label">Tên thể loại:</p>
+        <div className="py-4 space-y-4">
+          {editingCategory && (
+            <div>
+              <label className="text-xs font-bold text-slate-500 uppercase mb-1 block">Mã thể loại</label>
               <Input
-                size="small"
-                value={editingCategory ? editingCategory.TenTL : newCategory.TenTL}
-                onChange={(e) => handleInputChange('TenTL', e.target.value)}
+                value={editingCategory.MaTL}
+                disabled
+                className="rounded-lg bg-slate-50 border-slate-200"
               />
             </div>
-            <div className="info-item">
-              <p className="info-label">Tình trạng:</p>
-              <Select
-                size="small"
-                value={editingCategory ? editingCategory.TinhTrang : newCategory.TinhTrang}
-                onChange={(value) => handleInputChange('TinhTrang', value)}
-                style={{ width: '100%' }}
-              >
-                <Option value={1}>Hoạt động</Option>
-                <Option value={0}>Không hoạt động</Option>
-              </Select>
-            </div>
+          )}
+          <div>
+            <label className="text-xs font-bold text-slate-500 uppercase mb-1 block">Tên thể loại</label>
+            <Input
+              placeholder="Nhập tên thể loại..."
+              value={editingCategory ? editingCategory.TenTL : newCategory.TenTL}
+              onChange={(e) => handleInputChange('TenTL', e.target.value)}
+              className="rounded-lg h-10"
+            />
+          </div>
+          <div>
+            <label className="text-xs font-bold text-slate-500 uppercase mb-1 block">Tình trạng</label>
+            <Select
+              value={editingCategory ? editingCategory.TinhTrang : newCategory.TinhTrang}
+              onChange={(value) => handleInputChange('TinhTrang', value)}
+              className="w-full h-10 rounded-lg"
+            >
+              <Option value={1}>Hoạt động</Option>
+              <Option value={0}>Không hoạt động</Option>
+            </Select>
           </div>
         </div>
       </Modal>
 
       <style>{`
-        .thongke-page {
-          min-height: 100vh;
+        .modern-table .ant-table-thead > tr > th {
+          background: #f8fafc;
+          color: #64748b;
+          font-weight: 600;
+          text-transform: uppercase;
+          font-size: 11px;
+          letter-spacing: 0.05em;
+          border-bottom: 1px solid #f1f5f9;
         }
-        .thongke-header {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          margin-bottom: 16px;
-          flex-wrap: wrap;
-          gap: 16px;
+        .modern-table .ant-table-tbody > tr > td {
+          border-bottom: 1px solid #f1f5f9;
+          padding: 12px 16px;
         }
-        .thongke-content {
-          background: #fff;
-          padding: 16px;
-          border-radius: 8px;
-          box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        }
-        .thongke-filters {
-          display: flex;
-          gap: 16px;
-          margin-bottom: 16px;
-          flex-wrap: wrap;
-        }
-        .filter-group {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-        }
-        .thongke-table {
-          margin-top: 16px;
-        }
-        .info-section {
-          background: #f8f8f8;
-          padding: 12px;
-          border-radius: 4px;
-          margin-bottom: 16px;
-        }
-        .info-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-          gap: 12px;
-        }
-        .info-item {
-          margin-bottom: 4px;
-        }
-        .info-label {
-          color: #666;
-          font-size: 12px;
-          margin: 0;
+        .modern-table .ant-table-tbody > tr:hover > td {
+          background: #f1f5f9 !important;
         }
       `}</style>
     </div>

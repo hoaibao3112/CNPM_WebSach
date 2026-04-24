@@ -1,7 +1,6 @@
 import React, { useEffect, useState, useContext } from 'react';
 import api from '../utils/api';
-import '../styles/AccountManagement.css';
-import { Button, Input, message, Table, Modal, Space, Select, Tabs, Form } from 'antd';
+import { Button, Input, message, Table, Modal, Space, Select, Tabs, Form, Tag, Tooltip } from 'antd';
 import {
   EditOutlined,
   DeleteOutlined,
@@ -9,10 +8,12 @@ import {
   LockOutlined,
   UnlockOutlined,
   PlusOutlined,
+  UserOutlined,
+  ShieldOutlined,
+  KeyOutlined,
 } from '@ant-design/icons';
 import { PermissionContext } from '../components/PermissionContext';
 
-// `Search` unused; removed to avoid eslint no-unused-vars warning
 const { Option } = Select;
 const { confirm } = Modal;
 const { TabPane } = Tabs;
@@ -34,12 +35,12 @@ const AccountManagement = () => {
     loading: false,
     error: null,
     quyenList: [],
-    permissions: [], // Danh sách quyền của nhóm quyền hiện tại
-    features: [], // Danh sách chức năng (cho việc thêm quyền)
-    newPermission: { MaCN: undefined, HanhDong: [], TinhTrang: '1' }, // Form thêm quyền mới
+    permissions: [],
+    features: [],
+    newPermission: { MaCN: undefined, HanhDong: [], TinhTrang: '1' },
   });
 
-  const { accounts, newAccount, editingAccount, searchTerm, isModalVisible, loading, error, quyenList, permissions, features, newPermission } = state;
+  const { accounts, newAccount, editingAccount, searchTerm, isModalVisible, loading, quyenList, permissions, features, newPermission } = state;
 
   const API_URL = '/accounts';
   const PERMISSION_API = '/permissions';
@@ -79,17 +80,12 @@ const AccountManagement = () => {
     }
   };
 
-
   useEffect(() => {
     if (hasPermission('Tài khoản', 'Đọc')) {
       fetchData();
-    } else {
-      message.error('Bạn không có quyền xem danh sách tài khoản!');
-      setState(prev => ({ ...prev, loading: false }));
     }
   }, [hasPermission]);
 
-  // Fetch quyền khi mở modal edit
   const fetchPermissions = async (maQuyen) => {
     try {
       const resp = await api.get(`${PERMISSION_API}/roles/${maQuyen}`);
@@ -121,542 +117,450 @@ const AccountManagement = () => {
     }
   };
 
-  const validateAccountData = (accountData) => {
-    if (!accountData.TenTK || !accountData.MatKhau || !accountData.MaQuyen) {
-      message.error('Vui lòng nhập đầy đủ thông tin bắt buộc (Tên TK, Mật khẩu, Quyền)!');
-      return false;
-    }
-    return true;
-  };
-
   const handleAddAccount = async () => {
-    if (!hasPermission('Tài khoản', 'Thêm')) {
-      message.error('Bạn không có quyền thêm tài khoản!');
+    if (!hasPermission('Tài khoản', 'Thêm')) return;
+    if (!newAccount.TenTK || !newAccount.MatKhau || !newAccount.MaQuyen) {
+      message.error('Vui lòng nhập đầy đủ thông tin!');
       return;
     }
-    if (!validateAccountData(newAccount)) return;
 
-    const payload = {
-      TenTK: newAccount.TenTK,
-      MatKhau: newAccount.MatKhau,
-      MaQuyen: newAccount.MaQuyen,
-      NgayTao: newAccount.NgayTao,
-      TinhTrang: parseInt(newAccount.TinhTrang),
-    };
     try {
-      await api.post(API_URL, payload);
-      await fetchData();
+      await api.post(API_URL, {
+        ...newAccount,
+        TinhTrang: parseInt(newAccount.TinhTrang),
+      });
+      fetchData();
       setState(prev => ({
         ...prev,
-        newAccount: {
-          TenTK: '',
-          MatKhau: '',
-          MaQuyen: undefined,
-          NgayTao: new Date().toISOString().slice(0, 10), // Fix date format
-          TinhTrang: '1',
-        },
         isModalVisible: false,
+        newAccount: { TenTK: '', MatKhau: '', MaQuyen: undefined, NgayTao: new Date().toISOString().split('T')[0], TinhTrang: '1' }
       }));
       message.success('Thêm tài khoản thành công!');
     } catch (error) {
-      message.error(`Lỗi khi thêm tài khoản: ${error.response?.data?.error || error.message}`);
+      message.error(`Lỗi: ${error.response?.data?.error || error.message}`);
     }
   };
 
   const handleUpdateAccount = async () => {
-    if (!hasPermission('Tài khoản', 'Sửa')) {
-      message.error('Bạn không có quyền sửa tài khoản!');
-      return;
-    }
-    if (!validateAccountData(editingAccount)) return;
-
-    const payload = {
-      TenTK: editingAccount.TenTK,
-      MatKhau: editingAccount.MatKhau,
-      MaQuyen: editingAccount.MaQuyen,
-      TinhTrang: parseInt(editingAccount.TinhTrang),
-    };
+    if (!hasPermission('Tài khoản', 'Sửa')) return;
     try {
-      await api.put(`${API_URL}/${editingAccount.MaTK}`, payload);
-      await fetchData();
-      setState(prev => ({
-        ...prev,
-        editingAccount: null,
-        isModalVisible: false,
-      }));
-      message.success('Cập nhật tài khoản thành công!');
+      await api.put(`${API_URL}/${editingAccount.MaTK}`, {
+        TenTK: editingAccount.TenTK,
+        MatKhau: editingAccount.MatKhau,
+        MaQuyen: editingAccount.MaQuyen,
+        TinhTrang: parseInt(editingAccount.TinhTrang),
+      });
+      fetchData();
+      setState(prev => ({ ...prev, isModalVisible: false, editingAccount: null }));
+      message.success('Cập nhật thành công!');
     } catch (error) {
-      message.error(`Lỗi khi cập nhật tài khoản: ${error.response?.data?.error || error.message}`);
+      message.error(`Lỗi: ${error.response?.data?.error || error.message}`);
     }
   };
 
   const handleDeleteAccount = (MaTK) => {
-    if (!hasPermission('Tài khoản', 'Xóa')) {
-      message.error('Bạn không có quyền xóa tài khoản!');
-      return;
-    }
+    if (!hasPermission('Tài khoản', 'Xóa')) return;
     confirm({
-      title: 'Bạn có chắc muốn xóa tài khoản này?',
+      title: 'Xóa tài khoản này?',
       icon: <ExclamationCircleFilled />,
-      content: 'Hành động này sẽ không thể hoàn tác',
+      content: 'Hành động này không thể hoàn tác.',
       okText: 'Xóa',
       okType: 'danger',
-      cancelText: 'Thoát',
-      async onOk() {
+      onOk: async () => {
         try {
           await api.delete(`${API_URL}/${MaTK}`);
-          await fetchData();
-          message.success('Xóa tài khoản thành công!');
+          fetchData();
+          message.success('Đã xóa tài khoản');
         } catch (error) {
-          message.error(`Lỗi khi xóa tài khoản: ${error.response?.data?.error || error.message}`);
+          message.error('Lỗi khi xóa');
         }
-      },
+      }
     });
   };
 
   const handleToggleStatus = (account) => {
-    if (!hasPermission('Tài khoản', 'Sửa')) {
-      message.error('Bạn không có quyền thay đổi trạng thái tài khoản!');
-      return;
-    }
+    const newStatus = account.TinhTrangValue === 1 ? 0 : 1;
     confirm({
-      title: `Bạn có muốn ${account.TinhTrang === 'Hoạt động' ? 'tạm ẩn' : 'kích hoạt'} tài khoản này?`,
-      icon: <ExclamationCircleFilled />,
-      okText: 'Xác nhận',
-      cancelText: 'Hủy',
-      async onOk() {
+      title: `${newStatus === 1 ? 'Kích hoạt' : 'Khóa'} tài khoản?`,
+      onOk: async () => {
         try {
-          const newStatus = account.TinhTrangValue === 1 ? 0 : 1;
           await api.put(`${API_URL}/${account.MaTK}`, { TinhTrang: newStatus });
-          await fetchData();
-          message.success(`Đã ${newStatus === 1 ? 'kích hoạt' : 'tạm ẩn'} tài khoản!`);
+          fetchData();
+          message.success('Đã cập nhật trạng thái');
         } catch (error) {
-          message.error(`Lỗi khi đổi trạng thái: ${error.response?.data?.error || error.message}`);
+          message.error('Lỗi khi cập nhật');
         }
-      },
+      }
     });
   };
 
-  // Thêm quyền mới cho nhóm quyền
   const handleAddPermission = async () => {
-    if (!hasPermission('Phân quyền', 'Thêm')) {
-      message.error('Bạn không có quyền thêm quyền!');
+    if (!newPermission.MaCN || !newPermission.HanhDong.length) {
+      message.error('Chọn chức năng và hành động!');
       return;
     }
-    // Hỗ trợ chọn nhiều hành động cùng lúc (newPermission.HanhDong là mảng)
-    if (!newPermission.MaCN || !newPermission.HanhDong || newPermission.HanhDong.length === 0) {
-      message.error('Vui lòng chọn chức năng và ít nhất một hành động!');
-      return;
-    }
-
     try {
-      // Gửi nhiều request (mỗi hành động 1 bản ghi)
-      const requests = newPermission.HanhDong.map((hd) =>
+      const requests = newPermission.HanhDong.map(hd =>
         api.post(PERMISSION_API, {
           MaQuyen: editingAccount.MaQuyen,
           MaCN: newPermission.MaCN,
           HanhDong: hd,
-          TinhTrang: parseInt(newPermission.TinhTrang),
+          TinhTrang: 1
         })
       );
       await Promise.all(requests);
-      await fetchPermissions(editingAccount.MaQuyen);
+      fetchPermissions(editingAccount.MaQuyen);
       setState(prev => ({ ...prev, newPermission: { MaCN: undefined, HanhDong: [], TinhTrang: '1' } }));
       message.success('Thêm quyền thành công!');
     } catch (error) {
-      message.error(`Lỗi khi thêm quyền: ${error.response?.data?.error || error.message}`);
+      message.error('Lỗi thêm quyền');
     }
   };
 
-  // Xóa quyền
-  const handleDeletePermission = (maCTQ) => {
-    if (!hasPermission('Phân quyền', 'Xóa')) {
-      message.error('Bạn không có quyền xóa quyền!');
-      return;
-    }
-    confirm({
-      title: 'Bạn có chắc muốn xóa quyền này?',
-      icon: <ExclamationCircleFilled />,
-      okText: 'Xóa',
-      okType: 'danger',
-      cancelText: 'Hủy',
-      async onOk() {
-        try {
-          await api.delete(`${PERMISSION_API}/${maCTQ}`);
-          await fetchPermissions(editingAccount.MaQuyen);
-          message.success('Xóa quyền thành công!');
-        } catch (error) {
-          message.error(`Lỗi khi xóa quyền: ${error.response?.data?.error || error.message}`);
-        }
-      },
-    });
-  };
-
-  // Sửa quyền - Để đầy đủ, thêm chức năng edit (sử dụng modal con hoặc inline, ở đây dùng state editingPermission)
   const [editingPermission, setEditingPermission] = useState(null);
 
-  const handleEditPermission = (permission) => {
-    if (!hasPermission('Phân quyền', 'Sửa')) {
-      message.error('Bạn không có quyền sửa quyền!');
-      return;
-    }
-    setEditingPermission(permission);
-  };
-
   const handleUpdatePermission = async () => {
-    if (!editingPermission) return;
-
     try {
       await api.put(`${PERMISSION_API}/${editingPermission.MaCTQ}`, {
-        MaQuyen: editingAccount.MaQuyen, // Giữ nguyên nhóm
-        MaCN: editingPermission.MaCN,
-        HanhDong: editingPermission.HanhDong,
-        TinhTrang: editingPermission.TinhTrang,
+        ...editingPermission,
+        MaQuyen: editingAccount.MaQuyen
       });
-      await fetchPermissions(editingAccount.MaQuyen);
+      fetchPermissions(editingAccount.MaQuyen);
       setEditingPermission(null);
       message.success('Cập nhật quyền thành công!');
     } catch (error) {
-      message.error(`Lỗi khi cập nhật quyền: ${error.response?.data?.error || error.message}`);
+      message.error('Lỗi cập nhật');
     }
   };
 
-  const handlePermissionInputChange = (field, value) => {
-    setEditingPermission(prev => ({ ...prev, [field]: value }));
-  };
-
-  const filteredAccounts = accounts.filter(
-    account =>
-      searchTerm === '' || account.TinhTrang === searchTerm
-  );
+  const filteredAccounts = accounts.filter(a => searchTerm === '' || a.TinhTrang === searchTerm);
 
   const columns = [
-    { title: 'Mã TK', dataIndex: 'MaTK', key: 'MaTK', width: 100, fixed: 'left' },
-    { title: 'Tên tài khoản', dataIndex: 'TenTK', key: 'TenTK', width: 200 },
     {
-      title: 'Quyền',
-      dataIndex: 'MaQuyen',
-      key: 'MaQuyen',
-      width: 120,
-      render: (value) => quyenList.find(q => q.MaNQ === value)?.TenNQ || 'Chưa xác định',
-    },
-    { title: 'Ngày tạo', dataIndex: 'NgayTao', key: 'NgayTao', width: 200 },
-    {
-      title: 'Trạng thái',
-      dataIndex: 'TinhTrang',
-      key: 'TinhTrang',
-      width: 120,
-      render: (status) => (
-        <span
-          className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${status === 'Hoạt động' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-            }`}
-        >
-          {status}
-        </span>
-      ),
-    },
-    {
-      title: 'Thao tác',
-      key: 'action',
+      title: 'TÀI KHOẢN',
+      key: 'account',
+      fixed: 'left',
+      width: 250,
       render: (_, record) => (
-        <Space size="small">
-          {hasPermission('Tài khoản', 'Sửa') && (
-            <Button
-              size="small"
-              icon={<EditOutlined />}
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-indigo-50 flex items-center justify-center text-indigo-600 font-black">
+            {record.TenTK.slice(0, 2).toUpperCase()}
+          </div>
+          <div>
+            <div className="font-bold text-slate-700">{record.TenTK}</div>
+            <div className="text-[10px] text-slate-400 font-black uppercase tracking-tighter">ID: #{record.MaTK}</div>
+          </div>
+        </div>
+      )
+    },
+    {
+      title: 'NHÓM QUYỀN',
+      key: 'role',
+      width: 180,
+      render: (_, record) => (
+        <Tag color="blue" className="rounded-lg font-bold border-0 px-3 py-1 uppercase text-[10px] tracking-widest">
+          {quyenList.find(q => q.MaNQ === record.MaQuyen)?.TenNQ || 'N/A'}
+        </Tag>
+      )
+    },
+    {
+      title: 'NGÀY TẠO',
+      dataIndex: 'NgayTao',
+      key: 'NgayTao',
+      width: 150,
+      render: (date) => <span className="text-slate-500 font-medium">{date}</span>
+    },
+    {
+      title: 'TRẠNG THÁI',
+      key: 'status',
+      width: 150,
+      render: (_, record) => (
+        <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${
+          record.TinhTrangValue === 1 ? 'bg-emerald-100 text-emerald-600' : 'bg-rose-100 text-rose-600'
+        }`}>
+          {record.TinhTrang}
+        </span>
+      )
+    },
+    {
+      title: 'THAO TÁC',
+      key: 'action',
+      fixed: 'right',
+      width: 180,
+      render: (_, record) => (
+        <div className="flex gap-2">
+          <Tooltip title="Chỉnh sửa">
+            <Button 
+              className="w-10 h-10 rounded-xl flex items-center justify-center border-slate-200 text-slate-600 hover:text-indigo-600 hover:border-indigo-600 transition-all"
+              icon={<EditOutlined />} 
               onClick={() => {
-                setState(prev => ({
-                  ...prev,
-                  editingAccount: { ...record, TinhTrang: record.TinhTrangValue.toString() },
-                  isModalVisible: true,
-                }));
+                setState(prev => ({ ...prev, editingAccount: { ...record, TinhTrang: record.TinhTrangValue.toString() }, isModalVisible: true }));
                 fetchPermissions(record.MaQuyen);
               }}
             />
-          )}
-          {hasPermission('Tài khoản', 'Sửa') && (
-            <Button
-              size="small"
-              icon={record.TinhTrang === 'Hoạt động' ? <LockOutlined /> : <UnlockOutlined />}
+          </Tooltip>
+          <Tooltip title={record.TinhTrangValue === 1 ? 'Khóa' : 'Mở khóa'}>
+            <Button 
+              className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${
+                record.TinhTrangValue === 1 ? 'hover:text-rose-600 hover:border-rose-600' : 'hover:text-emerald-600 hover:border-emerald-600'
+              }`}
+              icon={record.TinhTrangValue === 1 ? <LockOutlined /> : <UnlockOutlined />} 
               onClick={() => handleToggleStatus(record)}
             />
-          )}
-          {hasPermission('Tài khoản', 'Xóa') && (
-            <Button
-              size="small"
+          </Tooltip>
+          <Tooltip title="Xóa">
+            <Button 
               danger
-              icon={<DeleteOutlined />}
+              className="w-10 h-10 rounded-xl flex items-center justify-center"
+              icon={<DeleteOutlined />} 
               onClick={() => handleDeleteAccount(record.MaTK)}
             />
-          )}
-        </Space>
-      ),
-      fixed: 'right',
-      width: 200,
-    },
+          </Tooltip>
+        </div>
+      )
+    }
   ];
 
-  const permissionColumns = [
-    { title: 'Mã CTQ', dataIndex: 'MaCTQ', key: 'MaCTQ' },
-    { title: 'Chức năng', dataIndex: 'TenCN', key: 'TenCN' },
-    { title: 'Hành động', dataIndex: 'HanhDong', key: 'HanhDong' },
-    {
-      title: 'Trạng thái',
-      dataIndex: 'TinhTrang',
-      key: 'TinhTrang',
-      render: (status) => (status === 1 ? 'Hoạt động' : 'Bị khóa'),
-    },
-    {
-      title: 'Thao tác',
-      key: 'action',
-      render: (_, record) => (
-        <Space>
-          {hasPermission('Phân quyền', 'Sửa') && (
-            <Button size="small" icon={<EditOutlined />} onClick={() => handleEditPermission(record)} />
-          )}
-          {hasPermission('Phân quyền', 'Xóa') && (
-            <Button size="small" danger icon={<DeleteOutlined />} onClick={() => handleDeletePermission(record.MaCTQ)} />
-          )}
-        </Space>
-      ),
-    },
-  ];
-
-  if (!hasPermission('Tài khoản', 'Đọc')) {
-    return <div>Bạn không có quyền truy cập trang này!</div>;
-  }
+  if (!hasPermission('Tài khoản', 'Đọc')) return <div className="p-8 text-center font-bold text-slate-400 uppercase tracking-widest">Truy cập bị từ chối</div>;
 
   return (
-    <div className="thongke-page">
-      <div className="thongke-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <h1>
-          <i className="fas fa-users"></i> Quản lý Tài khoản
-        </h1>
+    <div className="p-4 md:p-8 min-h-screen bg-slate-50 font-sans">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+        <div>
+          <h1 className="text-2xl font-black text-slate-800 flex items-center gap-3">
+            <span className="material-icons text-indigo-500">manage_accounts</span>
+            Quản lý Tài khoản
+          </h1>
+          <p className="text-slate-400 text-sm mt-1">Quản lý định danh và phân quyền hệ thống</p>
+        </div>
         {hasPermission('Tài khoản', 'Thêm') && (
           <Button
             type="primary"
-            size="small"
-            onClick={() => {
-              setState(prev => ({
-                ...prev,
-                editingAccount: null,
-                newAccount: {
-                  TenTK: '',
-                  MatKhau: '',
-                  MaQuyen: undefined,
-                  NgayTao: new Date().toISOString().split('T')[0],
-                  TinhTrang: '1',
-                },
-                isModalVisible: true,
-              }));
-            }}
+            icon={<PlusOutlined />}
+            onClick={() => setState(prev => ({ ...prev, editingAccount: null, isModalVisible: true }))}
+            className="h-12 px-6 rounded-2xl bg-indigo-600 hover:bg-indigo-700 border-0 shadow-lg shadow-indigo-100 font-bold flex items-center gap-2"
           >
             Thêm tài khoản
           </Button>
         )}
       </div>
 
-      <div className="thongke-content">
-        <div className="thongke-filters">
-          <div className="filter-group">
-            <label>Trạng thái:</label>
-            <Select
-              value={searchTerm}
-              onChange={(value) => setState(prev => ({ ...prev, searchTerm: value }))}
-              style={{ width: 250 }}
-              placeholder="Tìm tài khoản..."
-            >
-              <Select.Option value="">Tất cả</Select.Option>
-              <Select.Option value="Hoạt động">Hoạt động</Select.Option>
-              <Select.Option value="Bị khóa">Bị khóa</Select.Option>
-            </Select>
-          </div>
+      <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm mb-8 flex flex-col md:flex-row gap-6">
+        <div className="flex-1 space-y-2">
+          <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Lọc trạng thái</label>
+          <Select
+            className="w-full h-11 modern-select"
+            value={searchTerm}
+            onChange={(v) => setState(prev => ({ ...prev, searchTerm: v }))}
+          >
+            <Option value="">Tất cả trạng thái</Option>
+            <Option value="Hoạt động text-emerald-600">Hoạt động</Option>
+            <Option value="Bị khóa text-rose-600">Bị khóa</Option>
+          </Select>
         </div>
-
-        <div className="thongke-table">
-          <Table
-            columns={columns}
-            dataSource={filteredAccounts}
-            rowKey="MaTK"
-            loading={loading}
-            scroll={{ x: 1000 }}
-            pagination={false}
-          />
+        <div className="flex-1 flex items-end">
+          <div className="w-full h-11 px-4 rounded-xl bg-slate-50 border border-slate-100 flex items-center gap-3">
+            <span className="material-icons text-slate-400">info</span>
+            <span className="text-xs text-slate-500 font-medium">Tìm thấy {filteredAccounts.length} tài khoản trong hệ thống</span>
+          </div>
         </div>
       </div>
 
+      <div className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
+        <Table
+          columns={columns}
+          dataSource={filteredAccounts}
+          rowKey="MaTK"
+          loading={loading}
+          scroll={{ x: 1000 }}
+          pagination={{ pageSize: 10, className: "px-6 py-4" }}
+          className="modern-table"
+        />
+      </div>
+
       <Modal
-        title={editingAccount ? 'Chỉnh sửa tài khoản' : 'Thêm tài khoản mới'}
+        title={null}
         open={isModalVisible}
-        onCancel={() => setState(prev => ({ ...prev, isModalVisible: false, editingAccount: null, permissions: [] }))}
+        onCancel={() => setState(prev => ({ ...prev, isModalVisible: false, editingAccount: null }))}
         footer={null}
         width={800}
-        styles={{ body: { padding: '16px' } }}
+        centered
+        className="modern-modal"
       >
-        <Tabs defaultActiveKey="1">
-          <TabPane tab="Thông tin tài khoản" key="1">
-            <div className="info-section">
-              <div className="info-grid">
-                {editingAccount && (
-                  <div className="info-item">
-                    <p className="info-label">Mã tài khoản:</p>
-                    <Input size="small" value={editingAccount.MaTK} disabled />
-                  </div>
-                )}
-                <div className="info-item">
-                  <p className="info-label">Tên tài khoản <span style={{ color: 'red' }}>*</span></p>
-                  <Input
-                    size="small"
-                    value={editingAccount ? editingAccount.TenTK : newAccount.TenTK}
-                    onChange={(e) => handleInputChange('TenTK', e.target.value)}
-                    required
-                  />
-                </div>
-                <div className="info-item">
-                  <p className="info-label">Mật khẩu <span style={{ color: 'red' }}>*</span></p>
-                  <Input.Password
-                    size="small"
-                    value={editingAccount ? editingAccount.MatKhau : newAccount.MatKhau}
-                    onChange={(e) => handleInputChange('MatKhau', e.target.value)}
-                    required
-                  />
-                </div>
-                <div className="info-item">
-                  <p className="info-label">Quyền <span style={{ color: 'red' }}>*</span></p>
-                  <Select
-                    size="small"
-                    value={editingAccount ? editingAccount.MaQuyen : newAccount.MaQuyen}
-                    onChange={(value) => handleInputChange('MaQuyen', value)}
-                    style={{ width: '100%' }}
-                  >
-                    {quyenList.map(quyen => (
-                      <Option key={quyen.MaNQ} value={quyen.MaNQ}>
-                        {quyen.TenNQ}
-                      </Option>
-                    ))}
-                  </Select>
-                </div>
-                <div className="info-item">
-                  <p className="info-label">Ngày tạo:</p>
-                  <Input
-                    size="small"
-                    type="date"
-                    value={editingAccount ? editingAccount.NgayTao : newAccount.NgayTao}
-                    onChange={(e) => handleInputChange('NgayTao', e.target.value)}
-                  />
-                </div>
-                <div className="info-item">
-                  <p className="info-label">Trạng thái <span style={{ color: 'red' }}>*</span></p>
-                  <Select
-                    size="small"
-                    value={editingAccount ? editingAccount.TinhTrang : newAccount.TinhTrang}
-                    onChange={(value) => handleInputChange('TinhTrang', value)}
-                    style={{ width: '100%' }}
-                  >
-                    <Option value="1">Hoạt động</Option>
-                    <Option value="0">Bị khóa</Option>
-                  </Select>
-                </div>
+        <div className="mb-6">
+          <h2 className="text-xl font-black text-slate-800 flex items-center gap-2">
+            <span className="material-icons text-indigo-500">{editingAccount ? 'edit' : 'person_add'}</span>
+            {editingAccount ? 'Cập nhật tài khoản' : 'Tạo tài khoản mới'}
+          </h2>
+        </div>
+
+        <Tabs defaultActiveKey="1" className="modern-tabs">
+          <TabPane tab={<span className="flex items-center gap-2 px-2"><UserOutlined /> Thông tin</span>} key="1">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4">
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Tên tài khoản</label>
+                <Input 
+                  prefix={<UserOutlined className="text-slate-400" />}
+                  className="h-11 rounded-xl"
+                  value={editingAccount ? editingAccount.TenTK : newAccount.TenTK}
+                  onChange={(e) => handleInputChange('TenTK', e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Mật khẩu</label>
+                <Input.Password 
+                  prefix={<KeyOutlined className="text-slate-400" />}
+                  className="h-11 rounded-xl"
+                  value={editingAccount ? editingAccount.MatKhau : newAccount.MatKhau}
+                  onChange={(e) => handleInputChange('MatKhau', e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Nhóm quyền</label>
+                <Select 
+                  className="w-full h-11"
+                  value={editingAccount ? editingAccount.MaQuyen : newAccount.MaQuyen}
+                  onChange={(v) => handleInputChange('MaQuyen', v)}
+                >
+                  {quyenList.map(q => <Option key={q.MaNQ} value={q.MaNQ}>{q.TenNQ}</Option>)}
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Trạng thái</label>
+                <Select 
+                  className="w-full h-11"
+                  value={editingAccount ? editingAccount.TinhTrang : newAccount.TinhTrang}
+                  onChange={(v) => handleInputChange('TinhTrang', v)}
+                >
+                  <Option value="1">Hoạt động</Option>
+                  <Option value="0">Khóa</Option>
+                </Select>
               </div>
             </div>
-            <Button type="primary" onClick={editingAccount ? handleUpdateAccount : handleAddAccount} style={{ marginTop: 16 }}>
-              {editingAccount ? 'Lưu' : 'Thêm'}
-            </Button>
+            <div className="mt-8 flex justify-end gap-3 border-t border-slate-100 pt-6">
+              <Button 
+                onClick={() => setState(prev => ({ ...prev, isModalVisible: false }))}
+                className="h-11 px-8 rounded-xl font-bold border-slate-200"
+              >
+                Hủy
+              </Button>
+              <Button 
+                type="primary" 
+                onClick={editingAccount ? handleUpdateAccount : handleAddAccount}
+                className="h-11 px-8 rounded-xl font-bold bg-indigo-600 border-0"
+              >
+                {editingAccount ? 'Cập nhật' : 'Tạo ngay'}
+              </Button>
+            </div>
           </TabPane>
+
           {editingAccount && (
-            <TabPane tab="Quyền của nhóm" key="2">
-              <h3>Quyền của nhóm {quyenList.find(q => q.MaNQ === editingAccount?.MaQuyen)?.TenNQ}</h3>
-              {hasPermission('Phân quyền', 'Thêm') && (
-                <div style={{ marginBottom: 12 }}>
-                  <h4>Thêm quyền mới</h4>
-                  <Form layout="inline">
-                    <Form.Item label="Chức năng">
-                      <Select
-                        value={newPermission.MaCN}
-                        onChange={(v) => setState(prev => ({ ...prev, newPermission: { ...prev.newPermission, MaCN: v } }))}
-                        style={{ width: 200 }}
-                      >
-                        {features.map(f => <Option key={f.MaCN} value={f.MaCN}>{f.TenCN}</Option>)}
-                      </Select>
-                    </Form.Item>
-                    <Form.Item label="Hành động">
-                      <Select
-                        mode="multiple"
-                        placeholder="Chọn hành động (Đọc, Thêm, Sửa, Xóa)"
-                        value={newPermission.HanhDong}
-                        onChange={(v) => setState(prev => ({ ...prev, newPermission: { ...prev.newPermission, HanhDong: v } }))}
-                        style={{ minWidth: 220 }}
-                      >
-                        <Option value="Đọc">Đọc</Option>
-                        <Option value="Thêm">Thêm</Option>
-                        <Option value="Sửa">Sửa</Option>
-                        <Option value="Xóa">Xóa</Option>
-                      </Select>
-                    </Form.Item>
-                    <Form.Item label="Trạng thái">
-                      <Select
-                        value={newPermission.TinhTrang}
-                        onChange={(v) => setState(prev => ({ ...prev, newPermission: { ...prev.newPermission, TinhTrang: v } }))}
-                        style={{ width: 120 }}
-                      >
-                        <Option value="1">Hoạt động</Option>
-                        <Option value="0">Bị khóa</Option>
-                      </Select>
-                    </Form.Item>
-                    <Button type="primary" icon={<PlusOutlined />} onClick={handleAddPermission}>
-                      Thêm
+            <TabPane tab={<span className="flex items-center gap-2 px-2"><ShieldOutlined /> Phân quyền</span>} key="2">
+              <div className="pt-4 space-y-6">
+                <div className="p-6 bg-slate-50 rounded-2xl border border-slate-100">
+                  <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+                    <PlusOutlined /> Thêm quyền trực tiếp
+                  </h4>
+                  <div className="flex flex-wrap gap-4">
+                    <Select
+                      placeholder="Chọn chức năng"
+                      className="h-11 flex-1 min-w-[200px]"
+                      value={newPermission.MaCN}
+                      onChange={(v) => setState(prev => ({ ...prev, newPermission: { ...prev.newPermission, MaCN: v } }))}
+                    >
+                      {features.map(f => <Option key={f.MaCN} value={f.MaCN}>{f.TenCN}</Option>)}
+                    </Select>
+                    <Select
+                      mode="multiple"
+                      placeholder="Hành động"
+                      className="h-11 flex-1 min-w-[200px]"
+                      value={newPermission.HanhDong}
+                      onChange={(v) => setState(prev => ({ ...prev, newPermission: { ...prev.newPermission, HanhDong: v } }))}
+                    >
+                      {['Đọc', 'Thêm', 'Sửa', 'Xóa'].map(v => <Option key={v} value={v}>{v}</Option>)}
+                    </Select>
+                    <Button 
+                      type="primary" 
+                      onClick={handleAddPermission}
+                      className="h-11 px-6 rounded-xl font-bold bg-slate-800 border-0 hover:bg-slate-900"
+                    >
+                      Thêm quyền
                     </Button>
-                  </Form>
+                  </div>
                 </div>
-              )}
-              <Table
-                columns={permissionColumns}
-                dataSource={permissions}
-                rowKey="MaCTQ"
-                pagination={false}
-                size="small"
-              />
+
+                <div className="rounded-2xl border border-slate-100 overflow-hidden">
+                  <Table
+                    columns={[
+                      { title: 'CHỨC NĂNG', dataIndex: 'TenCN', key: 'TenCN', render: (t) => <span className="font-bold text-slate-700">{t}</span> },
+                      { title: 'HÀNH ĐỘNG', dataIndex: 'HanhDong', key: 'HanhDong', render: (h) => <Tag className="rounded-md font-bold">{h}</Tag> },
+                      {
+                        title: 'THAO TÁC',
+                        key: 'action',
+                        width: 100,
+                        render: (_, record) => (
+                          <Button 
+                            danger type="text" size="small" 
+                            icon={<DeleteOutlined />} 
+                            onClick={async () => {
+                              try {
+                                await api.delete(`${PERMISSION_API}/${record.MaCTQ}`);
+                                fetchPermissions(editingAccount.MaQuyen);
+                                message.success('Đã gỡ quyền');
+                              } catch(e) { message.error('Lỗi'); }
+                            }}
+                          />
+                        )
+                      }
+                    ]}
+                    dataSource={permissions}
+                    rowKey="MaCTQ"
+                    pagination={false}
+                    size="small"
+                  />
+                </div>
+              </div>
             </TabPane>
           )}
         </Tabs>
       </Modal>
 
-      {/* Modal sửa quyền (nếu muốn dùng modal riêng) */}
-      <Modal
-        title="Sửa quyền"
-        open={!!editingPermission}
-        onCancel={() => setEditingPermission(null)}
-        onOk={handleUpdatePermission}
-      >
-        {editingPermission && (
-          <div>
-            <p>Chức năng:</p>
-            <Select
-              value={editingPermission.MaCN}
-              onChange={(v) => handlePermissionInputChange('MaCN', v)}
-              style={{ width: '100%' }}
-            >
-              {features.map(f => <Option key={f.MaCN} value={f.MaCN}>{f.TenCN}</Option>)}
-            </Select>
-            <p>Hành động:</p>
-            <Input
-              value={editingPermission.HanhDong}
-              onChange={(e) => handlePermissionInputChange('HanhDong', e.target.value)}
-            />
-            <p>Trạng thái:</p>
-            <Select
-              value={editingPermission.TinhTrang}
-              onChange={(v) => handlePermissionInputChange('TinhTrang', v)}
-              style={{ width: '100%' }}
-            >
-              <Option value={1}>Hoạt động</Option>
-              <Option value={0}>Bị khóa</Option>
-            </Select>
-          </div>
-        )}
-      </Modal>
-
-      {error && <div className="text-red-500 text-sm mt-2">{error}</div>}
+      <style dangerouslySetInnerHTML={{ __html: `
+        .modern-table .ant-table-thead > tr > th {
+          background: #f8fafc !important;
+          color: #94a3b8 !important;
+          font-size: 11px !important;
+          font-weight: 900 !important;
+          text-transform: uppercase !important;
+          letter-spacing: 0.1em !important;
+          padding: 16px 24px !important;
+          border-bottom: 1px solid #f1f5f9 !important;
+        }
+        .modern-table .ant-table-tbody > tr > td {
+          padding: 16px 24px !important;
+          border-bottom: 1px solid #f8fafc !important;
+        }
+        .modern-table .ant-table-row:hover > td {
+          background: #f8fafc !important;
+        }
+        .modern-modal .ant-modal-content {
+          border-radius: 32px !important;
+          padding: 32px !important;
+          box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.1) !important;
+        }
+        .modern-tabs .ant-tabs-nav::before {
+          border-bottom: 1px solid #f1f5f9 !important;
+        }
+        .modern-tabs .ant-tabs-tab-active .ant-tabs-tab-btn {
+          color: #4f46e5 !important;
+          font-weight: 900 !important;
+        }
+        .modern-tabs .ant-tabs-ink-bar {
+          background: #4f46e5 !important;
+          height: 3px !important;
+          border-radius: 3px 3px 0 0 !important;
+        }
+      `}} />
     </div>
   );
 };

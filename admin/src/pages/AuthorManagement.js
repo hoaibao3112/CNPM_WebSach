@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback, useContext } from 'react';
 import api from '../utils/api';
-import { Button, Input, message, Table, Modal, Space, DatePicker } from 'antd';
+import { Button, Input, message, Table, Modal, Space, DatePicker, Avatar } from 'antd';
 import { EditOutlined, DeleteOutlined, ExclamationCircleFilled } from '@ant-design/icons';
 import { PermissionContext } from '../components/PermissionContext';
 import moment from 'moment';
@@ -27,8 +27,6 @@ const AuthorManagement = () => {
   const IMAGE_BASE_PATH = '/img/author/';
 
   const fetchAuthors = useCallback(async () => {
-    console.log('[DEBUG] Fetching authors...');
-    console.log('[DEBUG] Has Read Permission:', hasPermission('Tác Giả', 'Đọc'));
     if (!hasPermission('Tác Giả', 'Đọc')) {
       message.error('Bạn không có quyền xem danh sách tác giả!');
       return;
@@ -39,7 +37,6 @@ const AuthorManagement = () => {
       const response = await api.get(API_URL, {
         params: { page: 1, limit: 100, search: searchTerm },
       });
-      console.log('[DEBUG] API Response:', response.data);
 
       const resData = response.data.data;
       const authorsData = Array.isArray(resData) ? resData : (resData?.data || []);
@@ -49,7 +46,6 @@ const AuthorManagement = () => {
           const imageUrl = author.AnhTG && author.AnhTG !== 'null'
             ? `${IMAGE_BASE_PATH}${author.AnhTG}`
             : 'https://via.placeholder.com/50';
-          console.log(`[DEBUG] URL ảnh cho tác giả ${author.MaTG}: ${imageUrl}`);
 
           return {
             ...author,
@@ -61,12 +57,10 @@ const AuthorManagement = () => {
           };
         });
         setAuthors(processedAuthors);
-        console.log('[DEBUG] Set Authors:', processedAuthors);
       } else {
         throw new Error('Dữ liệu tác giả không hợp lệ');
       }
     } catch (error) {
-      console.error('[ERROR] Lỗi khi lấy danh sách tác giả:', error.response || error);
       message.error(error.response?.data?.error || 'Lỗi khi tải danh sách tác giả');
     } finally {
       setLoading(false);
@@ -107,17 +101,6 @@ const AuthorManagement = () => {
       message.error('Tên tác giả là bắt buộc!');
       return;
     }
-    if (newAuthor.QuocTich && newAuthor.QuocTich.length > 100) {
-      message.error('Quốc tịch không được vượt quá 100 ký tự!');
-      return;
-    }
-    if (newAuthor.NgaySinh) {
-      const date = new Date(newAuthor.NgaySinh);
-      if (isNaN(date.getTime()) || date > new Date()) {
-        message.error('Ngày sinh không hợp lệ!');
-        return;
-      }
-    }
 
     try {
       const formData = new FormData();
@@ -147,7 +130,6 @@ const AuthorManagement = () => {
       setIsModalVisible(false);
       message.success(response.data.message || 'Thêm tác giả thành công!');
     } catch (error) {
-      console.error('[ERROR] Lỗi khi thêm tác giả:', error.response || error);
       message.error(error.response?.data?.error || 'Lỗi khi thêm tác giả!');
     }
   };
@@ -162,17 +144,6 @@ const AuthorManagement = () => {
     if (!tenTG) {
       message.error('Tên tác giả là bắt buộc!');
       return;
-    }
-    if (editingAuthor.QuocTich && editingAuthor.QuocTich.length > 100) {
-      message.error('Quốc tịch không được vượt quá 100 ký tự!');
-      return;
-    }
-    if (editingAuthor.NgaySinh) {
-      const date = new Date(editingAuthor.NgaySinh);
-      if (isNaN(date.getTime()) || date > new Date()) {
-        message.error('Ngày sinh không hợp lệ!');
-        return;
-      }
     }
 
     try {
@@ -199,7 +170,6 @@ const AuthorManagement = () => {
       setIsModalVisible(false);
       message.success(response.data.message || 'Sửa tác giả thành công!');
     } catch (error) {
-      console.error('[ERROR] Lỗi khi sửa tác giả:', error.response || error);
       message.error(error.response?.data?.error || 'Lỗi khi sửa tác giả!');
     }
   };
@@ -222,7 +192,6 @@ const AuthorManagement = () => {
           await fetchAuthors();
           message.success(response.data.message || 'Xóa tác giả thành công!');
         } catch (error) {
-          console.error('[ERROR] Lỗi khi xóa tác giả:', error.response || error);
           message.error(error.response?.data?.error || 'Xóa tác giả thất bại!');
         }
       },
@@ -234,56 +203,47 @@ const AuthorManagement = () => {
       (author.TenTG || '').toLowerCase().includes(searchTerm.toLowerCase().trim()) ||
       (author.QuocTich || '').toLowerCase().includes(searchTerm.toLowerCase().trim())
   );
-  console.log('[DEBUG] Filtered Authors:', filteredAuthors);
 
   const columns = [
     {
-      title: 'Mã TG',
-      dataIndex: 'MaTG',
-      key: 'MaTG',
-      width: 100,
+      title: 'Tác giả',
+      key: 'author',
+      render: (_, record) => (
+        <div className="flex items-center gap-4">
+          <Avatar 
+            src={record.AnhTG} 
+            size={44} 
+            className="border border-slate-100 shadow-sm rounded-xl"
+            onError={(e) => { e.target.src = 'https://via.placeholder.com/50'; }}
+          />
+          <div>
+            <div className="font-bold text-slate-800">{record.TenTG}</div>
+            <div className="text-slate-400 text-xs">ID: {record.MaTG}</div>
+          </div>
+        </div>
+      ),
+      width: 250,
       fixed: 'left',
-    },
-    {
-      title: 'Tên tác giả',
-      dataIndex: 'TenTG',
-      key: 'TenTG',
-      width: 200,
     },
     {
       title: 'Ngày sinh',
       dataIndex: 'NgaySinh',
       key: 'NgaySinh',
-      width: 120,
+      width: 140,
     },
     {
       title: 'Quốc tịch',
       dataIndex: 'QuocTich',
       key: 'QuocTich',
       width: 150,
+      render: (text) => <span className="font-medium text-slate-600">{text || 'N/A'}</span>
     },
     {
       title: 'Tiểu sử',
       dataIndex: 'TieuSu',
       key: 'TieuSu',
-      width: 300,
-    },
-    {
-      title: 'Ảnh',
-      dataIndex: 'AnhTG',
-      key: 'AnhTG',
-      render: (text) => (
-        <img
-          src={text}
-          alt="author"
-          style={{ width: 40, height: 40, objectFit: 'cover', borderRadius: 2 }}
-          onError={(e) => {
-            console.log(`[ERROR] Lỗi tải ảnh: ${text}`);
-            e.target.src = 'https://via.placeholder.com/50';
-          }}
-        />
-      ),
-      width: 80,
+      width: 350,
+      render: (text) => <div className="truncate max-w-[300px] text-slate-500 italic">{text || 'Chưa cập nhật'}</div>
     },
     {
       title: 'Thao tác',
@@ -298,6 +258,7 @@ const AuthorManagement = () => {
                 setEditingAuthor(record);
                 setIsModalVisible(true);
               }}
+              className="rounded-lg hover:text-indigo-600 hover:border-indigo-400"
             />
           )}
           {hasPermission('Tác Giả', 'Xóa') && (
@@ -306,27 +267,44 @@ const AuthorManagement = () => {
               danger
               icon={<DeleteOutlined />}
               onClick={() => handleDeleteAuthor(record.MaTG)}
+              className="rounded-lg"
             />
           )}
         </Space>
       ),
       fixed: 'right',
-      width: 100,
+      width: 120,
     },
   ];
 
   if (!hasPermission('Tác Giả', 'Đọc')) {
-    return <div className="author-management-container">Bạn không có quyền truy cập trang này!</div>;
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] bg-white rounded-3xl border border-slate-100 shadow-sm p-12">
+        <div className="w-20 h-20 bg-red-50 text-red-500 rounded-full flex items-center justify-center mb-6">
+          <span className="material-icons text-4xl">lock</span>
+        </div>
+        <h2 className="text-2xl font-black text-slate-800 mb-2">Quyền truy cập bị từ chối</h2>
+        <p className="text-slate-500 text-center max-w-md">
+          Bạn không có quyền xem danh sách tác giả. Vui lòng liên hệ quản trị viên để được cấp quyền.
+        </p>
+      </div>
+    );
   }
 
   return (
-    <div className="thongke-page">
-      <div className="thongke-header">
-        <h1 className="page-title">Quản lý Tác giả</h1>
+    <div className="p-4 md:p-8 min-h-screen bg-slate-50 font-sans">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+        <div>
+          <h1 className="text-2xl font-black text-slate-800 flex items-center gap-3">
+            <span className="material-icons text-indigo-500">person_search</span>
+            Quản lý Tác giả
+          </h1>
+          <p className="text-slate-400 text-sm mt-1">Quản lý danh sách và thông tin chi tiết các tác giả</p>
+        </div>
+        
         {hasPermission('Tác Giả', 'Thêm') && (
           <Button
             type="primary"
-            size="small"
             onClick={() => {
               setEditingAuthor(null);
               setNewAuthor({
@@ -338,109 +316,114 @@ const AuthorManagement = () => {
               });
               setIsModalVisible(true);
             }}
+            icon={<span className="material-icons text-sm font-bold">add</span>}
+            className="h-11 px-6 rounded-xl flex items-center gap-2 font-bold bg-indigo-600 hover:bg-indigo-700 border-none shadow-lg shadow-indigo-100 transition-all"
           >
             Thêm tác giả
           </Button>
         )}
       </div>
 
-      <div className="thongke-content">
-        <div className="thongke-filters">
-          <div className="search-box">
-            <Search
-              placeholder="Tìm tác giả..."
-              allowClear
-              enterButton
-              size="small"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-          </div>
+      <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 mb-8 transition-all duration-300">
+        <div className="max-w-md mb-6">
+          <label className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-2 block ml-1">Tìm kiếm tác giả</label>
+          <Search
+            placeholder="Tìm theo tên hoặc quốc tịch..."
+            onSearch={(v) => setSearchTerm(v)}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            allowClear
+            size="large"
+            className="modern-search"
+          />
         </div>
 
-        <div className="thongke-table">
+        <div className="overflow-hidden rounded-2xl border border-slate-100">
           <Table
             columns={columns}
             dataSource={filteredAuthors}
             rowKey="MaTG"
             loading={loading}
             scroll={{ x: 1000 }}
-            pagination={{
+            pagination={{ 
               pageSize: 10,
-              showSizeChanger: false,
-              size: 'small',
+              className: 'px-6 py-4',
+              size: 'small'
             }}
-            size="small"
-            className="compact-author-table"
-            style={{ fontSize: '13px' }}
-            locale={{
-              emptyText: 'Không tìm thấy tác giả',
-            }}
+            className="modern-table"
           />
         </div>
       </div>
 
       <Modal
-        title={editingAuthor ? 'Chỉnh sửa tác giả' : 'Thêm tác giả mới'}
+        title={
+          <div className="flex items-center gap-3 text-xl font-black text-slate-800">
+            <div className="p-2 rounded-lg bg-indigo-50 text-indigo-600">
+              <span className="material-icons leading-none">{editingAuthor ? 'edit' : 'person_add'}</span>
+            </div>
+            {editingAuthor ? 'Cập nhật Tác giả' : 'Thêm Tác giả mới'}
+          </div>
+        }
         open={isModalVisible}
         onCancel={() => {
           setIsModalVisible(false);
           setEditingAuthor(null);
         }}
         footer={[
-          <Button
-            key="cancel"
-            onClick={() => {
-              setIsModalVisible(false);
-              setEditingAuthor(null);
-            }}
-          >
+          <Button key="cancel" onClick={() => setIsModalVisible(false)} className="h-11 px-6 rounded-xl font-bold border-slate-200">
             Hủy
           </Button>,
-          <Button
-            key="submit"
-            type="primary"
+          <Button 
+            key="submit" 
+            type="primary" 
             onClick={editingAuthor ? handleUpdateAuthor : handleAddAuthor}
+            className="h-11 px-8 rounded-xl font-bold bg-indigo-600 shadow-md shadow-indigo-100 border-none"
           >
-            {editingAuthor ? 'Lưu' : 'Thêm'}
+            {editingAuthor ? 'Cập nhật' : 'Thêm mới'}
           </Button>,
         ]}
-        width={600}
-        styles={{ body: { padding: '16px' } }}
+        width={700}
+        centered
+        className="modern-modal"
       >
-        <div className="info-section">
-          <div className="info-grid">
-            {editingAuthor && (
-              <div className="info-item">
-                <p className="info-label">Mã tác giả:</p>
-                <Input size="small" value={editingAuthor.MaTG} disabled />
-              </div>
-            )}
-            <div className="info-item">
-              <p className="info-label">Tên tác giả <span style={{ color: 'red' }}>*</span></p>
+        <div className="py-4 space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label className="text-xs font-black text-slate-400 uppercase tracking-widest mb-2 block ml-1">Tên tác giả <span className="text-red-500">*</span></label>
               <Input
-                size="small"
+                placeholder="Nhập tên tác giả..."
                 value={editingAuthor ? editingAuthor.TenTG : newAuthor.TenTG}
                 onChange={(e) =>
                   editingAuthor
                     ? setEditingAuthor({ ...editingAuthor, TenTG: e.target.value })
                     : setNewAuthor({ ...newAuthor, TenTG: e.target.value })
                 }
-                required
+                className="h-11 rounded-xl border-slate-200 focus:border-indigo-400 shadow-none"
               />
             </div>
-            <div className="info-item">
-              <p className="info-label">Ngày sinh:</p>
+            <div>
+              <label className="text-xs font-black text-slate-400 uppercase tracking-widest mb-2 block ml-1">Quốc tịch</label>
+              <Input
+                placeholder="Nhập quốc tịch..."
+                value={editingAuthor ? editingAuthor.QuocTich : newAuthor.QuocTich}
+                onChange={(e) =>
+                  editingAuthor
+                    ? setEditingAuthor({ ...editingAuthor, QuocTich: e.target.value })
+                    : setNewAuthor({ ...newAuthor, QuocTich: e.target.value })
+                }
+                className="h-11 rounded-xl border-slate-200 focus:border-indigo-400 shadow-none"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label className="text-xs font-black text-slate-400 uppercase tracking-widest mb-2 block ml-1">Ngày sinh</label>
               <DatePicker
-                size="small"
+                placeholder="Chọn ngày sinh"
                 value={
                   editingAuthor
-                    ? editingAuthor.NgaySinh
-                      ? moment(editingAuthor.NgaySinh)
-                      : null
-                    : newAuthor.NgaySinh
-                      ? moment(newAuthor.NgaySinh)
-                      : null
+                    ? editingAuthor.NgaySinh ? moment(editingAuthor.NgaySinh) : null
+                    : newAuthor.NgaySinh ? moment(newAuthor.NgaySinh) : null
                 }
                 onChange={(date, dateString) =>
                   editingAuthor
@@ -448,107 +431,91 @@ const AuthorManagement = () => {
                     : setNewAuthor({ ...newAuthor, NgaySinh: dateString })
                 }
                 format="YYYY-MM-DD"
-                style={{ width: '100%' }}
+                className="h-11 w-full rounded-xl border-slate-200 focus:border-indigo-400 shadow-none"
               />
             </div>
-            <div className="info-item">
-              <p className="info-label">Quốc tịch:</p>
-              <Input
-                size="small"
-                value={editingAuthor ? editingAuthor.QuocTich : newAuthor.QuocTich}
-                onChange={(e) =>
-                  editingAuthor
-                    ? setEditingAuthor({ ...editingAuthor, QuocTich: e.target.value })
-                    : setNewAuthor({ ...newAuthor, QuocTich: e.target.value })
-                }
-              />
+            <div>
+              <label className="text-xs font-black text-slate-400 uppercase tracking-widest mb-2 block ml-1">Ảnh đại diện</label>
+              <div className="flex items-center gap-4">
+                <label className="cursor-pointer flex items-center justify-center h-11 px-4 rounded-xl border-2 border-dashed border-slate-200 text-slate-400 hover:border-indigo-400 hover:text-indigo-500 transition-all flex-1">
+                  <span className="material-icons text-sm mr-2">upload_file</span>
+                  <span className="text-xs font-bold uppercase truncate max-w-[150px]">
+                    {(editingAuthor?.AnhTG instanceof File) ? editingAuthor.AnhTG.name : (newAuthor.AnhTG instanceof File) ? newAuthor.AnhTG.name : 'Chọn ảnh'}
+                  </span>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => handleFileChange(e, !!editingAuthor)}
+                    className="hidden"
+                  />
+                </label>
+                {(editingAuthor?.AnhTG || newAuthor.AnhTG) && (
+                  <div className="w-11 h-11 rounded-lg overflow-hidden border border-slate-100 shadow-sm flex-shrink-0 bg-slate-50">
+                    <img 
+                      src={(editingAuthor?.AnhTG instanceof File) ? URL.createObjectURL(editingAuthor.AnhTG) : (newAuthor.AnhTG instanceof File) ? URL.createObjectURL(newAuthor.AnhTG) : (editingAuthor?.AnhTG || 'https://via.placeholder.com/50')} 
+                      alt="preview" 
+                      className="w-full h-full object-cover"
+                      onError={(e) => { e.target.src = 'https://via.placeholder.com/50'; }}
+                    />
+                  </div>
+                )}
+              </div>
             </div>
-            <div className="info-item">
-              <p className="info-label">Tiểu sử:</p>
-              <Input.TextArea
-                size="small"
-                value={editingAuthor ? editingAuthor.TieuSu : newAuthor.TieuSu}
-                onChange={(e) =>
-                  editingAuthor
-                    ? setEditingAuthor({ ...editingAuthor, TieuSu: e.target.value })
-                    : setNewAuthor({ ...newAuthor, TieuSu: e.target.value })
-                }
-                rows={4}
-              />
-            </div>
-            <div className="info-item">
-              <p className="info-label">Hình ảnh:</p>
-              <input
-                type="file"
-                accept="image/*"
-                onChange={(e) => handleFileChange(e, !!editingAuthor)}
-              />
-              {(editingAuthor && editingAuthor.AnhTG && !(editingAuthor.AnhTG instanceof File)) && (
-                <img
-                  src={editingAuthor.AnhTG}
-                  alt="preview"
-                  style={{ width: 50, height: 50, marginTop: 8 }}
-                />
-              )}
-            </div>
+          </div>
+
+          <div>
+            <label className="text-xs font-black text-slate-400 uppercase tracking-widest mb-2 block ml-1">Tiểu sử</label>
+            <Input.TextArea
+              placeholder="Nhập tóm tắt tiểu sử tác giả..."
+              value={editingAuthor ? editingAuthor.TieuSu : newAuthor.TieuSu}
+              onChange={(e) =>
+                editingAuthor
+                  ? setEditingAuthor({ ...editingAuthor, TieuSu: e.target.value })
+                  : setNewAuthor({ ...newAuthor, TieuSu: e.target.value })
+              }
+              rows={5}
+              className="rounded-2xl border-slate-200 focus:border-indigo-400 p-4 shadow-none"
+            />
           </div>
         </div>
       </Modal>
 
       <style>{`
-        .author-management-container {
-          padding: 16px 16px 16px 216px;
-          min-height: 100vh;
+        .modern-table .ant-table-thead > tr > th {
+          background: #f8fafc !important;
+          color: #64748b !important;
+          font-weight: 700 !important;
+          text-transform: uppercase !important;
+          font-size: 11px !important;
+          letter-spacing: 0.05em !important;
+          border-bottom: 1px solid #f1f5f9 !important;
         }
-        .thongke-header {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          margin-bottom: 16px;
+        .modern-table .ant-table-tbody > tr > td {
+          border-bottom: 1px solid #f1f5f9 !important;
+          padding: 16px !important;
+          font-size: 14px !important;
         }
-        .header-section {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          margin-bottom: 16px;
-          flex-wrap: wrap;
-          gap: 16px;
+        .modern-table .ant-table-tbody > tr:hover > td {
+          background: #f1f5f9 !important;
         }
-        .page-title {
-          font-size: 18px;
-          font-weight: 600;
-          margin: 0;
+        .modern-modal .ant-modal-content {
+          border-radius: 2rem !important;
+          padding: 1.5rem !important;
         }
-        .search-box {
-          width: 250px;
+        .modern-search .ant-input-wrapper {
+          border-radius: 1rem;
+          overflow: hidden;
         }
-        .info-section {
-          background: #f8f8f8;
-          padding: 12px;
-          border-radius: 4px;
-          margin-bottom: 16px;
+        .modern-search .ant-input {
+          height: 48px;
+          border-radius: 1rem 0 0 1rem;
         }
-        .info-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-          gap: 12px;
-        }
-        .info-item {
-          margin-bottom: 4px;
-        }
-        .info-label {
-          color: #666;
-          font-size: 12px;
-          margin: 0;
-        }
-        .compact-author-table .ant-table-thead > tr > th {
-          padding: 8px 12px;
-        }
-        .compact-author-table .ant-table-tbody > tr > td {
-          padding: 8px 12px;
-        }
-        input[type="file"] {
-          font-size: 12px;
+        .modern-search .ant-input-search-button {
+          height: 48px;
+          width: 56px;
+          border-radius: 0 1rem 1rem 0;
+          background: #4f46e5;
+          border-color: #4f46e5;
         }
       `}</style>
     </div>

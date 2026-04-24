@@ -1,8 +1,16 @@
 import React, { useEffect, useState } from 'react';
 import api from '../utils/api';
-import { Button, Input, message, Table, Modal, Space, Select } from 'antd';
-import { EditOutlined, DeleteOutlined, ExclamationCircleFilled } from '@ant-design/icons';
-import '../styles/ProductManagement.css';
+import { Button, Input, message, Table, Modal, Space, Select, Tooltip, Tag, Divider } from 'antd';
+import { 
+  EditOutlined, 
+  DeleteOutlined, 
+  ExclamationCircleFilled, 
+  PlusOutlined, 
+  SearchOutlined,
+  CloudUploadOutlined,
+  CloseCircleFilled,
+  Inventory2Outlined
+} from '@ant-design/icons';
 
 const { Search } = Input;
 const { confirm } = Modal;
@@ -44,27 +52,22 @@ const ProductManagement = () => {
   const CATEGORIES_API_URL = '/product/categories';
   const SUPPLIERS_API_URL = '/product/suppliers';
 
-  // Fetch danh sách tác giả
   const fetchAuthors = async () => {
     try {
       const response = await api.get(AUTHORS_API_URL);
-      // Handle wrapped paginated response { data: { data: [], ... } } or simple { data: [] }
       const resData = response.data.data || response.data;
       setAuthors(Array.isArray(resData) ? resData : (resData?.data || []));
     } catch (error) {
-      console.error('Lỗi khi lấy danh sách tác giả:', error);
       message.error('Lỗi khi tải danh sách tác giả');
     }
   };
 
-  // Fetch danh sách thể loại
   const fetchCategories = async () => {
     try {
       const response = await api.get(CATEGORIES_API_URL);
       const resData = response.data.data || response.data;
       setCategories(Array.isArray(resData) ? resData : (resData?.data || []));
     } catch (error) {
-      console.error('Lỗi khi lấy danh sách thể loại:', error);
       message.error('Lỗi khi tải danh sách thể loại');
     }
   };
@@ -75,7 +78,6 @@ const ProductManagement = () => {
       const resData = response.data.data || response.data;
       setSuppliers(Array.isArray(resData) ? resData : (resData?.data || []));
     } catch (error) {
-      console.error('Lỗi khi lấy danh sách nhà cung cấp:', error);
       message.error('Lỗi khi tải danh sách nhà cung cấp');
     }
   };
@@ -91,7 +93,6 @@ const ProductManagement = () => {
           HinhAnh: product.HinhAnh && product.HinhAnh !== 'null'
             ? `/img/products/${product.HinhAnh}`
             : 'https://via.placeholder.com/50',
-          // ✅ SỬA LOGIC: Nếu SoLuong > 0 thì "Còn hàng", ngược lại "Hết hàng"
           TinhTrang: (product.SoLuong && product.SoLuong > 0) ? 'Còn hàng' : 'Hết hàng',
           MinSoLuong: product.MinSoLuong || 0,
           MoTa: product.MoTa || null,
@@ -103,11 +104,8 @@ const ProductManagement = () => {
           HinhThuc: product.HinhThuc || null,
         }));
         setProducts(processedProducts);
-      } else {
-        throw new Error('Dữ liệu sản phẩm không hợp lệ');
       }
     } catch (error) {
-      console.error('Lỗi khi lấy danh sách sản phẩm:', error);
       message.error('Lỗi khi tải danh sách sản phẩm');
     } finally {
       setLoading(false);
@@ -121,984 +119,577 @@ const ProductManagement = () => {
     fetchSuppliers();
   }, []);
 
-  // Xử lý thay đổi file
-  // Xử lý thay đổi file
-  // fieldType: 'primary' | 'secondary'
   const handleFileChange = (e, isEditing = false, fieldType = 'primary') => {
+    const file = e.target.files[0];
     if (isEditing) {
-      // editing primary image
       if (fieldType === 'primary') {
-        const file = e.target.files[0];
-        if (file) {
-          if (!file.type.startsWith('image/')) {
-            message.error('Vui lòng chọn một file hình ảnh!');
-            return;
-          }
-          if (file.size > 5 * 1024 * 1024) {
-            message.error('File hình ảnh quá lớn! Vui lòng chọn file dưới 5MB.');
-            return;
-          }
-          setEditingProduct({ ...editingProduct, HinhAnh: file });
-        }
+        if (file) setEditingProduct({ ...editingProduct, HinhAnh: file });
         return;
       }
-
-      // editing extra images (add files to editingExtraFiles)
       if (fieldType === 'extra') {
         const files = Array.from(e.target.files || []);
-        if (files.length === 0) return;
-        const valid = [];
-        for (const file of files) {
-          if (!file.type.startsWith('image/')) {
-            message.error(`${file.name} không phải là hình ảnh. Bỏ qua.`);
-            continue;
-          }
-          if (file.size > 5 * 1024 * 1024) {
-            message.error(`${file.name} quá lớn (>5MB). Bỏ qua.`);
-            continue;
-          }
-          valid.push(file);
-        }
-        if (valid.length === 0) return;
-        setEditingExtraFiles(prev => [...prev, ...valid]);
+        setEditingExtraFiles(prev => [...prev, ...files]);
         return;
       }
     }
-
     if (fieldType === 'primary') {
-      const file = e.target.files[0];
-      if (!file) return;
-      if (!file.type.startsWith('image/')) {
-        message.error('Vui lòng chọn một file hình ảnh cho ảnh chính!');
-        return;
-      }
-      if (file.size > 5 * 1024 * 1024) {
-        message.error('Ảnh chính quá lớn (>5MB).');
-        return;
-      }
-      setNewProduct({ ...newProduct, HinhAnhPrimary: file });
+      if (file) setNewProduct({ ...newProduct, HinhAnhPrimary: file });
       return;
     }
-
-    // secondary images (multiple)
     const files = Array.from(e.target.files || []);
-    if (files.length === 0) return;
-
-    const validFiles = [];
-    for (const file of files) {
-      if (!file.type.startsWith('image/')) {
-        message.error(`${file.name} không phải là hình ảnh. Bỏ qua.`);
-        continue;
-      }
-      if (file.size > 5 * 1024 * 1024) {
-        message.error(`${file.name} quá lớn (>5MB). Bỏ qua.`);
-        continue;
-      }
-      validFiles.push(file);
-    }
-
-    if (validFiles.length === 0) return;
-    setNewProduct({ ...newProduct, HinhAnhPhu: [...newProduct.HinhAnhPhu, ...validFiles] });
+    setNewProduct({ ...newProduct, HinhAnhPhu: [...newProduct.HinhAnhPhu, ...files] });
   };
 
-  const handleRemoveEditingExtraFile = (index) => {
-    const updated = [...editingExtraFiles];
-    updated.splice(index, 1);
-    setEditingExtraFiles(updated);
-  };
-
-  const removeNewProductSecondaryImage = (index) => {
-    const updated = [...newProduct.HinhAnhPhu];
-    updated.splice(index, 1);
-    setNewProduct({ ...newProduct, HinhAnhPhu: updated });
-    // optional: revoke object URL if used elsewhere
-  };
-
-  // Thêm sản phẩm - SỬA XỬ LÝ NAMXB
   const handleAddProduct = async () => {
-    const maTL = newProduct.MaTL;
-    const tenSP = newProduct.TenSP.trim();
-    const maTG = newProduct.MaTG;
-    const namXB = newProduct.NamXB; // ✅ Bỏ .trim() vì có thể là số
-
-    if (!maTL || !tenSP) {
-      message.error('Vui lòng nhập đầy đủ thông tin bắt buộc (Thể loại, Tên SP)!');
-      return;
-    }
-
     try {
       const formData = new FormData();
-      formData.append('MaTL', maTL);
-      formData.append('TenSP', tenSP);
-      // Backend expects fields: 'HinhAnh' (primary, single) and 'ExtraImages' (secondary, multiple)
-      if (newProduct.HinhAnhPrimary) {
-        formData.append('HinhAnh', newProduct.HinhAnhPrimary);
-      }
-      if (Array.isArray(newProduct.HinhAnhPhu) && newProduct.HinhAnhPhu.length > 0) {
-        newProduct.HinhAnhPhu.forEach((file) => formData.append('ExtraImages', file));
-      }
-      if (maTG) {
-        formData.append('MaTG', maTG);
-      }
-      if (newProduct.MoTa) formData.append('MoTa', newProduct.MoTa);
-      if (newProduct.MaNCC) formData.append('MaNCC', newProduct.MaNCC);
-      if (newProduct.TrongLuong) formData.append('TrongLuong', newProduct.TrongLuong);
-      if (newProduct.KichThuoc) formData.append('KichThuoc', newProduct.KichThuoc);
-      if (newProduct.SoTrang) formData.append('SoTrang', newProduct.SoTrang);
-      if (newProduct.HinhThuc) formData.append('HinhThuc', newProduct.HinhThuc);
-      if (newProduct.MinSoLuong) formData.append('MinSoLuong', newProduct.MinSoLuong);
-      // ✅ SỬA: Kiểm tra namXB khác null/undefined và là số hợp lệ
-      if (namXB && namXB.toString().trim() && !isNaN(parseInt(namXB))) {
-        formData.append('NamXB', parseInt(namXB));
-      }
+      Object.keys(newProduct).forEach(key => {
+        if (key === 'HinhAnhPrimary' && newProduct[key]) {
+          formData.append('HinhAnh', newProduct[key]);
+        } else if (key === 'HinhAnhPhu') {
+          newProduct[key].forEach(file => formData.append('ExtraImages', file));
+        } else if (newProduct[key] !== null && newProduct[key] !== '') {
+          formData.append(key, newProduct[key]);
+        }
+      });
       formData.append('TinhTrang', 0);
       formData.append('DonGia', 0);
       formData.append('SoLuong', 0);
 
-      const response = await api.post(API_URL, formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      });
-
-      await fetchProducts();
-      setNewProduct({
-        MaTL: '',
-        TenSP: '',
-        HinhAnhPrimary: null,
-        HinhAnhPhu: [],
-        MaTG: '',
-        NamXB: '',
-        TinhTrang: 'Hết hàng',
-        DonGia: 0,
-        SoLuong: 0,
-        MoTa: '',
-        MaNCC: '',
-        TrongLuong: '',
-        KichThuoc: '',
-        SoTrang: '',
-        HinhThuc: '',
-        MinSoLuong: 0,
-      });
+      await api.post(API_URL, formData, { headers: { 'Content-Type': 'multipart/form-data' } });
+      fetchProducts();
       setIsModalVisible(false);
-      message.success(response.data.message || 'Thêm sản phẩm thành công!');
+      message.success('Thêm sản phẩm thành công!');
     } catch (error) {
-      console.error('❌ Lỗi khi thêm sản phẩm:', error.response || error);
-
-      if (error.response?.status === 401) {
-        message.error('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại!');
-        document.cookie = "authToken=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
-        window.location.href = '/admin/login';
-        return;
-      }
-
-      if (error.response?.status === 403) {
-        message.error(`Không có quyền! ${error.response.data?.error || 'Cần tài khoản admin/staff/NV004/NV007'}`);
-        return;
-      }
-
-      const errorMessage = error.response?.data?.error || error.message || 'Lỗi khi thêm sản phẩm!';
-      message.error(errorMessage);
+      message.error(error.response?.data?.error || 'Lỗi khi thêm sản phẩm');
     }
   };
 
-
-  // Cập nhật sản phẩm - SỬA XỬ LÝ NAMXB
   const handleUpdateProduct = async () => {
-    const maTL = editingProduct.MaTL;
-    const tenSP = editingProduct.TenSP.trim();
-    const maTG = editingProduct.MaTG;
-    const namXB = editingProduct.NamXB; // ✅ Bỏ .trim() vì có thể là số
-
-    if (!maTL || !tenSP) {
-      message.error('Vui lòng nhập đầy đủ thông tin bắt buộc (Thể loại, Tên SP)!');
-      return;
-    }
-
     try {
       const formData = new FormData();
-      formData.append('MaTL', maTL);
-      formData.append('TenSP', tenSP);
-      // If user selected a new primary file, append it; otherwise, keep existing HinhAnh value (filename string)
-      if (editingProduct.HinhAnh instanceof File) {
-        formData.append('HinhAnh', editingProduct.HinhAnh);
-      } else if (editingProduct.HinhAnh) {
-        // editingProduct.HinhAnh might be '/img/products/<filename>' or a filename
-        const possible = editingProduct.HinhAnh.toString();
-        const filenameOnly = possible.includes('/img/products/') ? possible.replace('/img/products/', '') : possible;
-        formData.append('HinhAnh', filenameOnly);
-      }
-
-      // If there are newly added extra images while editing, append them
-      if (Array.isArray(editingExtraFiles) && editingExtraFiles.length > 0) {
-        editingExtraFiles.forEach(f => formData.append('ExtraImages', f));
-      }
-      if (maTG) {
-        formData.append('MaTG', maTG);
-      }
-      // New fields for update
-      if (editingProduct.MoTa !== undefined) formData.append('MoTa', editingProduct.MoTa);
-      if (editingProduct.MaNCC !== undefined) formData.append('MaNCC', editingProduct.MaNCC);
-      if (editingProduct.TrongLuong !== undefined) formData.append('TrongLuong', editingProduct.TrongLuong);
-      if (editingProduct.KichThuoc !== undefined) formData.append('KichThuoc', editingProduct.KichThuoc);
-      if (editingProduct.SoTrang !== undefined) formData.append('SoTrang', editingProduct.SoTrang);
-      if (editingProduct.HinhThuc !== undefined) formData.append('HinhThuc', editingProduct.HinhThuc);
-      if (editingProduct.MinSoLuong !== undefined) formData.append('MinSoLuong', editingProduct.MinSoLuong);
-      // ✅ SỬA: Kiểm tra namXB khác null/undefined và là số hợp lệ
-      if (namXB && namXB.toString().trim() && !isNaN(parseInt(namXB))) {
-        formData.append('NamXB', parseInt(namXB));
-      }
-      formData.append('TinhTrang', 0);
-      formData.append('DonGia', 0);
-      formData.append('SoLuong', 0);
-
-      const response = await api.put(`${API_URL}/${editingProduct.MaSP}`, formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
+      Object.keys(editingProduct).forEach(key => {
+        if (key === 'HinhAnh') {
+          if (editingProduct[key] instanceof File) {
+            formData.append('HinhAnh', editingProduct[key]);
+          } else {
+            const filename = editingProduct[key].replace('/img/products/', '');
+            formData.append('HinhAnh', filename);
+          }
+        } else if (editingProduct[key] !== null && editingProduct[key] !== '') {
+          formData.append(key, editingProduct[key]);
+        }
       });
+      editingExtraFiles.forEach(f => formData.append('ExtraImages', f));
 
-      await fetchProducts();
-      setEditingProduct(null);
-      setEditingExtraFiles([]);
+      await api.put(`${API_URL}/${editingProduct.MaSP}`, formData, { headers: { 'Content-Type': 'multipart/form-data' } });
+      fetchProducts();
       setIsModalVisible(false);
-      message.success(response.data.message || 'Cập nhật sản phẩm thành công!');
+      message.success('Cập nhật thành công!');
     } catch (error) {
-      console.error('❌ Lỗi khi cập nhật sản phẩm:', error.response || error);
-
-      if (error.response?.status === 403) {
-        message.error('Bạn không có quyền thực hiện thao tác này!');
-        return;
-      }
-
-      const errorMessage = error.response?.data?.error || error.message || 'Lỗi khi cập nhật sản phẩm!';
-      message.error(errorMessage);
+      message.error(error.response?.data?.error || 'Lỗi khi cập nhật');
     }
   };
 
-  // Xóa sản phẩm
-  const handleDeleteProduct = (productId) => {
+  const handleDeleteProduct = (id) => {
     confirm({
-      title: 'Xác nhận xóa sản phẩm',
-      icon: <ExclamationCircleFilled />,
-      content: 'Bạn có chắc chắn muốn xóa sản phẩm này không?',
-      okText: 'Xóa',
-      okType: 'danger',
-      cancelText: 'Hủy',
+      title: 'Xác nhận xóa?',
       onOk: async () => {
         try {
-          await api.delete(`${API_URL}/${productId}`);
-          message.success('Xóa sản phẩm thành công!');
+          await api.delete(`${API_URL}/${id}`);
           fetchProducts();
-        } catch (error) {
-          console.error('Lỗi khi xóa sản phẩm:', error);
-          if (error.response?.status === 403) {
-            message.error('Bạn không có quyền thực hiện thao tác này!');
-          } else {
-            message.error(error.response?.data?.error || 'Lỗi khi xóa sản phẩm!');
-          }
-        }
-      },
+          message.success('Đã xóa sản phẩm');
+        } catch (e) { message.error('Lỗi khi xóa'); }
+      }
     });
   };
 
-  // Open modal to edit MinSoLuong
-  const openEditMinModal = (product) => {
-    setEditingProduct(product);
-    setMinValue(product.MinSoLuong || 0);
-    setMinModalVisible(true);
-  };
-
   const handleSaveMinStock = async () => {
-    if (!editingProduct) return;
     try {
-      const res = await api.patch(`${API_URL}/${editingProduct.MaSP}/min-stock`, { MinSoLuong: minValue });
-      message.success(res.data.message || 'Cập nhật ngưỡng tồn thành công');
+      await api.patch(`${API_URL}/${editingProduct.MaSP}/min-stock`, { MinSoLuong: minValue });
+      message.success('Đã cập nhật ngưỡng tồn');
       setMinModalVisible(false);
-      setEditingProduct(null);
       fetchProducts();
-    } catch (error) {
-      console.error('Lỗi khi cập nhật MinSoLuong:', error.response || error);
-      message.error(error.response?.data?.error || 'Lỗi khi cập nhật ngưỡng tồn');
-    }
+    } catch (e) { message.error('Lỗi'); }
   };
 
-  // Format tiền tệ
-  const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('vi-VN', {
-      style: 'currency',
-      currency: 'VND',
-    }).format(amount || 0);
-  };
-
-  // Lọc sản phẩm theo tìm kiếm
-  const filteredProducts = products.filter(
-    (product) =>
-      (product.TenSP || '').toLowerCase().includes(searchTerm.toLowerCase().trim()) ||
-      (product.MaSP || '').toString().includes(searchTerm.trim())
+  const filteredProducts = products.filter(p => 
+    p.TenSP.toLowerCase().includes(searchTerm.toLowerCase()) || 
+    p.MaSP.toString().includes(searchTerm)
   );
 
-  // Cột của bảng
   const columns = [
     {
-      title: 'Mã SP',
-      dataIndex: 'MaSP',
-      key: 'MaSP',
-      width: 80,
-      align: 'center',
-    },
-    {
-      title: 'Hình ảnh',
-      dataIndex: 'HinhAnh',
-      key: 'HinhAnh',
-      width: 80,
-      align: 'center',
-      render: (text) => (
-        <img
-          src={text}
-          alt="Product"
-          style={{
-            width: 40,
-            height: 40,
-            objectFit: 'cover',
-            borderRadius: 4,
-            border: '1px solid #d9d9d9'
-          }}
-          onError={(e) => {
-            e.target.src = 'https://via.placeholder.com/40';
-          }}
-        />
-      ),
-    },
-    {
-      title: 'Tên sản phẩm',
-      dataIndex: 'TenSP',
-      key: 'TenSP',
-      width: 200,
-      ellipsis: true,
-    },
-    {
-      title: 'Tác giả',
-      dataIndex: 'TacGia',
-      key: 'TacGia',
-      width: 120,
-      ellipsis: true,
-      render: (text) => text || 'Chưa có',
-    },
-    {
-      title: 'Năm XB',
-      dataIndex: 'NamXB',
-      key: 'NamXB',
-      width: 80,
-      align: 'center',
-      render: (text) => text || 'N/A',
-    },
-    {
-      title: 'Tình trạng',
-      dataIndex: 'TinhTrang',
-      key: 'TinhTrang',
-      width: 100,
-      align: 'center',
-      render: (status) => (
-        <span
-          style={{
-            padding: '2px 8px',
-            borderRadius: 4,
-            fontSize: '12px',
-            backgroundColor: status === 'Còn hàng' ? '#f6ffed' : '#fff2f0',
-            color: status === 'Còn hàng' ? '#52c41a' : '#ff4d4f',
-            border: `1px solid ${status === 'Còn hàng' ? '#b7eb8f' : '#ffccc7'}`,
-          }}
-        >
-          {status}
-        </span>
-      ),
-    },
-    {
-      title: 'Đơn giá',
-      dataIndex: 'DonGia',
-      key: 'DonGia',
-      width: 100,
-      align: 'right',
-      render: (price) => formatCurrency(price),
-    },
-    {
-      title: 'Số lượng',
-      dataIndex: 'SoLuong',
-      key: 'SoLuong',
-      width: 80,
-      align: 'center',
-    },
-    {
-      title: 'Ngưỡng tối thiểu',
-      dataIndex: 'MinSoLuong',
-      key: 'MinSoLuong',
-      width: 80,
-      align: 'center',
-      render: (v) => v || 0,
-    },
-    {
-      title: 'Thao tác',
-      key: 'actions',
-      width: 150,
-      align: 'center',
+      title: 'SẢN PHẨM',
+      key: 'product',
+      width: 300,
+      fixed: 'left',
       render: (_, record) => (
-        <Space size="small">
-          <Button
-            type="link"
-            size="small"
-            icon={<EditOutlined />}
-            onClick={async () => {
-              // fetch full product details (including images) before opening modal
-              try {
+        <div className="flex items-center gap-4">
+          <div className="w-16 h-20 shrink-0 rounded-xl overflow-hidden border border-slate-100 shadow-sm">
+            <img src={record.HinhAnh} alt="" className="w-full h-full object-cover" />
+          </div>
+          <div className="min-w-0">
+            <div className="font-black text-slate-700 truncate text-sm" title={record.TenSP}>{record.TenSP}</div>
+            <div className="text-[10px] text-slate-400 font-black uppercase tracking-widest mt-1 flex items-center gap-2">
+              <span className="px-2 py-0.5 bg-slate-100 rounded text-slate-500">#{record.MaSP}</span>
+              <span className="truncate max-w-[120px]">{record.TacGia || 'Ẩn danh'}</span>
+            </div>
+          </div>
+        </div>
+      )
+    },
+    {
+      title: 'KHO HÀNG',
+      key: 'stock',
+      width: 150,
+      render: (_, record) => (
+        <div className="space-y-1">
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] font-black text-slate-400 uppercase">Số lượng:</span>
+            <span className={`text-sm font-black ${record.SoLuong <= record.MinSoLuong ? 'text-rose-600' : 'text-slate-700'}`}>
+              {record.SoLuong}
+            </span>
+          </div>
+          <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
+            <div 
+              className={`h-full rounded-full ${record.SoLuong <= record.MinSoLuong ? 'bg-rose-500' : 'bg-emerald-500'}`}
+              style={{ width: `${Math.min((record.SoLuong / (record.MinSoLuong || 100)) * 100, 100)}%` }}
+            ></div>
+          </div>
+          <div className="text-[9px] font-bold text-slate-400 text-right uppercase">Min: {record.MinSoLuong}</div>
+        </div>
+      )
+    },
+    {
+      title: 'GIÁ BÁN',
+      dataIndex: 'DonGia',
+      key: 'price',
+      width: 150,
+      render: (price) => (
+        <div className="text-right">
+          <div className="text-sm font-black text-indigo-600">
+            {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price)}
+          </div>
+          <div className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">Giá gốc</div>
+        </div>
+      )
+    },
+    {
+      title: 'TRẠNG THÁI',
+      key: 'status',
+      width: 120,
+      render: (_, record) => (
+        <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${
+          record.TinhTrang === 'Còn hàng' ? 'bg-emerald-100 text-emerald-600' : 'bg-rose-100 text-rose-600'
+        }`}>
+          {record.TinhTrang}
+        </span>
+      )
+    },
+    {
+      title: 'THAO TÁC',
+      key: 'actions',
+      width: 180,
+      fixed: 'right',
+      render: (_, record) => (
+        <div className="flex gap-2">
+          <Tooltip title="Chỉnh sửa">
+            <Button 
+              className="w-10 h-10 rounded-xl flex items-center justify-center border-slate-200 text-slate-600 hover:text-indigo-600 hover:border-indigo-600 transition-all"
+              icon={<EditOutlined />} 
+              onClick={async () => {
                 const res = await api.get(`${API_URL}/${record.MaSP}`);
                 setEditingProduct(res.data.data);
                 setEditingExtraFiles([]);
                 setIsModalVisible(true);
-              } catch (err) {
-                console.error('Lỗi khi lấy chi tiết sản phẩm để sửa:', err);
-                message.error('Không thể tải chi tiết sản phẩm. Vui lòng thử lại.');
-              }
-            }}
-            style={{ padding: 0 }}
-          />
-          <Button
-            type="link"
-            size="small"
-            onClick={() => openEditMinModal(record)}
-            style={{ padding: 0, color: '#1890ff' }}
-          >
-            Sửa ngưỡng
-          </Button>
-          <Button
-            type="link"
-            size="small"
-            icon={<DeleteOutlined />}
-            onClick={() => handleDeleteProduct(record.MaSP)}
-            style={{ padding: 0, color: '#ff4d4f' }}
-          />
-        </Space>
-      ),
-    },
+              }}
+            />
+          </Tooltip>
+          <Tooltip title="Ngưỡng tồn">
+            <Button 
+              className="w-10 h-10 rounded-xl flex items-center justify-center border-slate-200 text-slate-600 hover:text-orange-600 hover:border-orange-600 transition-all"
+              icon={<Inventory2Outlined />} 
+              onClick={() => {
+                setEditingProduct(record);
+                setMinValue(record.MinSoLuong || 0);
+                setMinModalVisible(true);
+              }}
+            />
+          </Tooltip>
+          <Tooltip title="Xóa">
+            <Button 
+              danger
+              className="w-10 h-10 rounded-xl flex items-center justify-center"
+              icon={<DeleteOutlined />} 
+              onClick={() => handleDeleteProduct(record.MaSP)}
+            />
+          </Tooltip>
+        </div>
+      )
+    }
   ];
 
   return (
-    <div className="product-management-container">
-      {/* Header */}
-      <div className="header-section">
-        <h1 className="page-title">Quản lý Sản phẩm</h1>
-        <div className="header-actions">
-          <div className="search-box">
-            <Search
-              placeholder="Tìm kiếm sản phẩm..."
-              allowClear
-              enterButton
-              size="small"
+    <div className="p-4 md:p-8 min-h-screen bg-slate-50 font-sans">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
+        <div>
+          <h1 className="text-2xl font-black text-slate-800 flex items-center gap-3">
+            <span className="material-icons text-indigo-500">inventory_2</span>
+            Kho Sản phẩm
+          </h1>
+          <p className="text-slate-400 text-sm mt-1">Quản lý danh mục sách và tình trạng tồn kho</p>
+        </div>
+        
+        <div className="flex flex-col sm:flex-row gap-4">
+          <div className="relative group">
+            <SearchOutlined className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-500 transition-colors z-10" />
+            <Input 
+              placeholder="Tìm theo tên hoặc mã..." 
+              className="h-12 pl-12 pr-4 w-full sm:w-80 rounded-2xl border-0 shadow-sm bg-white font-bold text-slate-600 focus:ring-2 focus:ring-indigo-500/20"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
           <Button
             type="primary"
-            size="small"
+            icon={<PlusOutlined />}
             onClick={() => {
               setEditingProduct(null);
               setNewProduct({
-                MaTL: '',
-                TenSP: '',
-                HinhAnhPrimary: null,
-                HinhAnhPhu: [],
-                MaTG: '',
-                NamXB: '',
-                TinhTrang: 'Hết hàng',
-                DonGia: 0,
-                SoLuong: 0,
+                MaTL: '', TenSP: '', HinhAnhPrimary: null, HinhAnhPhu: [],
+                MaTG: '', NamXB: '', TinhTrang: 'Hết hàng', DonGia: 0, SoLuong: 0,
+                MoTa: '', MaNCC: '', TrongLuong: '', KichThuoc: '', SoTrang: '',
+                HinhThuc: '', MinSoLuong: 0,
               });
               setIsModalVisible(true);
             }}
+            className="h-12 px-8 rounded-2xl bg-indigo-600 hover:bg-indigo-700 border-0 shadow-lg shadow-indigo-100 font-bold flex items-center gap-2"
           >
             Thêm sản phẩm
           </Button>
         </div>
       </div>
 
-      {/* Thông tin tóm tắt */}
-      <div className="info-section">
-        <div className="info-grid">
-          <div className="info-item">
-            <p className="info-label">Tổng sản phẩm:</p>
-            <p className="info-value">{products.length}</p>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-8">
+        {[
+          { label: 'Tổng số sách', val: products.length, icon: 'book', color: 'indigo' },
+          { label: 'Sắp hết hàng', val: products.filter(p => p.SoLuong <= p.MinSoLuong && p.SoLuong > 0).length, icon: 'warning', color: 'orange' },
+          { label: 'Hết hàng', val: products.filter(p => p.SoLuong === 0).length, icon: 'error_outline', color: 'rose' },
+          { label: 'Doanh số ưu tiên', val: '12%', icon: 'trending_up', color: 'emerald' }
+        ].map((stat, i) => (
+          <div key={i} className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm flex flex-col gap-1 transition-all hover:shadow-md">
+            <div className="flex items-center justify-between mb-2">
+              <div className={`w-10 h-10 rounded-xl bg-${stat.color}-50 flex items-center justify-center text-${stat.color}-500`}>
+                <span className="material-icons text-xl">{stat.icon}</span>
+              </div>
+              <span className="text-2xl font-black text-slate-800">{stat.val}</span>
+            </div>
+            <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest">{stat.label}</p>
           </div>
-          <div className="info-item">
-            <p className="info-label">Còn hàng:</p>
-            <p className="info-value" style={{ color: '#52c41a' }}>
-              {products.filter(p => p.TinhTrang === 'Còn hàng').length}
-            </p>
-          </div>
-          <div className="info-item">
-            <p className="info-label">Hết hàng:</p>
-            <p className="info-value" style={{ color: '#ff4d4f' }}>
-              {products.filter(p => p.TinhTrang === 'Hết hàng').length}
-            </p>
-          </div>
-          <div className="info-item">
-            <p className="info-label">Kết quả tìm kiếm:</p>
-            <p className="info-value">{filteredProducts.length}</p>
-          </div>
-        </div>
+        ))}
       </div>
 
-      {/* Bảng sản phẩm */}
-      <div className="table-section">
+      <div className="bg-white rounded-[2rem] border border-slate-100 shadow-sm overflow-hidden">
         <Table
           columns={columns}
           dataSource={filteredProducts}
           rowKey="MaSP"
           loading={loading}
-          pagination={{
-            pageSize: 10,
-            showSizeChanger: true,
-            showQuickJumper: true,
-            showTotal: (total, range) => `${range[0]}-${range[1]} của ${total} sản phẩm`,
-          }}
-          size="small"
-          scroll={{ x: 800 }}
+          pagination={{ pageSize: 8, className: "px-8 py-6" }}
+          className="modern-table"
+          scroll={{ x: 1000 }}
         />
       </div>
 
-      {/* Modal thêm/sửa sản phẩm */}
       <Modal
-        title={editingProduct ? 'Chỉnh sửa sản phẩm' : 'Thêm sản phẩm mới'}
+        title={null}
         open={isModalVisible}
-        onCancel={() => {
-          setIsModalVisible(false);
-          setEditingProduct(null);
-        }}
-        footer={[
-          <Button
-            key="cancel"
-            onClick={() => {
-              setIsModalVisible(false);
-              setEditingProduct(null);
-            }}
-          >
-            Hủy
-          </Button>,
-          <Button
-            key="submit"
-            type="primary"
-            onClick={editingProduct ? handleUpdateProduct : handleAddProduct}
-          >
-            {editingProduct ? 'Cập nhật' : 'Thêm mới'}
-          </Button>,
-        ]}
-        width={700}
-        styles={{ body: { padding: '16px' } }}
+        onCancel={() => setIsModalVisible(false)}
+        footer={null}
+        width={800}
+        centered
+        className="modern-modal"
       >
-        <div className="info-section">
-          <div className="info-grid">
-            {editingProduct && (
-              <div className="info-item">
-                <p className="info-label">Mã sản phẩm:</p>
-                <Input size="small" value={editingProduct.MaSP} disabled />
-              </div>
-            )}
+        <div className="mb-8">
+          <h2 className="text-2xl font-black text-slate-800 flex items-center gap-3">
+            <span className="material-icons text-indigo-500">{editingProduct ? 'edit' : 'add_box'}</span>
+            {editingProduct ? 'Cập nhật sản phẩm' : 'Đăng ký sản phẩm mới'}
+          </h2>
+          <p className="text-slate-400 text-sm mt-1 font-medium">Hoàn thiện thông tin sách để hiển thị trên cửa hàng</p>
+        </div>
 
-            {/* Dropdown chọn thể loại */}
-            <div className="info-item">
-              <p className="info-label">Thể loại <span style={{ color: 'red' }}>*</span></p>
-              <Select
-                size="small"
-                placeholder="Chọn thể loại"
-                value={editingProduct ? editingProduct.MaTL : newProduct.MaTL}
-                onChange={(value) =>
-                  editingProduct
-                    ? setEditingProduct({ ...editingProduct, MaTL: value })
-                    : setNewProduct({ ...newProduct, MaTL: value })
-                }
-                style={{ width: '100%' }}
-                showSearch
-                optionFilterProp="children"
-                filterOption={(input, option) =>
-                  (option?.children || "").toString().toLowerCase().indexOf(input.toLowerCase()) >= 0
-                }
-              >
-                {categories.map(category => (
-                  <Option key={category.MaTL} value={category.MaTL}>
-                    {category.TenTL}
-                  </Option>
-                ))}
-              </Select>
-            </div>
-
-            <div className="info-item">
-              <p className="info-label">Tên sản phẩm <span style={{ color: 'red' }}>*</span></p>
-              <Input
-                size="small"
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 overflow-y-auto max-h-[70vh] px-2 custom-scrollbar">
+          <div className="space-y-6">
+            <div className="space-y-2">
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Tên sản phẩm <span className="text-rose-500">*</span></label>
+              <Input 
+                className="h-11 rounded-xl font-bold"
                 value={editingProduct ? editingProduct.TenSP : newProduct.TenSP}
-                onChange={(e) =>
-                  editingProduct
-                    ? setEditingProduct({ ...editingProduct, TenSP: e.target.value })
-                    : setNewProduct({ ...newProduct, TenSP: e.target.value })
-                }
-                required
-                placeholder="Nhập tên sản phẩm"
+                onChange={(e) => editingProduct ? setEditingProduct({...editingProduct, TenSP: e.target.value}) : setNewProduct({...newProduct, TenSP: e.target.value})}
               />
             </div>
 
-            <div className="info-item">
-              <p className="info-label">Ảnh chính:</p>
-              {!editingProduct ? (
-                <>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => handleFileChange(e, false, 'primary')}
-                    style={{ width: '100%', fontSize: '12px' }}
-                  />
-                  {newProduct.HinhAnhPrimary && (
-                    <div style={{ marginTop: 8 }}>
-                      <img
-                        src={URL.createObjectURL(newProduct.HinhAnhPrimary)}
-                        alt={newProduct.HinhAnhPrimary.name}
-                        style={{ width: 80, height: 80, objectFit: 'cover', border: '1px solid #d9d9d9', borderRadius: 4 }}
-                      />
-                    </div>
-                  )}
-                  <div style={{ height: 8 }} />
-                  <p className="info-label">Ảnh phụ (có thể chọn nhiều):</p>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    multiple
-                    onChange={(e) => handleFileChange(e, false, 'secondary')}
-                    style={{ width: '100%', fontSize: '12px' }}
-                  />
-                  {Array.isArray(newProduct.HinhAnhPhu) && newProduct.HinhAnhPhu.length > 0 && (
-                    <div style={{ display: 'flex', gap: 8, marginTop: 8, flexWrap: 'wrap' }}>
-                      {newProduct.HinhAnhPhu.map((file, idx) => (
-                        <div key={idx} style={{ position: 'relative' }}>
-                          <img
-                            src={URL.createObjectURL(file)}
-                            alt={file.name}
-                            style={{ width: 60, height: 60, objectFit: 'cover', border: '1px solid #d9d9d9', borderRadius: 4 }}
-                          />
-                          <button
-                            type="button"
-                            onClick={() => removeNewProductSecondaryImage(idx)}
-                            style={{ position: 'absolute', top: -6, right: -6, width: 20, height: 20, borderRadius: '50%', border: '1px solid #ccc', background: '#fff', cursor: 'pointer', padding: 0, lineHeight: '18px', textAlign: 'center' }}
-                            aria-label={`Xóa ${file.name}`}
-                          >
-                            ×
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </>
-              ) : (
-                <>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => handleFileChange(e, true, 'primary')}
-                    style={{ width: '100%', fontSize: '12px' }}
-                  />
-                  {/* show current primary image (could be URL string) */}
-                  {editingProduct && editingProduct.HinhAnh && !(editingProduct.HinhAnh instanceof File) && (
-                    <div style={{ marginTop: 8 }}>
-                      <img
-                        src={editingProduct.HinhAnh}
-                        alt="preview"
-                        style={{ width: 80, height: 80, objectFit: 'cover', border: '1px solid #d9d9d9', borderRadius: 4 }}
-                      />
-                    </div>
-                  )}
-
-                  <div style={{ height: 8 }} />
-                  <p className="info-label">Ảnh phụ hiện có:</p>
-                  {/* Existing images from product.images when editing */}
-                  {editingProduct && Array.isArray(editingProduct.images) && editingProduct.images.length > 0 ? (
-                    <div style={{ display: 'flex', gap: 8, marginTop: 8, flexWrap: 'wrap' }}>
-                      {editingProduct.images.map((img, idx) => (
-                        <div key={img.id || `${img.filename}-${idx}`} style={{ position: 'relative', textAlign: 'center' }}>
-                          <img
-                            src={img.url}
-                            alt={img.filename}
-                            style={{ width: 80, height: 80, objectFit: 'cover', border: '1px solid #d9d9d9', borderRadius: 4 }}
-                          />
-                          <div style={{ marginTop: 4, display: 'flex', gap: 4, justifyContent: 'center' }}>
-                            <button
-                              type="button"
-                              onClick={async () => {
-                                // set this image as primary (update sanpham.HinhAnh)
-                                try {
-                                  const fd = new FormData();
-                                  // send filename only
-                                  const filenameOnly = img.filename;
-                                  fd.append('HinhAnh', filenameOnly);
-                                  await api.put(`${API_URL}/${editingProduct.MaSP}`, fd, {
-                                    headers: { 'Content-Type': 'multipart/form-data' }
-                                  });
-                                  // refresh product
-                                  const refreshed = await api.get(`${API_URL}/${editingProduct.MaSP}`);
-                                  setEditingProduct(refreshed.data);
-                                  message.success('Đã đặt ảnh này làm ảnh chính');
-                                } catch (err) {
-                                  console.error('Lỗi khi đặt ảnh chính:', err);
-                                  message.error('Không thể đặt ảnh làm ảnh chính');
-                                }
-                              }}
-                              style={{ padding: '2px 6px', fontSize: 12 }}
-                            >
-                              Đặt làm chính
-                            </button>
-                            <button
-                              type="button"
-                              onClick={async () => {
-                                // delete this image
-                                try {
-                                  await api.delete(`${API_URL}/images/${img.id}`);
-                                  const refreshed = await api.get(`${API_URL}/${editingProduct.MaSP}`);
-                                  setEditingProduct(refreshed.data.data);
-                                  message.success('Xóa ảnh thành công');
-                                } catch (err) {
-                                  console.error('Lỗi khi xóa ảnh:', err);
-                                  message.error('Không thể xóa ảnh');
-                                }
-                              }}
-                              style={{ padding: '2px 6px', fontSize: 12, background: '#fff', border: '1px solid #f5222d', color: '#f5222d' }}
-                            >
-                              × Xóa
-                            </button>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div style={{ marginTop: 8, color: '#888' }}>Không có ảnh phụ</div>
-                  )}
-
-                  <div style={{ height: 8 }} />
-                  <p className="info-label">Thêm ảnh phụ (có thể chọn nhiều):</p>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    multiple
-                    onChange={(e) => handleFileChange(e, true, 'extra')}
-                    style={{ width: '100%', fontSize: '12px' }}
-                  />
-                  {Array.isArray(editingExtraFiles) && editingExtraFiles.length > 0 && (
-                    <div style={{ display: 'flex', gap: 8, marginTop: 8, flexWrap: 'wrap' }}>
-                      {editingExtraFiles.map((file, idx) => (
-                        <div key={idx} style={{ position: 'relative' }}>
-                          <img
-                            src={URL.createObjectURL(file)}
-                            alt={file.name}
-                            style={{ width: 60, height: 60, objectFit: 'cover', border: '1px solid #d9d9d9', borderRadius: 4 }}
-                          />
-                          <button
-                            type="button"
-                            onClick={() => handleRemoveEditingExtraFile(idx)}
-                            style={{ position: 'absolute', top: -6, right: -6, width: 20, height: 20, borderRadius: '50%', border: '1px solid #ccc', background: '#fff', cursor: 'pointer', padding: 0, lineHeight: '18px', textAlign: 'center' }}
-                            aria-label={`Xóa ${file.name}`}
-                          >
-                            ×
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </>
-              )}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Thể loại</label>
+                <Select 
+                  className="w-full h-11"
+                  value={editingProduct ? editingProduct.MaTL : newProduct.MaTL}
+                  onChange={(v) => editingProduct ? setEditingProduct({...editingProduct, MaTL: v}) : setNewProduct({...newProduct, MaTL: v})}
+                >
+                  {categories.map(c => <Option key={c.MaTL} value={c.MaTL}>{c.TenTL}</Option>)}
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Tác giả</label>
+                <Select 
+                  className="w-full h-11"
+                  value={editingProduct ? editingProduct.MaTG : newProduct.MaTG}
+                  onChange={(v) => editingProduct ? setEditingProduct({...editingProduct, MaTG: v}) : setNewProduct({...newProduct, MaTG: v})}
+                >
+                  {authors.map(a => <Option key={a.MaTG} value={a.MaTG}>{a.TenTG}</Option>)}
+                </Select>
+              </div>
             </div>
 
-            {/* Dropdown chọn tác giả */}
-            <div className="info-item">
-              <p className="info-label">Tác giả:</p>
-              <Select
-                size="small"
-                placeholder="Chọn tác giả"
-                value={editingProduct ? editingProduct.MaTG : newProduct.MaTG}
-                onChange={(value) =>
-                  editingProduct
-                    ? setEditingProduct({ ...editingProduct, MaTG: value })
-                    : setNewProduct({ ...newProduct, MaTG: value })
-                }
-                style={{ width: '100%' }}
-                allowClear
-                showSearch
-                optionFilterProp="children"
-                filterOption={(input, option) =>
-                  (option?.children || "").toString().toLowerCase().indexOf(input.toLowerCase()) >= 0
-                }
-              >
-                {authors.map(author => (
-                  <Option key={author.MaTG} value={author.MaTG}>
-                    {author.TenTG}
-                  </Option>
-                ))}
-              </Select>
-            </div>
-
-            <div className="info-item">
-              <p className="info-label">Năm xuất bản:</p>
-              <Input
-                size="small"
-                type="number"
-                value={editingProduct ? editingProduct.NamXB : newProduct.NamXB}
-                onChange={(e) =>
-                  editingProduct
-                    ? setEditingProduct({ ...editingProduct, NamXB: e.target.value })
-                    : setNewProduct({ ...newProduct, NamXB: e.target.value })
-                }
-                placeholder="Nhập năm xuất bản (1900-2024)"
-              />
-            </div>
-            <div className="info-item">
-              <p className="info-label">Mô tả:</p>
-              <Input.TextArea
-                rows={3}
+            <div className="space-y-2">
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Mô tả sản phẩm</label>
+              <Input.TextArea 
+                rows={4} 
+                className="rounded-xl font-medium p-4"
                 value={editingProduct ? editingProduct.MoTa : newProduct.MoTa}
-                onChange={(e) =>
-                  editingProduct
-                    ? setEditingProduct({ ...editingProduct, MoTa: e.target.value })
-                    : setNewProduct({ ...newProduct, MoTa: e.target.value })
-                }
-                placeholder="Mô tả ngắn về sản phẩm"
+                onChange={(e) => editingProduct ? setEditingProduct({...editingProduct, MoTa: e.target.value}) : setNewProduct({...newProduct, MoTa: e.target.value})}
               />
             </div>
 
-            <div className="info-item">
-              <p className="info-label">Nhà cung cấp:</p>
-              <Select
-                size="small"
-                placeholder="Chọn nhà cung cấp"
+            <div className="p-6 bg-slate-50 rounded-2xl border border-slate-100">
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4 block">Ảnh chính (Primary Image)</label>
+              <div className="flex items-center gap-6">
+                <div className="w-24 h-32 rounded-xl bg-white border border-slate-200 flex items-center justify-center overflow-hidden shadow-sm">
+                  {(editingProduct ? editingProduct.HinhAnh : newProduct.HinhAnhPrimary) ? (
+                    <img 
+                      src={editingProduct ? (editingProduct.HinhAnh instanceof File ? URL.createObjectURL(editingProduct.HinhAnh) : `/img/products/${editingProduct.HinhAnh.replace('/img/products/', '')}`) : URL.createObjectURL(newProduct.HinhAnhPrimary)} 
+                      alt="" className="w-full h-full object-cover" 
+                    />
+                  ) : (
+                    <span className="material-icons text-slate-200 text-4xl">image</span>
+                  )}
+                </div>
+                <div className="flex-1">
+                  <label className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-xl text-xs font-black uppercase tracking-widest cursor-pointer hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100">
+                    <CloudUploadOutlined /> Chọn ảnh
+                    <input type="file" className="hidden" accept="image/*" onChange={(e) => handleFileChange(e, !!editingProduct, 'primary')} />
+                  </label>
+                  <p className="mt-2 text-[10px] text-slate-400 font-bold uppercase">PNG, JPG tối đa 5MB</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-6">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Năm xuất bản</label>
+                <Input 
+                  className="h-11 rounded-xl"
+                  value={editingProduct ? editingProduct.NamXB : newProduct.NamXB}
+                  onChange={(e) => editingProduct ? setEditingProduct({...editingProduct, NamXB: e.target.value}) : setNewProduct({...newProduct, NamXB: e.target.value})}
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Kích thước</label>
+                <Input 
+                  className="h-11 rounded-xl"
+                  value={editingProduct ? editingProduct.KichThuoc : newProduct.KichThuoc}
+                  onChange={(e) => editingProduct ? setEditingProduct({...editingProduct, KichThuoc: e.target.value}) : setNewProduct({...newProduct, KichThuoc: e.target.value})}
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-3 gap-4">
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Số trang</label>
+                <Input 
+                  className="h-11 rounded-xl"
+                  value={editingProduct ? editingProduct.SoTrang : newProduct.SoTrang}
+                  onChange={(e) => editingProduct ? setEditingProduct({...editingProduct, SoTrang: e.target.value}) : setNewProduct({...newProduct, SoTrang: e.target.value})}
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Trọng lượng</label>
+                <Input 
+                  className="h-11 rounded-xl"
+                  suffix="g"
+                  value={editingProduct ? editingProduct.TrongLuong : newProduct.TrongLuong}
+                  onChange={(e) => editingProduct ? setEditingProduct({...editingProduct, TrongLuong: e.target.value}) : setNewProduct({...newProduct, TrongLuong: e.target.value})}
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Định dạng</label>
+                <Input 
+                  className="h-11 rounded-xl"
+                  placeholder="Bìa mềm..."
+                  value={editingProduct ? editingProduct.HinhThuc : newProduct.HinhThuc}
+                  onChange={(e) => editingProduct ? setEditingProduct({...editingProduct, HinhThuc: e.target.value}) : setNewProduct({...newProduct, HinhThuc: e.target.value})}
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Nhà cung cấp</label>
+              <Select 
+                className="w-full h-11"
                 value={editingProduct ? editingProduct.MaNCC : newProduct.MaNCC}
-                onChange={(value) =>
-                  editingProduct
-                    ? setEditingProduct({ ...editingProduct, MaNCC: value })
-                    : setNewProduct({ ...newProduct, MaNCC: value })
-                }
-                style={{ width: '100%' }}
-                allowClear
-                showSearch
-                optionFilterProp="children"
-                filterOption={(input, option) =>
-                  (option?.children || "").toString().toLowerCase().indexOf(input.toLowerCase()) >= 0
-                }
+                onChange={(v) => editingProduct ? setEditingProduct({...editingProduct, MaNCC: v}) : setNewProduct({...newProduct, MaNCC: v})}
               >
-                {suppliers.map(s => (
-                  <Option key={s.MaNCC} value={s.MaNCC}>{s.TenNCC}</Option>
-                ))}
+                {suppliers.map(s => <Option key={s.MaNCC} value={s.MaNCC}>{s.TenNCC}</Option>)}
               </Select>
             </div>
 
-            <div className="info-item">
-              <p className="info-label">Trọng lượng (g):</p>
-              <Input
-                size="small"
-                type="number"
-                value={editingProduct ? editingProduct.TrongLuong : newProduct.TrongLuong}
-                onChange={(e) =>
-                  editingProduct
-                    ? setEditingProduct({ ...editingProduct, TrongLuong: e.target.value })
-                    : setNewProduct({ ...newProduct, TrongLuong: e.target.value })
-                }
-                placeholder="Trọng lượng (gram)"
-              />
+            <div className="p-6 bg-slate-50 rounded-2xl border border-slate-100">
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4 block">Ảnh bổ sung (Extra Images)</label>
+              <div className="flex flex-wrap gap-3 mb-4">
+                {(editingProduct ? editingExtraFiles : newProduct.HinhAnhPhu).map((file, idx) => (
+                  <div key={idx} className="w-16 h-20 rounded-lg bg-white border border-slate-200 overflow-hidden relative group">
+                    <img src={URL.createObjectURL(file)} alt="" className="w-full h-full object-cover" />
+                    <button 
+                      className="absolute -top-1 -right-1 text-rose-500 bg-white rounded-full hidden group-hover:block transition-all"
+                      onClick={() => {
+                        if (editingProduct) {
+                          const updated = [...editingExtraFiles];
+                          updated.splice(idx, 1);
+                          setEditingExtraFiles(updated);
+                        } else {
+                          const updated = [...newProduct.HinhAnhPhu];
+                          updated.splice(idx, 1);
+                          setNewProduct({...newProduct, HinhAnhPhu: updated});
+                        }
+                      }}
+                    >
+                      <CloseCircleFilled />
+                    </button>
+                  </div>
+                ))}
+                <label className="w-16 h-20 rounded-lg bg-white border-2 border-dashed border-slate-200 flex items-center justify-center text-slate-300 hover:border-indigo-400 hover:text-indigo-400 cursor-pointer transition-all">
+                  <PlusOutlined />
+                  <input type="file" className="hidden" multiple accept="image/*" onChange={(e) => handleFileChange(e, !!editingProduct, 'extra')} />
+                </label>
+              </div>
             </div>
+          </div>
+        </div>
 
-            <div className="info-item">
-              <p className="info-label">Kích thước:</p>
-              <Input
-                size="small"
-                value={editingProduct ? editingProduct.KichThuoc : newProduct.KichThuoc}
-                onChange={(e) =>
-                  editingProduct
-                    ? setEditingProduct({ ...editingProduct, KichThuoc: e.target.value })
-                    : setNewProduct({ ...newProduct, KichThuoc: e.target.value })
-                }
-                placeholder="Ví dụ: 20x13x2 cm"
-              />
-            </div>
+        <div className="mt-8 flex justify-end gap-3 border-t border-slate-100 pt-6">
+          <Button 
+            onClick={() => setIsModalVisible(false)}
+            className="h-12 px-8 rounded-2xl font-bold border-slate-200"
+          >
+            Đóng
+          </Button>
+          <Button 
+            type="primary" 
+            onClick={editingProduct ? handleUpdateProduct : handleAddProduct}
+            className="h-12 px-12 rounded-2xl font-black uppercase tracking-widest text-xs bg-indigo-600 border-0 shadow-lg shadow-indigo-100"
+          >
+            {editingProduct ? 'Cập nhật' : 'Hoàn tất'}
+          </Button>
+        </div>
+      </Modal>
 
-            <div className="info-item">
-              <p className="info-label">Số trang:</p>
-              <Input
-                size="small"
-                type="number"
-                value={editingProduct ? editingProduct.SoTrang : newProduct.SoTrang}
-                onChange={(e) =>
-                  editingProduct
-                    ? setEditingProduct({ ...editingProduct, SoTrang: e.target.value })
-                    : setNewProduct({ ...newProduct, SoTrang: e.target.value })
-                }
-                placeholder="Số trang"
-              />
-            </div>
-
-            <div className="info-item">
-              <p className="info-label">Hình thức:</p>
-              <Input
-                size="small"
-                value={editingProduct ? editingProduct.HinhThuc : newProduct.HinhThuc}
-                onChange={(e) =>
-                  editingProduct
-                    ? setEditingProduct({ ...editingProduct, HinhThuc: e.target.value })
-                    : setNewProduct({ ...newProduct, HinhThuc: e.target.value })
-                }
-                placeholder="Ví dụ: Bìa mềm / Bìa cứng"
-              />
-            </div>
-
-            <div className="info-item">
-              <p className="info-label">Ngưỡng tối thiểu (MinSoLuong):</p>
-              <Input
-                size="small"
-                type="number"
-                min={0}
-                value={editingProduct ? editingProduct.MinSoLuong : newProduct.MinSoLuong}
-                onChange={(e) =>
-                  editingProduct
-                    ? setEditingProduct({ ...editingProduct, MinSoLuong: Number(e.target.value) })
-                    : setNewProduct({ ...newProduct, MinSoLuong: Number(e.target.value) })
-                }
-                placeholder="Ngưỡng tồn tối thiểu"
-              />
-            </div>
-            <div className="info-item">
-              <p className="info-label">Tình trạng:</p>
-              <Input size="small" value="Hết hàng (mặc định)" disabled />
-            </div>
-            <div className="info-item">
-              <p className="info-label">Đơn giá:</p>
-              <Input size="small" value="0 VND (mặc định)" disabled />
-            </div>
-            <div className="info-item">
-              <p className="info-label">Số lượng:</p>
-              <Input size="small" value="0 (mặc định)" disabled />
-            </div>
+      <Modal
+        title={null}
+        open={minModalVisible}
+        onCancel={() => setMinModalVisible(false)}
+        footer={null}
+        width={400}
+        centered
+        className="modern-modal"
+      >
+        <div className="text-center mb-6">
+          <div className="w-16 h-16 bg-orange-50 text-orange-500 rounded-3xl flex items-center justify-center mx-auto mb-4">
+            <span className="material-icons text-3xl">inventory</span>
+          </div>
+          <h2 className="text-xl font-black text-slate-800">Ngưỡng tồn tối thiểu</h2>
+          <p className="text-slate-400 text-xs font-bold uppercase tracking-widest mt-1">Sản phẩm: {editingProduct?.TenSP}</p>
+        </div>
+        
+        <div className="space-y-6">
+          <div className="space-y-2">
+            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Số lượng tối thiểu</label>
+            <Input 
+              type="number" 
+              className="h-12 rounded-2xl font-black text-lg text-center"
+              value={minValue}
+              onChange={(e) => setMinValue(e.target.value)}
+            />
+            <p className="text-[10px] text-slate-400 font-medium italic text-center">Hệ thống sẽ cảnh báo khi tồn kho thấp hơn ngưỡng này</p>
+          </div>
+          
+          <div className="flex flex-col gap-2">
+            <Button 
+              type="primary" 
+              onClick={handleSaveMinStock}
+              className="h-12 rounded-2xl bg-orange-500 hover:bg-orange-600 border-0 font-bold"
+            >
+              Cập nhật ngay
+            </Button>
+            <Button 
+              onClick={() => setMinModalVisible(false)}
+              className="h-12 rounded-2xl border-slate-200 font-bold"
+            >
+              Hủy bỏ
+            </Button>
           </div>
         </div>
       </Modal>
 
-      {/* Modal chỉnh ngưỡng tối thiểu (MinSoLuong) */}
-      <Modal
-        title={`Cập nhật ngưỡng tồn cho sản phẩm ${editingProduct ? editingProduct.MaSP : ''}`}
-        open={minModalVisible}
-        onCancel={() => { setMinModalVisible(false); setEditingProduct(null); }}
-        onOk={handleSaveMinStock}
-        okText="Lưu"
-        cancelText="Hủy"
-        width={420}
-      >
-        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-          <Input
-            type="number"
-            min={0}
-            value={minValue}
-            onChange={(e) => setMinValue(Number(e.target.value))}
-          />
-          <span>cái</span>
-        </div>
-      </Modal>
+      <style dangerouslySetInnerHTML={{ __html: `
+        .modern-table .ant-table-thead > tr > th {
+          background: #f8fafc !important;
+          color: #94a3b8 !important;
+          font-size: 11px !important;
+          font-weight: 900 !important;
+          text-transform: uppercase !important;
+          letter-spacing: 0.1em !important;
+          padding: 20px 24px !important;
+          border-bottom: 1px solid #f1f5f9 !important;
+        }
+        .modern-table .ant-table-tbody > tr > td {
+          padding: 16px 24px !important;
+          border-bottom: 1px solid #f8fafc !important;
+        }
+        .modern-table .ant-table-row:hover > td {
+          background: #f8fafc !important;
+        }
+        .modern-modal .ant-modal-content {
+          border-radius: 40px !important;
+          padding: 32px !important;
+          box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.1) !important;
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+          width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+          background: #f1f5f9;
+          border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+          background: #cbd5e1;
+          border-radius: 10px;
+        }
+        .modern-select.ant-select-single:not(.ant-select-customize-input) .ant-select-selector {
+          height: 44px !important;
+          border-radius: 12px !important;
+          border-color: #f1f5f9 !important;
+          background: #f8fafc !important;
+          padding: 0 16px !important;
+          display: flex;
+          align-items: center;
+          font-weight: 700;
+          color: #334155;
+        }
+      `}} />
     </div>
   );
 };

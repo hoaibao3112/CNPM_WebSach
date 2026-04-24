@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { message, DatePicker } from 'antd';
+import { message, DatePicker, Button } from 'antd';
 import api from '../utils/api';
 import dayjs from 'dayjs';
 import * as XLSX from 'xlsx';
@@ -21,7 +21,7 @@ import {
   ArcElement,
 } from 'chart.js';
 import { Line, Bar, Pie } from 'react-chartjs-2';
-import '../styles/statistical.css';
+// import '../styles/statistical.css';
 
 // Đăng ký các components của Chart.js
 ChartJS.register(
@@ -1114,7 +1114,6 @@ const ThongKe = () => {
   };
 
   // ==================== RENDER CHART ====================
-  // ...existing code...
   const renderChart = () => {
     if (!showChart || loading) return null;
 
@@ -1134,428 +1133,552 @@ const ThongKe = () => {
       chartData = getKhachHangChartData();
       ChartComponent = Bar;
     } else if (activeTab === 'luong') {
-      // đảm bảo salaryData đã load
-      if (!salaryData || (Array.isArray(salaryData) && salaryData.length === 0)) {
-        console.debug('Luong: salaryData empty', salaryData);
-        return null;
-      }
+      if (!salaryData || (Array.isArray(salaryData) && salaryData.length === 0)) return null;
       chartData = getLuongChartData();
       ChartComponent = Bar;
     }
 
-    if (!chartData || !ChartComponent) {
-      console.debug('No chartData or ChartComponent', { activeTab, chartData, salaryData });
-      return null;
-    }
-
-    // debug: in ra dữ liệu chart để kiểm tra
-    console.debug('Render chart', { activeTab, chartData });
+    if (!chartData || !ChartComponent) return null;
 
     return (
-      <div className="chart-container" style={{ width: '100%', marginTop: 12 }}>
-        <div className="chart-wrapper" style={{ height: 360 }}>
-          <ChartComponent data={chartData} options={chartOptions} />
+      <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm mb-8 transition-all hover:shadow-md">
+        <div className="flex items-center justify-between mb-6">
+          <h3 className="text-sm font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+            <span className="material-icons text-indigo-500">insights</span>
+            Phân tích dữ liệu trực quan
+          </h3>
+          <div className="flex gap-2">
+            <span className="w-3 h-3 rounded-full bg-indigo-500 animate-pulse"></span>
+            <span className="w-3 h-3 rounded-full bg-slate-200"></span>
+          </div>
+        </div>
+        <div className="h-[400px] w-full">
+          <ChartComponent data={chartData} options={{
+            ...chartOptions,
+            maintainAspectRatio: false,
+            plugins: {
+              ...chartOptions.plugins,
+              legend: {
+                ...chartOptions.plugins.legend,
+                labels: {
+                  usePointStyle: true,
+                  padding: 20,
+                  font: { family: 'Inter', size: 12, weight: '600' }
+                }
+              }
+            }
+          }} />
         </div>
       </div>
     );
   };
-  // ...existing code...
   // ==================== RENDER TABS ====================
   const renderDoanhThuTab = () => (
-    <div className="thongke-content">
-      <div className="thongke-subtabs">
-        <button className={subTab === 'nam' ? 'active' : ''} onClick={() => setSubTab('nam')}>
-          Thống kê theo năm
-        </button>
-        <button className={subTab === 'thang' ? 'active' : ''} onClick={() => setSubTab('thang')}>
-          Thống kê từng tháng trong năm
-        </button>
-        <button className={subTab === 'ngay' ? 'active' : ''} onClick={() => setSubTab('ngay')}>
-          Thống kê từng ngày trong tháng
-        </button>
-        <button className={subTab === 'khoangtg' ? 'active' : ''} onClick={() => setSubTab('khoangtg')}>
-          Thống kê từ ngày đến ngày
-        </button>
+    <div className="space-y-6">
+      <div className="flex flex-wrap gap-2 p-1.5 bg-slate-100 rounded-2xl w-fit">
+        {[
+          { id: 'nam', label: 'Theo Năm' },
+          { id: 'thang', label: 'Theo Tháng' },
+          { id: 'ngay', label: 'Theo Ngày' },
+          { id: 'khoangtg', label: 'Khoảng TG' },
+        ].map((t) => (
+          <button
+            key={t.id}
+            className={`px-6 py-2.5 rounded-xl text-sm font-bold transition-all ${
+              subTab === t.id 
+                ? 'bg-white text-indigo-600 shadow-sm' 
+                : 'text-slate-500 hover:text-slate-700'
+            }`}
+            onClick={() => setSubTab(t.id)}
+          >
+            {t.label}
+          </button>
+        ))}
       </div>
 
-      <div className="thongke-filters">
-        {subTab === 'thang' && (
-          <div className="filter-group">
-            <label>Từ năm</label>
-            <select value={selectedYear} onChange={(e) => setSelectedYear(parseInt(e.target.value))}>
-              {Array.from({ length: 10 }, (_, i) => new Date().getFullYear() - i).map(year => (
-                <option key={year} value={year}>{year}</option>
-              ))}
-            </select>
+      <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+          <div className="flex flex-wrap items-end gap-6">
+            {(subTab === 'thang' || subTab === 'ngay') && (
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Chọn Năm</label>
+                <select 
+                  className="h-11 px-4 rounded-xl border-slate-200 bg-slate-50 text-slate-700 font-bold focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all outline-none min-w-[120px]"
+                  value={selectedYear} 
+                  onChange={(e) => setSelectedYear(parseInt(e.target.value))}
+                >
+                  {Array.from({ length: 10 }, (_, i) => new Date().getFullYear() - i).map(year => (
+                    <option key={year} value={year}>{year}</option>
+                  ))}
+                </select>
+              </div>
+            )}
+
+            {subTab === 'ngay' && (
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Chọn Tháng</label>
+                <select 
+                  className="h-11 px-4 rounded-xl border-slate-200 bg-slate-50 text-slate-700 font-bold focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all outline-none min-w-[140px]"
+                  value={selectedMonth} 
+                  onChange={(e) => setSelectedMonth(parseInt(e.target.value))}
+                >
+                  {Array.from({ length: 12 }, (_, i) => i + 1).map(month => (
+                    <option key={month} value={month}>Tháng {month}</option>
+                  ))}
+                </select>
+              </div>
+            )}
+
+            {subTab === 'khoangtg' && (
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Khoảng thời gian</label>
+                <RangePicker
+                  className="h-11 rounded-xl border-slate-200 bg-slate-50 font-bold"
+                  value={dateRange}
+                  onChange={setDateRange}
+                  format="DD/MM/YYYY"
+                />
+              </div>
+            )}
           </div>
-        )}
 
-        {subTab === 'ngay' && (
-          <>
-            <div className="filter-group">
-              <label>Từ năm</label>
-              <select value={selectedYear} onChange={(e) => setSelectedYear(parseInt(e.target.value))}>
-                {Array.from({ length: 10 }, (_, i) => new Date().getFullYear() - i).map(year => (
-                  <option key={year} value={year}>{year}</option>
-                ))}
-              </select>
-            </div>
-            <div className="filter-group">
-              <label>Đến năm</label>
-              <select value={selectedMonth} onChange={(e) => setSelectedMonth(parseInt(e.target.value))}>
-                {Array.from({ length: 12 }, (_, i) => i + 1).map(month => (
-                  <option key={month} value={month}>Tháng {month}</option>
-                ))}
-              </select>
-            </div>
-          </>
-        )}
-
-        {subTab === 'khoangtg' && (
-          <div className="filter-group">
-            <RangePicker
-              value={dateRange}
-              onChange={setDateRange}
-              format="DD/MM/YYYY"
-              placeholder={['Từ ngày', 'Đến ngày']}
-            />
+          <div className="flex flex-wrap gap-3">
+            <Button
+              onClick={() => setShowChart(!showChart)}
+              icon={<span className="material-icons text-sm">{showChart ? 'visibility_off' : 'insert_chart'}</span>}
+              className={`h-11 px-6 rounded-xl font-bold flex items-center gap-2 transition-all ${
+                showChart ? 'bg-indigo-50 text-indigo-600 border-indigo-100' : 'bg-white text-slate-600 border-slate-200'
+              }`}
+            >
+              {showChart ? 'Ẩn biểu đồ' : 'Hiện biểu đồ'}
+            </Button>
+            <Button
+              onClick={handleExportPDF}
+              icon={<span className="material-icons text-sm">picture_as_pdf</span>}
+              className="h-11 px-6 rounded-xl font-bold bg-rose-50 text-rose-600 border-rose-100 hover:bg-rose-100 flex items-center gap-2"
+            >
+              Xuất PDF
+            </Button>
+            <Button
+              onClick={handleExportExcel}
+              icon={<span className="material-icons text-sm">table_view</span>}
+              className="h-11 px-6 rounded-xl font-bold bg-emerald-50 text-emerald-600 border-emerald-100 hover:bg-emerald-100 flex items-center gap-2"
+            >
+              Xuất Excel
+            </Button>
           </div>
-        )}
-
-        <div className="filter-actions">
-          <button className={`btn-chart ${showChart ? 'active' : ''}`} onClick={() => setShowChart(!showChart)}>
-            <i className={`fas fa-chart-${showChart ? 'line' : 'bar'}`}></i>
-            {showChart ? 'Ẩn biểu đồ' : 'Hiện biểu đồ'}
-          </button>
-
-          <button className="btn-pdf" onClick={handleExportPDF}>
-            <i className="fas fa-file-pdf"></i> Xuất PDF
-          </button>
-
-          <button className="btn-excel" onClick={handleExportExcel}>
-            <i className="fas fa-file-excel"></i> Xuất Excel
-          </button>
         </div>
       </div>
 
       {renderChart()}
 
-      <div className="thongke-table">
-        <table>
-          <thead>
-            <tr>
-              <th>{subTab === 'nam' ? 'Năm' : subTab === 'thang' ? 'Tháng' : subTab === 'ngay' ? 'Ngày' : 'Thời gian'}</th>
-              <th>Vốn</th>
-              <th>Doanh thu</th>
-            </tr>
-          </thead>
-          <tbody>
-            {loading ? (
-              <tr>
-                <td colSpan="3" style={{ textAlign: 'center', padding: '30px' }}>
-                  <i className="fas fa-spinner fa-spin"></i> Đang tải...
-                </td>
-              </tr>
-            ) : data.length > 0 ? (
-              data.map((item, index) => (
-                <tr key={index}>
-                  <td>{item.Nam || item.Thang || item.Ngay || (item.Ngay && dayjs(item.Ngay).format('DD/MM/YYYY'))}</td>
-                  <td>{formatCurrency(item.Von)}</td>
-                  <td style={{ color: '#52c41a', fontWeight: 'bold' }}>{formatCurrency(item.DoanhThu)}</td>
-                </tr>
-              ))
-            ) : (
-              <tr>
-                <td colSpan="3" style={{ textAlign: 'center', padding: '30px' }}>Không có dữ liệu</td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  );
-  // ...existing code inside renderLuongTab ...
-  const renderLuongTab = () => {
-    console.log('🎨 Rendering Luong Tab - salaryDetails length:', salaryDetails.length); // Debug render
-    return (
-      <div id="luong-export-area" className="thongke-content">
-        <div className="thongke-filters">
-          <div className="filter-group">
-            <label>Năm:</label>
-            <select value={salaryYear} onChange={(e) => setSalaryYear(Number(e.target.value))}>
-              {[2023, 2024, 2025].map(y => <option key={y} value={y}>{y}</option>)}
-            </select>
-          </div>
-          <div className="filter-group">
-            <label>Tháng:</label>
-            <select value={selectedSalaryMonth || ''} onChange={(e) => setSelectedSalaryMonth(Number(e.target.value))}>
-              <option value="">Chọn tháng</option>
-              {Array.from({ length: 12 }, (_, i) => i + 1).map(m => <option key={m} value={m}>Tháng {m}</option>)}
-            </select>
-          </div>
-          <div className="filter-actions">
-            <button className="btn-refresh" onClick={() => selectedSalaryMonth && fetchSalaryDetails(selectedSalaryMonth)}>
-              <i className="fas fa-sync-alt"></i> Tải lại
-            </button>
-            <button className="btn-pdf" onClick={handleExportPDF}>
-              <i className="fas fa-file-pdf"></i> Xuất PDF
-            </button>
-
-            <button className="btn-excel" onClick={handleExportExcel}>
-              <i className="fas fa-file-excel"></i> Xuất Excel
-            </button>
-          </div>
-        </div>
-
-        <div className="thongke-table">
-          <table>
+      <div className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse">
             <thead>
-              <tr>
-                <th>STT</th>
-                <th>MÃ NV</th>
-                <th>TÊN NV</th>
-                <th>LƯƠNG CƠ BẢN</th>
-                <th>PHỤ CẤP</th>
-                <th>TĂNG CA</th>
-                <th>THƯỞNG</th>
-                <th>PHẠT</th>
-                <th>TỔNG NHẬN</th>
-                <th>TRẠNG THÁI</th>
+              <tr className="bg-slate-50 border-bottom border-slate-100">
+                <th className="px-6 py-4 text-[11px] font-black text-slate-400 uppercase tracking-widest">
+                  {subTab === 'nam' ? 'Năm' : subTab === 'thang' ? 'Tháng' : subTab === 'ngay' ? 'Ngày' : 'Thời gian'}
+                </th>
+                <th className="px-6 py-4 text-[11px] font-black text-slate-400 uppercase tracking-widest text-right">Vốn đầu tư</th>
+                <th className="px-6 py-4 text-[11px] font-black text-slate-400 uppercase tracking-widest text-right">Doanh thu</th>
+                <th className="px-6 py-4 text-[11px] font-black text-slate-400 uppercase tracking-widest text-right">Lợi nhuận</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody className="divide-y divide-slate-50">
               {loading ? (
                 <tr>
-                  <td colSpan="10" style={{ textAlign: 'center', padding: '30px' }}>
-                    <i className="fas fa-spinner fa-spin"></i> Đang tải dữ liệu lương...
+                  <td colSpan="4" className="px-6 py-12 text-center">
+                    <div className="flex flex-col items-center gap-3">
+                      <div className="w-10 h-10 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
+                      <span className="text-slate-400 font-bold">Đang tải dữ liệu...</span>
+                    </div>
                   </td>
                 </tr>
-              ) : salaryDetails.length > 0 ? (
-                salaryDetails.map((item, index) => {
-                  console.log('📊 Mapping row:', index + 1, item); // Debug từng row
-                  return (
-                    <tr key={item.id || index}>
-                      <td>{index + 1}</td>
-                      <td>{item.MaNV}</td>
-                      <td>{item.TenNV}</td>
-                      <td>{formatCurrency(item.luong_co_ban)}</td>
-                      <td>{formatCurrency(item.phu_cap)}</td>
-                      <td>{formatCurrency(item.tang_ca)}</td>
-                      <td style={{ color: 'green' }}>{formatCurrency(item.thuong)}</td>
-                      <td style={{ color: 'red' }}>{formatCurrency(item.phat)}</td>
-                      <td style={{ color: '#1890ff', fontWeight: 'bold' }}>{formatCurrency(item.tong_luong)}</td>
-                      <td>{item.trang_thai}</td>
-                    </tr>
-                  );
-                })
+              ) : data.length > 0 ? (
+                data.map((item, index) => (
+                  <tr key={index} className="hover:bg-slate-50/50 transition-colors group">
+                    <td className="px-6 py-4 font-bold text-slate-700">
+                      {item.Nam || item.Thang || item.Ngay || (item.Ngay && dayjs(item.Ngay).format('DD/MM/YYYY'))}
+                    </td>
+                    <td className="px-6 py-4 text-right font-medium text-slate-500">
+                      {formatCurrency(item.Von)}
+                    </td>
+                    <td className="px-6 py-4 text-right font-black text-indigo-600">
+                      {formatCurrency(item.DoanhThu)}
+                    </td>
+                    <td className="px-6 py-4 text-right font-black text-emerald-500">
+                      {formatCurrency(item.DoanhThu - item.Von)}
+                    </td>
+                  </tr>
+                ))
               ) : (
                 <tr>
-                  <td colSpan="10" style={{ textAlign: 'center', padding: '30px' }}>
-                    Không có dữ liệu lương cho tháng {selectedSalaryMonth}/{salaryYear}.<br />
-                    <button onClick={() => fetchSalaryDetails(selectedSalaryMonth)}>Thử tải lại</button>
-                  </td>
+                  <td colSpan="4" className="px-6 py-12 text-center text-slate-400 font-medium italic">Không có dữ liệu</td>
                 </tr>
               )}
             </tbody>
           </table>
         </div>
       </div>
-    );
-  };
+    </div>
+  );
+
   const renderBanHangTab = () => (
-    <div className="thongke-content">
-      <div className="thongke-subtabs">
-        <button className={productTab === 'sanpham' ? 'active' : ''} onClick={() => setProductTab('sanpham')}>
-          Sản phẩm
-        </button>
-        <button className={productTab === 'theloai' ? 'active' : ''} onClick={() => setProductTab('theloai')}>
-          Thể loại
-        </button>
+    <div className="space-y-6">
+      <div className="flex flex-wrap gap-2 p-1.5 bg-slate-100 rounded-2xl w-fit">
+        {[
+          { id: 'sanpham', label: 'Sản phẩm' },
+          { id: 'theloai', label: 'Thể loại' },
+        ].map((t) => (
+          <button
+            key={t.id}
+            className={`px-6 py-2.5 rounded-xl text-sm font-bold transition-all ${
+              productTab === t.id 
+                ? 'bg-white text-indigo-600 shadow-sm' 
+                : 'text-slate-500 hover:text-slate-700'
+            }`}
+            onClick={() => setProductTab(t.id)}
+          >
+            {t.label}
+          </button>
+        ))}
       </div>
 
-      <div className="thongke-filters">
-        <div className="filter-group">
-          <label>Khoảng thời gian</label>
-          <select value={productFilter} onChange={(e) => setProductFilter(e.target.value)}>
-            <option value="today">Hôm nay</option>
-            <option value="custom">Tùy chỉnh</option>
-          </select>
-        </div>
+      <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+          <div className="flex flex-wrap items-end gap-6">
+            <div className="space-y-2">
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Khoảng thời gian</label>
+              <select 
+                className="h-11 px-4 rounded-xl border-slate-200 bg-slate-50 text-slate-700 font-bold focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all outline-none min-w-[160px]"
+                value={productFilter} 
+                onChange={(e) => setProductFilter(e.target.value)}
+              >
+                <option value="today">Hôm nay</option>
+                <option value="custom">Tùy chỉnh</option>
+              </select>
+            </div>
 
-        {productFilter === 'custom' && (
-          <div className="filter-group">
-            <RangePicker
-              value={productDateRange}
-              onChange={setProductDateRange}
-              format="DD/MM/YYYY"
-              placeholder={['Từ ngày', 'Đến ngày']}
-            />
+            {productFilter === 'custom' && (
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Chọn ngày</label>
+                <RangePicker
+                  className="h-11 rounded-xl border-slate-200 bg-slate-50 font-bold"
+                  value={productDateRange}
+                  onChange={setProductDateRange}
+                  format="DD/MM/YYYY"
+                />
+              </div>
+            )}
+
+            {productTab === 'sanpham' && (
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Lọc theo</label>
+                <select 
+                  className="h-11 px-4 rounded-xl border-slate-200 bg-slate-50 text-slate-700 font-bold focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all outline-none min-w-[180px]"
+                  value={sortBy} 
+                  onChange={(e) => setSortBy(e.target.value)}
+                >
+                  <option value="bestseller">Sản phẩm bán chạy</option>
+                  <option value="all">Tất cả sản phẩm</option>
+                </select>
+              </div>
+            )}
           </div>
-        )}
 
-        {productTab === 'sanpham' && (
-          <div className="filter-group">
-            <label>Lọc</label>
-            <select value={sortBy} onChange={(e) => setSortBy(e.target.value)}>
-              <option value="bestseller">Sản phẩm bán chạy</option>
-              <option value="all">Tất cả</option>
-            </select>
+          <div className="flex flex-wrap gap-3">
+            <Button
+              onClick={() => setShowChart(!showChart)}
+              icon={<span className="material-icons text-sm">{showChart ? 'visibility_off' : 'pie_chart'}</span>}
+              className={`h-11 px-6 rounded-xl font-bold flex items-center gap-2 transition-all ${
+                showChart ? 'bg-indigo-50 text-indigo-600 border-indigo-100' : 'bg-white text-slate-600 border-slate-200'
+              }`}
+            >
+              {showChart ? 'Ẩn biểu đồ' : 'Hiện biểu đồ'}
+            </Button>
+            <Button
+              onClick={handleExportPDF}
+              icon={<span className="material-icons text-sm">picture_as_pdf</span>}
+              className="h-11 px-6 rounded-xl font-bold bg-rose-50 text-rose-600 border-rose-100 hover:bg-rose-100 flex items-center gap-2"
+            >
+              Xuất PDF
+            </Button>
           </div>
-        )}
-
-        <div className="filter-actions">
-          <button className={`btn-chart ${showChart ? 'active' : ''}`} onClick={() => setShowChart(!showChart)}>
-            <i className={`fas fa-chart-${productTab === 'sanpham' ? 'bar' : 'pie'}`}></i>
-            {showChart ? 'Ẩn biểu đồ' : 'Hiện biểu đồ'}
-          </button>
-
-          <button className="btn-pdf" onClick={handleExportPDF}>
-            <i className="fas fa-file-pdf"></i> Xuất PDF
-          </button>
-
-          <button className="btn-excel" onClick={handleExportExcel}>
-            <i className="fas fa-file-excel"></i> Xuất Excel
-          </button>
         </div>
       </div>
 
       {renderChart()}
 
-      <div className="thongke-table">
-        <table>
-          <thead>
-            <tr>
-              <th>STT</th>
-              {productTab === 'sanpham' ? (
-                <>
-                  <th>MaSP</th>
-                  <th>TenSP</th>
-                  <th>SL bán</th>
-                  <th>SL đơn bán</th>
-                </>
-              ) : (
-                <>
-                  <th>Thể loại</th>
-                  <th>Tổng SL</th>
-                  <th>Tổng đơn</th>
-                  <th>Số SP</th>
-                </>
-              )}
-            </tr>
-          </thead>
-          <tbody>
-            {loading ? (
-              <tr>
-                <td colSpan={productTab === 'sanpham' ? 5 : 5} style={{ textAlign: 'center', padding: '30px' }}>
-                  <i className="fas fa-spinner fa-spin"></i> Đang tải...
-                </td>
+      <div className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="bg-slate-50 border-bottom border-slate-100">
+                <th className="px-6 py-4 text-[11px] font-black text-slate-400 uppercase tracking-widest w-16">STT</th>
+                {productTab === 'sanpham' ? (
+                  <>
+                    <th className="px-6 py-4 text-[11px] font-black text-slate-400 uppercase tracking-widest">Sản phẩm</th>
+                    <th className="px-6 py-4 text-[11px] font-black text-slate-400 uppercase tracking-widest text-center w-32">SL Bán</th>
+                    <th className="px-6 py-4 text-[11px] font-black text-slate-400 uppercase tracking-widest text-center w-32">Số Đơn</th>
+                  </>
+                ) : (
+                  <>
+                    <th className="px-6 py-4 text-[11px] font-black text-slate-400 uppercase tracking-widest">Thể loại</th>
+                    <th className="px-6 py-4 text-[11px] font-black text-slate-400 uppercase tracking-widest text-center w-32">Tổng SL</th>
+                    <th className="px-6 py-4 text-[11px] font-black text-slate-400 uppercase tracking-widest text-center w-32">Tổng Đơn</th>
+                    <th className="px-6 py-4 text-[11px] font-black text-slate-400 uppercase tracking-widest text-center w-32">Số SP</th>
+                  </>
+                )}
               </tr>
-            ) : data.length > 0 ? (
-              data.map((item, index) => (
-                <tr key={index}>
-                  <td>{index + 1}</td>
-                  {productTab === 'sanpham' ? (
-                    <>
-                      <td>{item.MaSP}</td>
-                      <td>{item.TenSP}</td>
-                      <td style={{ color: '#1890ff', fontWeight: 'bold' }}>{item.SoLuongBan}</td>
-                      <td>{item.SoLuongDon}</td>
-                    </>
-                  ) : (
-                    <>
-                      <td>{item.TheLoai}</td>
-                      <td style={{ color: '#1890ff', fontWeight: 'bold' }}>{item.TongSoLuong}</td>
-                      <td>{item.TongDon}</td>
-                      <td>{item.SoSanPham}</td>
-                    </>
-                  )}
+            </thead>
+            <tbody className="divide-y divide-slate-50">
+              {loading ? (
+                <tr>
+                  <td colSpan="5" className="px-6 py-12 text-center">
+                    <div className="flex flex-col items-center gap-3">
+                      <div className="w-10 h-10 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
+                      <span className="text-slate-400 font-bold">Đang tải dữ liệu...</span>
+                    </div>
+                  </td>
                 </tr>
-              ))
-            ) : (
-              <tr>
-                <td colSpan={productTab === 'sanpham' ? 5 : 5} style={{ textAlign: 'center', padding: '30px' }}>
-                  Không có dữ liệu
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
+              ) : data.length > 0 ? (
+                data.map((item, index) => (
+                  <tr key={index} className="hover:bg-slate-50/50 transition-colors">
+                    <td className="px-6 py-4 text-slate-400 font-medium text-sm">{index + 1}</td>
+                    {productTab === 'sanpham' ? (
+                      <>
+                        <td className="px-6 py-4">
+                          <div className="font-bold text-slate-700">{item.TenSP}</div>
+                          <div className="text-[10px] text-slate-400 font-black uppercase tracking-tighter">SKU: {item.MaSP}</div>
+                        </td>
+                        <td className="px-6 py-4 text-center font-black text-indigo-600">{item.SoLuongBan}</td>
+                        <td className="px-6 py-4 text-center font-bold text-slate-500">{item.SoLuongDon}</td>
+                      </>
+                    ) : (
+                      <>
+                        <td className="px-6 py-4 font-bold text-slate-700">{item.TheLoai}</td>
+                        <td className="px-6 py-4 text-center font-black text-indigo-600">{item.TongSoLuong}</td>
+                        <td className="px-6 py-4 text-center font-bold text-slate-500">{item.TongDon}</td>
+                        <td className="px-6 py-4 text-center font-medium text-slate-400">{item.SoSanPham}</td>
+                      </>
+                    )}
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan="5" className="px-6 py-12 text-center text-slate-400 font-medium italic">Không có dữ liệu</td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );
 
   const renderKhachHangTab = () => (
-    <div className="thongke-content">
-      <div className="thongke-filters">
-        <div className="filter-group">
-          <label>Khoảng thời gian</label>
-          <select value={customerFilter} onChange={(e) => setCustomerFilter(e.target.value)}>
-            <option value="today">Hôm nay</option>
-            <option value="custom">Tùy chỉnh</option>
-          </select>
-        </div>
+    <div className="space-y-6">
+      <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+          <div className="flex flex-wrap items-end gap-6">
+            <div className="space-y-2">
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Khoảng thời gian</label>
+              <select 
+                className="h-11 px-4 rounded-xl border-slate-200 bg-slate-50 text-slate-700 font-bold focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all outline-none min-w-[160px]"
+                value={customerFilter} 
+                onChange={(e) => setCustomerFilter(e.target.value)}
+              >
+                <option value="today">Hôm nay</option>
+                <option value="custom">Tùy chỉnh</option>
+              </select>
+            </div>
 
-        {customerFilter === 'custom' && (
-          <div className="filter-group">
-            <RangePicker
-              value={customerDateRange}
-              onChange={setCustomerDateRange}
-              format="DD/MM/YYYY"
-              placeholder={['Từ ngày', 'Đến ngày']}
-            />
+            {customerFilter === 'custom' && (
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Chọn ngày</label>
+                <RangePicker
+                  className="h-11 rounded-xl border-slate-200 bg-slate-50 font-bold"
+                  value={customerDateRange}
+                  onChange={setCustomerDateRange}
+                  format="DD/MM/YYYY"
+                />
+              </div>
+            )}
           </div>
-        )}
 
-        <div className="filter-actions">
-          <button className={`btn-chart ${showChart ? 'active' : ''}`} onClick={() => setShowChart(!showChart)}>
-            <i className="fas fa-chart-bar"></i>
-            {showChart ? 'Ẩn biểu đồ' : 'Hiện biểu đồ'}
-          </button>
-
-          <button className="btn-pdf" onClick={handleExportPDF}>
-            <i className="fas fa-file-pdf"></i> Xuất PDF
-          </button>
-
-          <button className="btn-excel" onClick={handleExportExcel}>
-            <i className="fas fa-file-excel"></i> Xuất Excel
-          </button>
+          <div className="flex flex-wrap gap-3">
+            <Button
+              onClick={() => setShowChart(!showChart)}
+              icon={<span className="material-icons text-sm">{showChart ? 'visibility_off' : 'group'}</span>}
+              className={`h-11 px-6 rounded-xl font-bold flex items-center gap-2 transition-all ${
+                showChart ? 'bg-indigo-50 text-indigo-600 border-indigo-100' : 'bg-white text-slate-600 border-slate-200'
+              }`}
+            >
+              {showChart ? 'Ẩn biểu đồ' : 'Hiện biểu đồ'}
+            </Button>
+            <Button
+              onClick={handleExportPDF}
+              icon={<span className="material-icons text-sm">picture_as_pdf</span>}
+              className="h-11 px-6 rounded-xl font-bold bg-rose-50 text-rose-600 border-rose-100 hover:bg-rose-100 flex items-center gap-2"
+            >
+              Xuất PDF
+            </Button>
+          </div>
         </div>
       </div>
 
       {renderChart()}
 
-      <div className="thongke-table">
-        <table>
+      <div className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="bg-slate-50 border-bottom border-slate-100">
+                <th className="px-6 py-4 text-[11px] font-black text-slate-400 uppercase tracking-widest w-16">STT</th>
+                <th className="px-6 py-4 text-[11px] font-black text-slate-400 uppercase tracking-widest">Thời gian</th>
+                <th className="px-6 py-4 text-[11px] font-black text-slate-400 uppercase tracking-widest text-center">Số lượng đơn</th>
+                <th className="px-6 py-4 text-[11px] font-black text-slate-400 uppercase tracking-widest text-center">Số lượng SP</th>
+                <th className="px-6 py-4 text-[11px] font-black text-slate-400 uppercase tracking-widest text-center">Số loại SP</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-50">
+              {loading ? (
+                <tr>
+                  <td colSpan="5" className="px-6 py-12 text-center">
+                    <div className="flex flex-col items-center gap-3">
+                      <div className="w-10 h-10 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
+                      <span className="text-slate-400 font-bold">Đang tải dữ liệu...</span>
+                    </div>
+                  </td>
+                </tr>
+              ) : data.length > 0 ? (
+                data.map((item, index) => (
+                  <tr key={index} className="hover:bg-slate-50/50 transition-colors">
+                    <td className="px-6 py-4 text-slate-400 font-medium text-sm">{index + 1}</td>
+                    <td className="px-6 py-4 font-bold text-slate-700">{dayjs(item.ThoiGian).format('DD/MM/YYYY')}</td>
+                    <td className="px-6 py-4 text-center font-black text-indigo-600">{item.SoLuongDon}</td>
+                    <td className="px-6 py-4 text-center font-bold text-slate-600">{item.SoLuongKhachHang}</td>
+                    <td className="px-6 py-4 text-center font-medium text-slate-500">{item.SoLoaiSanPham}</td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan="5" className="px-6 py-12 text-center text-slate-400 font-medium italic">Không có dữ liệu</td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderLuongTab = () => (
+    <div id="luong-export-area" className="space-y-6">
+      <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+          <div className="flex flex-wrap items-end gap-6">
+            <div className="space-y-2">
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Chọn Năm</label>
+              <select 
+                className="h-11 px-4 rounded-xl border-slate-200 bg-slate-50 text-slate-700 font-bold focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all outline-none min-w-[120px]"
+                value={salaryYear} 
+                onChange={(e) => setSalaryYear(Number(e.target.value))}
+              >
+                {[2023, 2024, 2025].map(y => <option key={y} value={y}>{y}</option>)}
+              </select>
+            </div>
+            <div className="space-y-2">
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Chọn Tháng</label>
+              <select 
+                className="h-11 px-4 rounded-xl border-slate-200 bg-slate-50 text-slate-700 font-bold focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all outline-none min-w-[140px]"
+                value={selectedSalaryMonth || ''} 
+                onChange={(e) => setSelectedSalaryMonth(Number(e.target.value))}
+              >
+                <option value="">Chọn tháng</option>
+                {Array.from({ length: 12 }, (_, i) => i + 1).map(m => <option key={m} value={m}>Tháng {m}</option>)}
+              </select>
+            </div>
+          </div>
+
+          <div className="flex flex-wrap gap-3">
+            <Button
+              onClick={() => selectedSalaryMonth && fetchSalaryDetails(selectedSalaryMonth)}
+              icon={<span className="material-icons text-sm">refresh</span>}
+              className="h-11 px-6 rounded-xl font-bold bg-indigo-50 text-indigo-600 border-indigo-100 hover:bg-indigo-100 flex items-center gap-2"
+            >
+              Tải lại
+            </Button>
+            <Button
+              onClick={handleExportPDF}
+              icon={<span className="material-icons text-sm">picture_as_pdf</span>}
+              className="h-11 px-6 rounded-xl font-bold bg-rose-50 text-rose-600 border-rose-100 hover:bg-rose-100 flex items-center gap-2"
+            >
+              Xuất PDF
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      <div className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden overflow-x-auto">
+        <table className="w-full text-left border-collapse min-w-[1000px]">
           <thead>
-            <tr>
-              <th>STT</th>
-              <th>Thời gian</th>
-              <th>Số lượng đơn</th>
-              <th>Số lượng SP</th>
-              <th>Số loại SP</th>
+            <tr className="bg-slate-50 border-bottom border-slate-100">
+              <th className="px-6 py-4 text-[11px] font-black text-slate-400 uppercase tracking-widest w-12">#</th>
+              <th className="px-6 py-4 text-[11px] font-black text-slate-400 uppercase tracking-widest">Nhân viên</th>
+              <th className="px-6 py-4 text-[11px] font-black text-slate-400 uppercase tracking-widest text-right">Lương CB</th>
+              <th className="px-6 py-4 text-[11px] font-black text-slate-400 uppercase tracking-widest text-right">Phụ cấp</th>
+              <th className="px-6 py-4 text-[11px] font-black text-slate-400 uppercase tracking-widest text-right">Tăng ca</th>
+              <th className="px-6 py-4 text-[11px] font-black text-slate-400 uppercase tracking-widest text-right text-emerald-600">Thưởng</th>
+              <th className="px-6 py-4 text-[11px] font-black text-slate-400 uppercase tracking-widest text-right text-rose-600">Phạt</th>
+              <th className="px-6 py-4 text-[11px] font-black text-slate-400 uppercase tracking-widest text-right">Tổng nhận</th>
+              <th className="px-6 py-4 text-[11px] font-black text-slate-400 uppercase tracking-widest text-center">Trạng thái</th>
             </tr>
           </thead>
-          <tbody>
+          <tbody className="divide-y divide-slate-50">
             {loading ? (
               <tr>
-                <td colSpan="5" style={{ textAlign: 'center', padding: '30px' }}>
-                  <i className="fas fa-spinner fa-spin"></i> Đang tải...
+                <td colSpan="9" className="px-6 py-12 text-center">
+                  <div className="flex flex-col items-center gap-3">
+                    <div className="w-10 h-10 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
+                    <span className="text-slate-400 font-bold">Đang tính toán lương...</span>
+                  </div>
                 </td>
               </tr>
-            ) : data.length > 0 ? (
-              data.map((item, index) => (
-                <tr key={index}>
-                  <td>{index + 1}</td>
-                  <td>{dayjs(item.ThoiGian).format('DD/MM/YYYY')}</td>
-                  <td style={{ color: '#1890ff', fontWeight: 'bold' }}>{item.SoLuongDon}</td>
-                  <td>{item.SoLuongKhachHang}</td>
-                  <td>{item.SoLoaiSanPham}</td>
+            ) : salaryDetails.length > 0 ? (
+              salaryDetails.map((item, index) => (
+                <tr key={item.id || index} className="hover:bg-slate-50/50 transition-colors">
+                  <td className="px-6 py-4 text-slate-400 font-medium text-xs">{index + 1}</td>
+                  <td className="px-6 py-4">
+                    <div className="font-bold text-slate-700">{item.TenNV}</div>
+                    <div className="text-[10px] text-slate-400 font-black uppercase">ID: {item.MaNV}</div>
+                  </td>
+                  <td className="px-6 py-4 text-right font-medium text-slate-500">{formatCurrency(item.luong_co_ban)}</td>
+                  <td className="px-6 py-4 text-right font-medium text-slate-500">{formatCurrency(item.phu_cap)}</td>
+                  <td className="px-6 py-4 text-right font-medium text-slate-500">{formatCurrency(item.tang_ca)}</td>
+                  <td className="px-6 py-4 text-right font-black text-emerald-500">{formatCurrency(item.thuong)}</td>
+                  <td className="px-6 py-4 text-right font-black text-rose-500">{formatCurrency(item.phat)}</td>
+                  <td className="px-6 py-4 text-right font-black text-indigo-600 bg-indigo-50/30">{formatCurrency(item.tong_luong)}</td>
+                  <td className="px-6 py-4 text-center">
+                    <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider ${
+                      item.trang_thai === 'Đã thanh toán' ? 'bg-emerald-100 text-emerald-600' : 'bg-slate-100 text-slate-500'
+                    }`}>
+                      {item.trang_thai}
+                    </span>
+                  </td>
                 </tr>
               ))
             ) : (
               <tr>
-                <td colSpan="5" style={{ textAlign: 'center', padding: '30px' }}>
-                  Không có dữ liệu
+                <td colSpan="9" className="px-6 py-12 text-center">
+                  <div className="max-w-xs mx-auto text-center space-y-4">
+                    <div className="text-slate-300"><span className="material-icons text-5xl">payments</span></div>
+                    <p className="text-slate-400 font-medium italic">Không có dữ liệu lương cho tháng {selectedSalaryMonth}/{salaryYear}</p>
+                    {selectedSalaryMonth && (
+                      <Button onClick={() => fetchSalaryDetails(selectedSalaryMonth)} className="rounded-xl font-bold">Thử tải lại</Button>
+                    )}
+                  </div>
                 </td>
               </tr>
             )}
@@ -1567,23 +1690,45 @@ const ThongKe = () => {
 
   // ==================== MAIN RENDER ====================
   return (
-    <div className="thongke-page">
-      <div className="thongke-header">
-        <h1>
-          <i className="fas fa-chart-bar"></i> Thống kê
-        </h1>
+    <div className="p-4 md:p-8 min-h-screen bg-slate-50 font-sans">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+        <div>
+          <h1 className="text-2xl font-black text-slate-800 flex items-center gap-3">
+            <span className="material-icons text-indigo-500">analytics</span>
+            Trung tâm Thống kê & Báo cáo
+          </h1>
+          <p className="text-slate-400 text-sm mt-1">Theo dõi hiệu suất kinh doanh và tài chính thời gian thực</p>
+        </div>
       </div>
 
-      <div className="thongke-tabs">
-        <button className={activeTab === 'doanhthu' ? 'active' : ''} onClick={() => setActiveTab('doanhthu')}>Doanh thu</button>
-        <button className={activeTab === 'banhang' ? 'active' : ''} onClick={() => setActiveTab('banhang')}>Bán hàng</button>
-        <button className={activeTab === 'khachhang' ? 'active' : ''} onClick={() => setActiveTab('khachhang')}>Khách mua hàng theo thời gian</button>
-        <button className={activeTab === 'luong' ? 'active' : ''} onClick={() => setActiveTab('luong')}>Lương nhân viên</button>
+      <div className="flex flex-wrap gap-2 p-1.5 bg-white rounded-2xl w-fit shadow-sm border border-slate-100 mb-8">
+        {[
+          { id: 'doanhthu', label: 'Doanh thu', icon: 'payments' },
+          { id: 'banhang', label: 'Bán hàng', icon: 'shopping_bag' },
+          { id: 'khachhang', label: 'Khách hàng', icon: 'people' },
+          { id: 'luong', label: 'Lương NV', icon: 'account_balance_wallet' },
+        ].map((tab) => (
+          <button
+            key={tab.id}
+            className={`flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-black transition-all ${
+              activeTab === tab.id 
+                ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-200 scale-105' 
+                : 'text-slate-500 hover:bg-slate-50'
+            }`}
+            onClick={() => setActiveTab(tab.id)}
+          >
+            <span className="material-icons text-lg">{tab.icon}</span>
+            {tab.label}
+          </button>
+        ))}
       </div>
-      {activeTab === 'doanhthu' && renderDoanhThuTab()}
-      {activeTab === 'banhang' && renderBanHangTab()}
-      {activeTab === 'khachhang' && renderKhachHangTab()}
-      {activeTab === 'luong' && renderLuongTab()}
+
+      <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+        {activeTab === 'doanhthu' && renderDoanhThuTab()}
+        {activeTab === 'banhang' && renderBanHangTab()}
+        {activeTab === 'khachhang' && renderKhachHangTab()}
+        {activeTab === 'luong' && renderLuongTab()}
+      </div>
     </div>
   );
 };
