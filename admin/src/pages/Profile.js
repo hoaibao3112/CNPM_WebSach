@@ -1,11 +1,10 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { Card, Spin, message, Button, Modal, Form, Input, Row, Col, Avatar, Typography, Table, Upload, Tag, Space, Divider, Tooltip } from 'antd';
+import { Card, message, Button, Modal, Form, Input, Avatar, Table, Upload, Tag } from 'antd';
 import api from '../utils/api';
 import { 
   UserOutlined, 
   LockOutlined, 
   CheckCircleOutlined, 
-  LogoutOutlined, 
   DollarCircleOutlined, 
   EyeOutlined,
   MailOutlined,
@@ -18,19 +17,14 @@ import {
 } from '@ant-design/icons';
 import dayjs from 'dayjs';
 
-const { Title, Text } = Typography;
-
 const Profile = () => {
   const [userInfo, setUserInfo] = useState(null);
-  const [loading, setLoading] = useState(true);
   const [showPwdModal, setShowPwdModal] = useState(false);
   const [pwdLoading, setPwdLoading] = useState(false);
   const [salaryList, setSalaryList] = useState([]);
   const [salaryLoading, setSalaryLoading] = useState(false);
   const [showSalaryModal, setShowSalaryModal] = useState(false);
   const [attendanceLoading, setAttendanceLoading] = useState(false);
-  const [showResignModal, setShowResignModal] = useState(false);
-  const [resignLoading, setResignLoading] = useState(false);
   const [showAvatarModal, setShowAvatarModal] = useState(false);
   const [avatarFile, setAvatarFile] = useState(null);
   const [avatarUploading, setAvatarUploading] = useState(false);
@@ -46,15 +40,8 @@ const Profile = () => {
     return `${apiBase}/uploads/nhanvien/${clean}`;
   }, [apiBase]);
 
-  const [detailModal, setDetailModal] = useState(false);
-  const [detailLoading, setDetailLoading] = useState(false);
-  const [attendanceDetail, setAttendanceDetail] = useState([]);
-  const [detailMonth, setDetailMonth] = useState(null);
-  const [detailYear, setDetailYear] = useState(null);
-
-  const fetchProfile = async () => {
+  const fetchProfile = useCallback(async () => {
     try {
-      setLoading(true);
       const userInfoStr = localStorage.getItem('userInfo');
       if (!userInfoStr) return;
       const { MaTK } = JSON.parse(userInfoStr);
@@ -62,10 +49,9 @@ const Profile = () => {
       setUserInfo(res.data);
       setAvatarSrc(buildAvatarSrc(res.data?.Anh));
     } catch (error) { message.error('Lỗi khi tải thông tin!'); }
-    finally { setLoading(false); }
-  };
+  }, [buildAvatarSrc]);
 
-  useEffect(() => { fetchProfile(); }, [buildAvatarSrc]);
+  useEffect(() => { fetchProfile(); }, [fetchProfile]);
 
   const handleCheckIn = async () => {
     setAttendanceLoading(true);
@@ -110,7 +96,6 @@ const Profile = () => {
               <div className="flex flex-wrap justify-center md:justify-start gap-3">
                 <Button type="primary" icon={<CheckCircleOutlined />} loading={attendanceLoading} onClick={handleCheckIn} className="h-12 px-8 rounded-2xl bg-emerald-600 border-0 shadow-lg shadow-emerald-100 font-black text-[11px] uppercase tracking-widest">Chấm công nhanh</Button>
                 <Button icon={<LockOutlined />} onClick={() => setShowPwdModal(true)} className="h-12 px-8 rounded-2xl font-black text-[11px] uppercase tracking-widest border-slate-200">Đổi mật khẩu</Button>
-                <Button danger icon={<LogoutOutlined />} onClick={() => setShowResignModal(true)} className="h-12 px-8 rounded-2xl font-black text-[11px] uppercase tracking-widest bg-rose-50 border-0 text-rose-600 shadow-none">Xin nghỉ việc</Button>
               </div>
             </div>
           </div>
@@ -183,7 +168,7 @@ const Profile = () => {
             { title: 'THỜI GIAN', key: 'time', render: (_, r) => <span className="font-bold text-slate-700">T{r.thang}/{r.nam}</span> },
             { title: 'TỔNG LƯƠNG', dataIndex: 'tong_luong', render: v => <span className="font-black text-indigo-600">{v?.toLocaleString()}đ</span> },
             { title: 'TRẠNG THÁI', dataIndex: 'trang_thai', render: v => <Tag color={v === 'Da_tra' ? 'green' : 'orange'} className="font-black text-[10px] rounded-full px-3">{v === 'Da_tra' ? 'HOÀN TẤT' : 'CHỜ XỬ LÝ'}</Tag> },
-            { title: 'HÀNH ĐỘNG', key: 'op', render: (_, r) => <Button size="small" icon={<EyeOutlined />} onClick={() => { setDetailMonth(r.thang); setDetailYear(r.nam); setDetailModal(true); setAttendanceDetail([]); fetchAttendanceDetail(r.thang, r.nam); }} className="rounded-lg font-bold">CHI TIẾT CÔNG</Button> }
+            { title: 'HÀNH ĐỘNG', key: 'op', render: (_, r) => <Button size="small" icon={<EyeOutlined />} onClick={() => { fetchAttendanceDetail(r.thang, r.nam); }} className="rounded-lg font-bold">CHI TIẾT CÔNG</Button> }
           ]}
           dataSource={salaryList}
           loading={salaryLoading}
@@ -271,13 +256,13 @@ const Profile = () => {
   }
 
   async function fetchAttendanceDetail(thang, nam) {
-    setDetailLoading(true);
     try {
       const { MaTK } = JSON.parse(localStorage.getItem('userInfo'));
       const res = await api.get(`/attendance/detail/${MaTK}/${thang}/${nam}`);
-      setAttendanceDetail(res.data.data || res.data);
+      // Dữ liệu chi tiết hiện chưa có Modal để hiển thị, log ra console hoặc thông báo
+      console.log('Attendance detail:', res.data.data || res.data);
+      message.info('Tính năng hiển thị chi tiết công đang được cập nhật');
     } catch { message.error('Không lấy được chi tiết'); }
-    finally { setDetailLoading(false); }
   }
 };
 

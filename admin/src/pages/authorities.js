@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useContext } from 'react';
+import React, { useEffect, useState, useContext, useCallback } from 'react';
 import api from '../utils/api';
 import { PermissionContext } from '../components/PermissionContext';
 import { Button, Input, message, Table, Modal, Select, Form, Checkbox, Tooltip } from 'antd';
@@ -33,7 +33,7 @@ const PermissionManagement = () => {
 
   const { refreshPermissions } = useContext(PermissionContext);
 
-  const fetchRoles = async (page = 1, pageSize = 10, search = '') => {
+  const fetchRoles = useCallback(async (page = 1, pageSize = 10, search = '') => {
     try {
       setLoading(true);
       const response = await api.get('/roles', { params: { page, pageSize, search } });
@@ -50,21 +50,21 @@ const PermissionManagement = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const fetchFunctions = async () => {
+  const fetchFunctions = useCallback(async () => {
     try {
       const response = await api.get('/roles/functions');
       if (Array.isArray(response.data)) setFunctions(response.data);
     } catch (error) {
       message.error('Lỗi khi tải danh sách chức năng');
     }
-  };
+  }, []);
 
   useEffect(() => {
     fetchRoles();
     fetchFunctions();
-  }, []);
+  }, [fetchRoles, fetchFunctions]);
 
   const handleSearch = (value) => {
     setSearchTerm(value);

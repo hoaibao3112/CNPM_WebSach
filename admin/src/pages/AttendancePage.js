@@ -6,15 +6,13 @@ import {
   CalendarOutlined, 
   UserOutlined, 
   CheckCircleOutlined, 
-  CloseCircleOutlined, 
   HistoryOutlined, 
   SaveOutlined, 
   DollarOutlined, 
   FilePdfOutlined,
-  WarningOutlined,
-  FieldTimeOutlined
+  WarningOutlined
 } from '@ant-design/icons';
-import { Tooltip, Badge, Avatar, Button, Card, Statistic, Tag, Divider, message, Modal } from 'antd';
+import { Tooltip, Avatar, Button, Card, Statistic, Tag, Divider, message } from 'antd';
 
 const statusColors = {
   Di_lam: 'bg-emerald-500',
@@ -76,7 +74,7 @@ const AttendancePage = () => {
       } catch (err) { setEmployees([]); }
     };
     fetchData();
-  }, [month, year]);
+  }, [month, year, selectedEmployee]);
 
   const handleDayClick = (day) => {
     if (isSunday(year, month, day) || !selectedEmployee || !selectedStatus) return;

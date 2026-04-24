@@ -1,28 +1,14 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { 
   Table, 
   Button, 
   Input, 
-  Modal, 
-  Form, 
-  Select, 
   Tag, 
-  Space, 
   message, 
-  DatePicker, 
   Card, 
-  Row, 
-  Col, 
   Tooltip, 
-  Typography, 
-  Divider, 
-  Spin, 
   Tabs, 
-  Switch, 
-  Statistic,
-  Avatar,
-  Badge,
-  Timeline
+  Statistic
 } from 'antd';
 import { 
   PlusOutlined, 
@@ -34,25 +20,15 @@ import {
   GiftOutlined, 
   CalendarOutlined, 
   PercentageOutlined, 
-  DollarOutlined, 
-  TagOutlined, 
   TagsOutlined, 
   FormOutlined, 
-  BarChartOutlined, 
   UserOutlined, 
   CheckCircleOutlined, 
   CloseCircleOutlined, 
-  DownloadOutlined,
-  ThunderboltOutlined,
-  HeartOutlined,
-  SolutionOutlined
+  DownloadOutlined
 } from '@ant-design/icons';
 import axios from 'axios';
 import dayjs from 'dayjs';
-
-const { TabPane } = Tabs;
-const { Option } = Select;
-const { Title, Text } = Typography;
 
 const DiscountManagement = () => {
   const [promotions, setPromotions] = useState([]);
@@ -65,11 +41,7 @@ const DiscountManagement = () => {
   const apiBase = process.env.REACT_APP_API_BASE || 'https://cnpm-customer.onrender.com';
   const getAuthHeader = () => ({ Authorization: `Bearer ${(document.cookie.split('; ').find(row => row.startsWith('authToken='))?.split('=')[1] || null)}` });
 
-  useEffect(() => {
-    fetchPromotions();
-  }, [searchTerm]);
-
-  const fetchPromotions = async () => {
+  const fetchPromotions = useCallback(async () => {
     setLoading(true);
     try {
       const response = await axios.get(`${apiBase}/api/khuyenmai?search=${encodeURIComponent(searchTerm)}`, { headers: getAuthHeader() });
@@ -84,7 +56,11 @@ const DiscountManagement = () => {
       });
     } catch (err) { message.error('Lỗi tải dữ liệu'); }
     finally { setLoading(false); }
-  };
+  }, [searchTerm, apiBase]);
+
+  useEffect(() => {
+    fetchPromotions();
+  }, [fetchPromotions]);
 
   const columns = [
     {

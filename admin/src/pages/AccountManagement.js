@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useContext } from 'react';
 import api from '../utils/api';
-import { Button, Input, message, Table, Modal, Space, Select, Tabs, Form, Tag, Tooltip } from 'antd';
+import { Button, Input, message, Table, Modal, Select, Tabs, Tag, Tooltip } from 'antd';
 import {
   EditOutlined,
   DeleteOutlined,
@@ -221,21 +221,7 @@ const AccountManagement = () => {
     }
   };
 
-  const [editingPermission, setEditingPermission] = useState(null);
 
-  const handleUpdatePermission = async () => {
-    try {
-      await api.put(`${PERMISSION_API}/${editingPermission.MaCTQ}`, {
-        ...editingPermission,
-        MaQuyen: editingAccount.MaQuyen
-      });
-      fetchPermissions(editingAccount.MaQuyen);
-      setEditingPermission(null);
-      message.success('Cập nhật quyền thành công!');
-    } catch (error) {
-      message.error('Lỗi cập nhật');
-    }
-  };
 
   const filteredAccounts = accounts.filter(a => searchTerm === '' || a.TinhTrang === searchTerm);
 

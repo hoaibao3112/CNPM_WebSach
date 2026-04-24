@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import api from '../utils/api';
 import { 
   Table, 
@@ -7,16 +7,12 @@ import {
   Input, 
   Select, 
   Tag, 
-  Space, 
   Avatar, 
   Card, 
   Statistic, 
   Tooltip, 
-  Divider, 
   message, 
-  Timeline,
-  Checkbox,
-  InputNumber
+  Timeline
 } from 'antd';
 import { 
   InboxOutlined, 
@@ -25,12 +21,9 @@ import {
   CheckCircleOutlined, 
   CloseCircleOutlined, 
   CarOutlined, 
-  LoadingOutlined,
   EyeOutlined,
   HistoryOutlined,
   DollarOutlined,
-  RestOutlined,
-  FileImageOutlined,
   ClockCircleOutlined
 } from '@ant-design/icons';
 import moment from 'moment';
@@ -54,14 +47,8 @@ const ReturnManagement = () => {
   const [statusFilter, setStatusFilter] = useState('all');
   const [selectedReturn, setSelectedReturn] = useState(null);
   const [detailModal, setDetailModal] = useState(false);
-  const [processing, setProcessing] = useState(false);
-  const [receiveOptions, setReceiveOptions] = useState({ restock: true, so_tien_hoan: '', phuong_thuc_hoan: '' });
 
-  useEffect(() => {
-    fetchReturns();
-  }, [statusFilter]);
-
-  const fetchReturns = async () => {
+  const fetchReturns = useCallback(async () => {
     setLoading(true);
     try {
       const params = { trang_thai: statusFilter === 'all' ? undefined : statusFilter };
@@ -69,28 +56,28 @@ const ReturnManagement = () => {
       setReturnsList(Array.isArray(data) ? data : []);
     } catch (err) { message.error('Lỗi tải danh sách trả hàng'); }
     finally { setLoading(false); }
-  };
+  }, [statusFilter]);
+
+  useEffect(() => {
+    fetchReturns();
+  }, [fetchReturns]);
 
   const openDetail = async (id) => {
     try {
-      setProcessing(true);
       const { data } = await api.get(`/tra-hang/${id}`);
       setSelectedReturn(data);
       setDetailModal(true);
     } catch (err) { message.error('Không thể tải chi tiết'); }
-    finally { setProcessing(false); }
   };
 
   const handleAction = async (id, action, opts = {}) => {
     try {
-      setProcessing(true);
       const payload = { action, ...opts };
       await api.put(`/tra-hang/${id}/action`, payload);
       message.success('Đã cập nhật trạng thái');
       fetchReturns();
       if (selectedReturn) openDetail(id);
     } catch (err) { message.error(err.response?.data?.error || 'Lỗi xử lý'); }
-    finally { setProcessing(false); }
   };
 
   const columns = [

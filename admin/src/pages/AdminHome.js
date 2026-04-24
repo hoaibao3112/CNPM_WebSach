@@ -1,6 +1,5 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { 
-  UserOutlined, 
   ClockCircleOutlined, 
   CalendarOutlined, 
   DashboardOutlined, 
@@ -11,7 +10,7 @@ import {
   ThunderboltOutlined,
   DollarOutlined
 } from '@ant-design/icons';
-import { Card, Avatar, Tag, Statistic, Button, Divider } from 'antd';
+import { Card, Tag, Statistic, Button, Divider } from 'antd';
 
 const ROLE_LABEL = {
   6: 'Quản trị viên',

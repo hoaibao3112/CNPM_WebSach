@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import api from '../utils/api';
 import { Table, Button, Modal, Form, Select, Input, notification, DatePicker, Alert, Tag, InputNumber } from 'antd';
 import { PlusOutlined, EyeOutlined, SyncOutlined, SearchOutlined, CarOutlined, UserOutlined, FileTextOutlined, CloseCircleFilled } from '@ant-design/icons';
@@ -22,38 +22,51 @@ const NhapHang = () => {
   const [showLowStockDetails, setShowLowStockDetails] = useState(false);
   const [tyLeLoi, setTyLeLoi] = useState(10);
   const [formItems, setFormItems] = useState([]);
+  const calculateTotalNhap = (items) => (items || []).reduce((t, it) => t + (Number(it?.DonGiaNhap || 0) * Number(it?.SoLuong || 0)), 0);
+  const calculateGiaBan = (donGiaNhap, tyLe) => Math.round(Number(donGiaNhap || 0) * (1 + Number(tyLe || 0) / 100));
+  const calculateTotalBan = (items, tyLe) => (items || []).reduce((t, it) => t + (calculateGiaBan(it?.DonGiaNhap, tyLe) * Number(it?.SoLuong || 0)), 0);
 
-  useEffect(() => {
-    fetchPhieuNhap();
-    fetchNhaCungCap();
-    fetchSanPham();
-    fetchLowStock(true);
-  }, [fetchPhieuNhap, fetchNhaCungCap, fetchSanPham, fetchLowStock]);
+  const resolveSuggestedQty = (sp) => {
+    const s = Number(sp?.SuggestedOrder);
+    if (s > 0) return s;
+    const n = Number(sp?.Needed);
+    if (n > 0) return n;
+    return 1;
+  };
 
-  const fetchPhieuNhap = async () => {
+  const createReceiptFromLowStock = useCallback((items) => {
+    const source = Array.isArray(items) ? items : lowStock;
+    const itemsPrefill = source.map(sp => ({ MaSP: sp.MaSP, TenSP: sp.TenSP, SoLuong: resolveSuggestedQty(sp), DonGiaNhap: Number(sp.DonGia || 0) }));
+    form.setFieldsValue({ items: itemsPrefill });
+    setFormItems(itemsPrefill);
+    setTyLeLoi(10);
+    setModalVisible(true);
+  }, [form, lowStock]);
+
+  const fetchPhieuNhap = useCallback(async () => {
     try {
       const res = await api.get('/receipt');
       setPhieuNhap(res.data.data || []);
     } catch (error) { notification.error({ message: 'Lỗi tải dữ liệu phiếu nhập' }); }
-  };
+  }, []);
 
-  const fetchNhaCungCap = async () => {
+  const fetchNhaCungCap = useCallback(async () => {
     try {
       const res = await api.get('/company');
       const resData = res.data.data || res.data;
       setNhaCungCap(Array.isArray(resData) ? resData : (resData?.data || []));
     } catch (error) { notification.error({ message: 'Lỗi tải nhà cung cấp' }); }
-  };
+  }, []);
 
-  const fetchSanPham = async () => {
+  const fetchSanPham = useCallback(async () => {
     try {
       const res = await api.get('/product');
       const resData = res.data.data || res.data;
       setSanPham(Array.isArray(resData) ? resData : (resData?.data || []));
     } catch (error) { setSanPham([]); }
-  };
+  }, []);
 
-  const fetchLowStock = async (askConfirm = false) => {
+  const fetchLowStock = useCallback(async (askConfirm = false) => {
     try {
       const res = await api.get('/product/low-stock', { params: { defaultThreshold: 5, buffer: 5, limit: 200 } });
       const items = Array.isArray(res.data.data) ? res.data.data : [];
@@ -69,28 +82,14 @@ const NhapHang = () => {
         });
       }
     } catch (error) {}
-  };
+  }, [createReceiptFromLowStock]);
 
-  const calculateTotalNhap = (items) => (items || []).reduce((t, it) => t + (Number(it?.DonGiaNhap || 0) * Number(it?.SoLuong || 0)), 0);
-  const calculateGiaBan = (donGiaNhap, tyLe) => Math.round(Number(donGiaNhap || 0) * (1 + Number(tyLe || 0) / 100));
-  const calculateTotalBan = (items, tyLe) => (items || []).reduce((t, it) => t + (calculateGiaBan(it?.DonGiaNhap, tyLe) * Number(it?.SoLuong || 0)), 0);
-
-  const resolveSuggestedQty = (sp) => {
-    const s = Number(sp?.SuggestedOrder);
-    if (s > 0) return s;
-    const n = Number(sp?.Needed);
-    if (n > 0) return n;
-    return 1;
-  };
-
-  const createReceiptFromLowStock = (items) => {
-    const source = Array.isArray(items) ? items : lowStock;
-    const itemsPrefill = source.map(sp => ({ MaSP: sp.MaSP, TenSP: sp.TenSP, SoLuong: resolveSuggestedQty(sp), DonGiaNhap: Number(sp.DonGia || 0) }));
-    form.setFieldsValue({ items: itemsPrefill });
-    setFormItems(itemsPrefill);
-    setTyLeLoi(10);
-    setModalVisible(true);
-  };
+  useEffect(() => {
+    fetchPhieuNhap();
+    fetchNhaCungCap();
+    fetchSanPham();
+    fetchLowStock(true);
+  }, [fetchPhieuNhap, fetchNhaCungCap, fetchSanPham, fetchLowStock]);
 
   const handleSubmit = async (values) => {
     try {

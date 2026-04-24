@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import api from '../utils/api';
 import { 
@@ -8,13 +8,10 @@ import {
   Input, 
   Select, 
   Tag, 
-  Space, 
   Card, 
   Statistic, 
   Tooltip, 
-  Divider, 
   message, 
-  Badge,
   Avatar
 } from 'antd';
 import { 
@@ -24,7 +21,6 @@ import {
   SearchOutlined, 
   ClockCircleOutlined, 
   CheckCircleOutlined, 
-  CloseCircleOutlined, 
   WalletOutlined, 
   EyeOutlined,
   LoadingOutlined,
@@ -51,11 +47,7 @@ const RefundManagement = () => {
   const [processing, setProcessing] = useState(false);
   const [processForm, setProcessForm] = useState({ action: '', adminReason: '', actualRefundAmount: '', transactionId: '' });
 
-  useEffect(() => {
-    fetchRefunds();
-  }, [statusFilter]);
-
-  const fetchRefunds = async () => {
+  const fetchRefunds = useCallback(async () => {
     try {
       setLoading(true);
       const res = await api.get('/refunds/admin/list', { params: { status: statusFilter === 'all' ? undefined : statusFilter } });
@@ -65,7 +57,11 @@ const RefundManagement = () => {
       }
     } catch (error) { message.error('Lỗi tải dữ liệu hoàn tiền'); }
     finally { setLoading(false); }
-  };
+  }, [statusFilter, summary]);
+
+  useEffect(() => {
+    fetchRefunds();
+  }, [fetchRefunds]);
 
   const handleProcess = async () => {
     if (!processForm.action) return message.warning('Vui lòng chọn hành động');

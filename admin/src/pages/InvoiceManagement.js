@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import axios from 'axios';
-import { Modal, Button, Select, message, Table, Tag, Space, Input, Avatar, Badge, Dropdown, Menu, Rate, Divider, Tooltip } from 'antd';
-import { ExclamationCircleFilled, EyeOutlined, DeleteOutlined, MessageOutlined, SendOutlined, UserOutlined, CustomerServiceOutlined, CloseOutlined, BellOutlined, StarOutlined } from '@ant-design/icons';
+import { Modal, Button, Select, message, Table, Tag, Space, Input, Avatar, Badge, Dropdown, Menu, Rate, Tooltip } from 'antd';
+import { ExclamationCircleFilled, EyeOutlined, DeleteOutlined, MessageOutlined, UserOutlined, StarOutlined } from '@ant-design/icons';
 
 const { confirm } = Modal;
 const { Search, TextArea } = Input;
@@ -713,27 +713,7 @@ const InvoiceManagement = () => {
     setNewMessage('');
   };
 
-  // ✅ Render unique messages
-  const renderMessages = () => {
-    const uniqueMessages = messages.filter((msg, index, self) =>
-      index === self.findIndex(m => m.id === msg.id)
-    );
 
-    return uniqueMessages.map((msg) => (
-      <div
-        key={`${msg.id}-${msg.created_at}`}
-        className={`message-wrapper ${msg.sender_type === 'staff' ? 'staff-message' : 'customer-message'}`}
-      >
-        <div className={`message-bubble ${msg.sender_type === 'staff' ? 'staff' : 'customer'} ${msg.isTemporary ? 'temporary' : ''}`}>
-          <div className="message-content">{msg.content}</div>
-          <div className="message-time">
-            {formatTime(msg.created_at)}
-            {msg.isTemporary && <span className="sending-indicator"> ⏳</span>}
-          </div>
-        </div>
-      </div>
-    ));
-  };
 
   // ✅ Utility functions
   const formatCurrency = (amount) => {
@@ -939,9 +919,7 @@ const InvoiceManagement = () => {
     fetchInvoices();
   }, []);
 
-  const handleSearch = (value) => {
-    setSearchTerm(value);
-  };
+
 
   return (
     <div className="p-4 md:p-8 min-h-screen bg-slate-50 font-sans">

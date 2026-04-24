@@ -1,10 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import api from '../utils/api';
-import { Button, Input, message, Table, Modal, Space, Select, Tooltip, Tag, Divider } from 'antd';
+import { Button, Input, message, Table, Modal, Select, Tooltip } from 'antd';
 import { 
   EditOutlined, 
   DeleteOutlined, 
-  ExclamationCircleFilled, 
   PlusOutlined, 
   SearchOutlined,
   CloudUploadOutlined,
@@ -12,7 +11,6 @@ import {
   ContainerOutlined
 } from '@ant-design/icons';
 
-const { Search } = Input;
 const { confirm } = Modal;
 const { Option } = Select;
 

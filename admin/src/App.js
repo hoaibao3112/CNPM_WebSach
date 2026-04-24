@@ -14,7 +14,6 @@ import Client from './pages/client.js';
 import Authorities from './pages/authorities';
 import Receipt from './pages/receipt.js';
 import Statistical from './pages/statistical.js';
-//import KhuyenMai from './pages/khuyenmai.js';
 import ReturnManagement from './pages/ReturnManagement.js';
 import Profile from './pages/Profile';
 import SalaryPage from './pages/SalaryPage';
@@ -40,7 +39,6 @@ axios.interceptors.response.use(
   (error) => {
     if (error.response?.status === 401) {
       document.cookie = "authToken=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
-      // window.location.href = '/admin/login';
     }
     return Promise.reject(error);
   }
@@ -64,9 +62,7 @@ const PrivateRoute = ({ component: Component }) => {
         </div>
         <button 
           onClick={() => {
-            // We need to trigger the Sidebar's state. 
-            // Since we don't have a global state, we can use a custom event or just lift state.
-            // For now, let's use a simple approach: dispatch a custom event.
+            setIsSidebarOpen(!isSidebarOpen);
             window.dispatchEvent(new CustomEvent('toggle-sidebar'));
           }}
           className="p-2 hover:bg-slate-800 rounded-lg transition-colors"
@@ -102,7 +98,6 @@ const App = () => {
 
   return (
     <Routes>
-      {/* Redirect root and /login to /admin/login for Vercel deployment */}
       <Route path="/" element={<Navigate to="/admin/login" replace />} />
       <Route path="/login" element={<Navigate to="/admin/login" replace />} />
 
@@ -206,7 +201,6 @@ const App = () => {
         }
       />
 
-      {/* Thêm route cho trang tạo khuyến mãi */}
       <Route
         path="/admin/khuyenmai"
         element={
