@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import api from '../utils/api';
-import { Table, Button, Modal, Form, Select, Input, notification, DatePicker, Alert, Tooltip, Tag, Statistic, Card, Divider } from 'antd';
-import { PlusOutlined, EyeOutlined, SyncOutlined, SearchOutlined, Inventory2Outlined, LocalShippingOutlined, PersonOutlineOutlined, TrendingUpOutlined, ReceiptLongOutlined } from '@ant-design/icons';
+import { Table, Button, Modal, Form, Select, Input, notification, DatePicker, Alert, Tooltip, Tag, Statistic, Card, Divider, InputNumber } from 'antd';
+import { PlusOutlined, EyeOutlined, SyncOutlined, SearchOutlined, Inventory2Outlined, LocalShippingOutlined, PersonOutlineOutlined, TrendingUpOutlined, ReceiptLongOutlined, CloseCircleFilled } from '@ant-design/icons';
 
 const { Column } = Table;
 const { Option } = Select;

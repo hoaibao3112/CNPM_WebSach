@@ -18,6 +18,7 @@ import { PermissionContext } from '../components/PermissionContext';
 
 const { RangePicker } = DatePicker;
 const { TextArea } = Input;
+const { Option } = Select;
 
 const LeavePage = () => {
   const { hasPermission } = useContext(PermissionContext);

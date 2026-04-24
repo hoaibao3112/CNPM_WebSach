@@ -7,7 +7,9 @@ import {
   ShoppingOutlined, 
   UserAddOutlined, 
   RocketOutlined,
-  CheckCircleOutlined
+  CheckCircleOutlined,
+  ThunderboltOutlined,
+  DollarOutlined
 } from '@ant-design/icons';
 import { Card, Avatar, Tag, Statistic, Button, Divider } from 'antd';
 

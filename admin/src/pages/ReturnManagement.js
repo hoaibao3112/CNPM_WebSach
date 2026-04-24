@@ -30,7 +30,8 @@ import {
   HistoryOutlined,
   DollarOutlined,
   RestOutlined,
-  FileImageOutlined
+  FileImageOutlined,
+  ClockCircleOutlined
 } from '@ant-design/icons';
 import moment from 'moment';
 
