@@ -28,7 +28,7 @@ const NhapHang = () => {
     fetchNhaCungCap();
     fetchSanPham();
     fetchLowStock(true);
-  }, []);
+  }, [fetchPhieuNhap, fetchNhaCungCap, fetchSanPham, fetchLowStock]);
 
   const fetchPhieuNhap = async () => {
     try {

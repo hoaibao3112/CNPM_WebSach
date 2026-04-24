@@ -9,7 +9,6 @@ import {
   ClockCircleOutlined, 
   EyeOutlined, 
   HistoryOutlined,
-  ArrowUpOutlined,
   ThunderboltOutlined
 } from '@ant-design/icons';
 

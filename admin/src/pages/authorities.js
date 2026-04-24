@@ -1,20 +1,15 @@
 import React, { useEffect, useState, useContext } from 'react';
 import api from '../utils/api';
 import { PermissionContext } from '../components/PermissionContext';
-import { Button, Input, message, Table, Modal, Space, Select, Form, Checkbox, Tooltip } from 'antd';
+import { Button, Input, message, Table, Modal, Select, Form, Checkbox, Tooltip } from 'antd';
 import { 
   EditOutlined, 
   DeleteOutlined, 
-  ExclamationCircleFilled, 
   PlusOutlined, 
   SearchOutlined,
-  SafetyOutlined,
-  SettingOutlined,
-  CloseCircleFilled,
-  LockOutlined
+  CloseCircleFilled
 } from '@ant-design/icons';
 
-const { Search } = Input;
 const { confirm } = Modal;
 const { Option } = Select;
 
