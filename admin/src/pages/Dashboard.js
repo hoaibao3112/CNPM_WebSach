@@ -36,7 +36,7 @@ const Dashboard = () => {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh]">
         <div className="w-12 h-12 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin mb-4"></div>
-        <p className="text-slate-400 font-bold animate-pulse tracking-widest uppercase text-xs">Đang tải hồ sơ...</p>
+        <p className="text-slate-400 font-bold animate-pulse tracking-widest uppercase text-sm">Đang tải hồ sơ...</p>
       </div>
     );
   }
@@ -73,7 +73,7 @@ const Dashboard = () => {
                 </div>
               </div>
               <h2 className="text-xl font-black text-slate-800">{userInfo.TenNV || userInfo.TenTK}</h2>
-              <span className={`mt-2 px-4 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${
+              <span className={`mt-2 px-4 py-1 rounded-full text-sm font-black uppercase tracking-widest ${
                 userInfo.TinhTrang ? 'bg-emerald-100 text-emerald-600' : 'bg-slate-100 text-slate-400'
               }`}>
                 {userInfo.TinhTrang ? 'Đang hoạt động' : 'Vô hiệu hóa'}
@@ -81,15 +81,15 @@ const Dashboard = () => {
               <div className="w-full h-px bg-slate-50 my-6"></div>
               <div className="flex items-center gap-2 text-indigo-600">
                 <span className="material-icons text-sm">verified_user</span>
-                <span className="text-xs font-black uppercase tracking-widest">{userInfo.TenNQ || 'Thành viên'}</span>
+                <span className="text-sm font-black uppercase tracking-widest">{userInfo.TenNQ || 'Thành viên'}</span>
               </div>
             </div>
 
             <div className="bg-indigo-600 p-6 rounded-3xl shadow-lg shadow-indigo-100 text-white relative overflow-hidden">
               <div className="relative z-10">
-                <p className="text-indigo-200 text-xs font-black uppercase tracking-widest mb-1">Mã tài khoản</p>
+                <p className="text-indigo-200 text-sm font-black uppercase tracking-widest mb-1">Mã tài khoản</p>
                 <h3 className="text-2xl font-black tracking-tighter">#{userInfo.MaTK}</h3>
-                <div className="mt-4 flex items-center gap-2 text-indigo-200 text-xs font-bold">
+                <div className="mt-4 flex items-center gap-2 text-indigo-200 text-sm font-bold">
                   <span className="material-icons text-sm">calendar_today</span>
                   Tham gia từ {new Date(userInfo.NgayTao).toLocaleDateString('vi-VN')}
                 </div>
@@ -107,27 +107,27 @@ const Dashboard = () => {
               
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-12 gap-y-8">
                 <div className="space-y-1">
-                  <label className="text-[10px] font-black text-slate-300 uppercase tracking-widest">Họ và tên</label>
+                  <label className="text-sm font-black text-slate-300 uppercase tracking-widest">Họ và tên</label>
                   <p className="text-slate-700 font-bold border-b border-slate-50 pb-2">{userInfo.TenNV || '—'}</p>
                 </div>
                 <div className="space-y-1">
-                  <label className="text-[10px] font-black text-slate-300 uppercase tracking-widest">Mã nhân viên</label>
+                  <label className="text-sm font-black text-slate-300 uppercase tracking-widest">Mã nhân viên</label>
                   <p className="text-slate-700 font-bold border-b border-slate-50 pb-2">{userInfo.MaNV || '—'}</p>
                 </div>
                 <div className="space-y-1">
-                  <label className="text-[10px] font-black text-slate-300 uppercase tracking-widest">Số điện thoại</label>
+                  <label className="text-sm font-black text-slate-300 uppercase tracking-widest">Số điện thoại</label>
                   <p className="text-slate-700 font-bold border-b border-slate-50 pb-2">{userInfo.SDT || '—'}</p>
                 </div>
                 <div className="space-y-1">
-                  <label className="text-[10px] font-black text-slate-300 uppercase tracking-widest">Email</label>
+                  <label className="text-sm font-black text-slate-300 uppercase tracking-widest">Email</label>
                   <p className="text-slate-700 font-bold border-b border-slate-50 pb-2">{userInfo.Email || '—'}</p>
                 </div>
                 <div className="space-y-1">
-                  <label className="text-[10px] font-black text-slate-300 uppercase tracking-widest">Giới tính</label>
+                  <label className="text-sm font-black text-slate-300 uppercase tracking-widest">Giới tính</label>
                   <p className="text-slate-700 font-bold border-b border-slate-50 pb-2">{userInfo.GioiTinh || '—'}</p>
                 </div>
                 <div className="space-y-1 sm:col-span-2">
-                  <label className="text-[10px] font-black text-slate-300 uppercase tracking-widest">Địa chỉ liên hệ</label>
+                  <label className="text-sm font-black text-slate-300 uppercase tracking-widest">Địa chỉ liên hệ</label>
                   <p className="text-slate-700 font-bold border-b border-slate-50 pb-2">{userInfo.DiaChi || '—'}</p>
                 </div>
               </div>
@@ -135,9 +135,9 @@ const Dashboard = () => {
               <div className="mt-12 p-6 bg-slate-50 rounded-2xl border border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-left">
                 <div>
                   <h4 className="text-slate-800 font-black text-sm">Cập nhật mật khẩu?</h4>
-                  <p className="text-slate-400 text-xs font-bold">Hãy bảo vệ tài khoản của bạn thường xuyên</p>
+                  <p className="text-slate-400 text-sm font-bold">Hãy bảo vệ tài khoản của bạn thường xuyên</p>
                 </div>
-                <button className="h-10 px-6 rounded-xl bg-white border border-slate-200 text-slate-600 text-xs font-black uppercase tracking-widest hover:bg-slate-100 transition-all shadow-sm">
+                <button className="h-10 px-6 rounded-xl bg-white border border-slate-200 text-slate-600 text-sm font-black uppercase tracking-widest hover:bg-slate-100 transition-all shadow-sm">
                   Thay đổi
                 </button>
               </div>

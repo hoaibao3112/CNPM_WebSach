@@ -36,10 +36,10 @@ const RestrictedRoute = ({ component: Component, permission }) => {
 
 const AppAdmin = () => {
   return (
-    <div className="flex min-h-screen bg-slate-50 font-sans">
+    <div className="flex min-h-screen bg-slate-50 font-sans overflow-x-hidden">
       <Sidebar />
-      <div className="flex-1 transition-all duration-500 ease-in-out pl-0 lg:sidebar-open:pl-72 lg:sidebar-closed:pl-20">
-        <div className="p-0">
+      <div className="flex-1 transition-all duration-500 ease-in-out pl-0 lg:sidebar-open:pl-72 lg:sidebar-closed:pl-20 pt-16 lg:pt-0 pb-20 lg:pb-0">
+        <div className="p-0 min-h-full">
           <Routes>
             <Route index element={<Dashboard />} />
             <Route path="products" element={<RestrictedRoute component={ProductManagement} permission="Sản phẩm" />} />

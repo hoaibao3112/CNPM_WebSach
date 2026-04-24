@@ -420,21 +420,21 @@ const ProductManagement = () => {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-8">
         {[
           { label: 'Tổng số sách', val: products.length, icon: 'book', color: 'indigo' },
           { label: 'Sắp hết hàng', val: products.filter(p => p.SoLuong <= p.MinSoLuong && p.SoLuong > 0).length, icon: 'warning', color: 'orange' },
           { label: 'Hết hàng', val: products.filter(p => p.SoLuong === 0).length, icon: 'error_outline', color: 'rose' },
           { label: 'Doanh số ưu tiên', val: '12%', icon: 'trending_up', color: 'emerald' }
         ].map((stat, i) => (
-          <div key={i} className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm flex flex-col gap-1 transition-all hover:shadow-md">
+          <div key={i} className="bg-white p-5 md:p-6 rounded-[1.5rem] md:rounded-[2rem] border border-slate-100 shadow-sm flex flex-col gap-1 transition-all hover:shadow-md">
             <div className="flex items-center justify-between mb-2">
               <div className={`w-10 h-10 rounded-xl bg-${stat.color}-50 flex items-center justify-center text-${stat.color}-500`}>
                 <span className="material-icons text-xl">{stat.icon}</span>
               </div>
-              <span className="text-2xl font-black text-slate-800">{stat.val}</span>
+              <span className="text-xl md:text-2xl font-black text-slate-800">{stat.val}</span>
             </div>
-            <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest">{stat.label}</p>
+            <p className="text-slate-400 text-sm font-black uppercase tracking-widest">{stat.label}</p>
           </div>
         ))}
       </div>
