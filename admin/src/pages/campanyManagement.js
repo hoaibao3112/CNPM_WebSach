@@ -83,6 +83,14 @@ const CompanyManagement = () => {
 
   const validate = (data, isEditing) => {
     if (!data.MaNCC || !data.TenNCC || !data.SDT || !data.DiaChi) return message.error('Vui lòng nhập đầy đủ thông tin!'), false;
+    
+    // Vietnamese phone number validation (simple check for 10 digits starting with 0)
+    const phoneRegex = /^(0[3|5|7|8|9])[0-9]{8}$/;
+    if (!phoneRegex.test(data.SDT)) {
+      message.error('Số điện thoại không hợp lệ (Phải có 10 chữ số và bắt đầu bằng 03, 05, 07, 08 hoặc 09)!');
+      return false;
+    }
+
     if (!isEditing && companies.some(c => c.MaNCC === data.MaNCC)) return message.error('Mã NCC đã tồn tại!'), false;
     return true;
   };
@@ -215,15 +223,15 @@ const CompanyManagement = () => {
         <div className="mb-8"><h2 className="text-2xl font-black text-slate-800 flex items-center gap-3"><span className="material-icons text-indigo-500">{editingCompany ? 'edit' : 'add_business'}</span> {editingCompany ? 'Cập nhật đối tác' : 'Đăng ký nhà cung cấp'}</h2><p className="text-slate-400 text-sm mt-1 font-medium">Thiết lập thông tin định danh và liên hệ chính thức</p></div>
         <Form layout="vertical" className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <Form.Item label={<span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Mã định danh</span>} required>
+            <Form.Item label={<span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Mã định danh <span className="text-red-500">*</span></span>} required>
               <Input className="h-11 rounded-xl font-black" value={editingCompany ? editingCompany.MaNCC : newCompany.MaNCC} disabled={!!editingCompany} onChange={(e) => handleInputChange('MaNCC', e.target.value)} />
             </Form.Item>
-            <Form.Item label={<span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Tên nhà cung cấp</span>} required>
+            <Form.Item label={<span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Tên nhà cung cấp <span className="text-red-500">*</span></span>} required>
               <Input className="h-11 rounded-xl font-bold" value={editingCompany ? editingCompany.TenNCC : newCompany.TenNCC} onChange={(e) => handleInputChange('TenNCC', e.target.value)} />
             </Form.Item>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <Form.Item label={<span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Số điện thoại</span>} required>
+            <Form.Item label={<span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Số điện thoại <span className="text-red-500">*</span></span>} required>
               <Input prefix={<PhoneOutlined className="text-slate-300" />} className="h-11 rounded-xl font-bold" value={editingCompany ? editingCompany.SDT : newCompany.SDT} onChange={(e) => handleInputChange('SDT', e.target.value)} />
             </Form.Item>
             <Form.Item label={<span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Trạng thái hợp tác</span>}>
@@ -233,7 +241,7 @@ const CompanyManagement = () => {
               </Select>
             </Form.Item>
           </div>
-          <Form.Item label={<span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Địa chỉ trụ sở</span>} required>
+          <Form.Item label={<span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Địa chỉ trụ sở <span className="text-red-500">*</span></span>} required>
             <Input.TextArea rows={3} className="rounded-xl font-medium p-4" value={editingCompany ? editingCompany.DiaChi : newCompany.DiaChi} onChange={(e) => handleInputChange('DiaChi', e.target.value)} />
           </Form.Item>
           <div className="flex justify-end gap-3 pt-6 border-t border-slate-100">

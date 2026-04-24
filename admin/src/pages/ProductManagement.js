@@ -140,7 +140,54 @@ const ProductManagement = () => {
     setNewProduct({ ...newProduct, HinhAnhPhu: [...newProduct.HinhAnhPhu, ...files] });
   };
 
+  const validateForm = (data, isEditing = false) => {
+    if (!data.TenSP?.trim()) {
+      message.error('Vui lòng nhập tên sản phẩm');
+      return false;
+    }
+    if (!data.MaTL) {
+      message.error('Vui lòng chọn thể loại');
+      return false;
+    }
+    if (!data.MaTG) {
+      message.error('Vui lòng chọn tác giả');
+      return false;
+    }
+    if (!data.MaNCC) {
+      message.error('Vui lòng chọn nhà cung cấp');
+      return false;
+    }
+    
+    // Check primary image for new products
+    if (!isEditing && !data.HinhAnhPrimary) {
+      message.error('Vui lòng chọn ảnh chính cho sản phẩm');
+      return false;
+    }
+
+    // Numeric validations
+    if (data.NamXB && (isNaN(data.NamXB) || data.NamXB < 1000 || data.NamXB > new Date().getFullYear())) {
+      message.error('Năm xuất bản không hợp lệ');
+      return false;
+    }
+    if (data.TrongLuong && (isNaN(data.TrongLuong) || data.TrongLuong < 0)) {
+      message.error('Trọng lượng phải là số dương');
+      return false;
+    }
+    if (data.SoTrang && (isNaN(data.SoTrang) || data.SoTrang < 0)) {
+      message.error('Số trang phải là số dương');
+      return false;
+    }
+    if (data.MinSoLuong !== undefined && (isNaN(data.MinSoLuong) || data.MinSoLuong < 0)) {
+      message.error('Ngưỡng tồn tối thiểu phải là số dương');
+      return false;
+    }
+
+    return true;
+  };
+
   const handleAddProduct = async () => {
+    if (!validateForm(newProduct)) return;
+    
     try {
       const formData = new FormData();
       Object.keys(newProduct).forEach(key => {
@@ -166,6 +213,8 @@ const ProductManagement = () => {
   };
 
   const handleUpdateProduct = async () => {
+    if (!validateForm(editingProduct, true)) return;
+    
     try {
       const formData = new FormData();
       Object.keys(editingProduct).forEach(key => {
@@ -432,7 +481,7 @@ const ProductManagement = () => {
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Thể loại</label>
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Thể loại <span className="text-rose-500">*</span></label>
                 <Select 
                   className="w-full h-11"
                   value={editingProduct ? editingProduct.MaTL : newProduct.MaTL}
@@ -442,7 +491,7 @@ const ProductManagement = () => {
                 </Select>
               </div>
               <div className="space-y-2">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Tác giả</label>
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Tác giả <span className="text-rose-500">*</span></label>
                 <Select 
                   className="w-full h-11"
                   value={editingProduct ? editingProduct.MaTG : newProduct.MaTG}
@@ -537,7 +586,7 @@ const ProductManagement = () => {
             </div>
 
             <div className="space-y-2">
-              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Nhà cung cấp</label>
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Nhà cung cấp <span className="text-rose-500">*</span></label>
               <Select 
                 className="w-full h-11"
                 value={editingProduct ? editingProduct.MaNCC : newProduct.MaNCC}

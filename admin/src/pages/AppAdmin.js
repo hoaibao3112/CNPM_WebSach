@@ -38,7 +38,7 @@ const AppAdmin = () => {
   return (
     <div className="flex min-h-screen bg-slate-50 font-sans">
       <Sidebar />
-      <div className="flex-1 transition-all duration-300 ease-in-out lg:pl-0">
+      <div className="flex-1 transition-all duration-500 ease-in-out pl-0 lg:sidebar-open:pl-72 lg:sidebar-closed:pl-20">
         <div className="p-0">
           <Routes>
             <Route index element={<Dashboard />} />

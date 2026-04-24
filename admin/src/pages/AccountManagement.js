@@ -143,6 +143,10 @@ const AccountManagement = () => {
 
   const handleUpdateAccount = async () => {
     if (!hasPermission('Tài khoản', 'Sửa')) return;
+    if (!editingAccount.TenTK || !editingAccount.MaQuyen) {
+      message.error('Vui lòng nhập tên tài khoản và chọn nhóm quyền!');
+      return;
+    }
     try {
       await api.put(`${API_URL}/${editingAccount.MaTK}`, {
         TenTK: editingAccount.TenTK,
@@ -398,7 +402,7 @@ const AccountManagement = () => {
           <TabPane tab={<span className="flex items-center gap-2 px-2"><UserOutlined /> Thông tin</span>} key="1">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4">
               <div className="space-y-2">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Tên tài khoản</label>
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Tên tài khoản <span className="text-red-500">*</span></label>
                 <Input 
                   prefix={<UserOutlined className="text-slate-400" />}
                   className="h-11 rounded-xl"
@@ -407,7 +411,7 @@ const AccountManagement = () => {
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Mật khẩu</label>
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Mật khẩu {!editingAccount && <span className="text-red-500">*</span>}</label>
                 <Input.Password 
                   prefix={<KeyOutlined className="text-slate-400" />}
                   className="h-11 rounded-xl"
@@ -416,7 +420,7 @@ const AccountManagement = () => {
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Nhóm quyền</label>
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Nhóm quyền <span className="text-red-500">*</span></label>
                 <Select 
                   className="w-full h-11"
                   value={editingAccount ? editingAccount.MaQuyen : newAccount.MaQuyen}

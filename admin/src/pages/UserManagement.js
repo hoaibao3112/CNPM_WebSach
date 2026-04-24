@@ -390,7 +390,7 @@ const UserManagement = () => {
       >
         <div className="py-6 grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-1">
-            <label className="text-xs font-bold text-slate-400 uppercase tracking-widest ml-1">Mã nhân viên</label>
+            <label className="text-xs font-bold text-slate-400 uppercase tracking-widest ml-1">Mã nhân viên <span className="text-red-500">*</span></label>
             <Input
               placeholder="Ví dụ: NV001"
               value={editingUser ? editingUser.MaNV : newUser.MaNV}
@@ -400,7 +400,7 @@ const UserManagement = () => {
             />
           </div>
           <div className="space-y-1">
-            <label className="text-xs font-bold text-slate-400 uppercase tracking-widest ml-1">Tên nhân viên</label>
+            <label className="text-xs font-bold text-slate-400 uppercase tracking-widest ml-1">Tên nhân viên <span className="text-red-500">*</span></label>
             <Input
               placeholder="Nhập họ và tên..."
               value={editingUser ? editingUser.TenNV : newUser.TenNV}
@@ -409,7 +409,7 @@ const UserManagement = () => {
             />
           </div>
           <div className="space-y-1">
-            <label className="text-xs font-bold text-slate-400 uppercase tracking-widest ml-1">Số điện thoại</label>
+            <label className="text-xs font-bold text-slate-400 uppercase tracking-widest ml-1">Số điện thoại <span className="text-red-500">*</span></label>
             <Input
               placeholder="Nhập số điện thoại..."
               value={editingUser ? editingUser.SDT : newUser.SDT}
@@ -440,7 +440,7 @@ const UserManagement = () => {
             />
           </div>
           <div className="space-y-1">
-            <label className="text-xs font-bold text-slate-400 uppercase tracking-widest ml-1">Email</label>
+            <label className="text-xs font-bold text-slate-400 uppercase tracking-widest ml-1">Email <span className="text-red-500">*</span></label>
             <Input
               type="email"
               placeholder="email@example.com"

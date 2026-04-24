@@ -90,21 +90,33 @@ const AuthorManagement = () => {
     }
   };
 
+  const validateAuthorData = (data) => {
+    if (!data.TenTG?.trim()) {
+      message.error('Tên tác giả là bắt buộc!');
+      return false;
+    }
+    if (!data.QuocTich?.trim()) {
+      message.error('Quốc tịch là bắt buộc!');
+      return false;
+    }
+    if (data.NgaySinh && moment(data.NgaySinh).isAfter(moment())) {
+      message.error('Ngày sinh không được ở tương lai!');
+      return false;
+    }
+    return true;
+  };
+
   const handleAddAuthor = async () => {
     if (!hasPermission('Tác Giả', 'Thêm')) {
       message.error('Bạn không có quyền thêm tác giả!');
       return;
     }
 
-    const tenTG = newAuthor.TenTG.trim();
-    if (!tenTG) {
-      message.error('Tên tác giả là bắt buộc!');
-      return;
-    }
+    if (!validateAuthorData(newAuthor)) return;
 
     try {
       const formData = new FormData();
-      formData.append('TenTG', tenTG);
+      formData.append('TenTG', newAuthor.TenTG.trim());
       if (newAuthor.NgaySinh) {
         formData.append('NgaySinh', newAuthor.NgaySinh);
       }
@@ -140,15 +152,11 @@ const AuthorManagement = () => {
       return;
     }
 
-    const tenTG = editingAuthor.TenTG.trim();
-    if (!tenTG) {
-      message.error('Tên tác giả là bắt buộc!');
-      return;
-    }
+    if (!validateAuthorData(editingAuthor)) return;
 
     try {
       const formData = new FormData();
-      formData.append('TenTG', tenTG);
+      formData.append('TenTG', editingAuthor.TenTG.trim());
       if (editingAuthor.NgaySinh) {
         formData.append('NgaySinh', editingAuthor.NgaySinh);
       }
@@ -401,7 +409,7 @@ const AuthorManagement = () => {
               />
             </div>
             <div>
-              <label className="text-xs font-black text-slate-400 uppercase tracking-widest mb-2 block ml-1">Quốc tịch</label>
+              <label className="text-xs font-black text-slate-400 uppercase tracking-widest mb-2 block ml-1">Quốc tịch <span className="text-red-500">*</span></label>
               <Input
                 placeholder="Nhập quốc tịch..."
                 value={editingAuthor ? editingAuthor.QuocTich : newAuthor.QuocTich}
