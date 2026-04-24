@@ -1,11 +1,10 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import axios from 'axios';
-import { Modal, Button, Select, message, Table, Tag, Space, Input, Avatar, Badge, Dropdown, Menu, Rate, Divider } from 'antd';
+import { Modal, Button, Select, message, Table, Tag, Space, Input, Avatar, Badge, Dropdown, Menu, Rate, Divider, Tooltip } from 'antd';
 import { ExclamationCircleFilled, EyeOutlined, DeleteOutlined, MessageOutlined, SendOutlined, UserOutlined, CustomerServiceOutlined, CloseOutlined, BellOutlined, StarOutlined } from '@ant-design/icons';
 
 const { confirm } = Modal;
 const { Search, TextArea } = Input;
-// THÊM VÀO SAU DÒNG const { confirm } = Modal; (sau dòng 6)
 
 // ✅ THÊM HÀM FORMAT ĐỊA CHỈ GIỐNG BÊN CUSTOMER
 const addressCache = {
@@ -840,9 +839,9 @@ const InvoiceManagement = () => {
       title: 'Khách hàng',
       key: 'customer',
       render: (_, record) => (
-        <div className="customer-cell">
-          <div className="font-medium truncate">{record.customerName}</div>
-          <div className="text-gray-500 text-xs">{record.customerPhone}</div>
+        <div className="flex flex-col">
+          <div className="font-bold text-slate-700">{record.customerName}</div>
+          <div className="text-slate-400 text-xs">{record.customerPhone}</div>
         </div>
       ),
       width: 180,
@@ -851,7 +850,7 @@ const InvoiceManagement = () => {
       title: 'Ngày lập',
       dataIndex: 'createdAt',
       key: 'createdAt',
-      render: (date) => formatDate(date),
+      render: (date) => <span className="text-slate-500 font-medium">{formatDate(date)}</span>,
       width: 150,
     },
     {
@@ -859,7 +858,7 @@ const InvoiceManagement = () => {
       dataIndex: 'totalAmount',
       key: 'totalAmount',
       render: (amount) => (
-        <div className="text-right">
+        <div className="font-black text-slate-800 text-right">
           {formatCurrency(amount)}
         </div>
       ),
@@ -872,14 +871,13 @@ const InvoiceManagement = () => {
       render: (status, record) => (
         <Select
           value={status}
-          style={{ width: 140 }}
+          className="w-full modern-select"
           onChange={(value) => onStatusSelect(record.id, value, record.status)}
-          dropdownMatchSelectWidth={false}
           size="small"
         >
           {orderStatuses.map((item) => (
             <Select.Option key={item.value} value={item.value}>
-              <Tag color={item.color} style={{ fontSize: '12px' }}>{item.value}</Tag>
+              <Tag color={item.color} className="rounded-full px-3 font-bold border-0">{item.value}</Tag>
             </Select.Option>
           ))}
         </Select>
@@ -889,43 +887,50 @@ const InvoiceManagement = () => {
     {
       title: 'Thao tác',
       key: 'action',
+      fixed: 'right',
       render: (_, record) => (
         <Space size="small">
-          <Button
-            size="small"
-            icon={<EyeOutlined />}
-            onClick={() => handleViewInvoice(record.id)}
-            title="Xem chi tiết"
-          />
-          <Button
-            size="small"
-            icon={<StarOutlined />}
-            onClick={() => handleViewReview(record.id)}
-            loading={reviewLoading}
-            title="Xem đánh giá"
-          />
-          <Button
-            size="small"
-            type="primary"
-            icon={<MessageOutlined />}
-            onClick={() => {
-              handleChatWithCustomer(record.makh);
-            }}
-            loading={chatLoading}
-            title="Chat với khách hàng"
-          />
-          {record.status !== 'Đã hủy' && (
+          <Tooltip title="Xem chi tiết">
             <Button
               size="small"
-              danger
-              icon={<DeleteOutlined />}
-              onClick={() => handleCancelInvoice(record.id)}
-              title="Hủy đơn hàng"
+              icon={<EyeOutlined />}
+              onClick={() => handleViewInvoice(record.id)}
+              className="rounded-lg"
             />
+          </Tooltip>
+          <Tooltip title="Xem đánh giá">
+            <Button
+              size="small"
+              icon={<StarOutlined />}
+              onClick={() => handleViewReview(record.id)}
+              loading={reviewLoading}
+              className="rounded-lg"
+            />
+          </Tooltip>
+          <Tooltip title="Chat với khách hàng">
+            <Button
+              size="small"
+              type="primary"
+              icon={<MessageOutlined />}
+              onClick={() => handleChatWithCustomer(record.makh)}
+              loading={chatLoading}
+              className="rounded-lg shadow-sm"
+            />
+          </Tooltip>
+          {record.status !== 'Đã hủy' && (
+            <Tooltip title="Hủy đơn hàng">
+              <Button
+                size="small"
+                danger
+                icon={<DeleteOutlined />}
+                onClick={() => handleCancelInvoice(record.id)}
+                className="rounded-lg"
+              />
+            </Tooltip>
           )}
         </Space>
       ),
-      width: 200,
+      width: 180,
     },
   ];
 
