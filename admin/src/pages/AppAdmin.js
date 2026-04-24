@@ -1,7 +1,7 @@
 import React, { useContext } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import Sidebar from '../components/Sidebar';
-import Dashboard from '../components/Dashboard';
+import Dashboard from './Dashboard';
 import ProductManagement from './ProductManagement';
 import AccountManagement from './AccountManagement';
 import UserManagement from './UserManagement';
@@ -38,7 +38,7 @@ const AppAdmin = () => {
   return (
     <div className="flex min-h-screen bg-slate-50 font-sans overflow-x-hidden">
       <Sidebar />
-      <div className="flex-1 transition-all duration-500 ease-in-out pl-0 lg:sidebar-open:pl-72 lg:sidebar-closed:pl-20 pt-16 lg:pt-0 pb-20 lg:pb-0">
+      <div className="flex-1 transition-all duration-500 ease-in-out main-content-wrapper pt-16 lg:pt-0 pb-20 lg:pb-0">
         <div className="p-0 min-h-full">
           <Routes>
             <Route index element={<Dashboard />} />

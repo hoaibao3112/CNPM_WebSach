@@ -46,19 +46,11 @@ code {
 }
 
 /* Sidebar Layout Utilities */
-@layer utilities {
-  .lg\:sidebar-open\:pl-72 {
-    @media (min-width: 1024px) {
-      body.sidebar-open & {
-        padding-left: 18rem; /* 72 * 4px */
-      }
-    }
+@media (min-width: 1024px) {
+  body.sidebar-open .main-content-wrapper {
+    padding-left: 18rem; /* 72 * 4px = 288px */
   }
-  .lg\:sidebar-closed\:pl-20 {
-    @media (min-width: 1024px) {
-      body.sidebar-closed & {
-        padding-left: 5rem; /* 20 * 4px */
-      }
-    }
+  body.sidebar-closed .main-content-wrapper {
+    padding-left: 5rem; /* 20 * 4px = 80px */
   }
 }
