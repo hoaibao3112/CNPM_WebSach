@@ -232,14 +232,21 @@ const ProductManagement = () => {
     try {
       const formData = new FormData();
       Object.keys(editingProduct).forEach(key => {
-        if (key === 'HinhAnh') {
+        // Skip display fields
+        if (['TenTL', 'TenTG', 'TenNCC', 'GiaBan', 'NhaCungCap', 'images'].includes(key)) return;
+        
+        if (key === 'TinhTrang') {
+          formData.append('TinhTrang', 1); // Always active unless deleted
+        } else if (key === 'HinhAnh') {
           if (editingProduct[key] instanceof File) {
             formData.append('HinhAnh', editingProduct[key]);
           } else {
             const filename = String(editingProduct[key] || '').split('/').pop();
-            formData.append('HinhAnh', filename);
+            if (filename !== '50' && filename !== 'undefined' && filename !== 'null') {
+              formData.append('HinhAnh', filename);
+            }
           }
-        } else if (editingProduct[key] !== null && editingProduct[key] !== '') {
+        } else if (editingProduct[key] !== null && editingProduct[key] !== undefined) {
           formData.append(key, editingProduct[key]);
         }
       });
