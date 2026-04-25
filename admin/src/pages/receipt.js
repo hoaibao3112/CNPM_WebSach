@@ -89,7 +89,8 @@ const NhapHang = () => {
     fetchNhaCungCap();
     fetchSanPham();
     fetchLowStock(true);
-  }, [fetchPhieuNhap, fetchNhaCungCap, fetchSanPham, fetchLowStock]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleSubmit = async (values) => {
     try {
