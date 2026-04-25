@@ -14,10 +14,22 @@ const authenticateToken = (req, res, next) => {
 
     try {
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        
+        // Determine userType if missing
+        let userType = decoded.userType;
+        if (!userType) {
+            if (decoded.role || decoded.MaQuyen) {
+                userType = 'admin';
+            } else {
+                userType = 'customer';
+            }
+        }
+
         // Standardize user object
         req.user = {
             userId: decoded.userId || decoded.id || decoded.makh,
             role: decoded.role || decoded.MaQuyen,
+            userType: userType,
             ...decoded
         };
         next();

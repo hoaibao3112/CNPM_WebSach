@@ -60,7 +60,8 @@ class AuthService {
       {
         userId: account.MaTK,
         username: account.TenTK,
-        role: account.MaQuyen
+        role: account.MaQuyen,
+        userType: 'admin'
       },
       process.env.JWT_SECRET,
       { expiresIn: '1h' }
