@@ -46,8 +46,9 @@ const Profile = () => {
       if (!userInfoStr) return;
       const { MaTK } = JSON.parse(userInfoStr);
       const res = await api.get(`/users/by-matk/${MaTK}`);
-      setUserInfo(res.data);
-      setAvatarSrc(buildAvatarSrc(res.data?.Anh));
+      const profileData = res.data.data || res.data;
+      setUserInfo(profileData);
+      setAvatarSrc(buildAvatarSrc(profileData?.Anh));
     } catch (error) { message.error('Lỗi khi tải thông tin!'); }
   }, [buildAvatarSrc]);
 

@@ -414,18 +414,21 @@ const InvoiceManagement = () => {
       
       const res = await axios.get(`${process.env.REACT_APP_API_BASE || 'https://cnpm-customer.onrender.com'}/api/orders/${id}`, { headers });
 
+      // ✅ XỬ LÝ LẤY DATA TỪ RESPONSE WRAPPER
+      const orderData = res.data.data || res.data;
+
       // ✅ FORMAT ĐỊA CHỈ TRƯỚC KHI SET STATE
-      const formattedAddress = await formatFullAddress(res.data);
+      const formattedAddress = await formatFullAddress(orderData);
 
       setSelectedInvoice({
-        ...res.data,
-        items: res.data.items.map(item => ({
+        ...orderData,
+        items: (orderData.items || []).map(item => ({
           ...item,
           unitPrice: item.price,
           productImage: item.productImage || 'https://via.placeholder.com/50'
         })),
-        note: res.data.GhiChu || '',
-        status: res.data.tinhtrang,
+        note: orderData.GhiChu || '',
+        status: orderData.tinhtrang,
         // ✅ THÊM TRƯỜNG ĐỊA CHỈ ĐÃ FORMAT
         formattedAddress: formattedAddress
       });
