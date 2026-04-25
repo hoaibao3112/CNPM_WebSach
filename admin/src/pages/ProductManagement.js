@@ -86,21 +86,37 @@ const ProductManagement = () => {
       const response = await api.get(API_URL);
       const productsData = response.data.data;
       if (Array.isArray(productsData)) {
-        const processedProducts = productsData.map((product) => ({
-          ...product,
-          HinhAnh: product.HinhAnh && product.HinhAnh !== 'null'
-            ? `/img/products/${product.HinhAnh}`
-            : 'https://via.placeholder.com/50',
-          TinhTrang: (product.SoLuong && product.SoLuong > 0) ? 'Còn hàng' : 'Hết hàng',
-          MinSoLuong: product.MinSoLuong || 0,
-          MoTa: product.MoTa || null,
-          MaNCC: product.MaNCC || null,
-          NhaCungCap: product.NhaCungCap || null,
-          TrongLuong: product.TrongLuong == null ? null : Number(product.TrongLuong),
-          KichThuoc: product.KichThuoc || null,
-          SoTrang: product.SoTrang == null ? null : Number(product.SoTrang),
-          HinhThuc: product.HinhThuc || null,
-        }));
+        const apiBase = process.env.REACT_APP_API_BASE || 'https://cnpm-websach-2.onrender.com';
+        
+        const processedProducts = productsData.map((product) => {
+          let imageUrl = 'https://via.placeholder.com/50';
+          if (product.HinhAnh && product.HinhAnh !== 'null') {
+            const fileName = product.HinhAnh.replace('/img/products/', '');
+            if (/^\d{13}-/.test(fileName)) {
+              // Newly uploaded file via multer (Date.now()-...)
+              imageUrl = `${apiBase}/uploads/products/${fileName}`;
+            } else if (fileName.startsWith('http')) {
+              imageUrl = fileName;
+            } else {
+              // Legacy static file
+              imageUrl = `/img/products/${fileName}`;
+            }
+          }
+
+          return {
+            ...product,
+            HinhAnh: imageUrl,
+            TinhTrang: (product.SoLuong && product.SoLuong > 0) ? 'Còn hàng' : 'Hết hàng',
+            MinSoLuong: product.MinSoLuong || 0,
+            MoTa: product.MoTa || null,
+            MaNCC: product.MaNCC || null,
+            NhaCungCap: product.NhaCungCap || null,
+            TrongLuong: product.TrongLuong == null ? null : Number(product.TrongLuong),
+            KichThuoc: product.KichThuoc || null,
+            SoTrang: product.SoTrang == null ? null : Number(product.SoTrang),
+            HinhThuc: product.HinhThuc || null,
+          };
+        });
         setProducts(processedProducts);
       }
     } catch (error) {
@@ -220,7 +236,7 @@ const ProductManagement = () => {
           if (editingProduct[key] instanceof File) {
             formData.append('HinhAnh', editingProduct[key]);
           } else {
-            const filename = editingProduct[key].replace('/img/products/', '');
+            const filename = String(editingProduct[key] || '').split('/').pop();
             formData.append('HinhAnh', filename);
           }
         } else if (editingProduct[key] !== null && editingProduct[key] !== '') {
@@ -522,8 +538,9 @@ const ProductManagement = () => {
                 <div className="w-24 h-32 rounded-xl bg-white border border-slate-200 flex items-center justify-center overflow-hidden shadow-sm">
                   {(editingProduct ? editingProduct.HinhAnh : newProduct.HinhAnhPrimary) ? (
                     <img 
-                      src={editingProduct ? (editingProduct.HinhAnh instanceof File ? URL.createObjectURL(editingProduct.HinhAnh) : `/img/products/${editingProduct.HinhAnh.replace('/img/products/', '')}`) : URL.createObjectURL(newProduct.HinhAnhPrimary)} 
-                      alt="" className="w-full h-full object-cover" 
+                      src={editingProduct ? (editingProduct.HinhAnh instanceof File ? URL.createObjectURL(editingProduct.HinhAnh) : editingProduct.HinhAnh) : URL.createObjectURL(newProduct.HinhAnhPrimary)} 
+                      alt="Preview" 
+                      className="w-full h-full object-cover" 
                     />
                   ) : (
                     <span className="material-icons text-slate-200 text-4xl">image</span>
