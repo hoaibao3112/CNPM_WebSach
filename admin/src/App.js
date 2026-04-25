@@ -72,7 +72,7 @@ const PrivateRoute = ({ component: Component }) => {
       </div>
 
       <Sidebar />
-      <div className="main-content min-h-screen transition-all duration-300">
+      <div className="main-content min-h-screen transition-all duration-300 lg:ml-72">
         <Component />
       </div>
     </div>
