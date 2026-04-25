@@ -27,9 +27,15 @@ const SalaryPage = () => {
       setLoading(true);
       try {
         const res = await api.post(`/salary/compute/${selectedYear}/${selectedMonth}`);
-        const data = Array.isArray(res.data.data) ? res.data.data : (res.data || []);
-        setSalaryData(data);
-      } catch (error) { message.error('Lỗi khi tính lương'); }
+        let parsedData = [];
+        if (res.data?.success) {
+          if (Array.isArray(res.data.data?.data)) parsedData = res.data.data.data;
+          else if (Array.isArray(res.data.data)) parsedData = res.data.data;
+        } else if (Array.isArray(res.data)) {
+          parsedData = res.data;
+        }
+        setSalaryData(parsedData);
+      } catch (error) { message.error('Lỗi khi tính lương'); setSalaryData([]); }
       finally { setLoading(false); }
     };
     fetchSalary();
