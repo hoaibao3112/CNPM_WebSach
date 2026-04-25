@@ -10,7 +10,7 @@ class ProductService {
       LEFT JOIN nhacungcap ncc ON sp.MaNCC = ncc.MaNCC
       LEFT JOIN theloai tl ON sp.MaTL = tl.MaTL
       LEFT JOIN tacgia tg ON sp.MaTG = tg.MaTG
-      WHERE 1=1
+      WHERE CAST(COALESCE(sp.TinhTrang, 1) AS UNSIGNED) = 1
     `;
         const params = [];
 
