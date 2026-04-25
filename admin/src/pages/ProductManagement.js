@@ -482,6 +482,9 @@ const ProductManagement = () => {
                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Thể loại <span className="text-rose-500">*</span></label>
                 <Select 
                   className="w-full h-11"
+                  showSearch
+                  optionFilterProp="children"
+                  filterOption={(input, option) => (option?.children ?? '').toLowerCase().includes(input.toLowerCase())}
                   value={editingProduct ? editingProduct.MaTL : newProduct.MaTL}
                   onChange={(v) => editingProduct ? setEditingProduct({...editingProduct, MaTL: v}) : setNewProduct({...newProduct, MaTL: v})}
                 >
@@ -492,6 +495,9 @@ const ProductManagement = () => {
                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Tác giả <span className="text-rose-500">*</span></label>
                 <Select 
                   className="w-full h-11"
+                  showSearch
+                  optionFilterProp="children"
+                  filterOption={(input, option) => (option?.children ?? '').toLowerCase().includes(input.toLowerCase())}
                   value={editingProduct ? editingProduct.MaTG : newProduct.MaTG}
                   onChange={(v) => editingProduct ? setEditingProduct({...editingProduct, MaTG: v}) : setNewProduct({...newProduct, MaTG: v})}
                 >
@@ -540,6 +546,9 @@ const ProductManagement = () => {
                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Năm xuất bản</label>
                 <Input 
                   className="h-11 rounded-xl"
+                  type="number"
+                  min={1000}
+                  max={new Date().getFullYear()}
                   value={editingProduct ? editingProduct.NamXB : newProduct.NamXB}
                   onChange={(e) => editingProduct ? setEditingProduct({...editingProduct, NamXB: e.target.value}) : setNewProduct({...newProduct, NamXB: e.target.value})}
                 />
@@ -559,6 +568,8 @@ const ProductManagement = () => {
                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Số trang</label>
                 <Input 
                   className="h-11 rounded-xl"
+                  type="number"
+                  min={0}
                   value={editingProduct ? editingProduct.SoTrang : newProduct.SoTrang}
                   onChange={(e) => editingProduct ? setEditingProduct({...editingProduct, SoTrang: e.target.value}) : setNewProduct({...newProduct, SoTrang: e.target.value})}
                 />
@@ -567,6 +578,8 @@ const ProductManagement = () => {
                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Trọng lượng</label>
                 <Input 
                   className="h-11 rounded-xl"
+                  type="number"
+                  min={0}
                   suffix="g"
                   value={editingProduct ? editingProduct.TrongLuong : newProduct.TrongLuong}
                   onChange={(e) => editingProduct ? setEditingProduct({...editingProduct, TrongLuong: e.target.value}) : setNewProduct({...newProduct, TrongLuong: e.target.value})}
@@ -574,12 +587,18 @@ const ProductManagement = () => {
               </div>
               <div className="space-y-2">
                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Định dạng</label>
-                <Input 
-                  className="h-11 rounded-xl"
-                  placeholder="Bìa mềm..."
+                <Select 
+                  className="w-full h-11"
+                  allowClear
+                  placeholder="Chọn định dạng"
                   value={editingProduct ? editingProduct.HinhThuc : newProduct.HinhThuc}
-                  onChange={(e) => editingProduct ? setEditingProduct({...editingProduct, HinhThuc: e.target.value}) : setNewProduct({...newProduct, HinhThuc: e.target.value})}
-                />
+                  onChange={(v) => editingProduct ? setEditingProduct({...editingProduct, HinhThuc: v}) : setNewProduct({...newProduct, HinhThuc: v})}
+                >
+                  <Option value="Bìa mềm">Bìa mềm</Option>
+                  <Option value="Bìa cứng">Bìa cứng</Option>
+                  <Option value="Ebook">Ebook</Option>
+                  <Option value="Audiobook">Audiobook</Option>
+                </Select>
               </div>
             </div>
 
@@ -587,6 +606,9 @@ const ProductManagement = () => {
               <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Nhà cung cấp <span className="text-rose-500">*</span></label>
               <Select 
                 className="w-full h-11"
+                showSearch
+                optionFilterProp="children"
+                filterOption={(input, option) => (option?.children ?? '').toLowerCase().includes(input.toLowerCase())}
                 value={editingProduct ? editingProduct.MaNCC : newProduct.MaNCC}
                 onChange={(v) => editingProduct ? setEditingProduct({...editingProduct, MaNCC: v}) : setNewProduct({...newProduct, MaNCC: v})}
               >
