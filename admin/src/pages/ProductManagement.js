@@ -261,8 +261,8 @@ const ProductManagement = () => {
   };
 
   const filteredProducts = products.filter(p => 
-    p.TenSP.toLowerCase().includes(searchTerm.toLowerCase()) || 
-    p.MaSP.toString().includes(searchTerm)
+    (p.TenSP || '').toLowerCase().includes((searchTerm || '').toLowerCase()) || 
+    (p.MaSP || '').toString().includes(searchTerm || '')
   );
 
   const columns = [
