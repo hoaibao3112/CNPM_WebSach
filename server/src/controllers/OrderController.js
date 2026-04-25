@@ -64,7 +64,8 @@ class OrderController {
             const order = await OrderService.getOrderById(orderId);
 
             // Check authorization
-            if (req.user.makh != order.customerId && req.user.userType !== 'admin') {
+            const isAdmin = req.user.userType === 'admin' || req.user.role !== undefined || req.user.MaQuyen !== undefined;
+            if (req.user.makh != order.customerId && !isAdmin) {
                 return baseController.sendError(res, 'Không có quyền truy cập', 403);
             }
 

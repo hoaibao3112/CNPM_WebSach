@@ -17,13 +17,13 @@ const authenticateToken = (req, res, next) => {
         
         // Determine userType: prioritize role/MaQuyen presence over token's userType field
         // This handles old tokens that may have incorrect userType stored
-        let userType;
-        if (decoded.role || decoded.MaQuyen) {
+        let userType = decoded.userType;
+        if (decoded.role !== undefined || decoded.MaQuyen !== undefined) {
             // Has a role/permission code → always admin
             userType = 'admin';
-        } else {
-            // Fall back to token's userType, then default to 'customer'
-            userType = decoded.userType || 'customer';
+        } else if (!userType) {
+            // Fall back to default
+            userType = 'customer';
         }
 
         // Standardize user object
