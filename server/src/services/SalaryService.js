@@ -82,6 +82,17 @@ class SalaryService {
     logger.info(`Computed salary for ${results.length} employees`, { year, month });
     return results;
   }
+
+  async getHistory(maNV) {
+    const [rows] = await pool.query(
+      `SELECT thang, nam, tong_luong, trang_thai
+       FROM luong
+       WHERE MaNV = ?
+       ORDER BY nam DESC, thang DESC`,
+      [maNV]
+    );
+    return rows;
+  }
 }
 
 export default new SalaryService();

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
+import api from '../utils/api';
 import { Button, Input, message, Table, Modal, Tag, Select, Badge, Tooltip, Avatar, Divider } from 'antd';
 import { 
   UserOutlined, 
@@ -14,26 +14,6 @@ import {
 } from '@ant-design/icons';
 
 const { Option } = Select;
-const api = axios.create({ baseURL: (process.env.REACT_APP_API_BASE || 'https://cnpm-customer.onrender.com') + '', withCredentials: false });
-
-const TOKEN_KEYS = ['adminToken', 'token', 'accessToken', 'auth_token', 'jwt', 'authToken', 'wn_token'];
-
-api.interceptors.request.use((config) => {
-  let token = null;
-  for (const k of TOKEN_KEYS) {
-    const v = localStorage.getItem(k);
-    if (v) { token = v; break; }
-  }
-  if (!token && typeof document !== 'undefined' && document.cookie) {
-    const cookies = document.cookie.split(';').map(c => c.trim());
-    for (const k of TOKEN_KEYS) {
-      const found = cookies.find(c => c.startsWith(k + '='));
-      if (found) { token = decodeURIComponent(found.split('=')[1]); break; }
-    }
-  }
-  if (token) config.headers['Authorization'] = token.startsWith('Bearer ') ? token : `Bearer ${token}`;
-  return config;
-});
 
 const CustomerManagement = () => {
   const [customers, setCustomers] = useState([]);

@@ -20,6 +20,16 @@ class SalaryController {
             return baseController.sendError(res, 'Lỗi tính toán lương', 500, error.message);
         }
     }
+
+    async getHistory(req, res) {
+        try {
+            const { id } = req.params;
+            const data = await SalaryService.getHistory(id);
+            return baseController.sendSuccess(res, data);
+        } catch (error) {
+            return baseController.sendError(res, 'Lỗi lấy lịch sử lương', 500, error.message);
+        }
+    }
 }
 
 export default new SalaryController();
