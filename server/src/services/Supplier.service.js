@@ -141,8 +141,18 @@ class SupplierService {
 
   _convertTinhTrangSingle(row) {
     const data = row.toJSON ? row.toJSON() : { ...row };
-    if (data.TinhTrang && data.TinhTrang.type === 'Buffer') {
-      data.TinhTrang = data.TinhTrang.data[0].toString();
+    const raw = data.TinhTrang;
+    // Normalize TinhTrang to string '1' or '0' regardless of how MySQL/Sequelize returns it:
+    // Possible types: Buffer (TINYINT returned as BIT), boolean (Sequelize typecasting), number (0/1), string ('0'/'1')
+    if (raw !== null && raw !== undefined) {
+      if (typeof raw === 'object' && raw.type === 'Buffer' && raw.data) {
+        // BIT/TINYINT returned as Buffer
+        data.TinhTrang = raw.data[0] === 1 ? '1' : '0';
+      } else if (typeof raw === 'boolean') {
+        data.TinhTrang = raw ? '1' : '0';
+      } else {
+        data.TinhTrang = raw.toString() === '1' || raw.toString().toLowerCase() === 'true' ? '1' : '0';
+      }
     }
     return data;
   }

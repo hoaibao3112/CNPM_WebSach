@@ -15,22 +15,24 @@ const authenticateToken = (req, res, next) => {
     try {
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
         
-        // Determine userType if missing
-        let userType = decoded.userType;
-        if (!userType) {
-            if (decoded.role || decoded.MaQuyen) {
-                userType = 'admin';
-            } else {
-                userType = 'customer';
-            }
+        // Determine userType: prioritize role/MaQuyen presence over token's userType field
+        // This handles old tokens that may have incorrect userType stored
+        let userType;
+        if (decoded.role || decoded.MaQuyen) {
+            // Has a role/permission code → always admin
+            userType = 'admin';
+        } else {
+            // Fall back to token's userType, then default to 'customer'
+            userType = decoded.userType || 'customer';
         }
 
         // Standardize user object
+        // NOTE: spread decoded first, then override with computed values to avoid decoded overwriting userType
         req.user = {
+            ...decoded,
             userId: decoded.userId || decoded.id || decoded.makh,
             role: decoded.role || decoded.MaQuyen,
             userType: userType,
-            ...decoded
         };
         next();
     } catch (error) {

@@ -32,8 +32,8 @@ const CustomerManagement = () => {
   const [pendingLoading, setPendingLoading] = useState(false);
   const [pendingCount, setPendingCount] = useState(0);
 
-  const API_URL = '/api/client';
-  const RATINGS_API = '/api/ratings';
+  const API_URL = '/client';
+  const RATINGS_API = '/ratings';
 
   const fetchCustomers = async () => {
     try {

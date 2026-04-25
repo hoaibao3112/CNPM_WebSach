@@ -81,7 +81,10 @@ const isOriginAllowed = (origin) => {
 };
 
 app.use(cors({
-  origin: true, // Reflect origin of requester (highly permissive for debugging)
+  origin: (origin, callback) => {
+    if (isOriginAllowed(origin)) return callback(null, true);
+    return callback(new Error(`CORS blocked: ${origin}`));
+  },
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   credentials: true,
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Auth-Key', 'X-Requested-With', 'Accept', 'Origin'],
@@ -109,17 +112,24 @@ app.get('/api/ping', (req, res) => {
   });
 });
 
+// DIAGNOSTIC — Admin-only in production
 app.get('/api/diag', async (req, res) => {
+  // Block in production unless internal admin token provided
+  if (process.env.NODE_ENV === 'production') {
+    const adminKey = req.headers['x-admin-diag-key'];
+    if (!adminKey || adminKey !== process.env.ADMIN_DIAG_KEY) {
+      return res.status(403).json({ error: 'Forbidden' });
+    }
+  }
+
   const diag = {
     timestamp: new Date().toISOString(),
     node_version: process.version,
     env: {
       NODE_ENV: process.env.NODE_ENV,
-      DB_HOST: process.env.DB_HOST,
-      DB_NAME: process.env.DB_NAME,
-      DB_PORT: process.env.DB_PORT,
-      DB_USER: process.env.DB_USER ? 'Set (masked)' : 'Not set',
-      SSL_CA_B64: process.env.DB_SSL_CA_BASE64 ? 'Set' : 'Not set'
+      DB_HOST: process.env.DB_HOST ? '[SET]' : '[NOT SET]',
+      DB_NAME: process.env.DB_NAME ? '[SET]' : '[NOT SET]',
+      DB_USER: process.env.DB_USER ? '[SET]' : '[NOT SET]',
     },
     database: { connected: false, tables: [], error: null }
   };
@@ -127,21 +137,20 @@ app.get('/api/diag', async (req, res) => {
   try {
     const conn = await pool.getConnection();
     diag.database.connected = true;
-    const [tables] = await conn.query('SHOW TABLES');
-    diag.database.tables = tables.map(t => Object.values(t)[0]);
     conn.release();
   } catch (err) {
-    diag.database.error = {
-      message: err.message,
-      code: err.code,
-      stack: err.stack
-    };
+    diag.database.error = { message: err.message, code: err.code };
   }
 
   res.json(diag);
 });
 
 app.get('/api/diag/schema', async (req, res) => {
+  // Block entirely in production
+  if (process.env.NODE_ENV === 'production') {
+    return res.status(403).json({ error: 'Forbidden' });
+  }
+  // Original handler below (dev only)
     try {
         const connection = await pool.getConnection();
         const tablesToInspect = ['hoadon', 'chitiethoadon', 'khachhang', 'diachi', 'sanpham', 'giohang_chitiet', 'khuyen_mai'];
@@ -338,7 +347,12 @@ wss.on('connection', async (ws, req) => {
         const data = JSON.parse(message.toString());
         if (data.action !== 'send_message') return;
 
-        const { room_id, sender_id, sender_type, message: msgContent } = data.message;
+        const { room_id, message: msgContent } = data.message;
+
+        // SECURITY: Use sender identity from verified JWT (ws.user), NOT from client payload
+        // Client must NOT be trusted to declare their own sender_id or sender_type
+        const sender_id = ws.user?.makh || ws.user?.MaTK || ws.user?.id || 'unknown';
+        const sender_type = (ws.user?.role || ws.user?.MaQuyen) ? 'staff' : 'customer';
 
         if (room_id !== roomId) return; // Security: only send to own room
 
@@ -400,17 +414,7 @@ const startServers = async () => {
     console.log(`✅ MySQL connected on port ${DB_PORT}`);
     conn.release();
 
-    // Generate test tokens (update to async)
-    console.log('Generating test tokens...');
-    const { generateToken } = await import('./src/utils/generateToken.js');
-    try {
-      const customerToken = await generateToken('19', 'customer');
-      console.log('Customer Token:', customerToken.substring(0, 20) + '...');
-      const staffToken = await generateToken('NV007', 'staff');
-      console.log('Staff Token:', staffToken.substring(0, 20) + '...');
-    } catch (genError) {
-      console.error('Token generation error:', genError);
-    }
+    // NOTE: Token generation for testing removed from production startup for security
 
     // Start HTTP server (WS attached)
     httpServer.listen(HTTP_PORT, () => {

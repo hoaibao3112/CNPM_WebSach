@@ -18,52 +18,60 @@ async function checkOrderOwnershipAndCompleted(orderId, customerId) {
   return { exists: true, completed, owner, order };
 }
 
-//lay the loai dươc mua nhiều nhất từ hóa đơn
+// Helper: resolve userType from decoded JWT (same logic as auth middleware)
+function resolveUserType(decoded) {
+  if (decoded.role || decoded.MaQuyen) return 'admin';
+  return decoded.userType || 'customer';
+}
 
+// GET /api/orderreview/order-count - top 3 categories by sales
 router.get("/order-count", async(req, res) => {
   try {
-    const sql = `SELECT tl.matl ,tl.TenTL, COUNT(sp.MaSP) AS tong_sanpham
+    const sql = `SELECT tl.matl, tl.TenTL, COUNT(sp.MaSP) AS tong_sanpham
                   FROM chitiethoadon ct
                   JOIN sanpham sp ON ct.MaSP = sp.MaSP
                   JOIN theloai tl ON sp.MaTL = tl.MaTL
                   GROUP BY tl.TenTL, tl.matl
                   ORDER BY tong_sanpham DESC
                   LIMIT 3;
-                `
+                `;
     const [result] = await pool.query(sql);
-    return res.status(200).json({success: true, data: result})
+    return res.status(200).json({success: true, data: result});
   } catch (error) {
-    logger.info(error);
-    return res.status(500).json({error:"lỗi server" })
+    logger.error('GET /order-count error', error);
+    return res.status(500).json({error: "Lỗi server"});
   }
-})
+});
 
 // GET /api/orderreview/:orderId - return review for that order. Token is optional;
 // - If token present and userType is admin/staff, return any review for the order
 // - If token present for a customer, return only their review
-// - If no token present, return public review for the order (if any)
+// - If no token present, return public review (limited fields)
 router.get('/:orderId', async (req, res) => {
   try {
     const { orderId } = req.params;
+
+    if (!orderId || isNaN(orderId)) return res.status(400).json({ error: 'Invalid orderId' });
+
     // Try to optionally verify token if present in cookie or Authorization header
     const token = req.cookies?.token || (req.headers['authorization'] && req.headers['authorization'].split(' ')[1]);
     let optionalUser = null;
     if (token) {
       try {
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        optionalUser = decoded;
-        logger.info('Optional token verified for orderreview GET:', { user: optionalUser });
+        // Apply same userType logic as auth middleware: role/MaQuyen always wins
+        const resolvedUserType = resolveUserType(decoded);
+        optionalUser = { ...decoded, userType: resolvedUserType };
+        logger.info('Optional token verified for orderreview GET:', { userType: resolvedUserType });
       } catch (e) {
         logger.warn('Optional token invalid or expired for orderreview GET:', e.message);
         // proceed without user
       }
     }
 
-    if (!orderId || isNaN(orderId)) return res.status(400).json({ error: 'Invalid orderId' });
-
     // If requester is admin/staff, allow fetching review for the order regardless of owner
     if (optionalUser && (optionalUser.userType === 'admin' || optionalUser.userType === 'staff' || optionalUser.userType === 'superadmin')) {
-      logger.info('Admin/staff fetch by user:', optionalUser);
+      logger.info('Admin/staff fetch by user:', { userType: optionalUser.userType });
       const [rows] = await pool.query(
         `SELECT d.*, kh.tenkh AS customerName
          FROM danhgia_donhang d
@@ -81,18 +89,17 @@ router.get('/:orderId', async (req, res) => {
       return res.status(200).json({ review: rows[0] || null });
     }
 
-    // No token: public fetch — return any review for the order (useful for admin staff who can't send token)
+    // No token: public fetch — return limited fields only
     const [rows] = await pool.query(
-      `SELECT d.MaDGHD AS MaDGHD, d.MaHD, d.MaKH, d.SoSao, d.NhanXet, d.NgayDanhGia, kh.tenkh AS customerName
+      `SELECT d.MaDGHD, d.MaHD, d.SoSao, d.NhanXet, d.NgayDanhGia
        FROM danhgia_donhang d
-       LEFT JOIN khachhang kh ON d.MaKH = kh.makh
        WHERE d.MaHD = ?`,
       [parseInt(orderId)]
     );
     return res.status(200).json({ review: rows[0] || null });
   } catch (err) {
     logger.error('GET /api/orderreview/:orderId error', err);
-    res.status(500).json({ error: 'Lỗi server', details: err.message });
+    res.status(500).json({ error: 'Lỗi server' });
   }
 });
 
@@ -100,7 +107,7 @@ router.get('/:orderId', async (req, res) => {
 router.post('/:orderId', authenticateToken, async (req, res) => {
   try {
     const { orderId } = req.params;
-    logger.info('POST /api/orderreview/:orderId called', { orderId, user: req.user && req.user.makh, body: req.body });
+    logger.info('POST /api/orderreview/:orderId called', { orderId, user: req.user && req.user.makh });
     const customerId = req.user && (req.user.makh || req.user.id || req.user.MaKH);
     const { rating, comment } = req.body;
 
@@ -120,17 +127,14 @@ router.post('/:orderId', authenticateToken, async (req, res) => {
 
     const [result] = await pool.query(sql, [parseInt(orderId), customerId, r, comment || null]);
 
-    // result.affectedRows: insert -> 1 or 2? For ON DUPLICATE, affectedRows can be 1 (insert) or 2 (update)
     if (!result) return res.status(500).json({ error: 'Không thể lưu đánh giá' });
 
     const message = result.affectedRows && result.affectedRows > 1 ? 'Cập nhật đánh giá thành công' : 'Đã lưu đánh giá';
     return res.status(200).json({ message });
   } catch (err) {
     logger.error('POST /api/orderreview/:orderId error', err);
-    res.status(500).json({ error: 'Lỗi server', details: err.message });
+    res.status(500).json({ error: 'Lỗi server' });
   }
 });
-
-
 
 export default router;
