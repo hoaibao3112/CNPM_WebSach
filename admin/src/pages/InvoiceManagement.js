@@ -409,7 +409,10 @@ const InvoiceManagement = () => {
 
   const handleViewInvoice = async (id) => {
     try {
-      const res = await axios.get(`${process.env.REACT_APP_API_BASE || 'https://cnpm-customer.onrender.com'}/api/orders/hoadon/${id}`);
+      const token = (document.cookie.split('; ').find(row => row.startsWith('authToken='))?.split('=')[1] || null) || (document.cookie.split('; ').find(row => row.startsWith('token='))?.split('=')[1] || null);
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+      
+      const res = await axios.get(`${process.env.REACT_APP_API_BASE || 'https://cnpm-customer.onrender.com'}/api/orders/${id}`, { headers });
 
       // ✅ FORMAT ĐỊA CHỈ TRƯỚC KHI SET STATE
       const formattedAddress = await formatFullAddress(res.data);
@@ -688,7 +691,7 @@ const InvoiceManagement = () => {
       async onOk() {
         try {
           const token = (document.cookie.split('; ').find(row => row.startsWith('authToken='))?.split('=')[1] || null);
-          await axios.put(`${process.env.REACT_APP_API_BASE || 'https://cnpm-customer.onrender.com'}/api/orders/hoadon/${id}/huy`, {
+          await axios.put(`${process.env.REACT_APP_API_BASE || 'https://cnpm-customer.onrender.com'}/api/orders/customer-orders/cancel/${id}`, {
             lyDo: 'Hủy bởi quản trị viên'
           }, {
             headers: { Authorization: `Bearer ${token}` }
