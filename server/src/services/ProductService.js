@@ -250,16 +250,24 @@ class ProductService {
             NamXB, MaTG, MinSoLuong, TrongLuong, KichThuoc, SoTrang, HinhThuc, TinhTrang
         } = productData;
 
-        const [result] = await pool.query(
-            `UPDATE sanpham SET 
-                TenSP=?, DonGia=?, SoLuong=?, MoTa=?, HinhAnh=?, MaTL=?, MaNCC=?, 
-                NamXB=?, MaTG=?, MinSoLuong=?, TrongLuong=?, KichThuoc=?, SoTrang=?, HinhThuc=?, TinhTrang=?
-            WHERE MaSP=?`,
-            [
-                TenSP, DonGia, SoLuong, MoTa, HinhAnh, MaTL, MaNCC,
-                NamXB, MaTG, MinSoLuong, TrongLuong, KichThuoc, SoTrang, HinhThuc, TinhTrang, id
-            ]
-        );
+        let query = `UPDATE sanpham SET 
+            TenSP=?, DonGia=?, SoLuong=?, MoTa=?, MaTL=?, MaNCC=?, 
+            NamXB=?, MaTG=?, MinSoLuong=?, TrongLuong=?, KichThuoc=?, SoTrang=?, HinhThuc=?, TinhTrang=?`;
+        let params = [
+            TenSP, DonGia, SoLuong, MoTa, MaTL, MaNCC,
+            NamXB, MaTG, MinSoLuong, TrongLuong, KichThuoc, SoTrang, HinhThuc, TinhTrang
+        ];
+
+        // Only update HinhAnh if a valid value is provided
+        if (HinhAnh !== undefined && HinhAnh !== 'undefined' && HinhAnh !== 'null' && HinhAnh !== '50' && HinhAnh !== '') {
+            query += `, HinhAnh=?`;
+            params.push(HinhAnh);
+        }
+
+        query += ` WHERE MaSP=?`;
+        params.push(id);
+
+        const [result] = await pool.query(query, params);
         if (result.affectedRows === 0) throw new Error('Sản phẩm không tồn tại');
         return true;
     }
