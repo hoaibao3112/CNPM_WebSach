@@ -225,47 +225,62 @@
       offset: 60
     });
   </script>
-  <!-- Floating Right Toolbar -->
-  <div class="fixed right-0 top-1/2 -translate-y-1/2 flex flex-col gap-2 z-40 bg-gray-500/80 backdrop-blur-sm p-2 rounded-l-2xl shadow-lg border-y border-l border-white/20">
-    <button onclick="openRandomBooksModal('Gợi Ý Cho Bạn', 'fas fa-thumbs-up')" class="w-12 h-12 bg-white rounded-xl flex items-center justify-center text-gray-500 hover:text-primary hover:scale-110 transition-all shadow-sm group relative">
-      <i class="fas fa-thumbs-up text-xl"></i>
-      <span class="absolute right-full mr-3 top-1/2 -translate-y-1/2 px-3 py-1.5 bg-gray-800 text-white text-xs font-bold whitespace-nowrap rounded-lg opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity">
+  <!-- Floating Right Toolbar (Giống Fahasa) -->
+  <div class="fixed right-0 top-1/2 -translate-y-1/2 z-[60] flex flex-col bg-[#777e80] shadow-lg rounded-l-lg overflow-hidden border border-r-0 border-white/20">
+    <!-- Nút Like -->
+    <button onclick="openRandomBooksModal('Gợi Ý Sách Hay', 'fas fa-thumbs-up')" class="w-10 h-10 md:w-12 md:h-12 flex items-center justify-center hover:bg-black/20 transition-colors group relative">
+      <div class="w-7 h-7 md:w-8 md:h-8 bg-white rounded flex items-center justify-center">
+        <i class="fas fa-thumbs-up text-gray-600 md:text-lg"></i>
+      </div>
+      <!-- Tooltip -->
+      <span class="absolute right-full mr-2 md:mr-3 top-1/2 -translate-y-1/2 px-2 py-1 md:px-3 md:py-1.5 bg-gray-800 text-white text-[10px] md:text-xs font-bold whitespace-nowrap rounded-md opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity hidden sm:block">
         Gợi ý sách hay
-        <span class="absolute left-full top-1/2 -translate-y-1/2 border-[5px] border-transparent border-l-gray-800"></span>
+        <span class="absolute left-full top-1/2 -translate-y-1/2 border-[4px] border-transparent border-l-gray-800"></span>
       </span>
     </button>
-    <button onclick="openRandomBooksModal('Sách Đáng Đọc', 'fas fa-book-open')" class="w-12 h-12 bg-white rounded-xl flex items-center justify-center text-gray-500 hover:text-primary hover:scale-110 transition-all shadow-sm group relative">
-      <i class="fas fa-book-open text-xl"></i>
-      <span class="absolute right-full mr-3 top-1/2 -translate-y-1/2 px-3 py-1.5 bg-gray-800 text-white text-xs font-bold whitespace-nowrap rounded-lg opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity">
+    <div class="w-full h-px bg-white/20"></div>
+    <!-- Nút Đọc Sách -->
+    <button onclick="openRandomBooksModal('Sách Đáng Đọc', 'fas fa-book-open')" class="w-10 h-10 md:w-12 md:h-12 flex items-center justify-center hover:bg-black/20 transition-colors group relative">
+      <div class="w-7 h-7 md:w-8 md:h-8 bg-white rounded flex items-center justify-center">
+        <i class="fas fa-book-open text-gray-600 md:text-lg"></i>
+      </div>
+      <!-- Tooltip -->
+      <span class="absolute right-full mr-2 md:mr-3 top-1/2 -translate-y-1/2 px-2 py-1 md:px-3 md:py-1.5 bg-gray-800 text-white text-[10px] md:text-xs font-bold whitespace-nowrap rounded-md opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity hidden sm:block">
         Sách đáng đọc
-        <span class="absolute left-full top-1/2 -translate-y-1/2 border-[5px] border-transparent border-l-gray-800"></span>
+        <span class="absolute left-full top-1/2 -translate-y-1/2 border-[4px] border-transparent border-l-gray-800"></span>
       </span>
     </button>
   </div>
 
-  <!-- Random Books Modal -->
-  <div id="randomBooksModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] hidden opacity-0 transition-opacity duration-300 flex items-center justify-center p-4">
-    <div class="bg-white w-full max-w-5xl rounded-[32px] shadow-2xl overflow-hidden flex flex-col max-h-[90vh] scale-95 transition-transform duration-300" id="randomBooksModalContent">
-      <div class="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
-        <div class="flex items-center gap-4">
-          <div class="w-12 h-12 bg-primary/10 text-primary rounded-2xl flex items-center justify-center">
-            <i id="modalIcon" class="fas fa-star text-xl"></i>
-          </div>
-          <div>
-            <h2 id="modalTitle" class="text-2xl font-black text-gray-800 tracking-tight">Gợi Ý Ngẫu Nhiên</h2>
-            <p class="text-xs font-bold text-gray-400 uppercase tracking-widest mt-1">10 Tựa Sách Khám Phá Hôm Nay</p>
-          </div>
+  <!-- Right Drawer (Thay cho Modal ở giữa) -->
+  <!-- Backdrop -->
+  <div id="randomBooksBackdrop" onclick="closeRandomBooksModal()" class="fixed inset-0 bg-black/40 z-[70] hidden opacity-0 transition-opacity duration-300"></div>
+  
+  <!-- Drawer Content -->
+  <div id="randomBooksModal" class="fixed top-0 right-0 h-full w-[85%] sm:w-[400px] md:w-[450px] bg-white z-[80] translate-x-full transition-transform duration-300 shadow-2xl flex flex-col">
+    <!-- Header -->
+    <div class="p-4 md:p-5 border-b border-gray-100 flex justify-between items-center bg-gray-50 shrink-0">
+      <div class="flex items-center gap-3">
+        <div class="w-8 h-8 md:w-10 md:h-10 bg-primary/10 text-primary rounded-xl flex items-center justify-center">
+          <i id="modalIcon" class="fas fa-star md:text-lg"></i>
         </div>
-        <button onclick="closeRandomBooksModal()" class="w-10 h-10 bg-gray-100 text-gray-500 rounded-full hover:bg-red-50 hover:text-red-500 transition-colors flex items-center justify-center">
-          <i class="fas fa-times text-lg"></i>
-        </button>
+        <div>
+          <h2 id="modalTitle" class="text-base md:text-lg font-black text-gray-800 tracking-tight">Gợi Ý Ngẫu Nhiên</h2>
+          <p class="text-[9px] md:text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-0.5">10 Tựa Sách Khám Phá Hôm Nay</p>
+        </div>
       </div>
-      <div class="p-6 overflow-y-auto custom-scrollbar flex-1 bg-gray-50/30">
-        <div id="randomBooksGrid" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
-          <div class="col-span-full py-12 flex flex-col items-center justify-center text-primary gap-4">
-            <i class="fas fa-spinner fa-spin text-3xl"></i>
-            <p class="text-xs font-bold uppercase tracking-widest">Đang tải sách...</p>
-          </div>
+      <button onclick="closeRandomBooksModal()" class="w-8 h-8 bg-white border border-gray-200 text-gray-500 rounded-lg hover:bg-red-50 hover:text-red-500 hover:border-red-200 transition-all flex items-center justify-center shrink-0">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+    
+    <!-- Body (Scrollable) -->
+    <div class="p-4 md:p-5 overflow-y-auto flex-1 bg-white custom-scrollbar">
+      <div id="randomBooksGrid" class="flex flex-col gap-4">
+        <!-- Loading state -->
+        <div class="py-12 flex flex-col items-center justify-center text-primary gap-3">
+          <i class="fas fa-spinner fa-spin text-2xl md:text-3xl"></i>
+          <p class="text-[10px] font-bold uppercase tracking-widest">Đang tải sách...</p>
         </div>
       </div>
     </div>
