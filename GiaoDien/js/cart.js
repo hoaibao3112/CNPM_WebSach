@@ -3409,7 +3409,7 @@ async function loadSavedAddresses() {
         let found = false;
         for (let i = 0; i < tinh.options.length; i++) {
           const opt = tinh.options[i];
-          if (String(opt.value).trim() === String(addr.province).trim() || opt.text.trim() === String(addr.province).trim()) {
+          if (String(opt.value).trim() === String(addr.province).trim() || opt.text.trim() === String(addr.province).trim() || (addr.provinceName && opt.text.trim() === String(addr.provinceName).trim())) {
             tinh.selectedIndex = i;
             tinh.dispatchEvent(new Event('change'));
             found = true;
@@ -3421,7 +3421,7 @@ async function loadSavedAddresses() {
           await waitForOptions(quan, 2, 3000);
           for (let i = 0; i < quan.options.length; i++) {
             const opt = quan.options[i];
-            if (String(opt.value).trim() === String(addr.district).trim() || opt.text.trim() === String(addr.district).trim()) {
+            if (String(opt.value).trim() === String(addr.district).trim() || opt.text.trim() === String(addr.district).trim() || (addr.districtName && opt.text.trim() === String(addr.districtName).trim())) {
               quan.selectedIndex = i;
               quan.dispatchEvent(new Event('change'));
               break;
@@ -3437,7 +3437,7 @@ async function loadSavedAddresses() {
         await waitForOptions(phuong, 2, 3000);
         for (let i = 0; i < phuong.options.length; i++) {
           const opt = phuong.options[i];
-          if (String(opt.value).trim() === String(addr.ward).trim() || opt.text.trim() === String(addr.ward).trim()) {
+          if (String(opt.value).trim() === String(addr.ward).trim() || opt.text.trim() === String(addr.ward).trim() || (addr.wardName && opt.text.trim() === String(addr.wardName).trim())) {
             phuong.selectedIndex = i;
             phuong.dispatchEvent(new Event('change'));
             break;

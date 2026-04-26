@@ -79,14 +79,14 @@ router.get('/full/:city_id/:district_id/:ward_identifier', async (req, res) => {
     const wards = await readJSONFile('wards.json');
 
     // Convert to string for comparison
-    const city = cities.find(c => String(c.city_id) === String(city_id));
-    const district = districts.find(d => String(d.district_id) === String(district_id));
+    const city = cities.find(c => String(c.city_id) === String(city_id) || String(c.original_id) === String(city_id));
+    const district = districts.find(d => String(d.district_id) === String(district_id) || String(d.original_id) === String(district_id));
 
     // Try to find ward - NOTE: wards.json has NO ward_id field, only ward_name and district_id
     let ward = null;
 
     // First, filter wards by district_id
-    const districtWards = wards.filter(w => String(w.district_id) === String(district_id));
+    const filterDistrictId = district ? district.district_id : district_id; const districtWards = wards.filter(w => String(w.district_id) === String(filterDistrictId));
 
     // PRIORITY 1: Try to find by ward_name (case-insensitive and normalized)
     if (ward_identifier) {
@@ -106,7 +106,7 @@ router.get('/full/:city_id/:district_id/:ward_identifier', async (req, res) => {
       }
     }
 
-    // PRIORITY 2: If numeric, treat as index in the filtered array
+    if (!ward) { ward = districtWards.find(w => String(w.original_id) === String(ward_identifier)); } // PRIORITY 2: If numeric, treat as index in the filtered array
     if (!ward && /^\d+$/.test(ward_identifier)) {
       const index = parseInt(ward_identifier);
       // Check if it's a reasonable index (0 to array length)
