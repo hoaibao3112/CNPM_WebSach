@@ -12,11 +12,12 @@ const router = express.Router();
 router.get('/config', (req, res) => {
   const googleClientId = process.env.GOOGLE_CLIENT_ID || '';
   const facebookClientId = process.env.FACEBOOK_CLIENT_ID || '';
-  
-  console.log('[API] GET /api/client/config');
-  console.log('  GOOGLE_CLIENT_ID from env:', googleClientId ? 'SET' : 'NOT SET');
-  console.log('  FACEBOOK_CLIENT_ID from env:', facebookClientId ? 'SET' : 'NOT SET');
-  
+
+  // Only log in development to avoid noise in production logs
+  if (process.env.NODE_ENV !== 'production') {
+    console.log('[DEV] GET /api/client/config — GOOGLE_CLIENT_ID:', googleClientId ? 'SET' : 'NOT SET');
+  }
+
   res.json({
     GOOGLE_CLIENT_ID: googleClientId,
     FACEBOOK_CLIENT_ID: facebookClientId,
@@ -50,9 +51,9 @@ router.put('/cart/select', authenticateToken, CartController.toggleSelection);
 router.delete('/cart/remove/:productId', authenticateToken, CartController.remove);
 router.delete('/cart/clear', authenticateToken, CartController.clear);
 
-// Activity routes
-router.post('/activity/view', CustomerController.logView);
-router.post('/activity/search', CustomerController.logSearch);
+// Activity routes — require auth so makh is always from JWT (fixed in controller)
+router.post('/activity/view', authenticateToken, CustomerController.logView);
+router.post('/activity/search', authenticateToken, CustomerController.logSearch);
 
 // ===== PARAMETERIZED ROUTES (Must be last to avoid overriding specific routes) =====
 // Admin routes

@@ -51,4 +51,7 @@ if (unset.length > 0) {
 
 console.log('✅ App config validated successfully');
 console.log(`   Environment: ${process.env.NODE_ENV || 'development'}`);
-console.log(`   Database: ${process.env.DB_HOST}:${process.env.DB_PORT || 3306}/${process.env.DB_NAME}`);
+// Only log DB details in development to avoid leaking host info in production logs
+if (process.env.NODE_ENV !== 'production') {
+  console.log(`   Database: ${process.env.DB_HOST}:${process.env.DB_PORT || 3306}/${process.env.DB_NAME}`);
+}

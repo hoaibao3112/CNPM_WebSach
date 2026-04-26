@@ -62,7 +62,11 @@ const allowedOrigins = [
 ];
 
 const isOriginAllowed = (origin) => {
-  if (!origin) return true; // Allow server-to-server (Postman, curl, etc.)
+  if (!origin) {
+    // In production: block requests without Origin (server-to-server / curl)
+    // In development: allow for Postman/testing convenience
+    return process.env.NODE_ENV !== 'production';
+  }
 
   // Direct whitelist match
   if (allowedOrigins.includes(origin)) return true;
@@ -218,8 +222,8 @@ app.use('/api/auth/forgot-password', authLimiter);
 
 // 3.2 Other middleware
 app.use(cookieParser());
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+app.use(express.json({ limit: '1mb' }));       // 1mb đủ cho JSON API; file upload dùng multer riêng
+app.use(express.urlencoded({ extended: true, limit: '1mb' }));
 
 // Serve uploaded files (customer uploads) so URLs like /uploads/tra_hang/<file> are reachable
 app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
@@ -279,19 +283,15 @@ app.use('/vnpay', createProxyMiddleware({
   changeOrigin: true,
   pathRewrite: { '^/vnpay': '' },
   onProxyReq: (proxyReq, req, res) => {
-    console.log('Proxy request:', {
-      url: req.url,
-      method: req.method,
-      headers: req.headers
-    });
+    if (process.env.NODE_ENV !== 'production') {
+      console.log(`[DEV] VNPay proxy request: ${req.method} ${req.url}`);
+    }
     proxyReq.setHeader('Host', 'sandbox.vnpayment.vn');
   },
   onProxyRes: (proxyRes, req, res) => {
-    console.log('Proxy response:', {
-      url: req.url,
-      status: proxyRes.statusCode,
-      headers: proxyRes.headers
-    });
+    if (process.env.NODE_ENV !== 'production') {
+      console.log(`[DEV] VNPay proxy response: ${proxyRes.statusCode} ${req.url}`);
+    }
     // Xóa CSP gốc
     delete proxyRes.headers['content-security-policy'];
     delete proxyRes.headers['content-security-policy-report-only'];
@@ -335,7 +335,9 @@ wss.on('connection', async (ws, req) => {
     const token = url.searchParams.get('token');
     const roomId = url.searchParams.get('room_id');
 
-    console.log(`WS Connection: room=${roomId}, token=${token ? 'present' : 'missing'}`);
+    if (process.env.NODE_ENV !== 'production') {
+      console.log(`[DEV] WS Connection: room=${roomId}, token=${token ? 'present' : 'missing'}`);
+    }
 
     if (!token || !roomId) {
       ws.send(JSON.stringify({ action: 'error', message: 'Missing token or roomId' }));
@@ -364,7 +366,9 @@ wss.on('connection', async (ws, req) => {
     );
     ws.send(JSON.stringify({ action: 'chat_history', messages }));
 
-    console.log(`WS Connected: ${decoded.makh || decoded.MaTK || 'unknown'} to room ${roomId}`);
+    if (process.env.NODE_ENV !== 'production') {
+      console.log(`[DEV] WS Connected: ${decoded.makh || decoded.MaTK || 'unknown'} to room ${roomId}`);
+    }
 
     ws.on('message', async (message) => {
       try {
@@ -401,7 +405,9 @@ wss.on('connection', async (ws, req) => {
           });
         }
 
-        console.log(`Message broadcasted in room ${room_id}: ${msgContent.substring(0, 50)}...`);
+        if (process.env.NODE_ENV !== 'production') {
+          console.log(`[DEV] WS msg in room ${room_id}: ${msgContent.substring(0, 30)}...`);
+        }
       } catch (error) {
         console.error('WS Message Error:', error);
         if (ws.readyState === WebSocket.OPEN) {
@@ -415,7 +421,9 @@ wss.on('connection', async (ws, req) => {
         rooms.get(roomId).delete(ws);
         if (rooms.get(roomId).size === 0) rooms.delete(roomId);
       }
-      console.log(`WS Disconnected from room ${roomId}`);
+      if (process.env.NODE_ENV !== 'production') {
+        console.log(`[DEV] WS Disconnected from room ${roomId}`);
+      }
     });
 
     ws.on('error', (error) => {

@@ -20,21 +20,17 @@ class OrderController {
             return baseController.sendSuccess(res, checkoutResult.payload);
 
         } catch (error) {
-            console.error('[CRITICAL] Order placement failed:', error);
-            // Log full error for debugging
-            console.error('Order Error Details:', {
+            console.error('[CRITICAL] Order placement failed:', {
                 message: error.message,
                 code: error.code,
                 paymentMethod: req.body.paymentMethod,
-                stack: error.stack
+                stack: error.stack,
+                sqlMessage: error.sqlMessage // server-side only
             });
-            
-            // Return verbose error to frontend for debugging
+            // DO NOT expose sqlMessage to client — leaks DB schema
             return res.status(500).json({
                 success: false,
-                message: error.message || 'Lỗi khi đặt hàng',
-                detail: error.message, // For user visibility
-                sqlMessage: error.sqlMessage // MySQL specific
+                message: 'Đặt hàng thất bại, vui lòng thử lại sau.'
             });
         }
     }
@@ -63,8 +59,8 @@ class OrderController {
             const orderId = req.params.orderId || req.params.id;
             const order = await OrderService.getOrderById(orderId);
 
-            // Check authorization
-            const isAdmin = req.user.userType === 'admin' || req.user.role !== undefined || req.user.MaQuyen !== undefined;
+            // Check authorization — only use userType set by auth middleware
+            const isAdmin = req.user.userType === 'admin';
             if (req.user.makh != order.customerId && !isAdmin) {
                 return baseController.sendError(res, 'Không có quyền truy cập', 403);
             }

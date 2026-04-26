@@ -33,7 +33,7 @@ if (sslCaB64) {
       rejectUnauthorized: process.env.DB_REJECT_UNAUTHORIZED !== 'false',
       minVersion: 'TLSv1.2'
     };
-    console.log('DB SSL: using DB_SSL_CA_BASE64');
+    if (process.env.NODE_ENV !== 'production') console.log('DB SSL: using DB_SSL_CA_BASE64');
   } catch (err) {
     console.warn('DB SSL: failed to parse DB_SSL_CA_BASE64, falling back', err.message);
   }
@@ -43,7 +43,7 @@ if (sslCaB64) {
     rejectUnauthorized: process.env.DB_REJECT_UNAUTHORIZED !== 'false',
     minVersion: 'TLSv1.2'
   };
-  console.log('DB SSL: using DB_SSL_CA (raw PEM)');
+  if (process.env.NODE_ENV !== 'production') console.log('DB SSL: using DB_SSL_CA (raw PEM)');
 } else if (dbConfig.host.includes('tidbcloud.com') || process.env.DB_REQUIRE_SSL === 'true') {
   // TiDB Cloud Serverless REQUIRE TLS. If no CA is provided, try to load local ones or use default TLS settings.
   const caFiles = ['isrgrootx1.pem', 'tidb-ca.pem'];
@@ -54,7 +54,7 @@ if (sslCaB64) {
       const p = path.join(process.cwd(), f);
       if (fs.existsSync(p)) {
         loadedCa = fs.readFileSync(p);
-        console.log(`DB SSL: auto-loaded local CA from ${f}`);
+        if (process.env.NODE_ENV !== 'production') console.log(`DB SSL: auto-loaded local CA from ${f}`);
         break;
       }
     } catch (e) { /* continue */ }
@@ -65,7 +65,7 @@ if (sslCaB64) {
     rejectUnauthorized: process.env.DB_REJECT_UNAUTHORIZED !== 'false',
     minVersion: 'TLSv1.2'
   };
-  console.log('DB SSL: enabled for TiDB Cloud / SSL Required mode');
+  if (process.env.NODE_ENV !== 'production') console.log('DB SSL: enabled for TiDB Cloud / SSL Required mode');
 }
 
 // Tạo pool kết nối với xử lý lỗi
@@ -113,7 +113,7 @@ let pool = mysql.createPool(dbConfig);
 process.on('SIGINT', async () => {
   try {
     await pool.end();
-    console.log('Database connection pool closed');
+    if (process.env.NODE_ENV !== 'production') console.log('Database connection pool closed');
     process.exit(0);
   } catch (err) {
     console.error('Error closing connection pool:', err);

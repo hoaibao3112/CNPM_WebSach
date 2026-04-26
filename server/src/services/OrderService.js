@@ -20,13 +20,15 @@ const wardsData = JSON.parse(fs.readFileSync(path.join(__dirname, '../../migrati
 class OrderService {
     constructor() {
         // VNPay configuration
+        // testMode: false ở production thật (live payment), true ở dev/staging (sandbox)
+        const isProduction = process.env.NODE_ENV === 'production';
         this.vnpay = new VNPay({
-            tmnCode: process.env.VNP_TMNCODE || 'MPEBN4AM',
-            secureSecret: process.env.VNP_HASHSECRET || 'JNW4HXMTKJ0X3IE8YBVXGRVRACHISEH5',
+            tmnCode: process.env.VNP_TMNCODE,
+            secureSecret: process.env.VNP_HASHSECRET,
             vnpayHost: process.env.VNP_URL ? process.env.VNP_URL.split('/paymentv2')[0] : 'https://sandbox.vnpayment.vn',
-            testMode: true,
+            testMode: !isProduction,  // auto: false khi production, true khi dev/staging
             hashAlgorithm: 'SHA512',
-            enableLog: process.env.NODE_ENV !== 'production',
+            enableLog: !isProduction,
             loggerFn: ignoreLogger,
         });
     }

@@ -1,9 +1,20 @@
 import express from 'express';
+import rateLimit from 'express-rate-limit';
 import OrderController from '../controllers/OrderController.js';
 import RefundController from '../controllers/RefundController.js';
 import { authenticateToken } from '../middlewares/auth.js';
 
 const router = express.Router();
+
+// Rate limiter riêng cho đặt hàng — chống spam và brute-force mã giảm giá
+const placeOrderLimiter = rateLimit({
+    windowMs: 60 * 1000,  // 1 phút
+    max: 10,              // tối đa 10 đơn/phút/IP
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { success: false, message: 'Bạn đặt hàng quá nhiều, vui lòng thử lại sau 1 phút.' },
+    keyGenerator: (req) => req.user?.makh || req.ip, // Rate limit theo user ID (sau auth)
+});
 
 // ===== VNPAY =====
 // VNPay payment callback (no auth required - it's a redirect from VNPay)
@@ -11,11 +22,17 @@ const router = express.Router();
 router.get('/vnpay_return', OrderController.vnpayReturn);
 
 // ===== ORDER OPERATIONS =====
-// Place order (VNPay or COD)
-router.post('/place-order', authenticateToken, OrderController.placeOrder);
+// Place order (VNPay or COD) — rate limited per user
+router.post('/place-order', authenticateToken, placeOrderLimiter, OrderController.placeOrder);
 
-// Get all orders (admin only - should add role check middleware)
-router.get('/hoadon', authenticateToken, OrderController.getAllOrders);
+// Get all orders (admin only)
+const requireAdmin = (req, res, next) => {
+    if (req.user?.userType !== 'admin') {
+        return res.status(403).json({ success: false, message: 'Chỉ admin mới có quyền truy cập' });
+    }
+    next();
+};
+router.get('/hoadon', authenticateToken, requireAdmin, OrderController.getAllOrders);
 
 // Get single order details
 router.get('/:id', authenticateToken, OrderController.getOrderDetails);

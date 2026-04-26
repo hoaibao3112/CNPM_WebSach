@@ -44,7 +44,8 @@ class CustomerController {
 
     async logView(req, res) {
         try {
-            const { maSanPham, makh } = req.body;
+            const { maSanPham } = req.body;
+            const makh = req.user?.makh; // Always from JWT, never from client body
             await CustomerService.logActivity(makh, 'view', { masanpham: maSanPham });
             return baseController.sendSuccess(res, null, 'Ghi nhận hành động xem thành công', 201);
         } catch (error) {
@@ -54,7 +55,8 @@ class CustomerController {
 
     async logSearch(req, res) {
         try {
-            const { query, makh } = req.body;
+            const { query } = req.body;
+            const makh = req.user?.makh; // Always from JWT, never from client body
             await CustomerService.logActivity(makh, 'search', { query });
             return baseController.sendSuccess(res, null, 'Ghi nhận hành động tìm kiếm thành công', 201);
         } catch (error) {
