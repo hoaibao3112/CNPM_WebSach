@@ -532,13 +532,11 @@ window.openOrderDetailFromProfile = async function (orderId) {
       }
     }
 
-    // Fallback: store id and navigate to orders page
-    localStorage.setItem('currentOrderId', String(orderId));
-    window.location.href = 'orders.html';
+    // Fallback: navigate to orders page with orderId as query param (no localStorage needed)
+    window.location.href = `orders.html?orderId=${encodeURIComponent(orderId)}`;
   } catch (err) {
     console.error('openOrderDetailFromProfile error', err);
-    localStorage.setItem('currentOrderId', String(orderId));
-    window.location.href = 'orders.html';
+    window.location.href = `orders.html?orderId=${encodeURIComponent(orderId)}`;
   }
 };
 let _currentProfileReviewOrderId = null;

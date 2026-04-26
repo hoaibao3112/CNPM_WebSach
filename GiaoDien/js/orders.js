@@ -202,11 +202,14 @@ function initializeApp() {
         initializeChatSystem();
     }, 500);
 
-    // Load danh sách đơn hàng — sau khi render xong, tự động mở đơn từ profile nếu có
+    // Load danh sách đơn hàng — sau khi render xong, tự động mở đơn nếu orderId có trong URL
     renderOrders(user.makh).then(() => {
-        const pendingOrderId = localStorage.getItem('currentOrderId');
+        const params = new URLSearchParams(window.location.search);
+        const pendingOrderId = params.get('orderId');
         if (pendingOrderId) {
-            localStorage.removeItem('currentOrderId');
+            // Xóa query param khỏi URL mà không reload trang
+            const cleanUrl = window.location.pathname;
+            window.history.replaceState({}, '', cleanUrl);
             fetchOrderDetail(pendingOrderId).then(detail => {
                 if (detail) showOrderDetail(detail);
             }).catch(err => console.warn('Auto-open order detail failed:', err));
