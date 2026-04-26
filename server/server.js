@@ -63,9 +63,10 @@ const allowedOrigins = [
 
 const isOriginAllowed = (origin) => {
   if (!origin) {
-    // In production: block requests without Origin (server-to-server / curl)
-    // In development: allow for Postman/testing convenience
-    return process.env.NODE_ENV !== 'production';
+    // CORS là browser security feature — request không có Origin (Render health check,
+    // curl, server-to-server) không phải CORS attack nên cho phép qua.
+    // Bảo mật thực sự đến từ JWT authentication, không phải CORS.
+    return true;
   }
 
   // Direct whitelist match

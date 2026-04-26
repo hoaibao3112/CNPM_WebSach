@@ -1,5 +1,5 @@
 import express from 'express';
-import rateLimit from 'express-rate-limit';
+import rateLimit, { ipKeyGenerator } from 'express-rate-limit';
 import OrderController from '../controllers/OrderController.js';
 import RefundController from '../controllers/RefundController.js';
 import { authenticateToken } from '../middlewares/auth.js';
@@ -8,12 +8,13 @@ const router = express.Router();
 
 // Rate limiter riêng cho đặt hàng — chống spam và brute-force mã giảm giá
 const placeOrderLimiter = rateLimit({
-    windowMs: 60 * 1000,  // 1 phút
-    max: 10,              // tối đa 10 đơn/phút/IP
+    windowMs: 60 * 1000,
+    max: 10,
     standardHeaders: true,
     legacyHeaders: false,
     message: { success: false, message: 'Bạn đặt hàng quá nhiều, vui lòng thử lại sau 1 phút.' },
-    keyGenerator: (req) => req.user?.makh || req.ip, // Rate limit theo user ID (sau auth)
+    // Dùng user ID nếu đã auth, fallback về IP (dùng ipKeyGenerator để handle IPv6)
+    keyGenerator: (req) => req.user?.makh ? String(req.user.makh) : ipKeyGenerator(req),
 });
 
 // ===== VNPAY =====
