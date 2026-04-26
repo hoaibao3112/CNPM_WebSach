@@ -421,35 +421,72 @@ async function loadReviewedOrders() {
     const reviewed = checks.filter(c => c.review).map(c => ({ order: c.order, review: c.review }));
 
     if (!reviewed.length) {
-      listEl.innerHTML = `<div class="no-orders"><i class="fas fa-star"></i><p>Bạn chưa có đơn hàng nào đã đánh giá.</p></div>`;
+      listEl.innerHTML = `
+        <div class="flex flex-col items-center justify-center py-20 text-center">
+          <div class="w-20 h-20 bg-yellow-50 rounded-full flex items-center justify-center mb-4">
+            <i class="fas fa-star text-4xl text-yellow-300"></i>
+          </div>
+          <p class="text-base font-black text-gray-700 uppercase tracking-tight">Chưa có đánh giá</p>
+          <p class="text-sm text-gray-400 mt-1">Bạn chưa đánh giá đơn hàng nào.</p>
+        </div>`;
       return;
     }
 
     // Render chỉ phần đã đánh giá
-    const parts = [];
-    parts.push(`<h3>Đã đánh giá (${reviewed.length})</h3>`);
-    parts.push(reviewed.map(r => {
+    const header = `
+      <div class="flex items-center gap-3 mb-6">
+        <div class="w-8 h-8 bg-yellow-400 rounded-xl flex items-center justify-center shadow-sm">
+          <i class="fas fa-star text-white text-sm"></i>
+        </div>
+        <h3 class="text-base font-black text-gray-800 uppercase tracking-tight">Đã đánh giá <span class="text-primary">(${reviewed.length})</span></h3>
+      </div>`;
+
+    const cards = `<div class="grid grid-cols-1 md:grid-cols-2 gap-4">` + reviewed.map(r => {
       const o = r.order;
       const rv = r.review || {};
-      const rating = rv.rating || rv.SoSao || rv.so_diem || rv.SoDiem || 0;
+      const rating = Number(rv.rating || rv.SoSao || rv.so_diem || rv.SoDiem || 0);
       const comment = rv.NhanXet || rv.comment || rv.noi_dung || '';
-      const created = new Date(o.createdAt || o.NgayTao || o.NgayDat || Date.now()).toLocaleString('vi-VN');
+      const created = new Date(o.createdAt || o.NgayTao || o.NgayDat || Date.now()).toLocaleDateString('vi-VN');
+      const stars = '★'.repeat(Math.min(5, Math.max(0, rating))) + '☆'.repeat(Math.max(0, 5 - Math.min(5, Math.max(0, rating))));
+      const total = formatPrice(o.totalAmount || o.TongTien || o.TongTienThanhToan || 0);
       return `
-        <div class="reviewed-order-card" data-order-id="${o.id}" style="border:1px solid #eee;padding:12px;border-radius:8px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:flex-start;gap:12px">
-          <div style="flex:1">
-            <div style="font-weight:600">Đơn hàng #${o.id} <small style="color:#666;margin-left:8px">${created}</small></div>
-            <div style="color:#333;margin-top:6px">Tổng: <strong>${formatPrice(o.totalAmount || o.TongTien || o.TongTienThanhToan || 0)}</strong></div>
-            <div style="margin-top:8px;color:#444">${comment ? escapeHtml(comment).slice(0, 200) : '<em>Không có nhận xét</em>'}</div>
+        <div class="bg-white border border-gray-100 rounded-2xl p-5 hover:shadow-lg hover:border-primary/20 transition-all duration-300 group" data-order-id="${o.id}">
+          <div class="flex items-start justify-between mb-3">
+            <div>
+              <div class="flex items-center gap-2">
+                <span class="text-[10px] font-black text-primary uppercase tracking-[0.2em]">Đơn hàng</span>
+                <span class="text-sm font-black text-gray-800">#${o.id}</span>
+              </div>
+              <p class="text-[10px] text-gray-400 font-medium mt-0.5">${created}</p>
+            </div>
+            <div class="text-right">
+              <div class="text-lg text-yellow-400 tracking-widest leading-none">${stars}</div>
+              <p class="text-[10px] text-gray-400 mt-1">${rating}/5 sao</p>
+            </div>
           </div>
-          <div style="width:160px;text-align:right">
-            <div style="font-size:14px;color:#ffb400;margin-bottom:6px">${'★'.repeat(Math.min(5, Math.max(0, Number(rating)))) + '☆'.repeat(Math.max(0, 5 - Math.min(5, Math.max(0, Number(rating)))))}</div>
-            <div><a href="#" onclick="openOrderDetailFromProfile('${o.id}'); return false;" class="btn" style="text-decoration:none">Xem chi tiết</a></div>
-          </div>
-        </div>
-      `;
-    }).join(''));
 
-    listEl.innerHTML = parts.join('\n');
+          <div class="border-t border-dashed border-gray-100 pt-3 mb-3">
+            <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Tổng tiền</p>
+            <p class="text-lg font-black text-gray-800 tracking-tighter">${total}</p>
+          </div>
+
+          ${comment ? `
+          <div class="bg-gray-50 rounded-xl p-3 mb-4">
+            <p class="text-xs text-gray-500 leading-relaxed italic">"${escapeHtml(comment).slice(0, 180)}${comment.length > 180 ? '…' : ''}"</p>
+          </div>` : `
+          <div class="bg-gray-50 rounded-xl p-3 mb-4">
+            <p class="text-xs text-gray-400 italic">Không có nhận xét</p>
+          </div>`}
+
+          <button
+            onclick="openOrderDetailFromProfile('${o.id}')"
+            class="w-full py-2.5 bg-primary/5 hover:bg-primary hover:text-white text-primary rounded-xl text-[11px] font-black uppercase tracking-widest transition-all duration-300 flex items-center justify-center gap-2 group-hover:shadow-md">
+            <i class="fas fa-eye text-xs"></i> Xem chi tiết
+          </button>
+        </div>`;
+    }).join('') + `</div>`;
+
+    listEl.innerHTML = header + cards;
 
   } catch (err) {
     console.error('loadReviewedOrders error', err);

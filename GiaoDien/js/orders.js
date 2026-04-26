@@ -202,8 +202,16 @@ function initializeApp() {
         initializeChatSystem();
     }, 500);
 
-    // Load danh sách đơn hàng
-    renderOrders(user.makh);
+    // Load danh sách đơn hàng — sau khi render xong, tự động mở đơn từ profile nếu có
+    renderOrders(user.makh).then(() => {
+        const pendingOrderId = localStorage.getItem('currentOrderId');
+        if (pendingOrderId) {
+            localStorage.removeItem('currentOrderId');
+            fetchOrderDetail(pendingOrderId).then(detail => {
+                if (detail) showOrderDetail(detail);
+            }).catch(err => console.warn('Auto-open order detail failed:', err));
+        }
+    });
 
     // Gắn các sự kiện
     attachEventListeners();
