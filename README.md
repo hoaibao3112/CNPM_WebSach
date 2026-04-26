@@ -1,163 +1,220 @@
 <div align="center">
 
-# 📚 WebSách - Hệ Thống Quản Lý Nhà Sách
+# 📚 WebSách — Hệ Thống Bán Sách Trực Tuyến
 
-<img src="./GiaoDien/img/logo.png" alt="WebSách Logo" width="200"/>
+<img src="./GiaoDien/img/logo1.png" alt="WebSách Logo" width="180"/>
 
-### *Giải pháp quản lý nhà sách hiện đại, toàn diện và chuyên nghiệp* ✨
+### *Nền tảng mua sắm sách trực tuyến hiện đại — từ cửa hàng đến tay bạn đọc* ✨
 
-[![React](https://img.shields.io/badge/React-18.0+-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://reactjs.org/)
-[![Node.js](https://img.shields.io/badge/Node.js-18.0+-339933?style=for-the-badge&logo=node.js&logoColor=white)](https://nodejs.org/)
-[![MySQL](https://img.shields.io/badge/MySQL-8.0+-4479A1?style=for-the-badge&logo=mysql&logoColor=white)](https://www.mysql.com/)
-[![Express.js](https://img.shields.io/badge/Express.js-4.18+-000000?style=for-the-badge&logo=express&logoColor=white)](https://expressjs.com/)
-[![License](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](LICENSE)
+[![Node.js](https://img.shields.io/badge/Node.js-22.x-339933?style=for-the-badge&logo=node.js&logoColor=white)](https://nodejs.org/)
+[![Express](https://img.shields.io/badge/Express.js-4.x-000000?style=for-the-badge&logo=express&logoColor=white)](https://expressjs.com/)
+[![React](https://img.shields.io/badge/React-18.x-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://reactjs.org/)
+[![TiDB](https://img.shields.io/badge/TiDB_Cloud-MySQL-4479A1?style=for-the-badge&logo=mysql&logoColor=white)](https://tidbcloud.com/)
+[![Vercel](https://img.shields.io/badge/Vercel-Frontend-000000?style=for-the-badge&logo=vercel&logoColor=white)](https://vercel.com/)
+[![Render](https://img.shields.io/badge/Render-Backend-46E3B7?style=for-the-badge&logo=render&logoColor=white)](https://render.com/)
 
-[Tính Năng](#-tính-năng) •
-[Demo](#-demo) •
-[Cài Đặt](#-cài-đặt) •
-[Tech Stack](#-công-nghệ-sử-dụng) •
-[API Docs](#-api-documentation) •
-[Đóng Góp](#-đóng-góp)
+[🌐 Demo Khách Hàng](#-production-deployment) •
+[🛠️ Admin Panel](#-production-deployment) •
+[⚡ Cài Đặt](#-cài-đặt-local) •
+[📡 API Docs](#-api-documentation) •
+[🏗️ Kiến Trúc](#️-kiến-trúc-hệ-thống)
 
 ---
 
 </div>
 
+## 🚀 Production Deployment
+
+> Dự án đã được deploy hoàn chỉnh lên môi trường production với đầy đủ 3 tầng:
+
+| Service | URL | Platform | Status |
+|---------|-----|----------|--------|
+| 🌐 **Customer Frontend** | [cnpm-web-sach.vercel.app](https://cnpm-web-sach.vercel.app) | Vercel | ![Live](https://img.shields.io/badge/status-live-brightgreen) |
+| 💼 **Admin Dashboard** | [cnpm-admin-dashboard.vercel.app](https://cnpm-admin-dashboard.vercel.app) | Vercel | ![Live](https://img.shields.io/badge/status-live-brightgreen) |
+| ⚙️ **Backend API** | [cnpm-websach-2.onrender.com](https://cnpm-websach-2.onrender.com) | Render | ![Live](https://img.shields.io/badge/status-live-brightgreen) |
+| 🤖 **AI Chatbot** | [cnpm-websach-hf0f.onrender.com](https://cnpm-websach-hf0f.onrender.com) | Render | ![Live](https://img.shields.io/badge/status-live-brightgreen) |
+
+---
+
 ## 🎯 Tổng Quan
 
-**WebSách** là hệ thống quản lý nhà sách offline toàn diện, được xây dựng với kiến trúc hiện đại và giao diện thân thiện với người dùng. Hệ thống cung cấp đầy đủ các tính năng quản lý từ điểm bán hàng (POS), kho hàng, nhân sự, tài chính đến báo cáo và phân tích dữ liệu.
+**WebSách** là hệ thống bán sách trực tuyến toàn diện, bao gồm hai giao diện tách biệt dành cho **khách hàng** và **quản trị viên**, được vận hành trên nền tảng cloud hiện đại.
+
+Khách hàng có thể dễ dàng tìm kiếm, đặt mua sách và theo dõi đơn hàng, trong khi đội ngũ quản trị có công cụ mạnh mẽ để vận hành toàn bộ nhà sách — từ kho hàng, nhân sự, đến tài chính và báo cáo.
 
 ### 🎪 Điểm Nổi Bật
 
 ```
-🔐 Phân quyền người dùng linh hoạt với RBAC
-💰 Quản lý điểm bán hàng (POS) chuyên nghiệp
-📦 Hệ thống quản lý kho hàng thông minh
-👥 Quản lý nhân sự & chấm công tự động
-📊 Dashboard thống kê & báo cáo chi tiết
-🎁 Chương trình khuyến mãi & tích điểm
-💳 Đa dạng phương thức thanh toán
-🔄 Quản lý trả hàng & hoàn tiền
+🛒  Mua sắm trực tuyến mượt mà với giỏ hàng & thanh toán online
+💳  Tích hợp VNPay · MoMo · ZaloPay — thanh toán nhanh, bảo mật
+🤖  AI Chatbot thông minh hỗ trợ tư vấn sách 24/7 (Gemini AI)
+💬  Chat realtime giữa khách hàng và nhân viên hỗ trợ (WebSocket)
+🔐  Xác thực đa nền tảng: Google OAuth · Facebook OAuth · Email/Password
+📊  Dashboard thống kê doanh thu, tồn kho, nhân sự theo thời gian thực
+👥  Phân quyền RBAC linh hoạt cho từng vai trò nhân viên
+🔄  Quản lý trả hàng & hoàn tiền tự động
 ```
 
 ---
 
-## ✨ Tính Năng
+## ✨ Tính Năng Chi Tiết
 
-### 🛒 **Module Bán Hàng**
-- ✅ **Point of Sale (POS)**: Giao diện bán hàng nhanh chóng, tiện lợi
-- ✅ **Quản lý hóa đơn**: Tạo, xem, in và xuất hóa đơn
-- ✅ **Quản lý khách hàng**: Lưu trữ thông tin, lịch sử mua hàng
-- ✅ **Chương trình khách hàng thân thiết**: Tích điểm và đổi quà
-- ✅ **Trả hàng & Hoàn tiền**: Xử lý đơn hàng trả về
+### 🌐 Giao Diện Khách Hàng (Vanilla JS + HTML/CSS)
 
-### 📦 **Module Kho Hàng**
-- ✅ **Quản lý sản phẩm**: CRUD sản phẩm, phân loại theo danh mục
-- ✅ **Quản lý tác giả & Nhà xuất bản**: Thông tin chi tiết
-- ✅ **Quản lý tồn kho**: Theo dõi số lượng, cảnh báo hết hàng
-- ✅ **Nhập hàng từ nhà cung cấp**: Phiếu nhập kho chi tiết
-- ✅ **Chuyển kho**: Di chuyển hàng giữa các chi nhánh
+| Tính năng | Mô tả |
+|-----------|-------|
+| 🏠 Trang chủ | Sản phẩm nổi bật, slider khuyến mãi, sách mới nhất |
+| 🔍 Tìm kiếm & Lọc | Tìm theo tên, tác giả, danh mục, giá, đánh giá |
+| 📖 Chi tiết sản phẩm | Thông tin đầy đủ, ảnh, đánh giá, sách liên quan |
+| 🛒 Giỏ hàng | Thêm/xóa/cập nhật số lượng, tính tổng tự động |
+| 💳 Thanh toán | VNPay · MoMo · ZaloPay · COD |
+| 📦 Theo dõi đơn hàng | Lịch sử đơn, trạng thái, hủy & trả hàng |
+| 👤 Tài khoản | Thông tin cá nhân, địa chỉ, bảo mật |
+| 🔐 Đăng nhập | Email/Password · Google · Facebook OAuth |
+| 🤖 Chatbot | Tư vấn sách thông minh với Gemini AI |
 
-### 👨‍💼 **Module Nhân Sự**
-- ✅ **Quản lý nhân viên**: Hồ sơ, chức vụ, phòng ban
-- ✅ **Chấm công**: Tracking giờ làm việc, ca làm việc
-- ✅ **Quản lý nghỉ phép**: Đăng ký, duyệt phép
-- ✅ **Tính lương**: Tự động tính lương theo công thức
-- ✅ **Đơn từ chức**: Quản lý quy trình nghỉ việc
+### 💼 Admin Dashboard (React + TailwindCSS)
 
-### 💼 **Module Tài Chính**
-- ✅ **Báo cáo doanh thu**: Theo ngày, tuần, tháng, năm
-- ✅ **Phân tích lợi nhuận**: Chi tiết theo sản phẩm, danh mục
-- ✅ **Quản lý chi phí**: Nhập liệu và theo dõi
-- ✅ **Dashboard tài chính**: Biểu đồ trực quan
-
-### 🔐 **Module Hệ Thống**
-- ✅ **Quản lý người dùng**: Tạo, sửa, xóa tài khoản
-- ✅ **Phân quyền RBAC**: Role-based Access Control linh hoạt
-- ✅ **Audit Log**: Ghi lại mọi thao tác quan trọng
-- ✅ **Cài đặt hệ thống**: Cấu hình tham số
-
-### 🌐 **Module Giao Diện Khách Hàng**
-- ✅ **Trang chủ**: Hiển thị sản phẩm nổi bật, khuyến mãi
-- ✅ **Tìm kiếm & Lọc**: Tìm sách theo nhiều tiêu chí
-- ✅ **Chi tiết sản phẩm**: Thông tin đầy đủ, đánh giá
-- ✅ **Giỏ hàng**: Quản lý sản phẩm muốn mua
-- ✅ **Đặt hàng**: Quy trình đặt hàng đơn giản
-- ✅ **Tài khoản cá nhân**: Quản lý thông tin, đơn hàng
+| Module | Tính năng |
+|--------|-----------|
+| 📊 **Dashboard** | Biểu đồ doanh thu, top sản phẩm, thống kê tổng quan |
+| 📦 **Sản phẩm** | CRUD sản phẩm, quản lý tồn kho, cảnh báo hết hàng |
+| 🧑‍🤝‍🧑 **Khách hàng** | Danh sách, lịch sử mua, điểm thưởng |
+| 📋 **Đơn hàng** | Xử lý đơn, cập nhật trạng thái, hoàn tiền |
+| 👷 **Nhân sự** | Quản lý nhân viên, chức vụ, phòng ban |
+| ⏰ **Chấm công** | Tracking giờ làm, ca làm việc, tự động xử lý |
+| 💰 **Tính lương** | Tự động tính lương theo công thức |
+| 🏷️ **Khuyến mãi** | Tạo & quản lý coupon, chương trình giảm giá |
+| 🏢 **Nhà cung cấp** | Quản lý nhà cung cấp, phiếu nhập kho |
+| 📝 **Hoàn trả** | Duyệt đơn trả hàng, hoàn tiền |
+| 💬 **Chat** | Hỗ trợ khách hàng realtime qua WebSocket |
+| 🔐 **Phân quyền** | RBAC — cấu hình quyền theo từng vai trò |
 
 ---
 
-## 🚀 Demo
+## 🏗️ Kiến Trúc Hệ Thống
 
-### 📸 Screenshots
-
-<div align="center">
-
-#### 🏠 Giao Diện Khách Hàng
-
-| Trang Chủ | Chi Tiết Sản Phẩm |
-|-----------|-------------------|
-| Hiển thị sản phẩm nổi bật, khuyến mãi | Thông tin chi tiết, đánh giá |
-
-#### 💼 Giao Diện Quản Trị
-
-| Dashboard | Quản Lý Sản Phẩm |
-|-----------|------------------|
-| Thống kê tổng quan | CRUD sản phẩm, kho hàng |
-
-</div>
+```
+┌─────────────────────────────────────────────────────────────┐
+│                        PRODUCTION                           │
+│                                                             │
+│   ┌──────────────────┐    ┌──────────────────┐             │
+│   │  Customer Web    │    │  Admin Dashboard  │             │
+│   │  (Vercel)        │    │  (Vercel)         │             │
+│   │  HTML/CSS/JS     │    │  React + Tailwind │             │
+│   └────────┬─────────┘    └────────┬──────────┘             │
+│            │                       │                         │
+│            └──────────┬────────────┘                         │
+│                       ↓ HTTPS + JWT                          │
+│           ┌───────────────────────┐                          │
+│           │   Backend API         │                          │
+│           │   (Render)            │                          │
+│           │   Node.js + Express   │                          │
+│           │   + WebSocket         │                          │
+│           └───────────┬───────────┘                          │
+│                       │                                       │
+│        ┌──────────────┼──────────────┐                       │
+│        ↓              ↓              ↓                       │
+│   ┌─────────┐   ┌──────────┐  ┌──────────┐                  │
+│   │ TiDB    │   │ Chatbot  │  │ Payment  │                  │
+│   │ Cloud   │   │ (Render) │  │ Gateways │                  │
+│   │ MySQL   │   │ Python   │  │ VNPay    │                  │
+│   │         │   │ Gemini   │  │ MoMo     │                  │
+│   └─────────┘   └──────────┘  │ ZaloPay  │                  │
+│                                └──────────┘                  │
+└─────────────────────────────────────────────────────────────┘
+```
 
 ---
 
 ## 🛠️ Công Nghệ Sử Dụng
 
-### **Frontend**
-
-```javascript
-{
-  "framework": "React 18+",
-  "styling": "CSS3 + Custom Components",
-  "state": "React Hooks + Context API",
-  "routing": "React Router v6",
-  "http": "Axios",
-  "auth": "JWT (JSON Web Tokens)"
-}
+### Frontend — Customer
+```
+HTML5 · CSS3 · Vanilla JavaScript
+Axios (HTTP) · WebSocket Client
+Responsive Design · Live Server
 ```
 
-### **Backend**
-
-```javascript
-{
-  "runtime": "Node.js 18+",
-  "framework": "Express.js 4.18+",
-  "database": "MySQL 8.0+",
-  "orm": "Sequelize",
-  "authentication": "JWT + bcrypt",
-  "file_upload": "Multer",
-  "email": "Nodemailer"
-}
+### Frontend — Admin Dashboard
+```
+React 18         — UI Framework
+TailwindCSS      — Styling
+React Router v6  — Navigation
+Axios            — HTTP Client
+Chart.js / Recharts — Data visualization
 ```
 
-### **DevOps & Tools**
+### Backend
+```
+Node.js 22       — Runtime
+Express.js 4.x   — Web Framework
+Sequelize 6      — ORM
+MySQL2           — Database driver
+JSON Web Token   — Authentication (HS256, 4h expiry)
+bcryptjs         — Password hashing
+Multer           — File upload
+Nodemailer       — Email (Gmail SMTP)
+Helmet           — HTTP Security Headers
+express-rate-limit — Rate limiting
+WebSocket (ws)   — Realtime chat
+http-proxy-middleware — VNPay proxy
+```
 
-```bash
-Git, npm, MySQL Workbench, Postman, VS Code
+### AI Chatbot
+```
+Python · FastAPI
+Google Gemini AI (gemini-2.0-flash)
+FAISS / ChromaDB — Vector search
+LangChain        — RAG pipeline
+```
+
+### Infrastructure
+```
+Vercel    — Frontend hosting (CDN, Edge)
+Render    — Backend + Chatbot hosting
+TiDB Cloud — MySQL-compatible cloud database (SSL)
+GitHub    — Source control & CI/CD trigger
+```
+
+### Payments & OAuth
+```
+VNPay · MoMo · ZaloPay  — Payment gateways
+Google OAuth 2.0         — Social login
+Facebook OAuth           — Social login
+Gmail SMTP · SendGrid    — Email delivery
 ```
 
 ---
 
-## 📋 Yêu Cầu Hệ Thống
+## 🔒 Bảo Mật
 
-Trước khi bắt đầu, hãy đảm bảo bạn đã cài đặt:
+Hệ thống được trang bị đầy đủ các lớp bảo mật cho môi trường production:
 
-- **Node.js** >= 18.0.0
-- **npm** >= 9.0.0
-- **MySQL** >= 8.0
-- **Git**
+- ✅ **JWT** với secret 128-char random, hết hạn sau 4h (refresh 14 ngày)
+- ✅ **Helmet.js** — 11 HTTP security headers (XSS, Clickjacking, MIME sniff...)
+- ✅ **Rate Limiting** — 200 req/15min tổng, 15 lần/15min cho login/register
+- ✅ **RBAC** — Phân quyền theo vai trò, kiểm tra số nguyên hợp lệ
+- ✅ **SSL/TLS** — Kết nối database với `rejectUnauthorized: true`
+- ✅ **CORS** — Chỉ cho phép đúng domain production
+- ✅ **bcryptjs** — Mã hóa mật khẩu một chiều
+- ✅ **Input limit** — JSON body giới hạn 10MB
 
 ---
 
-## 🔧 Cài Đặt
+## 📋 Yêu Cầu Cài Đặt Local
+
+| Công cụ | Phiên bản |
+|---------|----------|
+| Node.js | >= 18.0.0 |
+| npm | >= 9.0.0 |
+| MySQL | >= 8.0 (hoặc dùng TiDB Cloud) |
+| Python | >= 3.10 (chatbot) |
+| Git | Latest |
+
+---
+
+## ⚡ Cài Đặt Local
 
 ### 1️⃣ Clone Repository
 
@@ -166,70 +223,48 @@ git clone https://github.com/hoaibao3112/CNPM_WebSach.git
 cd CNPM_WebSach
 ```
 
-### 2️⃣ Cài Đặt Database
+### 2️⃣ Cài Đặt Backend
 
 ```bash
-# Tạo database
-mysql -u root -p
-
-# Import database schema
-mysql -u root -p < Dump20250912.sql
-```
-
-### 3️⃣ Cấu Hình Backend
-
-```bash
-# Di chuyển đến thư mục server
 cd server
-
-# Cài đặt dependencies
 npm install
 
-# Tạo file .env
+# Tạo file .env từ mẫu
 cp .env.example .env
+# Điền các thông tin vào .env (xem .env.example để biết các biến cần thiết)
 
-# Cấu hình thông tin database trong file .env
-DB_HOST=localhost
-DB_USER=root
-DB_PASSWORD=your_password
-DB_NAME=qlbs
-JWT_SECRET=your_secret_key
-PORT=5000
+# Khởi động development
+npm run dev
+# → http://localhost:5000
 ```
 
-### 4️⃣ Cấu Hình Frontend Admin
+### 3️⃣ Cài Đặt Admin Dashboard
 
 ```bash
-# Di chuyển đến thư mục admin
 cd ../admin
-
-# Cài đặt dependencies
 npm install
-
-# Tạo file .env (nếu cần)
-REACT_APP_API_URL=http://localhost:5000/api
-```
-
-### 5️⃣ Khởi Động Ứng Dụng
-
-**Terminal 1 - Backend:**
-```bash
-cd server
 npm start
-# Server running on http://localhost:5000
+# → http://localhost:3000
 ```
 
-**Terminal 2 - Admin Panel:**
+### 4️⃣ Mở Giao Diện Khách Hàng
+
 ```bash
-cd admin
-npm start
-# Admin panel running on http://localhost:3000
+cd ../GiaoDien
+# Dùng VS Code Live Server hoặc bất kỳ HTTP server nào
+# → http://localhost:5500
 ```
 
-**Terminal 3 - Frontend (Optional):**
+### 5️⃣ Cài Đặt AI Chatbot (tuỳ chọn)
+
 ```bash
-cd GiaoDien
-# Mở file index.html hoặc sử dụng live server
+cd ../chatbot
+pip install -r requirements.txt
+cp .env.example .env
+# Điền GEMINI_API_KEY vào .env
+
+python ingest.py   # Tạo vector index từ tài liệu
+python main.py     # → http://localhost:8000
 ```
 
 ---
@@ -239,83 +274,98 @@ cd GiaoDien
 ```
 CNPM_WebSach/
 │
-├── 📂 GiaoDien/                  # Giao diện khách hàng (Vanilla JS)
-│   ├── components/               # Components tái sử dụng
-│   ├── img/                      # Hình ảnh, assets
-│   ├── js/                       # JavaScript files
-│   ├── styles/                   # CSS files
-│   └── *.html                    # HTML pages
+├── 📂 GiaoDien/                   # Customer Frontend (Vanilla JS)
+│   ├── components/                # Header, Footer, shared components
+│   ├── js/                        # Logic từng trang
+│   ├── styles/                    # CSS files
+│   ├── img/                       # Assets & images
+│   └── *.html                     # Các trang HTML
 │
-├── 📂 admin/                     # Admin Panel (React)
-│   ├── public/                   # Static files
+├── 📂 admin/                      # Admin Dashboard (React)
 │   ├── src/
-│   │   ├── components/           # React components
-│   │   ├── pages/                # Page components
-│   │   ├── services/             # API services
-│   │   ├── styles/               # CSS modules
-│   │   └── App.js                # Main app component
+│   │   ├── components/            # Reusable UI components
+│   │   ├── pages/                 # Page components theo module
+│   │   ├── services/              # API call services
+│   │   └── App.js
+│   ├── tailwind.config.js
+│   └── vercel.json                # Vercel SPA routing config
+│
+├── 📂 server/                     # Backend (Node.js + Express)
+│   ├── src/
+│   │   ├── config/                # DB, app config & env validation
+│   │   ├── controllers/           # Business logic handlers
+│   │   ├── middlewares/           # auth.js, rbac, errorHandler
+│   │   ├── models/                # Sequelize models
+│   │   ├── routes/                # API route definitions
+│   │   ├── services/              # Service layer
+│   │   └── utils/                 # Helpers, seeders
+│   ├── backend/product/           # Uploaded product images
+│   ├── uploads/                   # Customer uploaded files
+│   ├── server.js                  # Entry point + WebSocket
+│   ├── .env.example               # Environment template
 │   └── package.json
 │
-├── 📂 server/                    # Backend (Node.js + Express)
-│   ├── src/
-│   │   ├── config/               # Database config
-│   │   ├── models/               # Sequelize models
-│   │   ├── routes/               # API routes
-│   │   ├── controllers/          # Business logic
-│   │   └── utils/                # Helper functions
-│   ├── backend/product/          # Uploaded files
-│   ├── .env                      # Environment variables
-│   ├── server.js                 # Entry point
-│   └── package.json
+├── 📂 chatbot/                    # AI Chatbot (Python + Gemini)
+│   ├── main.py                    # FastAPI server
+│   ├── ingest.py                  # Document ingestion & indexing
+│   ├── config.py                  # Configuration
+│   ├── knowledge_docs/            # Tài liệu sách cho RAG
+│   └── requirements.txt
 │
-├── Dump20250912.sql              # Database schema
-├── qlbs.sql                      # Database backup
-└── README.md                     # This file
+└── README.md
 ```
 
 ---
 
-## 🔌 API Documentation
+## 📡 API Documentation
 
-### Authentication
-
-```http
-POST /api/auth/login
-POST /api/auth/register
-POST /api/auth/forgot-password
-POST /api/auth/reset-password
-```
-
-### Products
+### 🔐 Authentication
 
 ```http
-GET    /api/products           # Get all products
-GET    /api/products/:id       # Get product by ID
-POST   /api/products           # Create product
-PUT    /api/products/:id       # Update product
-DELETE /api/products/:id       # Delete product
+POST /api/auth/login                # Đăng nhập (email/password)
+POST /api/auth/register             # Đăng ký tài khoản
+POST /api/auth/logout               # Đăng xuất
+POST /api/auth/forgot-password      # Quên mật khẩu
+POST /api/auth/reset-password       # Đặt lại mật khẩu
+GET  /auth/google                   # Google OAuth
+GET  /auth/facebook                 # Facebook OAuth
 ```
 
-### Orders
+### 📦 Products
 
 ```http
-GET    /api/orders             # Get all orders
-GET    /api/orders/:id         # Get order by ID
-POST   /api/orders             # Create order
-PUT    /api/orders/:id         # Update order status
+GET    /api/products                # Danh sách sản phẩm (có filter/search)
+GET    /api/products/:id            # Chi tiết sản phẩm
+POST   /api/products                # Tạo sản phẩm [Admin]
+PUT    /api/products/:id            # Cập nhật [Admin]
+DELETE /api/products/:id            # Xóa [Admin]
 ```
 
-### Users & Roles
+### 🛒 Orders
 
 ```http
-GET    /api/users              # Get all users
-POST   /api/users              # Create user
-PUT    /api/users/:id          # Update user
-DELETE /api/users/:id          # Delete user
-GET    /api/roles              # Get all roles
+GET    /api/orders                  # Danh sách đơn hàng
+POST   /api/orders                  # Tạo đơn hàng mới
+GET    /api/orders/:id              # Chi tiết đơn hàng
+PUT    /api/orders/:id/status       # Cập nhật trạng thái [Admin]
+POST   /api/orders/vnpay_return     # VNPay callback
+POST   /api/payments/momo-ipn       # MoMo IPN
+POST   /api/payments/zalopay/ipn    # ZaloPay IPN
 ```
 
-> 📖 **Chi tiết API**: Xem file `API_DOCUMENTATION.md` hoặc import Postman collection
+### 💬 Chat (WebSocket)
+
+```
+ws://your-server/chat?token=<JWT>&room_id=<id>
+
+Events:
+  → send_message    { action, message: { room_id, message } }
+  ← new_message     { action, message: {...} }
+  ← chat_history    { action, messages: [...] }
+  ← error           { action, message }
+```
+
+> 🔍 Health check: `GET /api/ping`
 
 ---
 
@@ -323,154 +373,71 @@ GET    /api/roles              # Get all roles
 
 <div align="center">
 
-| Avatar | Tên | Vai Trò | GitHub |
-|--------|-----|---------|--------|
-| 👨‍💻 | **Hoài Bảo** | Team Lead & Backend | [@hoaibao3112](https://github.com/hoaibao3112) |
-| 👨‍💻 | **Contributor 1** | Frontend Developer | [@username](https://github.com) |
-| 👨‍💻 | **Contributor 2** | Fullstack Developer | [@username](https://github.com) |
+| Tên | Vai Trò | GitHub |
+|-----|---------|--------|
+| 👨‍💻 **Hoài Bảo** | Team Lead · Backend · DevOps | [@hoaibao3112](https://github.com/hoaibao3112) |
 
 </div>
 
 ---
 
-## 🤝 Đóng Góp
+## 📊 Trạng Thái Dự Án
 
-Chúng tôi luôn chào đón mọi đóng góp! Nếu bạn muốn đóng góp vào dự án, vui lòng làm theo các bước sau:
+### ✅ Đã Hoàn Thành & Deploy Production
 
-1. **Fork** repository này
-2. Tạo **branch** mới (`git checkout -b feature/AmazingFeature`)
-3. **Commit** thay đổi (`git commit -m 'Add some AmazingFeature'`)
-4. **Push** lên branch (`git push origin feature/AmazingFeature`)
-5. Tạo **Pull Request**
+- [x] Customer Frontend — Vercel
+- [x] Admin Dashboard (React) — Vercel  
+- [x] Backend REST API — Render
+- [x] AI Chatbot (Gemini + RAG) — Render
+- [x] TiDB Cloud Database — AWS AP Southeast
+- [x] Thanh toán VNPay · MoMo · ZaloPay
+- [x] Google OAuth · Facebook OAuth
+- [x] Realtime Chat (WebSocket)
+- [x] Email (Gmail SMTP · SendGrid · Resend)
+- [x] RBAC phân quyền theo vai trò
+- [x] Chấm công & Tính lương tự động
+- [x] Quản lý trả hàng & hoàn tiền
+- [x] Bảo mật production (Helmet, Rate Limit, SSL)
 
-### 📝 Code Style
+### 💡 Kế Hoạch Tương Lai
 
-- Sử dụng ESLint cho JavaScript
-- Đặt tên biến rõ ràng, có ý nghĩa
-- Comment code khi cần thiết
-- Tuân thủ nguyên tắc DRY (Don't Repeat Yourself)
+- [ ] Mobile App (React Native)
+- [ ] Xuất báo cáo Excel / PDF
+- [ ] Multi-language (EN/VI)
+- [ ] Progressive Web App (PWA)
+- [ ] Tích hợp API vận chuyển (GHN, GHTK)
+- [ ] Notification push realtime
 
 ---
 
-## 🐛 Báo Lỗi & Góp Ý
+## 📊 GitHub Stats
 
-Nếu bạn phát hiện lỗi hoặc có góp ý, vui lòng tạo [Issue](https://github.com/hoaibao3112/CNPM_WebSach/issues) mới.
+<div align="center">
 
-### Template Issue
+![Repo Size](https://img.shields.io/github/repo-size/hoaibao3112/CNPM_WebSach?style=flat-square)
+![Last Commit](https://img.shields.io/github/last-commit/hoaibao3112/CNPM_WebSach?style=flat-square)
+![Stars](https://img.shields.io/github/stars/hoaibao3112/CNPM_WebSach?style=flat-square)
+![Issues](https://img.shields.io/github/issues/hoaibao3112/CNPM_WebSach?style=flat-square)
+![Contributors](https://img.shields.io/github/contributors/hoaibao3112/CNPM_WebSach?style=flat-square)
 
-```markdown
-**Mô tả lỗi:**
-[Mô tả chi tiết lỗi]
-
-**Các bước tái hiện:**
-1. 
-2. 
-3. 
-
-**Kết quả mong đợi:**
-[Mô tả kết quả mong đợi]
-
-**Screenshots:**
-[Nếu có]
-
-**Môi trường:**
-- OS: [Windows/macOS/Linux]
-- Browser: [Chrome/Firefox/...]
-- Node version: [18.x]
-```
+</div>
 
 ---
 
 ## 📄 License
 
-Dự án này được phân phối dưới giấy phép **MIT License**. Xem file [LICENSE](LICENSE) để biết thêm chi tiết.
-
-```
-MIT License
-
-Copyright (c) 2025 WebSách Team
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software")...
-```
+Phân phối dưới giấy phép **MIT License**. Xem file [LICENSE](LICENSE) để biết thêm.
 
 ---
-
-## 📞 Liên Hệ
-
-### 📧 Email Support
-- **Technical Support**: support@websach.com
-- **Business Inquiry**: business@websach.com
-
-### 🌐 Social Media
-[![Facebook](https://img.shields.io/badge/Facebook-1877F2?style=for-the-badge&logo=facebook&logoColor=white)](https://facebook.com)
-[![GitHub](https://img.shields.io/badge/GitHub-100000?style=for-the-badge&logo=github&logoColor=white)](https://github.com/hoaibao3112/CNPM_WebSach)
-[![LinkedIn](https://img.shields.io/badge/LinkedIn-0077B5?style=for-the-badge&logo=linkedin&logoColor=white)](https://linkedin.com)
-
----
-
-## 🎓 Tài Liệu Tham Khảo
-
-- [React Documentation](https://react.dev/)
-- [Node.js Documentation](https://nodejs.org/docs/)
-- [Express.js Guide](https://expressjs.com/en/guide/routing.html)
-- [MySQL Documentation](https://dev.mysql.com/doc/)
-- [Sequelize Documentation](https://sequelize.org/docs/v6/)
-
----
-
-## 🌟 Roadmap
-
-### ✅ Hoàn Thành
-- [x] Hệ thống đăng nhập/đăng ký
-- [x] Quản lý sản phẩm
-- [x] Quản lý đơn hàng
-- [x] Dashboard thống kê
-- [x] Phân quyền người dùng
-
-### 🚧 Đang Phát Triển
-- [ ] Tích hợp thanh toán online (VNPay, Momo)
-- [ ] AI Chatbot hỗ trợ khách hàng
-- [ ] Mobile App (React Native)
-- [ ] Hệ thống thông báo realtime
-
-### 💡 Kế Hoạch Tương Lai
-- [ ] Multi-language support
-- [ ] Dark mode
-- [ ] Progressive Web App (PWA)
-- [ ] Export báo cáo Excel/PDF
-- [ ] Tích hợp với hệ thống vận chuyển
-
----
-
-## 📊 Thống Kê Dự Án
-
-![GitHub repo size](https://img.shields.io/github/repo-size/hoaibao3112/CNPM_WebSach?style=flat-square)
-![GitHub contributors](https://img.shields.io/github/contributors/hoaibao3112/CNPM_WebSach?style=flat-square)
-![GitHub stars](https://img.shields.io/github/stars/hoaibao3112/CNPM_WebSach?style=flat-square)
-![GitHub forks](https://img.shields.io/github/forks/hoaibao3112/CNPM_WebSach?style=flat-square)
-![GitHub issues](https://img.shields.io/github/issues/hoaibao3112/CNPM_WebSach?style=flat-square)
-![GitHub pull requests](https://img.shields.io/github/issues-pr/hoaibao3112/CNPM_WebSach?style=flat-square)
-![GitHub last commit](https://img.shields.io/github/last-commit/hoaibao3112/CNPM_WebSach?style=flat-square)
-
----
-
-## 💖 Support Us
-
-Nếu bạn thấy dự án hữu ích, hãy cho chúng tôi một ⭐️!
 
 <div align="center">
 
-### ⭐️ Star History
+**Made with ❤️ by WebSách Team — 2026**
 
-[![Star History Chart](https://api.star-history.com/svg?repos=hoaibao3112/CNPM_WebSach&type=Date)](https://star-history.com/#hoaibao3112/CNPM_WebSach&Date)
+*Cảm ơn bạn đã ghé thăm dự án!*
 
----
+[⬆ Về đầu trang](#-websách--hệ-thống-bán-sách-trực-tuyến)
 
-**Made with ❤️ by WebSách Team**
-
-*Cảm ơn bạn đã quan tâm đến dự án của chúng tôi!*
-
-[⬆ Về đầu trang](#-websách---hệ-thống-quản-lý-nhà-sách)
+[![GitHub](https://img.shields.io/badge/GitHub-hoaibao3112-100000?style=for-the-badge&logo=github&logoColor=white)](https://github.com/hoaibao3112/CNPM_WebSach)
 
 </div>
