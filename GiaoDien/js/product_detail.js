@@ -1217,9 +1217,23 @@ window.saveProductBeforeRedirect = (product) => {
 };
 
 /**
+ * Lấy token từ cookie
+ */
+function _getAuthToken() {
+    return (document.cookie.split('; ').find(row => row.startsWith('token='))?.split('=')[1] || null);
+}
+
+/**
+ * Kiểm tra đã đăng nhập chưa
+ */
+function _isLoggedIn() {
+    return Boolean(_getAuthToken());
+}
+
+/**
  * Thêm vào giỏ hàng
  */
-function addToCart() {
+async function addToCart() {
     const addToCartBtn = document.getElementById('add-to-cart');
     if (!addToCartBtn || !addToCartBtn.dataset.product) {
         console.error('Error: add-to-cart button or dataset.product is not set');
@@ -1231,23 +1245,52 @@ function addToCart() {
         const productData = JSON.parse(addToCartBtn.dataset.product);
         const qtyInput = document.getElementById('qty-input');
         const quantity = qtyInput ? (parseInt(qtyInput.value) || 1) : 1;
-        
-        let cart = JSON.parse(localStorage.getItem('cart')) || [];
-        
-        const existingItem = cart.find(item => item.id === productData.id);
-        if (existingItem) {
-            existingItem.quantity += quantity;
+
+        if (_isLoggedIn()) {
+            // ✅ Đã đăng nhập: gọi API backend để lưu vào DB
+            try {
+                const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'https://cnpm-websach-2.onrender.com';
+                const response = await fetch(`${_apiBase}/api/client/cart/add`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${_getAuthToken()}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ productId: Number(productData.id), quantity })
+                });
+
+                if (response.ok) {
+                    showAlert(`Đã thêm ${quantity} "${productData.name}" vào giỏ hàng!`, 'success');
+                    // Cập nhật số lượng giỏ hàng trên header
+                    if (typeof window.updateCartCount === 'function') {
+                        window.updateCartCount();
+                    }
+                } else {
+                    let errBody = null;
+                    try { errBody = await response.json(); } catch (e) { errBody = {}; }
+                    console.error('Add to cart API failed:', response.status, errBody);
+                    showAlert(errBody?.error || errBody?.message || 'Lỗi khi thêm vào giỏ hàng', 'error');
+                }
+            } catch (apiError) {
+                console.error('Add to cart API error:', apiError);
+                showAlert('Lỗi kết nối. Vui lòng thử lại!', 'error');
+            }
         } else {
-            cart.push({...productData, quantity: quantity});
-        }
-        
-        console.log(`Added ${quantity} of ${productData.name} to cart`);
-        localStorage.setItem('cart', JSON.stringify(cart));
-        showAlert(`Đã thêm ${quantity} "${productData.name}" vào giỏ hàng!`, 'success');
-        
-        // Cập nhật số lượng giỏ hàng trên header nếu có hàm updateCartCount
-        if (typeof window.updateCartCount === 'function') {
-            window.updateCartCount();
+            // Chưa đăng nhập: lưu vào localStorage
+            let cart = JSON.parse(localStorage.getItem('cart')) || [];
+            const existingItem = cart.find(item => item.id === productData.id);
+            if (existingItem) {
+                existingItem.quantity += quantity;
+            } else {
+                cart.push({...productData, quantity: quantity, selected: true});
+            }
+            localStorage.setItem('cart', JSON.stringify(cart));
+            showAlert(`Đã thêm ${quantity} "${productData.name}" vào giỏ hàng! (Đăng nhập để lưu vĩnh viễn)`, 'success');
+
+            // Cập nhật số lượng giỏ hàng trên header
+            if (typeof window.updateCartCount === 'function') {
+                window.updateCartCount();
+            }
         }
     } catch (error) {
         console.error('Error in addToCart:', error);
