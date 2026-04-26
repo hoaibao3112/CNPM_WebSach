@@ -2974,6 +2974,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Export functions
 window.addToCart = addToCart;
+window._cartAddToCart = addToCart; // Dùng cho book.js gọi lại
 window.getCart = getCart;
 
 // Load saved addresses from backend for logged-in customers

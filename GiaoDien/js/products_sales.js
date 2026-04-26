@@ -99,10 +99,12 @@
 
 	// Add to cart
 	async function addToCart(productId, productName, price, image) {
-		const user = JSON.parse(localStorage.getItem('user') || localStorage.getItem('loggedInUser') || '{}');
-		const token = (document.cookie.split('; ').find(row => row.startsWith('token='))?.split('=')[1] || null);
+		if (typeof window._cartAddToCart === 'function') {
+			return window._cartAddToCart(productId, 1, productName, price, image);
+		}
 
-		if (user && (user.makh || user.tenkh) && token) {
+		const token = (document.cookie.split('; ').find(row => row.startsWith('token='))?.split('=')[1] || null);
+		if (token) {
 			try {
 				const response = await fetch(`${_apiBase}/api/client/cart/add`, {
 					method: 'POST',
@@ -110,7 +112,7 @@
 						'Authorization': `Bearer ${token}`,
 						'Content-Type': 'application/json'
 					},
-					body: JSON.stringify({ productId, quantity: 1 })
+					body: JSON.stringify({ productId: Number(productId), quantity: 1 })
 				});
 
 				if (response.ok) {
@@ -118,8 +120,11 @@
 					if (typeof updateCartCount === 'function') updateCartCount();
 					return;
 				}
+				const errData = await response.json().catch(() => ({}));
+				showToast(errData.error || 'Lỗi khi thêm vào giỏ hàng');
 			} catch (error) {
 				console.error('Lỗi thêm vào giỏ hàng:', error);
+				showToast('Lỗi kết nối. Vui lòng thử lại!');
 			}
 		} else {
 			// Guest cart fallback
@@ -129,17 +134,11 @@
 			if (existingItem) {
 				existingItem.quantity += 1;
 			} else {
-				cart.push({
-					id: productId,
-					name: productName,
-					price: price,
-					image: image,
-					quantity: 1,
-				});
+				cart.push({ id: productId, name: productName, price, image, quantity: 1, selected: true });
 			}
 
 			localStorage.setItem('cart', JSON.stringify(cart));
-			showToast(`Đã thêm ${productName} vào giỏ hàng!`);
+			showToast(`Đã thêm ${productName} vào giỏ hàng! (Đăng nhập để lưu vĩnh viễn)`);
 			if (typeof updateCartCount === 'function') updateCartCount();
 		}
 	}

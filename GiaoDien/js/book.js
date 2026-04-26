@@ -71,73 +71,49 @@ function showToast(message) {
   });
 }
 
-// Hàm thêm sản phẩm vào giỏ hàng (cập nhật để sử dụng API nếu đăng nhập)
+// Hàm thêm sản phẩm vào giỏ hàng
+// ✅ Ủy quyền hoàn toàn sang cart.js (load trước trong HTML) để đảm bảo
+// logic login nhất quán và dữ liệu được lưu đúng vào DB khi đã đăng nhập.
+// cart.js dùng: addToCart(productId, quantity, productName, price, image)
+// book.js gọi: addToCart(productId, productName, price, image) — bridge thứ tự tham số
 async function addToCart(productId, productName, price, image) {
-  const user = JSON.parse(localStorage.getItem('user') || localStorage.getItem('loggedInUser') || '{}');
-  const token = (document.cookie.split('; ').find(row => row.startsWith('token='))?.split('=')[1] || null);
+  // Ưu tiên dùng hàm của cart.js nếu có (nó xử lý API + localStorage chuẩn)
+  if (typeof window._cartAddToCart === 'function') {
+    return window._cartAddToCart(productId, 1, productName, price, image);
+  }
 
-  if (user && (user.makh || user.tenkh) && token) {
-    // Nếu đã đăng nhập, sử dụng API
+  // Fallback tự xử lý nếu cart.js chưa load
+  const token = (document.cookie.split('; ').find(row => row.startsWith('token='))?.split('=')[1] || null);
+  if (token) {
     try {
-      const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || window.API_CONFIG.BASE_URL;
+      const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'https://cnpm-websach-2.onrender.com';
       const response = await fetch(`${_apiBase}/api/client/cart/add`, {
         method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ productId, quantity: 1 })
+        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ productId: Number(productId), quantity: 1 })
       });
-
       if (response.ok) {
-        const data = await response.json();
         showToast(`Đã thêm ${productName} vào giỏ hàng!`);
-        updateCartCount(); // Cập nhật UI từ index.js
+        if (typeof updateCartCount === 'function') updateCartCount();
         return;
-      } else {
-        const errorData = await response.json();
-        showToast(errorData.error || 'Lỗi khi thêm vào giỏ hàng');
       }
+      const errData = await response.json().catch(() => ({}));
+      showToast(errData.error || 'Lỗi khi thêm vào giỏ hàng');
     } catch (error) {
       console.error('Lỗi thêm vào giỏ hàng:', error);
       showToast('Lỗi kết nối. Vui lòng thử lại!');
     }
   } else {
-    // Nếu chưa đăng nhập, sử dụng localStorage (fallback)
     let cart = JSON.parse(localStorage.getItem('cart') || '[]');
     const existingItem = cart.find(item => item.id === productId);
-
     if (existingItem) {
       existingItem.quantity += 1;
     } else {
-      cart.push({
-        id: productId,
-        name: productName,
-        price: price,
-        image: image,
-        quantity: 1,
-      });
+      cart.push({ id: productId, name: productName, price, image, quantity: 1, selected: true });
     }
-
     localStorage.setItem('cart', JSON.stringify(cart));
-    // Inject common product card styles if not already present
-    if (!document.getElementById('book-js-styles')) {
-      const style = document.createElement('style');
-      style.id = 'book-js-styles';
-      style.textContent = `
-        .product-actions { display: flex; gap: 8px; margin-top: 15px; width: 100%; }
-        .product-actions .btn-add-cart { flex: 2; padding: 12px 5px; font-size: 10px; font-weight: 800; border-radius: 12px; text-transform: uppercase; }
-        .product-actions .btn-detail { flex: 1; padding: 12px 5px; font-size: 10px; font-weight: 800; border-radius: 12px; display: flex; align-items: center; justify-content: center; gap: 4px; text-transform: uppercase; }
-        
-        /* Specific for sale-item-actions in book.js */
-        .sale-item-actions { display: flex; gap: 8px; margin-top: 12px; width: 100%; }
-        .sale-item-actions .btn-add-cart { flex: 2; padding: 12px 5px; font-size: 10px; font-weight: 800; border-radius: 12px; background: #B03A2E; color: white; border: none; text-transform: uppercase; }
-        .sale-item-actions .btn-detail { flex: 1; padding: 12px 5px; font-size: 10px; font-weight: 800; border-radius: 12px; background: #f8fafc; color: #64748b; border: 1px solid #e2e8f0; text-transform: uppercase; }
-      `;
-      document.head.appendChild(style);
-    }
-    showToast(`Đã thêm ${productName} vào giỏ hàng! (Vui lòng đăng nhập để lưu vĩnh viễn)`);
-    updateCartCount(); // Cập nhật UI
+    showToast(`Đã thêm ${productName} vào giỏ hàng! (Đăng nhập để lưu vĩnh viễn)`);
+    if (typeof updateCartCount === 'function') updateCartCount();
   }
 }
 

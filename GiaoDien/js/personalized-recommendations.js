@@ -651,10 +651,10 @@ const PersonalizedRecommendations = {
 
       console.log('📦 Product info:', { productId, productName, price, image });
 
-      // Sử dụng hàm addToCart từ cart.js hoặc book.js nếu có
-      if (typeof window.addToCart === 'function') {
-        console.log('✅ Using window.addToCart');
-        await window.addToCart(productId, 1, productName, price, image);
+      // Sử dụng hàm addToCart từ cart.js nếu có
+      if (typeof window._cartAddToCart === 'function') {
+        console.log('✅ Using window._cartAddToCart');
+        await window._cartAddToCart(productId, 1, productName, price, image);
         this.showToast('✅ Đã thêm vào giỏ hàng!', 'success');
       } else {
         console.log('⚠️ window.addToCart not found, using API directly');
