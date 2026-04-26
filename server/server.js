@@ -3,6 +3,8 @@ import './src/config/app.config.js'; // Validate env vars on startup
 import express from 'express';
 import dotenv from 'dotenv';
 import cors from 'cors';
+import helmet from 'helmet';
+import rateLimit from 'express-rate-limit';
 import cookieParser from 'cookie-parser';
 import { createServer } from 'http';
 import { WebSocketServer } from 'ws';
@@ -45,39 +47,32 @@ console.log('DB env presence:', {
   DB_REJECT_UNAUTHORIZED: process.env.DB_REJECT_UNAUTHORIZED === 'true'
 });
 
-// 2. CORS configuration
+// 2. CORS configuration — only allow specific trusted origins
 const allowedOrigins = [
-  process.env.CLIENT_ADMIN_URL || 'http://localhost:3000',
+  process.env.CLIENT_ADMIN_URL  || 'http://localhost:3000',
   process.env.CLIENT_CUSTOMER_URL || 'http://localhost:5500',
   'https://cnpm-web-sach.vercel.app',
-  'https://cnpm-web-sach.vercel.app/',
+  'https://cnpm-admin-dashboard.vercel.app',
   'http://localhost:5501',
   'http://localhost:5000',
-  'http://127.0.0.1',
+  'http://localhost:3000',
+  'http://127.0.0.1:5500',
+  'http://127.0.0.1:5501',
   'https://empty-words-pump.loca.lt',
 ];
 
-// Helper to check if origin is allowed (including subdomains for Vercel/Render)
 const isOriginAllowed = (origin) => {
-  if (!origin) return true; // Allow non-CORS requests (like postman or server-to-server)
-  
-  // Direct matches
+  if (!origin) return true; // Allow server-to-server (Postman, curl, etc.)
+
+  // Direct whitelist match
   if (allowedOrigins.includes(origin)) return true;
-  
-  // Local development matches
-  if (origin.startsWith('http://localhost') || origin.startsWith('http://127.0.0.1')) return true;
-  
-  try {
-    const url = new URL(origin);
-    // Allow ALL subdomains of Vercel and Render for convenience in production
-    return (
-      url.hostname.endsWith('.vercel.app') || 
-      url.hostname.endsWith('.onrender.com') ||
-      url.hostname === 'cnpm-web-sach.vercel.app'
-    );
-  } catch (err) {
-    return false;
+
+  // Local development only
+  if (process.env.NODE_ENV !== 'production') {
+    if (origin.startsWith('http://localhost') || origin.startsWith('http://127.0.0.1')) return true;
   }
+
+  return false;
 };
 
 app.use(cors({
@@ -192,10 +187,39 @@ app.get('/api/diag/schema', async (req, res) => {
     }
 });
 
-// 3. Middleware
+// 3. Security headers (helmet) — applied before routes
+app.use(helmet({
+  crossOriginResourcePolicy: { policy: 'cross-origin' }, // Allow product images to be fetched cross-origin
+  contentSecurityPolicy: false, // Managed manually for VNPay proxy below
+}));
+
+// 3.1 Rate limiting — protect against brute-force & DoS
+const generalLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 200,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { success: false, message: 'Quá nhiều yêu cầu, vui lòng thử lại sau 15 phút.' },
+  skip: (req) => req.path === '/api/ping', // Do not rate-limit health check
+});
+
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 15, // Strict for login/register
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { success: false, message: 'Quá nhiều lần đăng nhập, vui lòng thử lại sau 15 phút.' },
+});
+
+app.use('/api/', generalLimiter);
+app.use('/api/auth/login', authLimiter);
+app.use('/api/auth/register', authLimiter);
+app.use('/api/auth/forgot-password', authLimiter);
+
+// 3.2 Other middleware
 app.use(cookieParser());
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Serve uploaded files (customer uploads) so URLs like /uploads/tra_hang/<file> are reachable
 app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
