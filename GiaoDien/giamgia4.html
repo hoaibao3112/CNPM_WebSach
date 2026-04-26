@@ -3,9 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Ưu Đãi Ngành Hàng Gấp Bội</title>
+  <title>Sản Phẩm Mới — WebSách</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
   <link rel="icon" href="favicon.ico" type="image/x-icon" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
 
   <!-- Tailwind CSS CDN & Config -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -14,98 +15,460 @@
   <!-- API Configuration - LOAD EARLY -->
   <script src="js/config.js"></script>
   <script src="js/api-patcher.js"></script>
+
+  <style>
+    /* ─── Base ─────────────────────────────────── */
+    * { font-family: 'Inter', sans-serif; }
+
+    /* ─── Hero Banner ───────────────────────────── */
+    .hero-banner {
+      position: relative;
+      overflow: hidden;
+      border-radius: 24px;
+      background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
+      padding: 48px 40px;
+      display: flex;
+      align-items: center;
+      gap: 32px;
+      min-height: 200px;
+    }
+    .hero-banner::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(ellipse at 20% 50%, rgba(129, 78, 255, 0.35) 0%, transparent 60%),
+        radial-gradient(ellipse at 80% 30%, rgba(255, 72, 111, 0.25) 0%, transparent 50%),
+        radial-gradient(ellipse at 60% 80%, rgba(0, 212, 255, 0.2) 0%, transparent 50%);
+      pointer-events: none;
+    }
+    /* Decorative floating circles */
+    .hero-banner::after {
+      content: '';
+      position: absolute;
+      width: 300px; height: 300px;
+      right: -60px; top: -80px;
+      background: radial-gradient(circle, rgba(129,78,255,0.3) 0%, transparent 70%);
+      border-radius: 50%;
+      pointer-events: none;
+    }
+    .hero-glow-dot {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(40px);
+      pointer-events: none;
+    }
+    .hero-icon-wrap {
+      position: relative;
+      flex-shrink: 0;
+      width: 88px; height: 88px;
+      background: rgba(255,255,255,0.08);
+      border: 1.5px solid rgba(255,255,255,0.15);
+      border-radius: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      backdrop-filter: blur(12px);
+      box-shadow: 0 8px 32px rgba(129,78,255,0.3);
+    }
+    .hero-icon-wrap img {
+      width: 52px; height: 52px;
+      object-fit: contain;
+      filter: drop-shadow(0 0 12px rgba(255,255,255,0.4));
+    }
+    .hero-text-wrap { position: relative; z-index: 1; }
+    .hero-eyebrow {
+      display: inline-block;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.5);
+      margin-bottom: 8px;
+    }
+    .hero-title {
+      font-size: clamp(28px, 4vw, 44px);
+      font-weight: 900;
+      letter-spacing: -0.03em;
+      line-height: 1.1;
+      background: linear-gradient(135deg, #fff 30%, #c4b5fd 70%, #818cf8 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 10px;
+    }
+    .hero-subtitle {
+      font-size: 13px;
+      color: rgba(255,255,255,0.55);
+      font-weight: 500;
+    }
+    .hero-badge {
+      margin-left: auto;
+      flex-shrink: 0;
+      position: relative;
+      z-index: 1;
+      text-align: center;
+    }
+    .hero-badge-inner {
+      background: linear-gradient(135deg, #814eff, #ff486f);
+      border-radius: 20px;
+      padding: 18px 28px;
+      box-shadow: 0 8px 32px rgba(129,78,255,0.4), inset 0 1px 0 rgba(255,255,255,0.2);
+    }
+    .hero-badge-inner .num {
+      font-size: 36px;
+      font-weight: 900;
+      color: #fff;
+      line-height: 1;
+      display: block;
+    }
+    .hero-badge-inner .lbl {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.75);
+    }
+    /* Particle dots */
+    .particle {
+      position: absolute;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.6);
+      animation: float-particle 4s ease-in-out infinite;
+    }
+    @keyframes float-particle {
+      0%, 100% { transform: translateY(0); opacity: 0.6; }
+      50%       { transform: translateY(-12px); opacity: 1; }
+    }
+
+    /* ─── Category pills ────────────────────────── */
+    .category {
+      display: flex;
+      flex-wrap: nowrap;
+      gap: 10px;
+      overflow-x: auto;
+      padding-bottom: 6px;
+      scrollbar-width: none;
+      user-select: none;
+    }
+    .category::-webkit-scrollbar { display: none; }
+
+    .category-item {
+      flex-shrink: 0;
+      padding: 9px 20px;
+      background: #fff;
+      border: 1.5px solid #e5e7eb;
+      border-radius: 100px;
+      font-size: 11px;
+      font-weight: 700;
+      color: #6b7280;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      white-space: nowrap;
+    }
+    .category-item:hover {
+      border-color: #814eff;
+      color: #814eff;
+      background: #f5f3ff;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(129,78,255,0.15);
+    }
+    .category-item.active {
+      background: linear-gradient(135deg, #814eff, #818cf8);
+      border-color: transparent;
+      color: #fff;
+      box-shadow: 0 4px 16px rgba(129,78,255,0.4);
+      transform: translateY(-1px);
+    }
+
+    /* ─── Section heading ───────────────────────── */
+    .section-heading {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .section-heading .line {
+      flex: 1;
+      height: 1px;
+      background: linear-gradient(to right, #e5e7eb, transparent);
+    }
+    .section-heading .tag {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: #9ca3af;
+    }
+
+    /* ─── Product Grid ──────────────────────────── */
+    .product-row {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 20px;
+    }
+    @media (min-width: 640px)  { .product-row { grid-template-columns: repeat(3, 1fr); } }
+    @media (min-width: 768px)  { .product-row { grid-template-columns: repeat(4, 1fr); } }
+    @media (min-width: 1024px) { .product-row { grid-template-columns: repeat(5, 1fr); } }
+
+    /* ─── Product card ──────────────────────────── */
+    .product-item {
+      background: #fff;
+      border-radius: 20px;
+      border: 1.5px solid #f3f4f6;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+      overflow: hidden;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+      position: relative;
+    }
+    .product-item:hover {
+      transform: translateY(-6px);
+      box-shadow: 0 20px 40px rgba(129,78,255,0.15);
+      border-color: #c4b5fd;
+    }
+    /* Image wrapper with fixed aspect ratio */
+    .product-item > img {
+      width: 100%;
+      aspect-ratio: 3/4;
+      object-fit: cover;
+      display: block;
+      transition: transform 0.5s ease;
+    }
+    .product-item:hover > img {
+      transform: scale(1.06);
+    }
+    /* Gradient overlay on image */
+    .product-item > img + * {
+      position: relative;
+    }
+    .product-item::before {
+      content: '';
+      position: absolute;
+      left: 0; right: 0; top: 0;
+      height: 45%;
+      background: linear-gradient(to bottom, rgba(0,0,0,0.08), transparent);
+      pointer-events: none;
+      z-index: 1;
+      border-radius: 20px 20px 0 0;
+    }
+
+    /* "Mới" badge */
+    .item-new-name {
+      padding: 14px 14px 10px;
+      flex: 1;
+    }
+    .item-new-name .new {
+      display: inline-block;
+      font-size: 8px;
+      font-weight: 800;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      background: linear-gradient(135deg, #814eff, #818cf8);
+      color: #fff;
+      padding: 3px 8px;
+      border-radius: 100px;
+      margin-bottom: 6px;
+      box-shadow: 0 2px 8px rgba(129,78,255,0.3);
+    }
+    .item-new-name .name {
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      font-size: 12px;
+      font-weight: 700;
+      color: #1f2937;
+      line-height: 1.4;
+      letter-spacing: -0.01em;
+    }
+
+    /* Price */
+    .item-price {
+      padding: 0 14px 4px;
+      display: flex;
+      align-items: baseline;
+      gap: 4px;
+    }
+    .item-price .price {
+      font-size: 15px;
+      font-weight: 900;
+      color: #814eff;
+      letter-spacing: -0.03em;
+    }
+    .item-price .unit {
+      font-size: 10px;
+      font-weight: 700;
+      color: #814eff;
+      text-transform: uppercase;
+    }
+    .item-price .discount {
+      margin-left: auto;
+      font-size: 9px;
+      font-weight: 800;
+      color: #ef4444;
+      background: #fef2f2;
+      border-radius: 6px;
+      padding: 2px 6px;
+    }
+
+    /* Original price */
+    .origin-price {
+      padding: 0 14px 14px;
+      font-size: 10px;
+      font-weight: 600;
+      color: #d1d5db;
+      text-decoration: line-through;
+      font-style: italic;
+    }
+
+    /* ─── Loading state ─────────────────────────── */
+    .loading {
+      grid-column: 1/-1;
+      padding: 80px 0;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 14px;
+    }
+    .loading i {
+      font-size: 28px;
+      color: #814eff;
+    }
+    .loading p {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: #d1d5db;
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50%       { opacity: 0.4; }
+    }
+
+    /* ─── Floating sparkle animation ───────────── */
+    @keyframes sparkle {
+      0%   { transform: scale(0) rotate(0deg); opacity: 0; }
+      50%  { transform: scale(1) rotate(180deg); opacity: 1; }
+      100% { transform: scale(0) rotate(360deg); opacity: 0; }
+    }
+    .sparkle {
+      position: absolute;
+      color: rgba(255,255,255,0.6);
+      font-size: 12px;
+      animation: sparkle 3s ease-in-out infinite;
+    }
+  </style>
 </head>
 
-<body class="bg-bg pt-14 font-body antialiased">
-    <div id="load-header"></div>
+<body class="bg-[#f8f7ff] pt-14 antialiased">
+  <div id="load-header"></div>
 
-    <!-- Breadcrumb Navigation -->
-    <nav class="navi container max-w-[1300px] mx-auto px-4 py-6">
-        <div class="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-gray-400">
-            <a href="index.html" class="hover:text-primary transition-colors">TRANG CHỦ</a>
-            <span class="text-gray-200">/</span>
-            <span class="text-primary">SẢN PHẨM MỚI</span>
+  <!-- Breadcrumb -->
+  <nav class="container max-w-[1300px] mx-auto px-4 pt-6 pb-2">
+    <div class="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-gray-400">
+      <a href="index.html" class="hover:text-purple-600 transition-colors">Trang Chủ</a>
+      <span class="text-gray-300">/</span>
+      <span class="text-purple-600">Sản Phẩm Mới</span>
+    </div>
+  </nav>
+
+  <main class="container max-w-[1300px] mx-auto px-4 pb-24 space-y-10">
+
+    <!-- ═══ HERO BANNER ═══ -->
+    <div class="hero-banner">
+      <!-- Glow dots -->
+      <div class="hero-glow-dot" style="width:200px;height:200px;left:-40px;bottom:-60px;background:radial-gradient(circle,rgba(0,212,255,0.25),transparent 70%)"></div>
+      <div class="hero-glow-dot" style="width:150px;height:150px;right:120px;top:-40px;background:radial-gradient(circle,rgba(255,72,111,0.2),transparent 70%)"></div>
+
+      <!-- Floating particles -->
+      <span class="particle" style="width:4px;height:4px;left:15%;top:25%;animation-delay:0s"></span>
+      <span class="particle" style="width:3px;height:3px;left:30%;top:70%;animation-delay:1s"></span>
+      <span class="particle" style="width:5px;height:5px;left:55%;top:20%;animation-delay:2s"></span>
+      <span class="particle" style="width:3px;height:3px;left:75%;top:65%;animation-delay:0.5s"></span>
+
+      <!-- Sparkles -->
+      <span class="sparkle" style="left:12%;top:15%;animation-delay:0s"><i class="fas fa-star"></i></span>
+      <span class="sparkle" style="left:48%;top:75%;animation-delay:1.5s;font-size:8px"><i class="fas fa-sparkles"></i></span>
+
+      <!-- Icon -->
+      <div class="hero-icon-wrap">
+        <img src="img/anhnen4/icon_title.png" alt="Sản phẩm mới" onerror="this.style.display='none'; this.parentElement.innerHTML='<i class=\'fas fa-book-open\' style=\'font-size:36px;color:white;\'></i>'">
+      </div>
+
+      <!-- Text -->
+      <div class="hero-text-wrap flex-1">
+        <span class="hero-eyebrow">✦ Cập nhật liên tục mỗi ngày</span>
+        <h1 class="hero-title">Sản Phẩm Mới</h1>
+        <p class="hero-subtitle">Những tựa sách mới nhất — được chọn lọc kỹ càng dành cho bạn</p>
+        <div class="flex flex-wrap gap-3 mt-5">
+          <span class="inline-flex items-center gap-1.5 bg-white/10 backdrop-blur-sm border border-white/15 text-white/80 text-[10px] font-semibold px-3 py-1.5 rounded-full">
+            <i class="fas fa-bolt text-yellow-300 text-[9px]"></i> Giao hàng nhanh
+          </span>
+          <span class="inline-flex items-center gap-1.5 bg-white/10 backdrop-blur-sm border border-white/15 text-white/80 text-[10px] font-semibold px-3 py-1.5 rounded-full">
+            <i class="fas fa-shield-halved text-green-300 text-[9px]"></i> Chính hãng 100%
+          </span>
+          <span class="inline-flex items-center gap-1.5 bg-white/10 backdrop-blur-sm border border-white/15 text-white/80 text-[10px] font-semibold px-3 py-1.5 rounded-full">
+            <i class="fas fa-rotate-left text-blue-300 text-[9px]"></i> Đổi trả miễn phí
+          </span>
         </div>
-    </nav>
+      </div>
 
-    <main class="wrapper container max-w-[1300px] mx-auto px-4 pb-20 space-y-12">
-        <!-- Page Header / Title -->
-        <div class="title bg-white p-8 rounded-3xl border border-border shadow-sm flex items-center gap-6 animate-in fade-in slide-in-from-top-4 duration-700">
-            <div class="w-16 h-16 bg-primary-light rounded-2xl flex items-center justify-center p-3 shadow-inner">
-                <img src="img/anhnen4/icon_title.png" alt="Biểu tượng sản phẩm mới" class="w-full h-full object-contain">
-            </div>
-            <div class="space-y-1">
-                <h1 class="text-3xl font-black text-gray-800 uppercase tracking-tighter">SẢN PHẨM MỚI</h1>
-                <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest italic">Cập nhật những tựa sách mới nhất mỗi ngày</p>
-            </div>
+      <!-- Badge -->
+      <div class="hero-badge hidden sm:block">
+        <div class="hero-badge-inner">
+          <span class="num">NEW</span>
+          <span class="lbl">Arrivals</span>
         </div>
+        <p class="text-white/40 text-[9px] font-bold uppercase tracking-widest mt-2">Mỗi ngày ra mắt</p>
+      </div>
+    </div>
 
-        <!-- Khung thể loại -->
-        <ul class="category flex flex-wrap gap-3" id="category">
-            <!-- JS will render categories here -->
-        </ul>
+    <!-- ═══ CATEGORY FILTER ═══ -->
+    <div class="space-y-4">
+      <div class="section-heading">
+        <span class="tag">Lọc theo thể loại</span>
+        <div class="line"></div>
+      </div>
+      <!-- JS renders <li> items with class "category-item" inside here -->
+      <ul class="category" id="category"></ul>
+    </div>
 
-        <!-- List sản phẩm -->
-        <div class="product space-y-8">
-            <div class="product-row grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6" id="product-row">
-                <!-- JS will render products here -->
-                <div class="loading col-span-full py-20 text-center space-y-4">
-                    <i class="fas fa-spinner fa-spin text-3xl text-primary"></i>
-                    <p class="text-[10px] font-black text-gray-300 uppercase tracking-widest animate-pulse">Đang tải sản phẩm mới...</p>
-                </div>
-            </div>
+    <!-- ═══ PRODUCT GRID ═══ -->
+    <div class="space-y-6">
+      <div class="section-heading">
+        <span class="tag">Danh sách sản phẩm</span>
+        <div class="line"></div>
+        <i class="fas fa-grid-2 text-gray-300 text-xs"></i>
+      </div>
+
+      <div class="product">
+        <div class="product-row" id="product-row">
+          <!-- Loading placeholder -->
+          <div class="loading col-span-full">
+            <i class="fas fa-spinner fa-spin"></i>
+            <p>Đang tải sản phẩm mới...</p>
+          </div>
         </div>
+      </div>
+    </div>
 
-        <!-- Recommend widget mount point -->
-        <div id="recommend-widget-container" class="pt-20 border-t border-border"></div>
-    </main>
+    <!-- ═══ RECOMMEND WIDGET (DO NOT TOUCH) ═══ -->
+    <div id="recommend-widget-container" class="pt-16 border-t border-gray-100"></div>
+  </main>
 
-    <div id="load-footer"></div>
+  <div id="load-footer"></div>
 
-    <script src="js/giamgia4.js"></script>
-    <script src="js/loadHeader.js"></script>
-    <script src="js/loadFooter.js"></script>
-    <script src="js/recommend-widget.js"></script>
-
-    <style>
-        /* Shared Styles for JS-rendered elements */
-        .category-item {
-            @apply px-6 py-2.5 bg-white border border-border rounded-xl text-xs font-black text-gray-400 uppercase tracking-widest transition-all cursor-pointer hover:border-primary-light hover:text-primary active:scale-95 [&.active]:bg-primary [&.active]:text-white [&.active]:border-primary [&.active]:shadow-lg [&.active]:shadow-primary/20;
-        }
-        
-        .product-item {
-            @apply bg-white rounded-3xl border border-border shadow-sm overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-2 cursor-pointer relative flex flex-col;
-        }
-        .product-item img {
-            @apply w-full aspect-[3/4] object-cover transition-transform duration-700;
-        }
-        .product-item:hover img {
-            @apply scale-110;
-        }
-        .item-new-name {
-            @apply p-4 space-y-2 flex-1;
-        }
-        .item-new-name .new {
-            @apply inline-block text-[8px] font-black bg-primary text-white px-2 py-0.5 rounded-full uppercase tracking-widest mb-1 shadow-sm;
-        }
-        .item-new-name .name {
-            @apply block text-sm font-black text-gray-800 uppercase tracking-tighter line-clamp-2 leading-tight;
-        }
-        .item-price {
-            @apply px-4 pb-4 flex items-baseline gap-1;
-        }
-        .item-price .price {
-            @apply text-lg font-black text-primary tracking-tighter;
-        }
-        .item-price .unit {
-            @apply text-[10px] font-black text-primary uppercase;
-        }
-        .item-price .discount {
-            @apply ml-auto text-[10px] font-black text-red-500 bg-red-50 px-2 py-0.5 rounded-lg;
-        }
-        .origin-price {
-            @apply px-4 pb-6 text-[10px] font-bold text-gray-300 line-through italic;
-        }
-    </style>
+  <!-- ═══ All scripts — DO NOT MODIFY ═══ -->
+  <script src="js/giamgia4.js"></script>
+  <script src="js/loadHeader.js"></script>
+  <script src="js/loadFooter.js"></script>
+  <script src="js/recommend-widget.js"></script>
 </body>
 </html>
