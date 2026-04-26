@@ -23,6 +23,10 @@ import { createProxyMiddleware } from 'http-proxy-middleware';
 dotenv.config({ path: './.env' });
 
 const app = express();
+// Enable trust proxy for Render.com (hoặc các dịch vụ proxy khác)
+// Điều này giúp express-rate-limit hiểu đúng IP thật thông qua header X-Forwarded-For
+app.set('trust proxy', 1);
+
 const { PORT: HTTP_PORT = 5000, WS_PORT = 5001, DB_PORT = 3306 } = process.env;
 
 // Log key env vars
