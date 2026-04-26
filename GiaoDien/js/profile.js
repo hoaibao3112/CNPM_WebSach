@@ -31,8 +31,12 @@ async function loadUserProfile() {
     const responseData = await response.json();
     const data = responseData.data || responseData;
 
-    if (!response.ok || !data.user) {
+    if (!response.ok) {
       throw new Error(responseData.error || responseData.message || 'Không thể lấy thông tin người dùng');
+    }
+
+    if (!data.user) {
+      throw new Error('Dữ liệu người dùng không hợp lệ từ server');
     }
 
     const user = data.user;
@@ -693,6 +697,26 @@ async function renderMembershipCard() {
       nextLabel: 'Tối đa'
     }
   };
+
+  // === Derive membership variables from user data ===
+  const points = Number(user.loyalty_points || user.diem_tich_luy || user.DiemTichLuy || 0);
+  const customerId = user.makh || user.id || 'N/A';
+
+  // Determine tier based on points
+  let tier = 'Đồng';
+  if (points >= 5000) tier = 'Vàng';
+  else if (points >= 1000) tier = 'Bạc';
+
+  // Progress bar & next threshold
+  let nextThreshold = 1000;
+  let currentMin = 0;
+  if (tier === 'Đồng') { currentMin = 0; nextThreshold = 1000; }
+  else if (tier === 'Bạc') { currentMin = 1000; nextThreshold = 5000; }
+  else { currentMin = 5000; nextThreshold = 5000; } // Vàng is max
+
+  const progress = tier === 'Vàng'
+    ? 100
+    : Math.min(100, Math.round(((points - currentMin) / (nextThreshold - currentMin)) * 100));
 
   const config = tierConfigs[tier] || tierConfigs['Đồng'];
 

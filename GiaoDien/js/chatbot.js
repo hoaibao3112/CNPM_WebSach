@@ -3,10 +3,12 @@
  * Manages the floating chatbot widget, API communication, and UI rendering.
  */
 
-let chatbotInitialized = false;
+if (typeof window.chatbotInitialized === 'undefined') {
+    window.chatbotInitialized = false;
+}
 
 function bootstrapChatbot() {
-    if (chatbotInitialized) return;
+    if (window.chatbotInitialized) return;
 
     // Inject HTML structure if it doesn't exist
     if (!document.getElementById('chatbot-widget-container')) {
@@ -14,7 +16,7 @@ function bootstrapChatbot() {
     }
 
     if (initChatbot()) {
-        chatbotInitialized = true;
+        window.chatbotInitialized = true;
     }
 }
 
