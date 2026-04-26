@@ -196,7 +196,7 @@ app.use(helmet({
 // 3.1 Rate limiting — protect against brute-force & DoS
 const generalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 200,
+  max: 500, // ~83 page loads/15min per IP — đủ cho usage thực tế
   standardHeaders: true,
   legacyHeaders: false,
   message: { success: false, message: 'Quá nhiều yêu cầu, vui lòng thử lại sau 15 phút.' },
