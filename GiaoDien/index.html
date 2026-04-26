@@ -8,7 +8,9 @@
   <!-- Google Fonts: Playfair Display + Inter -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap"
+    rel="stylesheet" />
   <!-- AOS — Animate On Scroll -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.css" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
@@ -17,14 +19,15 @@
   <!-- Tailwind CSS CDN & Config -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="js/tailwind-config.js"></script>
-  
+
   <!-- API Configuration - LOAD EARLY -->
   <script src="js/config.js"></script>
   <script src="js/api-patcher.js"></script>
 
   <style>
     /* Prevent horizontal overflow on mobile */
-    html, body {
+    html,
+    body {
       overflow-x: hidden;
       width: 100%;
       position: relative;
@@ -34,6 +37,7 @@
     .no-scrollbar::-webkit-scrollbar {
       display: none;
     }
+
     .no-scrollbar {
       -ms-overflow-style: none;
       scrollbar-width: none;
@@ -46,58 +50,88 @@
   <div id="load-header"></div>
 
   <!-- Slideshow -->
-  <div class="grid-slideshow grid grid-cols-1 md:grid-cols-3 md:grid-rows-2 gap-2 md:gap-3 w-[94%] md:w-[92%] mx-auto my-4 rounded-xl md:rounded-2xl overflow-hidden shadow-sm">
+  <div
+    class="grid-slideshow grid grid-cols-1 md:grid-cols-3 md:grid-rows-2 gap-2 md:gap-3 w-[94%] md:w-[92%] mx-auto my-4 rounded-xl md:rounded-2xl overflow-hidden shadow-sm">
     <div class="slide-large md:col-span-2 md:row-span-2 h-[180px] sm:h-[260px] md:h-[420px] overflow-hidden">
-      <img src="img/anhnen/17d.jpg" alt="Slide lớn" class="w-full h-full object-cover transition-transform duration-500 hover:scale-105">
+      <img src="img/anhnen/17d.jpg" alt="Slide lớn"
+        class="w-full h-full object-cover transition-transform duration-500 hover:scale-105">
     </div>
     <div class="slide-small h-[80px] sm:h-[120px] md:h-[200px] overflow-hidden">
-      <img src="img/anhnen/18d.jpg" alt="Slide nhỏ 1" class="w-full h-full object-cover transition-transform duration-500 hover:scale-105">
+      <img src="img/anhnen/18d.jpg" alt="Slide nhỏ 1"
+        class="w-full h-full object-cover transition-transform duration-500 hover:scale-105">
     </div>
     <div class="slide-small h-[80px] sm:h-[120px] md:h-[200px] overflow-hidden">
-      <img src="img/anhnen/14d.jpg" alt="Slide nhỏ 2" class="w-full h-full object-cover transition-transform duration-500 hover:scale-105">
+      <img src="img/anhnen/14d.jpg" alt="Slide nhỏ 2"
+        class="w-full h-full object-cover transition-transform duration-500 hover:scale-105">
     </div>
   </div>
 
   <!-- Promotion Cards -->
-  <div class="promo-bar-container w-[94%] md:w-[92%] mx-auto mt-4 md:mt-10 bg-white p-3 md:p-7 rounded-2xl md:rounded-[2.5rem] border border-border flex justify-start md:justify-center items-center gap-4 md:gap-10 overflow-x-auto no-scrollbar shadow-md">
-    <div class="promo-card flex-shrink-0 w-20 md:w-24 text-center cursor-pointer transition-all hover:-translate-y-1.5 hover:scale-105" onclick="window.location.href='./giamgia1.html'">
-      <img src="img/giamgia/anh1.jpg" alt="Mã giảm giá" class="w-12 h-12 md:w-16 md:h-16 mx-auto rounded-full object-cover shadow-md mb-2.5 border-2 border-white ring-1 ring-primary/5">
+  <div
+    class="promo-bar-container w-[94%] md:w-[92%] mx-auto mt-4 md:mt-10 bg-white p-3 md:p-7 rounded-2xl md:rounded-[2.5rem] border border-border flex justify-start md:justify-center items-center gap-4 md:gap-10 overflow-x-auto no-scrollbar shadow-md">
+    <div
+      class="promo-card flex-shrink-0 w-20 md:w-24 text-center cursor-pointer transition-all hover:-translate-y-1.5 hover:scale-105"
+      onclick="window.location.href='./giamgia1.html'">
+      <img src="img/giamgia/anh1.jpg" alt="Mã giảm giá"
+        class="w-12 h-12 md:w-16 md:h-16 mx-auto rounded-full object-cover shadow-md mb-2.5 border-2 border-white ring-1 ring-primary/5">
       <p class="text-[9px] md:text-xs font-black text-text uppercase tracking-tight">Ưu đãi</p>
     </div>
-    <div class="promo-card flex-shrink-0 w-20 md:w-24 text-center cursor-pointer transition-all hover:-translate-y-1.5 hover:scale-105" onclick="window.location.href='./giamgia1.html'">
-      <img src="img/giamgia/anh2.jpg" alt="Flash Sale" class="w-12 h-12 md:w-16 md:h-16 mx-auto rounded-full object-cover shadow-md mb-2.5 border-2 border-white ring-1 ring-primary/5">
+    <div
+      class="promo-card flex-shrink-0 w-20 md:w-24 text-center cursor-pointer transition-all hover:-translate-y-1.5 hover:scale-105"
+      onclick="window.location.href='./giamgia1.html'">
+      <img src="img/giamgia/anh2.jpg" alt="Flash Sale"
+        class="w-12 h-12 md:w-16 md:h-16 mx-auto rounded-full object-cover shadow-md mb-2.5 border-2 border-white ring-1 ring-primary/5">
       <p class="text-[9px] md:text-xs font-black text-text uppercase tracking-tight">Flash Sale</p>
     </div>
-    <div class="promo-card flex-shrink-0 w-20 md:w-24 text-center cursor-pointer transition-all hover:-translate-y-1.5 hover:scale-105" onclick="window.location.href='./giamgia2.html'">
-      <img src="img/giamgia/anh3.jpg" alt="Đinh Tị Books" class="w-12 h-12 md:w-16 md:h-16 mx-auto rounded-full object-cover shadow-md mb-2.5 border-2 border-white ring-1 ring-primary/5">
+    <div
+      class="promo-card flex-shrink-0 w-20 md:w-24 text-center cursor-pointer transition-all hover:-translate-y-1.5 hover:scale-105"
+      onclick="window.location.href='./giamgia2.html'">
+      <img src="img/giamgia/anh3.jpg" alt="Đinh Tị Books"
+        class="w-12 h-12 md:w-16 md:h-16 mx-auto rounded-full object-cover shadow-md mb-2.5 border-2 border-white ring-1 ring-primary/5">
       <p class="text-[9px] md:text-xs font-black text-text uppercase tracking-tight">Đinh Tị</p>
     </div>
-    <div class="promo-card flex-shrink-0 w-20 md:w-24 text-center cursor-pointer transition-all hover:-translate-y-1.5 hover:scale-105" onclick="window.location.href='./giamgia5.html'">
-      <img src="img/giamgia/anh4.jpg" alt="Alpha Books" class="w-12 h-12 md:w-16 md:h-16 mx-auto rounded-full object-cover shadow-md mb-2.5 border-2 border-white ring-1 ring-primary/5">
+    <div
+      class="promo-card flex-shrink-0 w-20 md:w-24 text-center cursor-pointer transition-all hover:-translate-y-1.5 hover:scale-105"
+      onclick="window.location.href='./giamgia5.html'">
+      <img src="img/giamgia/anh4.jpg" alt="Alpha Books"
+        class="w-12 h-12 md:w-16 md:h-16 mx-auto rounded-full object-cover shadow-md mb-2.5 border-2 border-white ring-1 ring-primary/5">
       <p class="text-[9px] md:text-xs font-black text-text uppercase tracking-tight">Alpha</p>
     </div>
-    <div class="promo-card flex-shrink-0 w-20 md:w-24 text-center cursor-pointer transition-all hover:-translate-y-1.5 hover:scale-105" onclick="window.location.href='./giamgia3.html'">
-      <img src="img/giamgia/anh5.jpg" alt="Phiếu giảm giá" class="w-12 h-12 md:w-16 md:h-16 mx-auto rounded-full object-cover shadow-md mb-2.5 border-2 border-white ring-1 ring-primary/5">
+    <div
+      class="promo-card flex-shrink-0 w-20 md:w-24 text-center cursor-pointer transition-all hover:-translate-y-1.5 hover:scale-105"
+      onclick="window.location.href='./giamgia3.html'">
+      <img src="img/giamgia/anh5.jpg" alt="Phiếu giảm giá"
+        class="w-12 h-12 md:w-16 md:h-16 mx-auto rounded-full object-cover shadow-md mb-2.5 border-2 border-white ring-1 ring-primary/5">
       <p class="text-[9px] md:text-xs font-black text-text uppercase tracking-tight">Voucher</p>
     </div>
-    <div class="promo-card flex-shrink-0 w-20 md:w-24 text-center cursor-pointer transition-all hover:-translate-y-1.5 hover:scale-105" onclick="window.location.href='./giamgia4.html'">
-      <img src="img/giamgia/anh6.jpg" alt="Sản phẩm mới" class="w-12 h-12 md:w-16 md:h-16 mx-auto rounded-full object-cover shadow-md mb-2.5 border-2 border-white ring-1 ring-primary/5">
+    <div
+      class="promo-card flex-shrink-0 w-20 md:w-24 text-center cursor-pointer transition-all hover:-translate-y-1.5 hover:scale-105"
+      onclick="window.location.href='./giamgia4.html'">
+      <img src="img/giamgia/anh6.jpg" alt="Sản phẩm mới"
+        class="w-12 h-12 md:w-16 md:h-16 mx-auto rounded-full object-cover shadow-md mb-2.5 border-2 border-white ring-1 ring-primary/5">
       <p class="text-[9px] md:text-xs font-black text-text uppercase tracking-tight">Mới nhất</p>
     </div>
-    <div class="promo-card flex-shrink-0 w-20 md:w-24 text-center cursor-pointer transition-all hover:-translate-y-1.5 hover:scale-105" onclick="window.location.href='./khuyenmai9.html'">
-      <img src="img/giamgia/anh9.jpg" alt="Truyện tranh" class="w-12 h-12 md:w-16 md:h-16 mx-auto rounded-full object-cover shadow-md mb-2.5 border-2 border-white ring-1 ring-primary/5">
+    <div
+      class="promo-card flex-shrink-0 w-20 md:w-24 text-center cursor-pointer transition-all hover:-translate-y-1.5 hover:scale-105"
+      onclick="window.location.href='./khuyenmai9.html'">
+      <img src="img/giamgia/anh9.jpg" alt="Truyện tranh"
+        class="w-12 h-12 md:w-16 md:h-16 mx-auto rounded-full object-cover shadow-md mb-2.5 border-2 border-white ring-1 ring-primary/5">
       <p class="text-[9px] md:text-xs font-black text-text uppercase tracking-tight">Truyện</p>
     </div>
   </div>
 
   <!-- Flash Sale Section -->
-  <div id="flash-sale" class="flash-sale-container w-[94%] md:w-[92%] mx-auto mt-6 md:mt-8 bg-white rounded-xl md:rounded-2xl border border-border overflow-hidden shadow-sm">
-    <div class="flash-sale-header flex justify-between items-center p-3 md:p-4 bg-gradient-to-r from-primary to-[#e74c3c] text-white">
+  <div id="flash-sale"
+    class="flash-sale-container w-[94%] md:w-[92%] mx-auto mt-6 md:mt-8 bg-white rounded-xl md:rounded-2xl border border-border overflow-hidden shadow-sm">
+    <div
+      class="flash-sale-header flex justify-between items-center p-3 md:p-4 bg-gradient-to-r from-primary to-[#e74c3c] text-white">
       <div class="flash-sale-left flex items-center gap-2 md:gap-4">
         <h2 class="font-display text-lg md:text-xl font-black tracking-tight italic">FLASH SALE</h2>
         <div id="flash-countdown" class="countdown"> </div>
       </div>
-      <button id="flash-view-all" class="view-all-btn text-[10px] md:text-xs font-black uppercase tracking-widest bg-white/10 hover:bg-white text-white hover:text-primary px-4 md:px-6 py-2 md:py-2.5 rounded-lg md:rounded-xl transition-all border border-white/20 shadow-sm active:scale-95">Tất cả</button>
+      <button id="flash-view-all"
+        class="view-all-btn text-[10px] md:text-xs font-black uppercase tracking-widest bg-white/10 hover:bg-white text-white hover:text-primary px-4 md:px-6 py-2 md:py-2.5 rounded-lg md:rounded-xl transition-all border border-white/20 shadow-sm active:scale-95">Tất
+        cả</button>
     </div>
 
     <div id="flash-products" class="flash-products">
@@ -122,7 +156,8 @@
           </h2>
           <!-- <a href="book.html" class="text-sm font-bold text-primary hover:underline">Xem tất cả <i class="fas fa-chevron-right ml-1"></i></a> -->
         </div>
-        <div id="book-list" class="product-container grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4"></div>
+        <div id="book-list"
+          class="product-container grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4"></div>
       </div>
 
       <!-- Section: Sách Giáo Khoa -->
@@ -133,7 +168,8 @@
             <span class="absolute bottom-[-13px] left-0 w-12 h-1 bg-primary rounded-full"></span>
           </h2>
         </div>
-        <div id="textbook-list" class="product-container grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4"></div>
+        <div id="textbook-list"
+          class="product-container grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4"></div>
       </div>
 
       <!-- Section: Sách Khoa Học -->
@@ -144,7 +180,8 @@
             <span class="absolute bottom-[-13px] left-0 w-12 h-1 bg-primary rounded-full"></span>
           </h2>
         </div>
-        <div id="science-book-list" class="product-container grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4"></div>
+        <div id="science-book-list"
+          class="product-container grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4"></div>
       </div>
     </main>
   </div>
@@ -188,6 +225,53 @@
       offset: 60
     });
   </script>
+  <!-- Floating Right Toolbar -->
+  <div class="fixed right-0 top-1/2 -translate-y-1/2 flex flex-col gap-2 z-40 bg-gray-500/80 backdrop-blur-sm p-2 rounded-l-2xl shadow-lg border-y border-l border-white/20">
+    <button onclick="openRandomBooksModal('Gợi Ý Cho Bạn', 'fas fa-thumbs-up')" class="w-12 h-12 bg-white rounded-xl flex items-center justify-center text-gray-500 hover:text-primary hover:scale-110 transition-all shadow-sm group relative">
+      <i class="fas fa-thumbs-up text-xl"></i>
+      <span class="absolute right-full mr-3 top-1/2 -translate-y-1/2 px-3 py-1.5 bg-gray-800 text-white text-xs font-bold whitespace-nowrap rounded-lg opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity">
+        Gợi ý sách hay
+        <span class="absolute left-full top-1/2 -translate-y-1/2 border-[5px] border-transparent border-l-gray-800"></span>
+      </span>
+    </button>
+    <button onclick="openRandomBooksModal('Sách Đáng Đọc', 'fas fa-book-open')" class="w-12 h-12 bg-white rounded-xl flex items-center justify-center text-gray-500 hover:text-primary hover:scale-110 transition-all shadow-sm group relative">
+      <i class="fas fa-book-open text-xl"></i>
+      <span class="absolute right-full mr-3 top-1/2 -translate-y-1/2 px-3 py-1.5 bg-gray-800 text-white text-xs font-bold whitespace-nowrap rounded-lg opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity">
+        Sách đáng đọc
+        <span class="absolute left-full top-1/2 -translate-y-1/2 border-[5px] border-transparent border-l-gray-800"></span>
+      </span>
+    </button>
+  </div>
+
+  <!-- Random Books Modal -->
+  <div id="randomBooksModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] hidden opacity-0 transition-opacity duration-300 flex items-center justify-center p-4">
+    <div class="bg-white w-full max-w-5xl rounded-[32px] shadow-2xl overflow-hidden flex flex-col max-h-[90vh] scale-95 transition-transform duration-300" id="randomBooksModalContent">
+      <div class="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+        <div class="flex items-center gap-4">
+          <div class="w-12 h-12 bg-primary/10 text-primary rounded-2xl flex items-center justify-center">
+            <i id="modalIcon" class="fas fa-star text-xl"></i>
+          </div>
+          <div>
+            <h2 id="modalTitle" class="text-2xl font-black text-gray-800 tracking-tight">Gợi Ý Ngẫu Nhiên</h2>
+            <p class="text-xs font-bold text-gray-400 uppercase tracking-widest mt-1">10 Tựa Sách Khám Phá Hôm Nay</p>
+          </div>
+        </div>
+        <button onclick="closeRandomBooksModal()" class="w-10 h-10 bg-gray-100 text-gray-500 rounded-full hover:bg-red-50 hover:text-red-500 transition-colors flex items-center justify-center">
+          <i class="fas fa-times text-lg"></i>
+        </button>
+      </div>
+      <div class="p-6 overflow-y-auto custom-scrollbar flex-1 bg-gray-50/30">
+        <div id="randomBooksGrid" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+          <div class="col-span-full py-12 flex flex-col items-center justify-center text-primary gap-4">
+            <i class="fas fa-spinner fa-spin text-3xl"></i>
+            <p class="text-xs font-bold uppercase tracking-widest">Đang tải sách...</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/random-books.js"></script>
 </body>
 
 </html>
