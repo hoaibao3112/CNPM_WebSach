@@ -396,14 +396,73 @@ const InvoiceManagement = () => {
     }
   }, [currentRoom, displayedMessageIds]);
 
-  // ✅ Auto refresh messages
-  useEffect(() => {
-    let interval;
-    if (chatVisible && currentRoom) {
-      interval = setInterval(refreshMessages, 3000);
+  // WebSocket logic for Admin
+  const socketRef = useRef(null);
+
+  const connectWebSocket = useCallback((roomId) => {
+    if (socketRef.current) {
+        socketRef.current.close();
     }
-    return () => clearInterval(interval);
-  }, [chatVisible, currentRoom, refreshMessages]);
+
+    const token = (document.cookie.split('; ').find(row => row.startsWith('authToken='))?.split('=')[1] || null) || (document.cookie.split('; ').find(row => row.startsWith('token='))?.split('=')[1] || null);
+    const apiBase = process.env.REACT_APP_API_BASE || 'https://cnpm-customer.onrender.com';
+    const wsUrl = `${apiBase.replace(/^http/, 'ws')}/?token=${token}&room_id=${roomId}`;
+
+    console.log('🔌 Admin connecting to WebSocket:', wsUrl);
+    const ws = new WebSocket(wsUrl);
+    socketRef.current = ws;
+
+    ws.onmessage = (event) => {
+        try {
+            const data = JSON.parse(event.data);
+            if (data.action === 'new_message') {
+                const msg = data.message;
+                const formattedMsg = {
+                    ...msg,
+                    content: msg.message || msg.content || '',
+                    sender_name: msg.sender_name || (msg.sender_type === 'staff' ? 'Admin' : 'Khách hàng')
+                };
+                setMessages(prev => {
+                    if (prev.some(m => m.id === formattedMsg.id)) return prev;
+                    return [...prev, formattedMsg].sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+                });
+                if (msg.sender_type === 'customer') {
+                    // Play sound if needed
+                }
+            } else if (data.action === 'chat_history') {
+                const formattedHistory = (data.messages || []).map(msg => ({
+                    ...msg,
+                    content: msg.message || msg.content || '',
+                    sender_name: msg.sender_name || (msg.sender_type === 'staff' ? 'Admin' : 'Khách hàng')
+                }));
+                setMessages(formattedHistory.sort((a, b) => new Date(a.created_at) - new Date(b.created_at)));
+            }
+        } catch (e) {
+            console.error('❌ WS Parse error:', e);
+        }
+    };
+
+    ws.onclose = () => {
+        console.log('ℹ️ Admin WebSocket closed');
+        if (chatVisible) {
+            setTimeout(() => connectWebSocket(roomId), 5000);
+        }
+    };
+
+    return ws;
+  }, [chatVisible]);
+
+  useEffect(() => {
+    if (chatVisible && currentRoom) {
+      connectWebSocket(currentRoom.room_id);
+    } else if (socketRef.current) {
+      socketRef.current.close();
+      socketRef.current = null;
+    }
+    return () => {
+      if (socketRef.current) socketRef.current.close();
+    };
+  }, [chatVisible, currentRoom, connectWebSocket]);
 
   // THAY THẾ HÀM handleViewInvoice (khoảng dòng 350) BẰNG:
 
@@ -412,6 +471,7 @@ const InvoiceManagement = () => {
       const token = (document.cookie.split('; ').find(row => row.startsWith('authToken='))?.split('=')[1] || null) || (document.cookie.split('; ').find(row => row.startsWith('token='))?.split('=')[1] || null);
       const headers = token ? { Authorization: `Bearer ${token}` } : {};
       
+      // SỬA ĐƯỜNG DẪN ĐÚNG (Fix 404)
       const res = await axios.get(`${process.env.REACT_APP_API_BASE || 'https://cnpm-customer.onrender.com'}/api/orders/${id}`, { headers });
 
       // ✅ XỬ LÝ LẤY DATA TỪ RESPONSE WRAPPER
@@ -481,7 +541,7 @@ const InvoiceManagement = () => {
 
     setChatLoading(true);
     try {
-      const token = (document.cookie.split('; ').find(row => row.startsWith('authToken='))?.split('=')[1] || null);
+      const token = (document.cookie.split('; ').find(row => row.startsWith('authToken='))?.split('=')[1] || null) || (document.cookie.split('; ').find(row => row.startsWith('token='))?.split('=')[1] || null);
 
       if (!token) {
         message.error('Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại.');
@@ -490,7 +550,7 @@ const InvoiceManagement = () => {
 
       console.log('🔑 Token:', token.substring(0, 20) + '...');
 
-      // 1. Get customer info
+      // 1. Get customer info - SỬA ĐƯỜNG DẪN ĐÚNG (Fix 404)
       console.log('👤 Fetching customer info...');
       try {
         const customerRes = await axios.get(
@@ -558,76 +618,46 @@ const InvoiceManagement = () => {
       return;
     }
 
-    if (sendingMessage) return; // Prevent double send
+    // Ưu tiên gửi qua WebSocket nếu đã kết nối
+    if (socketRef.current && socketRef.current.readyState === WebSocket.OPEN) {
+        const payload = {
+            action: 'send_message',
+            message: {
+                room_id: currentRoom.room_id,
+                message: messageText
+            }
+        };
+        socketRef.current.send(JSON.stringify(payload));
+        
+        // Optimistic update - hiển thị message ngay cho Admin đỡ chờ
+        const tempMessage = {
+            id: `temp-${Date.now()}`,
+            content: messageText,
+            sender_type: 'staff',
+            sender_name: 'Admin',
+            created_at: new Date().toISOString()
+        };
+        setMessages(prev => [...prev, tempMessage]);
+        setNewMessage('');
+        return;
+    }
 
+    if (sendingMessage) return;
     setSendingMessage(true);
 
     try {
-      const token = (document.cookie.split('; ').find(row => row.startsWith('authToken='))?.split('=')[1] || null);
-      if (!token) {
-        message.error('Phiên đăng nhập hết hạn');
-        return;
-      }
-
-      console.log('📤 Sending message:', messageText);
-
-      // Optimistic update - hiển thị message ngay
-      const tempMessage = {
-        id: `temp-${Date.now()}`,
-        content: messageText,
-        sender_type: 'staff',
-        sender_name: 'Admin',
-        created_at: new Date().toISOString(),
-        isTemporary: true
-      };
-
-      setMessages(prev => [...prev, tempMessage]);
-      setDisplayedMessageIds(prev => new Set([...prev, tempMessage.id]));
-
-      // Clear input
-      setNewMessage('');
-
-      const response = await axios.post(
+      const token = (document.cookie.split('; ').find(row => row.startsWith('authToken='))?.split('=')[1] || null) || (document.cookie.split('; ').find(row => row.startsWith('token='))?.split('=')[1] || null);
+      
+      await axios.post(
         (process.env.REACT_APP_API_BASE || 'https://cnpm-customer.onrender.com') + '/api/chat/messages',
-        {
-          room_id: currentRoom.room_id,
-          message: messageText
-        },
-        {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
-        }
+        { room_id: currentRoom.room_id, message: messageText },
+        { headers: { 'Authorization': `Bearer ${token}` } }
       );
 
-      console.log('✅ Message sent:', response.data);
-
-      // Remove temporary message
-      setMessages(prev => prev.filter(msg => msg.id !== tempMessage.id));
-      setDisplayedMessageIds(prev => {
-        const newSet = new Set(prev);
-        newSet.delete(tempMessage.id);
-        return newSet;
-      });
-
-      // Reload messages sau 500ms
-      setTimeout(() => {
-        loadMessages(currentRoom.room_id, token);
-      }, 500);
-
+      setNewMessage('');
     } catch (error) {
-      console.error('❌ Send message error:', error.response?.data || error.message);
-
-      // Remove temporary message on error
-      setMessages(prev => prev.filter(msg => !msg.isTemporary));
-      setDisplayedMessageIds(prev => {
-        const newSet = new Set([...prev].filter(id => !id.toString().startsWith('temp-')));
-        return newSet;
-      });
-
-      const errorMsg = error.response?.data?.error || error.message || 'Gửi tin nhắn thất bại';
-      message.error(errorMsg);
+      console.error('❌ Send message error:', error);
+      message.error('Gửi tin nhắn thất bại');
     } finally {
       setSendingMessage(false);
     }

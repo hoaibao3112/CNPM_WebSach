@@ -216,6 +216,9 @@ function initializeApp() {
         }
     });
 
+    // Bắt đầu lắng nghe thông báo tin nhắn chưa đọc (nếu cần)
+    startUnreadPolling();
+
     // Gắn các sự kiện
     attachEventListeners();
 

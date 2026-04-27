@@ -83,6 +83,16 @@ class CustomerController {
             return baseController.sendError(res, 'Lỗi cập nhật trạng thái', 500, error.message);
         }
     }
+
+    async getCustomerById(req, res) {
+        try {
+            const { makh } = req.params;
+            const customer = await CustomerService.getProfile(makh);
+            return baseController.sendSuccess(res, customer);
+        } catch (error) {
+            return baseController.sendError(res, 'Lỗi khi lấy thông tin khách hàng', 404, error.message);
+        }
+    }
 }
 
 export default new CustomerController();

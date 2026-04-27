@@ -58,6 +58,7 @@ router.post('/activity/search', authenticateToken, CustomerController.logSearch)
 // ===== PARAMETERIZED ROUTES (Must be last to avoid overriding specific routes) =====
 // Admin routes
 router.get('/', authenticateToken, CustomerController.getAllCustomers);
+router.get('/khachhang/:makh', authenticateToken, CustomerController.getCustomerById);
 router.patch('/:makh/toggle-status', authenticateToken, CustomerController.toggleStatus);
 
 // Proxy other customer-related routes if needed
