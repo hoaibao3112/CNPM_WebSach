@@ -202,7 +202,7 @@ class ChatService {
     const newMsg = await ChatMessage.create({
       room_id: roomId,
       sender_id: senderId,
-      sender_type: 'admin',
+      sender_type: 'staff',
       message: messageText,
       created_at: new Date()
     });

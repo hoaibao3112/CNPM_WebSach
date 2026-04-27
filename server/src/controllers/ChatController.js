@@ -45,7 +45,7 @@ class ChatController {
       const { room_id, message } = req.body;
       
       if (req.user.userType === 'admin') {
-        const msg = await ChatService.sendAdminMessage(room_id, req.user.id || req.user.userId, message);
+        const msg = await ChatService.sendAdminMessage(room_id, req.user.userId || req.user.id, message);
         return res.status(201).json({ success: true, message: msg });
       }
 

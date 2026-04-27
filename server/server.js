@@ -383,9 +383,11 @@ wss.on('connection', async (ws, req) => {
         const { room_id, message: msgContent } = data.message;
 
         // SECURITY: Use sender identity from verified JWT (ws.user), NOT from client payload
-        // Client must NOT be trusted to declare their own sender_id or sender_type
-        const sender_id = ws.user?.makh || ws.user?.MaTK || ws.user?.id || 'unknown';
-        const sender_type = (ws.user?.role || ws.user?.MaQuyen) ? 'staff' : 'customer';
+        const sender_id = ws.user?.makh || ws.user?.userId || ws.user?.id || ws.user?.MaTK || 'unknown';
+        
+        // Determine sender type: Check role/MaQuyen or explicit userType
+        const hasAdminRole = (ws.user?.role || ws.user?.MaQuyen);
+        const sender_type = (hasAdminRole || ws.user?.userType === 'admin') ? 'staff' : 'customer';
 
         if (room_id !== roomId) return; // Security: only send to own room
 
