@@ -136,6 +136,7 @@ const InvoiceManagement = () => {
   const [unreadRooms, setUnreadRooms] = useState([]);
   const [notificationVisible, setNotificationVisible] = useState(false);
   const [notificationPolling, setNotificationPolling] = useState(null);
+  const [notificationSearchTerm, setNotificationSearchTerm] = useState('');
 
   // Ref cho auto scroll
   const messagesEndRef = useRef(null);
@@ -742,71 +743,87 @@ const InvoiceManagement = () => {
     invoice.customerPhone.includes(searchTerm)
   );
 
-  // ✨ NOTIFICATION MENU - THIẾT KẾ LẠI CỰC ĐẸP VỚI TAILWIND
+  // ✨ NOTIFICATION MENU - THIẾT KẾ LẠI CỰC ĐẸP VỚI TAILWIND + TÌM KIẾM
   const notificationMenu = (
     <Menu className="notification-menu !p-0 !rounded-xl !overflow-hidden !border-none !shadow-2xl !w-[350px]">
       <div className="bg-gradient-to-r from-blue-600 to-blue-500 p-4">
-        <div className="flex justify-between items-center">
+        <div className="flex justify-between items-center mb-3">
           <span className="text-white font-bold text-lg">Tin nhắn mới</span>
           <Badge count={unreadCount} overflowCount={99} className="!bg-white !text-blue-600 font-bold border-none" />
         </div>
+        
+        {/* Thanh tìm kiếm trong Menu */}
+        <Input 
+          prefix={<SearchOutlined className="text-gray-400" />}
+          placeholder="Tìm tên khách hàng..."
+          variant="borderless"
+          className="!bg-white/20 !text-white placeholder:!text-white/60 !rounded-lg !py-1.5 focus:!bg-white/30 transition-all"
+          onChange={(e) => setNotificationSearchTerm(e.target.value)}
+          value={notificationSearchTerm}
+          onClick={(e) => e.stopPropagation()} // Không đóng menu khi nhấn vào ô tìm kiếm
+        />
       </div>
       
-      <div className="max-h-[450px] overflow-y-auto custom-scrollbar bg-white">
-        {unreadRooms.length === 0 ? (
+      <div className="max-h-[400px] overflow-y-auto custom-scrollbar bg-white">
+        {unreadRooms.filter(room => 
+          room.customer_name?.toLowerCase().includes(notificationSearchTerm.toLowerCase())
+        ).length === 0 ? (
           <div className="p-10 text-center flex flex-col items-center gap-3">
             <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center">
               <MessageOutlined className="text-3xl text-gray-300" />
             </div>
-            <p className="text-gray-400">Không có tin nhắn mới</p>
+            <p className="text-gray-400">{notificationSearchTerm ? 'Không tìm thấy kết quả' : 'Không có tin nhắn mới'}</p>
           </div>
         ) : (
-          unreadRooms.map((room, index) => (
-            <Menu.Item
-              key={room.room_id}
-              onClick={() => {
-                handleChatWithCustomer(room.customer_id);
-                setNotificationVisible(false);
-              }}
-              className="!p-0 !m-0 hover:!bg-blue-50 transition-colors border-b border-gray-50 last:border-none"
-            >
-              <div className="flex items-center gap-4 p-4">
-                <div className="relative">
-                  <Avatar 
-                    size={48} 
-                    className={`!flex !items-center !justify-center font-bold text-lg shadow-sm ${
-                      ['bg-blue-500', 'bg-purple-500', 'bg-orange-500', 'bg-pink-500', 'bg-green-500'][index % 5]
-                    }`}
-                  >
-                    {room.customer_name?.charAt(0).toUpperCase() || 'K'}
-                  </Avatar>
-                  <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full shadow-sm"></div>
-                </div>
+          unreadRooms
+            .filter(room => room.customer_name?.toLowerCase().includes(notificationSearchTerm.toLowerCase()))
+            .map((room, index) => (
+              <Menu.Item
+                key={room.room_id}
+                onClick={() => {
+                  handleChatWithCustomer(room.customer_id);
+                  setNotificationVisible(false);
+                  setNotificationSearchTerm(''); // Reset tìm kiếm
+                }}
+                className="!p-0 !m-0 hover:!bg-blue-50 transition-colors border-b border-gray-50 last:border-none"
+              >
+                <div className="flex items-center gap-4 p-4">
+                  <div className="relative">
+                    <Avatar 
+                      size={48} 
+                      className={`!flex !items-center !justify-center font-bold text-lg shadow-sm ${
+                        ['bg-blue-500', 'bg-purple-500', 'bg-orange-500', 'bg-pink-500', 'bg-green-500'][index % 5]
+                      }`}
+                    >
+                      {room.customer_name?.charAt(0).toUpperCase() || 'K'}
+                    </Avatar>
+                    <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full shadow-sm"></div>
+                  </div>
 
-                <div className="flex-1 min-w-0">
-                  <div className="flex justify-between items-start mb-1">
-                    <h4 className="font-bold text-gray-800 m-0 truncate text-sm leading-tight">
-                      {room.customer_name}
-                    </h4>
-                    <span className="text-[11px] text-gray-400 font-medium ml-2 shrink-0">
-                      {formatTime(room.last_message_time)}
-                    </span>
-                  </div>
-                  
-                  <div className="flex justify-between items-center">
-                    <p className="text-gray-500 text-xs m-0 truncate pr-4 italic">
-                      {room.last_message || 'Gửi một tin nhắn...'}
-                    </p>
-                    {room.unread_count > 0 && (
-                      <div className="bg-blue-600 text-white text-[10px] font-bold min-w-[18px] h-[18px] rounded-full flex items-center justify-center px-1 animate-pulse">
-                        {room.unread_count}
-                      </div>
-                    )}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex justify-between items-start mb-1">
+                      <h4 className="font-bold text-gray-800 m-0 truncate text-sm leading-tight">
+                        {room.customer_name}
+                      </h4>
+                      <span className="text-[11px] text-gray-400 font-medium ml-2 shrink-0">
+                        {formatTime(room.last_message_time)}
+                      </span>
+                    </div>
+                    
+                    <div className="flex justify-between items-center">
+                      <p className="text-gray-500 text-xs m-0 truncate pr-4 italic">
+                        {room.last_message || 'Gửi một tin nhắn...'}
+                      </p>
+                      {room.unread_count > 0 && (
+                        <div className="bg-blue-600 text-white text-[10px] font-bold min-w-[18px] h-[18px] rounded-full flex items-center justify-center px-1 animate-pulse">
+                          {room.unread_count}
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
-              </div>
-            </Menu.Item>
-          ))
+              </Menu.Item>
+            ))
         )}
       </div>
       
