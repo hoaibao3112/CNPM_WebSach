@@ -1,60 +1,433 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kết quả thanh toán | Bookstore</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
-    <link rel="icon" href="favicon.ico" type="image/x-icon" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kết quả thanh toán | Trung Phong Books</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Playfair+Display:wght@700;900&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="js/tailwind-config.js"></script>
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    .font-display { font-family: 'Playfair Display', serif; }
 
-    <!-- Tailwind CSS CDN & Config -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="js/tailwind-config.js"></script>
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(32px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes scaleIn {
+      from { opacity: 0; transform: scale(0.7); }
+      to   { opacity: 1; transform: scale(1); }
+    }
+    @keyframes pulse-ring {
+      0%   { transform: scale(0.8); opacity: 1; }
+      100% { transform: scale(2);   opacity: 0; }
+    }
+    @keyframes confetti-fall {
+      0%   { transform: translateY(-20px) rotate(0deg); opacity: 1; }
+      100% { transform: translateY(110vh) rotate(720deg); opacity: 0; }
+    }
+
+    .animate-fade-up   { animation: fadeInUp 0.6s ease both; }
+    .animate-scale-in  { animation: scaleIn 0.5s cubic-bezier(.175,.885,.32,1.275) both; }
+    .delay-1 { animation-delay: 0.1s; }
+    .delay-2 { animation-delay: 0.2s; }
+    .delay-3 { animation-delay: 0.3s; }
+    .delay-4 { animation-delay: 0.4s; }
+    .delay-5 { animation-delay: 0.5s; }
+
+    .confetti-piece {
+      position: fixed;
+      width: 10px; height: 10px;
+      top: -20px;
+      animation: confetti-fall linear forwards;
+      border-radius: 2px;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    .pulse-ring::before {
+      content: '';
+      position: absolute;
+      inset: -8px;
+      border-radius: 50%;
+      background: currentColor;
+      opacity: 0.15;
+      animation: pulse-ring 1.5s ease-out infinite;
+    }
+
+    .detail-card {
+      background: #fff;
+      border-radius: 20px;
+      border: 1.5px solid #f0ebe5;
+      overflow: hidden;
+    }
+    .detail-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 20px;
+      border-bottom: 1px solid #f7f4f1;
+      font-size: 14px;
+      flex-wrap: wrap;
+      gap: 4px;
+    }
+    .detail-row:last-child { border-bottom: none; }
+    .detail-row .lbl { color: #888; font-weight: 600; }
+    .detail-row .val { font-weight: 700; color: #222; text-align: right; }
+
+    .step-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      padding: 12px 0;
+    }
+    .step-icon {
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+      font-size: 14px;
+    }
+
+    /* Spinner */
+    .spin { animation: spin 1s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
 </head>
+<body class="min-h-screen bg-gradient-to-br from-[#fdf8f5] via-[#fff] to-[#f5f0ff] flex flex-col items-center justify-start py-8 px-4 relative overflow-x-hidden">
 
-<body class="bg-bg min-h-screen font-body antialiased flex items-center justify-center p-4">
-    <div class="container max-w-md w-full bg-white rounded-3xl shadow-2xl border border-border p-8 md:p-10 space-y-10 text-center animate-in fade-in zoom-in duration-500">
-        <!-- Logo/Icon Placeholder -->
-        <div class="flex justify-center">
-            <div class="w-20 h-20 bg-primary-light rounded-full flex items-center justify-center text-primary text-3xl shadow-lg shadow-primary/10">
-                <i class="fas fa-book-open"></i>
-            </div>
-        </div>
+  <!-- Confetti container -->
+  <div id="confetti-container" class="fixed inset-0 pointer-events-none z-0"></div>
 
-        <div id="result-content" class="space-y-6">
-            <!-- Processing State -->
-            <div class="loading space-y-4">
-                <div class="relative">
-                    <i class="fas fa-spinner fa-spin text-5xl text-primary"></i>
-                    <div class="absolute inset-0 flex items-center justify-center">
-                        <div class="w-2 h-2 bg-primary rounded-full animate-ping"></div>
-                    </div>
-                </div>
-                <div class="space-y-1">
-                    <h2 class="text-xl font-black text-gray-800 uppercase tracking-tighter">Đang xử lý thanh toán</h2>
-                    <p class="text-xs font-bold text-gray-400 uppercase tracking-widest animate-pulse">Vui lòng chờ trong giây lát...</p>
-                </div>
-            </div>
-        </div>
-        
-        <div class="btn-group flex flex-col gap-3 pt-6 border-t border-gray-50">
-            <a href="index.html" class="bg-primary hover:bg-primary-dark text-white px-8 py-4 rounded-2xl font-black text-sm shadow-lg shadow-primary/20 transition-all active:scale-95 flex items-center justify-center gap-3 uppercase tracking-widest">
-                <i class="fas fa-home"></i> TRANG CHỦ
-            </a>
-            <div class="grid grid-cols-2 gap-3">
-                <a href="book.html" class="bg-white border-2 border-gray-100 hover:border-gray-200 text-gray-600 px-4 py-3 rounded-2xl font-bold text-xs shadow-sm transition-all flex items-center justify-center gap-2">
-                    <i class="fas fa-shopping-cart text-primary"></i> MUA SẮM
-                </a>
-                <a href="orders.html" id="view-orders-btn" class="bg-gray-800 hover:bg-black text-white px-4 py-3 rounded-2xl font-bold text-xs shadow-md transition-all flex items-center justify-center gap-2 hidden">
-                    <i class="fas fa-list"></i> ĐƠN HÀNG
-                </a>
-            </div>
-        </div>
+  <!-- Main card -->
+  <div class="relative z-10 w-full max-w-lg">
+
+    <!-- Loading state -->
+    <div id="loading-state" class="bg-white rounded-[32px] shadow-2xl border border-border p-10 text-center space-y-6">
+      <div class="w-20 h-20 mx-auto bg-primary/10 rounded-full flex items-center justify-center">
+        <i class="fas fa-circle-notch spin text-3xl text-primary"></i>
+      </div>
+      <div>
+        <h2 class="text-xl font-black text-gray-800 uppercase tracking-tight">Đang xử lý</h2>
+        <p class="text-sm text-gray-400 mt-1">Vui lòng chờ trong giây lát...</p>
+      </div>
     </div>
 
-    <!-- API Configuration - MUST load first! -->
-    <script src="js/config.js"></script>
-    <script src="js/api-patcher.js"></script>
-    <script src="js/order-confirmation.js"></script>
+    <!-- Result state (hidden until JS fills it) -->
+    <div id="result-state" class="hidden space-y-5">
+
+      <!-- Hero Card -->
+      <div id="hero-card" class="bg-white rounded-[32px] shadow-2xl border border-border p-8 text-center space-y-5 animate-fade-up">
+        <!-- Icon -->
+        <div class="flex justify-center">
+          <div id="status-icon-wrap" class="relative w-24 h-24 rounded-full flex items-center justify-center pulse-ring">
+            <i id="status-icon" class="text-4xl"></i>
+          </div>
+        </div>
+        <!-- Title & subtitle -->
+        <div class="space-y-1">
+          <h1 id="status-title" class="text-2xl sm:text-3xl font-display font-black tracking-tight"></h1>
+          <p id="status-subtitle" class="text-sm text-gray-500 font-medium"></p>
+        </div>
+        <!-- Total amount highlight -->
+        <div id="total-highlight" class="hidden bg-gradient-to-r from-primary to-rose-700 rounded-2xl p-5 text-white">
+          <p class="text-xs font-black uppercase tracking-widest opacity-70 mb-1">Tổng thanh toán</p>
+          <p id="total-amount-big" class="text-4xl font-black tracking-tighter"></p>
+        </div>
+      </div>
+
+      <!-- Order details card -->
+      <div id="order-card" class="detail-card animate-fade-up delay-1 hidden">
+        <div class="px-5 py-4 bg-gray-50 border-b border-gray-100 flex items-center gap-3">
+          <i class="fas fa-receipt text-primary text-sm"></i>
+          <span class="text-xs font-black uppercase tracking-widest text-gray-600">Thông tin đơn hàng</span>
+        </div>
+        <div id="order-rows"></div>
+      </div>
+
+      <!-- Price breakdown card -->
+      <div id="price-card" class="detail-card animate-fade-up delay-2 hidden">
+        <div class="px-5 py-4 bg-gray-50 border-b border-gray-100 flex items-center gap-3">
+          <i class="fas fa-calculator text-primary text-sm"></i>
+          <span class="text-xs font-black uppercase tracking-widest text-gray-600">Chi tiết thanh toán</span>
+        </div>
+        <div id="price-rows"></div>
+      </div>
+
+      <!-- COD steps -->
+      <div id="cod-card" class="detail-card animate-fade-up delay-3 hidden">
+        <div class="px-5 py-4 bg-emerald-50 border-b border-emerald-100 flex items-center gap-3">
+          <i class="fas fa-truck text-emerald-600 text-sm"></i>
+          <span class="text-xs font-black uppercase tracking-widest text-emerald-700">Hướng dẫn nhận hàng COD</span>
+        </div>
+        <div class="p-5 space-y-1">
+          <div class="step-item">
+            <div class="step-icon bg-emerald-50 text-emerald-600"><i class="fas fa-phone"></i></div>
+            <div class="pt-1"><p class="text-sm font-bold text-gray-800">Xác nhận trong 24h</p><p class="text-xs text-gray-500">Chúng tôi sẽ gọi điện xác nhận đơn hàng</p></div>
+          </div>
+          <div class="step-item">
+            <div class="step-icon bg-blue-50 text-blue-600"><i class="fas fa-box"></i></div>
+            <div class="pt-1"><p class="text-sm font-bold text-gray-800">Đóng gói & vận chuyển</p><p class="text-xs text-gray-500">Thời gian giao hàng: 2–3 ngày làm việc</p></div>
+          </div>
+          <div class="step-item">
+            <div class="step-icon bg-amber-50 text-amber-600"><i class="fas fa-money-bill-wave"></i></div>
+            <div class="pt-1"><p class="text-sm font-bold text-gray-800">Chuẩn bị tiền mặt</p><p class="text-xs text-gray-500">Thanh toán khi nhận hàng, kiểm tra trước khi ký</p></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Error details card -->
+      <div id="error-card" class="detail-card animate-fade-up delay-2 hidden">
+        <div class="px-5 py-4 bg-red-50 border-b border-red-100 flex items-center gap-3">
+          <i class="fas fa-exclamation-triangle text-red-500 text-sm"></i>
+          <span class="text-xs font-black uppercase tracking-widest text-red-600">Chi tiết lỗi</span>
+        </div>
+        <div id="error-rows"></div>
+      </div>
+
+      <!-- Action buttons -->
+      <div id="action-btns" class="space-y-3 animate-fade-up delay-4">
+        <!-- filled by JS -->
+      </div>
+
+      <!-- Trust bar -->
+      <div class="animate-fade-up delay-5 flex items-center justify-center gap-2 text-xs text-gray-400 font-semibold pb-4">
+        <i class="fas fa-shield-alt text-primary/60"></i>
+        Giao dịch được mã hóa & bảo mật 100%
+      </div>
+
+    </div>
+  </div>
+
+  <script src="js/config.js"></script>
+  <script src="js/api-patcher.js"></script>
+  <script>
+    function formatPrice(p) {
+      if (!p && p !== 0) return '0đ';
+      return parseInt(p).toLocaleString('vi-VN') + 'đ';
+    }
+
+    function row(label, value, cls = '') {
+      return `<div class="detail-row"><span class="lbl">${label}</span><span class="val ${cls}">${value}</span></div>`;
+    }
+
+    function isLoggedIn() {
+      return !!(document.cookie.split('; ').find(r => r.startsWith('token='))?.split('=')[1]);
+    }
+
+    async function loadOrderDetails(orderId) {
+      if (!orderId) return null;
+      try {
+        const r = await fetch(`${window.API_CONFIG.BASE_URL}/api/orders/hoadon/${orderId}`);
+        if (r.ok) return await r.json();
+        if (isLoggedIn()) {
+          const token = document.cookie.split('; ').find(r => r.startsWith('token='))?.split('=')[1];
+          const r2 = await fetch(`${window.API_CONFIG.BASE_URL}/api/orders/customer-orders/detail/${orderId}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
+          if (r2.ok) return await r2.json();
+        }
+      } catch(e) { console.error(e); }
+      return null;
+    }
+
+    function spawnConfetti() {
+      const colors = ['#B03A2E','#f59e0b','#10b981','#3b82f6','#8b5cf6','#f97316'];
+      const container = document.getElementById('confetti-container');
+      for (let i = 0; i < 60; i++) {
+        const el = document.createElement('div');
+        el.className = 'confetti-piece';
+        el.style.left = Math.random() * 100 + 'vw';
+        el.style.background = colors[Math.floor(Math.random() * colors.length)];
+        el.style.width = (6 + Math.random() * 8) + 'px';
+        el.style.height = (6 + Math.random() * 8) + 'px';
+        el.style.animationDuration = (2 + Math.random() * 3) + 's';
+        el.style.animationDelay = (Math.random() * 1.5) + 's';
+        el.style.borderRadius = Math.random() > 0.5 ? '50%' : '2px';
+        container.appendChild(el);
+        setTimeout(() => el.remove(), 6000);
+      }
+    }
+
+    function successBtns(showOrders) {
+      return `
+        <a href="index.html" class="flex items-center justify-center gap-3 w-full py-4 bg-gradient-to-r from-primary to-rose-700 text-white rounded-2xl font-black text-sm uppercase tracking-widest shadow-lg shadow-primary/25 hover:opacity-90 transition-all active:scale-95">
+          <i class="fas fa-home"></i> Về trang chủ
+        </a>
+        <div class="grid grid-cols-2 gap-3">
+          <a href="book.html" class="flex items-center justify-center gap-2 py-4 bg-white border-2 border-gray-100 hover:border-primary hover:text-primary text-gray-600 rounded-2xl font-bold text-xs transition-all">
+            <i class="fas fa-shopping-cart text-primary"></i> Mua sắm
+          </a>
+          ${showOrders ? `<a href="orders.html" class="flex items-center justify-center gap-2 py-4 bg-gray-900 hover:bg-black text-white rounded-2xl font-bold text-xs transition-all">
+            <i class="fas fa-list"></i> Đơn hàng
+          </a>` : `<a href="book.html" class="flex items-center justify-center gap-2 py-4 bg-gray-900 hover:bg-black text-white rounded-2xl font-bold text-xs transition-all">
+            <i class="fas fa-book-open"></i> Sách mới
+          </a>`}
+        </div>`;
+    }
+
+    function errorBtns() {
+      return `
+        <a href="cart.html" class="flex items-center justify-center gap-3 w-full py-4 bg-gradient-to-r from-primary to-rose-700 text-white rounded-2xl font-black text-sm uppercase tracking-widest shadow-lg shadow-primary/25 hover:opacity-90 transition-all active:scale-95">
+          <i class="fas fa-redo"></i> Thử lại
+        </a>
+        <a href="book.html" class="flex items-center justify-center gap-2 w-full py-4 bg-white border-2 border-gray-100 hover:border-primary hover:text-primary text-gray-600 rounded-2xl font-bold text-sm transition-all">
+          <i class="fas fa-shopping-cart text-primary"></i> Tiếp tục mua sắm
+        </a>`;
+    }
+
+    document.addEventListener('DOMContentLoaded', async function() {
+      const p = new URLSearchParams(window.location.search);
+      const orderId      = p.get('orderId');
+      const status       = p.get('status');
+      const amount       = p.get('amount');
+      const subtotal     = p.get('subtotal');
+      const discount     = p.get('discount');
+      const shipping     = p.get('shipping');
+      const discountCode = p.get('discountCode');
+      const freeShipCode = p.get('freeShipCode');
+      const errorCode    = p.get('code');
+      const paymentMethod= p.get('paymentMethod');
+      const message      = p.get('message');
+
+      const orderDetails = orderId ? await loadOrderDetails(orderId) : null;
+
+      document.getElementById('loading-state').classList.add('hidden');
+      document.getElementById('result-state').classList.remove('hidden');
+
+      const icon     = document.getElementById('status-icon');
+      const iconWrap = document.getElementById('status-icon-wrap');
+      const title    = document.getElementById('status-title');
+      const subtitle = document.getElementById('status-subtitle');
+      const totalHL  = document.getElementById('total-highlight');
+      const totalBig = document.getElementById('total-amount-big');
+      const orderCard= document.getElementById('order-card');
+      const orderRows= document.getElementById('order-rows');
+      const priceCard= document.getElementById('price-card');
+      const priceRows= document.getElementById('price-rows');
+      const codCard  = document.getElementById('cod-card');
+      const errCard  = document.getElementById('error-card');
+      const errRows  = document.getElementById('error-rows');
+      const actionDiv= document.getElementById('action-btns');
+
+      const dateStr = orderDetails?.NgayTao
+        ? new Date(orderDetails.NgayTao).toLocaleDateString('vi-VN')
+        : new Date().toLocaleDateString('vi-VN');
+
+      // ---- COD / success ----
+      if (status === 'cod' || (status === 'success' && paymentMethod === 'COD')) {
+        const sub  = subtotal ? parseFloat(subtotal) : 0;
+        const disc = discount ? parseFloat(discount) : 0;
+        const ship = shipping ? parseFloat(shipping) : 0;
+        const total= amount  ? parseFloat(amount)   : Math.max(0, sub - disc + ship);
+
+        iconWrap.classList.add('text-emerald-500','bg-emerald-50');
+        icon.className = 'fas fa-check-circle text-emerald-500 text-5xl';
+        title.textContent = 'Đặt hàng thành công!';
+        title.className   = 'text-2xl sm:text-3xl font-display font-black tracking-tight text-emerald-600';
+        subtitle.textContent = 'Cảm ơn bạn đã tin tưởng Trung Phong Books 📚';
+
+        totalHL.classList.remove('hidden');
+        totalBig.textContent = formatPrice(total);
+
+        orderCard.classList.remove('hidden');
+        orderRows.innerHTML =
+          row('Mã đơn hàng', `<span class="text-primary">#${orderId}</span>`) +
+          row('Ngày đặt', dateStr) +
+          row('Phương thức', 'COD (Thanh toán khi nhận hàng)') +
+          row('Thanh toán', `<span class="inline-flex items-center gap-1 bg-amber-100 text-amber-700 px-3 py-1 rounded-full text-xs font-black"><i class="fas fa-clock text-[10px]"></i> Chưa thanh toán</span>`) +
+          row('Trạng thái', `<span class="inline-flex items-center gap-1 bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-xs font-black"><i class="fas fa-hourglass-half text-[10px]"></i> Chờ xử lý</span>`);
+
+        priceCard.classList.remove('hidden');
+        let pHTML = row('Tổng sản phẩm', formatPrice(sub));
+        if (disc > 0) pHTML += row('Giảm giá', `<span class="text-emerald-600">-${formatPrice(disc)}</span>`);
+        if (discountCode) pHTML += row('Mã giảm giá', `<span class="bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full text-xs font-black">${discountCode}</span>`);
+        if (ship > 0) pHTML += row('Phí vận chuyển', formatPrice(ship));
+        else if (freeShipCode) pHTML += row('Phí vận chuyển', `<span class="text-emerald-600 font-black">Miễn phí 🎉</span>`);
+        if (freeShipCode) pHTML += row('Mã Free Ship', `<span class="bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full text-xs font-black">${freeShipCode}</span>`);
+        pHTML += `<div class="detail-row bg-primary/5"><span class="lbl font-black text-gray-800 text-sm">TỔNG THANH TOÁN</span><span class="val text-primary text-lg font-black">${formatPrice(total)}</span></div>`;
+        priceRows.innerHTML = pHTML;
+
+        codCard.classList.remove('hidden');
+        actionDiv.innerHTML = successBtns(isLoggedIn());
+        spawnConfetti();
+      }
+
+      // ---- VNPay success ----
+      else if (status === 'success' && (!paymentMethod || paymentMethod === 'VNPAY')) {
+        const sub  = subtotal ? parseFloat(subtotal) : 0;
+        const disc = discount ? parseFloat(discount) : 0;
+        const ship = shipping ? parseFloat(shipping) : 0;
+        const total= amount  ? parseFloat(amount)   : Math.max(0, sub - disc + ship);
+
+        iconWrap.classList.add('text-blue-500','bg-blue-50');
+        icon.className = 'fas fa-check-circle text-blue-500 text-5xl';
+        title.textContent = 'Thanh toán VNPay thành công!';
+        title.className   = 'text-2xl sm:text-3xl font-display font-black tracking-tight text-blue-600';
+        subtitle.textContent = 'Đơn hàng đang được xử lý, chúng tôi sẽ liên hệ sớm!';
+
+        totalHL.classList.remove('hidden');
+        totalHL.className = 'bg-gradient-to-r from-blue-600 to-blue-800 rounded-2xl p-5 text-white';
+        totalBig.textContent = formatPrice(total);
+
+        orderCard.classList.remove('hidden');
+        orderRows.innerHTML =
+          row('Mã đơn hàng', `<span class="text-primary">#${orderId}</span>`) +
+          row('Ngày đặt', dateStr) +
+          row('Phương thức', 'VNPay') +
+          row('Thanh toán', `<span class="inline-flex items-center gap-1 bg-emerald-100 text-emerald-700 px-3 py-1 rounded-full text-xs font-black"><i class="fas fa-check text-[10px]"></i> Đã thanh toán</span>`) +
+          row('Trạng thái', `<span class="inline-flex items-center gap-1 bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-xs font-black"><i class="fas fa-hourglass-half text-[10px]"></i> Chờ xử lý</span>`);
+
+        priceCard.classList.remove('hidden');
+        let pHTML = row('Tổng sản phẩm', formatPrice(sub));
+        if (disc > 0) pHTML += row('Giảm giá', `<span class="text-emerald-600">-${formatPrice(disc)}</span>`);
+        if (ship > 0) pHTML += row('Phí vận chuyển', formatPrice(ship));
+        pHTML += `<div class="detail-row bg-primary/5"><span class="lbl font-black text-gray-800 text-sm">TỔNG THANH TOÁN</span><span class="val text-primary text-lg font-black">${formatPrice(total)}</span></div>`;
+        priceRows.innerHTML = pHTML;
+
+        actionDiv.innerHTML = successBtns(isLoggedIn());
+        spawnConfetti();
+      }
+
+      // ---- failed / error ----
+      else if (status === 'failed' || status === 'error') {
+        iconWrap.classList.add('text-red-500','bg-red-50');
+        icon.className = 'fas fa-times-circle text-red-500 text-5xl';
+        title.textContent = status === 'failed' ? 'Thanh toán thất bại!' : 'Có lỗi xảy ra!';
+        title.className   = 'text-2xl sm:text-3xl font-display font-black tracking-tight text-red-600';
+        subtitle.textContent = message ? decodeURIComponent(message) : 'Đã xảy ra lỗi trong quá trình xử lý. Vui lòng thử lại!';
+
+        errCard.classList.remove('hidden');
+        errRows.innerHTML =
+          row('Mã đơn hàng', orderId ? `#${orderId}` : 'N/A') +
+          (errorCode ? row('Mã lỗi', errorCode) : '') +
+          row('Lý do', message ? decodeURIComponent(message) : 'Lỗi không xác định');
+
+        actionDiv.innerHTML = errorBtns();
+      }
+
+      // ---- invalid signature ----
+      else if (status === 'invalid_signature') {
+        iconWrap.classList.add('text-orange-500','bg-orange-50');
+        icon.className = 'fas fa-shield-alt text-orange-500 text-5xl';
+        title.textContent = 'Lỗi bảo mật!';
+        title.className   = 'text-2xl sm:text-3xl font-display font-black tracking-tight text-orange-600';
+        subtitle.textContent = 'Chữ ký VNPay không hợp lệ. Giao dịch có thể bị can thiệp.';
+        actionDiv.innerHTML = errorBtns();
+      }
+
+      // ---- default ----
+      else {
+        iconWrap.classList.add('text-amber-500','bg-amber-50');
+        icon.className = 'fas fa-question-circle text-amber-500 text-5xl';
+        title.textContent = 'Trạng thái không xác định';
+        title.className   = 'text-2xl sm:text-3xl font-display font-black tracking-tight text-amber-600';
+        subtitle.textContent = 'Vui lòng liên hệ với chúng tôi để được hỗ trợ.';
+        actionDiv.innerHTML = errorBtns();
+      }
+    });
+  </script>
 </body>
 </html>
