@@ -77,6 +77,13 @@ class ChatController {
     } catch (error) { next(error); }
   }
 
+  async getAllRooms(req, res, next) {
+    try {
+      const rooms = await ChatService.getAllRooms();
+      return res.status(200).json({ success: true, rooms });
+    } catch (error) { next(error); }
+  }
+
   async markRoomAsRead(req, res, next) {
     try {
       await ChatService.markRoomAsRead(req.params.roomId);

@@ -134,9 +134,11 @@ const InvoiceManagement = () => {
   // ✨ THÊM CÁC STATE CHO THÔNG BÁO
   const [unreadCount, setUnreadCount] = useState(0);
   const [unreadRooms, setUnreadRooms] = useState([]);
+  const [allRooms, setAllRooms] = useState([]);
   const [notificationVisible, setNotificationVisible] = useState(false);
   const [notificationPolling, setNotificationPolling] = useState(null);
   const [notificationSearchTerm, setNotificationSearchTerm] = useState('');
+  const [isSearchingAll, setIsSearchingAll] = useState(false);
 
   // Ref cho auto scroll
   const messagesEndRef = useRef(null);
@@ -151,7 +153,7 @@ const InvoiceManagement = () => {
   ];
 
   // ✅ Hàm lấy Token thông minh
-  const getAuthToken = () => {
+  const getAuthToken = useCallback(() => {
     // 1. Thử lấy từ Cookies
     const cookieToken = (document.cookie.split('; ').find(row => row.startsWith('authToken='))?.split('=')[1]) || 
                        (document.cookie.split('; ').find(row => row.startsWith('token='))?.split('=')[1]);
@@ -163,7 +165,25 @@ const InvoiceManagement = () => {
     if (localToken) return localToken;
 
     return null;
-  };
+  }, []);
+
+  // ✅ Hàm lấy TẤT CẢ phòng chat để tìm kiếm
+  const fetchAllRooms = useCallback(async () => {
+    try {
+      setIsSearchingAll(true);
+      const token = getAuthToken();
+      const res = await axios.get((process.env.REACT_APP_API_BASE || 'https://cnpm-customer.onrender.com') + '/api/chat/admin/all-rooms', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.data.success) {
+        setAllRooms(res.data.rooms || []);
+      }
+    } catch (error) {
+      console.error('❌ Fetch all rooms error:', error);
+    } finally {
+      setIsSearchingAll(false);
+    }
+  }, [getAuthToken]);
 
   // ✅ Fetch invoices from API
   const fetchInvoices = useCallback(async () => {
@@ -196,12 +216,12 @@ const InvoiceManagement = () => {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [getAuthToken]);
 
   // ✨ THÊM CÁC FUNCTION CHO THÔNG BÁO
   const loadUnreadNotifications = useCallback(async () => {
     try {
-      const token = (document.cookie.split('; ').find(row => row.startsWith('authToken='))?.split('=')[1] || null);
+      const token = getAuthToken();
       if (!token) return;
 
       const [countRes, roomsRes] = await Promise.all([
@@ -231,7 +251,8 @@ const InvoiceManagement = () => {
     } catch (error) {
       console.error('❌ Load notifications error:', error);
     }
-  }, [unreadCount]);
+  }, [getAuthToken, unreadCount]);
+
 
   const playNotificationSound = () => {
     try {
@@ -354,7 +375,7 @@ const InvoiceManagement = () => {
       message.error('Không thể tải tin nhắn');
       setMessages([]);
     }
-  }, []);
+  }, [getAuthToken]);
 
 
   // WebSocket logic for Admin
@@ -411,7 +432,7 @@ const InvoiceManagement = () => {
     };
 
     return ws;
-  }, [chatVisible]);
+  }, [chatVisible, getAuthToken]);
 
   useEffect(() => {
     if (chatVisible && currentRoom) {
@@ -758,73 +779,84 @@ const InvoiceManagement = () => {
           placeholder="Tìm tên khách hàng..."
           variant="borderless"
           className="!bg-white/20 !text-white placeholder:!text-white/60 !rounded-lg !py-1.5 focus:!bg-white/30 transition-all"
-          onChange={(e) => setNotificationSearchTerm(e.target.value)}
+          onChange={(e) => {
+            const val = e.target.value;
+            setNotificationSearchTerm(val);
+            if (val.length > 0) fetchAllRooms(); // Tự động lấy tất cả khi bắt đầu tìm
+          }}
           value={notificationSearchTerm}
-          onClick={(e) => e.stopPropagation()} // Không đóng menu khi nhấn vào ô tìm kiếm
+          onClick={(e) => e.stopPropagation()} 
         />
       </div>
       
       <div className="max-h-[400px] overflow-y-auto custom-scrollbar bg-white">
-        {unreadRooms.filter(room => 
-          room.customer_name?.toLowerCase().includes(notificationSearchTerm.toLowerCase())
-        ).length === 0 ? (
-          <div className="p-10 text-center flex flex-col items-center gap-3">
-            <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center">
-              <MessageOutlined className="text-3xl text-gray-300" />
-            </div>
-            <p className="text-gray-400">{notificationSearchTerm ? 'Không tìm thấy kết quả' : 'Không có tin nhắn mới'}</p>
-          </div>
-        ) : (
-          unreadRooms
-            .filter(room => room.customer_name?.toLowerCase().includes(notificationSearchTerm.toLowerCase()))
-            .map((room, index) => (
-              <Menu.Item
-                key={room.room_id}
-                onClick={() => {
-                  handleChatWithCustomer(room.customer_id);
-                  setNotificationVisible(false);
-                  setNotificationSearchTerm(''); // Reset tìm kiếm
-                }}
-                className="!p-0 !m-0 hover:!bg-blue-50 transition-colors border-b border-gray-50 last:border-none"
-              >
-                <div className="flex items-center gap-4 p-4">
-                  <div className="relative">
-                    <Avatar 
-                      size={48} 
-                      className={`!flex !items-center !justify-center font-bold text-lg shadow-sm ${
-                        ['bg-blue-500', 'bg-purple-500', 'bg-orange-500', 'bg-pink-500', 'bg-green-500'][index % 5]
-                      }`}
-                    >
-                      {room.customer_name?.charAt(0).toUpperCase() || 'K'}
-                    </Avatar>
-                    <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full shadow-sm"></div>
-                  </div>
+        {(() => {
+          // Logic tìm kiếm: Ưu tiên chưa đọc, nếu có search term thì tìm cả list 'allRooms'
+          const displayRooms = notificationSearchTerm 
+            ? allRooms.filter(room => room.customer_name?.toLowerCase().includes(notificationSearchTerm.toLowerCase()))
+            : unreadRooms;
 
-                  <div className="flex-1 min-w-0">
-                    <div className="flex justify-between items-start mb-1">
-                      <h4 className="font-bold text-gray-800 m-0 truncate text-sm leading-tight">
-                        {room.customer_name}
-                      </h4>
-                      <span className="text-[11px] text-gray-400 font-medium ml-2 shrink-0">
-                        {formatTime(room.last_message_time)}
-                      </span>
-                    </div>
-                    
-                    <div className="flex justify-between items-center">
-                      <p className="text-gray-500 text-xs m-0 truncate pr-4 italic">
-                        {room.last_message || 'Gửi một tin nhắn...'}
-                      </p>
-                      {room.unread_count > 0 && (
-                        <div className="bg-blue-600 text-white text-[10px] font-bold min-w-[18px] h-[18px] rounded-full flex items-center justify-center px-1 animate-pulse">
-                          {room.unread_count}
-                        </div>
-                      )}
-                    </div>
+          if (displayRooms.length === 0) {
+            return (
+              <div className="p-10 text-center flex flex-col items-center gap-3">
+                <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center">
+                  <MessageOutlined className="text-3xl text-gray-300" />
+                </div>
+                <p className="text-gray-400">{notificationSearchTerm ? (isSearchingAll ? 'Đang tìm...' : 'Không tìm thấy kết quả') : 'Không có tin nhắn mới'}</p>
+              </div>
+            );
+          }
+
+          return displayRooms.map((room, index) => (
+            <Menu.Item
+              key={room.room_id}
+              onClick={() => {
+                handleChatWithCustomer(room.customer_id);
+                setNotificationVisible(false);
+                setNotificationSearchTerm(''); 
+              }}
+              className="!p-0 !m-0 hover:!bg-blue-50 transition-colors border-b border-gray-50 last:border-none"
+            >
+              <div className="flex items-center gap-4 p-4">
+                <div className="relative">
+                  <Avatar 
+                    size={48} 
+                    className={`!flex !items-center !justify-center font-bold text-lg shadow-sm ${
+                      room.unread_count > 0 ? 'border-2 border-blue-500' : ''
+                    } ${
+                      ['bg-blue-500', 'bg-purple-500', 'bg-orange-500', 'bg-pink-500', 'bg-green-500'][index % 5]
+                    }`}
+                  >
+                    {room.customer_name?.charAt(0).toUpperCase() || 'K'}
+                  </Avatar>
+                  {room.unread_count > 0 && <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full shadow-sm"></div>}
+                </div>
+
+                <div className="flex-1 min-w-0">
+                  <div className="flex justify-between items-start mb-1">
+                    <h4 className={`font-bold text-gray-800 m-0 truncate text-sm leading-tight ${room.unread_count > 0 ? 'text-blue-600' : ''}`}>
+                      {room.customer_name}
+                    </h4>
+                    <span className="text-[11px] text-gray-400 font-medium ml-2 shrink-0">
+                      {room.last_message_time ? formatTime(room.last_message_time) : ''}
+                    </span>
+                  </div>
+                  
+                  <div className="flex justify-between items-center">
+                    <p className={`text-gray-500 text-xs m-0 truncate pr-4 ${room.unread_count > 0 ? 'font-bold text-gray-700' : 'italic'}`}>
+                      {room.last_message || 'Chưa có tin nhắn...'}
+                    </p>
+                    {room.unread_count > 0 && (
+                      <div className="bg-blue-600 text-white text-[10px] font-bold min-w-[18px] h-[18px] rounded-full flex items-center justify-center px-1 animate-pulse">
+                        {room.unread_count}
+                      </div>
+                    )}
                   </div>
                 </div>
-              </Menu.Item>
-            ))
-        )}
+              </div>
+            </Menu.Item>
+          ));
+        })()}
       </div>
       
       {unreadRooms.length > 0 && (

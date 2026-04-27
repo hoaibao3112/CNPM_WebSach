@@ -29,6 +29,9 @@ router.get('/admin/unread-count', authenticateToken, ChatController.getUnreadCou
 // Get list of rooms with unread messages
 router.get('/admin/unread-rooms', authenticateToken, ChatController.getUnreadRooms);
 
+// Get ALL rooms for admin search
+router.get('/admin/all-rooms', authenticateToken, ChatController.getAllRooms);
+
 // Mark room as read by admin
 router.patch('/admin/mark-read/:roomId', authenticateToken, ChatController.markRoomAsRead);
 

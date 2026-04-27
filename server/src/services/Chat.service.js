@@ -152,6 +152,27 @@ class ChatService {
   }
 
   /**
+   * Lấy tất cả phòng chat (admin) - Dùng cho tìm kiếm toàn diện
+   */
+  async getAllRooms() {
+    const pool = (await import('../config/connectDatabase.js')).default;
+    const [rooms] = await pool.query(`
+      SELECT 
+        cr.room_id,
+        cr.customer_id,
+        kh.tenkh as customer_name,
+        (SELECT message FROM chat_messages WHERE room_id = cr.room_id ORDER BY created_at DESC LIMIT 1) as last_message,
+        (SELECT created_at FROM chat_messages WHERE room_id = cr.room_id ORDER BY created_at DESC LIMIT 1) as last_message_time,
+        (SELECT COUNT(*) FROM chat_messages WHERE room_id = cr.room_id AND created_at > COALESCE(cr.admin_read_at, '1970-01-01')) as unread_count
+      FROM chat_rooms cr
+      LEFT JOIN khachhang kh ON cr.customer_id = kh.makh
+      ORDER BY cr.updated_at DESC
+      LIMIT 100
+    `);
+    return rooms;
+  }
+
+  /**
    * Đánh dấu phòng đã đọc (admin)
    */
   async markRoomAsRead(roomId) {
