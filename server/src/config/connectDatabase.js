@@ -8,11 +8,11 @@ dotenv.config();
 
 // Cấu hình kết nối với giá trị mặc định an toàn hơn
 const dbConfig = {
-  host: process.env.DB_HOST || '127.0.0.1', // Sử dụng 127.0.0.1 thay vì localhost để tránh DNS lookup
-  user: process.env.DB_USER || 'root',
-  password: process.env.DB_PASSWORD || '1234',
-  database: process.env.DB_NAME || 'bansach',
-  port: parseInt(process.env.DB_PORT) || 3306,
+  host: process.env.DB_HOST, // Sử dụng 127.0.0.1 thay vì localhost để tránh DNS lookup
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+  database: process.env.DB_NAME,
+  port: parseInt(process.env.DB_PORT),
   waitForConnections: true,
   connectionLimit: 10, // Giới hạn số connection đồng thời
   queueLimit: 0,

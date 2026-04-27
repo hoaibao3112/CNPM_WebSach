@@ -1460,6 +1460,7 @@ async function loadProvinces() {
       option.value = city.city_id;
       option.textContent = city.city_name;
       option.dataset.provinceName = city.city_name; // Lưu tên tỉnh để tính phí ship
+      option.dataset.originalId = city.original_id; // Lưu ID gốc để khớp địa chỉ cũ
       provinceSelect.appendChild(option);
     });
 
@@ -1552,19 +1553,35 @@ async function loadDistricts() {
   }
 
   try {
-    // Load from local JSON file instead of API
+    districtSelect.disabled = true;
+    districtSelect.innerHTML = '<option value="">-- Đang tải Quận/Huyện... --</option>';
+    
+    console.log(`🔍 Fetching districts for city: ${provinceSelect.value}`);
     const response = await fetch(`${window.API_CONFIG.BASE_URL}/api/address/districts/${provinceSelect.value}`);
+    
+    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+    
     const districts = await response.json();
-    districts.forEach(district => {
-      const option = document.createElement('option');
-      option.value = district.district_id;
-      option.textContent = district.district_name;
-      districtSelect.appendChild(option);
-    });
-    districtSelect.disabled = false;
+    console.log(`✅ Loaded ${districts.length} districts`);
+    
+    districtSelect.innerHTML = '<option value="">-- Chọn Quận/Huyện --</option>';
+    
+    if (districts.length === 0) {
+      districtSelect.innerHTML = '<option value="">Không có dữ liệu Quận/Huyện</option>';
+    } else {
+      districts.forEach(district => {
+        const option = document.createElement('option');
+        option.value = district.district_id;
+        option.textContent = district.district_name;
+        option.dataset.originalId = district.original_id; // Lưu ID gốc để khớp địa chỉ cũ
+        districtSelect.appendChild(option);
+      });
+      districtSelect.disabled = false;
+    }
   } catch (error) {
-    console.error('Error loading districts:', error);
-    districtSelect.innerHTML = '<option value="">Không tải được dữ liệu</option>';
+    console.error('❌ Error loading districts:', error);
+    districtSelect.innerHTML = '<option value="">Lỗi tải dữ liệu Quận/Huyện</option>';
+    districtSelect.disabled = true;
   }
 }
 
@@ -1581,19 +1598,34 @@ async function loadWards() {
   }
 
   try {
-    // Load from local JSON file instead of API
+    wardSelect.disabled = true;
+    wardSelect.innerHTML = '<option value="">-- Đang tải Phường/Xã... --</option>';
+
+    console.log(`🔍 Fetching wards for district: ${districtSelect.value}`);
     const response = await fetch(`${window.API_CONFIG.BASE_URL}/api/address/wards/${districtSelect.value}`);
+    
+    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+    
     const wards = await response.json();
-    wards.forEach(ward => {
-      const option = document.createElement('option');
-      option.value = ward.ward_name; // Use ward_name as value
-      option.textContent = ward.ward_name;
-      wardSelect.appendChild(option);
-    });
-    wardSelect.disabled = false;
+    console.log(`✅ Loaded ${wards.length} wards`);
+
+    wardSelect.innerHTML = '<option value="">-- Chọn Phường/Xã --</option>';
+    
+    if (wards.length === 0) {
+      wardSelect.innerHTML = '<option value="">Không có dữ liệu Phường/Xã</option>';
+    } else {
+      wards.forEach(ward => {
+        const option = document.createElement('option');
+        option.value = ward.ward_name; // Use ward_name as value
+        option.textContent = ward.ward_name;
+        wardSelect.appendChild(option);
+      });
+      wardSelect.disabled = false;
+    }
   } catch (error) {
-    console.error('Error loading wards:', error);
-    wardSelect.innerHTML = '<option value="">Không tải được dữ liệu</option>';
+    console.error('❌ Error loading wards:', error);
+    wardSelect.innerHTML = '<option value="">Lỗi tải dữ liệu Phường/Xã</option>';
+    wardSelect.disabled = true;
   }
 }
 
@@ -3409,7 +3441,12 @@ async function loadSavedAddresses() {
         let found = false;
         for (let i = 0; i < tinh.options.length; i++) {
           const opt = tinh.options[i];
-          if (String(opt.value).trim() === String(addr.province).trim() || opt.text.trim() === String(addr.province).trim() || (addr.provinceName && opt.text.trim() === String(addr.provinceName).trim())) {
+          const matchesId = String(opt.value).trim() === String(addr.province).trim();
+          const matchesOriginalId = opt.dataset.originalId && String(opt.dataset.originalId).trim() === String(addr.province).trim();
+          const matchesText = opt.text.trim() === String(addr.province).trim();
+          const matchesName = addr.provinceName && opt.text.trim() === String(addr.provinceName).trim();
+
+          if (matchesId || matchesOriginalId || matchesText || matchesName) {
             tinh.selectedIndex = i;
             tinh.dispatchEvent(new Event('change'));
             found = true;
@@ -3421,7 +3458,12 @@ async function loadSavedAddresses() {
           await waitForOptions(quan, 2, 3000);
           for (let i = 0; i < quan.options.length; i++) {
             const opt = quan.options[i];
-            if (String(opt.value).trim() === String(addr.district).trim() || opt.text.trim() === String(addr.district).trim() || (addr.districtName && opt.text.trim() === String(addr.districtName).trim())) {
+            const matchesId = String(opt.value).trim() === String(addr.district).trim();
+            const matchesOriginalId = opt.dataset.originalId && String(opt.dataset.originalId).trim() === String(addr.district).trim();
+            const matchesText = opt.text.trim() === String(addr.district).trim();
+            const matchesName = addr.districtName && opt.text.trim() === String(addr.districtName).trim();
+
+            if (matchesId || matchesOriginalId || matchesText || matchesName) {
               quan.selectedIndex = i;
               quan.dispatchEvent(new Event('change'));
               break;
