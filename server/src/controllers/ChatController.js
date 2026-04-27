@@ -6,8 +6,12 @@ import ChatService from '../services/Chat.service.js';
 class ChatController {
   async createOrGetRoom(req, res, next) {
     try {
-      const customerId = req.user.makh;
-      if (!customerId) return res.status(401).json({ success: false, error: 'Unauthorized' });
+      // Ưu tiên customer_id từ body (cho Admin), fallback về makh từ token (cho khách)
+      const customerId = (req.user.userType === 'admin' ? req.body.customer_id : null) || req.user.makh;
+      
+      if (!customerId) {
+        return res.status(401).json({ success: false, error: 'Unauthorized: Missing Customer ID' });
+      }
 
       const { room, isNew } = await ChatService.createOrGetRoom(customerId);
       return res.status(isNew ? 201 : 200).json({ success: true, room });
@@ -26,6 +30,11 @@ class ChatController {
 
   async getMessages(req, res, next) {
     try {
+      if (req.user.userType === 'admin') {
+        const messages = await ChatService.getMessagesForAdmin(req.params.roomId);
+        return res.status(200).json({ success: true, messages });
+      }
+
       const messages = await ChatService.getMessages(req.params.roomId, req.user.makh);
       return res.status(200).json({ success: true, messages });
     } catch (error) { next(error); }
@@ -33,7 +42,14 @@ class ChatController {
 
   async sendMessage(req, res, next) {
     try {
-      const msg = await ChatService.sendMessage(req.body.room_id, req.user.makh, req.body.message);
+      const { room_id, message } = req.body;
+      
+      if (req.user.userType === 'admin') {
+        const msg = await ChatService.sendAdminMessage(room_id, req.user.id || req.user.userId, message);
+        return res.status(201).json({ success: true, message: msg });
+      }
+
+      const msg = await ChatService.sendMessage(room_id, req.user.makh, message);
       return res.status(201).json({ success: true, message: msg });
     } catch (error) { next(error); }
   }

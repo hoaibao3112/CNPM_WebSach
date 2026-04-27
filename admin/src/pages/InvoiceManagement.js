@@ -150,11 +150,26 @@ const InvoiceManagement = () => {
     { value: 'Đã hủy', color: 'red' }
   ];
 
+  // ✅ Hàm lấy Token thông minh
+  const getAuthToken = () => {
+    // 1. Thử lấy từ Cookies
+    const cookieToken = (document.cookie.split('; ').find(row => row.startsWith('authToken='))?.split('=')[1]) || 
+                       (document.cookie.split('; ').find(row => row.startsWith('token='))?.split('=')[1]);
+    
+    if (cookieToken) return cookieToken;
+
+    // 2. Thử lấy từ LocalStorage
+    const localToken = localStorage.getItem('authToken') || localStorage.getItem('token');
+    if (localToken) return localToken;
+
+    return null;
+  };
+
   // ✅ Fetch invoices from API
   const fetchInvoices = async () => {
     setLoading(true);
     try {
-      const token = (document.cookie.split('; ').find(row => row.startsWith('authToken='))?.split('=')[1] || null);
+      const token = getAuthToken();
       const response = await axios.get((process.env.REACT_APP_API_BASE || 'https://cnpm-customer.onrender.com') + '/api/orders/hoadon', {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -266,7 +281,7 @@ const InvoiceManagement = () => {
 
   const markRoomAsRead = async (roomId) => {
     try {
-      const token = (document.cookie.split('; ').find(row => row.startsWith('authToken='))?.split('=')[1] || null);
+      const token = getAuthToken();
       await axios.patch(`${process.env.REACT_APP_API_BASE || 'https://cnpm-customer.onrender.com'}/api/chat/admin/mark-read/${roomId}`, {}, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -305,9 +320,10 @@ const InvoiceManagement = () => {
     try {
       console.log('📨 Loading messages for room:', roomId);
 
+      const token = getAuthToken();
       const msgRes = await axios.get(
         `${process.env.REACT_APP_API_BASE || 'https://cnpm-customer.onrender.com'}/api/chat/rooms/${roomId}/messages`,
-        { headers: { Authorization: `Bearer ${token || (document.cookie.split('; ').find(row => row.startsWith('authToken='))?.split('=')[1] || null)}` } }
+        { headers: { Authorization: `Bearer ${token}` } }
       );
 
       console.log('📨 Messages API response:', msgRes.data);
@@ -404,7 +420,7 @@ const InvoiceManagement = () => {
         socketRef.current.close();
     }
 
-    const token = (document.cookie.split('; ').find(row => row.startsWith('authToken='))?.split('=')[1] || null) || (document.cookie.split('; ').find(row => row.startsWith('token='))?.split('=')[1] || null);
+    const token = getAuthToken();
     const apiBase = process.env.REACT_APP_API_BASE || 'https://cnpm-customer.onrender.com';
     const wsUrl = `${apiBase.replace(/^http/, 'ws')}/?token=${token}&room_id=${roomId}`;
 
@@ -468,7 +484,7 @@ const InvoiceManagement = () => {
 
   const handleViewInvoice = async (id) => {
     try {
-      const token = (document.cookie.split('; ').find(row => row.startsWith('authToken='))?.split('=')[1] || null) || (document.cookie.split('; ').find(row => row.startsWith('token='))?.split('=')[1] || null);
+      const token = getAuthToken();
       const headers = token ? { Authorization: `Bearer ${token}` } : {};
       
       // SỬA ĐƯỜNG DẪN ĐÚNG (Fix 404)
@@ -541,10 +557,11 @@ const InvoiceManagement = () => {
 
     setChatLoading(true);
     try {
-      const token = (document.cookie.split('; ').find(row => row.startsWith('authToken='))?.split('=')[1] || null) || (document.cookie.split('; ').find(row => row.startsWith('token='))?.split('=')[1] || null);
+      const token = getAuthToken();
+      console.log('🔑 Admin Chat Token:', token ? (token.substring(0, 15) + '...') : 'NOT FOUND ❌');
 
       if (!token) {
-        message.error('Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại.');
+        message.error('Không tìm thấy mã xác thực. Vui lòng đăng nhập lại.');
         return;
       }
 
@@ -646,7 +663,7 @@ const InvoiceManagement = () => {
     setSendingMessage(true);
 
     try {
-      const token = (document.cookie.split('; ').find(row => row.startsWith('authToken='))?.split('=')[1] || null) || (document.cookie.split('; ').find(row => row.startsWith('token='))?.split('=')[1] || null);
+      const token = getAuthToken();
       
       await axios.post(
         (process.env.REACT_APP_API_BASE || 'https://cnpm-customer.onrender.com') + '/api/chat/messages',
