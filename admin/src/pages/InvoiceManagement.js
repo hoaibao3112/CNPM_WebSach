@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import axios from 'axios';
 import { Modal, Button, Select, message, Table, Tag, Space, Input, Avatar, Badge, Dropdown, Menu, Rate, Tooltip } from 'antd';
-import { ExclamationCircleFilled, EyeOutlined, DeleteOutlined, MessageOutlined, UserOutlined, StarOutlined } from '@ant-design/icons';
+import { ExclamationCircleFilled, EyeOutlined, DeleteOutlined, MessageOutlined, StarOutlined } from '@ant-design/icons';
 
 const { confirm } = Modal;
 const { Search, TextArea } = Input;
@@ -125,7 +125,6 @@ const InvoiceManagement = () => {
   const [newMessage, setNewMessage] = useState('');
   const [chatLoading, setChatLoading] = useState(false);
   const [customerInfo, setCustomerInfo] = useState(null);
-  const [displayedMessageIds, setDisplayedMessageIds] = useState(new Set());
   const [sendingMessage, setSendingMessage] = useState(false);
   // Review modal state
   const [reviewModalVisible, setReviewModalVisible] = useState(false);
@@ -166,7 +165,7 @@ const InvoiceManagement = () => {
   };
 
   // ✅ Fetch invoices from API
-  const fetchInvoices = async () => {
+  const fetchInvoices = useCallback(async () => {
     setLoading(true);
     try {
       const token = getAuthToken();
@@ -196,7 +195,7 @@ const InvoiceManagement = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   // ✨ THÊM CÁC FUNCTION CHO THÔNG BÁO
   const loadUnreadNotifications = useCallback(async () => {
@@ -316,7 +315,7 @@ const InvoiceManagement = () => {
   }, [startNotificationPolling, stopNotificationPolling]);
 
   // ✅ Load messages function
-  const loadMessages = useCallback(async (roomId, token) => {
+  const loadMessages = useCallback(async (roomId) => {
     try {
       console.log('📨 Loading messages for room:', roomId);
 
@@ -345,72 +344,17 @@ const InvoiceManagement = () => {
 
         console.log('✅ Formatted messages:', formattedMessages.length);
         setMessages(formattedMessages);
-
-        // Update displayed IDs
-        const messageIds = new Set(formattedMessages.map(m => m.id));
-        setDisplayedMessageIds(messageIds);
       } else {
         console.error('❌ Invalid messages response:', msgRes.data);
         setMessages([]);
-        setDisplayedMessageIds(new Set());
       }
     } catch (error) {
       console.error('❌ Load messages error:', error.response?.data || error.message);
       message.error('Không thể tải tin nhắn');
       setMessages([]);
-      setDisplayedMessageIds(new Set());
     }
   }, []);
 
-  // ✅ Refresh messages function
-  const refreshMessages = useCallback(async () => {
-    if (!currentRoom) return;
-
-    try {
-      const token = (document.cookie.split('; ').find(row => row.startsWith('authToken='))?.split('=')[1] || null);
-
-      const msgRes = await axios.get(
-        `${process.env.REACT_APP_API_BASE || 'https://cnpm-customer.onrender.com'}/api/chat/rooms/${currentRoom.room_id}/messages`,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-
-      if (msgRes.data.success && Array.isArray(msgRes.data.messages)) {
-        // Tìm messages mới
-        const newMessages = msgRes.data.messages.filter(msg =>
-          !displayedMessageIds.has(msg.id)
-        );
-
-        if (newMessages.length > 0) {
-          console.log('🆕 New messages found:', newMessages.length);
-
-          const formattedNewMessages = newMessages.map(msg => ({
-            ...msg,
-            content: msg.message || msg.content || '',
-            sender_name: msg.sender_name || (msg.sender_type === 'staff' ? 'Admin' : 'Khách hàng')
-          }));
-
-          // Append new messages
-          setMessages(prevMessages => {
-            const allMessages = [...prevMessages, ...formattedNewMessages];
-            // Remove duplicates và sort
-            const uniqueMessages = allMessages.filter((msg, index, self) =>
-              index === self.findIndex(m => m.id === msg.id)
-            );
-            return uniqueMessages.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
-          });
-
-          // Update displayed IDs
-          setDisplayedMessageIds(prev => {
-            const newSet = new Set(prev);
-            formattedNewMessages.forEach(msg => newSet.add(msg.id));
-            return newSet;
-          });
-        }
-      }
-    } catch (error) {
-      console.error('❌ Refresh messages error:', error);
-    }
-  }, [currentRoom, displayedMessageIds]);
 
   // WebSocket logic for Admin
   const socketRef = useRef(null);
@@ -550,7 +494,6 @@ const InvoiceManagement = () => {
 
     // Reset chat state
     setMessages([]);
-    setDisplayedMessageIds(new Set());
     setCurrentRoom(null);
     setCustomerInfo(null);
     setNewMessage('');
@@ -761,7 +704,6 @@ const InvoiceManagement = () => {
     setChatVisible(false);
     setCurrentRoom(null);
     setMessages([]);
-    setDisplayedMessageIds(new Set());
     setCustomerInfo(null);
     setNewMessage('');
   };
@@ -992,7 +934,7 @@ const InvoiceManagement = () => {
   // Auto load invoices on mount
   useEffect(() => {
     fetchInvoices();
-  }, []);
+  }, [fetchInvoices]);
 
 
 
