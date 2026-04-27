@@ -126,14 +126,22 @@ function setupQuantitySelector() {
 
     if (!minusBtn || !plusBtn || !qtyInput) return;
 
-    minusBtn.addEventListener('click', () => {
+    // Xóa sự kiện cũ (nếu có) để tránh bị lặp (double-bound)
+    const newMinusBtn = minusBtn.cloneNode(true);
+    const newPlusBtn = plusBtn.cloneNode(true);
+    minusBtn.parentNode.replaceChild(newMinusBtn, minusBtn);
+    plusBtn.parentNode.replaceChild(newPlusBtn, plusBtn);
+
+    newMinusBtn.addEventListener('click', () => {
         let val = parseInt(qtyInput.value) || 1;
         if (val > 1) qtyInput.value = val - 1;
+        qtyInput.dispatchEvent(new Event('change')); // Kích hoạt sự kiện change để đồng bộ
     });
 
-    plusBtn.addEventListener('click', () => {
+    newPlusBtn.addEventListener('click', () => {
         let val = parseInt(qtyInput.value) || 1;
         if (val < 99) qtyInput.value = val + 1;
+        qtyInput.dispatchEvent(new Event('change')); // Kích hoạt sự kiện change để đồng bộ
     });
 
     qtyInput.addEventListener('change', () => {
