@@ -41,10 +41,8 @@ if (!window.API_CONFIG) {
         // Chatbot service URL
         CHATBOT_URL: (() => {
             const hostname = window.location.hostname;
-            if (hostname !== 'localhost' && hostname !== '127.0.0.1') {
-                return 'https://cnpm-websach-2.onrender.com/api/chatbot';
-            }
-            return 'http://127.0.0.1:8002';
+            // Always use the Render URL for the chatbot to ensure Llama 3 is used
+            return 'https://cnpm-websach-hf0f.onrender.com/chat';
         })(),
 
         // Google & Facebook Client IDs - will be set after fetching from backend

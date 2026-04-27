@@ -234,11 +234,9 @@ function initChatbot() {
     let isLoading = false;
     let messageCount = 0;
     
-    // API URLs: prefer direct chatbot URL, then backend proxy, then local direct fallback
-    const API_BASE = window.API_CONFIG ? window.API_CONFIG.BASE_URL : window.API_CONFIG.BASE_URL;
-    const configuredChatbotUrl = window.API_CONFIG ? window.API_CONFIG.CHATBOT_URL : '';
+    const configuredChatbotUrl = window.API_CONFIG ? window.API_CONFIG.CHATBOT_URL : 'https://cnpm-websach-hf0f.onrender.com/chat';
     const chatEndpoints = [
-        `${API_BASE.replace(/\/$/, '')}/api/chatbot/chat`
+        configuredChatbotUrl
     ];
     
     // Initial welcome message
@@ -287,16 +285,18 @@ function initChatbot() {
     }
     
     function formatText(text) {
-        // Simple markdown parsing for bold and lists
+        // If the text already contains HTML tags (like <b>, <ul>, etc.), trust it.
+        // Otherwise, do a simple markdown fallback.
+        if (/<[a-z][\s\S]*>/i.test(text)) {
+            return text;
+        }
+
         let formatted = text
-            // Handle bold **text**
             .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-            // Handle lists
             .replace(/^- (.*)$/gm, '<li>$1</li>');
             
-        // Wrap lists in ul
         if (formatted.includes('<li>')) {
-            formatted = formatted.replace(/(<li>.*<\/li>)/s, '<ul>$1</ul>');
+            formatted = `<ul>${formatted}</ul>`;
         }
         
         return formatted;
