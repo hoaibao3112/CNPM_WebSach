@@ -9,13 +9,14 @@ import time
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
-from langchain_google_genai import ChatGoogleGenerativeAI, GoogleGenerativeAIEmbeddings
+from langchain_google_genai import GoogleGenerativeAIEmbeddings
+from langchain_groq import ChatGroq
 from langchain_community.vectorstores import FAISS
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_core.messages import HumanMessage, AIMessage
 from langchain_core.output_parsers import StrOutputParser
 from config import (
-    GEMINI_API_KEY, LLM_MODEL,
+    GEMINI_API_KEY, GROQ_API_KEY, LLM_MODEL,
     FAISS_INDEX_PATH,
     EMBEDDING_MODEL, CHATBOT_PORT
 )
@@ -65,18 +66,16 @@ Vai trò của bạn:
 - Hỗ trợ khách hàng tìm kiếm sách, tư vấn sản phẩm
 - Trả lời câu hỏi về chính sách cửa hàng (đặt hàng, giao hàng, đổi trả, khuyến mãi)
 - Gợi ý sách phù hợp dựa trên sở thích khách hàng
-- Cung cấp thông tin liên hệ khi cần
 
-Quy tắc:
-1. LUÔN trả lời bằng tiếng Việt
-2. Thân thiện, lịch sự, chuyên nghiệp
-3. Trả lời ngắn gọn, rõ ràng, đi thẳng vào vấn đề
-4. Nếu không biết câu trả lời, hãy nói rằng bạn không có thông tin và đề nghị khách liên hệ hotline 0374170367
-5. Sử dụng thông tin từ ngữ cảnh được cung cấp để trả lời chính xác
-6. Khi gợi ý sách, luôn kèm giá và tác giả nếu có
-7. KHÔNG bịa ra thông tin không có trong ngữ cảnh
-8. Nếu câu hỏi liên quan mua hàng, hãy kết thúc bằng một gợi ý hành động ngắn
-9. Nếu có nhiều lựa chọn, trình bày dạng danh sách gạch đầu dòng
+Quy tắc trình bày bằng HTML:
+1. LUÔN trả lời bằng tiếng Việt.
+2. LUÔN sử dụng định dạng HTML để câu trả lời hiển thị đẹp trên giao diện web.
+3. Sử dụng các thẻ <b> hoặc <strong> để làm nổi bật tên sách, giá tiền hoặc thông tin quan trọng.
+4. Sử dụng danh sách <ul> và <li> khi liệt kê nhiều sản phẩm hoặc các bước hướng dẫn.
+5. Sử dụng thẻ <br> để xuống dòng giữa các đoạn văn.
+6. Thân thiện, lịch sự, chuyên nghiệp.
+7. Nếu không biết câu trả lời, hãy nói rằng bạn không có thông tin và đề nghị khách liên hệ hotline 0374170367.
+8. KHÔNG bịa ra thông tin không có trong ngữ cảnh.
 
 Thông tin ngữ cảnh từ cơ sở dữ liệu:
 {context}
@@ -124,25 +123,15 @@ def init_components():
     """Initialize LLM, embeddings, and vector store."""
     global llm, vectorstore, retriever
 
-    if not GEMINI_API_KEY:
-        print("❌ WARNING: GEMINI_API_KEY is missing! Chatbot will fail to generate responses.")
+    if not GROQ_API_KEY:
+        print("❌ WARNING: GROQ_API_KEY is missing! Chatbot will fail to generate responses.")
 
-    # Auto-select the best model based on account permissions
-    actual_model = select_best_model(LLM_MODEL, GEMINI_API_KEY)
-    
-    # Ensure model starts with 'models/' if not present, as some SDK versions require it
-    if not actual_model.startswith("models/"):
-        full_model_name = f"models/{actual_model}"
-    else:
-        full_model_name = actual_model
-
-    print(f"🤖 Initializing Google Gemini LLM: {full_model_name} (using API v1)")
-    llm = ChatGoogleGenerativeAI(
-        model=full_model_name,
-        google_api_key=GEMINI_API_KEY,
+    print(f"🤖 Initializing Groq LLM: {LLM_MODEL}")
+    llm = ChatGroq(
+        model_name=LLM_MODEL,
+        groq_api_key=GROQ_API_KEY,
         temperature=0.3,
-        max_output_tokens=512,
-        convert_system_message_to_human=True # Better compatibility for some models
+        max_tokens=512,
     )
 
     print(f"🧠 Using Google AI embeddings: {EMBEDDING_MODEL}")

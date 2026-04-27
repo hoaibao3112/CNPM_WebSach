@@ -7,9 +7,10 @@ load_dotenv()
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-# Gemini settings
+# AI Settings
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
-LLM_MODEL = os.getenv("LLM_MODEL", "gemini-pro") # Using gemini-pro for maximum compatibility
+GROQ_API_KEY = os.getenv("GROQ_API_KEY", "")
+LLM_MODEL = os.getenv("LLM_MODEL", "llama-3.3-70b-versatile")
 
 # FAISS settings
 _faiss_env_path = os.getenv("FAISS_INDEX_PATH")
