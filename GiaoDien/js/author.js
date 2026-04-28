@@ -27,12 +27,23 @@ async function fetchAuthorsByNationality(page = 1, nationality = '', search = ''
 
     const data = await res.json();
     
-    // ✅ FIX: Handle multiple API response formats
-    const authors = data?.data || data || [];
+    // ✅ FIX: Robustly extract authors array from multiple possible response formats
+    let authors = [];
+    if (Array.isArray(data)) {
+      authors = data;
+    } else if (data && Array.isArray(data.data)) {
+      authors = data.data;
+    } else if (data && Array.isArray(data.authors)) {
+      authors = data.authors;
+    } else if (data && typeof data === 'object') {
+      // If it's an object but doesn't have data/authors, it might be a single author object or an unexpected format
+      console.warn('⚠️ API returned an unexpected object format for authors:', data);
+    }
+    
     const pagination = data?.pagination || { page: 1, totalPages: 1 };
     
-    if (!Array.isArray(authors) || authors.length === 0) {
-      console.warn('⚠️ No authors returned from API:', data);
+    if (authors.length === 0) {
+      console.warn('⚠️ No authors found in the response:', data);
     }
 
     const respPage = pagination.page || 1;
