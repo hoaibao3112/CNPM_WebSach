@@ -207,7 +207,7 @@
         }).format(product.DonGia);
 
         const imageHtml = `
-        <img src="img/product/${product.HinhAnh || 'default-book.jpg'}"
+        <img src="${window.API_CONFIG ? window.API_CONFIG.resolveImageUrl(product.HinhAnh) : `img/product/${product.HinhAnh || 'default-book.jpg'}`}"
              alt="${escapeHtml(product.TenSP)}"
              onerror="this.src='img/default-book.jpg'"
              loading="lazy">
