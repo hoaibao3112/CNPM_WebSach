@@ -61,9 +61,11 @@ async function fetchAuthorsByNationality(page = 1, nationality = '', search = ''
 }
 
 /* -------------------- RENDER AUTHORS -------------------- */
-function renderAuthors(authors = []) {
+function renderAuthors(authorsInput = []) {
   const authorList = document.getElementById('author-list');
   authorList.innerHTML = '';
+
+  const authors = Array.isArray(authorsInput) ? authorsInput : [];
 
   if (authors.length === 0) {
     authorList.innerHTML = '<div class="no-results">Không tìm thấy tác giả nào</div>';
@@ -113,7 +115,8 @@ async function fetchAuthorDetail(maTG) {
   try {
     const res = await fetch(`${API_URL}/${maTG}`);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    return await res.json();
+    const json = await res.json();
+    return json.data || json;
   } catch (err) {
     console.error('Lỗi tải chi tiết tác giả:', err);
     return null;
