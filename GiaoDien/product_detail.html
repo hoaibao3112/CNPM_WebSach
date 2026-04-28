@@ -411,26 +411,85 @@
                 <!-- Tabs -->
                 <div class="bg-white rounded-[32px] border border-border shadow-sm overflow-hidden">
                     <div class="flex border-b border-border bg-gray-50/50">
-                        <button class="px-10 py-6 text-[11px] font-black uppercase tracking-widest text-primary border-b-4 border-primary">Thông tin chi tiết</button>
-                        <button class="px-10 py-6 text-[11px] font-black uppercase tracking-widest text-text-light hover:text-primary transition-colors">Chính sách vận chuyển</button>
+                        <button id="tab-info-btn" class="tab-btn px-10 py-6 text-[11px] font-black uppercase tracking-widest text-primary border-b-4 border-primary transition-all">Thông tin chi tiết</button>
+                        <button id="tab-shipping-btn" class="tab-btn px-10 py-6 text-[11px] font-black uppercase tracking-widest text-text-light hover:text-primary transition-all">Chính sách vận chuyển</button>
                     </div>
                     <div class="p-8 md:p-12">
-                        <div id="product-details-grid" class="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-8 mb-16">
-                            <!-- JS renders details here -->
-                            <div class="skeleton h-12 w-full rounded-xl"></div>
-                            <div class="skeleton h-12 w-full rounded-xl"></div>
-                            <div class="skeleton h-12 w-full rounded-xl"></div>
-                            <div class="skeleton h-12 w-full rounded-xl"></div>
+                        <!-- Content: Thông tin chi tiết -->
+                        <div id="tab-info-content" class="tab-content">
+                            <div id="product-details-grid" class="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-8 mb-16">
+                                <!-- JS renders details here -->
+                                <div class="skeleton h-12 w-full rounded-xl"></div>
+                                <div class="skeleton h-12 w-full rounded-xl"></div>
+                                <div class="skeleton h-12 w-full rounded-xl"></div>
+                                <div class="skeleton h-12 w-full rounded-xl"></div>
+                            </div>
+                            <div class="prose max-w-none prose-slate border-t border-border/50 pt-12">
+                                <h3 class="text-2xl font-display font-black text-text mb-8 flex items-center gap-4">
+                                    <span class="w-8 h-1 bg-primary rounded-full"></span> Giới thiệu tác phẩm
+                                </h3>
+                                <div id="product-description" class="text-text-muted leading-relaxed space-y-6 text-lg font-medium">
+                                    <div class="skeleton h-4 w-full rounded-full"></div>
+                                    <div class="skeleton h-4 w-[90%] rounded-full"></div>
+                                    <div class="skeleton h-4 w-[95%] rounded-full"></div>
+                                    <div class="skeleton h-4 w-[85%] rounded-full"></div>
+                                </div>
+                            </div>
                         </div>
-                        <div class="prose max-w-none prose-slate border-t border-border/50 pt-12">
-                            <h3 class="text-2xl font-display font-black text-text mb-8 flex items-center gap-4">
-                                <span class="w-8 h-1 bg-primary rounded-full"></span> Giới thiệu tác phẩm
-                            </h3>
-                            <div id="product-description" class="text-text-muted leading-relaxed space-y-6 text-lg font-medium">
-                                <div class="skeleton h-4 w-full rounded-full"></div>
-                                <div class="skeleton h-4 w-[90%] rounded-full"></div>
-                                <div class="skeleton h-4 w-[95%] rounded-full"></div>
-                                <div class="skeleton h-4 w-[85%] rounded-full"></div>
+
+                        <!-- Content: Chính sách vận chuyển -->
+                        <div id="tab-shipping-content" class="tab-content hidden animate-fade-in">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                <div class="space-y-6">
+                                    <h3 class="text-xl font-display font-black text-text flex items-center gap-3">
+                                        <span class="w-8 h-1 bg-primary rounded-full"></span> 
+                                        Giao Hàng Siêu Tốc
+                                    </h3>
+                                    <div class="space-y-4">
+                                        <div class="flex items-start gap-4">
+                                            <div class="w-10 h-10 rounded-xl bg-blue-50 text-blue-500 flex items-center justify-center shrink-0">
+                                                <i class="fas fa-bolt"></i>
+                                            </div>
+                                            <div>
+                                                <h4 class="font-bold text-text text-sm">Nội thành TP.HCM</h4>
+                                                <p class="text-xs text-text-light">Nhận hàng trong 2h - 4h. Miễn phí vận chuyển 100%.</p>
+                                            </div>
+                                        </div>
+                                        <div class="flex items-start gap-4">
+                                            <div class="w-10 h-10 rounded-xl bg-green-50 text-green-500 flex items-center justify-center shrink-0">
+                                                <i class="fas fa-globe-asia"></i>
+                                            </div>
+                                            <div>
+                                                <h4 class="font-bold text-text text-sm">Toàn quốc</h4>
+                                                <p class="text-xs text-text-light">Giao hàng từ 2-5 ngày làm việc. Đóng gói 3 lớp bảo vệ sách.</p>
+                                            </div>
+                                        </div>
+                                        <div class="flex items-start gap-4">
+                                            <div class="w-10 h-10 rounded-xl bg-yellow-50 text-yellow-600 flex items-center justify-center shrink-0">
+                                                <i class="fas fa-crown"></i>
+                                            </div>
+                                            <div>
+                                                <h4 class="font-bold text-text text-sm">Ưu đãi thành viên</h4>
+                                                <p class="text-xs text-text-light">Giảm 20% phí ship cho hạng Bạc, 50% cho hạng Vàng.</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <a href="shipping-policy.html" class="inline-flex items-center gap-2 text-primary font-black text-xs uppercase tracking-widest hover:underline pt-4">
+                                        Xem chính sách chi tiết <i class="fas fa-chevron-right text-[10px]"></i>
+                                    </a>
+                                </div>
+                                
+                                <div class="bg-gray-50 rounded-3xl p-8 border border-border flex flex-col items-center text-center justify-center space-y-4">
+                                    <div class="w-16 h-16 bg-white rounded-2xl shadow-sm flex items-center justify-center text-primary text-2xl">
+                                        <i class="fas fa-calculator"></i>
+                                    </div>
+                                    <h4 class="font-display font-black text-text">Công cụ tính phí ship</h4>
+                                    <p class="text-xs text-text-light">Bạn muốn biết chính xác phí vận chuyển cho cuốn sách này?</p>
+                                    <button onclick="window.location.href='shipping-policy.html'" class="px-8 py-3 bg-text text-white rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-primary transition-all active:scale-95 shadow-lg">
+                                        THỬ NGAY TẠI ĐÂY
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>

@@ -114,6 +114,38 @@ function setupEventListeners() {
             if (maTG) viewAuthorDetail(maTG);
         });
     }
+
+    // Tab switching logic
+    const tabInfoBtn = document.getElementById('tab-info-btn');
+    const tabShippingBtn = document.getElementById('tab-shipping-btn');
+    const tabInfoContent = document.getElementById('tab-info-content');
+    const tabShippingContent = document.getElementById('tab-shipping-content');
+
+    if (tabInfoBtn && tabShippingBtn && tabInfoContent && tabShippingContent) {
+        tabInfoBtn.addEventListener('click', () => {
+            // Update buttons
+            tabInfoBtn.classList.add('text-primary', 'border-b-4', 'border-primary');
+            tabInfoBtn.classList.remove('text-text-light');
+            tabShippingBtn.classList.remove('text-primary', 'border-b-4', 'border-primary');
+            tabShippingBtn.classList.add('text-text-light');
+            
+            // Update content
+            tabInfoContent.classList.remove('hidden');
+            tabShippingContent.classList.add('hidden');
+        });
+
+        tabShippingBtn.addEventListener('click', () => {
+            // Update buttons
+            tabShippingBtn.classList.add('text-primary', 'border-b-4', 'border-primary');
+            tabShippingBtn.classList.remove('text-text-light');
+            tabInfoBtn.classList.remove('text-primary', 'border-b-4', 'border-primary');
+            tabInfoBtn.classList.add('text-text-light');
+            
+            // Update content
+            tabShippingContent.classList.remove('hidden');
+            tabInfoContent.classList.add('hidden');
+        });
+    }
 }
 
 /**

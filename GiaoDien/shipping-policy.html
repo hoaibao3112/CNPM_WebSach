@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Chính Sách Vận Chuyển | Bookstore</title>
+  <!-- Google Fonts: Playfair Display + Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap"
+    rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+  <link rel="icon" href="favicon.ico" type="image/x-icon" />
+
+  <!-- Tailwind CSS CDN & Config -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="js/tailwind-config.js"></script>
+
+  <!-- API Configuration -->
+  <script src="js/config.js"></script>
+  <script src="js/api-patcher.js"></script>
+
+  <style>
+    .glass-card {
+      background: rgba(255, 255, 255, 0.8);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+    }
+
+    .calc-input:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 4px rgba(var(--primary-rgb), 0.1);
+    }
+
+    .shipping-timeline::before {
+      content: '';
+      position: absolute;
+      left: 18px;
+      top: 0;
+      bottom: 0;
+      width: 2px;
+      background: linear-gradient(to bottom, #e74c3c, #f39c12);
+      border-radius: 2px;
+    }
+
+    @media (min-width: 768px) {
+      .shipping-timeline::before {
+        left: 50%;
+        transform: translateX(-50%);
+      }
+    }
+    
+    .tier-btn.active {
+      background-color: rgba(var(--primary-rgb), 0.1);
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .animate-fade-in {
+      animation: fadeIn 0.4s ease-out forwards;
+    }
+  </style>
+</head>
+
+<body class="bg-[#f8f9fa] pt-14 md:pt-16 font-body antialiased">
+  <!-- Header -->
+  <div id="load-header"></div>
+
+  <main class="container max-w-[1100px] mx-auto px-4 py-8 md:py-12">
+    <!-- Hero Section -->
+    <div class="text-center mb-12" data-aos="fade-up">
+      <h1 class="font-display text-3xl md:text-5xl font-black text-text mb-4 tracking-tight">Chính Sách Vận Chuyển</h1>
+      <p class="text-text-light text-sm md:text-base max-w-2xl mx-auto">Tận tâm trong từng khâu đóng gói, tốc độ trong từng chặng giao hàng. Chúng tôi cam kết mang tri thức đến tận tay bạn một cách trọn vẹn nhất.</p>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <!-- Left: Policy Content -->
+      <div class="lg:col-span-2 space-y-8">
+        <!-- Highlights -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4" data-aos="fade-up" data-aos-delay="100">
+          <div class="bg-white p-6 rounded-2xl shadow-sm border border-border hover:shadow-md transition-shadow group">
+            <div class="w-12 h-12 bg-blue-50 text-blue-500 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+              <i class="fas fa-shipping-fast text-xl"></i>
+            </div>
+            <h3 class="font-bold text-text mb-2 text-sm">Giao Nhanh</h3>
+            <p class="text-[11px] text-text-light leading-relaxed">2h - 4h tại TP.HCM. 2-5 ngày đối với các tỉnh thành khác trên toàn quốc.</p>
+          </div>
+          <div class="bg-white p-6 rounded-2xl shadow-sm border border-border hover:shadow-md transition-shadow group">
+            <div class="w-12 h-12 bg-green-50 text-green-500 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+              <i class="fas fa-shield-alt text-xl"></i>
+            </div>
+            <h3 class="font-bold text-text mb-2 text-sm">Bảo Hiểm Sách</h3>
+            <p class="text-[11px] text-text-light leading-relaxed">Đóng gói 3 lớp tiêu chuẩn. Cam kết đổi trả 100% nếu sách bị móp méo, hư hỏng.</p>
+          </div>
+          <div class="bg-white p-6 rounded-2xl shadow-sm border border-border hover:shadow-md transition-shadow group">
+            <div class="w-12 h-12 bg-purple-50 text-purple-500 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+              <i class="fas fa-crown text-xl"></i>
+            </div>
+            <h3 class="font-bold text-text mb-2 text-sm">Ưu Đãi VIP</h3>
+            <p class="text-[11px] text-text-light leading-relaxed">Giảm tới 50% phí vận chuyển cho thành viên hạng Bạc và Vàng.</p>
+          </div>
+        </div>
+
+        <!-- Detailed Policy -->
+        <div class="bg-white p-6 md:p-8 rounded-3xl border border-border shadow-sm" data-aos="fade-up" data-aos-delay="200">
+          <h2 class="font-display text-xl md:text-2xl font-black text-text mb-6 flex items-center gap-3">
+            <span class="w-8 h-1 bg-primary rounded-full"></span>
+            Chi Tiết Chính Sách
+          </h2>
+          
+          <div class="space-y-6 text-sm text-text-light leading-relaxed">
+            <section>
+              <h4 class="font-bold text-text mb-2 flex items-center gap-2">
+                <i class="fas fa-map-marker-alt text-primary"></i> 1. Khu vực Miễn phí
+              </h4>
+              <p>Mọi đơn hàng có địa chỉ nhận tại <strong>TP. Hồ Chí Minh</strong> đều được miễn phí vận chuyển 100%, không giới hạn giá trị đơn hàng và cân nặng.</p>
+            </section>
+
+            <section>
+              <h4 class="font-bold text-text mb-2 flex items-center gap-2">
+                <i class="fas fa-balance-scale text-primary"></i> 2. Tính phí theo trọng lượng
+              </h4>
+              <p>Đối với các tỉnh thành khác, phí vận chuyển được tính minh bạch dựa trên tổng trọng lượng đơn hàng:</p>
+              <ul class="list-disc ml-5 mt-2 space-y-1">
+                <li>Đơn vị tính: 15.000đ / mỗi 500g.</li>
+                <li>Khối lượng sẽ được làm tròn lên mốc 500g gần nhất để tính phí.</li>
+              </ul>
+            </section>
+
+            <section>
+              <h4 class="font-bold text-text mb-2 flex items-center gap-2">
+                <i class="fas fa-user-tag text-primary"></i> 3. Đặc quyền Thành viên
+              </h4>
+              <p>Chúng tôi luôn trân trọng sự đồng hành của bạn. Phí ship sẽ được giảm trực tiếp theo hạng thành viên:</p>
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mt-3">
+                <div class="bg-bg p-3 rounded-xl border border-dashed border-border text-center">
+                  <span class="text-[10px] font-bold text-gray-500 uppercase">Hạng Đồng</span>
+                  <p class="font-black text-text">Phí Gốc</p>
+                </div>
+                <div class="bg-blue-50 p-3 rounded-xl border border-dashed border-blue-200 text-center">
+                  <span class="text-[10px] font-bold text-blue-600 uppercase">Hạng Bạc</span>
+                  <p class="font-black text-blue-700">-20% Phí</p>
+                </div>
+                <div class="bg-yellow-50 p-3 rounded-xl border border-dashed border-yellow-300 text-center">
+                  <span class="text-[10px] font-bold text-yellow-600 uppercase">Hạng Vàng</span>
+                  <p class="font-black text-yellow-700">-50% Phí</p>
+                </div>
+              </div>
+            </section>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right: Calculator Widget -->
+      <div class="lg:col-span-1" data-aos="fade-left" data-aos-delay="300">
+        <div class="sticky top-24 bg-white rounded-3xl border border-border shadow-xl overflow-hidden">
+          <div class="bg-primary p-6 text-white">
+            <h3 class="font-display text-xl font-black italic tracking-tight uppercase">CÔNG CỤ TÍNH PHÍ</h3>
+            <p class="text-[10px] uppercase font-bold tracking-widest opacity-80 mt-1">Ước tính phí giao hàng tức thì</p>
+          </div>
+          
+          <div class="p-6 space-y-5">
+            <!-- Province Select -->
+            <div>
+              <label class="text-[11px] font-black text-text-light uppercase tracking-wider mb-2 block">Tỉnh / Thành phố</label>
+              <select id="calc-province" class="w-full bg-bg border border-border rounded-xl px-4 py-3 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all appearance-none">
+                <option value="">Đang tải danh sách...</option>
+              </select>
+            </div>
+
+            <!-- Weight Input -->
+            <div>
+              <label class="text-[11px] font-black text-text-light uppercase tracking-wider mb-2 block">Trọng lượng (Gram)</label>
+              <div class="relative">
+                <input type="number" id="calc-weight" placeholder="VD: 500" class="w-full bg-bg border border-border rounded-xl px-4 py-3 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all">
+                <span class="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] font-bold text-text-light">GRAM</span>
+              </div>
+            </div>
+
+            <!-- Tier Select -->
+            <div>
+              <label class="text-[11px] font-black text-text-light uppercase tracking-wider mb-2 block">Hạng thành viên</label>
+              <div class="grid grid-cols-3 gap-2">
+                <button type="button" data-tier="Đồng" class="tier-btn active p-2 rounded-xl border-2 border-primary bg-primary/5 text-primary text-[10px] font-black uppercase transition-all">Đồng</button>
+                <button type="button" data-tier="Bạc" class="tier-btn p-2 rounded-xl border-2 border-border bg-white text-text-light text-[10px] font-black uppercase transition-all hover:border-blue-300">Bạc</button>
+                <button type="button" data-tier="Vàng" class="tier-btn p-2 rounded-xl border-2 border-border bg-white text-text-light text-[10px] font-black uppercase transition-all hover:border-yellow-400">Vàng</button>
+              </div>
+            </div>
+
+            <button id="btn-calculate" class="w-full bg-text text-white font-black py-4 rounded-xl shadow-lg hover:bg-primary transition-all active:scale-95 flex items-center justify-center gap-2">
+              <i class="fas fa-calculator"></i>
+              TÍNH PHÍ NGAY
+            </button>
+
+            <!-- Result Section -->
+            <div id="calc-result" class="hidden mt-6 pt-6 border-t border-dashed border-border animate-fade-in">
+              <div class="space-y-3">
+                <div class="flex justify-between items-center text-xs">
+                  <span class="text-text-light">Phí vận chuyển gốc:</span>
+                  <span id="res-original" class="font-bold line-through text-gray-400">0đ</span>
+                </div>
+                <div class="flex justify-between items-center text-xs text-green-600">
+                  <span id="res-discount-label">Ưu đãi thành viên:</span>
+                  <span id="res-discount" class="font-bold">-0đ</span>
+                </div>
+                <div class="flex justify-between items-center pt-2">
+                  <span class="text-sm font-black text-text uppercase">Tổng cộng:</span>
+                  <span id="res-total" class="text-2xl font-black text-primary tracking-tighter">0đ</span>
+                </div>
+              </div>
+              
+              <div id="res-message" class="mt-4 p-3 bg-blue-50 text-blue-700 text-[10px] font-bold rounded-xl flex items-center gap-2">
+                <i class="fas fa-info-circle"></i>
+                <span id="res-msg-text">Giao hàng dự kiến trong 2-3 ngày.</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Timeline / Process -->
+    <div class="mt-20" data-aos="fade-up">
+      <h2 class="font-display text-2xl md:text-3xl font-black text-text text-center mb-12">Hành Trình Của Một Cuốn Sách</h2>
+      
+      <div class="relative shipping-timeline max-w-4xl mx-auto space-y-12">
+        <!-- Step 1 -->
+        <div class="relative flex flex-col md:flex-row items-center md:justify-between group">
+          <div class="md:w-[45%] text-center md:text-right order-2 md:order-1 mt-4 md:mt-0">
+            <h4 class="font-black text-text text-lg">Đặt Hàng Thành Công</h4>
+            <p class="text-xs text-text-light">Hệ thống ghi nhận và duyệt đơn hàng tự động ngay khi bạn hoàn tất thanh toán.</p>
+          </div>
+          <div class="w-10 h-10 bg-white border-4 border-primary rounded-full z-10 flex items-center justify-center text-primary order-1 md:order-2 shadow-md group-hover:scale-125 transition-transform">
+            <i class="fas fa-check text-xs"></i>
+          </div>
+          <div class="md:w-[45%] order-3 hidden md:block"></div>
+        </div>
+
+        <!-- Step 2 -->
+        <div class="relative flex flex-col md:flex-row items-center md:justify-between group">
+          <div class="md:w-[45%] order-3 md:order-1 hidden md:block"></div>
+          <div class="w-10 h-10 bg-white border-4 border-[#f39c12] rounded-full z-10 flex items-center justify-center text-[#f39c12] order-1 md:order-2 shadow-md group-hover:scale-125 transition-transform">
+            <i class="fas fa-box text-xs"></i>
+          </div>
+          <div class="md:w-[45%] text-center md:text-left order-2 md:order-3 mt-4 md:mt-0">
+            <h4 class="font-black text-text text-lg">Đóng Gói 3 Lớp</h4>
+            <p class="text-xs text-text-light">Sách được bọc màng co, chống sốc và đóng hộp carton cứng cáp để tránh mọi va đập.</p>
+          </div>
+        </div>
+
+        <!-- Step 3 -->
+        <div class="relative flex flex-col md:flex-row items-center md:justify-between group">
+          <div class="md:w-[45%] text-center md:text-right order-2 md:order-1 mt-4 md:mt-0">
+            <h4 class="font-black text-text text-lg">Bàn Giao Vận Chuyển</h4>
+            <p class="text-xs text-text-light">Đơn hàng được chuyển tới các đối tác vận chuyển uy tín như GHTK, GHN trong ngày.</p>
+          </div>
+          <div class="w-10 h-10 bg-white border-4 border-[#3498db] rounded-full z-10 flex items-center justify-center text-[#3498db] order-1 md:order-2 shadow-md group-hover:scale-125 transition-transform">
+            <i class="fas fa-truck text-xs"></i>
+          </div>
+          <div class="md:w-[45%] order-3 hidden md:block"></div>
+        </div>
+
+        <!-- Step 4 -->
+        <div class="relative flex flex-col md:flex-row items-center md:justify-between group">
+          <div class="md:w-[45%] order-3 md:order-1 hidden md:block"></div>
+          <div class="w-10 h-10 bg-white border-4 border-[#2ecc71] rounded-full z-10 flex items-center justify-center text-[#2ecc71] order-1 md:order-2 shadow-md group-hover:scale-125 transition-transform">
+            <i class="fas fa-home text-xs"></i>
+          </div>
+          <div class="md:w-[45%] text-center md:text-left order-2 md:order-3 mt-4 md:mt-0">
+            <h4 class="font-black text-text text-lg">Giao Hàng Thành Công</h4>
+            <p class="text-xs text-text-light">Shipper liên hệ và giao hàng tận tay bạn. Bạn hoàn toàn có thể kiểm tra sách trước khi nhận.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <div id="load-footer"></div>
+
+  <!-- Scripts -->
+  <script src="js/customerActivity.js"></script>
+  <script src="js/loadHeader.js"></script>
+  <script src="js/shipping-calculator.js"></script>
+  
+  <!-- AOS Init -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.js"></script>
+  <script>
+    AOS.init({
+      duration: 800,
+      easing: 'ease-out-cubic',
+      once: true,
+      offset: 50
+    });
+
+    // Header & Footer loading
+    (function () {
+      fetch('components/footer.html')
+        .then(res => res.text())
+        .then(html => {
+          document.getElementById('load-footer').innerHTML = html;
+        });
+    })();
+  </script>
+</body>
+
+</html>
