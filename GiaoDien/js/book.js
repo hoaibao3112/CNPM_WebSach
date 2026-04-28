@@ -673,7 +673,7 @@ async function fetchAndDisplayProducts() {
 
   try {
     productList.innerHTML = '<div class="loading">Đang tải sản phẩm...</div>';
-    const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || window.API_CONFIG.BASE_URL;
+    const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'https://cnpm-websach-2.onrender.com';
     let url = `${_apiBase}/api/product/sorted/year`;
     // Only honor saved filters when we are on the book page itself.
     const categoryKey = storageKeyForGroup('category');
@@ -1144,7 +1144,7 @@ async function populateHinhThuc() {
   try {
     let values = [];
     try {
-      const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || window.API_CONFIG.BASE_URL;
+      const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'https://cnpm-websach-2.onrender.com';
       const res = await fetch(`${_apiBase}/api/product`);
       if (!res.ok) throw new Error('Không lấy được sản phẩm để xác định HìnhThức');
       const responseData = await res.json();

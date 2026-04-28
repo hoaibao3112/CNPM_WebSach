@@ -215,15 +215,26 @@
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
+
+        /* Skeleton Loading */
+        .skeleton {
+            background: linear-gradient(90deg, #f0f0f0 25%, #f8f8f8 50%, #f0f0f0 75%);
+            background-size: 200% 100%;
+            animation: skeleton-loading 1.5s infinite linear;
+        }
+        @keyframes skeleton-loading {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
     </style>
 </head>
 
-<body class="bg-bg pt-14 md:pt-16 font-body text-text antialiased selection:bg-primary/20 selection:text-primary">
+<body class="bg-[#f7f3f0] pt-14 md:pt-16 font-body text-text antialiased selection:bg-primary/20 selection:text-primary">
     <!-- Header -->
     <div id="load-header"></div>
     
     <!-- Main Content -->
-    <main class="container max-w-[1300px] mx-auto px-4 py-12">
+    <main class="container max-w-[1300px] mx-auto px-4 py-12 min-h-screen">
         <!-- Breadcrumb Navigation -->
         <nav class="breadcrumb flex items-center gap-3 text-[11px] font-bold text-text-light uppercase tracking-[0.15em] mb-10">
             <a href="index.html" class="hover:text-primary transition-all flex items-center gap-2">
@@ -242,12 +253,20 @@
                 <div class="sticky top-28 space-y-6">
                     <div class="relative group aspect-square rounded-[32px] bg-white border border-border shadow-md overflow-hidden flex items-center justify-center p-12 transition-all duration-500 hover:shadow-xl">
                         <div class="absolute inset-0 bg-gradient-to-tr from-bg/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                        <img id="main-product-image" src="" alt="Product Image" class="max-w-full max-h-full object-contain relative z-10 transition-transform duration-700 group-hover:scale-105">
+                        <img id="main-product-image" src="https://via.placeholder.com/600x600?text=Loading..." alt="Product Image" class="max-w-full max-h-full object-contain relative z-10 transition-transform duration-700 group-hover:scale-105">
+                        
+                        <!-- Zoom Hint -->
+                        <div class="absolute bottom-6 right-6 bg-white/80 backdrop-blur-md w-10 h-10 rounded-full flex items-center justify-center text-text-light opacity-0 group-hover:opacity-100 transition-opacity">
+                            <i class="fas fa-search-plus"></i>
+                        </div>
                     </div>
                     
                     <!-- Thumbnails -->
                     <div class="flex gap-4 overflow-x-auto pb-2 scrollbar-hide" id="product-thumbs">
-                        <!-- JS renders thumbnails here -->
+                        <!-- Skeleton thumbs -->
+                        <div class="w-20 h-20 bg-white rounded-2xl border border-border skeleton"></div>
+                        <div class="w-20 h-20 bg-white rounded-2xl border border-border skeleton"></div>
+                        <div class="w-20 h-20 bg-white rounded-2xl border border-border skeleton"></div>
                     </div>
                 </div>
             </div>
@@ -263,9 +282,10 @@
                             </span>
                         </div>
                         <h1 id="product-title" class="text-4xl md:text-5xl font-display font-black text-text leading-tight tracking-tight">Đang tải...</h1>
+                        
                         <div class="flex flex-wrap items-center gap-x-8 gap-y-3 pt-2">
                             <div class="flex items-center gap-3">
-                                <div class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-primary text-xs">
+                                <div class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-primary text-sm shadow-inner">
                                     <i class="fas fa-pen-nib"></i>
                                 </div>
                                 <div>
@@ -274,12 +294,21 @@
                                 </div>
                             </div>
                             <div class="flex items-center gap-3">
-                                <div class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-primary text-xs">
-                                    <i class="fas fa-calendar"></i>
+                                <div class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-primary text-sm shadow-inner">
+                                    <i class="fas fa-calendar-alt"></i>
                                 </div>
                                 <div>
                                     <p class="text-[10px] font-bold text-text-light uppercase tracking-tighter">Năm xuất bản</p>
                                     <p id="product-year" class="text-sm font-black text-text">Đang cập nhật</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-primary text-sm shadow-inner">
+                                    <i class="fas fa-book-open"></i>
+                                </div>
+                                <div>
+                                    <p class="text-[10px] font-bold text-text-light uppercase tracking-tighter">Nhà xuất bản</p>
+                                    <p id="product-publisher" class="text-sm font-black text-text">Đang cập nhật</p>
                                 </div>
                             </div>
                         </div>
@@ -294,36 +323,36 @@
                                     <span class="text-5xl font-black text-primary tracking-tighter" id="product-price">0 đ</span>
                                     <span class="text-xl text-text-light line-through font-medium hidden" id="product-original-price"></span>
                                 </div>
-                                <div class="flex items-center gap-2">
-                                    <div id="product-discount" class="bg-primary text-white text-[10px] font-black px-2 py-0.5 rounded-md uppercase hidden"></div>
-                                    <p class="text-xs font-medium text-text-light">Tiết kiệm hơn khi mua combo</p>
+                                <div id="product-discount" class="inline-flex items-center gap-2 bg-primary/10 text-primary text-[11px] font-black px-3 py-1 rounded-lg uppercase hidden">
+                                    <i class="fas fa-bolt text-[10px]"></i> Giảm sốc
                                 </div>
+                                <p class="text-xs font-medium text-text-light pt-2">Giá đã bao gồm tất cả các loại thuế</p>
                             </div>
-                            <div class="flex items-center gap-4 border-l border-border pl-6">
+                            <div class="flex items-center gap-6 border-l-0 md:border-l border-border pl-0 md:pl-8">
                                 <div class="text-center">
                                     <p class="text-[10px] font-bold text-text-light uppercase tracking-widest mb-1">Đánh giá</p>
-                                    <div class="flex items-center gap-1 text-yellow-400 font-black">
+                                    <div class="flex items-center gap-1 text-yellow-400 font-black text-lg">
                                         <span id="header-rating">4.8</span> <i class="fas fa-star text-xs"></i>
                                     </div>
                                 </div>
-                                <div class="h-8 w-px bg-border"></div>
+                                <div class="h-10 w-px bg-border hidden md:block"></div>
                                 <div class="text-center">
                                     <p class="text-[10px] font-bold text-text-light uppercase tracking-widest mb-1">Đã bán</p>
-                                    <p class="font-black text-text">1.2k+</p>
+                                    <p class="text-lg font-black text-text">1.2k+</p>
                                 </div>
                             </div>
                         </div>
                     </div>
 
                     <!-- Quantity & Call to Action -->
-                    <div class="space-y-8">
+                    <div class="space-y-8 bg-white/50 p-8 rounded-[32px] border border-border/50">
                         <div class="flex flex-wrap items-center gap-8">
-                            <div class="space-y-2">
-                                <label class="text-[11px] font-black text-text-light uppercase tracking-widest">Số lượng</label>
-                                <div class="flex items-center h-14 bg-white border border-border rounded-2xl p-1 shadow-sm overflow-hidden">
-                                    <button id="qty-minus" class="w-12 h-full flex items-center justify-center text-text-light hover:text-primary transition-colors"><i class="fas fa-minus text-xs"></i></button>
-                                    <input type="number" id="qty-input" value="1" min="1" max="99" class="w-12 text-center font-black text-text outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none">
-                                    <button id="qty-plus" class="w-12 h-full flex items-center justify-center text-text-light hover:text-primary transition-colors"><i class="fas fa-plus text-xs"></i></button>
+                            <div class="space-y-3">
+                                <label class="text-[11px] font-black text-text-light uppercase tracking-widest ml-1">Số lượng</label>
+                                <div class="flex items-center h-14 bg-white border border-border rounded-2xl p-1 shadow-sm overflow-hidden w-40">
+                                    <button id="qty-minus" class="w-12 h-full flex items-center justify-center text-text-light hover:text-primary transition-colors bg-gray-50/50 hover:bg-gray-100 rounded-xl"><i class="fas fa-minus text-xs"></i></button>
+                                    <input type="number" id="qty-input" value="1" min="1" max="99" class="flex-1 text-center font-black text-text outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none bg-transparent">
+                                    <button id="qty-plus" class="w-12 h-full flex items-center justify-center text-text-light hover:text-primary transition-colors bg-gray-50/50 hover:bg-gray-100 rounded-xl"><i class="fas fa-plus text-xs"></i></button>
                                 </div>
                             </div>
                             
@@ -337,35 +366,23 @@
                             </div>
                         </div>
 
-                        <!-- Info Grid -->
-                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                            <div class="p-4 bg-white rounded-2xl border border-border flex items-center gap-3 transition-transform hover:-translate-y-1">
-                                <i class="fas fa-truck text-primary"></i>
-                                <div>
-                                    <p class="text-[9px] font-black text-text-light uppercase">Vận chuyển</p>
-                                    <p class="text-[11px] font-bold">Toàn quốc</p>
-                                </div>
+                        <!-- Trust Markers -->
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 pt-4">
+                            <div class="flex items-center gap-3 p-3 rounded-xl hover:bg-white transition-colors">
+                                <div class="w-8 h-8 rounded-full bg-blue-50 flex items-center justify-center text-blue-600 text-xs"><i class="fas fa-truck"></i></div>
+                                <div><p class="text-[8px] font-black text-text-light uppercase">Vận chuyển</p><p class="text-[10px] font-bold">Toàn quốc</p></div>
                             </div>
-                            <div class="p-4 bg-white rounded-2xl border border-border flex items-center gap-3 transition-transform hover:-translate-y-1">
-                                <i class="fas fa-shield-alt text-green-500"></i>
-                                <div>
-                                    <p class="text-[9px] font-black text-text-light uppercase">Bảo hành</p>
-                                    <p class="text-[11px] font-bold">Đổi trả 7 ngày</p>
-                                </div>
+                            <div class="flex items-center gap-3 p-3 rounded-xl hover:bg-white transition-colors">
+                                <div class="w-8 h-8 rounded-full bg-green-50 flex items-center justify-center text-green-600 text-xs"><i class="fas fa-shield-alt"></i></div>
+                                <div><p class="text-[8px] font-black text-text-light uppercase">Bảo hành</p><p class="text-[10px] font-bold">Đổi trả 7 ngày</p></div>
                             </div>
-                            <div class="p-4 bg-white rounded-2xl border border-border flex items-center gap-3 transition-transform hover:-translate-y-1">
-                                <i class="fas fa-check-circle text-blue-500"></i>
-                                <div>
-                                    <p class="text-[9px] font-black text-text-light uppercase">Cam kết</p>
-                                    <p class="text-[11px] font-bold">100% Chính hãng</p>
-                                </div>
+                            <div class="flex items-center gap-3 p-3 rounded-xl hover:bg-white transition-colors">
+                                <div class="w-8 h-8 rounded-full bg-purple-50 flex items-center justify-center text-purple-600 text-xs"><i class="fas fa-check-circle"></i></div>
+                                <div><p class="text-[8px] font-black text-text-light uppercase">Cam kết</p><p class="text-[10px] font-bold">100% Chính hãng</p></div>
                             </div>
-                            <div class="p-4 bg-white rounded-2xl border border-border flex items-center gap-3 transition-transform hover:-translate-y-1">
-                                <i class="fas fa-headset text-orange-500"></i>
-                                <div>
-                                    <p class="text-[9px] font-black text-text-light uppercase">Hỗ trợ</p>
-                                    <p class="text-[11px] font-bold">24/7 Hotline</p>
-                                </div>
+                            <div class="flex items-center gap-3 p-3 rounded-xl hover:bg-white transition-colors">
+                                <div class="w-8 h-8 rounded-full bg-orange-50 flex items-center justify-center text-orange-600 text-xs"><i class="fas fa-headset"></i></div>
+                                <div><p class="text-[8px] font-black text-text-light uppercase">Hỗ trợ</p><p class="text-[10px] font-bold">24/7 Hotline</p></div>
                             </div>
                         </div>
                     </div>
@@ -376,13 +393,13 @@
                     <div class="flex items-center gap-4">
                         <span class="text-[10px] font-black text-text-light uppercase tracking-[0.2em]">Chia sẻ</span>
                         <div class="flex gap-2">
-                            <a href="https://www.facebook.com/tran.bao.28897" target="_blank" rel="noopener noreferrer" class="w-9 h-9 rounded-full bg-white border border-border flex items-center justify-center text-sm text-text-light hover:text-primary hover:border-primary transition-all"><i class="fab fa-facebook-f"></i></a>
-                            <a href="#" class="w-9 h-9 rounded-full bg-white border border-border flex items-center justify-center text-sm text-text-light hover:text-primary hover:border-primary transition-all"><i class="fab fa-twitter"></i></a>
-                            <a href="#" class="w-9 h-9 rounded-full bg-white border border-border flex items-center justify-center text-sm text-text-light hover:text-primary hover:border-primary transition-all"><i class="fab fa-pinterest"></i></a>
+                            <a href="https://www.facebook.com/tran.bao.28897" target="_blank" rel="noopener noreferrer" class="w-10 h-10 rounded-full bg-white border border-border flex items-center justify-center text-sm text-text-light hover:text-primary hover:border-primary hover:bg-primary/5 transition-all"><i class="fab fa-facebook-f"></i></a>
+                            <a href="#" class="w-10 h-10 rounded-full bg-white border border-border flex items-center justify-center text-sm text-text-light hover:text-primary hover:border-primary hover:bg-primary/5 transition-all"><i class="fab fa-twitter"></i></a>
+                            <a href="#" class="w-10 h-10 rounded-full bg-white border border-border flex items-center justify-center text-sm text-text-light hover:text-primary hover:border-primary hover:bg-primary/5 transition-all"><i class="fab fa-pinterest"></i></a>
                         </div>
                     </div>
-                    <button id="add-to-wishlist" class="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-text-light hover:text-primary transition-colors group">
-                        <i class="far fa-heart text-sm group-hover:scale-125 transition-transform"></i> Yêu thích
+                    <button id="add-to-wishlist" class="flex items-center gap-2 text-[11px] font-black uppercase tracking-widest text-text-light hover:text-primary transition-all group px-4 py-2 bg-white rounded-xl border border-border shadow-sm">
+                        <i class="far fa-heart text-sm group-hover:scale-125 transition-transform group-hover:text-primary"></i> Yêu thích
                     </button>
                 </div>
             </div>
@@ -391,19 +408,29 @@
         <!-- Details & Description -->
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 mb-20">
             <div class="lg:col-span-8 space-y-12">
-                <!-- Tabs (Simulated) -->
+                <!-- Tabs -->
                 <div class="bg-white rounded-[32px] border border-border shadow-sm overflow-hidden">
                     <div class="flex border-b border-border bg-gray-50/50">
-                        <button class="px-8 py-6 text-sm font-black uppercase tracking-widest text-primary border-b-2 border-primary">Thông tin chi tiết</button>
+                        <button class="px-10 py-6 text-[11px] font-black uppercase tracking-widest text-primary border-b-4 border-primary">Thông tin chi tiết</button>
+                        <button class="px-10 py-6 text-[11px] font-black uppercase tracking-widest text-text-light hover:text-primary transition-colors">Chính sách vận chuyển</button>
                     </div>
                     <div class="p-8 md:p-12">
-                        <div id="product-details-grid" class="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-6 mb-12">
+                        <div id="product-details-grid" class="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-8 mb-16">
                             <!-- JS renders details here -->
+                            <div class="skeleton h-12 w-full rounded-xl"></div>
+                            <div class="skeleton h-12 w-full rounded-xl"></div>
+                            <div class="skeleton h-12 w-full rounded-xl"></div>
+                            <div class="skeleton h-12 w-full rounded-xl"></div>
                         </div>
-                        <div class="prose max-w-none prose-slate">
-                            <h3 class="text-xl font-display font-black text-text mb-6">Giới thiệu tác phẩm</h3>
-                            <div id="product-description" class="text-text-muted leading-relaxed space-y-4">
-                                Đang tải mô tả sản phẩm...
+                        <div class="prose max-w-none prose-slate border-t border-border/50 pt-12">
+                            <h3 class="text-2xl font-display font-black text-text mb-8 flex items-center gap-4">
+                                <span class="w-8 h-1 bg-primary rounded-full"></span> Giới thiệu tác phẩm
+                            </h3>
+                            <div id="product-description" class="text-text-muted leading-relaxed space-y-6 text-lg font-medium">
+                                <div class="skeleton h-4 w-full rounded-full"></div>
+                                <div class="skeleton h-4 w-[90%] rounded-full"></div>
+                                <div class="skeleton h-4 w-[95%] rounded-full"></div>
+                                <div class="skeleton h-4 w-[85%] rounded-full"></div>
                             </div>
                         </div>
                     </div>
@@ -411,45 +438,53 @@
 
                 <!-- Ratings Section -->
                 <div class="bg-white rounded-[32px] border border-border shadow-sm p-8 md:p-12">
-                    <div class="flex items-center justify-between mb-12">
-                        <h2 class="text-2xl font-display font-black text-text">Đánh giá từ độc giả</h2>
-                        <div class="flex items-center gap-4">
-                            <div class="text-right">
-                                <p class="text-3xl font-black text-text" id="average-rating">0.0</p>
-                                <p class="text-[10px] font-bold text-text-light uppercase tracking-widest" id="total-ratings">0 đánh giá</p>
+                    <div class="flex flex-col md:flex-row items-center justify-between mb-12 gap-8 bg-gray-50 p-10 rounded-[28px] border border-border/50">
+                        <div class="space-y-2 text-center md:text-left">
+                            <h2 class="text-2xl font-display font-black text-text">Đánh giá từ độc giả</h2>
+                            <p class="text-sm text-text-light font-medium">Chúng tôi trân trọng mọi ý kiến đóng góp từ bạn</p>
+                        </div>
+                        <div class="flex items-center gap-8">
+                            <div class="text-center">
+                                <p class="text-5xl font-black text-text" id="average-rating">0.0</p>
+                                <p class="text-[10px] font-black text-text-light uppercase tracking-widest mt-2" id="total-ratings">0 đánh giá</p>
                             </div>
-                            <div class="flex text-yellow-400 text-lg" id="star-display">
-                                <i class="far fa-star"></i><i class="far fa-star"></i><i class="far fa-star"></i><i class="far fa-star"></i><i class="far fa-star"></i>
+                            <div class="flex flex-col gap-1 items-center" id="star-display">
+                                <div class="flex text-yellow-400 text-xl">
+                                    <i class="far fa-star"></i><i class="far fa-star"></i><i class="far fa-star"></i><i class="far fa-star"></i><i class="far fa-star"></i>
+                                </div>
                             </div>
                         </div>
                     </div>
 
-                    <form id="rating-form" class="bg-bg/50 p-8 rounded-3xl border border-border mb-12 space-y-6">
+                    <form id="rating-form" class="bg-white p-8 rounded-3xl border-2 border-dashed border-border mb-12 space-y-6 group focus-within:border-primary/30 transition-colors">
                         <div class="flex flex-col md:flex-row md:items-center gap-6">
-                            <span class="text-sm font-bold text-text uppercase tracking-widest">Đánh giá của bạn:</span>
-                            <div id="star-input" class="flex gap-3 text-3xl text-gray-200 cursor-pointer">
-                                <i class="fas fa-star hover:text-yellow-400 transition-colors" data-value="1"></i>
-                                <i class="fas fa-star hover:text-yellow-400 transition-colors" data-value="2"></i>
-                                <i class="fas fa-star hover:text-yellow-400 transition-colors" data-value="3"></i>
-                                <i class="fas fa-star hover:text-yellow-400 transition-colors" data-value="4"></i>
-                                <i class="fas fa-star hover:text-yellow-400 transition-colors" data-value="5"></i>
+                            <span class="text-xs font-black text-text uppercase tracking-widest">Đánh giá của bạn:</span>
+                            <div id="star-input" class="flex gap-4 text-4xl text-gray-200 cursor-pointer">
+                                <i class="fas fa-star hover:text-yellow-400 transition-all hover:scale-110" data-value="1"></i>
+                                <i class="fas fa-star hover:text-yellow-400 transition-all hover:scale-110" data-value="2"></i>
+                                <i class="fas fa-star hover:text-yellow-400 transition-all hover:scale-110" data-value="3"></i>
+                                <i class="fas fa-star hover:text-yellow-400 transition-all hover:scale-110" data-value="4"></i>
+                                <i class="fas fa-star hover:text-yellow-400 transition-all hover:scale-110" data-value="5"></i>
                             </div>
                         </div>
                         <div class="relative">
-                            <textarea id="rating-comment" placeholder="Chia sẻ cảm nhận của bạn về cuốn sách này..." maxlength="500" class="w-full p-6 bg-white border border-border rounded-2xl focus:border-primary outline-none transition-all text-sm h-32 resize-none shadow-inner"></textarea>
-                            <span class="absolute bottom-4 right-6 text-[10px] font-bold text-text-light" id="rating-char-count">0/500</span>
+                            <textarea id="rating-comment" placeholder="Chia sẻ cảm nhận của bạn về cuốn sách này..." maxlength="500" class="w-full p-8 bg-gray-50/50 border border-border rounded-[24px] focus:bg-white focus:border-primary outline-none transition-all text-base h-40 resize-none shadow-inner"></textarea>
+                            <span class="absolute bottom-6 right-8 text-[11px] font-black text-text-light bg-white px-2 py-1 rounded-lg border border-border shadow-sm" id="rating-char-count">0/500</span>
                         </div>
-                        <div class="flex justify-between items-center">
-                            <div id="rating-message" class="text-xs font-medium italic"></div>
-                            <button type="submit" id="submit-rating" disabled class="bg-primary disabled:opacity-50 text-white px-10 py-4 rounded-2xl font-black text-xs tracking-widest shadow-lg shadow-primary/20 transition-all active:scale-95">
-                                GỬI ĐÁNH GIÁ
+                        <div class="flex justify-between items-center pt-2">
+                            <div id="rating-message" class="text-xs font-bold italic text-text-light"></div>
+                            <button type="submit" id="submit-rating" disabled class="bg-primary disabled:opacity-50 text-white px-12 py-4 rounded-2xl font-black text-[11px] uppercase tracking-widest shadow-lg shadow-primary/20 transition-all active:scale-95 hover:bg-primary-dark">
+                                GỬI ĐÁNH GIÁ <i class="fas fa-paper-plane ml-2"></i>
                             </button>
                         </div>
                     </form>
 
-                    <div id="ratings-list" class="space-y-8 divide-y divide-border">
+                    <div id="ratings-list" class="space-y-10 divide-y divide-border/50">
                         <!-- JS renders ratings here -->
-                        <p class="text-center py-10 text-text-light italic">Chưa có đánh giá nào cho tác phẩm này.</p>
+                        <div class="text-center py-20 flex flex-col items-center gap-4 opacity-40">
+                            <i class="fas fa-comment-slash text-4xl"></i>
+                            <p class="font-bold italic">Chưa có đánh giá nào cho tác phẩm này.</p>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -457,41 +492,78 @@
             <!-- RIGHT COLUMN: Promotions & Author -->
             <div class="lg:col-span-4 space-y-8">
                 <!-- Promotion Box -->
-                <div id="product-promotions" class="bg-primary text-white p-8 rounded-[32px] shadow-lg shadow-primary/20 sticky top-28 overflow-hidden group">
-                    <div class="absolute -right-10 -bottom-10 w-40 h-40 bg-white/10 rounded-full group-hover:scale-110 transition-transform duration-700"></div>
-                    <div class="relative z-10 space-y-6">
-                        <div class="flex items-center gap-3">
-                            <div class="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center">
-                                <i class="fas fa-gift"></i>
+                <div id="product-promotions" class="bg-primary text-white p-8 rounded-[40px] shadow-2xl shadow-primary/30 sticky top-28 overflow-hidden group">
+                    <div class="absolute -right-16 -bottom-16 w-48 h-48 bg-white/10 rounded-full group-hover:scale-110 transition-transform duration-700"></div>
+                    <div class="relative z-10 space-y-8">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-4">
+                                <div class="w-12 h-12 rounded-[18px] bg-white/20 backdrop-blur-md flex items-center justify-center text-xl">
+                                    <i class="fas fa-gift"></i>
+                                </div>
+                                <h3 class="text-xl font-black uppercase tracking-widest">Ưu đãi độc quyền</h3>
                             </div>
-                            <h3 class="text-lg font-black uppercase tracking-widest">Khuyến mãi</h3>
+                            <div class="text-[10px] font-bold bg-white/20 px-2 py-1 rounded-lg">Mới nhất</div>
                         </div>
-                        <div id="promotions-container" class="space-y-4">
+                        
+                        <div id="promotions-container" class="space-y-5 max-h-[500px] overflow-y-auto pr-2 scrollbar-hide">
                             <!-- JS renders promotions here -->
-                            <p class="text-xs opacity-80 italic">Hiện không có khuyến mãi nào áp dụng trực tiếp cho sản phẩm này.</p>
+                            <div class="p-6 bg-white/10 rounded-3xl border border-white/20 skeleton h-32"></div>
+                            <div class="p-6 bg-white/10 rounded-3xl border border-white/20 skeleton h-32"></div>
                         </div>
+                        
+                        <p class="text-[11px] font-bold text-white/70 italic text-center pt-2">Lưu mã để sử dụng khi thanh toán</p>
                     </div>
                 </div>
 
-                <div class="bg-white p-8 rounded-[32px] border border-border shadow-sm">
-                    <h3 class="text-sm font-black text-text uppercase tracking-widest mb-6 flex items-center gap-3">
-                        <i class="fas fa-user-edit text-primary"></i> Thông tin tác giả
+                <!-- Related Authors -->
+                <div class="bg-white p-10 rounded-[40px] border border-border shadow-sm hover:shadow-md transition-shadow">
+                    <h3 class="text-xs font-black text-text uppercase tracking-[0.2em] mb-8 flex items-center gap-4">
+                        <div class="w-8 h-8 rounded-xl bg-orange-50 flex items-center justify-center text-orange-600">
+                            <i class="fas fa-user-edit text-xs"></i>
+                        </div>
+                        Về tác giả
                     </h3>
-                    <div id="related-authors" class="flex flex-wrap gap-2">
+                    <div id="related-authors" class="space-y-6">
                         <!-- JS renders authors here -->
+                        <div class="skeleton h-48 w-full rounded-3xl"></div>
                     </div>
+                </div>
+
+                <!-- Support Card -->
+                <div class="bg-gradient-to-br from-gray-800 to-black p-8 rounded-[40px] text-white shadow-xl">
+                    <h4 class="text-[10px] font-black uppercase tracking-widest text-white/50 mb-6">Cần hỗ trợ?</h4>
+                    <div class="flex items-center gap-6 mb-8">
+                        <div class="w-14 h-14 rounded-2xl bg-white/10 flex items-center justify-center text-2xl">
+                            <i class="fas fa-phone-alt"></i>
+                        </div>
+                        <div>
+                            <p class="text-sm font-bold opacity-70">Hotline 24/7</p>
+                            <p class="text-2xl font-black">0374 170 367</p>
+                        </div>
+                    </div>
+                    <button class="w-full py-4 bg-white text-black rounded-2xl font-black text-[11px] uppercase tracking-widest hover:bg-gray-100 transition-all">Liên hệ ngay</button>
                 </div>
             </div>
         </div>
 
         <!-- Related Products -->
-        <section class="related-products pt-12 border-t border-border">
-            <div class="flex items-center justify-between mb-10">
-                <h2 class="text-2xl font-display font-black text-text">Sách cùng thể loại</h2>
-                <a href="book.html" class="text-[10px] font-black uppercase tracking-widest text-primary hover:underline">Xem tất cả</a>
+        <section class="related-products pt-20 border-t border-border">
+            <div class="flex items-center justify-between mb-12">
+                <div class="space-y-2">
+                    <h2 class="text-3xl font-display font-black text-text">Có thể bạn sẽ thích</h2>
+                    <p class="text-sm text-text-light font-medium italic">Những tác phẩm cùng thể loại được đề xuất cho bạn</p>
+                </div>
+                <a href="book.html" class="group flex items-center gap-3 text-[11px] font-black uppercase tracking-widest text-primary hover:gap-5 transition-all">
+                    Xem tất cả <i class="fas fa-arrow-right"></i>
+                </a>
             </div>
-            <div id="related-products" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6 md:gap-8">
+            <div id="related-products" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-8">
                 <!-- JS renders related products here -->
+                <div class="skeleton h-64 rounded-3xl"></div>
+                <div class="skeleton h-64 rounded-3xl"></div>
+                <div class="skeleton h-64 rounded-3xl"></div>
+                <div class="skeleton h-64 rounded-3xl"></div>
+                <div class="skeleton h-64 rounded-3xl"></div>
             </div>
         </section>
     </main>
@@ -525,10 +597,12 @@
 
         if (qtyInput && qtyMinus && qtyPlus) {
             qtyMinus.addEventListener('click', () => {
-                if (qtyInput.value > 1) qtyInput.value--;
+                let val = parseInt(qtyInput.value) || 1;
+                if (val > 1) qtyInput.value = val - 1;
             });
             qtyPlus.addEventListener('click', () => {
-                if (qtyInput.value < 99) qtyInput.value++;
+                let val = parseInt(qtyInput.value) || 1;
+                if (val < 99) qtyInput.value = val + 1;
             });
         }
     </script>
