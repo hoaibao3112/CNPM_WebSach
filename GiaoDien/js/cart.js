@@ -360,7 +360,7 @@ async function renderCart() {
       <td class="px-4 py-6 align-middle">
         <div class="product-item flex items-center gap-4">
           <div class="relative w-16 h-20 flex-shrink-0 group-hover:scale-105 transition-transform duration-500">
-            <img src="img/product/${item.image}" alt="${item.name}" class="w-full h-full object-cover rounded-xl shadow-sm border border-border" onerror="this.src='img/product/default.jpg'">
+            <img src="${window.API_CONFIG ? window.API_CONFIG.resolveImageUrl(item.image) : `img/product/${item.image}`}" alt="${item.name}" class="w-full h-full object-cover rounded-xl shadow-sm border border-border" onerror="this.src='img/product/sp01.jpg'">
           </div>
           <div class="min-w-0 flex-1">
             <h3 class="text-xs font-black text-text mb-1 truncate leading-tight">${item.name}</h3>

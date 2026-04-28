@@ -62,10 +62,15 @@ if (!window.API_CONFIG) {
             }
             if (/^https?:\/\//i.test(filename)) return filename;
             
-            // If it starts with /img/products/, clean it
             const cleanName = filename.replace(/^\/img\/products\//, '');
+
+            // For newly uploaded files (Date.now()-filename.jpg)
+            // These are served directly by express.static('/uploads')
+            if (/^\d{13,}-/.test(cleanName)) {
+                return `${this.BASE_URL}/uploads/products/${cleanName}`;
+            }
             
-            // Use /product-images/ which we just fixed to search both folders
+            // For legacy files, use the smart proxy route
             return `${this.BASE_URL}/product-images/${cleanName}`;
         }
     };
