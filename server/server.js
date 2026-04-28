@@ -231,8 +231,17 @@ app.use(cookieParser());
 app.use(express.json({ limit: '1mb' }));       // 1mb đủ cho JSON API; file upload dùng multer riêng
 app.use(express.urlencoded({ extended: true, limit: '1mb' }));
 
-// Serve uploaded files (customer uploads) so URLs like /uploads/tra_hang/<file> are reachable
-app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
+// Static folders with CORS headers for images
+const staticOptions = {
+  setHeaders: (res) => {
+    res.set('Access-Control-Allow-Origin', '*');
+    res.set('Cross-Origin-Resource-Policy', 'cross-origin');
+  }
+};
+
+app.use('/img/product', express.static(productImagesDir, staticOptions));
+app.use('/uploads', express.static(path.join(process.cwd(), 'uploads'), staticOptions));
+app.use('/product-images', staticOptions); // Will be used in the middleware below
 
 // Serve product images from backend/product so they are reachable at /product-images/<file>
 const productImagesDir = path.join(process.cwd(), 'backend', 'product');
@@ -263,6 +272,10 @@ app.use('/product-images', (req, res, next) => {
 
   const safeName = path.basename(rawPath);
   
+  // Set CORS headers for all image responses
+  res.set('Access-Control-Allow-Origin', '*');
+  res.set('Cross-Origin-Resource-Policy', 'cross-origin');
+
   // 1. Check in legacy directory
   const legacyPath = path.join(productImagesDir, safeName);
   if (fs.existsSync(legacyPath)) return res.sendFile(legacyPath);
