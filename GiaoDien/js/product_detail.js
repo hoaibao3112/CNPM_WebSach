@@ -327,24 +327,41 @@ function displayRatings(ratings, averageRating, totalRatings, productId) {
     starDisplay.innerHTML = generateStarDisplay(averageRating);
 
     if (ratings.length === 0) {
-        ratingsList.innerHTML = '<p>Chưa có đánh giá nào.</p>';
+        ratingsList.innerHTML = `
+            <div class="text-center py-20 flex flex-col items-center gap-4 bg-yellow-50/20 rounded-[32px] border border-dashed border-yellow-200/50">
+                <div class="w-16 h-16 rounded-full bg-yellow-100 flex items-center justify-center text-yellow-600 text-2xl">
+                    <i class="fas fa-comment-slash"></i>
+                </div>
+                <p class="font-display font-black text-text-light italic">Chưa có đánh giá nào cho tác phẩm này.</p>
+                <p class="text-[10px] uppercase tracking-widest font-bold text-text-light/60">Hãy là người đầu tiên chia sẻ cảm nhận</p>
+            </div>
+        `;
         return;
     }
 
     ratingsList.innerHTML = ratings.map(rating => {
         const isOwnRating = user && user.makh === rating.MaKH;
         return `
-            <div class="rating-item">
-                <div class="rating-header">
-                    <span class="rating-user">${escapeHtml(rating.TenKH)}</span>
-                    <span class="rating-stars">${generateStarDisplay(rating.SoSao)}</span>
-                    <span class="rating-date">${formatDate(rating.NgayDanhGia)}</span>
+            <div class="rating-item bg-yellow-50/40 p-8 rounded-[32px] border border-yellow-100/50 hover:shadow-md transition-all duration-300">
+                <div class="rating-header flex items-center justify-between mb-4">
+                    <div class="flex items-center gap-4">
+                        <div class="w-10 h-10 rounded-full bg-yellow-400/20 flex items-center justify-center text-yellow-600 font-black text-xs uppercase">
+                            ${rating.TenKH ? rating.TenKH.charAt(0) : 'U'}
+                        </div>
+                        <div class="flex flex-col">
+                            <span class="rating-user font-display font-black text-text">${escapeHtml(rating.TenKH)}</span>
+                            <span class="rating-date text-[10px] font-bold text-text-light uppercase tracking-widest">${formatDate(rating.NgayDanhGia)}</span>
+                        </div>
+                    </div>
+                    <div class="rating-stars text-yellow-400 text-sm">
+                        ${generateStarDisplay(rating.SoSao)}
+                    </div>
                 </div>
-                <p class="rating-comment">${rating.NhanXet ? escapeHtml(rating.NhanXet) : 'Không có nhận xét'}</p>
+                <p class="rating-comment text-text-muted leading-relaxed font-medium">${rating.NhanXet ? escapeHtml(rating.NhanXet) : 'Không có nhận xét'}</p>
                 ${isOwnRating ? `
-                    <div class="rating-actions">
-                        <button class="edit-rating" data-id="${rating.MaDG}" data-stars="${rating.SoSao}" data-comment="${escapeHtml(rating.NhanXet || '')}">Chỉnh sửa</button>
-                        <button class="delete-rating" data-id="${rating.MaDG}">Xóa</button>
+                    <div class="rating-actions mt-6 flex gap-4">
+                        <button class="edit-rating px-4 py-2 bg-white border border-yellow-200 text-[10px] font-black uppercase tracking-widest text-yellow-700 rounded-lg hover:bg-yellow-50 transition-all" data-id="${rating.MaDG}" data-stars="${rating.SoSao}" data-comment="${escapeHtml(rating.NhanXet || '')}">Chỉnh sửa</button>
+                        <button class="delete-rating px-4 py-2 bg-white border border-red-100 text-[10px] font-black uppercase tracking-widest text-red-500 rounded-lg hover:bg-red-50 transition-all" data-id="${rating.MaDG}">Xóa</button>
                     </div>
                 ` : ''}
             </div>
