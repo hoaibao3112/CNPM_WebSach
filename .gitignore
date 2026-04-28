@@ -44,9 +44,9 @@ chatbot/error.log
 chatbot/pip_error.txt
 
 # Upload/generated media
-/server/uploads/*
-!/server/uploads/.gitkeep
-server/backend/product/
+# (Allowing products to be committed to maintain persistence on Render)
+!/server/uploads/products/
+!server/backend/product/
 
 # Existing project-specific ignore
 client/
