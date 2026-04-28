@@ -259,16 +259,19 @@ rebuildProductImageIndex();
 
 app.use('/product-images', (req, res, next) => {
   const rawPath = decodeURIComponent(req.path || '/').replace(/^\/+/, '');
-  if (!rawPath) {
-    return next();
-  }
+  if (!rawPath) return next();
 
   const safeName = path.basename(rawPath);
-  const exactPath = path.join(productImagesDir, safeName);
-  if (fs.existsSync(exactPath)) {
-    return res.sendFile(exactPath);
-  }
+  
+  // 1. Check in legacy directory
+  const legacyPath = path.join(productImagesDir, safeName);
+  if (fs.existsSync(legacyPath)) return res.sendFile(legacyPath);
 
+  // 2. Check in new uploads directory
+  const newUploadsPath = path.join(process.cwd(), 'uploads', 'products', safeName);
+  if (fs.existsSync(newUploadsPath)) return res.sendFile(newUploadsPath);
+
+  // 3. Check case-insensitive index
   let actualName = productImageIndex.get(safeName.toLowerCase());
   if (!actualName) {
     rebuildProductImageIndex();
@@ -276,7 +279,8 @@ app.use('/product-images', (req, res, next) => {
   }
 
   if (actualName) {
-    return res.sendFile(path.join(productImagesDir, actualName));
+    const indexPath = path.join(productImagesDir, actualName);
+    if (fs.existsSync(indexPath)) return res.sendFile(indexPath);
   }
 
   return next();

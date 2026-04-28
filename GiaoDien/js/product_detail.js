@@ -592,6 +592,7 @@ function displayProductDetail(product) {
         // If API provides an images array, use it; otherwise fallback to HinhAnh
         const buildSrcFromFilename = (filename) => {
             if (!filename) return 'https://via.placeholder.com/300x400?text=Book';
+            if (window.API_CONFIG && window.API_CONFIG.resolveImageUrl) return window.API_CONFIG.resolveImageUrl(filename);
             // if filename looks like a url, use it
             if (/^https?:\/\//i.test(filename)) return filename;
             // prefer backend static route, then fallback to local client folders

@@ -91,15 +91,15 @@ const ProductManagement = () => {
         const processedProducts = productsData.map((product) => {
           let imageUrl = 'https://via.placeholder.com/50';
           if (product.HinhAnh && product.HinhAnh !== 'null') {
-            const fileName = product.HinhAnh.replace('/img/products/', '');
-            if (/^\d{13}-/.test(fileName)) {
+            const fileName = (product.HinhAnh || '').replace('/img/products/', '');
+            if (/^\d{13,}-/.test(fileName)) {
               // Newly uploaded file via multer (Date.now()-...)
               imageUrl = `${apiBase}/uploads/products/${fileName}`;
             } else if (fileName.startsWith('http')) {
               imageUrl = fileName;
-            } else {
-              // Legacy static file
-              imageUrl = `/img/products/${fileName}`;
+            } else if (fileName) {
+              // Use the smart /product-images route we just updated on the server
+              imageUrl = `${apiBase}/product-images/${fileName}`;
             }
           }
 
@@ -545,7 +545,13 @@ const ProductManagement = () => {
                 <div className="w-24 h-32 rounded-xl bg-white border border-slate-200 flex items-center justify-center overflow-hidden shadow-sm">
                   {(editingProduct ? editingProduct.HinhAnh : newProduct.HinhAnhPrimary) ? (
                     <img 
-                      src={editingProduct ? (editingProduct.HinhAnh instanceof File ? URL.createObjectURL(editingProduct.HinhAnh) : editingProduct.HinhAnh) : URL.createObjectURL(newProduct.HinhAnhPrimary)} 
+                      src={editingProduct ?
+                        (editingProduct.HinhAnh instanceof File ?
+                          URL.createObjectURL(editingProduct.HinhAnh) :
+                          (editingProduct.HinhAnh.startsWith('http') ?
+                            editingProduct.HinhAnh :
+                            `${process.env.REACT_APP_API_BASE || 'https://cnpm-websach-2.onrender.com'}/product-images/${editingProduct.HinhAnh.replace('/img/products/', '')}`)) :
+                        URL.createObjectURL(newProduct.HinhAnhPrimary)} 
                       alt="Preview" 
                       className="w-full h-full object-cover" 
                     />

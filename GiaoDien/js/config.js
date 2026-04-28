@@ -53,6 +53,20 @@ if (!window.API_CONFIG) {
         buildUrl: function (endpoint) {
             const cleanEndpoint = endpoint.startsWith('/') ? endpoint.slice(1) : endpoint;
             return `${this.BASE_URL}/${cleanEndpoint}`;
+        },
+
+        // Helper to resolve product image URLs
+        resolveImageUrl: function (filename) {
+            if (!filename || filename === 'null' || filename === 'undefined' || filename === 'sp01.jpg') {
+                return 'https://via.placeholder.com/300x400?text=S%C3%A1ch';
+            }
+            if (/^https?:\/\//i.test(filename)) return filename;
+            
+            // If it starts with /img/products/, clean it
+            const cleanName = filename.replace(/^\/img\/products\//, '');
+            
+            // Use /product-images/ which we just fixed to search both folders
+            return `${this.BASE_URL}/product-images/${cleanName}`;
         }
     };
 

@@ -199,7 +199,7 @@ function displayProducts(productsData, containerId = 'book-list', limit = null) 
       productElement.innerHTML = `
         <div class="sale-item-image-wrapper">
           <img class="sale-item-img" 
-               src="img/product/${product.HinhAnh || 'sp01.jpg'}"
+               src="${window.API_CONFIG ? window.API_CONFIG.resolveImageUrl(product.HinhAnh) : 'img/product/sp01.jpg'}"
                alt="${escapeHtml(product.TenSP)}"
                onerror="this.src='img/product/sp01.jpg'">
           ${discountPercent ? `<div class="badge-discount">-${discountPercent}%</div>` : ''}
@@ -234,7 +234,7 @@ function displayProducts(productsData, containerId = 'book-list', limit = null) 
 
       productElement.innerHTML = `
         <div class="relative aspect-[3/4] mb-4 bg-gray-50 rounded-2xl overflow-hidden flex items-center justify-center p-4 group-hover:scale-[1.02] transition-transform duration-500">
-            <img src="img/product/${product.HinhAnh || 'sp01.jpg'}"
+            <img src="${window.API_CONFIG ? window.API_CONFIG.resolveImageUrl(product.HinhAnh) : 'img/product/sp01.jpg'}"
                  alt="${escapeHtml(product.TenSP)}"
                  class="max-w-full max-h-full object-contain drop-shadow-xl"
                  onerror="this.src='img/product/sp01.jpg'">
