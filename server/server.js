@@ -247,20 +247,31 @@ app.use('/uploads', express.static(path.join(process.cwd(), 'uploads'), staticOp
 let productImageIndex = new Map();
 
 const rebuildProductImageIndex = () => {
-  try {
-    const files = fs.readdirSync(productImagesDir, { withFileTypes: true });
-    const next = new Map();
-
-    for (const file of files) {
-      if (!file.isFile()) continue;
-      next.set(file.name.toLowerCase(), file.name);
-    }
-
-    productImageIndex = next;
-  } catch (error) {
-    console.warn('Could not build product image index:', error.message);
-    productImageIndex = new Map();
+  const next = new Map();
+  
+  // 1. Scan uploads/products (Priority)
+  const uploadsDir = path.join(process.cwd(), 'uploads', 'products');
+  if (fs.existsSync(uploadsDir)) {
+    try {
+      const files = fs.readdirSync(uploadsDir, { withFileTypes: true });
+      for (const file of files) {
+        if (file.isFile()) next.set(file.name.toLowerCase(), file.name);
+      }
+    } catch (e) { console.warn('Could not scan uploadsDir:', e.message); }
   }
+
+  // 2. Scan legacy directory (Fallback)
+  if (fs.existsSync(productImagesDir)) {
+    try {
+      const files = fs.readdirSync(productImagesDir, { withFileTypes: true });
+      for (const file of files) {
+        if (file.isFile()) next.set(file.name.toLowerCase(), file.name);
+      }
+    } catch (e) { console.warn('Could not scan legacy productImagesDir:', e.message); }
+  }
+
+  productImageIndex = next;
+  console.log(`✅ Product image index rebuilt with ${productImageIndex.size} items`);
 };
 
 rebuildProductImageIndex();
