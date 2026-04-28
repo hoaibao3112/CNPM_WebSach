@@ -213,7 +213,7 @@ function setupRatingSection(productId) {
             return;
         }
 
-        const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'https://cnpm-customer.onrender.com';
+        const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'https://cnpm-websach-2.onrender.com';
         const method = isEditing ? 'PUT' : 'POST';
         const url = isEditing ? `${_apiBase}/api/ratings/${editingRatingId}` : `${_apiBase}/api/ratings`;
         const body = {
@@ -261,7 +261,7 @@ function setupRatingSection(productId) {
  */
 async function fetchRatings(productId) {
     try {
-        const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'https://cnpm-customer.onrender.com';
+        const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'https://cnpm-websach-2.onrender.com';
         const response = await fetch(`${_apiBase}/api/ratings/${productId}`);
         if (response.ok) {
             const responseData = await response.json();
@@ -351,7 +351,7 @@ function displayRatings(ratings, averageRating, totalRatings, productId) {
 
             const ratingId = btn.dataset.id;
             try {
-                const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'https://cnpm-customer.onrender.com';
+                const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'https://cnpm-websach-2.onrender.com';
                 const response = await fetch(`${_apiBase}/api/ratings/${ratingId}`, {
                     method: 'DELETE',
                     headers: {
@@ -411,7 +411,7 @@ function generateStarDisplay(rating) {
 async function fetchProductDetail(productId) {
     try {
         showLoadingState();
-        const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'https://cnpm-customer.onrender.com';
+        const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'https://cnpm-websach-2.onrender.com';
         const response = await fetch(`${_apiBase}/api/product/${productId}`);
         
         if (!response.ok) throw new Error(`Lỗi HTTP: ${response.status}`);
@@ -445,7 +445,7 @@ async function fetchProductDetail(productId) {
 async function fetchRelatedAuthor(authorId) {
     try {
         console.log(`Fetching author with MaTG: ${authorId}`);
-        const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'https://cnpm-customer.onrender.com';
+        const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'https://cnpm-websach-2.onrender.com';
         const response = await fetch(`${_apiBase}/api/author/${authorId}`);
         if (!response.ok) throw new Error(`Lỗi API: ${response.status}`);
         
@@ -526,7 +526,7 @@ window.viewAuthorDetail = (authorId) => {
  */
 
 function displayProductDetail(product) {
-    const apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'https://cnpm-customer.onrender.com';
+    const apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'https://cnpm-websach-2.onrender.com';
     // Debug chi tiết hơn
     console.log('🔍 =====PRODUCT DEBUG=====');
     console.log('🔍 Raw product object:', product);
@@ -770,7 +770,7 @@ async function checkAndDisplayPromotions(productId) {
     console.log('🔍 Checking promotions for product:', productId);
     
     try {
-        const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'https://cnpm-customer.onrender.com';
+        const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'https://cnpm-websach-2.onrender.com';
         const response = await fetch(`${_apiBase}/api/khuyenmai/product/${productId}`);
         console.log('📡 Product Promotion API response status:', response.status);
         
@@ -916,7 +916,7 @@ function copyPromotionCode(code) {
  */
 async function showPromotionDetail(promotionId) {
     try {
-        const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'https://cnpm-customer.onrender.com';
+        const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'https://cnpm-websach-2.onrender.com';
         const response = await fetch(`${_apiBase}/api/khuyenmai/${promotionId}`);
         if (!response.ok) throw new Error('Không thể tải chi tiết khuyến mãi');
         
@@ -1104,7 +1104,7 @@ function savePromotion(code, promotionId) {
     if (token) {
         (async () => {
             try {
-                const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'https://cnpm-customer.onrender.com';
+                const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'https://cnpm-websach-2.onrender.com';
                 const res = await fetch(`${_apiBase}/api/khuyenmai/claim/${promotionId}`, {
                     method: 'POST',
                     headers: {
@@ -1153,7 +1153,7 @@ window.savePromotion = savePromotion;
  */
 async function fetchRelatedProducts(currentProductId) {
     try {
-        const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'https://cnpm-customer.onrender.com';
+        const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'https://cnpm-websach-2.onrender.com';
         const response = await fetch(`${_apiBase}/api/product`);
         if (!response.ok) throw new Error(`Lỗi API: ${response.status}`);
         
@@ -1258,7 +1258,7 @@ async function addToCart() {
         if (_isLoggedIn()) {
             // ✅ Đã đăng nhập: gọi API backend để lưu vào DB
             try {
-                const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'https://cnpm-customer.onrender.com';
+                const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'https://cnpm-websach-2.onrender.com';
                 const response = await fetch(`${_apiBase}/api/client/cart/add`, {
                     method: 'POST',
                     headers: {
@@ -1435,7 +1435,7 @@ function escapeHtml(unsafe) {
  */
 async function fetchProductInfo(productId) {
     if (!productId) return null;
-    const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'https://cnpm-customer.onrender.com';
+    const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'https://cnpm-websach-2.onrender.com';
     const endpoints = [`${_apiBase}/api/product/${productId}/info` ];
     // We remove the hardcoded relative path /api/... because it fails on Vercel without proxy
 

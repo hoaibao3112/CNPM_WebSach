@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-    baseURL: (process.env.REACT_APP_API_BASE || 'https://cnpm-customer.onrender.com') + '/api',
+    baseURL: (process.env.REACT_APP_API_BASE || 'https://cnpm-websach-2.onrender.com') + '/api',
 });
 
 // Request interceptor to add token

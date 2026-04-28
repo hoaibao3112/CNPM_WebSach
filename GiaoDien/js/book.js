@@ -86,7 +86,7 @@ async function addToCart(productId, productName, price, image) {
   const token = (document.cookie.split('; ').find(row => row.startsWith('token='))?.split('=')[1] || null);
   if (token) {
     try {
-      const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'https://cnpm-customer.onrender.com';
+      const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'https://cnpm-websach-2.onrender.com';
       const response = await fetch(`${_apiBase}/api/client/cart/add`, {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
@@ -673,7 +673,7 @@ async function fetchAndDisplayProducts() {
 
   try {
     productList.innerHTML = '<div class="loading">Đang tải sản phẩm...</div>';
-    const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'https://cnpm-customer.onrender.com';
+    const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'https://cnpm-websach-2.onrender.com';
     let url = `${_apiBase}/api/product/sorted/year`;
     // Only honor saved filters when we are on the book page itself.
     const categoryKey = storageKeyForGroup('category');
@@ -1090,7 +1090,7 @@ async function populateSuppliers() {
   const container = document.getElementById('supplierButtons');
   if (!container) return;
   try {
-    const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'https://cnpm-customer.onrender.com';
+    const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'https://cnpm-websach-2.onrender.com';
     const res = await fetch(`${_apiBase}/api/product/suppliers`);
     if (!res.ok) throw new Error('Không tải được danh sách nhà cung cấp');
     const responseData = await res.json();
@@ -1144,7 +1144,7 @@ async function populateHinhThuc() {
   try {
     let values = [];
     try {
-      const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'https://cnpm-customer.onrender.com';
+      const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'https://cnpm-websach-2.onrender.com';
       const res = await fetch(`${_apiBase}/api/product`);
       if (!res.ok) throw new Error('Không lấy được sản phẩm để xác định HìnhThức');
       const responseData = await res.json();
@@ -1197,7 +1197,7 @@ async function populateAuthors() {
   const container = document.getElementById('authorButtons');
   if (!container) return;
   try {
-    const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'https://cnpm-customer.onrender.com';
+    const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'https://cnpm-websach-2.onrender.com';
     const res = await fetch(`${_apiBase}/api/product/authors`);
     if (!res.ok) throw new Error('Không tải được danh sách tác giả');
     const responseData = await res.json();
@@ -1570,7 +1570,7 @@ async function loadPromotionsFromAPI() {
   dealHotContainer.innerHTML = '';
 
   try {
-    const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'https://cnpm-customer.onrender.com';
+    const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'https://cnpm-websach-2.onrender.com';
     const res = await fetch(`${_apiBase}/api/books/promotions`, { headers: { 'Accept': 'application/json' } });
     if (!res.ok) throw new Error('Lỗi khi tải khuyến mãi');
     const responseData = await res.json();
@@ -1635,7 +1635,7 @@ async function loadAllProductsToMain() {
 
   try {
     console.log('[products] fetching /api/product');
-    const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'https://cnpm-customer.onrender.com';
+    const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'https://cnpm-websach-2.onrender.com';
     const res = await fetch(`${_apiBase}/api/product`, {
       headers: { 'Accept': 'application/json' }
     });
@@ -1665,7 +1665,7 @@ async function loadProductsByPromotion(promoId) {
 
   try {
     console.log(`[promotions] fetching /api/books/promotions/${promoId}/products`);
-    const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'https://cnpm-customer.onrender.com';
+    const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'https://cnpm-websach-2.onrender.com';
     const res = await fetch(`${_apiBase}/api/books/promotions/${promoId}/products`, {
       headers: { 'Accept': 'application/json' }
     });
