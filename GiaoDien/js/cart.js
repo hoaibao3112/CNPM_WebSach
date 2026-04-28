@@ -48,7 +48,7 @@ function getUserId() {
 async function getCart() {
   if (isLoggedIn()) {
     try {
-      const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'https://cnpm-websach-2.onrender.com';
+      const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'https://cnpm-customer.onrender.com';
       const response = await fetch(`${_apiBase}/api/client/cart`, {
         headers: {
           'Authorization': `Bearer ${getToken()}`,
@@ -97,7 +97,7 @@ async function syncLocalCartToServer() {
 
   for (const item of localCart) {
     try {
-      const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'https://cnpm-websach-2.onrender.com';
+      const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'https://cnpm-customer.onrender.com';
       const response = await fetch(`${_apiBase}/api/client/cart/add`, {
         method: 'POST',
         headers: {
@@ -122,7 +122,7 @@ async function syncLocalCartToServer() {
 async function addToCart(productId, quantity = 1, productName, price, image) {
   if (isLoggedIn()) {
     try {
-      const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'https://cnpm-websach-2.onrender.com';
+      const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'https://cnpm-customer.onrender.com';
       const response = await fetch(`${_apiBase}/api/client/cart/add`, {
         method: 'POST',
         headers: {
@@ -171,7 +171,7 @@ async function updateQuantity(index, newQuantity) {
 
   if (isLoggedIn()) {
     try {
-      const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'https://cnpm-websach-2.onrender.com';
+      const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'https://cnpm-customer.onrender.com';
       const response = await fetch(`${_apiBase}/api/client/cart/update`, {
         method: 'PUT',
         headers: {
@@ -208,7 +208,7 @@ async function removeFromCart(index) {
 
   if (isLoggedIn()) {
     try {
-      const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'https://cnpm-websach-2.onrender.com';
+      const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'https://cnpm-customer.onrender.com';
       const response = await fetch(`${_apiBase}/api/client/cart/remove/${item.id}`, {
         method: 'DELETE',
         headers: {
@@ -243,7 +243,7 @@ async function toggleSelection(index, selected) {
   const cart = await getCart();
   if (isLoggedIn()) {
     try {
-      const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'https://cnpm-websach-2.onrender.com';
+      const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'https://cnpm-customer.onrender.com';
       const response = await fetch(`${_apiBase}/api/client/cart/select`, {
         method: 'PUT',
         headers: {
@@ -275,7 +275,7 @@ async function toggleSelection(index, selected) {
 async function clearCart() {
   if (isLoggedIn()) {
     try {
-      const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'https://cnpm-websach-2.onrender.com';
+      const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'https://cnpm-customer.onrender.com';
       const response = await fetch(`${_apiBase}/api/client/cart/clear`, {
         method: 'DELETE',
         headers: {

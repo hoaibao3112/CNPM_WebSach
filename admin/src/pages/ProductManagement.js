@@ -86,7 +86,7 @@ const ProductManagement = () => {
       const response = await api.get(API_URL);
       const productsData = response.data.data;
       if (Array.isArray(productsData)) {
-        const apiBase = process.env.REACT_APP_API_BASE || 'https://cnpm-websach-2.onrender.com';
+        const apiBase = process.env.REACT_APP_API_BASE || 'https://cnpm-customer.onrender.com';
         
         const processedProducts = productsData.map((product) => {
           let imageUrl = 'https://via.placeholder.com/50';
@@ -550,7 +550,7 @@ const ProductManagement = () => {
                           URL.createObjectURL(editingProduct.HinhAnh) :
                           (editingProduct.HinhAnh.startsWith('http') ?
                             editingProduct.HinhAnh :
-                            `${process.env.REACT_APP_API_BASE || 'https://cnpm-websach-2.onrender.com'}/product-images/${editingProduct.HinhAnh.replace('/img/products/', '')}`)) :
+                            `${process.env.REACT_APP_API_BASE || 'https://cnpm-customer.onrender.com'}/product-images/${editingProduct.HinhAnh.replace('/img/products/', '')}`)) :
                         URL.createObjectURL(newProduct.HinhAnhPrimary)} 
                       alt="Preview" 
                       className="w-full h-full object-cover" 

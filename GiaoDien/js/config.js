@@ -14,12 +14,12 @@ if (!window.API_CONFIG) {
         const forceProd = searchParams.get('env') === 'prod' || localStorage.getItem('FORCE_PROD') === 'true';
         if (forceProd) {
             console.log('🚀 Forced Production Mode API');
-            return 'https://cnpm-websach-2.onrender.com';
+            return 'https://cnpm-customer.onrender.com';
         }
 
         // Priority 2: Vercel or other production hosting
         if (hostname !== 'localhost' && hostname !== '127.0.0.1' && !hostname.startsWith('192.168.')) {
-            return 'https://cnpm-websach-2.onrender.com';
+            return 'https://cnpm-customer.onrender.com';
         }
 
         // Priority 3: Local development (default)
@@ -33,7 +33,7 @@ if (!window.API_CONFIG) {
         WS_URL: (() => {
             const hostname = window.location.hostname;
             if (hostname !== 'localhost' && hostname !== '127.0.0.1') {
-                return 'wss://cnpm-websach-2.onrender.com';
+                return 'wss://cnpm-customer.onrender.com';
             }
             return 'ws://localhost:5000';
         })(),

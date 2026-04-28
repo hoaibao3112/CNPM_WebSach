@@ -34,7 +34,7 @@ async function handleLogin(e) {
         btnSubmit.disabled = true;
         btnSubmit.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang xử lý...';
         
-        const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'https://cnpm-websach-2.onrender.com';
+        const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'https://cnpm-customer.onrender.com';
         const response = await fetch(`${_apiBase}/api/client/login`, {
             method: 'POST',
             headers: {
@@ -147,7 +147,7 @@ async function handleSendOTP() {
         sendOtpBtn.disabled = true;
         sendOtpBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang gửi...';
 
-        const _apiBase = window.API_CONFIG?.BASE_URL || 'https://cnpm-websach-2.onrender.com';
+        const _apiBase = window.API_CONFIG?.BASE_URL || 'https://cnpm-customer.onrender.com';
         const response = await fetch(`${_apiBase}/api/client/forgot-password/send-otp`, {
             method: 'POST',
             headers: {
@@ -200,7 +200,7 @@ async function handleVerifyOTP() {
         verifyOtpBtn.disabled = true;
         verifyOtpBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang xác nhận...';
 
-        const _apiBase = window.API_CONFIG?.BASE_URL || 'https://cnpm-websach-2.onrender.com';
+        const _apiBase = window.API_CONFIG?.BASE_URL || 'https://cnpm-customer.onrender.com';
         const response = await fetch(`${_apiBase}/api/client/forgot-password/verify-otp`, {
             method: 'POST',
             headers: {
@@ -267,7 +267,7 @@ async function handleResetPassword() {
             resetToken
         };
 
-        const _apiBase = window.API_CONFIG?.BASE_URL || 'https://cnpm-websach-2.onrender.com';
+        const _apiBase = window.API_CONFIG?.BASE_URL || 'https://cnpm-customer.onrender.com';
         const response = await fetch(`${_apiBase}/api/client/forgot-password/reset`, {
             method: 'POST',
             mode: 'cors', // Đảm bảo bật CORS
