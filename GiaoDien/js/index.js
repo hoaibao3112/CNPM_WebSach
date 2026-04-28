@@ -26,14 +26,14 @@ const largeImg = document.querySelector('.slide-large img');
 const smallImgs = document.querySelectorAll('.slide-small img');
 
 const slides = [
-  { src: "img/anhnen/17d.jpg", href: "khuyenmai.html" },
+  { src: "img/anhnen/17d.jpg", href: "giamgia1.html" },           // Flash Sale / Brand Day
   { src: "img/anhnen/18d.jpg", href: "book.html?search=Văn học kinh điển" },
   { src: "img/anhnen/14d.jpg", href: "book.html?search=Sách thiếu nhi" },
-  { src: "img/anhnen/15d.jpg", href: "khuyenmai.html" },
-  { src: "img/anhnen/13d.jpg", href: "khuyenmai.html" },
-  { src: "img/anhnen/9d.jpg", href: "khuyenmai.html" },
-  { src: "img/anhnen/10d.jpg", href: "khuyenmai.html" },
-  { src: "img/anhnen/11d.jpg", href: "khuyenmai.html" },
+  { src: "img/anhnen/15d.jpg", href: "giamgia3.html" },           // Voucher / VPBank
+  { src: "img/anhnen/13d.jpg", href: "giamgia.html" },            // General Promo
+  { src: "img/anhnen/9d.jpg",  href: "giamgia5.html" },           // Alpha Books
+  { src: "img/anhnen/10d.jpg", href: "giamgia2.html" },           // Đinh Tị Books
+  { src: "img/anhnen/11d.jpg", href: "giamgia4.html" },           // Mới nhất
   { src: "img/anhnen/12d.jpg", href: "khuyenmai.html" },
   { src: "img/anhnen/16d.jpg", href: "khuyenmai.html" }
 ];
