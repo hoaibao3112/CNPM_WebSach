@@ -1090,7 +1090,7 @@ async function populateSuppliers() {
   const container = document.getElementById('supplierButtons');
   if (!container) return;
   try {
-    const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || window.API_CONFIG.BASE_URL;
+    const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'https://cnpm-websach-2.onrender.com';
     const res = await fetch(`${_apiBase}/api/product/suppliers`);
     if (!res.ok) throw new Error('Không tải được danh sách nhà cung cấp');
     const responseData = await res.json();
@@ -1197,7 +1197,7 @@ async function populateAuthors() {
   const container = document.getElementById('authorButtons');
   if (!container) return;
   try {
-    const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || window.API_CONFIG.BASE_URL;
+    const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'https://cnpm-websach-2.onrender.com';
     const res = await fetch(`${_apiBase}/api/product/authors`);
     if (!res.ok) throw new Error('Không tải được danh sách tác giả');
     const responseData = await res.json();
@@ -1536,9 +1536,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // chỉ gọi hàm này khi ở trang book.html
   if (currentPath.endsWith("book.html")) {
-    // loadPromotions();
-    setupCategoryDropdown()
-    filterProductsByCategoryOnHeader()
+    setupCategoryDropdown();
+    filterProductsByCategoryOnHeader();
+    
+    // ✨ THÊM CÁC HÀM POPULATE SIDEBAR FILTERS
+    populateSuppliers();
+    populateAuthors();
+    populateHinhThuc();
+    loadPromotionsFromAPI();
   }
 });
 
@@ -1565,7 +1570,7 @@ async function loadPromotionsFromAPI() {
   dealHotContainer.innerHTML = '';
 
   try {
-    const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || window.API_CONFIG.BASE_URL;
+    const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'https://cnpm-websach-2.onrender.com';
     const res = await fetch(`${_apiBase}/api/books/promotions`, { headers: { 'Accept': 'application/json' } });
     if (!res.ok) throw new Error('Lỗi khi tải khuyến mãi');
     const responseData = await res.json();
@@ -1630,7 +1635,7 @@ async function loadAllProductsToMain() {
 
   try {
     console.log('[products] fetching /api/product');
-    const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || window.API_CONFIG.BASE_URL;
+    const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'https://cnpm-websach-2.onrender.com';
     const res = await fetch(`${_apiBase}/api/product`, {
       headers: { 'Accept': 'application/json' }
     });
@@ -1660,7 +1665,7 @@ async function loadProductsByPromotion(promoId) {
 
   try {
     console.log(`[promotions] fetching /api/books/promotions/${promoId}/products`);
-    const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || window.API_CONFIG.BASE_URL;
+    const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'https://cnpm-websach-2.onrender.com';
     const res = await fetch(`${_apiBase}/api/books/promotions/${promoId}/products`, {
       headers: { 'Accept': 'application/json' }
     });
