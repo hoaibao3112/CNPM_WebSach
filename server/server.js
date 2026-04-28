@@ -231,6 +231,9 @@ app.use(cookieParser());
 app.use(express.json({ limit: '1mb' }));       // 1mb đủ cho JSON API; file upload dùng multer riêng
 app.use(express.urlencoded({ extended: true, limit: '1mb' }));
 
+// Serve product images from backend/product so they are reachable at /product-images/<file>
+const productImagesDir = path.join(process.cwd(), 'backend', 'product');
+
 // Static folders with CORS headers for images
 const staticOptions = {
   setHeaders: (res) => {
@@ -241,10 +244,6 @@ const staticOptions = {
 
 app.use('/img/product', express.static(productImagesDir, staticOptions));
 app.use('/uploads', express.static(path.join(process.cwd(), 'uploads'), staticOptions));
-app.use('/product-images', staticOptions); // Will be used in the middleware below
-
-// Serve product images from backend/product so they are reachable at /product-images/<file>
-const productImagesDir = path.join(process.cwd(), 'backend', 'product');
 let productImageIndex = new Map();
 
 const rebuildProductImageIndex = () => {
