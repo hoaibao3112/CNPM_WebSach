@@ -590,37 +590,43 @@ const InvoiceManagement = () => {
   // ✅ Send message
   const handleSendMessage = async () => {
     const messageText = newMessage.trim();
-    if (!messageText) {
-      message.warning('Vui lòng nhập tin nhắn');
-      return;
-    }
+    if (!messageText) return;
 
     if (!currentRoom) {
       message.error('Không tìm thấy phòng chat');
       return;
     }
 
-    // Ưu tiên gửi qua WebSocket nếu đã kết nối
+    const roomId = currentRoom.room_id;
+    const token = getAuthToken();
+
+    // Optimistic update - show immediately
+    const tempId = `temp-${Date.now()}`;
+    const tempMessage = {
+      id: tempId,
+      content: messageText,
+      sender_type: 'staff',
+      sender_name: 'Admin',
+      created_at: new Date().toISOString()
+    };
+    
+    setMessages(prev => [...prev, tempMessage]);
+    setNewMessage('');
+
+    // Try WebSocket first
     if (socketRef.current && socketRef.current.readyState === WebSocket.OPEN) {
         const payload = {
             action: 'send_message',
+            room_id: roomId, // Top level for server.js robustness
             message: {
-                room_id: currentRoom.room_id,
+                room_id: roomId,
                 message: messageText
             }
         };
         socketRef.current.send(JSON.stringify(payload));
-        
-        // Optimistic update - hiển thị message ngay cho Admin đỡ chờ
-        const tempMessage = {
-            id: `temp-${Date.now()}`,
-            content: messageText,
-            sender_type: 'staff',
-            sender_name: 'Admin',
-            created_at: new Date().toISOString()
-        };
-        setMessages(prev => [...prev, tempMessage]);
-        setNewMessage('');
+        // Note: The real message will come back via WS and handleMessage will handle it
+        // We might want to remove the temp message then, but for now we'll just keep it
+        // or filter it out if a real message with same content arrives soon.
         return;
     }
 
@@ -628,18 +634,16 @@ const InvoiceManagement = () => {
     setSendingMessage(true);
 
     try {
-      const token = getAuthToken();
-      
       await axios.post(
         (process.env.REACT_APP_API_BASE || 'https://cnpm-customer.onrender.com') + '/api/chat/messages',
-        { room_id: currentRoom.room_id, message: messageText },
+        { room_id: roomId, message: messageText },
         { headers: { 'Authorization': `Bearer ${token}` } }
       );
-
-      setNewMessage('');
     } catch (error) {
       console.error('❌ Send message error:', error);
       message.error('Gửi tin nhắn thất bại');
+      // Remove temp message on failure
+      setMessages(prev => prev.filter(m => m.id !== tempId));
     } finally {
       setSendingMessage(false);
     }

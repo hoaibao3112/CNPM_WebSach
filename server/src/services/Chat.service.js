@@ -62,6 +62,26 @@ class ChatService {
     });
   }
 
+  // ===== WEBSOCKET INTEGRATION =====
+  static wss = null;
+  static wsRooms = null;
+
+  setWss(wss, rooms) {
+    this.wss = wss;
+    this.wsRooms = rooms;
+  }
+
+  async broadcastToRoom(roomId, messageData) {
+    if (!this.wsRooms || !this.wsRooms.has(String(roomId))) return;
+
+    const payload = JSON.stringify({ action: 'new_message', message: messageData });
+    this.wsRooms.get(String(roomId)).forEach(client => {
+      if (client.readyState === 1) { // OPEN
+        client.send(payload);
+      }
+    });
+  }
+
   /**
    * Gửi tin nhắn (customer)
    */
@@ -83,7 +103,7 @@ class ChatService {
 
     await room.update({ updated_at: new Date() });
 
-    return {
+    const msgData = {
       id: newMsg.message_id,
       room_id: newMsg.room_id,
       sender_id: newMsg.sender_id,
@@ -91,6 +111,47 @@ class ChatService {
       message: newMsg.message,
       created_at: newMsg.created_at
     };
+
+    // Broadcast real-time if WS is available
+    this.broadcastToRoom(roomId, msgData);
+
+    return msgData;
+  }
+
+  /**
+   * Admin gửi tin nhắn
+   */
+  async sendAdminMessage(roomId, adminId, messageText) {
+    if (!roomId || !messageText) throw new AppError('Thiếu room_id hoặc message', 400);
+
+    const room = await ChatRoom.findByPk(roomId);
+    if (!room) throw new AppError('Phòng chat không tồn tại', 404);
+
+    const senderId = adminId || 'admin';
+
+    const newMsg = await ChatMessage.create({
+      room_id: roomId,
+      sender_id: senderId,
+      sender_type: 'staff',
+      message: messageText,
+      created_at: new Date()
+    });
+
+    await room.update({ updated_at: new Date() });
+
+    const msgData = {
+      id: newMsg.message_id,
+      room_id: newMsg.room_id,
+      sender_id: newMsg.sender_id,
+      sender_type: newMsg.sender_type,
+      message: newMsg.message,
+      created_at: newMsg.created_at
+    };
+
+    // Broadcast real-time if WS is available
+    this.broadcastToRoom(roomId, msgData);
+
+    return msgData;
   }
 
   /**
@@ -207,37 +268,6 @@ class ChatService {
       order: [['created_at', 'ASC']],
       limit: 200
     });
-  }
-
-  /**
-   * Admin gửi tin nhắn
-   */
-  async sendAdminMessage(roomId, adminId, messageText) {
-    if (!roomId || !messageText) throw new AppError('Thiếu room_id hoặc message', 400);
-
-    const room = await ChatRoom.findByPk(roomId);
-    if (!room) throw new AppError('Phòng chat không tồn tại', 404);
-
-    const senderId = adminId || 'admin';
-
-    const newMsg = await ChatMessage.create({
-      room_id: roomId,
-      sender_id: senderId,
-      sender_type: 'staff',
-      message: messageText,
-      created_at: new Date()
-    });
-
-    await room.update({ updated_at: new Date() });
-
-    return {
-      id: newMsg.message_id,
-      room_id: newMsg.room_id,
-      sender_id: newMsg.sender_id,
-      sender_type: newMsg.sender_type,
-      message: newMsg.message,
-      created_at: newMsg.created_at
-    };
   }
 }
 

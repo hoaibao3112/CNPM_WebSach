@@ -87,33 +87,39 @@ wss.on('connection', async (ws, req) => {
       ws.send(JSON.stringify({ action: 'error', message: 'Lỗi khi lấy lịch sử tin nhắn' }));
     }
 
-    // Xử lý tin nhắn từ client
-    ws.on('message', async (message) => {
-      try {
-        const msgData = JSON.parse(message.toString());
-        console.log('Received message:', msgData);
+        // Xử lý tin nhắn từ client
+        ws.on('message', async (message) => {
+            try {
+                const msgData = JSON.parse(message.toString());
+                console.log('Received message:', msgData);
 
-        // Kiểm tra dữ liệu tin nhắn
-        if (!msgData.action || !msgData.room_id || !msgData.sender_id || !msgData.message) {
-          throw new Error('Dữ liệu tin nhắn không hợp lệ');
-        }
+                if (msgData.action !== 'send_message') {
+                    console.log('Ignoring non-send_message action');
+                    return;
+                }
 
-        if (msgData.action !== 'send_message') {
-          console.log('Ignoring non-send_message action');
-          return;
-        }
+                // Hỗ trợ cả payload phẳng và payload lồng nhau (từ Admin)
+                const roomId = msgData.room_id || (msgData.message && msgData.message.room_id) || ws.roomId;
+                const messageText = typeof msgData.message === 'string' ? msgData.message : (msgData.message && msgData.message.message);
+                const senderId = msgData.sender_id || ws.user?.userId || ws.user?.id || ws.user?.makh || 'admin';
+                const senderType = msgData.sender_type || (ws.user?.userType === 'admin' ? 'staff' : 'customer');
 
-        // Lưu tin nhắn vào database
-        const [result] = await new Promise((resolve, reject) => {
-          db.query(
-            'INSERT INTO chat_messages (room_id, sender_id, sender_type, message) VALUES (?, ?, ?, ?)',
-            [msgData.room_id, msgData.sender_id, msgData.sender_type || 'customer', msgData.message],
-            (err, results) => {
-              if (err) reject(err);
-              else resolve([results]);
-            }
-          );
-        });
+                // Kiểm tra dữ liệu tin nhắn
+                if (!roomId || !messageText) {
+                    throw new Error('Dữ liệu tin nhắn không hợp lệ: thiếu roomId hoặc message');
+                }
+
+                // Lưu tin nhắn vào database
+                const [result] = await new Promise((resolve, reject) => {
+                    db.query(
+                        'INSERT INTO chat_messages (room_id, sender_id, sender_type, message) VALUES (?, ?, ?, ?)',
+                        [roomId, senderId, senderType, messageText],
+                        (err, results) => {
+                            if (err) reject(err);
+                            else resolve([results]);
+                        }
+                    );
+                });
 
         // Cập nhật thời gian phòng chat
         await new Promise((resolve, reject) => {

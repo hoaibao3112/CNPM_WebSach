@@ -18,6 +18,7 @@ import db from './src/models/index.js';
 // Import the scheduled sync function from attendance admin route
 import { syncMissedAttendancesForDate } from './src/routes/AttendanceAdmin.js';
 import { createProxyMiddleware } from 'http-proxy-middleware';
+import ChatService from './src/services/Chat.service.js';
 
 // 1. Load environment config
 dotenv.config({ path: './.env' });
@@ -334,6 +335,9 @@ const httpServer = createServer(app);
 const wss = new WebSocketServer({ server: httpServer }); // Attach to HTTP server for unified port
 const rooms = new Map(); // roomId -> Set<ws>
 
+// Integrate WebSocket into ChatService for REST API broadcasts
+ChatService.setWss(wss, rooms);
+
 wss.on('connection', async (ws, req) => {
   try {
     const url = new URL(req.url, `http://${req.headers.host}`);
@@ -378,18 +382,32 @@ wss.on('connection', async (ws, req) => {
     ws.on('message', async (message) => {
       try {
         const data = JSON.parse(message.toString());
+        console.log('[WS] Received message:', data);
+        
         if (data.action !== 'send_message') return;
 
-        const { room_id, message: msgContent } = data.message;
+        // Robustly extract room_id and message content
+        // Supports both {message: {room_id, message}} and {room_id, message} formats
+        const room_id = data.room_id || (data.message && data.message.room_id) || ws.roomId;
+        const msgContent = typeof data.message === 'string' ? data.message : (data.message && data.message.message);
+
+        if (!room_id || !msgContent) {
+          console.error('[WS] Missing room_id or message content');
+          return;
+        }
+
+        // SECURITY: Verify room_id matches the one used during connection (loose equality for string/number)
+        if (String(room_id) !== String(ws.roomId)) {
+          console.error(`[WS] Room mismatch: payload=${room_id}, connection=${ws.roomId}`);
+          return;
+        }
 
         // SECURITY: Use sender identity from verified JWT (ws.user), NOT from client payload
         const sender_id = ws.user?.makh || ws.user?.userId || ws.user?.id || ws.user?.MaTK || 'unknown';
         
-        // Determine sender type: Check role/MaQuyen or explicit userType
-        const hasAdminRole = (ws.user?.role || ws.user?.MaQuyen);
+        // Determine sender type
+        const hasAdminRole = !!(ws.user?.role || ws.user?.MaQuyen);
         const sender_type = (hasAdminRole || ws.user?.userType === 'admin') ? 'staff' : 'customer';
-
-        if (room_id !== roomId) return; // Security: only send to own room
 
         // Insert to DB
         const [result] = await pool.query(
@@ -401,24 +419,24 @@ wss.on('connection', async (ws, req) => {
         await pool.query('UPDATE chat_rooms SET updated_at = CURRENT_TIMESTAMP WHERE room_id = ?', [room_id]);
 
         // Get full new message
-        const [newMsg] = await pool.query('SELECT * FROM chat_messages WHERE message_id = ?', [result.insertId]);
+        const [rows] = await pool.query('SELECT * FROM chat_messages WHERE message_id = ?', [result.insertId]);
+        const newMsg = rows[0];
 
-        // Broadcast to other clients in room (exclude sender)
-        if (rooms.has(room_id)) {
-          rooms.get(room_id).forEach(client => {
-            if (client.readyState === WebSocket.OPEN && client !== ws) {
-              client.send(JSON.stringify({ action: 'new_message', message: newMsg[0] }));
+        // Broadcast to all clients in room
+        const payload = JSON.stringify({ action: 'new_message', message: newMsg });
+        if (rooms.has(String(room_id))) {
+          rooms.get(String(room_id)).forEach(client => {
+            if (client.readyState === 1) { // 1 = OPEN
+              client.send(payload);
             }
           });
         }
 
-        if (process.env.NODE_ENV !== 'production') {
-          console.log(`[DEV] WS msg in room ${room_id}: ${msgContent.substring(0, 30)}...`);
-        }
+        console.log(`[WS] Msg processed in room ${room_id} from ${sender_id}`);
       } catch (error) {
-        console.error('WS Message Error:', error);
-        if (ws.readyState === WebSocket.OPEN) {
-          ws.send(JSON.stringify({ action: 'error', message: 'Failed to send message' }));
+        console.error('[WS] Message processing error:', error);
+        if (ws.readyState === 1) {
+          ws.send(JSON.stringify({ action: 'error', message: 'Failed to process message' }));
         }
       }
     });
