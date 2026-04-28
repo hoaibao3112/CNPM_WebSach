@@ -602,12 +602,23 @@ function displayProductDetail(product) {
         const buildFallbackCandidates = (filename) => {
             if (!filename) return ['https://via.placeholder.com/300x400?text=Book'];
             if (/^https?:\/\//i.test(filename)) return [filename];
+            
+            const cleanName = filename.replace(/^\/img\/products\//, '');
+            const serverUrl = 'https://cnpm-websach-2.onrender.com';
+            
+            // If it's a new upload (has timestamp), prioritize the direct server upload path
+            if (/^\d{13,}-/.test(cleanName)) {
+                return [
+                    `${serverUrl}/uploads/products/${cleanName}`,
+                    `${serverUrl}/product-images/${cleanName}`,
+                    'img/sp01.jpg' // Last resort local fallback
+                ];
+            }
+
             return [
-                `${apiBase}/product-images/${filename}`,
-                `img/product/${filename}`,
-                `../img/product/${filename}`,
-                'img/default-book.jpg',
-                'https://via.placeholder.com/300x400?text=Book'
+                `${serverUrl}/product-images/${cleanName}`,
+                `img/product/${cleanName}`,
+                'img/sp01.jpg'
             ];
         };
 

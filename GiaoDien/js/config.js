@@ -63,15 +63,23 @@ if (!window.API_CONFIG) {
             if (/^https?:\/\//i.test(filename)) return filename;
             
             const cleanName = filename.replace(/^\/img\/products\//, '');
+            const baseUrl = 'https://cnpm-websach-2.onrender.com';
+            let finalUrl = '';
 
             // For newly uploaded files (Date.now()-filename.jpg)
-            // These are served directly by express.static('/uploads')
             if (/^\d{13,}-/.test(cleanName)) {
-                return `${this.BASE_URL}/uploads/products/${cleanName}`;
+                finalUrl = `${baseUrl}/uploads/products/${cleanName}`;
+            } else {
+                // For legacy files
+                finalUrl = `${baseUrl}/product-images/${cleanName}`;
             }
             
-            // For legacy files, use the smart proxy route
-            return `${this.BASE_URL}/product-images/${cleanName}`;
+            // Add cache buster to force reload if image was just updated
+            const cacheBuster = `?t=${Date.now()}`;
+            const urlWithBuster = finalUrl + cacheBuster;
+            
+            console.log(`🖼️ Resolving image: ${filename} -> ${urlWithBuster}`);
+            return urlWithBuster;
         }
     };
 
