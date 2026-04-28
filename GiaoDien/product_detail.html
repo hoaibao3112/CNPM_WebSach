@@ -549,58 +549,60 @@
             </div>
 
             <!-- RIGHT COLUMN: Promotions & Author -->
-            <div class="lg:col-span-4 space-y-8">
-                <!-- Promotion Box -->
-                <div id="product-promotions" class="bg-primary text-white p-8 rounded-[40px] shadow-2xl shadow-primary/30 sticky top-28 overflow-hidden group">
-                    <div class="absolute -right-16 -bottom-16 w-48 h-48 bg-white/10 rounded-full group-hover:scale-110 transition-transform duration-700"></div>
-                    <div class="relative z-10 space-y-8">
-                        <div class="flex items-center justify-between">
-                            <div class="flex items-center gap-4">
-                                <div class="w-12 h-12 rounded-[18px] bg-white/20 backdrop-blur-md flex items-center justify-center text-xl">
-                                    <i class="fas fa-gift"></i>
+            <div class="lg:col-span-4">
+                <div class="sticky top-28 space-y-8">
+                    <!-- Promotion Box -->
+                    <div id="product-promotions" class="bg-primary text-white p-8 rounded-[40px] shadow-2xl shadow-primary/30 overflow-hidden group">
+                        <div class="absolute -right-16 -bottom-16 w-48 h-48 bg-white/10 rounded-full group-hover:scale-110 transition-transform duration-700"></div>
+                        <div class="relative z-10 space-y-8">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center gap-4">
+                                    <div class="w-12 h-12 rounded-[18px] bg-white/20 backdrop-blur-md flex items-center justify-center text-xl">
+                                        <i class="fas fa-gift"></i>
+                                    </div>
+                                    <h3 class="text-xl font-black uppercase tracking-widest">Ưu đãi độc quyền</h3>
                                 </div>
-                                <h3 class="text-xl font-black uppercase tracking-widest">Ưu đãi độc quyền</h3>
+                                <div class="text-[10px] font-bold bg-white/20 px-2 py-1 rounded-lg">Mới nhất</div>
                             </div>
-                            <div class="text-[10px] font-bold bg-white/20 px-2 py-1 rounded-lg">Mới nhất</div>
+                            
+                            <div id="promotions-container" class="space-y-5 max-h-[500px] overflow-y-auto pr-2 scrollbar-hide">
+                                <!-- JS renders promotions here -->
+                                <div class="p-6 bg-white/10 rounded-3xl border border-white/20 skeleton h-32"></div>
+                                <div class="p-6 bg-white/10 rounded-3xl border border-white/20 skeleton h-32"></div>
+                            </div>
+                            
+                            <p class="text-[11px] font-bold text-white/70 italic text-center pt-2">Lưu mã để sử dụng khi thanh toán</p>
                         </div>
-                        
-                        <div id="promotions-container" class="space-y-5 max-h-[500px] overflow-y-auto pr-2 scrollbar-hide">
-                            <!-- JS renders promotions here -->
-                            <div class="p-6 bg-white/10 rounded-3xl border border-white/20 skeleton h-32"></div>
-                            <div class="p-6 bg-white/10 rounded-3xl border border-white/20 skeleton h-32"></div>
-                        </div>
-                        
-                        <p class="text-[11px] font-bold text-white/70 italic text-center pt-2">Lưu mã để sử dụng khi thanh toán</p>
                     </div>
-                </div>
 
-                <!-- Related Authors -->
-                <div class="bg-white p-10 rounded-[40px] border border-border shadow-sm hover:shadow-md transition-shadow">
-                    <h3 class="text-xs font-black text-text uppercase tracking-[0.2em] mb-8 flex items-center gap-4">
-                        <div class="w-8 h-8 rounded-xl bg-orange-50 flex items-center justify-center text-orange-600">
-                            <i class="fas fa-user-edit text-xs"></i>
+                    <!-- Related Authors -->
+                    <div class="bg-white p-10 rounded-[40px] border border-border shadow-sm hover:shadow-md transition-shadow">
+                        <h3 class="text-xs font-black text-text uppercase tracking-[0.2em] mb-8 flex items-center gap-4">
+                            <div class="w-8 h-8 rounded-xl bg-orange-50 flex items-center justify-center text-orange-600">
+                                <i class="fas fa-user-edit text-xs"></i>
+                            </div>
+                            Về tác giả
+                        </h3>
+                        <div id="related-authors" class="space-y-6">
+                            <!-- JS renders authors here -->
+                            <div class="skeleton h-48 w-full rounded-3xl"></div>
                         </div>
-                        Về tác giả
-                    </h3>
-                    <div id="related-authors" class="space-y-6">
-                        <!-- JS renders authors here -->
-                        <div class="skeleton h-48 w-full rounded-3xl"></div>
                     </div>
-                </div>
 
-                <!-- Support Card -->
-                <div class="bg-gradient-to-br from-gray-800 to-black p-8 rounded-[40px] text-white shadow-xl">
-                    <h4 class="text-[10px] font-black uppercase tracking-widest text-white/50 mb-6">Cần hỗ trợ?</h4>
-                    <div class="flex items-center gap-6 mb-8">
-                        <div class="w-14 h-14 rounded-2xl bg-white/10 flex items-center justify-center text-2xl">
-                            <i class="fas fa-phone-alt"></i>
+                    <!-- Support Card -->
+                    <div class="bg-gradient-to-br from-gray-800 to-black p-8 rounded-[40px] text-white shadow-xl">
+                        <h4 class="text-[10px] font-black uppercase tracking-widest text-white/50 mb-6">Cần hỗ trợ?</h4>
+                        <div class="flex items-center gap-6 mb-8">
+                            <div class="w-14 h-14 rounded-2xl bg-white/10 flex items-center justify-center text-2xl">
+                                <i class="fas fa-phone-alt"></i>
+                            </div>
+                            <div>
+                                <p class="text-sm font-bold opacity-70">Hotline 24/7</p>
+                                <p class="text-2xl font-black">0374 170 367</p>
+                            </div>
                         </div>
-                        <div>
-                            <p class="text-sm font-bold opacity-70">Hotline 24/7</p>
-                            <p class="text-2xl font-black">0374 170 367</p>
-                        </div>
+                        <button class="w-full py-4 bg-white text-black rounded-2xl font-black text-[11px] uppercase tracking-widest hover:bg-gray-100 transition-all">Liên hệ ngay</button>
                     </div>
-                    <button class="w-full py-4 bg-white text-black rounded-2xl font-black text-[11px] uppercase tracking-widest hover:bg-gray-100 transition-all">Liên hệ ngay</button>
                 </div>
             </div>
         </div>
