@@ -611,14 +611,15 @@ function displayProductDetail(product) {
                 return [
                     `${serverUrl}/uploads/products/${cleanName}`,
                     `${serverUrl}/product-images/${cleanName}`,
-                    'img/sp01.jpg' // Last resort local fallback
+                    'img/default-book.jpg'
                 ];
             }
 
             return [
+                `${serverUrl}/uploads/products/${cleanName}`,
                 `${serverUrl}/product-images/${cleanName}`,
                 `img/product/${cleanName}`,
-                'img/sp01.jpg'
+                'img/default-book.jpg'
             ];
         };
 

@@ -199,9 +199,9 @@ function displayProducts(productsData, containerId = 'book-list', limit = null) 
       productElement.innerHTML = `
         <div class="sale-item-image-wrapper">
           <img class="sale-item-img" 
-               src="${window.API_CONFIG ? window.API_CONFIG.resolveImageUrl(product.HinhAnh) : `https://cnpm-websach-2.onrender.com/product-images/${(product.HinhAnh || '').replace('/img/products/', '')}`}"
+               src="${window.API_CONFIG ? window.API_CONFIG.resolveImageUrl(product.HinhAnh) : `https://cnpm-websach-2.onrender.com/uploads/products/${(product.HinhAnh || '').replace('/img/products/', '')}`}"
                alt="${escapeHtml(product.TenSP)}"
-               onerror="this.src='img/sp01.jpg'">
+               onerror="this.src='img/default-book.jpg'">
           ${discountPercent ? `<div class="badge-discount">-${discountPercent}%</div>` : ''}
         </div>
         <div class="sale-item-info">
@@ -234,10 +234,10 @@ function displayProducts(productsData, containerId = 'book-list', limit = null) 
 
       productElement.innerHTML = `
         <div class="relative aspect-[3/4] mb-4 bg-gray-50 rounded-2xl overflow-hidden flex items-center justify-center p-4 group-hover:scale-[1.02] transition-transform duration-500">
-            <img src="${window.API_CONFIG ? window.API_CONFIG.resolveImageUrl(product.HinhAnh) : `https://cnpm-websach-2.onrender.com/product-images/${(product.HinhAnh || '').replace('/img/products/', '')}`}"
+            <img src="${window.API_CONFIG ? window.API_CONFIG.resolveImageUrl(product.HinhAnh) : `https://cnpm-websach-2.onrender.com/uploads/products/${(product.HinhAnh || '').replace('/img/products/', '')}`}"
                  alt="${escapeHtml(product.TenSP)}"
                  class="max-w-full max-h-full object-contain drop-shadow-xl"
-                 onerror="this.src='img/sp01.jpg'">
+                 onerror="this.src='img/default-book.jpg'">
           ${isOutOfStock ? '<div class="absolute inset-0 bg-black/40 backdrop-blur-[2px] flex items-center justify-center"><span class="px-3 py-1 bg-white/90 rounded-full text-[10px] font-black uppercase tracking-widest text-gray-800">Hết hàng</span></div>' : ''}
           ${discountPercent ? `<div class="absolute top-2 right-2 bg-primary text-white text-[10px] font-black px-2 py-0.5 rounded-lg shadow-lg">-${discountPercent}%</div>` : ''}
         </div>
