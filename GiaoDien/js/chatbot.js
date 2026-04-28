@@ -152,9 +152,13 @@ function injectChatbotHTML() {
             .chatbot-msg-avatar { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; margin-top: 6px; }
             .chatbot-message.bot .chatbot-msg-avatar { background: linear-gradient(135deg, #4ade80 0%, #3b82f6 100%); color: white; }
             .chatbot-message.user .chatbot-msg-avatar { background: linear-gradient(135deg, #f43f5e 0%, #fb923c 100%); color: white; }
-            .chatbot-msg-bubble { padding: 12px 16px; border-radius: 20px; font-size: 14.5px; line-height: 1.6; word-wrap: break-word; white-space: pre-wrap; box-shadow: 0 2px 10px rgba(0,0,0,0.03); }
+            .chatbot-msg-bubble { padding: 12px 16px; border-radius: 20px; font-size: 14.5px; line-height: 1.5; word-wrap: break-word; box-shadow: 0 2px 10px rgba(0,0,0,0.03); }
+            .chatbot-msg-bubble ul, .chatbot-msg-bubble ol { margin: 8px 0 8px 20px; padding: 0; }
+            .chatbot-msg-bubble li { margin-bottom: 4px; }
+            .chatbot-msg-bubble p { margin: 0 0 8px 0; }
+            .chatbot-msg-bubble p:last-child { margin-bottom: 0; }
             .chatbot-message.bot .chatbot-msg-bubble { background: white; color: #334155; border: 1px solid #e2e8f0; border-top-left-radius: 4px; }
-            .chatbot-message.user .chatbot-msg-bubble { background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); color: white; border-top-right-radius: 4px; }
+            .chatbot-message.user .chatbot-msg-bubble { background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); color: white; border-top-right-radius: 4px; white-space: pre-wrap; }
             
             /* Typing Indicator */
             .chatbot-typing { display: flex; align-items: center; gap: 12px; align-self: flex-start; animation: chatbot-msg-in 0.3s ease; }
@@ -285,21 +289,49 @@ function initChatbot() {
     }
     
     function formatText(text) {
-        // If the text already contains HTML tags (like <b>, <ul>, etc.), trust it.
-        // Otherwise, do a simple markdown fallback.
-        if (/<[a-z][\s\S]*>/i.test(text)) {
+        if (!text) return '';
+        
+        // If the text already contains common HTML tags, trust it.
+        if (/<(b|strong|ul|li|br|p|div|i)[^>]*>/i.test(text)) {
             return text;
         }
 
-        let formatted = text
-            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-            .replace(/^- (.*)$/gm, '<li>$1</li>');
+        // 1. Normalize line endings and trim
+        let cleanText = text.trim();
+        
+        // 2. Handle bold
+        cleanText = cleanText.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+        
+        // 3. Handle Lists (Detect blocks of lines starting with - or *)
+        const lines = cleanText.split('\n');
+        let formattedParts = [];
+        let currentList = [];
+        
+        for (let i = 0; i < lines.length; i++) {
+            const line = lines[i].trim();
+            const listMatch = line.match(/^[\-\*]\s+(.*)$/);
             
-        if (formatted.includes('<li>')) {
-            formatted = `<ul>${formatted}</ul>`;
+            if (listMatch) {
+                currentList.push(`<li>${listMatch[1]}</li>`);
+            } else {
+                // If we were building a list, close it
+                if (currentList.length > 0) {
+                    formattedParts.push(`<ul>${currentList.join('')}</ul>`);
+                    currentList = [];
+                }
+                
+                if (line) {
+                    formattedParts.push(`<p>${line}</p>`);
+                }
+            }
         }
         
-        return formatted;
+        // Close any remaining list
+        if (currentList.length > 0) {
+            formattedParts.push(`<ul>${currentList.join('')}</ul>`);
+        }
+        
+        return formattedParts.join('');
     }
     
     function addMessage(role, content) {
