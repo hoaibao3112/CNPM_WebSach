@@ -149,16 +149,30 @@ function injectChatbotHTML() {
             .chatbot-message.user { align-self: flex-end; flex-direction: row-reverse; }
             .chatbot-message.bot { align-self: flex-start; }
             @keyframes chatbot-msg-in { from { opacity: 0; transform: translateY(15px) scale(0.9); } to { opacity: 1; transform: translateY(0) scale(1); } }
-            .chatbot-msg-avatar { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; margin-top: 6px; }
-            .chatbot-message.bot .chatbot-msg-avatar { background: linear-gradient(135deg, #4ade80 0%, #3b82f6 100%); color: white; }
+            .chatbot-msg-avatar { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; margin-top: 4px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+            .chatbot-message.bot .chatbot-msg-avatar { background: linear-gradient(135deg, #22c55e 0%, #3b82f6 100%); color: white; }
             .chatbot-message.user .chatbot-msg-avatar { background: linear-gradient(135deg, #f43f5e 0%, #fb923c 100%); color: white; }
-            .chatbot-msg-bubble { padding: 12px 16px; border-radius: 20px; font-size: 14.5px; line-height: 1.5; word-wrap: break-word; box-shadow: 0 2px 10px rgba(0,0,0,0.03); }
-            .chatbot-msg-bubble ul, .chatbot-msg-bubble ol { margin: 8px 0 8px 20px; padding: 0; }
-            .chatbot-msg-bubble li { margin-bottom: 4px; }
-            .chatbot-msg-bubble p { margin: 0 0 8px 0; }
+            .chatbot-msg-bubble { 
+                padding: 14px 18px; border-radius: 20px; font-size: 14.5px; line-height: 1.6; 
+                word-wrap: break-word; box-shadow: 0 3px 12px rgba(0,0,0,0.05); 
+                font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            }
+            .chatbot-msg-bubble ul, .chatbot-msg-bubble ol { margin: 10px 0 10px 22px; padding: 0; }
+            .chatbot-msg-bubble li { margin-bottom: 6px; }
+            .chatbot-msg-bubble li:last-child { margin-bottom: 0; }
+            .chatbot-msg-bubble p { margin: 0 0 10px 0; }
             .chatbot-msg-bubble p:last-child { margin-bottom: 0; }
-            .chatbot-message.bot .chatbot-msg-bubble { background: white; color: #334155; border: 1px solid #e2e8f0; border-top-left-radius: 4px; }
-            .chatbot-message.user .chatbot-msg-bubble { background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); color: white; border-top-right-radius: 4px; white-space: pre-wrap; }
+            .chatbot-msg-bubble strong { color: #1e293b; font-weight: 700; }
+            .chatbot-message.bot .chatbot-msg-bubble { 
+                background: #ffffff; color: #334155; border: 1px solid #f1f5f9; 
+                border-top-left-radius: 4px; text-align: justify;
+            }
+            .chatbot-message.user .chatbot-msg-bubble { 
+                background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); 
+                color: white; border-top-right-radius: 4px; white-space: pre-wrap;
+                box-shadow: 0 4px 15px rgba(37, 99, 235, 0.2);
+            }
+            .chatbot-message.user .chatbot-msg-bubble strong { color: white; }
             
             /* Typing Indicator */
             .chatbot-typing { display: flex; align-items: center; gap: 12px; align-self: flex-start; animation: chatbot-msg-in 0.3s ease; }
@@ -291,47 +305,68 @@ function initChatbot() {
     function formatText(text) {
         if (!text) return '';
         
-        // If the text already contains common HTML tags, trust it.
-        if (/<(b|strong|ul|li|br|p|div|i)[^>]*>/i.test(text)) {
+        // If the text already contains significant HTML tags, trust it.
+        if (/<(ul|li|p|div|table|ol)[^>]*>/i.test(text)) {
             return text;
         }
 
-        // 1. Normalize line endings and trim
-        let cleanText = text.trim();
+        // 1. Normalize: collapse 3+ newlines to 2, trim
+        let cleanText = text.replace(/\n{3,}/g, '\n\n').trim();
         
         // 2. Handle bold
         cleanText = cleanText.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
         
-        // 3. Handle Lists (Detect blocks of lines starting with - or *)
+        // 3. Process lines to build paragraphs and lists
         const lines = cleanText.split('\n');
         let formattedParts = [];
-        let currentList = [];
+        let currentList = null; // 'ul' or 'ol' or null
+        let listItems = [];
         
+        const closeList = () => {
+            if (currentList && listItems.length > 0) {
+                formattedParts.push(`<${currentList}>${listItems.join('')}</${currentList}>`);
+                listItems = [];
+                currentList = null;
+            }
+        };
+
         for (let i = 0; i < lines.length; i++) {
             const line = lines[i].trim();
-            const listMatch = line.match(/^[\-\*]\s+(.*)$/);
-            
-            if (listMatch) {
-                currentList.push(`<li>${listMatch[1]}</li>`);
+            if (!line) {
+                closeList();
+                continue;
+            }
+
+            // Detect Unordered List (- or *)
+            const ulMatch = line.match(/^[\-\*]\s+(.*)$/);
+            // Detect Ordered List (1. or 1))
+            const olMatch = line.match(/^(\d+)[.\)]\s+(.*)$/);
+
+            if (ulMatch) {
+                if (currentList !== 'ul') closeList();
+                currentList = 'ul';
+                listItems.push(`<li>${ulMatch[1]}</li>`);
+            } else if (olMatch) {
+                if (currentList !== 'ol') closeList();
+                currentList = 'ol';
+                listItems.push(`<li>${olMatch[2]}</li>`);
             } else {
-                // If we were building a list, close it
-                if (currentList.length > 0) {
-                    formattedParts.push(`<ul>${currentList.join('')}</ul>`);
-                    currentList = [];
-                }
-                
-                if (line) {
+                closeList();
+                // Check if it's a very short line that might be a header or just a single sentence
+                if (line.length < 100) {
+                    formattedParts.push(`<p><strong>${line}</strong></p>`);
+                } else {
+                    // Convert internal single newlines to <br> if needed, 
+                    // but here we treat each non-list line as a paragraph.
                     formattedParts.push(`<p>${line}</p>`);
                 }
             }
         }
         
-        // Close any remaining list
-        if (currentList.length > 0) {
-            formattedParts.push(`<ul>${currentList.join('')}</ul>`);
-        }
+        closeList();
         
-        return formattedParts.join('');
+        // Join parts and handle any remaining markdown-like breaks
+        return formattedParts.join('').replace(/\n/g, '<br>');
     }
     
     function addMessage(role, content) {
