@@ -20,29 +20,48 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // Hiển thị slideshow
+const largeLink = document.querySelector('.slide-large');
+const smallLinks = document.querySelectorAll('.slide-small');
 const largeImg = document.querySelector('.slide-large img');
-  const smallImgs = document.querySelectorAll('.slide-small img');
+const smallImgs = document.querySelectorAll('.slide-small img');
 
-  const images = [
-    "img/anhnen/17d.jpg", "img/anhnen/18d.jpg", "img/anhnen/14d.jpg",
-    "img/anhnen/15d.jpg", "img/anhnen/13d.jpg", "img/anhnen/9d.jpg",
-    "img/anhnen/10d.jpg", "img/anhnen/11d.jpg", "img/anhnen/12d.jpg",
-    "img/anhnen/16d.jpg"
-  ];
+const slides = [
+  { src: "img/anhnen/17d.jpg", href: "khuyenmai.html" },
+  { src: "img/anhnen/18d.jpg", href: "book.html?search=Văn học kinh điển" },
+  { src: "img/anhnen/14d.jpg", href: "book.html?search=Sách thiếu nhi" },
+  { src: "img/anhnen/15d.jpg", href: "khuyenmai.html" },
+  { src: "img/anhnen/13d.jpg", href: "khuyenmai.html" },
+  { src: "img/anhnen/9d.jpg", href: "khuyenmai.html" },
+  { src: "img/anhnen/10d.jpg", href: "khuyenmai.html" },
+  { src: "img/anhnen/11d.jpg", href: "khuyenmai.html" },
+  { src: "img/anhnen/12d.jpg", href: "khuyenmai.html" },
+  { src: "img/anhnen/16d.jpg", href: "khuyenmai.html" }
+];
 
-  let index = 0;
+let slideIdx = 0;
 
-  function updateSlides() {
-    largeImg.src = images[index % images.length];
-    smallImgs[0].src = images[(index + 1) % images.length];
-    smallImgs[1].src = images[(index + 2) % images.length];
-    index += 3;
-  }
+function updateSlides() {
+  if (!largeImg || !smallImgs.length) return;
+  
+  const currentLarge = slides[slideIdx % slides.length];
+  largeImg.src = currentLarge.src;
+  if (largeLink) largeLink.href = currentLarge.href;
 
-  document.addEventListener("DOMContentLoaded", () => {
-    updateSlides();
-    setInterval(updateSlides, 3000);
-  });
+  const currentSmall1 = slides[(slideIdx + 1) % slides.length];
+  smallImgs[0].src = currentSmall1.src;
+  if (smallLinks[0]) smallLinks[0].href = currentSmall1.href;
+
+  const currentSmall2 = slides[(slideIdx + 2) % slides.length];
+  smallImgs[1].src = currentSmall2.src;
+  if (smallLinks[1]) smallLinks[1].href = currentSmall2.href;
+
+  slideIdx += 3;
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  updateSlides();
+  setInterval(updateSlides, 5000); // Tăng thời gian lên 5s để người dùng kịp nhìn và click
+});
 
 
 
