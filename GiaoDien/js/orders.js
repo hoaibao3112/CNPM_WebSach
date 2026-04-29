@@ -1190,7 +1190,7 @@ async function submitReturnRequest(order) {
     // Hiển thị thông tin trả hàng (nếu có)
     try { await renderReturnInfo(order); } catch (e) { console.warn('renderReturnInfo failed', e); }
 
-        modal.style.display = 'block';
+        modal.style.display = 'flex';
         // Force Leaflet to recalculate size after modal is visible (fixes gray/cropped tiles)
         try {
             setTimeout(() => { if (typeof map !== 'undefined' && map) map.invalidateSize(); }, 150);
