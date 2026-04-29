@@ -649,24 +649,24 @@ function displayProductDetail(product) {
         };
 
         const buildFallbackCandidates = (filename) => {
-            if (!filename) return ['https://via.placeholder.com/300x400?text=Book'];
+            if (!filename) return ['img/default-book.jpg'];
             if (/^https?:\/\//i.test(filename)) return [filename];
             
-            const cleanName = filename.replace(/^\/img\/products\//, '');
-            const serverUrl = 'https://cnpm-websach-2.onrender.com';
+            const cleanName = filename.replace(/^\/img\/products\//, '').replace(/^\/+/, '');
+            const baseUrl = apiBase;
             
             // If it's a new upload (has timestamp), prioritize the direct server upload path
             if (/^\d{13,}-/.test(cleanName)) {
                 return [
-                    `${serverUrl}/uploads/products/${cleanName}`,
-                    `${serverUrl}/product-images/${cleanName}`,
+                    `${baseUrl}/uploads/products/${cleanName}`,
+                    `${baseUrl}/product-images/${cleanName}`,
                     'img/default-book.jpg'
                 ];
             }
 
             return [
-                `${serverUrl}/uploads/products/${cleanName}`,
-                `${serverUrl}/product-images/${cleanName}`,
+                `${baseUrl}/product-images/${cleanName}`,
+                `${baseUrl}/uploads/products/${cleanName}`,
                 `img/product/${cleanName}`,
                 'img/default-book.jpg'
             ];
@@ -674,31 +674,32 @@ function displayProductDetail(product) {
 
         const applyImageFallback = (imgEl, candidates) => {
             let index = 0;
-            imgEl.src = candidates[index] || 'https://via.placeholder.com/300x400?text=Book';
-            imgEl.onerror = () => {
-                index += 1;
+            const tryNext = () => {
                 if (index < candidates.length) {
-                    imgEl.src = candidates[index];
+                    const src = candidates[index];
+                    index++;
+                    imgEl.src = src;
                 } else {
                     imgEl.onerror = null;
-                    imgEl.src = 'https://via.placeholder.com/300x400?text=Book';
+                    imgEl.src = 'img/default-book.jpg';
                 }
             };
+            imgEl.onerror = tryNext;
+            tryNext();
         };
 
         let images = [];
         if (Array.isArray(product.images) && product.images.length > 0) {
             images = product.images.map(img => {
-                if (img.url || img.path) return { url: img.url || img.path, id: img.id };
+                if (img.url || img.path) return { url: img.url || img.path, filename: img.filename || img.url, id: img.id };
                 if (img.filename) return { url: buildSrcFromFilename(img.filename), filename: img.filename, id: img.id };
-                // if it's a plain string
-                if (typeof img === 'string') return { url: buildSrcFromFilename(img) };
+                if (typeof img === 'string') return { url: buildSrcFromFilename(img), filename: img };
                 return null;
             }).filter(Boolean);
         } else if (product.HinhAnh) {
-            images = [{ url: buildSrcFromFilename(product.HinhAnh) }];
+            images = [{ url: buildSrcFromFilename(product.HinhAnh), filename: product.HinhAnh }];
         } else {
-            images = [{ url: 'https://via.placeholder.com/300x400?text=Book' }];
+            images = [{ url: 'img/default-book.jpg', filename: null }];
         }
 
         // set main image to first image

@@ -27,29 +27,26 @@ router.get('/recommendations', ProductController.getRecommendations);
 router.get('/low-stock', authenticateToken, authorize('PRODUCT_READ'), ProductController.getLowStock);
 router.get('/:id', ProductController.getById);
 
-// Multer setup for product images
-const uploadDir = path.join(process.cwd(), 'uploads', 'products');
-if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
+// Multer setup for product images using Cloudinary
+import { storage as cloudinaryStorage } from '../config/cloudinary.js';
 
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, uploadDir),
-  filename: (req, file, cb) => cb(null, `${Date.now()}-${file.originalname}`)
-});
-const upload = multer({ storage });
+const upload = multer({ storage: cloudinaryStorage });
 
 const handleProductUploads = upload.fields([
   { name: 'HinhAnh', maxCount: 1 },
   { name: 'ExtraImages', maxCount: 10 }
 ]);
 
-// Helper to map files to body
+// Helper to map Cloudinary URLs to body
 const processFiles = (req, res, next) => {
   if (req.files) {
     if (req.files['HinhAnh'] && req.files['HinhAnh'].length > 0) {
-      req.body.HinhAnh = req.files['HinhAnh'][0].filename;
+      // Use the path property which contains the full Cloudinary URL
+      req.body.HinhAnh = req.files['HinhAnh'][0].path;
     }
     if (req.files['ExtraImages'] && req.files['ExtraImages'].length > 0) {
-      req.body.ExtraImages = req.files['ExtraImages'].map(f => f.filename);
+      // Map to an array of full Cloudinary URLs
+      req.body.ExtraImages = req.files['ExtraImages'].map(f => f.path);
     }
   }
   next();

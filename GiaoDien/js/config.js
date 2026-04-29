@@ -58,19 +58,19 @@ if (!window.API_CONFIG) {
         // Helper to resolve product image URLs
         resolveImageUrl: function (filename) {
             if (!filename || filename === 'null' || filename === 'undefined' || filename === 'sp01.jpg') {
-                return 'https://via.placeholder.com/300x400?text=S%C3%A1ch';
+                return 'img/default-book.jpg';
             }
             if (/^https?:\/\//i.test(filename)) return filename;
             
-            const cleanName = filename.replace(/^\/img\/products\//, '');
-            const baseUrl = 'https://cnpm-websach-2.onrender.com';
+            const cleanName = filename.replace(/^\/img\/products\//, '').replace(/^\/+/, '');
+            const baseUrl = this.BASE_URL;
             let finalUrl = '';
 
-            // For newly uploaded files (Date.now()-filename.jpg)
+            // For newly uploaded files (Date.now()-filename.jpg) or if it's already a filename from uploads/products
             if (/^\d{13,}-/.test(cleanName)) {
                 finalUrl = `${baseUrl}/uploads/products/${cleanName}`;
             } else {
-                // For legacy files
+                // For legacy files or files accessed via the smart route
                 finalUrl = `${baseUrl}/product-images/${cleanName}`;
             }
             

@@ -86,7 +86,7 @@ const ProductManagement = () => {
       const response = await api.get(API_URL);
       const productsData = response.data.data;
       if (Array.isArray(productsData)) {
-        const apiBase = process.env.REACT_APP_API_BASE || 'https://cnpm-websach-2.onrender.com';
+        const apiBase = process.env.REACT_APP_API_BASE || (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? 'http://localhost:5000' : 'https://cnpm-websach-2.onrender.com');
         
         const processedProducts = productsData.map((product) => {
           let imageUrl = 'https://via.placeholder.com/50';
@@ -241,9 +241,14 @@ const ProductManagement = () => {
           if (editingProduct[key] instanceof File) {
             formData.append('HinhAnh', editingProduct[key]);
           } else {
-            const filename = String(editingProduct[key] || '').split('/').pop();
-            if (filename !== '50' && filename !== 'undefined' && filename !== 'null') {
-              formData.append('HinhAnh', filename);
+            const value = String(editingProduct[key] || '');
+            if (value.startsWith('http')) {
+              formData.append('HinhAnh', value);
+            } else {
+              const filename = value.split('/').pop();
+              if (filename !== '50' && filename !== 'undefined' && filename !== 'null') {
+                formData.append('HinhAnh', filename);
+              }
             }
           }
         } else if (editingProduct[key] !== null && editingProduct[key] !== undefined) {
@@ -550,7 +555,7 @@ const ProductManagement = () => {
                           URL.createObjectURL(editingProduct.HinhAnh) :
                           (editingProduct.HinhAnh.startsWith('http') ?
                             editingProduct.HinhAnh :
-                            `${process.env.REACT_APP_API_BASE || 'https://cnpm-websach-2.onrender.com'}/product-images/${editingProduct.HinhAnh.replace('/img/products/', '')}`)) :
+                            `${apiBase}/product-images/${editingProduct.HinhAnh.replace('/img/products/', '')}`)) :
                         URL.createObjectURL(newProduct.HinhAnhPrimary)} 
                       alt="Preview" 
                       className="w-full h-full object-cover" 

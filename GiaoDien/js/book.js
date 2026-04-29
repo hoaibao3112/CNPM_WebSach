@@ -86,7 +86,7 @@ async function addToCart(productId, productName, price, image) {
   const token = (document.cookie.split('; ').find(row => row.startsWith('token='))?.split('=')[1] || null);
   if (token) {
     try {
-      const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'https://cnpm-websach-2.onrender.com';
+      const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'http://localhost:5000';
       const response = await fetch(`${_apiBase}/api/client/cart/add`, {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
@@ -199,7 +199,7 @@ function displayProducts(productsData, containerId = 'book-list', limit = null) 
       productElement.innerHTML = `
         <div class="sale-item-image-wrapper">
           <img class="sale-item-img" 
-               src="${window.API_CONFIG ? window.API_CONFIG.resolveImageUrl(product.HinhAnh) : `https://cnpm-websach-2.onrender.com/uploads/products/${(product.HinhAnh || '').replace('/img/products/', '')}`}"
+               src="${window.API_CONFIG ? window.API_CONFIG.resolveImageUrl(product.HinhAnh) : (product.HinhAnh || 'img/default-book.jpg')}"
                alt="${escapeHtml(product.TenSP)}"
                onerror="this.src='img/default-book.jpg'">
           ${discountPercent ? `<div class="badge-discount">-${discountPercent}%</div>` : ''}
@@ -234,7 +234,7 @@ function displayProducts(productsData, containerId = 'book-list', limit = null) 
 
       productElement.innerHTML = `
         <div class="relative aspect-[3/4] mb-4 bg-gray-50 rounded-2xl overflow-hidden flex items-center justify-center p-4 group-hover:scale-[1.02] transition-transform duration-500">
-            <img src="${window.API_CONFIG ? window.API_CONFIG.resolveImageUrl(product.HinhAnh) : `https://cnpm-websach-2.onrender.com/uploads/products/${(product.HinhAnh || '').replace('/img/products/', '')}`}"
+            <img src="${window.API_CONFIG ? window.API_CONFIG.resolveImageUrl(product.HinhAnh) : (product.HinhAnh || 'img/default-book.jpg')}"
                  alt="${escapeHtml(product.TenSP)}"
                  class="max-w-full max-h-full object-contain drop-shadow-xl"
                  onerror="this.src='img/default-book.jpg'">
@@ -703,7 +703,7 @@ async function fetchAndDisplayProducts() {
 
   try {
     productList.innerHTML = '<div class="loading">Đang tải sản phẩm...</div>';
-    const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'https://cnpm-websach-2.onrender.com';
+    const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'http://localhost:5000';
     let url = `${_apiBase}/api/product/sorted/year`;
     // Only honor saved filters when we are on the book page itself.
     const categoryKey = storageKeyForGroup('category');
