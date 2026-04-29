@@ -110,8 +110,13 @@ class AuthService {
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
     const token = crypto.randomBytes(32).toString('hex');
 
+    const now = new Date();
+    const expiresAt = new Date(now.getTime() + 15 * 60 * 1000); // 15 phút
+
     await OtpRequest.upsert({
-      email, otp, token, type: 'register'
+      email, otp, token, type: 'register',
+      created_at: now,
+      expires_at: expiresAt
     });
 
     await sendOTPEmail(email, otp);
@@ -179,8 +184,13 @@ class AuthService {
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
     const token = crypto.randomBytes(32).toString('hex');
 
+    const now = new Date();
+    const expiresAt = new Date(now.getTime() + 15 * 60 * 1000); // 15 phút
+
     await OtpRequest.upsert({
-      email, otp, token, type: 'forgot-password'
+      email, otp, token, type: 'forgot-password',
+      created_at: now,
+      expires_at: expiresAt
     });
 
     await sendOTPEmail(email, otp);
