@@ -306,7 +306,8 @@ export async function sendOrderConfirmationEmail(email, order = {}) {
   const paymentMethod = safe(order.paymentMethod || 'COD');
   const paymentUrl = safe(order.paymentUrl || '');
   const orderStatus = safe(order.status || 'ĐÃ TẠO');
-  const orderNote = safe(order.note || order.customerNote || '');
+  const orderNote = safe(order.note || order.customerNote || order.notes || '');
+  const customerPhone = safe(order.customerPhone || order.recipientPhone || (order.customer && order.customer.phone) || '');
 
   const shipping = order.shippingAddress || {};
   const addrLine1 = safe(shipping.detail || '');
@@ -501,6 +502,7 @@ export async function sendOrderConfirmationEmail(email, order = {}) {
                     <div style="color:#6b7280;font:700 12px Arial;margin-bottom:6px;">ĐỊA CHỈ GIAO</div>
                     <div style="font:700 14px Arial;color:#111827;">${addrLine1}</div>
                     <div style="font:400 13px Arial;color:#6b7280;margin-top:4px;">${addrLine2}</div>
+                    ${customerPhone ? `<div style="font:400 13px Arial;color:#6b7280;margin-top:4px;"><i class="fas fa-phone"></i> SĐT: ${customerPhone}</div>` : ''}
                   </td>
                 </tr>
               </table>
@@ -584,10 +586,16 @@ export async function sendOrderConfirmationEmail(email, order = {}) {
           <tr><td height="12"></td></tr>
           <tr>
             <td style="padding:8px 28px 20px 28px;background:#fbfbfd;">
-              <div style="text-align:center;color:#6b7280;font:400 12px/1.6 Arial;">
-                Cần hỗ trợ? Hãy trả lời email này hoặc liên hệ:
-                <a href="mailto:${process.env.EMAIL_USER}" style="color:#0ea5e9;text-decoration:none;">${process.env.EMAIL_USER}</a>
-              </div>
+                <div style="margin-top:40px;text-align:center;">
+                  <a href="${process.env.CLIENT_CUSTOMER_URL}/orders.html" style="background-color:#B03A2E;color:#ffffff;padding:14px 28px;text-decoration:none;border-radius:8px;font:700 14px Arial;display:inline-block;box-shadow:0 4px 6px rgba(0,0,0,0.1);">XEM CHI TIẾT ĐƠN HÀNG</a>
+                </div>
+                <div style="margin-top:40px;padding-top:20px;border-top:1px solid #e5e7eb;text-align:center;font:400 12px Arial;color:#9ca3af;">
+                  Nếu bạn có bất kỳ câu hỏi nào, vui lòng phản hồi email này hoặc liên hệ hotline: 1900 xxxx
+                </div>
+                <div style="text-align:center;color:#6b7280;font:400 12px/1.6 Arial;">
+                  Cần hỗ trợ? Hãy trả lời email này hoặc liên hệ:
+                  <a href="mailto:${process.env.EMAIL_USER}" style="color:#0ea5e9;text-decoration:none;">${process.env.EMAIL_USER}</a>
+                </div>
               <div style="text-align:center;color:#9aa0a6;font:400 11px Arial;margin-top:6px;">
                 © ${new Date().getFullYear()} ${brandName}. All rights reserved.
               </div>

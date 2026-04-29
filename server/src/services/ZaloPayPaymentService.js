@@ -254,31 +254,33 @@ class ZaloPayPaymentService {
           amount: payload.amount
         });
 
-        // Get customer info for email
-        const customer = order.makh ? await order.getKhachHang() : null;
-        if (customer) {
-          // Add loyalty points
-          try {
-            const pointsToAdd = Math.floor(order.TongTien / 1000); // 1 điểm per 1000 VND
-            await addLoyaltyPoints(order.makh, pointsToAdd, `ZaloPay payment #${orderId}`);
-            logger.info('✅ Loyalty points added:', { orderId, points: pointsToAdd });
-          } catch (pointsError) {
-            logger.warn('⚠️ Could not add loyalty points:', pointsError.message);
-          }
-
-          // Send confirmation email (non-blocking)
-          try {
-            await sendOrderConfirmationEmail(customer.Email, {
-              orderId,
-              totalAmount: order.TongTien,
-              paymentMethod: 'ZaloPay',
-              customerName: customer.TenKhachHang
-            });
-            logger.info('📧 Confirmation email sent:', { email: customer.Email });
-          } catch (emailError) {
-            logger.warn('⚠️ Email sending error:', emailError.message);
-          }
+        // 1 điểm per 1000 VND
+        try {
+          const pointsToAdd = Math.floor(order.TongTien / 1000);
+          await addLoyaltyPoints(order.makh, pointsToAdd, `ZaloPay payment #${orderId}`);
+          logger.info('✅ Loyalty points added:', { orderId, points: pointsToAdd });
+        } catch (pointsError) {
+          logger.warn('⚠️ Could not add loyalty points:', pointsError.message);
         }
+
+        // Gửi email xác nhận sau khi thanh toán thành công (Non-blocking)
+        setTimeout(async () => {
+          try {
+            // Sử dụng dynamic import để tránh circular dependency
+            const OrderService = (await import('./OrderService.js')).default;
+            const fullOrder = await OrderService.getOrderById(orderId);
+            
+            if (fullOrder && fullOrder.customerEmail) {
+              await sendOrderConfirmationEmail(fullOrder.customerEmail, {
+                ...fullOrder,
+                paymentMethod: 'ZaloPay',
+              });
+              logger.info(`📧 [ZaloPay] Đã gửi email xác nhận cho đơn hàng #${orderId} tới ${fullOrder.customerEmail}`);
+            }
+          } catch (emailErr) {
+            logger.warn(`⚠️ [ZaloPay] Gửi email thất bại cho đơn #${orderId}:`, emailErr.message);
+          }
+        }, 100);
 
         return true;
       } else {

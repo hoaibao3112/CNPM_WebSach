@@ -765,6 +765,7 @@ class OrderService {
             paymentMethod: orderResult.paymentMethod || 'VNPAY',
             paymentUrl,
             customerName: orderResult.customer.name,
+            customerPhone: orderResult.customer.phone,
             shippingAddress: emailShippingAddress,
             items: orderResult.cartItems,
         };
