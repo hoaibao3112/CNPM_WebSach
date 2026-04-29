@@ -37,7 +37,8 @@ class ProductController {
             const productId = await ProductService.createProduct(productData);
             return baseController.sendSuccess(res, { productId }, 'Thêm sản phẩm thành công', 201);
         } catch (error) {
-            return baseController.sendError(res, 'Lỗi khi thêm sản phẩm', 500, error.message);
+            console.error('❌ Product Create Error:', error);
+            return baseController.sendError(res, `Lỗi khi thêm sản phẩm: ${error.message}`, 500);
         }
     }
 
@@ -54,7 +55,8 @@ class ProductController {
             await ProductService.updateProduct(id, productData);
             return baseController.sendSuccess(res, null, 'Cập nhật sản phẩm thành công');
         } catch (error) {
-            return baseController.sendError(res, 'Lỗi khi cập nhật sản phẩm', 500, error.message);
+            console.error('❌ Product Update Error:', error);
+            return baseController.sendError(res, `Lỗi khi cập nhật sản phẩm: ${error.message}`, 500);
         }
     }
 
