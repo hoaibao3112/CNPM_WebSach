@@ -950,9 +950,12 @@ async function renderCategoryToFil() {
   
   let currentCat = getStoredFilterValue('category');
 
-  // Nếu có category trên URL, ưu tiên dùng nó
+  // Nếu có category trên URL, ưu tiên dùng nó và XÓA bộ lọc cũ để không bị kẹt
   if (urlCategoryName) {
     console.log('[CategoryFilter] Detecting from URL:', urlCategoryName);
+    // Reset bộ lọc cũ trước khi tìm cái mới
+    currentCat = null; 
+    
     const matchedCat = categoryData.find(c => {
       const dbName = c.TenTL.toLowerCase();
       const urlName = urlCategoryName.toLowerCase();
@@ -964,7 +967,9 @@ async function renderCategoryToFil() {
       currentCat = matchedCat.matl;
       localStorage.setItem(storageKeyForGroup('category'), currentCat);
     } else {
-      console.warn('[CategoryFilter] No match found for:', urlCategoryName);
+      console.warn('[CategoryFilter] No match found in API for:', urlCategoryName);
+      // Nếu không tìm thấy trong API, xóa luôn localStorage để không bị hiện sai
+      localStorage.removeItem(storageKeyForGroup('category'));
     }
   }
 
