@@ -986,7 +986,14 @@ async function renderCategoryToFil() {
     const a = document.createElement("a");
     a.href = "#";
     a.className = `dropdown-item ${isSelected ? 'active' : ''}`;
-    a.innerHTML = `<span>${cat.TenTL}</span> ${isSelected ? '<i class="fas fa-check text-[10px]"></i>' : ''}`;
+    // Thêm biểu tượng cuốn sách cho mỗi danh mục
+    a.innerHTML = `
+      <div class="flex items-center gap-3">
+        <i class="fas fa-book text-[10px] opacity-40"></i>
+        <span>${cat.TenTL}</span>
+      </div>
+      ${isSelected ? '<i class="fas fa-check text-[10px]"></i>' : ''}
+    `;
     
     if (isSelected) {
         const headerSpan = document.querySelector('#categoryDropdown .dropdown-header span');
@@ -997,7 +1004,7 @@ async function renderCategoryToFil() {
       e.preventDefault();
       // Use triggerFilterFetchFromUI by updating localStorage
       localStorage.setItem(storageKeyForGroup('category'), cat.matl);
-      // Cập nhật URL để đồng bộ
+      // Cập nhật URL để đồng bộ (dùng tên chuẩn từ database)
       const newUrl = `${window.location.pathname}?category=${encodeURIComponent(cat.TenTL)}`;
       window.history.replaceState({}, '', newUrl);
       
@@ -1005,14 +1012,14 @@ async function renderCategoryToFil() {
       
       // Update UI
       container.querySelectorAll('.dropdown-item').forEach(i => i.classList.remove('active'));
-      container.querySelectorAll('.dropdown-item i').forEach(i => i.remove());
       a.classList.add('active');
-      a.insertAdjacentHTML('beforeend', '<i class="fas fa-check text-[10px]"></i>');
       
       const headerSpan = document.querySelector('#categoryDropdown .dropdown-header span');
       if (headerSpan) headerSpan.textContent = cat.TenTL;
       
       document.getElementById('categoryDropdown').classList.remove('dropdown-active');
+      // Render lại để cập nhật dấu check
+      renderCategoryToFil();
     };
     container.appendChild(a);
   });
@@ -1385,11 +1392,14 @@ if (typeof window !== 'undefined' && isBookPage()) {
 
     // populate button lists on load and wait for them to complete, so we can restore stored selections
     await Promise.all([populateSuppliers(), populateHinhThuc(), populateAuthors(), renderCategoryToFil()]);
+    
     // restore UI from storage and fetch results once
     try {
       restoreActiveFromStorage();
     } catch (e) { /* ignore */ }
+    
     // Trigger a fetch so restored selections actually refresh the product list
+    // Đã đợi renderCategoryToFil xong nên lúc này localStorage đã có category từ URL
     triggerFilterFetchFromUI();
     // ensure filter bar exists and wire clear button
     const bar = ensureFilterBar();
