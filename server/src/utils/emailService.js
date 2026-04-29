@@ -19,11 +19,25 @@ function hasSendGridConfig() {
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
-function buildTransportConfig(portOverride) {
+function buildTransportConfig(port = 587) {
   const host = process.env.EMAIL_HOST || 'smtp.gmail.com';
-  const port = Number(portOverride || process.env.EMAIL_PORT || 587);
   const secure = port === 465;
 
+  // Cấu hình OAuth2 (Khuyên dùng cho Render/Production)
+  if (process.env.GOOGLE_MAIL_REFRESH_TOKEN) {
+    return {
+      service: 'gmail',
+      auth: {
+        type: 'OAuth2',
+        user: process.env.EMAIL_USER,
+        clientId: process.env.GOOGLE_MAIL_CLIENT_ID,
+        clientSecret: process.env.GOOGLE_MAIL_CLIENT_SECRET,
+        refreshToken: process.env.GOOGLE_MAIL_REFRESH_TOKEN
+      }
+    };
+  }
+
+  // Cấu hình SMTP thông thường (Dùng cho Local)
   return {
     host,
     port,
@@ -197,28 +211,28 @@ export async function sendOTPEmail(email, otp) {
   let errors = [];
 
   // THỨ TỰ ƯU TIÊN GỬI:
-  // 1. SendGrid (Bạn chọn dùng cái này)
+  // 1. Resend (Nhanh nhất và ít bị Gmail chặn nhất hiện nay)
+  if (resendConfigured) {
+    try {
+      // Dùng onboarding@resend.dev hoặc email đã verify trên Resend
+      const resendOptions = { ...mailOptions, from: `"${brandName}" <onboarding@resend.dev>` };
+      await sendMailWithResend(resendOptions);
+      console.log('✅ OTP gửi qua Resend thành công');
+      return true;
+    } catch (e) {
+      errors.push(`Resend lỗi: ${e.message}`);
+    }
+  }
+
+  // 2. SendGrid (Dự phòng 1 - Hay bị Deferred trên Render)
   if (sendGridConfigured) {
     try {
-      // Dùng đúng email đã verify trên SendGrid
       const sgOptions = { ...mailOptions, from: `"${brandName}" <${process.env.SENDGRID_FROM_EMAIL}>` };
       await sendMailWithSendGrid(sgOptions);
       console.log('✅ OTP gửi qua SendGrid thành công');
       return true;
     } catch (e) {
       errors.push(`SendGrid lỗi: ${e.message}`);
-    }
-  }
-
-  // 2. Resend 
-  if (resendConfigured) {
-    try {
-      const resendOptions = { ...mailOptions, from: 'onboarding@resend.dev' };
-      await sendMailWithResend(resendOptions);
-      console.log('✅ OTP gửi qua Resend (Onboarding) thành công');
-      return true;
-    } catch (e) {
-      errors.push(`Resend lỗi: ${e.message}`);
     }
   }
 
