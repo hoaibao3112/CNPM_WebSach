@@ -154,7 +154,7 @@
 		const img = document.createElement('img');
 		img.alt = p.TenSP || 'product';
 		img.className = 'sale-item-img';
-        const imgSrc = p.HinhAnh ? `${IMAGE_BASE}/${p.HinhAnh}` : 'img/product/default-book.jpg';
+        const imgSrc = window.API_CONFIG ? window.API_CONFIG.resolveImageUrl(p.HinhAnh) : (p.HinhAnh || 'img/product/default-book.jpg');
 		img.src = imgSrc;
 		img.onerror = () => { img.src = 'img/product/default-book.jpg'; };
 

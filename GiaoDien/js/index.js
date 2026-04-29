@@ -597,8 +597,8 @@ function setupChat() {
             return `
               <div class="product-card-mini">
                 <div class="product-image-wrapper">
-                  <img src="img/product/${image}" alt="${name}" 
-                       onerror="this.src='https://via.placeholder.com/150x200?text=Book'">
+                  <img src="${window.API_CONFIG ? window.API_CONFIG.resolveImageUrl(image) : `img/product/${image}`}" alt="${name}" 
+                       onerror="this.src='img/product/default-book.jpg'">
                 </div>
                 <div class="product-info-mini">
                   <h5 class="product-name-mini" title="${name}">${name}</h5>
@@ -639,9 +639,7 @@ async function showProductSuggestionWithDelay(productInfo) {
     const product = await searchProduct(productInfo);
     if (product) {
       // SỬA: Đường dẫn ảnh đúng
-      const imageUrl = product.HinhAnh ? 
-        `img/product/${product.HinhAnh}` : 
-        'img/default-book.jpg'; // Ảnh mặc định nếu không có
+      const imageUrl = window.API_CONFIG ? window.API_CONFIG.resolveImageUrl(product.HinhAnh) : (product.HinhAnh || 'img/default-book.jpg');
 
       // SỬA: Logic tình trạng kho
       let stockStatus;

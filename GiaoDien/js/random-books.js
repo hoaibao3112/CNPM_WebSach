@@ -58,7 +58,7 @@ async function loadRandomBooks() {
       const image = p.HinhAnh || p.image || 'default-book.jpg';
       const priceStr = Number(p.DonGia || 0).toLocaleString('vi-VN');
       const isSale = p.GiamGia > 0;
-      const imgUrl = image.startsWith('http') ? image : `${window.API_CONFIG.BASE_URL}/product-images/${image}`;
+      const imgUrl = window.API_CONFIG ? window.API_CONFIG.resolveImageUrl(image) : image;
       
       return `
         <div onclick="localStorage.setItem('selectedProductId', ${p.MaSP}); window.location.href='product_detail.html'" 

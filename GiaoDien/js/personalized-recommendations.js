@@ -440,8 +440,8 @@ const PersonalizedRecommendations = {
    * Render một card sản phẩm
    */
   renderProductCard(product) {
-    const imageUrl = product.HinhAnh || product.AnhSP || product.anhsp || 'default.jpg';
-    const imagePath = imageUrl.includes('img/') ? imageUrl : `img/product/${imageUrl}`;
+    const imageUrl = product.HinhAnh || product.AnhSP || product.anhsp || 'img/product/default-book.jpg';
+    const imagePath = window.API_CONFIG ? window.API_CONFIG.resolveImageUrl(imageUrl) : imageUrl;
     const productName = product.TenSP || product.tensp || 'Sản phẩm';
     const price = parseFloat(product.DonGia || product.dongia || 0);
     const discount = parseFloat(product.PhanTramGiamGia || product.phantramgiamgia || 0);
@@ -464,7 +464,7 @@ const PersonalizedRecommendations = {
         ${hasDiscount ? `<div class="discount-badge">-${discount}%</div>` : ''}
         
         <div class="product-image">
-          <img src="${imagePath}" alt="${productName}" loading="lazy" onerror="this.src='img/product/default.jpg'">
+          <img src="${imagePath}" alt="${productName}" loading="lazy" onerror="this.src='img/product/default-book.jpg'">
         </div>
 
         <div class="product-info">
