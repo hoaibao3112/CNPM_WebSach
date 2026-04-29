@@ -27,20 +27,34 @@ class ProductController {
 
     async create(req, res) {
         try {
-            const productId = await ProductService.createProduct(req.body);
-            return baseController.sendSuccess(res, { productId }, 'Tạo sản phẩm thành công', 201);
+            const productData = { ...req.body };
+            
+            // Đồng bộ tên biến từ Route (ExtraImages -> extraImages)
+            if (req.body.ExtraImages) {
+                productData.extraImages = req.body.ExtraImages;
+            }
+
+            const productId = await ProductService.createProduct(productData);
+            return baseController.sendSuccess(res, { productId }, 'Thêm sản phẩm thành công', 201);
         } catch (error) {
-            return baseController.sendError(res, 'Lỗi khi tạo sản phẩm', 500, error.message);
+            return baseController.sendError(res, 'Lỗi khi thêm sản phẩm', 500, error.message);
         }
     }
 
     async update(req, res) {
         try {
             const { id } = req.params;
-            await ProductService.updateProduct(id, req.body);
+            const productData = { ...req.body };
+            
+            // Đồng bộ tên biến từ Route (ExtraImages -> extraImages)
+            if (req.body.ExtraImages) {
+                productData.extraImages = req.body.ExtraImages;
+            }
+
+            await ProductService.updateProduct(id, productData);
             return baseController.sendSuccess(res, null, 'Cập nhật sản phẩm thành công');
         } catch (error) {
-            return baseController.sendError(res, error.message, 400);
+            return baseController.sendError(res, 'Lỗi khi cập nhật sản phẩm', 500, error.message);
         }
     }
 
