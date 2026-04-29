@@ -26,7 +26,7 @@ api.interceptors.response.use(
             // Handle unauthorized (e.g., redirect to login)
             document.cookie = "authToken=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
             localStorage.removeItem('userInfo');
-            // window.location.href = '/admin/login'; 
+            window.location.href = '/admin/login'; // Chuyển về đúng trang đăng nhập admin
         }
         return Promise.reject(error);
     }
