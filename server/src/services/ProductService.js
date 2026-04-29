@@ -228,48 +228,93 @@ class ProductService {
     async createProduct(productData) {
         const {
             TenSP, DonGia, SoLuong, MoTa, HinhAnh, MaTL, MaNCC,
-            NamXB, MaTG, MinSoLuong, TrongLuong, KichThuoc, SoTrang, HinhThuc
+            NamXB, MaTG, MinSoLuong, TrongLuong, KichThuoc, SoTrang, HinhThuc,
+            extraImages // Thêm mảng ảnh bổ sung
         } = productData;
-        const [result] = await pool.query(
-            `INSERT INTO sanpham (
-                TenSP, DonGia, SoLuong, MoTa, HinhAnh, MaTL, MaNCC, 
-                NamXB, MaTG, MinSoLuong, TrongLuong, KichThuoc, SoTrang, HinhThuc, TinhTrang
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1)`,
-            [
-                TenSP, DonGia, SoLuong, MoTa, HinhAnh, MaTL, MaNCC,
-                NamXB, MaTG, MinSoLuong || 0, TrongLuong || null,
-                KichThuoc || null, SoTrang || null, HinhThuc || null
-            ]
-        );
-        return result.insertId;
+
+        const connection = await pool.getConnection();
+        await connection.beginTransaction();
+
+        try {
+            const [result] = await connection.query(
+                `INSERT INTO sanpham (
+                    TenSP, DonGia, SoLuong, MoTa, HinhAnh, MaTL, MaNCC, 
+                    NamXB, MaTG, MinSoLuong, TrongLuong, KichThuoc, SoTrang, HinhThuc, TinhTrang
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1)`,
+                [
+                    TenSP, DonGia, SoLuong, MoTa, HinhAnh, MaTL, MaNCC,
+                    NamXB, MaTG, MinSoLuong || 0, TrongLuong || null,
+                    KichThuoc || null, SoTrang || null, HinhThuc || null
+                ]
+            );
+            const productId = result.insertId;
+
+            // Xử lý ảnh bổ sung
+            if (extraImages && Array.isArray(extraImages) && extraImages.length > 0) {
+                const values = extraImages.map((img, index) => [productId, img, index]);
+                await connection.query('INSERT INTO sanpham_anh (MaSP, FileName, SortOrder) VALUES ?', [values]);
+            }
+
+            await connection.commit();
+            return productId;
+        } catch (error) {
+            await connection.rollback();
+            throw error;
+        } finally {
+            connection.release();
+        }
     }
 
     async updateProduct(id, productData) {
         const {
             TenSP, DonGia, SoLuong, MoTa, HinhAnh, MaTL, MaNCC,
-            NamXB, MaTG, MinSoLuong, TrongLuong, KichThuoc, SoTrang, HinhThuc, TinhTrang
+            NamXB, MaTG, MinSoLuong, TrongLuong, KichThuoc, SoTrang, HinhThuc, TinhTrang,
+            extraImages // Thêm mảng ảnh bổ sung
         } = productData;
 
-        let query = `UPDATE sanpham SET 
-            TenSP=?, DonGia=?, SoLuong=?, MoTa=?, MaTL=?, MaNCC=?, 
-            NamXB=?, MaTG=?, MinSoLuong=?, TrongLuong=?, KichThuoc=?, SoTrang=?, HinhThuc=?, TinhTrang=?`;
-        let params = [
-            TenSP, DonGia, SoLuong, MoTa, MaTL, MaNCC,
-            NamXB, MaTG, MinSoLuong, TrongLuong, KichThuoc, SoTrang, HinhThuc, TinhTrang
-        ];
+        const connection = await pool.getConnection();
+        await connection.beginTransaction();
 
-        // Only update HinhAnh if a valid value is provided
-        if (HinhAnh !== undefined && HinhAnh !== 'undefined' && HinhAnh !== 'null' && HinhAnh !== '50' && HinhAnh !== '') {
-            query += `, HinhAnh=?`;
-            params.push(HinhAnh);
+        try {
+            let query = `UPDATE sanpham SET 
+                TenSP=?, DonGia=?, SoLuong=?, MoTa=?, MaTL=?, MaNCC=?, 
+                NamXB=?, MaTG=?, MinSoLuong=?, TrongLuong=?, KichThuoc=?, SoTrang=?, HinhThuc=?, TinhTrang=?`;
+            let params = [
+                TenSP, DonGia, SoLuong, MoTa, MaTL, MaNCC,
+                NamXB, MaTG, MinSoLuong, TrongLuong, KichThuoc, SoTrang, HinhThuc, TinhTrang
+            ];
+
+            if (HinhAnh !== undefined && HinhAnh !== 'undefined' && HinhAnh !== 'null' && HinhAnh !== '50' && HinhAnh !== '') {
+                query += `, HinhAnh=?`;
+                params.push(HinhAnh);
+            }
+
+            query += ` WHERE MaSP=?`;
+            params.push(id);
+
+            const [result] = await connection.query(query, params);
+            if (result.affectedRows === 0) throw new Error('Sản phẩm không tồn tại');
+
+            // Xử lý ảnh bổ sung
+            if (extraImages && Array.isArray(extraImages)) {
+                // Xóa ảnh cũ
+                await connection.query('DELETE FROM sanpham_anh WHERE MaSP = ?', [id]);
+                
+                // Thêm ảnh mới
+                if (extraImages.length > 0) {
+                    const values = extraImages.map((img, index) => [id, img, index]);
+                    await connection.query('INSERT INTO sanpham_anh (MaSP, FileName, SortOrder) VALUES ?', [values]);
+                }
+            }
+
+            await connection.commit();
+            return true;
+        } catch (error) {
+            await connection.rollback();
+            throw error;
+        } finally {
+            connection.release();
         }
-
-        query += ` WHERE MaSP=?`;
-        params.push(id);
-
-        const [result] = await pool.query(query, params);
-        if (result.affectedRows === 0) throw new Error('Sản phẩm không tồn tại');
-        return true;
     }
 
     async deleteProduct(id) {
