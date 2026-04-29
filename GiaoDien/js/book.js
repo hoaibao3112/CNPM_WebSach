@@ -449,16 +449,32 @@ function createOrUpdateChip(group, label, value) {
 
   // wire remove
   chip.querySelector('.chip-remove').addEventListener('click', () => {
-    // reset corresponding filter group to 'Tất cả'
-    const container = document.getElementById(group);
-    if (container) {
-      container.querySelectorAll('.filter-btn').forEach(b => {
-        if (b.dataset.value === '') b.classList.add('active');
-        else b.classList.remove('active');
-      });
+    if (group === 'category') {
+      localStorage.removeItem(storageKeyForGroup('category'));
+      // Reset dropdown UI
+      const headerSpan = document.querySelector('#categoryDropdown .dropdown-header span');
+      if (headerSpan) headerSpan.textContent = 'Tất cả danh mục';
+      const container = document.getElementById("category-content");
+      if (container) {
+        container.querySelectorAll('.dropdown-item').forEach(i => i.classList.remove('active'));
+        const allItem = Array.from(container.querySelectorAll('.dropdown-item')).find(i => i.textContent.includes('Tất cả'));
+        if (allItem) allItem.classList.add('active');
+      }
+      // Xóa param trên URL
+      const newUrl = window.location.pathname;
+      window.history.replaceState({}, '', newUrl);
+    } else {
+      // reset corresponding filter group to 'Tất cả'
+      const container = document.getElementById(group);
+      if (container) {
+        container.querySelectorAll('.filter-btn').forEach(b => {
+          if (b.dataset.value === '' || b.dataset.id === '') b.classList.add('active');
+          else b.classList.remove('active');
+        });
+      }
+      clearStoredFilterForGroup(group);
     }
-    // clear stored value for this group
-    clearStoredFilterForGroup(group);
+    
     chip.remove();
     // trigger fetch with current active filters
     triggerFilterFetchFromUI();
@@ -491,13 +507,27 @@ function triggerFilterFetchFromUI() {
   });
 
   // update chips to reflect current active filters
-  groups.forEach(gid => {
-    const container = document.getElementById(gid);
-    if (!container) return;
-    const active = container.querySelector('.filter-btn.active');
-    const label = active ? (active.textContent || '').trim() : '';
-    const val = active ? (active.dataset.value || active.dataset.id || '') : '';
-    createOrUpdateChip(gid, label, val);
+  const allGroups = [...groups, 'category'];
+  allGroups.forEach(gid => {
+    let label = '';
+    let val = '';
+
+    if (gid === 'category') {
+      val = getStoredFilterValue('category') || '';
+      // Tìm nhãn từ sidebar dropdown hoặc dùng tên tạm
+      const activeItem = document.querySelector(`#category-content .dropdown-item.active span`);
+      label = activeItem ? activeItem.textContent.trim() : (val ? 'Danh mục' : '');
+    } else {
+      const container = document.getElementById(gid);
+      if (!container) return;
+      const active = container.querySelector('.filter-btn.active');
+      label = active ? (active.textContent || '').trim() : '';
+      val = active ? (active.dataset.value || active.dataset.id || '') : '';
+    }
+    
+    if (val && label) {
+      createOrUpdateChip(gid, label, val);
+    }
   });
 
   // perform fetch (use stored MaTL/category if present)
