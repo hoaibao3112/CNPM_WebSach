@@ -215,14 +215,17 @@ class AuthService {
    * Verify forgot-password OTP
    */
   async verifyForgotOTP(email, otp, token) {
-    await this.verifyOTP(email, otp, token, 'forgot-password');
+    const cleanEmail = email ? email.trim().toLowerCase() : '';
+    await this.verifyOTP(cleanEmail, otp, token, 'forgot-password');
 
     const resetToken = crypto.randomBytes(32).toString('hex');
-    const oneHourLater = new Date(Date.now() + 60 * 60 * 1000);
+    const twoHoursLater = new Date(Date.now() + 120 * 60 * 1000); // 2 tiếng cho chắc chắn
 
+    console.log(`[DEBUG RESET] Tạo Reset Token cho: ${cleanEmail}`);
+    
     await KhachHang.update(
-      { reset_token: resetToken, reset_token_expires: oneHourLater },
-      { where: { email } }
+      { reset_token: resetToken, reset_token_expires: twoHoursLater },
+      { where: { email: cleanEmail } }
     );
 
     return resetToken;
@@ -232,15 +235,24 @@ class AuthService {
    * Reset password
    */
   async resetPassword(email, matkhau, resetToken) {
+    const cleanEmail = email ? email.trim().toLowerCase() : '';
+    
+    console.log(`[DEBUG RESET] Đang reset mật khẩu cho: ${cleanEmail}`);
+    console.log(`[DEBUG RESET] Token nhận được: ${resetToken ? 'CÓ' : 'KHÔNG'}`);
+
     const user = await KhachHang.findOne({
       where: {
-        email,
+        email: cleanEmail,
         reset_token: resetToken,
         reset_token_expires: { [Op.gt]: new Date() }
       },
       attributes: ['makh']
     });
-    if (!user) throw new AppError('Reset token không hợp lệ hoặc đã hết hạn', 400);
+
+    if (!user) {
+      console.log(`[DEBUG RESET] Thất bại: Không tìm thấy user với token này hoặc đã hết hạn.`);
+      throw new AppError('Reset token không hợp lệ hoặc đã hết hạn. Vui lòng xác nhận OTP lại.', 400);
+    }
 
     const hashedPassword = await bcrypt.hash(matkhau, 10);
     await user.update({
@@ -248,6 +260,8 @@ class AuthService {
       reset_token: null,
       reset_token_expires: null
     });
+    
+    console.log(`[DEBUG RESET] Thành công rực rỡ!`);
     return true;
   }
 
