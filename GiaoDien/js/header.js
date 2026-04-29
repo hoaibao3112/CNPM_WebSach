@@ -72,7 +72,17 @@ function setupLogout() {
 }
 // Cập nhật số lượng giỏ hàng
 async function updateCartCount() {
-  const user = JSON.parse(localStorage.getItem('user') || localStorage.getItem('loggedInUser') || '{}');
+  let user = {};
+  try {
+    const rawUser = localStorage.getItem('user') || localStorage.getItem('loggedInUser');
+    if (rawUser && rawUser !== 'undefined' && rawUser !== 'null') {
+      user = JSON.parse(rawUser);
+    }
+  } catch (error) {
+    console.error('Lỗi parse user trong updateCartCount:', error);
+    user = {};
+  }
+  
   const cartCountEl = document.getElementById('cart-count');
   if (!cartCountEl) return;
 
