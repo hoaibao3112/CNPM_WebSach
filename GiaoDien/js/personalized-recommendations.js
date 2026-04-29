@@ -647,7 +647,7 @@ const PersonalizedRecommendations = {
       // Lấy thông tin sản phẩm
       const productName = product.TenSP || product.tensp || 'Sản phẩm';
       const price = product.DonGia || product.dongia || 0;
-      const image = product.HinhAnh || product.hinhanh || 'img/product/default.jpg';
+      const image = product.HinhAnh || product.hinhanh || 'img/product/default-book.jpg';
 
       console.log('📦 Product info:', { productId, productName, price, image });
 

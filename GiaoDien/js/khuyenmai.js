@@ -148,7 +148,7 @@ document.addEventListener('DOMContentLoaded', function() {
       // Thêm nội dung cơ bản vào thẻ khuyến mãi
       promotionCard.innerHTML = `
         <div class="promotion-image">
-          <img src="img/promotions/${promotion.MaKM}.jpg" alt="${promotion.TenKM}" onerror="this.src='img/promotions/default.jpg'">
+          <img src="img/promotions/${promotion.MaKM}.jpg" alt="${promotion.TenKM}" onerror="this.src='img/product/default-book.jpg'">
           ${isActive ? '<span class="active-badge">ĐANG ÁP DỤNG</span>' : ''}
         </div>
         <div class="promotion-content">

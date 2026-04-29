@@ -1124,7 +1124,7 @@ async function submitReturnRequest(order) {
         orderItemsElement.innerHTML = order.items.map(item => `
             <div class="flex items-center gap-6 p-6 border-b border-border last:border-b-0 group">
                 <div class="w-16 h-20 flex-shrink-0 bg-bg rounded-lg overflow-hidden border border-border group-hover:scale-105 transition-transform duration-500">
-                    <img src="img/product/${item.productImage}" alt="${item.productName}" class="w-full h-full object-cover" onerror="this.src='img/product/default.jpg'">
+                    <img src="${window.API_CONFIG.resolveImageUrl(item.productImage)}" alt="${item.productName}" class="w-full h-full object-cover" onerror="this.src='img/default-book.jpg'">
                 </div>
                 <div class="flex-1 min-w-0">
                     <h4 class="text-sm font-black text-text mb-1 truncate">${item.productName}</h4>

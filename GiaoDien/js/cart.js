@@ -1245,12 +1245,12 @@ function showProductSuggestionModal(data, promoCode) {
         <div class="suggested-products-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px; max-height: 400px; overflow-y: auto;">
           ${data.suggestedProducts.slice(0, 6).map(product => {
       // ✅ FIX: Xử lý đường dẫn ảnh - thêm onerror handler
-      const imgPath = product.HinhAnh || 'img/product/default.jpg';
+      const imgPath = product.HinhAnh || 'img/product/default-book.jpg';
       return `
             <div class="suggested-product-card" style="border: 1px solid #ddd; border-radius: 8px; padding: 10px; text-align: center; background: #fff;">
-              <img src="${imgPath}" 
+              <img src="${window.API_CONFIG.resolveImageUrl(imgPath)}" 
                    alt="${product.TenSP}" 
-                   onerror="this.src='img/product/default.jpg'" 
+                   onerror="this.src='img/product/default-book.jpg'" 
                    style="width: 100%; height: 150px; object-fit: cover; border-radius: 5px; margin-bottom: 10px;">
               <h4 style="font-size: 14px; margin: 5px 0; height: 40px; overflow: hidden;">${product.TenSP}</h4>
               <p class="product-price" style="color: #e74c3c; font-weight: bold; margin: 5px 0;">${formatPrice(product.DonGia)}</p>
@@ -1305,12 +1305,12 @@ function showProductSuggestionModal(data, promoCode) {
           <div class="suggested-products-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px; max-height: 400px; overflow-y: auto;">
             ${suggestions.availableProducts.slice(0, 6).map(product => {
         // ✅ FIX: Xử lý đường dẫn ảnh - thêm onerror handler
-        const imgPath = product.HinhAnh || 'img/product/default.jpg';
+        const imgPath = product.HinhAnh || 'img/product/default-book.jpg';
         return `
               <div class="suggested-product-card" style="border: 1px solid #ddd; border-radius: 8px; padding: 10px; text-align: center; background: #fff;">
-                <img src="${imgPath}" 
+                <img src="${window.API_CONFIG.resolveImageUrl(imgPath)}" 
                      alt="${product.TenSP}" 
-                     onerror="this.src='img/product/default.jpg'" 
+                     onerror="this.src='img/product/default-book.jpg'" 
                      style="width: 100%; height: 150px; object-fit: cover; border-radius: 5px; margin-bottom: 10px;">
                 <h4 style="font-size: 14px; margin: 5px 0; height: 40px; overflow: hidden;">${product.TenSP}</h4>
                 <p class="product-price" style="color: #e74c3c; font-weight: bold; margin: 5px 0;">${formatPrice(product.DonGia)}</p>
