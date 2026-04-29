@@ -2,6 +2,7 @@ import nodemailer from 'nodemailer';
 import fs from 'fs';
 import path from 'path';
 import axios from 'axios';
+import { OAuth2Client } from 'google-auth-library';
 
 const EMAIL_CONNECTION_TIMEOUT_MS = Number(process.env.EMAIL_CONNECTION_TIMEOUT_MS || 5000); // 5s cho Render đỡ lag
 const EMAIL_SOCKET_TIMEOUT_MS = Number(process.env.EMAIL_SOCKET_TIMEOUT_MS || 15000);
@@ -18,6 +19,42 @@ function hasSendGridConfig() {
 }
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+// Hàm gửi mail qua Gmail REST API (Bypass hoàn toàn SMTP)
+async function sendMailWithGmailREST(mailOptions) {
+  const { GOOGLE_MAIL_CLIENT_ID, GOOGLE_MAIL_CLIENT_SECRET, GOOGLE_MAIL_REFRESH_TOKEN, EMAIL_USER } = process.env;
+  
+  const oauth2Client = new OAuth2Client(GOOGLE_MAIL_CLIENT_ID, GOOGLE_MAIL_CLIENT_SECRET);
+  oauth2Client.setCredentials({ refresh_token: GOOGLE_MAIL_REFRESH_TOKEN });
+
+  const { token } = await oauth2Client.getAccessToken();
+
+  // Tạo nội dung mail theo chuẩn MIME
+  const utf8Subject = `=?utf-8?B?${Buffer.from(mailOptions.subject).toString('base64')}?=`;
+  const messageParts = [
+    `From: ${mailOptions.from}`,
+    `To: ${mailOptions.to}`,
+    `Content-Type: text/html; charset=utf-8`,
+    `MIME-Version: 1.0`,
+    `Subject: ${utf8Subject}`,
+    '',
+    mailOptions.html,
+  ];
+  const message = messageParts.join('\n');
+
+  // Mã hóa Base64URL
+  const encodedMessage = Buffer.from(message)
+    .toString('base64')
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_')
+    .replace(/=+$/, '');
+
+  await axios.post(
+    `https://gmail.googleapis.com/gmail/v1/users/me/messages/send`,
+    { raw: encodedMessage },
+    { headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' } }
+  );
+}
 
 function buildTransportConfig(port = 587) {
   const host = process.env.EMAIL_HOST || 'smtp.gmail.com';
@@ -211,15 +248,15 @@ export async function sendOTPEmail(email, otp) {
   let errors = [];
 
   // THỨ TỰ ƯU TIÊN GỬI:
-  // 1. Gmail OAuth2 (Cách mạnh nhất và nhanh nhất cho người dùng thật)
-  if (smtpConfigured && process.env.GOOGLE_MAIL_REFRESH_TOKEN) {
+  // 1. Gmail API (Dùng REST API qua cổng 443 - Chắc chắn nhất trên Render)
+  if (process.env.GOOGLE_MAIL_REFRESH_TOKEN) {
     try {
-      const smtpOptions = { ...mailOptions, from: `"${brandName}" <${process.env.EMAIL_USER}>` };
-      await sendMailWithRetry(smtpOptions);
-      console.log('✅ OTP gửi qua Gmail API (OAuth2) thành công');
+      const gmailOptions = { ...mailOptions, from: `"${brandName}" <${process.env.EMAIL_USER}>` };
+      await sendMailWithGmailREST(gmailOptions);
+      console.log('✅ OTP gửi qua Gmail API (REST) thành công');
       return true;
     } catch (e) {
-      errors.push(`Gmail OAuth2 lỗi: ${e.message}`);
+      errors.push(`Gmail API lỗi: ${e.message}`);
     }
   }
 
