@@ -49,20 +49,31 @@ async function handleLogin(e) {
         const data = await response.json();
 
         if (response.ok) {
-            // Lấy dữ liệu user và token (hỗ trợ cả trường hợp bị bọc trong data.data)
-            const userData = data.user || (data.data && data.data.user);
-            const userToken = data.token || (data.data && data.data.token);
+            console.log('Phản hồi đăng nhập:', data);
 
-            if (!userData) {
-                errorMessage.textContent = 'Không nhận được thông tin người dùng từ server';
+            // Lấy dữ liệu (hỗ trợ nhiều cấu trúc trả về của backend)
+            const resultData = data.data || data;
+            const userData = resultData.user;
+            const userToken = resultData.token || resultData.accessToken;
+
+            if (!userData || !userToken) {
+                console.error('Dữ liệu không đầy đủ:', { userData, userToken });
+                errorMessage.textContent = 'Lỗi hệ thống: Phản hồi từ server không hợp lệ';
                 return;
             }
 
-            // Lưu thông tin user và token
+            // XÓA SẠCH dữ liệu cũ để tránh lỗi SyntaxError "undefined"
+            localStorage.clear();
+            sessionStorage.clear();
+            document.cookie = "token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+
+            // Lưu thông tin MỚI
             localStorage.setItem('user', JSON.stringify(userData));
-            document.cookie = "token=" + (userToken) + "; path=/; max-age=" + (7*24*60*60);
-            localStorage.setItem('customerId', userData.makh); // Lưu ID khách hàng
+            localStorage.setItem('customerId', userData.makh);
+            document.cookie = `token=${userToken}; path=/; max-age=${7*24*60*60}`;
             
+            console.log('✅ Đăng nhập thành công, đã lưu Token:', userToken);
+
             // Cập nhật giao diện
             updateAccountDisplay(userData.tenkh);
             
