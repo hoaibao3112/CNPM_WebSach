@@ -953,23 +953,29 @@ async function renderCategoryToFil() {
   // Nếu có category trên URL, ưu tiên dùng nó và XÓA bộ lọc cũ để không bị kẹt
   if (urlCategoryName) {
     console.log('[CategoryFilter] Detecting from URL:', urlCategoryName);
-    // Reset bộ lọc cũ trước khi tìm cái mới
     currentCat = null; 
     
-    const matchedCat = categoryData.find(c => {
-      const dbName = c.TenTL.toLowerCase();
-      const urlName = urlCategoryName.toLowerCase();
-      return dbName.includes(urlName) || urlName.includes(dbName);
-    });
-    
-    if (matchedCat) {
-      console.log('[CategoryFilter] Matched:', matchedCat.TenTL, '(MaTL:', matchedCat.matl, ')');
-      currentCat = matchedCat.matl;
+    // Kiểm tra nếu urlCategoryName là MỘT SỐ (ID)
+    if (!isNaN(urlCategoryName) && urlCategoryName.trim() !== "") {
+      currentCat = urlCategoryName;
+      console.log('[CategoryFilter] Using ID directly:', currentCat);
       localStorage.setItem(storageKeyForGroup('category'), currentCat);
     } else {
-      console.warn('[CategoryFilter] No match found in API for:', urlCategoryName);
-      // Nếu không tìm thấy trong API, xóa luôn localStorage để không bị hiện sai
-      localStorage.removeItem(storageKeyForGroup('category'));
+      // Nếu là chữ, tiến hành tìm kiếm trong danh sách categoryData
+      const matchedCat = categoryData.find(c => {
+        const dbName = c.TenTL.toLowerCase();
+        const urlName = urlCategoryName.toLowerCase();
+        return dbName.includes(urlName) || urlName.includes(dbName);
+      });
+      
+      if (matchedCat) {
+        console.log('[CategoryFilter] Matched name:', matchedCat.TenTL, '(MaTL:', matchedCat.matl, ')');
+        currentCat = matchedCat.matl;
+        localStorage.setItem(storageKeyForGroup('category'), currentCat);
+      } else {
+        console.warn('[CategoryFilter] No match found in API for name:', urlCategoryName);
+        localStorage.removeItem(storageKeyForGroup('category'));
+      }
     }
   }
 

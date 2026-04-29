@@ -5,7 +5,7 @@ class ProductController {
     async getAll(req, res) {
         try {
             const filters = {
-                category: req.query.category,
+                category: req.query.category || req.query.MaTL,
                 search: req.query.search
             };
             const products = await ProductService.getAllProducts(filters);
