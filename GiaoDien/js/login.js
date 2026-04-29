@@ -218,9 +218,13 @@ async function handleVerifyOTP() {
             document.getElementById('step2').style.display = 'none';
             document.getElementById('step3').style.display = 'block';
             
-            // Lưu resetToken nếu có
-            if (data.resetToken) {
-                sessionStorage.setItem('resetToken', data.resetToken);
+            // Lấy resetToken (hỗ trợ cả trường hợp bị bọc trong data.data)
+            const tokenToSave = data.resetToken || (data.data && data.data.resetToken);
+            if (tokenToSave) {
+                sessionStorage.setItem('resetToken', tokenToSave);
+                console.log('✅ Đã lưu Reset Token mới');
+            } else {
+                console.error('❌ Không tìm thấy resetToken trong phản hồi từ server:', data);
             }
         } else {
             showMessage(messageElement, data.error || data.message || 'Mã OTP không đúng hoặc đã hết hạn', 'error');
