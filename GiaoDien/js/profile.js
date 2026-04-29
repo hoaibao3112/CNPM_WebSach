@@ -991,7 +991,7 @@ window.saveProductBeforeRedirect = (product) => {
   localStorage.setItem('currentProduct', JSON.stringify(product));
 };
 
-const formatPrice = (price) => new Intl.NumberFormat('vi-VN').format(price) + ' đ';
+// formatPrice is already defined in cart.js or config.js
 const showAlert = (message) => alert(message);
 
 
