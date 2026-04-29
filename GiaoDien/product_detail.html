@@ -346,21 +346,21 @@
 
                     <!-- Quantity & Call to Action -->
                     <div class="space-y-8 bg-white/50 p-8 rounded-[32px] border border-border/50">
-                        <div class="flex flex-wrap items-center gap-8">
-                            <div class="space-y-3">
+                        <div class="flex flex-col sm:flex-row items-start sm:items-center gap-8">
+                            <div class="space-y-3 w-full sm:w-auto">
                                 <label class="text-[11px] font-black text-text-light uppercase tracking-widest ml-1">Số lượng</label>
-                                <div class="flex items-center h-14 bg-white border border-border rounded-2xl p-1 shadow-sm overflow-hidden w-40">
+                                <div class="flex items-center h-14 bg-white border border-border rounded-2xl p-1 shadow-sm overflow-hidden w-full sm:w-40">
                                     <button id="qty-minus" class="w-12 h-full flex items-center justify-center text-text-light hover:text-primary transition-colors bg-gray-50/50 hover:bg-gray-100 rounded-xl"><i class="fas fa-minus text-xs"></i></button>
                                     <input type="number" id="qty-input" value="1" min="1" max="99" class="flex-1 text-center font-black text-text outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none bg-transparent">
                                     <button id="qty-plus" class="w-12 h-full flex items-center justify-center text-text-light hover:text-primary transition-colors bg-gray-50/50 hover:bg-gray-100 rounded-xl"><i class="fas fa-plus text-xs"></i></button>
                                 </div>
                             </div>
                             
-                            <div class="flex-1 flex gap-4 min-w-[300px]">
-                                <button id="add-to-cart" class="h-14 flex-1 bg-white border-2 border-primary text-primary hover:bg-primary hover:text-white px-6 rounded-2xl font-black text-sm tracking-widest transition-all active:scale-95 flex items-center justify-center gap-3 shadow-md group">
+                            <div class="flex-1 flex flex-row gap-4 w-full">
+                                <button id="add-to-cart" class="h-14 flex-1 bg-white border-2 border-primary text-primary hover:bg-primary hover:text-white px-4 md:px-6 rounded-2xl font-black text-[10px] md:text-sm tracking-widest transition-all active:scale-95 flex items-center justify-center gap-2 md:gap-3 shadow-md group">
                                     <i class="fas fa-shopping-cart group-hover:-translate-y-1 transition-transform"></i> THÊM GIỎ HÀNG
                                 </button>
-                                <button id="buy-now" class="h-14 flex-1 bg-primary border-2 border-primary text-white hover:bg-primary-dark hover:border-primary-dark px-6 rounded-2xl font-black text-sm tracking-widest transition-all active:scale-95 flex items-center justify-center gap-3 shadow-lg shadow-primary/20">
+                                <button id="buy-now" class="h-14 flex-1 bg-primary border-2 border-primary text-white hover:bg-primary-dark hover:border-primary-dark px-4 md:px-6 rounded-2xl font-black text-[10px] md:text-sm tracking-widest transition-all active:scale-95 flex items-center justify-center gap-2 md:gap-3 shadow-lg shadow-primary/20">
                                     MUA NGAY <i class="fas fa-arrow-right animate-pulse"></i>
                                 </button>
                             </div>

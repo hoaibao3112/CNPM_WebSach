@@ -145,11 +145,11 @@ def load_static_docs():
 
             lower_name = filename.lower()
             try:
-                if lower_name.endswith(".txt"):
+                if lower_name.endswith(".txt") or lower_name.endswith(".md"):
                     content = read_txt_file(filepath)
                     if content.strip():
                         docs.append(f"Nguồn: {filename}\n\n{content}")
-                        print(f"  ✅ Loaded TXT doc: {filename}")
+                        print(f"  ✅ Loaded {'TXT' if lower_name.endswith('.txt') else 'MD'} doc: {filename}")
                 elif lower_name.endswith(".pdf"):
                     content = read_pdf_file(filepath)
                     if content.strip():
