@@ -122,21 +122,28 @@ class AuthService {
    * Verify OTP
    */
   async verifyOTP(email, otp, token, type = 'register') {
-    const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000);
+    // Tăng thời gian hết hạn lên 15 phút để tránh lệch múi giờ trên Render
+    const fifteenMinutesAgo = new Date(Date.now() - 15 * 60 * 1000);
+
+    const whereClause = {
+      email,
+      otp,
+      type,
+      created_at: { [Op.gt]: fifteenMinutesAgo }
+    };
+
+    // Chỉ kiểm tra token nếu phía frontend có gửi lên
+    if (token) {
+      whereClause.token = token;
+    }
 
     const otpRecord = await OtpRequest.findOne({
-      where: {
-        email,
-        token,
-        otp,
-        type,
-        created_at: { [Op.gt]: tenMinutesAgo }
-      }
+      where: whereClause
     });
 
     if (!otpRecord) throw new AppError('OTP không hợp lệ hoặc đã hết hạn', 400);
 
-    await OtpRequest.destroy({ where: { email, token } });
+    await OtpRequest.destroy({ where: { email, otp, type } });
     return true;
   }
 
