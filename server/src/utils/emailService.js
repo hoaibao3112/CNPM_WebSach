@@ -211,10 +211,21 @@ export async function sendOTPEmail(email, otp) {
   let errors = [];
 
   // THỨ TỰ ƯU TIÊN GỬI:
-  // 1. Resend (Nhanh nhất và ít bị Gmail chặn nhất hiện nay)
+  // 1. Gmail OAuth2 (Cách mạnh nhất và nhanh nhất cho người dùng thật)
+  if (smtpConfigured && process.env.GOOGLE_MAIL_REFRESH_TOKEN) {
+    try {
+      const smtpOptions = { ...mailOptions, from: `"${brandName}" <${process.env.EMAIL_USER}>` };
+      await sendMailWithRetry(smtpOptions);
+      console.log('✅ OTP gửi qua Gmail API (OAuth2) thành công');
+      return true;
+    } catch (e) {
+      errors.push(`Gmail OAuth2 lỗi: ${e.message}`);
+    }
+  }
+
+  // 2. Resend 
   if (resendConfigured) {
     try {
-      // Dùng onboarding@resend.dev hoặc email đã verify trên Resend
       const resendOptions = { ...mailOptions, from: `"${brandName}" <onboarding@resend.dev>` };
       await sendMailWithResend(resendOptions);
       console.log('✅ OTP gửi qua Resend thành công');
@@ -224,7 +235,7 @@ export async function sendOTPEmail(email, otp) {
     }
   }
 
-  // 2. SendGrid (Dự phòng 1 - Hay bị Deferred trên Render)
+  // 3. SendGrid (Dự phòng)
   if (sendGridConfigured) {
     try {
       const sgOptions = { ...mailOptions, from: `"${brandName}" <${process.env.SENDGRID_FROM_EMAIL}>` };
@@ -233,18 +244,6 @@ export async function sendOTPEmail(email, otp) {
       return true;
     } catch (e) {
       errors.push(`SendGrid lỗi: ${e.message}`);
-    }
-  }
-
-  // 3. SMTP (Gmail) - Dự phòng
-  if (smtpConfigured) {
-    try {
-      const smtpOptions = { ...mailOptions, from: `"${brandName}" <${process.env.EMAIL_USER}>` };
-      await sendMailWithRetry(smtpOptions);
-      console.log('✅ OTP gửi qua SMTP (Gmail) thành công');
-      return true;
-    } catch (e) {
-      errors.push(`SMTP lỗi: ${e.message}`);
     }
   }
 
