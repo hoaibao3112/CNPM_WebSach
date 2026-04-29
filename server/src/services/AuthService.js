@@ -126,29 +126,43 @@ class AuthService {
   /**
    * Verify OTP
    */
+  /**
+   * Verify OTP
+   */
+  /**
+   * Verify OTP
+   */
   async verifyOTP(email, otp, token, type = 'register') {
-    // Tăng thời gian hết hạn lên 15 phút để tránh lệch múi giờ trên Render
-    const fifteenMinutesAgo = new Date(Date.now() - 15 * 60 * 1000);
+    const cleanEmail = email ? email.trim().toLowerCase() : '';
+    const cleanOtp = otp ? otp.toString().trim() : '';
+    
+    console.log(`[DEBUG OTP] Bắt đầu xác thực cho: ${cleanEmail}`);
+    console.log(`[DEBUG OTP] Mã nhập vào: "${cleanOtp}", Type: ${type}`);
 
-    const whereClause = {
-      email,
-      otp,
-      type,
-      created_at: { [Op.gt]: fifteenMinutesAgo }
-    };
-
-    // Chỉ kiểm tra token nếu phía frontend có gửi lên
-    if (token) {
-      whereClause.token = token;
-    }
-
-    const otpRecord = await OtpRequest.findOne({
-      where: whereClause
+    // Tìm bản ghi MỚI NHẤT của email này và type này
+    const latestRequest = await OtpRequest.findOne({
+      where: { email: cleanEmail, type: type },
+      order: [['created_at', 'DESC']]
     });
 
-    if (!otpRecord) throw new AppError('OTP không hợp lệ hoặc đã hết hạn', 400);
+    if (!latestRequest) {
+      console.log(`[DEBUG OTP] KHÔNG tìm thấy bất kỳ mã nào cho email này trong DB.`);
+      throw new AppError('Không tìm thấy yêu cầu xác thực. Vui lòng gửi lại mã.', 400);
+    }
 
-    await OtpRequest.destroy({ where: { email, otp, type } });
+    console.log(`[DEBUG OTP] Tìm thấy mã mới nhất trong DB: "${latestRequest.otp}"`);
+
+    // So sánh mã (không phân biệt hoa thường nếu là chuỗi)
+    if (latestRequest.otp.toString().trim() !== cleanOtp) {
+      console.log(`[DEBUG OTP] Xác thực THẤT BẠI: Mã nhập vào "${cleanOtp}" khác mã trong DB "${latestRequest.otp}"`);
+      throw new AppError('Mã OTP không chính xác', 400);
+    }
+
+    console.log(`[DEBUG OTP] Xác thực THÀNH CÔNG!`);
+    
+    // Xóa tất cả các yêu cầu OTP cũ của email này để bảo mật
+    await OtpRequest.destroy({ where: { email: cleanEmail, type: type } });
+    
     return true;
   }
 
