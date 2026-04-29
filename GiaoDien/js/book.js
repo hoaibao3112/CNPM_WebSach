@@ -952,13 +952,19 @@ async function renderCategoryToFil() {
 
   // Nếu có category trên URL, ưu tiên dùng nó
   if (urlCategoryName) {
-    const matchedCat = categoryData.find(c => 
-      c.TenTL.toLowerCase().includes(urlCategoryName.toLowerCase()) || 
-      urlCategoryName.toLowerCase().includes(c.TenTL.toLowerCase())
-    );
+    console.log('[CategoryFilter] Detecting from URL:', urlCategoryName);
+    const matchedCat = categoryData.find(c => {
+      const dbName = c.TenTL.toLowerCase();
+      const urlName = urlCategoryName.toLowerCase();
+      return dbName.includes(urlName) || urlName.includes(dbName);
+    });
+    
     if (matchedCat) {
+      console.log('[CategoryFilter] Matched:', matchedCat.TenTL, '(MaTL:', matchedCat.matl, ')');
       currentCat = matchedCat.matl;
       localStorage.setItem(storageKeyForGroup('category'), currentCat);
+    } else {
+      console.warn('[CategoryFilter] No match found for:', urlCategoryName);
     }
   }
 
@@ -1024,7 +1030,7 @@ async function renderCategoryToFil() {
     container.appendChild(a);
   });
 
-  // Nếu vừa mới chọn từ URL, chạy fetch ngay
+  // Nếu vừa mới chọn từ URL, chạy fetch ngay để đảm bảo không bị trễ
   if (urlCategoryName) {
     triggerFilterFetchFromUI();
   }
@@ -1483,9 +1489,7 @@ const removeKeyWordSearch = () => {
   const searchParams = new URLSearchParams(window.location.search);
   if (currentPath.endsWith("book.html") && (searchParams.has("search") || searchParams.has("category"))) {
     document.getElementById('name-products-list').textContent = "Danh Sách tìm kiếm";
-    if (performance.getEntriesByType("navigation")[0].type === "reload") {
-      window.location.href = "book.html";
-    }
+    // Đã xóa đoạn code tự động chuyển hướng (window.location.href = "book.html") khi reload
   }
 }
 
@@ -1668,6 +1672,16 @@ async function loadPromotionsFromAPI() {
 async function loadAllProductsToMain() {
   const mainContainer = document.getElementById('search-book-list');
   if (!mainContainer) return;
+  
+  // Kiểm tra nếu đang có bộ lọc hoặc tìm kiếm thì KHÔNG tải tất cả sản phẩm đè lên
+  const params = new URLSearchParams(window.location.search);
+  const hasFilter = params.has('category') || params.has('search') || localStorage.getItem('currentCategory') || localStorage.getItem('currentPriceRange');
+  
+  if (hasFilter) {
+    console.log('[loadAllProductsToMain] Filter active, skipping default load');
+    return;
+  }
+
   mainContainer.innerHTML = '<p>Đang tải tất cả sản phẩm...</p>';
 
   try {
