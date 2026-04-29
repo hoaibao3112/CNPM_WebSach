@@ -237,22 +237,26 @@ class AuthService {
   async resetPassword(email, matkhau, resetToken) {
     const cleanEmail = email ? email.trim().toLowerCase() : '';
     
-    console.log(`[DEBUG RESET] Đang reset mật khẩu cho: ${cleanEmail}`);
-    console.log(`[DEBUG RESET] Token nhận được: ${resetToken ? 'CÓ' : 'KHÔNG'}`);
+    console.log(`[DEBUG RESET] Bắt đầu Reset cho: ${cleanEmail}`);
+    console.log(`[DEBUG RESET] Token nhận được: "${resetToken}"`);
 
+    // Tạm thời bỏ qua reset_token_expires để loại trừ lỗi múi giờ
     const user = await KhachHang.findOne({
       where: {
         email: cleanEmail,
-        reset_token: resetToken,
-        reset_token_expires: { [Op.gt]: new Date() }
+        reset_token: resetToken
       },
       attributes: ['makh']
     });
 
     if (!user) {
-      console.log(`[DEBUG RESET] Thất bại: Không tìm thấy user với token này hoặc đã hết hạn.`);
+      // Nếu không tìm thấy, thử tìm chỉ bằng email để xem token trong DB là gì
+      const anyUser = await KhachHang.findOne({ where: { email: cleanEmail }, attributes: ['reset_token'] });
+      console.log(`[DEBUG RESET] THẤT BẠI. Token trong DB đang là: "${anyUser ? anyUser.reset_token : 'N/A'}"`);
       throw new AppError('Reset token không hợp lệ hoặc đã hết hạn. Vui lòng xác nhận OTP lại.', 400);
     }
+
+    console.log(`[DEBUG RESET] Tìm thấy user! Đang tiến hành đổi mật khẩu...`);
 
     const hashedPassword = await bcrypt.hash(matkhau, 10);
     await user.update({
@@ -261,7 +265,7 @@ class AuthService {
       reset_token_expires: null
     });
     
-    console.log(`[DEBUG RESET] Thành công rực rỡ!`);
+    console.log(`[DEBUG RESET] Đổi mật khẩu THÀNH CÔNG!`);
     return true;
   }
 
