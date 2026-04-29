@@ -194,8 +194,20 @@ export async function sendOTPEmail(email, otp) {
 
   let errors = [];
 
-  // THỨ TỰ ƯU TIÊN GỬI:
-  // 1. SendGrid (Cứu cánh - Luôn chạy đầu tiên vì đã Verify chính chủ)
+  // THỨ TỰ ƯU TIÊN GỬI (Đã điều chỉnh: Ưu tiên SMTP cho môi trường dev/test)
+  // 1. SMTP (Trực tiếp qua Gmail - Thường ổn định nhất nếu đã có App Pass)
+  if (smtpConfigured) {
+    try {
+      const smtpOptions = { ...mailOptions, from: `"${brandName} Security" <${process.env.EMAIL_USER}>` };
+      await sendMailWithRetry(smtpOptions);
+      console.log('✅ OTP gửi qua SMTP (Gmail) thành công');
+      return true;
+    } catch (e) {
+      errors.push(`SMTP lỗi: ${e.message}`);
+    }
+  }
+
+  // 2. SendGrid (Dự phòng 1)
   if (sendGridConfigured) {
     try {
       const info = await sendMailWithSendGrid(mailOptions);
@@ -206,7 +218,7 @@ export async function sendOTPEmail(email, otp) {
     }
   }
 
-  // 2. Resend (Nhanh - Dùng cho các email chính chủ)
+  // 3. Resend (Dự phòng 2)
   if (resendConfigured) {
     try {
       const info = await sendMailWithResend(mailOptions);
@@ -214,17 +226,6 @@ export async function sendOTPEmail(email, otp) {
       return true;
     } catch (e) {
       errors.push(`Resend lỗi: ${e?.response?.data?.message || e.message}`);
-    }
-  }
-
-  // 3. SMTP (Dự phòng cuối cùng)
-  if (smtpConfigured) {
-    try {
-      const info = await sendMailWithRetry(mailOptions);
-      console.log('✅ OTP gửi qua SMTP thành công');
-      return true;
-    } catch (e) {
-      errors.push(`SMTP lỗi: ${e.message}`);
     }
   }
 
