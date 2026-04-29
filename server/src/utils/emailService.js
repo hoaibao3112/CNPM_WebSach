@@ -203,36 +203,40 @@ export async function sendOTPEmail(email, otp) {
   let errors = [];
 
   // THỨ TỰ ƯU TIÊN GỬI:
-  // 1. SMTP (Gmail) - Vì thực tế ảnh Spam cho thấy cái này đang chạy được
+  // 1. SendGrid (Bạn chọn dùng cái này)
+  if (sendGridConfigured) {
+    try {
+      // Dùng đúng email đã verify trên SendGrid
+      const sgOptions = { ...mailOptions, from: `"${brandName}" <${process.env.SENDGRID_FROM_EMAIL}>` };
+      await sendMailWithSendGrid(sgOptions);
+      console.log('✅ OTP gửi qua SendGrid thành công');
+      return true;
+    } catch (e) {
+      errors.push(`SendGrid lỗi: ${e.message}`);
+    }
+  }
+
+  // 2. Resend 
+  if (resendConfigured) {
+    try {
+      const resendOptions = { ...mailOptions, from: 'onboarding@resend.dev' };
+      await sendMailWithResend(resendOptions);
+      console.log('✅ OTP gửi qua Resend (Onboarding) thành công');
+      return true;
+    } catch (e) {
+      errors.push(`Resend lỗi: ${e.message}`);
+    }
+  }
+
+  // 3. SMTP (Gmail) - Dự phòng
   if (smtpConfigured) {
     try {
-      await sendMailWithRetry(mailOptions);
+      const smtpOptions = { ...mailOptions, from: `"${brandName}" <${process.env.EMAIL_USER}>` };
+      await sendMailWithRetry(smtpOptions);
       console.log('✅ OTP gửi qua SMTP (Gmail) thành công');
       return true;
     } catch (e) {
       errors.push(`SMTP lỗi: ${e.message}`);
-    }
-  }
-
-  // 2. SendGrid (Dự phòng 1)
-  if (sendGridConfigured) {
-    try {
-      const info = await sendMailWithSendGrid(mailOptions);
-      console.log('✅ OTP gửi qua SendGrid thành công');
-      return true;
-    } catch (e) {
-      errors.push(`SendGrid lỗi: ${e?.response?.data?.message || e.message}`);
-    }
-  }
-
-  // 3. Resend (Dự phòng 2)
-  if (resendConfigured) {
-    try {
-      const info = await sendMailWithResend(mailOptions);
-      console.log('✅ OTP gửi qua Resend thành công');
-      return true;
-    } catch (e) {
-      errors.push(`Resend lỗi: ${e?.response?.data?.message || e.message}`);
     }
   }
 
