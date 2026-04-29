@@ -36,8 +36,10 @@ function buildTransportConfig(portOverride) {
     connectionTimeout: EMAIL_CONNECTION_TIMEOUT_MS,
     greetingTimeout: EMAIL_CONNECTION_TIMEOUT_MS,
     socketTimeout: EMAIL_SOCKET_TIMEOUT_MS,
+    family: 4, // Ép dùng IPv4 để tránh lỗi ENETUNREACH trên Render
     tls: {
-      rejectUnauthorized: false
+      rejectUnauthorized: false,
+      minVersion: 'TLSv1.2'
     }
   };
 }
@@ -186,20 +188,25 @@ export async function sendOTPEmail(email, otp) {
     </div>
   `;
   const mailOptions = {
-    from: `"${brandName} Security" <${process.env.SENDGRID_FROM_EMAIL}>`,
+    from: `"${brandName}" <${process.env.EMAIL_USER}>`,
     to: email,
     subject: `🔐 ${otp} là mã xác thực tài khoản ${brandName} của bạn`,
     html: htmlContent
   };
 
+  // LOG MÃ OTP RA CONSOLE ĐỂ TEST KHI EMAIL CHẬM
+  console.log('-----------------------------------------');
+  console.log(`🔑 MÃ OTP CỦA BẠN LÀ: ${otp}`);
+  console.log(`📧 GỬI ĐẾN: ${email}`);
+  console.log('-----------------------------------------');
+
   let errors = [];
 
-  // THỨ TỰ ƯU TIÊN GỬI (Đã điều chỉnh: Ưu tiên SMTP cho môi trường dev/test)
-  // 1. SMTP (Trực tiếp qua Gmail - Thường ổn định nhất nếu đã có App Pass)
+  // THỨ TỰ ƯU TIÊN GỬI:
+  // 1. SMTP (Gmail) - Vì thực tế ảnh Spam cho thấy cái này đang chạy được
   if (smtpConfigured) {
     try {
-      const smtpOptions = { ...mailOptions, from: `"${brandName} Security" <${process.env.EMAIL_USER}>` };
-      await sendMailWithRetry(smtpOptions);
+      await sendMailWithRetry(mailOptions);
       console.log('✅ OTP gửi qua SMTP (Gmail) thành công');
       return true;
     } catch (e) {
