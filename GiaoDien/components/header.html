@@ -45,82 +45,83 @@
             <!-- Nav Links -->
             <ul class="top-links flex items-center gap-1 sm:gap-4 list-none m-0 p-0 shrink-0">
                 <!-- Danh mục với Mega Menu -->
-                <li class="relative group hidden sm:block">
+                <li class="relative group">
                     <a href="#" class="h-9 md:h-10 px-2 md:px-4 flex items-center gap-2 text-[10px] md:text-xs font-bold text-white/80 hover:text-white hover:bg-white/10 rounded-lg md:rounded-xl transition-all">
-                        <i class="fas fa-th-large"></i> <span>Danh mục</span>
+                        <i class="fas fa-th-large"></i> <span class="hidden xs:inline">Danh mục</span>
                     </a>
                     
-                    <!-- Mega Menu Dropdown -->
-                    <div class="absolute top-full left-0 w-[600px] mt-2 bg-white shadow-2xl rounded-[24px] border border-border opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-[10001] p-6 translate-y-2 group-hover:translate-y-0">
-                        <div class="grid grid-cols-2 gap-6">
+                    <!-- Mega Menu Dropdown - Căn chỉnh lại để không bị che -->
+                    <div class="absolute top-full right-0 w-[95vw] sm:w-[600px] mt-2 bg-white shadow-2xl rounded-[24px] border border-border opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-[10001] p-4 md:p-6 translate-y-2 group-hover:translate-y-0">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
                             <!-- Cột 1: Thể loại phổ biến -->
-                            <div class="space-y-4">
-                                <h4 class="text-[10px] font-black text-primary uppercase tracking-[0.2em] mb-2 px-2">Thể loại phổ biến</h4>
+                            <div class="space-y-3 md:space-y-4">
+                                <h4 class="text-[9px] md:text-[10px] font-black text-primary uppercase tracking-[0.2em] mb-2 px-2">Thể loại phổ biến</h4>
                                 <div class="grid grid-cols-1 gap-1">
-                                    <a href="book.html?category=Văn học" class="flex items-center gap-4 p-3 rounded-2xl hover:bg-primary/5 transition-all group/item">
-                                        <div class="w-10 h-10 rounded-xl bg-orange-50 flex items-center justify-center text-orange-500 group-hover/item:scale-110 transition-transform">
+                                    <a href="book.html?category=Văn học" class="flex items-center gap-3 md:gap-4 p-2 md:p-3 rounded-2xl hover:bg-primary/5 transition-all group/item">
+                                        <div class="w-8 h-8 md:w-10 md:h-10 rounded-xl bg-orange-50 flex items-center justify-center text-orange-500 group-hover/item:scale-110 transition-transform text-sm md:text-base">
                                             <i class="fas fa-book-open"></i>
                                         </div>
                                         <div>
-                                            <p class="text-xs font-bold text-text">Văn học Việt Nam</p>
-                                            <p class="text-[10px] text-text-light">Tiểu thuyết, truyện ngắn...</p>
+                                            <p class="text-[11px] md:text-xs font-bold text-text">Văn học Việt Nam</p>
+                                            <p class="text-[9px] md:text-[10px] text-text-light">Tiểu thuyết, truyện ngắn...</p>
                                         </div>
                                     </a>
-                                    <a href="book.html?category=Kinh tế" class="flex items-center gap-4 p-3 rounded-2xl hover:bg-primary/5 transition-all group/item">
-                                        <div class="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center text-blue-500 group-hover/item:scale-110 transition-transform">
+                                    <a href="book.html?category=Kinh tế" class="flex items-center gap-3 md:gap-4 p-2 md:p-3 rounded-2xl hover:bg-primary/5 transition-all group/item">
+                                        <div class="w-8 h-8 md:w-10 md:h-10 rounded-xl bg-blue-50 flex items-center justify-center text-blue-500 group-hover/item:scale-110 transition-transform text-sm md:text-base">
                                             <i class="fas fa-chart-line"></i>
                                         </div>
                                         <div>
-                                            <p class="text-xs font-bold text-text">Kinh tế - Tài chính</p>
-                                            <p class="text-[10px] text-text-light">Quản trị, đầu tư, làm giàu...</p>
+                                            <p class="text-[11px] md:text-xs font-bold text-text">Kinh tế - Tài chính</p>
+                                            <p class="text-[9px] md:text-[10px] text-text-light">Quản trị, đầu tư...</p>
                                         </div>
                                     </a>
-                                    <a href="book.html?category=Thiếu nhi" class="flex items-center gap-4 p-3 rounded-2xl hover:bg-primary/5 transition-all group/item">
-                                        <div class="w-10 h-10 rounded-xl bg-purple-50 flex items-center justify-center text-purple-500 group-hover/item:scale-110 transition-transform">
+                                    <a href="book.html?category=Thiếu nhi" class="flex items-center gap-3 md:gap-4 p-2 md:p-3 rounded-2xl hover:bg-primary/5 transition-all group/item">
+                                        <div class="w-8 h-8 md:w-10 md:h-10 rounded-xl bg-purple-50 flex items-center justify-center text-purple-500 group-hover/item:scale-110 transition-transform text-sm md:text-base">
                                             <i class="fas fa-child"></i>
                                         </div>
                                         <div>
-                                            <p class="text-xs font-bold text-text">Sách Thiếu nhi</p>
-                                            <p class="text-[10px] text-text-light">Truyện tranh, cổ tích...</p>
+                                            <p class="text-[11px] md:text-xs font-bold text-text">Sách Thiếu nhi</p>
+                                            <p class="text-[9px] md:text-[10px] text-text-light">Truyện tranh, cổ tích...</p>
                                         </div>
                                     </a>
                                 </div>
                             </div>
 
                             <!-- Cột 2: Sách kỹ năng & Ngoại ngữ -->
-                            <div class="space-y-4">
-                                <h4 class="text-[10px] font-black text-primary uppercase tracking-[0.2em] mb-2 px-2">Kỹ năng & Đời sống</h4>
+                            <div class="space-y-3 md:space-y-4">
+                                <h4 class="text-[9px] md:text-[10px] font-black text-primary uppercase tracking-[0.2em] mb-2 px-2">Kỹ năng & Đời sống</h4>
                                 <div class="grid grid-cols-1 gap-1">
-                                    <a href="book.html?category=Kỹ năng" class="flex items-center gap-4 p-3 rounded-2xl hover:bg-primary/5 transition-all group/item">
-                                        <div class="w-10 h-10 rounded-xl bg-green-50 flex items-center justify-center text-green-500 group-hover/item:scale-110 transition-transform">
+                                    <a href="book.html?category=Kỹ năng" class="flex items-center gap-3 md:gap-4 p-2 md:p-3 rounded-2xl hover:bg-primary/5 transition-all group/item">
+                                        <div class="w-8 h-8 md:w-10 md:h-10 rounded-xl bg-green-50 flex items-center justify-center text-green-500 group-hover/item:scale-110 transition-transform text-sm md:text-base">
                                             <i class="fas fa-lightbulb"></i>
                                         </div>
                                         <div>
-                                            <p class="text-xs font-bold text-text">Kỹ năng sống</p>
-                                            <p class="text-[10px] text-text-light">Phát triển bản thân, tư duy...</p>
+                                            <p class="text-[11px] md:text-xs font-bold text-text">Kỹ năng sống</p>
+                                            <p class="text-[9px] md:text-[10px] text-text-light">Phát triển bản thân...</p>
                                         </div>
                                     </a>
-                                    <a href="book.html?category=Ngoại ngữ" class="flex items-center gap-4 p-3 rounded-2xl hover:bg-primary/5 transition-all group/item">
-                                        <div class="w-10 h-10 rounded-xl bg-red-50 flex items-center justify-center text-red-500 group-hover/item:scale-110 transition-transform">
+                                    <a href="book.html?category=Ngoại ngữ" class="flex items-center gap-3 md:gap-4 p-2 md:p-3 rounded-2xl hover:bg-primary/5 transition-all group/item">
+                                        <div class="w-8 h-8 md:w-10 md:h-10 rounded-xl bg-red-50 flex items-center justify-center text-red-500 group-hover/item:scale-110 transition-transform text-sm md:text-base">
                                             <i class="fas fa-language"></i>
                                         </div>
                                         <div>
-                                            <p class="text-xs font-bold text-text">Học Ngoại ngữ</p>
-                                            <p class="text-[10px] text-text-light">Tiếng Anh, Nhật, Hàn...</p>
+                                            <p class="text-[11px] md:text-xs font-bold text-text">Học Ngoại ngữ</p>
+                                            <p class="text-[9px] md:text-[10px] text-text-light">Tiếng Anh, Nhật, Hàn...</p>
                                         </div>
                                     </a>
-                                    <div class="p-4 mt-2 bg-gradient-to-br from-primary to-primary-dark rounded-[20px] text-white overflow-hidden relative group/banner">
+                                    <div class="p-3 md:p-4 mt-2 bg-gradient-to-br from-primary to-primary-dark rounded-[20px] text-white overflow-hidden relative group/banner">
                                         <div class="relative z-10">
-                                            <p class="text-[9px] font-black uppercase tracking-widest opacity-80">Ưu đãi tuần này</p>
-                                            <p class="text-xs font-bold mb-2">Giảm 50% sách mới</p>
-                                            <a href="book.html" class="text-[9px] font-black uppercase bg-white text-primary px-3 py-1.5 rounded-lg inline-block">Xem ngay</a>
+                                            <p class="text-[8px] md:text-[9px] font-black uppercase tracking-widest opacity-80">Ưu đãi</p>
+                                            <p class="text-[10px] md:text-xs font-bold mb-2">Giảm 50% sách mới</p>
+                                            <a href="book.html" class="text-[8px] md:text-[9px] font-black uppercase bg-white text-primary px-3 py-1.5 rounded-lg inline-block hover:scale-105 transition-transform">Xem ngay</a>
                                         </div>
-                                        <i class="fas fa-fire absolute -right-2 -bottom-2 text-5xl opacity-20 group-hover/banner:scale-125 transition-transform"></i>
+                                        <i class="fas fa-fire absolute -right-2 -bottom-2 text-4xl md:text-5xl opacity-20 group-hover/banner:scale-125 transition-transform"></i>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
+                </li>
                 </li>
 
                 <!-- Account -->
