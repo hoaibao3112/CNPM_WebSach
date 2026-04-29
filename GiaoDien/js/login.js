@@ -49,13 +49,22 @@ async function handleLogin(e) {
         const data = await response.json();
 
         if (response.ok) {
+            // Lấy dữ liệu user và token (hỗ trợ cả trường hợp bị bọc trong data.data)
+            const userData = data.user || (data.data && data.data.user);
+            const userToken = data.token || (data.data && data.data.token);
+
+            if (!userData) {
+                errorMessage.textContent = 'Không nhận được thông tin người dùng từ server';
+                return;
+            }
+
             // Lưu thông tin user và token
-            localStorage.setItem('user', JSON.stringify(data.user));
-            document.cookie = "token=" + (data.token) + "; path=/; max-age=" + (7*24*60*60);
-            localStorage.setItem('customerId', data.user.makh); // Lưu ID khách hàng
+            localStorage.setItem('user', JSON.stringify(userData));
+            document.cookie = "token=" + (userToken) + "; path=/; max-age=" + (7*24*60*60);
+            localStorage.setItem('customerId', userData.makh); // Lưu ID khách hàng
             
             // Cập nhật giao diện
-            updateAccountDisplay(data.user.tenkh);
+            updateAccountDisplay(userData.tenkh);
             
             // Đồng bộ giỏ hàng khách sang giỏ hàng tài khoản (nếu có cart.js)
             if (typeof syncLocalCartToServer === 'function') {
