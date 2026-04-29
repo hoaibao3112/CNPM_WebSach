@@ -405,7 +405,10 @@ async function renderOrders(customerId, statusFilter = 'all') {
     const loadingModal = document.getElementById('loading-modal');
 
     // Hiển thị loading
-    if (loadingModal) loadingModal.style.display = 'block';
+    if (loadingModal) {
+        loadingModal.classList.add('active');
+        loadingModal.style.display = 'flex';
+    }
     if (orderListElement) orderListElement.innerHTML = '';
 
     try {
@@ -609,7 +612,10 @@ async function renderOrders(customerId, statusFilter = 'all') {
             </div>
         `;
     } finally {
-        if (loadingModal) loadingModal.style.display = 'none';
+        if (loadingModal) {
+            loadingModal.classList.remove('active');
+            loadingModal.style.display = 'none';
+        }
     }
 }
 
@@ -639,7 +645,8 @@ function openReviewModal(orderId) {
     document.getElementById('review-order-id').textContent = `#${orderId}`;
     document.getElementById('review-rating').value = '5';
     document.getElementById('review-comment').value = '';
-    modal.style.display = 'block';
+    modal.classList.add('active');
+    modal.style.display = 'flex';
 
     // Initialize star widget and show default stars immediately
     try {
@@ -728,8 +735,10 @@ function markReviewed(orderId) {
 async function reorderOrder(orderId) {
     if (!checkAuth()) return;
 
-    const loadingModal = document.getElementById('loading-modal');
-    if (loadingModal) loadingModal.style.display = 'block';
+    if (loadingModal) {
+        loadingModal.classList.add('active');
+        loadingModal.style.display = 'flex';
+    }
 
     // First: try to fetch order detail so we can persist address reliably
     let orderDataForAddress = null;
@@ -956,9 +965,22 @@ async function submitReturnRequest(order) {
     document.getElementById('order-status').textContent = status.text;
     document.getElementById('order-status').className = `order-status-badge ${status.class}`;
     document.getElementById('order-date').textContent = formatDateTime(order.createdAt);
-    document.getElementById('order-total').textContent = formatPrice(order.totalAmount);
+    document.getElementById('order-total').textContent = formatPrice(order.totalAmount || order.TongTien || 0);
     document.getElementById('payment-method').textContent = getPaymentMethodName(order.paymentMethod);
     document.getElementById('payment-status').textContent = order.paymentStatus || 'Chưa thanh toán';
+
+    // Cập nhật ghi chú
+    const notesDetail = document.getElementById('order-notes-detail');
+    const notesContainer = document.getElementById('order-notes-container');
+    const notes = order.notes || order.GhiChu;
+    if (notesDetail && notesContainer) {
+        if (notes) {
+            notesDetail.textContent = notes;
+            notesContainer.classList.remove('hidden');
+        } else {
+            notesContainer.classList.add('hidden');
+        }
+    }
 
     // Cập nhật thông tin giao hàng
     document.getElementById('receiver-name').textContent = order.recipientName || order.customerName || (order.customer && order.customer.name) || 'N/A';
@@ -1894,7 +1916,7 @@ async function showCancelModalAsync() {
             } catch (e) {
                 console.error('Error showing refund modal:', e);
                 // fallback: if refund modal exists, at least display it
-                if (refundModal) refundModal.style.display = 'block';
+                if (refundModal) refundModal.style.display = 'flex';
             }
         } else {
             // Chưa nhận tiền -> Hiển thị modal hủy bình thường
@@ -1910,7 +1932,7 @@ async function showCancelModalAsync() {
 function showNormalCancelModal() {
     const modal = document.getElementById('cancel-order-modal');
     if (modal) {
-        modal.style.display = 'block';
+        modal.style.display = 'flex';
         document.getElementById('cancel-reason').value = '';
 
         // Gắn event listeners cho modal COD
@@ -1922,8 +1944,7 @@ function showNormalCancelModal() {
 // ✅ MODAL THÀNH CÔNG CHO VNPAY
 function showVNPayCancelSuccessModal(data) {
     const modal = document.createElement('div');
-    modal.className = 'modal';
-    modal.style.display = 'block';
+    modal.className = 'modal active';
     modal.innerHTML = `
         <div class="modal-content" style="max-width: 600px;">
             <div class="success-header" style="background: linear-gradient(135deg, #28a745, #20c997); color: white; padding: 25px; text-align: center; border-radius: 8px 8px 0 0;">
@@ -1991,8 +2012,7 @@ function showVNPayCancelSuccessModal(data) {
 // ✅ MODAL THÀNH CÔNG CHO COD
 function showNormalCancelSuccessModal(data) {
     const modal = document.createElement('div');
-    modal.className = 'modal';
-    modal.style.display = 'block';
+    modal.className = 'modal active';
     modal.innerHTML = `
         <div class="modal-content" style="max-width: 500px; text-align: center;">
             <div class="success-header" style="background: linear-gradient(135deg, #28a745, #20c997); color: white; padding: 25px; border-radius: 8px 8px 0 0;">

@@ -62,6 +62,11 @@
             align-items: center;
             justify-content: center;
             padding: 20px;
+            /* Ensure centering works */
+            flex-direction: column;
+        }
+        .modal.active {
+            display: flex;
         }
 
         .modal-content {
@@ -213,6 +218,10 @@
                                     <span class="text-text-light text-sm font-medium">Tổng tiền:</span>
                                     <span id="order-total"
                                         class="font-black text-primary text-3xl tracking-tighter"></span>
+                                </div>
+                                <div id="order-notes-container" class="pt-4 border-t border-border space-y-1 hidden">
+                                    <span class="text-text-light text-[9px] font-black uppercase tracking-widest">Ghi chú:</span>
+                                    <p id="order-notes-detail" class="text-xs text-text-muted italic leading-relaxed"></p>
                                 </div>
                             </div>
                         </div>
