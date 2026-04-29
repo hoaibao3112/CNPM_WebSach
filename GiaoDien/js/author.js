@@ -141,7 +141,7 @@ async function showAuthorModal(author) {
   document.getElementById('modal-author-nationality').textContent = fullAuthor.QuocTich || 'Không rõ';
   document.getElementById('modal-author-bio').textContent = fullAuthor.TieuSu || 'Không có tiểu sử';
 
-  modal.style.display = 'block';
+  modal.style.display = 'flex';
 
   // Target the modal's specific books container by ID to avoid selecting an unintended `.books` elsewhere
   const booksContainer = document.getElementById('modal-author-products');
