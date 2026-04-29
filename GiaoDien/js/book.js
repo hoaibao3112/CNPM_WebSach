@@ -945,7 +945,22 @@ async function renderCategoryToFil() {
   const container = document.getElementById("category-content");
   if(!container || !categoryData) return;
 
-  const currentCat = getStoredFilterValue('category');
+  const urlParams = new URLSearchParams(window.location.search);
+  const urlCategoryName = urlParams.get('category');
+  
+  let currentCat = getStoredFilterValue('category');
+
+  // Nếu có category trên URL, ưu tiên dùng nó
+  if (urlCategoryName) {
+    const matchedCat = categoryData.find(c => 
+      c.TenTL.toLowerCase().includes(urlCategoryName.toLowerCase()) || 
+      urlCategoryName.toLowerCase().includes(c.TenTL.toLowerCase())
+    );
+    if (matchedCat) {
+      currentCat = matchedCat.matl;
+      localStorage.setItem(storageKeyForGroup('category'), currentCat);
+    }
+  }
 
   // Clear existing content except for maybe a "Tất cả" option if desired
   container.innerHTML = '';
@@ -957,6 +972,9 @@ async function renderCategoryToFil() {
   allA.onclick = (e) => {
     e.preventDefault();
     localStorage.removeItem(storageKeyForGroup('category'));
+    // Xóa param trên URL khi chọn "Tất cả"
+    const newUrl = window.location.pathname;
+    window.history.replaceState({}, '', newUrl);
     triggerFilterFetchFromUI();
     document.querySelector('#categoryDropdown .dropdown-header span').textContent = 'Tất cả danh mục';
     document.getElementById('categoryDropdown').classList.remove('dropdown-active');
@@ -979,6 +997,10 @@ async function renderCategoryToFil() {
       e.preventDefault();
       // Use triggerFilterFetchFromUI by updating localStorage
       localStorage.setItem(storageKeyForGroup('category'), cat.matl);
+      // Cập nhật URL để đồng bộ
+      const newUrl = `${window.location.pathname}?category=${encodeURIComponent(cat.TenTL)}`;
+      window.history.replaceState({}, '', newUrl);
+      
       triggerFilterFetchFromUI();
       
       // Update UI
@@ -994,6 +1016,11 @@ async function renderCategoryToFil() {
     };
     container.appendChild(a);
   });
+
+  // Nếu vừa mới chọn từ URL, chạy fetch ngay
+  if (urlCategoryName) {
+    triggerFilterFetchFromUI();
+  }
 }
 
 // Tải danh sách khuyến mãi
@@ -1357,7 +1384,7 @@ if (typeof window !== 'undefined' && isBookPage()) {
     }
 
     // populate button lists on load and wait for them to complete, so we can restore stored selections
-    await Promise.all([populateSuppliers(), populateHinhThuc(), populateAuthors()]);
+    await Promise.all([populateSuppliers(), populateHinhThuc(), populateAuthors(), renderCategoryToFil()]);
     // restore UI from storage and fetch results once
     try {
       restoreActiveFromStorage();
