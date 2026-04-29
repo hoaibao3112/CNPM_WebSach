@@ -961,8 +961,12 @@ async function submitReturnRequest(order) {
     document.getElementById('payment-status').textContent = order.paymentStatus || 'Chưa thanh toán';
 
     // Cập nhật thông tin giao hàng
-    document.getElementById('receiver-name').textContent = order.recipientName || 'N/A';
-    document.getElementById('receiver-phone').textContent = order.recipientPhone || 'N/A';
+    document.getElementById('receiver-name').textContent = order.recipientName || order.customerName || (order.customer && order.customer.name) || 'N/A';
+    
+    const phone = order.recipientPhone || order.customerPhone || order.sdt || order.SDT || order.phone || (order.customer && (order.customer.phone || order.customer.sdt)) || '';
+    const email = order.customerEmail || order.email || order.Email || (order.customer && order.customer.email) || '';
+    const contact = [phone, email].filter(Boolean).join(' - ');
+    document.getElementById('receiver-phone').textContent = contact || 'N/A';
     
     // ✅ HIỂN THỊ GHI CHÚ VỚI HIGHLIGHT NẾU CÓ PHÍ SHIP
     const notesElement = document.getElementById('order-notes');

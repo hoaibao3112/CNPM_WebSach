@@ -101,11 +101,11 @@
   <!-- Confetti container -->
   <div id="confetti-container" class="fixed inset-0 pointer-events-none z-0"></div>
 
-  <!-- Main card -->
-  <div class="relative z-10 w-full max-w-lg">
+  <!-- Main container -->
+  <div class="relative z-10 w-full max-w-6xl px-2 sm:px-6">
 
     <!-- Loading state -->
-    <div id="loading-state" class="bg-white rounded-[32px] shadow-2xl border border-border p-10 text-center space-y-6">
+    <div id="loading-state" class="max-w-lg mx-auto bg-white rounded-[32px] shadow-2xl border border-border p-10 text-center space-y-6">
       <div class="w-20 h-20 mx-auto bg-primary/10 rounded-full flex items-center justify-center">
         <i class="fas fa-circle-notch spin text-3xl text-primary"></i>
       </div>
@@ -115,105 +115,111 @@
       </div>
     </div>
 
-    <!-- Result state (hidden until JS fills it) -->
-    <div id="result-state" class="hidden space-y-5">
-
-      <!-- Hero Card -->
-      <div id="hero-card" class="bg-white rounded-[32px] shadow-2xl border border-border p-8 text-center space-y-5 animate-fade-up">
-        <!-- Icon -->
-        <div class="flex justify-center">
-          <div id="status-icon-wrap" class="relative w-24 h-24 rounded-full flex items-center justify-center pulse-ring">
-            <i id="status-icon" class="text-4xl"></i>
+    <!-- Result state -->
+    <div id="result-state" class="hidden grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+      
+      <!-- LEFT COLUMN: Status & Info -->
+      <div class="lg:col-span-7 space-y-6">
+        <!-- Hero Card -->
+        <div id="hero-card" class="bg-white rounded-[32px] shadow-2xl border border-border p-8 text-center space-y-5 animate-fade-up">
+          <div class="flex justify-center">
+            <div id="status-icon-wrap" class="relative w-24 h-24 rounded-full flex items-center justify-center pulse-ring">
+              <i id="status-icon" class="text-4xl"></i>
+            </div>
+          </div>
+          <div class="space-y-1">
+            <h1 id="status-title" class="text-2xl sm:text-3xl font-display font-black tracking-tight"></h1>
+            <p id="status-subtitle" class="text-sm text-gray-500 font-medium"></p>
           </div>
         </div>
-        <!-- Title & subtitle -->
-        <div class="space-y-1">
-          <h1 id="status-title" class="text-2xl sm:text-3xl font-display font-black tracking-tight"></h1>
-          <p id="status-subtitle" class="text-sm text-gray-500 font-medium"></p>
+
+        <!-- Order details -->
+        <div id="order-card" class="detail-card animate-fade-up delay-1 hidden">
+          <div class="px-5 py-4 bg-gray-50 border-b border-gray-100 flex items-center gap-3">
+            <i class="fas fa-receipt text-primary text-sm"></i>
+            <span class="text-xs font-black uppercase tracking-widest text-gray-600">Thông tin đơn hàng</span>
+          </div>
+          <div id="order-rows"></div>
         </div>
-        <!-- Total amount highlight -->
-        <div id="total-highlight" class="hidden bg-gradient-to-r from-primary to-rose-700 rounded-2xl p-5 text-white">
+
+        <!-- Customer Info -->
+        <div id="customer-card" class="detail-card animate-fade-up delay-1 hidden">
+          <div class="px-5 py-4 bg-gray-50 border-b border-gray-100 flex items-center gap-3">
+            <i class="fas fa-user text-primary text-sm"></i>
+            <span class="text-xs font-black uppercase tracking-widest text-gray-600">Thông tin nhận hàng</span>
+          </div>
+          <div id="customer-rows"></div>
+        </div>
+
+        <!-- COD steps -->
+        <div id="cod-card" class="detail-card animate-fade-up delay-3 hidden">
+          <div class="px-5 py-4 bg-emerald-50 border-b border-emerald-100 flex items-center gap-3">
+            <i class="fas fa-truck text-emerald-600 text-sm"></i>
+            <span class="text-xs font-black uppercase tracking-widest text-emerald-700">Hướng dẫn nhận hàng COD</span>
+          </div>
+          <div class="p-5 space-y-1">
+            <div class="step-item">
+              <div class="step-icon bg-emerald-50 text-emerald-600"><i class="fas fa-phone"></i></div>
+              <div class="pt-1"><p class="text-sm font-bold text-gray-800">Xác nhận trong 24h</p><p class="text-xs text-gray-500">Chúng tôi sẽ gọi điện xác nhận đơn hàng</p></div>
+            </div>
+            <div class="step-item">
+              <div class="step-icon bg-blue-50 text-blue-600"><i class="fas fa-box"></i></div>
+              <div class="pt-1"><p class="text-sm font-bold text-gray-800">Đóng gói & vận chuyển</p><p class="text-xs text-gray-500">Thời gian giao hàng: 2–3 ngày làm việc</p></div>
+            </div>
+            <div class="step-item">
+              <div class="step-icon bg-amber-50 text-amber-600"><i class="fas fa-money-bill-wave"></i></div>
+              <div class="pt-1"><p class="text-sm font-bold text-gray-800">Chuẩn bị tiền mặt</p><p class="text-xs text-gray-500">Thanh toán khi nhận hàng, kiểm tra trước khi ký</p></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Desktop Action Buttons -->
+        <div id="action-btns" class="hidden lg:block space-y-3 animate-fade-up delay-4"></div>
+      </div>
+
+      <!-- RIGHT COLUMN: Payment & Products -->
+      <div class="lg:col-span-5 space-y-6">
+        <!-- Total Highlight -->
+        <div id="total-highlight" class="hidden bg-gradient-to-r from-primary to-rose-700 rounded-[32px] p-8 text-white shadow-xl animate-fade-up">
           <p class="text-xs font-black uppercase tracking-widest opacity-70 mb-1">Tổng thanh toán</p>
-          <p id="total-amount-big" class="text-4xl font-black tracking-tighter"></p>
+          <p id="total-amount-big" class="text-5xl font-black tracking-tighter"></p>
         </div>
-      </div>
 
-      <!-- Order details card -->
-      <div id="order-card" class="detail-card animate-fade-up delay-1 hidden">
-        <div class="px-5 py-4 bg-gray-50 border-b border-gray-100 flex items-center gap-3">
-          <i class="fas fa-receipt text-primary text-sm"></i>
-          <span class="text-xs font-black uppercase tracking-widest text-gray-600">Thông tin đơn hàng</span>
-        </div>
-        <div id="order-rows"></div>
-      </div>
-
-      <!-- Customer Info card -->
-      <div id="customer-card" class="detail-card animate-fade-up delay-1 hidden">
-        <div class="px-5 py-4 bg-gray-50 border-b border-gray-100 flex items-center gap-3">
-          <i class="fas fa-user text-primary text-sm"></i>
-          <span class="text-xs font-black uppercase tracking-widest text-gray-600">Thông tin khách hàng</span>
-        </div>
-        <div id="customer-rows"></div>
-      </div>
-
-      <!-- Product list card -->
-      <div id="product-card" class="detail-card animate-fade-up delay-2 hidden">
-        <div class="px-5 py-4 bg-gray-50 border-b border-gray-100 flex items-center gap-3">
-          <i class="fas fa-box text-primary text-sm"></i>
-          <span class="text-xs font-black uppercase tracking-widest text-gray-600">Sản phẩm đã mua</span>
-        </div>
-        <div id="product-list" class="divide-y divide-gray-50"></div>
-      </div>
-
-      <!-- Price breakdown card -->
-      <div id="price-card" class="detail-card animate-fade-up delay-2 hidden">
-        <div class="px-5 py-4 bg-gray-50 border-b border-gray-100 flex items-center gap-3">
-          <i class="fas fa-calculator text-primary text-sm"></i>
-          <span class="text-xs font-black uppercase tracking-widest text-gray-600">Chi tiết thanh toán</span>
-        </div>
-        <div id="price-rows"></div>
-      </div>
-
-      <!-- COD steps -->
-      <div id="cod-card" class="detail-card animate-fade-up delay-3 hidden">
-        <div class="px-5 py-4 bg-emerald-50 border-b border-emerald-100 flex items-center gap-3">
-          <i class="fas fa-truck text-emerald-600 text-sm"></i>
-          <span class="text-xs font-black uppercase tracking-widest text-emerald-700">Hướng dẫn nhận hàng COD</span>
-        </div>
-        <div class="p-5 space-y-1">
-          <div class="step-item">
-            <div class="step-icon bg-emerald-50 text-emerald-600"><i class="fas fa-phone"></i></div>
-            <div class="pt-1"><p class="text-sm font-bold text-gray-800">Xác nhận trong 24h</p><p class="text-xs text-gray-500">Chúng tôi sẽ gọi điện xác nhận đơn hàng</p></div>
+        <!-- Price breakdown -->
+        <div id="price-card" class="detail-card animate-fade-up delay-2 hidden">
+          <div class="px-5 py-4 bg-gray-50 border-b border-gray-100 flex items-center gap-3">
+            <i class="fas fa-calculator text-primary text-sm"></i>
+            <span class="text-xs font-black uppercase tracking-widest text-gray-600">Chi tiết thanh toán</span>
           </div>
-          <div class="step-item">
-            <div class="step-icon bg-blue-50 text-blue-600"><i class="fas fa-box"></i></div>
-            <div class="pt-1"><p class="text-sm font-bold text-gray-800">Đóng gói & vận chuyển</p><p class="text-xs text-gray-500">Thời gian giao hàng: 2–3 ngày làm việc</p></div>
-          </div>
-          <div class="step-item">
-            <div class="step-icon bg-amber-50 text-amber-600"><i class="fas fa-money-bill-wave"></i></div>
-            <div class="pt-1"><p class="text-sm font-bold text-gray-800">Chuẩn bị tiền mặt</p><p class="text-xs text-gray-500">Thanh toán khi nhận hàng, kiểm tra trước khi ký</p></div>
-          </div>
+          <div id="price-rows"></div>
         </div>
-      </div>
 
-      <!-- Error details card -->
-      <div id="error-card" class="detail-card animate-fade-up delay-2 hidden">
-        <div class="px-5 py-4 bg-red-50 border-b border-red-100 flex items-center gap-3">
-          <i class="fas fa-exclamation-triangle text-red-500 text-sm"></i>
-          <span class="text-xs font-black uppercase tracking-widest text-red-600">Chi tiết lỗi</span>
+        <!-- Product list -->
+        <div id="product-card" class="detail-card animate-fade-up delay-2 hidden">
+          <div class="px-5 py-4 bg-gray-50 border-b border-gray-100 flex items-center gap-3">
+            <i class="fas fa-box text-primary text-sm"></i>
+            <span class="text-xs font-black uppercase tracking-widest text-gray-600">Sản phẩm đã mua</span>
+          </div>
+          <div id="product-list" class="divide-y divide-gray-50 max-h-[500px] overflow-y-auto"></div>
         </div>
-        <div id="error-rows"></div>
-      </div>
 
-      <!-- Action buttons -->
-      <div id="action-btns" class="space-y-3 animate-fade-up delay-4">
-        <!-- filled by JS -->
-      </div>
+        <!-- Error Card -->
+        <div id="error-card" class="detail-card animate-fade-up delay-2 hidden">
+          <div class="px-5 py-4 bg-red-50 border-b border-red-100 flex items-center gap-3">
+            <i class="fas fa-exclamation-triangle text-red-500 text-sm"></i>
+            <span class="text-xs font-black uppercase tracking-widest text-red-600">Chi tiết lỗi</span>
+          </div>
+          <div id="error-rows"></div>
+        </div>
 
-      <!-- Trust bar -->
-      <div class="animate-fade-up delay-5 flex items-center justify-center gap-2 text-xs text-gray-400 font-semibold pb-4">
-        <i class="fas fa-shield-alt text-primary/60"></i>
-        Giao dịch được mã hóa & bảo mật 100%
+        <!-- Mobile Action Buttons -->
+        <div id="action-btns-mobile" class="lg:hidden space-y-3 animate-fade-up delay-4"></div>
+
+        <!-- Trust bar -->
+        <div class="animate-fade-up delay-5 flex items-center justify-center gap-2 text-xs text-gray-400 font-semibold pt-4">
+          <i class="fas fa-shield-alt text-primary/60"></i>
+          Giao dịch được mã hóa & bảo mật 100%
+        </div>
       </div>
 
     </div>
@@ -238,16 +244,30 @@
     async function loadOrderDetails(orderId) {
       if (!orderId) return null;
       try {
-        const r = await fetch(`${window.API_CONFIG.BASE_URL}/api/orders/hoadon/${orderId}`);
-        if (r.ok) return await r.json();
+        // Try direct invoice endpoint (if exists)
+        let r = await fetch(`${window.API_CONFIG.BASE_URL}/api/orders/hoadon/${orderId}`);
+        if (!r.ok) {
+          // Try standard order details endpoint
+          r = await fetch(`${window.API_CONFIG.BASE_URL}/api/orders/${orderId}`);
+        }
+        
+        if (r.ok) {
+          const json = await r.json();
+          return json.data || json;
+        }
+
+        // Fallback for logged in users if public endpoints fail
         if (isLoggedIn()) {
           const token = document.cookie.split('; ').find(r => r.startsWith('token='))?.split('=')[1];
           const r2 = await fetch(`${window.API_CONFIG.BASE_URL}/api/orders/customer-orders/detail/${orderId}`, {
             headers: { 'Authorization': `Bearer ${token}` }
           });
-          if (r2.ok) return await r2.json();
+          if (r2.ok) {
+            const json2 = await r2.json();
+            return json2.data || json2;
+          }
         }
-      } catch(e) { console.error(e); }
+      } catch(e) { console.error('Error loading order details:', e); }
       return null;
     }
 
@@ -333,10 +353,71 @@
       const errCard     = document.getElementById('error-card');
       const errRows     = document.getElementById('error-rows');
       const actionDiv   = document.getElementById('action-btns');
+      const actionDivMobile = document.getElementById('action-btns-mobile');
 
       const dateStr = orderDetails?.NgayTao
         ? new Date(orderDetails.NgayTao).toLocaleDateString('vi-VN')
         : new Date().toLocaleDateString('vi-VN');
+
+      // Common logic for populating customer info & products
+      function populateInfo() {
+        if (orderDetails) {
+          customerCard.classList.remove('hidden');
+          const addr = [orderDetails.shippingAddress, orderDetails.ward, orderDetails.district, orderDetails.province]
+            .filter(Boolean)
+            .join(', ');
+
+          // Defensive check for multiple field name variations
+          const phone = orderDetails.recipientPhone || orderDetails.customerPhone || orderDetails.sdt || orderDetails.SDT || orderDetails.phone || (orderDetails.customer && (orderDetails.customer.phone || orderDetails.customer.sdt)) || '';
+          const email = orderDetails.customerEmail || orderDetails.email || orderDetails.Email || (orderDetails.customer && orderDetails.customer.email) || '';
+          const contact = [phone, email].filter(Boolean).join(' - ');
+
+          customerRows.innerHTML = 
+            row('Người nhận', orderDetails.recipientName || orderDetails.customerName || (orderDetails.customer && orderDetails.customer.name) || 'N/A') +
+            row('Liên hệ', contact || 'N/A') +
+            row('Địa chỉ', addr || 'N/A');
+
+          // Try to resolve address codes if they look like numbers
+          async function resolveAddress() {
+            let updatedAddr = addr;
+            try {
+              if (orderDetails.province && !isNaN(orderDetails.province)) {
+                const r = await fetch(`${window.API_CONFIG.BASE_URL}/api/orders/resolve/province/${orderDetails.province}`);
+                if (r.ok) { const j = await r.json(); if (j.success) updatedAddr = updatedAddr.replace(orderDetails.province, j.data.name); }
+              }
+              if (orderDetails.district && !isNaN(orderDetails.district)) {
+                const r = await fetch(`${window.API_CONFIG.BASE_URL}/api/orders/resolve/district/${orderDetails.district}`);
+                if (r.ok) { const j = await r.json(); if (j.success) updatedAddr = updatedAddr.replace(orderDetails.district, j.data.name); }
+              }
+              if (orderDetails.ward && !isNaN(orderDetails.ward)) {
+                const r = await fetch(`${window.API_CONFIG.BASE_URL}/api/orders/resolve/ward/${orderDetails.ward}`);
+                if (r.ok) { const j = await r.json(); if (j.success) updatedAddr = updatedAddr.replace(orderDetails.ward, j.data.name); }
+              }
+              if (updatedAddr !== addr) {
+                const addrVal = customerRows.querySelector('.detail-row:last-child .val');
+                if (addrVal) addrVal.textContent = updatedAddr;
+              }
+            } catch(e) { console.warn('Address resolution failed', e); }
+          }
+          resolveAddress();
+          
+          if (orderDetails.items && orderDetails.items.length > 0) {
+            productCard.classList.remove('hidden');
+            productList.innerHTML = orderDetails.items.map(item => `
+              <div class="flex items-center gap-4 p-4">
+                <img src="${window.API_CONFIG.resolveImageUrl(item.productImage)}" alt="${item.productName}" class="w-12 h-16 object-cover rounded-md bg-gray-100 flex-shrink-0">
+                <div class="flex-1 min-w-0">
+                  <p class="text-sm font-bold text-gray-800 truncate">${item.productName}</p>
+                  <p class="text-xs text-gray-500">${formatPrice(item.price)} x ${item.quantity}</p>
+                </div>
+                <div class="text-right">
+                  <p class="text-sm font-black text-primary">${formatPrice(item.price * item.quantity)}</p>
+                </div>
+              </div>
+            `).join('');
+          }
+        }
+      }
 
       // ---- COD / success ----
       if (status === 'cod' || (status === 'success' && paymentMethod === 'COD')) {
@@ -372,34 +453,11 @@
         pHTML += `<div class="detail-row bg-primary/5"><span class="lbl font-black text-gray-800 text-sm">TỔNG THANH TOÁN</span><span class="val text-primary text-lg font-black">${formatPrice(total)}</span></div>`;
         priceRows.innerHTML = pHTML;
 
-        // Populate customer info
-        if (orderDetails) {
-          customerCard.classList.remove('hidden');
-          customerRows.innerHTML = 
-            row('Người nhận', orderDetails.recipientName || orderDetails.customerName || 'N/A') +
-            row('Số điện thoại', orderDetails.recipientPhone || orderDetails.customerPhone || 'N/A') +
-            row('Email', orderDetails.customerEmail || 'N/A') +
-            row('Địa chỉ', `${orderDetails.shippingAddress}, ${orderDetails.ward}, ${orderDetails.district}, ${orderDetails.province}`);
-          
-          if (orderDetails.items && orderDetails.items.length > 0) {
-            productCard.classList.remove('hidden');
-            productList.innerHTML = orderDetails.items.map(item => `
-              <div class="flex items-center gap-4 p-4">
-                <img src="${window.API_CONFIG.resolveImageUrl(item.productImage)}" alt="${item.productName}" class="w-12 h-16 object-cover rounded-md bg-gray-100 flex-shrink-0">
-                <div class="flex-1 min-w-0">
-                  <p class="text-sm font-bold text-gray-800 truncate">${item.productName}</p>
-                  <p class="text-xs text-gray-500">${formatPrice(item.price)} x ${item.quantity}</p>
-                </div>
-                <div class="text-right">
-                  <p class="text-sm font-black text-primary">${formatPrice(item.price * item.quantity)}</p>
-                </div>
-              </div>
-            `).join('');
-          }
-        }
-
+        populateInfo();
         codCard.classList.remove('hidden');
-        actionDiv.innerHTML = successBtns(isLoggedIn());
+        const btns = successBtns(isLoggedIn());
+        actionDiv.innerHTML = btns;
+        actionDivMobile.innerHTML = btns;
         spawnConfetti();
       }
 
@@ -417,7 +475,7 @@
         subtitle.textContent = 'Đơn hàng đang được xử lý, chúng tôi sẽ liên hệ sớm!';
 
         totalHL.classList.remove('hidden');
-        totalHL.className = 'bg-gradient-to-r from-blue-600 to-blue-800 rounded-2xl p-5 text-white';
+        totalHL.className = 'bg-gradient-to-r from-blue-600 to-blue-800 rounded-[32px] p-8 text-white shadow-xl animate-fade-up';
         totalBig.textContent = formatPrice(total);
 
         orderCard.classList.remove('hidden');
@@ -435,33 +493,10 @@
         pHTML += `<div class="detail-row bg-primary/5"><span class="lbl font-black text-gray-800 text-sm">TỔNG THANH TOÁN</span><span class="val text-primary text-lg font-black">${formatPrice(total)}</span></div>`;
         priceRows.innerHTML = pHTML;
 
-        // Populate customer info & products
-        if (orderDetails) {
-          customerCard.classList.remove('hidden');
-          customerRows.innerHTML = 
-            row('Người nhận', orderDetails.recipientName || orderDetails.customerName || 'N/A') +
-            row('Số điện thoại', orderDetails.recipientPhone || orderDetails.customerPhone || 'N/A') +
-            row('Email', orderDetails.customerEmail || 'N/A') +
-            row('Địa chỉ', `${orderDetails.shippingAddress}, ${orderDetails.ward}, ${orderDetails.district}, ${orderDetails.province}`);
-          
-          if (orderDetails.items && orderDetails.items.length > 0) {
-            productCard.classList.remove('hidden');
-            productList.innerHTML = orderDetails.items.map(item => `
-              <div class="flex items-center gap-4 p-4">
-                <img src="${window.API_CONFIG.resolveImageUrl(item.productImage)}" alt="${item.productName}" class="w-12 h-16 object-cover rounded-md bg-gray-100 flex-shrink-0">
-                <div class="flex-1 min-w-0">
-                  <p class="text-sm font-bold text-gray-800 truncate">${item.productName}</p>
-                  <p class="text-xs text-gray-500">${formatPrice(item.price)} x ${item.quantity}</p>
-                </div>
-                <div class="text-right">
-                  <p class="text-sm font-black text-primary">${formatPrice(item.price * item.quantity)}</p>
-                </div>
-              </div>
-            `).join('');
-          }
-        }
-
-        actionDiv.innerHTML = successBtns(isLoggedIn());
+        populateInfo();
+        const btns = successBtns(isLoggedIn());
+        actionDiv.innerHTML = btns;
+        actionDivMobile.innerHTML = btns;
         spawnConfetti();
       }
 
@@ -479,7 +514,9 @@
           (errorCode ? row('Mã lỗi', errorCode) : '') +
           row('Lý do', message ? decodeURIComponent(message) : 'Lỗi không xác định');
 
-        actionDiv.innerHTML = errorBtns();
+        const btns = errorBtns();
+        actionDiv.innerHTML = btns;
+        actionDivMobile.innerHTML = btns;
       }
 
       // ---- invalid signature ----
@@ -489,7 +526,9 @@
         title.textContent = 'Lỗi bảo mật!';
         title.className   = 'text-2xl sm:text-3xl font-display font-black tracking-tight text-orange-600';
         subtitle.textContent = 'Chữ ký VNPay không hợp lệ. Giao dịch có thể bị can thiệp.';
-        actionDiv.innerHTML = errorBtns();
+        const btns = errorBtns();
+        actionDiv.innerHTML = btns;
+        actionDivMobile.innerHTML = btns;
       }
 
       // ---- default ----
@@ -499,7 +538,9 @@
         title.textContent = 'Trạng thái không xác định';
         title.className   = 'text-2xl sm:text-3xl font-display font-black tracking-tight text-amber-600';
         subtitle.textContent = 'Vui lòng liên hệ với chúng tôi để được hỗ trợ.';
-        actionDiv.innerHTML = errorBtns();
+        const btns = errorBtns();
+        actionDiv.innerHTML = btns;
+        actionDivMobile.innerHTML = btns;
       }
     });
   </script>
