@@ -5,13 +5,14 @@ class ProductService {
                 const normalizedSearch = typeof filters.search === 'string' ? filters.search.trim() : '';
 
         let query = `
-      SELECT sp.*, ncc.TenNCC, tl.TenTL, tg.TenTG 
+      SELECT DISTINCT sp.*, ncc.TenNCC, tl.TenTL, tg.TenTG 
       FROM sanpham sp
       LEFT JOIN nhacungcap ncc ON sp.MaNCC = ncc.MaNCC
       LEFT JOIN theloai tl ON sp.MaTL = tl.MaTL
       LEFT JOIN tacgia tg ON sp.MaTG = tg.MaTG
       LEFT JOIN sp_khuyen_mai spkm ON sp.MaSP = spkm.MaSP
       WHERE CAST(COALESCE(sp.TinhTrang, 1) AS UNSIGNED) = 1
+
 
 
     `;
@@ -88,13 +89,14 @@ class ProductService {
 
     async findProductsByFuzzySearch(searchText, filters = {}) {
         let query = `
-            SELECT sp.*, ncc.TenNCC, tl.TenTL, tg.TenTG
+            SELECT DISTINCT sp.*, ncc.TenNCC, tl.TenTL, tg.TenTG
             FROM sanpham sp
             LEFT JOIN nhacungcap ncc ON sp.MaNCC = ncc.MaNCC
             LEFT JOIN theloai tl ON sp.MaTL = tl.MaTL
             LEFT JOIN tacgia tg ON sp.MaTG = tg.MaTG
             LEFT JOIN sp_khuyen_mai spkm ON sp.MaSP = spkm.MaSP
             WHERE CAST(COALESCE(sp.TinhTrang, 1) AS UNSIGNED) = 1
+
 
 
         `;
