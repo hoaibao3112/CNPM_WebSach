@@ -10,7 +10,9 @@ class ProductService {
       LEFT JOIN nhacungcap ncc ON sp.MaNCC = ncc.MaNCC
       LEFT JOIN theloai tl ON sp.MaTL = tl.MaTL
       LEFT JOIN tacgia tg ON sp.MaTG = tg.MaTG
+      LEFT JOIN khuyenmai_sanpham kms ON sp.MaSP = kms.MaSP
       WHERE CAST(COALESCE(sp.TinhTrang, 1) AS UNSIGNED) = 1
+
     `;
         const params = [];
 
@@ -19,7 +21,51 @@ class ProductService {
             params.push(filters.category);
         }
 
+        if (filters.MaKM) {
+            query += ' AND kms.MaKM = ?';
+            params.push(filters.MaKM);
+        }
+
+
+        if (filters.MaNCC) {
+            const nccs = String(filters.MaNCC).split(',').filter(Boolean);
+            if (nccs.length > 0) {
+                query += ` AND sp.MaNCC IN (${nccs.map(() => '?').join(',')})`;
+                params.push(...nccs);
+            }
+        }
+
+        if (filters.MaTG) {
+            const tgs = String(filters.MaTG).split(',').filter(Boolean);
+            if (tgs.length > 0) {
+                query += ` AND sp.MaTG IN (${tgs.map(() => '?').join(',')})`;
+                params.push(...tgs);
+            }
+        }
+
+        if (filters.HinhThuc) {
+            const hts = String(filters.HinhThuc).split(',').filter(Boolean);
+            if (hts.length > 0) {
+                query += ` AND sp.HinhThuc IN (${hts.map(() => '?').join(',')})`;
+                params.push(...hts);
+            }
+        }
+
+        if (filters.priceRange) {
+            const range = String(filters.priceRange).split('-');
+            if (range.length === 2) {
+                query += ' AND sp.DonGia >= ? AND sp.DonGia <= ?';
+                params.push(Number(range[0]), Number(range[1]));
+            } else if (range.length === 1 && range[0] !== '') {
+                // "Trên 200k" case: data-value="200000"
+                query += ' AND sp.DonGia >= ?';
+                params.push(Number(range[0]));
+            }
+        }
+
+
         if (normalizedSearch) {
+
             query += `
               AND (
                 LOWER(COALESCE(sp.TenSP, '')) LIKE LOWER(?)
@@ -45,7 +91,9 @@ class ProductService {
             LEFT JOIN nhacungcap ncc ON sp.MaNCC = ncc.MaNCC
             LEFT JOIN theloai tl ON sp.MaTL = tl.MaTL
             LEFT JOIN tacgia tg ON sp.MaTG = tg.MaTG
+            LEFT JOIN khuyenmai_sanpham kms ON sp.MaSP = kms.MaSP
             WHERE CAST(COALESCE(sp.TinhTrang, 1) AS UNSIGNED) = 1
+
         `;
 
         const params = [];
@@ -54,7 +102,50 @@ class ProductService {
             params.push(filters.category);
         }
 
+        if (filters.MaKM) {
+            query += ' AND kms.MaKM = ?';
+            params.push(filters.MaKM);
+        }
+
+
+        if (filters.MaNCC) {
+            const nccs = String(filters.MaNCC).split(',').filter(Boolean);
+            if (nccs.length > 0) {
+                query += ` AND sp.MaNCC IN (${nccs.map(() => '?').join(',')})`;
+                params.push(...nccs);
+            }
+        }
+
+        if (filters.MaTG) {
+            const tgs = String(filters.MaTG).split(',').filter(Boolean);
+            if (tgs.length > 0) {
+                query += ` AND sp.MaTG IN (${tgs.map(() => '?').join(',')})`;
+                params.push(...tgs);
+            }
+        }
+
+        if (filters.HinhThuc) {
+            const hts = String(filters.HinhThuc).split(',').filter(Boolean);
+            if (hts.length > 0) {
+                query += ` AND sp.HinhThuc IN (${hts.map(() => '?').join(',')})`;
+                params.push(...hts);
+            }
+        }
+
+        if (filters.priceRange) {
+            const range = String(filters.priceRange).split('-');
+            if (range.length === 2) {
+                query += ' AND sp.DonGia >= ? AND sp.DonGia <= ?';
+                params.push(Number(range[0]), Number(range[1]));
+            } else if (range.length === 1 && range[0] !== '') {
+                query += ' AND sp.DonGia >= ?';
+                params.push(Number(range[0]));
+            }
+        }
+
+
         query += ' ORDER BY sp.MaSP DESC LIMIT 500';
+
 
         const [candidates] = await pool.query(query, params);
         if (!Array.isArray(candidates) || candidates.length === 0) {

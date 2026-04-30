@@ -6,9 +6,16 @@ class ProductController {
         try {
             const filters = {
                 category: req.query.category || req.query.MaTL,
-                search: req.query.search
+                search: req.query.search,
+                priceRange: req.query.priceRange,
+                MaNCC: req.query.MaNCC,
+                MaTG: req.query.MaTG,
+                HinhThuc: req.query.HinhThuc,
+                MaKM: req.query.MaKM
             };
             const products = await ProductService.getAllProducts(filters);
+
+
             return baseController.sendSuccess(res, products);
         } catch (error) {
             return baseController.sendError(res, 'Lỗi khi lấy danh sách sản phẩm', 500, error.message);
