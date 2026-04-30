@@ -10,8 +10,9 @@ class ProductService {
       LEFT JOIN nhacungcap ncc ON sp.MaNCC = ncc.MaNCC
       LEFT JOIN theloai tl ON sp.MaTL = tl.MaTL
       LEFT JOIN tacgia tg ON sp.MaTG = tg.MaTG
-      LEFT JOIN khuyenmai_sanpham kms ON sp.MaSP = kms.MaSP
+      LEFT JOIN sp_khuyen_mai spkm ON sp.MaSP = spkm.MaSP
       WHERE CAST(COALESCE(sp.TinhTrang, 1) AS UNSIGNED) = 1
+
 
     `;
         const params = [];
@@ -22,9 +23,10 @@ class ProductService {
         }
 
         if (filters.MaKM) {
-            query += ' AND kms.MaKM = ?';
+            query += ' AND spkm.MaKM = ?';
             params.push(filters.MaKM);
         }
+
 
 
         if (filters.MaNCC) {
@@ -91,8 +93,9 @@ class ProductService {
             LEFT JOIN nhacungcap ncc ON sp.MaNCC = ncc.MaNCC
             LEFT JOIN theloai tl ON sp.MaTL = tl.MaTL
             LEFT JOIN tacgia tg ON sp.MaTG = tg.MaTG
-            LEFT JOIN khuyenmai_sanpham kms ON sp.MaSP = kms.MaSP
+            LEFT JOIN sp_khuyen_mai spkm ON sp.MaSP = spkm.MaSP
             WHERE CAST(COALESCE(sp.TinhTrang, 1) AS UNSIGNED) = 1
+
 
         `;
 
@@ -103,9 +106,10 @@ class ProductService {
         }
 
         if (filters.MaKM) {
-            query += ' AND kms.MaKM = ?';
+            query += ' AND spkm.MaKM = ?';
             params.push(filters.MaKM);
         }
+
 
 
         if (filters.MaNCC) {
