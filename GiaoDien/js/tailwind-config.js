@@ -1,6 +1,9 @@
 tailwind.config = {
   theme: {
     extend: {
+      screens: {
+        'xs': '400px',
+      },
       colors: {
         primary: {
           DEFAULT: '#B03A2E',
@@ -35,3 +38,4 @@ tailwind.config = {
     }
   }
 }
+

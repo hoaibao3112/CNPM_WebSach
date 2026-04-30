@@ -199,7 +199,7 @@
         <div id="sidebar-overlay" class="fixed inset-0 bg-black/50 z-[10002] hidden lg:hidden backdrop-blur-sm" onclick="toggleMobileSidebar()"></div>
 
         <!-- Sidebar -->
-        <aside id="sidebar" class="sidebar fixed inset-y-0 left-0 w-[300px] bg-bg z-[10003] transform -translate-x-full lg:translate-x-0 lg:static lg:w-[280px] lg:z-0 lg:bg-transparent transition-transform duration-300 ease-in-out flex-shrink-0 space-y-6 overflow-y-auto lg:overflow-visible p-6 lg:p-0">
+        <aside id="sidebar" class="sidebar fixed inset-y-0 left-0 w-[280px] bg-bg z-[10003] transform -translate-x-full lg:translate-x-0 lg:static lg:w-[280px] lg:z-0 lg:bg-transparent transition-transform duration-300 ease-in-out flex-shrink-0 space-y-6 overflow-y-auto lg:overflow-visible p-6 lg:p-0 border-r border-border lg:border-none shadow-2xl lg:shadow-none">
             <!-- Mobile Sidebar Header -->
             <div class="lg:hidden flex items-center justify-between mb-8 border-b border-border pb-4">
                 <h2 class="text-lg font-black text-text uppercase tracking-widest">Bộ lọc</h2>
@@ -207,6 +207,7 @@
                     <i class="fas fa-times"></i>
                 </button>
             </div>
+
 
             <!-- Category Filter -->
             <div class="filter-card bg-white p-6 rounded-[2rem] border border-border shadow-sm hover:shadow-md transition-shadow">
@@ -293,9 +294,8 @@
             <div class="p-6 text-center bg-gray-50 rounded-[2rem] border border-border shadow-inner group">
                 <p class="text-[10px] font-black text-text-light mb-2 uppercase tracking-widest opacity-60">Hỗ trợ đặt hàng</p>
                 <div class="hotline text-xl font-black text-primary tracking-tight group-hover:scale-110 transition-transform">0374 170 367</div>
-            </div>
-            </div>
         </aside>
+
 
 
         <!-- Main Content -->
@@ -307,9 +307,10 @@
                     </h2>
                     <div class="text-xs text-gray-400 font-medium">Sắp xếp theo: <span class="text-primary cursor-pointer hover:underline">Mặc định</span></div>
                 </div>
-                <div id="search-book-list" class="product-container grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                <div id="search-book-list" class="product-container grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
                     <!-- Products rendered by JS -->
                 </div>
+
             </div>
         </main>
     </div>
