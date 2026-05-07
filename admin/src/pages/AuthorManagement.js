@@ -44,7 +44,7 @@ const AuthorManagement = () => {
       if (Array.isArray(authorsData)) {
         const processedAuthors = authorsData.map((author) => {
           const imageUrl = author.AnhTG && author.AnhTG !== 'null'
-            ? `${IMAGE_BASE_PATH}${author.AnhTG}`
+            ? (author.AnhTG.startsWith('http') ? author.AnhTG : `${IMAGE_BASE_PATH}${author.AnhTG}`)
             : 'https://via.placeholder.com/50';
 
           return {
@@ -123,7 +123,7 @@ const AuthorManagement = () => {
       formData.append('QuocTich', newAuthor.QuocTich?.trim() || '');
       formData.append('TieuSu', newAuthor.TieuSu?.trim() || '');
       if (newAuthor.AnhTG instanceof File) {
-        formData.append('AnhTG', newAuthor.AnhTG.name);
+        formData.append('AnhTG', newAuthor.AnhTG);
       }
 
       const response = await api.post(API_URL, formData, {
@@ -163,9 +163,9 @@ const AuthorManagement = () => {
       formData.append('QuocTich', editingAuthor.QuocTich?.trim() || '');
       formData.append('TieuSu', editingAuthor.TieuSu?.trim() || '');
       if (editingAuthor.AnhTG instanceof File) {
-        formData.append('AnhTG', editingAuthor.AnhTG.name);
+        formData.append('AnhTG', editingAuthor.AnhTG);
       } else if (editingAuthor.AnhTG) {
-        formData.append('AnhTG', editingAuthor.AnhTG.replace(IMAGE_BASE_PATH, ''));
+        formData.append('AnhTG', editingAuthor.AnhTG.startsWith('http') ? editingAuthor.AnhTG : editingAuthor.AnhTG.replace(IMAGE_BASE_PATH, ''));
       }
 
       const response = await api.put(`${API_URL}/${editingAuthor.MaTG}`, formData, {

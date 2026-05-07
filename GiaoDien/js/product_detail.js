@@ -1250,19 +1250,29 @@ function displayRelatedProducts(products) {
         container.innerHTML = '<p class="text-center py-10 text-text-light italic">Không có sản phẩm liên quan</p>';
         return;
     }
+    const _resolveProductImg = (filename) => {
+        const _base = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'https://cnpm-websach-2.onrender.com';
+        if (!filename || filename === 'null' || filename === 'undefined' || filename === 'sp01.jpg') return 'img/default-book.jpg';
+        if (/^https?:\/\//i.test(filename)) return filename;
+        const clean = filename.replace(/^\/img\/products\//, '').replace(/^\/+/, '');
+        if (/^\d{13,}-/.test(clean)) return `${_base}/uploads/products/${clean}`;
+        return `${_base}/product-images/${clean}`;
+    };
+
     container.innerHTML = products.map(product => {
         const year = product.NamXB || product.NamXb || product.Nam || product.Year || 'Đang cập nhật';
         const originalPrice = product.GiaBia || (product.DonGia * 1.25);
         const discountPercent = product.PhanTramGiam || (product.GiaBia > product.DonGia ? Math.round((1 - product.DonGia/product.GiaBia)*100) : 0);
+        const imgSrc = _resolveProductImg(product.HinhAnh);
 
         return `
         <div class="group bg-white rounded-2xl border border-border p-4 hover:shadow-lg transition-all duration-300 flex flex-col h-full cursor-pointer" 
              onclick="saveProductBeforeRedirect(${JSON.stringify(product).replace(/"/g, '&quot;')}); window.location.href='product_detail.html?id=${product.MaSP}'">
             <div class="relative aspect-[3/4] mb-4 bg-gray-50 rounded-xl overflow-hidden flex items-center justify-center p-3 group-hover:scale-[1.02] transition-transform duration-500">
-                <img src="img/product/${product.HinhAnh || 'sp01.jpg'}" 
+                <img src="${imgSrc}" 
                      alt="${escapeHtml(product.TenSP)}" 
                      class="max-w-full max-h-full object-contain drop-shadow-md"
-                     onerror="this.src='img/product/sp01.jpg'">
+                     onerror="this.onerror=null;this.src='img/default-book.jpg'">
                 ${discountPercent ? `<div class="absolute top-2 right-2 bg-primary text-white text-[9px] font-black px-1.5 py-0.5 rounded-md shadow-md">-${discountPercent}%</div>` : ''}
             </div>
             <div class="flex-1 flex flex-col">

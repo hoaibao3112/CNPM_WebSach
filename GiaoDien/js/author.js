@@ -1,8 +1,28 @@
-const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || window.API_CONFIG.BASE_URL;
+const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'https://cnpm-websach-2.onrender.com';
 const API_URL = `${_apiBase}/api/author`;
 const IMAGE_BASE_URL = 'img/author/';
 const PRODUCT_IMAGE_BASE_URL = 'img/product/';
 const ITEMS_PER_PAGE = 5;
+
+/**
+ * Resolve product image URL: handle Cloudinary full URLs and local filenames.
+ */
+function resolveProductImageUrl(filename) {
+    if (!filename || filename === 'null' || filename === 'undefined') return 'img/default-book.jpg';
+    if (/^https?:\/\//i.test(filename)) return filename;
+    const cleanName = filename.replace(/^\/img\/products\//, '').replace(/^\/+/, '');
+    if (/^\d{13,}-/.test(cleanName)) return `${_apiBase}/uploads/products/${cleanName}`;
+    return `${_apiBase}/product-images/${cleanName}`;
+}
+
+/**
+ * Resolve author image URL: handle Cloudinary full URLs and local filenames.
+ */
+function resolveAuthorImageUrl(filename) {
+    if (!filename || filename === 'null' || filename === 'undefined') return 'img/author/icon.jpg';
+    if (/^https?:\/\//i.test(filename)) return filename;
+    return `${IMAGE_BASE_URL}${filename}`;
+}
 
 let currentPage = 1;
 let totalPages = 1;
@@ -73,9 +93,7 @@ function renderAuthors(authorsInput = []) {
   }
 
   authors.forEach(author => {
-    const imageUrl = author.AnhTG
-      ? `${IMAGE_BASE_URL}${author.AnhTG}`
-      : 'img/author/icon.jpg';
+    const imageUrl = resolveAuthorImageUrl(author.AnhTG);
 
     const card = document.createElement('div');
     card.className = 'author-card';
@@ -133,9 +151,7 @@ async function showAuthorModal(author) {
   }
 
   document.getElementById('modal-author-name').textContent = fullAuthor.TenTG;
-  document.getElementById('modal-author-image').src = fullAuthor.AnhTG
-    ? `${IMAGE_BASE_URL}${fullAuthor.AnhTG}`
-    : 'img/author/icon.jpg';
+  document.getElementById('modal-author-image').src = resolveAuthorImageUrl(fullAuthor.AnhTG);
   document.getElementById('modal-author-birthday').textContent =
     fullAuthor.NgaySinh ? new Date(fullAuthor.NgaySinh).toLocaleDateString('vi-VN') : 'Không rõ';
   document.getElementById('modal-author-nationality').textContent = fullAuthor.QuocTich || 'Không rõ';
@@ -190,12 +206,12 @@ async function showAuthorModal(author) {
 
   booksToShow.forEach(book => {
     console.log('DEBUG: rendering book', book.MaSP, book.TenSP);
-    const bookImage = book.HinhAnh ? `${PRODUCT_IMAGE_BASE_URL}${book.HinhAnh}` : 'img/author/icon.jpg';
+    const bookImage = resolveProductImageUrl(book.HinhAnh);
     const bookEl = document.createElement('div');
     bookEl.className = 'book';
     bookEl.innerHTML = `
       <div class="book-image">
-        <img src="${bookImage}" alt="${book.TenSP}">
+        <img src="${bookImage}" alt="${book.TenSP}" onerror="this.src='img/default-book.jpg'">
       </div>
       <div class="book-name">${book.TenSP}</div>
     `;
