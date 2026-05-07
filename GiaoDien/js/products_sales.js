@@ -8,7 +8,9 @@
             .flash-sale-header { display: flex; justify-content: space-between; align-items: center; padding: 24px 32px; background: linear-gradient(135deg, #B03A2E 0%, #8E2920 100%); color: white; }
             .flash-sale-left { display: flex; align-items: center; gap: 24px; }
             .flash-sale-left h2 { font-family: 'Playfair Display', serif; font-size: 28px; font-weight: 950; color: #ffffff; margin: 0; letter-spacing: 2px; text-transform: uppercase; text-shadow: 0 2px 4px rgba(0,0,0,0.2); }
-            .countdown { display: flex; align-items: center; gap: 4px; font-family: 'Inter', sans-serif; background: rgba(0,0,0,0.3); padding: 6px 12px; border-radius: 12px; backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); }
+            .countdown { display: flex; align-items: center; gap: 4px; font-family: 'Inter', sans-serif; background: rgba(0,0,0,0.3); padding: 6px 12px; border-radius: 12px; backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); transition: all 0.5s; }
+            .countdown.ending-soon { background: rgba(255,255,255,0.2); animation: cd-pulse 1s infinite alternate; box-shadow: 0 0 15px rgba(255,255,255,0.4); }
+            @keyframes cd-pulse { from { transform: scale(1); } to { transform: scale(1.05); } }
             @media (min-width: 768px) { .countdown { gap: 10px; padding: 10px 20px; border-radius: 16px; } }
             .cd-box { background: #fff; color: #B03A2E; padding: 2px 6px; border-radius: 6px; font-weight: 900; min-width: 28px; text-align: center; font-size: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
             @media (min-width: 768px) { .cd-box { padding: 4px 10px; border-radius: 8px; min-width: 38px; font-size: 16px; } }
@@ -283,9 +285,18 @@
 			const diff = nearest - now;
 			if (diff <= 0) {
 				countdownEl.textContent = 'Khuyến mãi đã kết thúc';
+				countdownEl.classList.remove('ending-soon');
 				clearInterval(countdownInterval);
 				return;
 			}
+			
+			// Add ending-soon class if less than 1 hour left
+			if (diff < 3600000) {
+				countdownEl.classList.add('ending-soon');
+			} else {
+				countdownEl.classList.remove('ending-soon');
+			}
+
 			const days = Math.floor(diff / (1000 * 60 * 60 * 24));
 			const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
 			const minutes = Math.floor((diff / (1000 * 60)) % 60);

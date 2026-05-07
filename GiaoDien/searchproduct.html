@@ -1,1 +1,308 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tìm kiếm sách | BaoStore</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Playfair+Display:wght@700;900&display=swap" rel="stylesheet">
+  <link rel="icon" href="favicon.ico" type="image/x-icon">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="js/tailwind-config.js"></script>
+  <script src="js/config.js"></script>
+  <script src="js/api-patcher.js"></script>
+  <style>
+    :root { --primary:#B03A2E; --primary-dark:#8E2920; --bg:#f7f3f0; --border:#ede8e3; }
+    .product-card { transition: all .3s cubic-bezier(.4,0,.2,1); }
+    .product-card:hover { transform: translateY(-6px); box-shadow: 0 20px 40px rgba(0,0,0,.10); }
+    .skeleton { background: linear-gradient(90deg,#f0f0f0 25%,#f8f8f8 50%,#f0f0f0 75%); background-size:200% 100%; animation: sk 1.5s infinite linear; }
+    @keyframes sk { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+    #search-input-main:focus { outline:none; box-shadow: 0 0 0 3px rgba(176,58,46,.15); }
+    .sort-btn.active { background:var(--primary); color:#fff; border-color:var(--primary); }
+    .suggestion-item:hover { background:#fff5f5; color:var(--primary); }
+  </style>
+</head>
+<body class="bg-[#f7f3f0] pt-14 md:pt-16 font-body antialiased">
+  <div id="load-header"></div>
 
+  <main class="container max-w-[1300px] mx-auto px-4 py-10 min-h-screen">
+    <!-- Breadcrumb -->
+    <nav class="flex items-center gap-3 text-[11px] font-bold text-gray-400 uppercase tracking-[.15em] mb-8">
+      <a href="index.html" class="hover:text-[#B03A2E] flex items-center gap-1"><i class="fas fa-home"></i> Trang chủ</a>
+      <span class="opacity-30">/</span>
+      <span class="text-gray-700">Tìm kiếm</span>
+    </nav>
+
+    <!-- Search Box -->
+    <div class="bg-white rounded-3xl border border-[#ede8e3] shadow-sm p-6 md:p-10 mb-8">
+      <h1 class="text-2xl md:text-3xl font-black text-gray-800 mb-6 flex items-center gap-3">
+        <i class="fas fa-search text-[#B03A2E]"></i> Tìm kiếm sách
+      </h1>
+      <div class="relative">
+        <input id="search-input-main" type="text" placeholder="Nhập tên sách, tác giả, thể loại..."
+          class="w-full pl-14 pr-32 py-4 text-base font-semibold bg-[#f7f3f0] border-2 border-[#ede8e3] rounded-2xl transition-all"
+          autocomplete="off">
+        <i class="fas fa-search absolute left-5 top-1/2 -translate-y-1/2 text-gray-400 text-lg"></i>
+        <button id="search-btn"
+          class="absolute right-3 top-1/2 -translate-y-1/2 bg-[#B03A2E] text-white px-6 py-2.5 rounded-xl font-black text-sm uppercase tracking-widest hover:bg-[#8E2920] transition-all active:scale-95">
+          Tìm
+        </button>
+        <!-- Suggestions dropdown -->
+        <div id="suggestions" class="absolute top-full left-0 right-0 bg-white border border-[#ede8e3] rounded-2xl shadow-2xl mt-2 z-50 hidden overflow-hidden"></div>
+      </div>
+      <!-- Tìm kiếm phổ biến -->
+      <div class="mt-4 flex flex-wrap gap-2 items-center">
+        <span class="text-xs font-bold text-gray-400 uppercase tracking-widest">Phổ biến:</span>
+        <button onclick="quickSearch('Văn học')" class="px-3 py-1.5 bg-[#f7f3f0] border border-[#ede8e3] rounded-xl text-xs font-bold text-gray-600 hover:border-[#B03A2E] hover:text-[#B03A2E] transition-all">Văn học</button>
+        <button onclick="quickSearch('Khoa học')" class="px-3 py-1.5 bg-[#f7f3f0] border border-[#ede8e3] rounded-xl text-xs font-bold text-gray-600 hover:border-[#B03A2E] hover:text-[#B03A2E] transition-all">Khoa học</button>
+        <button onclick="quickSearch('Self-help')" class="px-3 py-1.5 bg-[#f7f3f0] border border-[#ede8e3] rounded-xl text-xs font-bold text-gray-600 hover:border-[#B03A2E] hover:text-[#B03A2E] transition-all">Self-help</button>
+        <button onclick="quickSearch('Trinh thám')" class="px-3 py-1.5 bg-[#f7f3f0] border border-[#ede8e3] rounded-xl text-xs font-bold text-gray-600 hover:border-[#B03A2E] hover:text-[#B03A2E] transition-all">Trinh thám</button>
+        <button onclick="quickSearch('Lịch sử')" class="px-3 py-1.5 bg-[#f7f3f0] border border-[#ede8e3] rounded-xl text-xs font-bold text-gray-600 hover:border-[#B03A2E] hover:text-[#B03A2E] transition-all">Lịch sử</button>
+      </div>
+    </div>
+
+    <!-- Filter + Sort Bar -->
+    <div id="filter-sort-bar" class="hidden bg-white rounded-2xl border border-[#ede8e3] shadow-sm px-6 py-4 mb-6 flex flex-wrap gap-3 items-center justify-between">
+      <div class="flex items-center gap-2 flex-wrap">
+        <span class="text-xs font-black uppercase tracking-widest text-gray-400">Giá:</span>
+        <button class="sort-btn px-3 py-1.5 text-xs font-bold border border-[#ede8e3] rounded-xl active" data-price="">Tất cả</button>
+        <button class="sort-btn px-3 py-1.5 text-xs font-bold border border-[#ede8e3] rounded-xl" data-price="0-100000">Dưới 100k</button>
+        <button class="sort-btn px-3 py-1.5 text-xs font-bold border border-[#ede8e3] rounded-xl" data-price="100000-300000">100k–300k</button>
+        <button class="sort-btn px-3 py-1.5 text-xs font-bold border border-[#ede8e3] rounded-xl" data-price="300000">Trên 300k</button>
+      </div>
+      <div class="flex items-center gap-2">
+        <span class="text-xs font-black uppercase tracking-widest text-gray-400">Sắp xếp:</span>
+        <select id="sort-select" class="text-xs font-bold border border-[#ede8e3] rounded-xl px-3 py-1.5 bg-white outline-none cursor-pointer">
+          <option value="default">Mặc định</option>
+          <option value="price-asc">Giá tăng dần</option>
+          <option value="price-desc">Giá giảm dần</option>
+          <option value="name-asc">Tên A–Z</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Result Header -->
+    <div id="result-header" class="hidden flex items-center justify-between mb-6">
+      <div>
+        <h2 id="result-title" class="text-lg font-black text-gray-800"></h2>
+        <p id="result-count" class="text-xs text-gray-400 font-bold mt-1"></p>
+      </div>
+    </div>
+
+    <!-- Skeleton Loading -->
+    <div id="skeleton-grid" class="hidden grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-5 mb-10">
+      <div class="skeleton h-64 rounded-2xl"></div>
+      <div class="skeleton h-64 rounded-2xl"></div>
+      <div class="skeleton h-64 rounded-2xl"></div>
+      <div class="skeleton h-64 rounded-2xl"></div>
+      <div class="skeleton h-64 rounded-2xl hidden xl:block"></div>
+    </div>
+
+    <!-- Product Grid -->
+    <div id="product-grid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-5 mb-10"></div>
+
+    <!-- Empty State -->
+    <div id="empty-state" class="hidden text-center py-20">
+      <div class="w-24 h-24 bg-[#f7f3f0] rounded-full flex items-center justify-center mx-auto mb-6">
+        <i class="fas fa-search text-4xl text-gray-300"></i>
+      </div>
+      <h3 class="text-xl font-black text-gray-700 mb-2">Không tìm thấy kết quả</h3>
+      <p id="empty-msg" class="text-gray-400 font-medium mb-8">Thử tìm với từ khóa khác nhé!</p>
+      <a href="book.html" class="inline-flex items-center gap-2 bg-[#B03A2E] text-white px-8 py-3 rounded-2xl font-black uppercase tracking-widest text-sm hover:bg-[#8E2920] transition-all">
+        <i class="fas fa-book"></i> Xem tất cả sách
+      </a>
+    </div>
+
+    <!-- Initial State (chưa tìm gì) -->
+    <div id="initial-state" class="text-center py-16">
+      <div class="w-20 h-20 bg-white border-2 border-[#ede8e3] rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-sm">
+        <i class="fas fa-book-open text-3xl text-[#B03A2E]"></i>
+      </div>
+      <h3 class="text-lg font-black text-gray-600 mb-2">Hãy nhập từ khóa để tìm sách</h3>
+      <p class="text-sm text-gray-400 font-medium">Tìm theo tên sách, tên tác giả hoặc thể loại</p>
+    </div>
+  </main>
+
+  <div id="load-footer"></div>
+  <script src="js/loadFooter.js"></script>
+  <script src="js/loadHeader.js"></script>
+
+  <script>
+    const API = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'https://cnpm-websach-2.onrender.com';
+    let allResults = [];
+    let currentPrice = '';
+    let debounceTimer = null;
+
+    // Resolve ảnh đúng Cloudinary/local
+    function resolveImg(filename) {
+      if (!filename || filename === 'null') return 'img/default-book.jpg';
+      if (/^https?:\/\//i.test(filename)) return filename;
+      const clean = filename.replace(/^\/img\/products\//, '').replace(/^\/+/, '');
+      if (/^\d{13,}-/.test(clean)) return `${API}/uploads/products/${clean}`;
+      return `${API}/product-images/${clean}`;
+    }
+
+    function formatPrice(n) {
+      return Number(n).toLocaleString('vi-VN') + ' đ';
+    }
+
+    function escHtml(str) {
+      return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    // Lấy keyword từ URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const initQ = urlParams.get('q') || urlParams.get('search') || '';
+    if (initQ) {
+      document.getElementById('search-input-main').value = initQ;
+      doSearch(initQ);
+    }
+
+    async function doSearch(query) {
+      query = query.trim();
+      if (!query) return;
+
+      // Cập nhật URL
+      const newUrl = new URL(window.location.href);
+      newUrl.searchParams.set('q', query);
+      window.history.replaceState({}, '', newUrl.toString());
+
+      // UI loading
+      document.getElementById('initial-state').classList.add('hidden');
+      document.getElementById('empty-state').classList.add('hidden');
+      document.getElementById('product-grid').innerHTML = '';
+      document.getElementById('skeleton-grid').classList.remove('hidden');
+      document.getElementById('filter-sort-bar').classList.remove('hidden');
+      document.getElementById('result-header').classList.remove('hidden');
+      document.getElementById('result-title').textContent = `Kết quả cho: "${query}"`;
+      document.getElementById('result-count').textContent = 'Đang tìm kiếm...';
+
+      try {
+        const res = await fetch(`${API}/api/product?search=${encodeURIComponent(query)}`);
+        const data = await res.json();
+        allResults = Array.isArray(data) ? data : (data.data || []);
+      } catch (e) {
+        allResults = [];
+      }
+
+      document.getElementById('skeleton-grid').classList.add('hidden');
+      renderResults();
+    }
+
+    function renderResults() {
+      const grid = document.getElementById('product-grid');
+      const countEl = document.getElementById('result-count');
+      const sortVal = document.getElementById('sort-select').value;
+
+      let items = [...allResults];
+
+      // Lọc giá
+      if (currentPrice) {
+        const parts = currentPrice.split('-');
+        if (parts.length === 2) {
+          items = items.filter(p => p.DonGia >= +parts[0] && p.DonGia <= +parts[1]);
+        } else {
+          items = items.filter(p => p.DonGia >= +parts[0]);
+        }
+      }
+
+      // Sắp xếp
+      if (sortVal === 'price-asc') items.sort((a,b) => a.DonGia - b.DonGia);
+      else if (sortVal === 'price-desc') items.sort((a,b) => b.DonGia - a.DonGia);
+      else if (sortVal === 'name-asc') items.sort((a,b) => a.TenSP.localeCompare(b.TenSP, 'vi'));
+
+      countEl.textContent = `Tìm thấy ${items.length} kết quả`;
+
+      if (items.length === 0) {
+        grid.innerHTML = '';
+        document.getElementById('empty-state').classList.remove('hidden');
+        document.getElementById('empty-msg').textContent = `Không có sách nào cho "${document.getElementById('search-input-main').value}". Thử từ khóa khác nhé!`;
+        return;
+      }
+
+      document.getElementById('empty-state').classList.add('hidden');
+      grid.innerHTML = items.map(p => `
+        <div class="product-card bg-white rounded-2xl border border-[#ede8e3] p-4 flex flex-col cursor-pointer"
+             onclick="goDetail(${p.MaSP}, ${JSON.stringify(JSON.stringify(p))})">
+          <div class="aspect-[3/4] bg-[#f7f3f0] rounded-xl overflow-hidden flex items-center justify-center mb-3 p-2">
+            <img src="${resolveImg(p.HinhAnh)}" alt="${escHtml(p.TenSP)}"
+                 class="max-w-full max-h-full object-contain"
+                 onerror="this.onerror=null;this.src='img/default-book.jpg'">
+          </div>
+          <h3 class="text-xs font-bold text-gray-800 line-clamp-2 mb-1 flex-1">${escHtml(p.TenSP)}</h3>
+          <p class="text-[10px] text-gray-400 font-bold mb-2">${escHtml(p.TenTG || '')}</p>
+          <span class="text-sm font-black text-[#B03A2E]">${formatPrice(p.DonGia)}</span>
+        </div>
+      `).join('');
+    }
+
+    function goDetail(id, productJson) {
+      try { localStorage.setItem('currentProduct', JSON.parse(productJson) ? productJson : '{}'); } catch(e){}
+      window.location.href = `product_detail.html?id=${id}`;
+    }
+
+    // Search button & Enter
+    document.getElementById('search-btn').onclick = () => doSearch(document.getElementById('search-input-main').value);
+    document.getElementById('search-input-main').addEventListener('keydown', e => {
+      if (e.key === 'Enter') { hideSuggestions(); doSearch(e.target.value); }
+    });
+
+    // Autocomplete suggestions
+    document.getElementById('search-input-main').addEventListener('input', e => {
+      clearTimeout(debounceTimer);
+      const val = e.target.value.trim();
+      if (!val) { hideSuggestions(); return; }
+      debounceTimer = setTimeout(() => fetchSuggestions(val), 300);
+    });
+
+    async function fetchSuggestions(q) {
+      try {
+        const res = await fetch(`${API}/api/product?search=${encodeURIComponent(q)}&limit=6`);
+        const data = await res.json();
+        const items = (Array.isArray(data) ? data : (data.data || [])).slice(0, 6);
+        const box = document.getElementById('suggestions');
+        if (!items.length) { hideSuggestions(); return; }
+        box.innerHTML = items.map(p => `
+          <div class="suggestion-item flex items-center gap-3 px-4 py-3 cursor-pointer border-b border-[#ede8e3] last:border-0 transition-colors"
+               onclick="pickSuggestion('${escHtml(p.TenSP)}')">
+            <i class="fas fa-search text-xs text-gray-300"></i>
+            <span class="text-sm font-bold text-gray-700">${escHtml(p.TenSP)}</span>
+            <span class="ml-auto text-xs font-bold text-[#B03A2E]">${formatPrice(p.DonGia)}</span>
+          </div>
+        `).join('');
+        box.classList.remove('hidden');
+      } catch(e) { hideSuggestions(); }
+    }
+
+    function pickSuggestion(name) {
+      document.getElementById('search-input-main').value = name;
+      hideSuggestions();
+      doSearch(name);
+    }
+
+    function hideSuggestions() { document.getElementById('suggestions').classList.add('hidden'); }
+    document.addEventListener('click', e => {
+      if (!e.target.closest('#search-input-main') && !e.target.closest('#suggestions')) hideSuggestions();
+    });
+
+    // Quick search tags
+    function quickSearch(q) {
+      document.getElementById('search-input-main').value = q;
+      doSearch(q);
+    }
+
+    // Price filter buttons
+    document.querySelectorAll('.sort-btn[data-price]').forEach(btn => {
+      btn.onclick = () => {
+        document.querySelectorAll('.sort-btn[data-price]').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        currentPrice = btn.dataset.price;
+        renderResults();
+      };
+    });
+
+    // Sort select
+    document.getElementById('sort-select').onchange = renderResults;
+  </script>
+</body>
+</html>

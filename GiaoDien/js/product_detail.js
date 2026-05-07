@@ -575,6 +575,7 @@ window.viewAuthorDetail = (authorId) => {
  */
 
 function displayProductDetail(product) {
+    if (window.RV_track) window.RV_track(product);
     const apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'https://cnpm-websach-2.onrender.com';
     // Debug chi tiết hơn
     console.log('🔍 =====PRODUCT DEBUG=====');

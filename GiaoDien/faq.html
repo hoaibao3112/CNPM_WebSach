@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Câu hỏi thường gặp | BaoStore</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Playfair+Display:wght@700;900&display=swap" rel="stylesheet">
+  <link rel="icon" href="favicon.ico" type="image/x-icon">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="js/tailwind-config.js"></script>
+  <script src="js/config.js"></script>
+  <script src="js/api-patcher.js"></script>
+  <style>
+    :root { --primary:#B03A2E; }
+    .faq-item { border-bottom: 1px solid #ede8e3; }
+    .faq-question { cursor: pointer; transition: background .2s; }
+    .faq-question:hover { background: #fff5f5; }
+    .faq-answer { max-height: 0; overflow: hidden; transition: max-height .35s ease, padding .25s ease; }
+    .faq-item.open .faq-answer { max-height: 400px; }
+    .faq-item.open .faq-icon { transform: rotate(45deg); color: var(--primary); }
+    .faq-icon { transition: transform .3s, color .2s; }
+    .tab-btn.active { background: var(--primary); color:#fff; border-color: var(--primary); }
+    .category-icon { width:44px; height:44px; border-radius:14px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+    .faq-search:focus { outline:none; box-shadow:0 0 0 3px rgba(176,58,46,.12); }
+  </style>
+</head>
+<body class="bg-[#f7f3f0] pt-14 md:pt-16 font-body antialiased">
+  <div id="load-header"></div>
+
+  <!-- Hero -->
+  <div class="bg-gradient-to-br from-[#B03A2E] to-[#6B1A13] text-white py-14 md:py-20 px-4">
+    <div class="max-w-3xl mx-auto text-center">
+      <div class="inline-flex items-center gap-2 bg-white/15 backdrop-blur rounded-2xl px-5 py-2 text-xs font-black uppercase tracking-widest mb-6">
+        <i class="fas fa-circle-question"></i> Trung tâm hỗ trợ
+      </div>
+      <h1 class="text-3xl md:text-5xl font-black mb-4 leading-tight">Câu hỏi thường gặp</h1>
+      <p class="text-white/75 text-base font-medium mb-8">Tìm câu trả lời nhanh cho mọi thắc mắc của bạn</p>
+      <!-- Search FAQ -->
+      <div class="relative max-w-xl mx-auto">
+        <input id="faq-search" type="text" placeholder="Tìm câu hỏi..."
+          class="faq-search w-full pl-12 pr-5 py-4 rounded-2xl text-gray-800 font-semibold text-sm bg-white border-2 border-transparent transition-all">
+        <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
+      </div>
+    </div>
+  </div>
+
+  <main class="max-w-4xl mx-auto px-4 py-10 md:py-16">
+    <!-- Category Tabs -->
+    <div class="flex flex-wrap gap-3 mb-10 justify-center" id="cat-tabs">
+      <button class="tab-btn active px-5 py-2.5 rounded-2xl border border-[#ede8e3] bg-white text-xs font-black uppercase tracking-widest transition-all" data-cat="all">Tất cả</button>
+      <button class="tab-btn px-5 py-2.5 rounded-2xl border border-[#ede8e3] bg-white text-xs font-black uppercase tracking-widest transition-all" data-cat="order"><i class="fas fa-shopping-bag mr-1"></i>Đặt hàng</button>
+      <button class="tab-btn px-5 py-2.5 rounded-2xl border border-[#ede8e3] bg-white text-xs font-black uppercase tracking-widest transition-all" data-cat="payment"><i class="fas fa-credit-card mr-1"></i>Thanh toán</button>
+      <button class="tab-btn px-5 py-2.5 rounded-2xl border border-[#ede8e3] bg-white text-xs font-black uppercase tracking-widest transition-all" data-cat="shipping"><i class="fas fa-truck mr-1"></i>Vận chuyển</button>
+      <button class="tab-btn px-5 py-2.5 rounded-2xl border border-[#ede8e3] bg-white text-xs font-black uppercase tracking-widest transition-all" data-cat="refund"><i class="fas fa-rotate-left mr-1"></i>Đổi trả</button>
+      <button class="tab-btn px-5 py-2.5 rounded-2xl border border-[#ede8e3] bg-white text-xs font-black uppercase tracking-widest transition-all" data-cat="account"><i class="fas fa-user mr-1"></i>Tài khoản</button>
+    </div>
+
+    <!-- FAQ List -->
+    <div id="faq-list" class="bg-white rounded-3xl border border-[#ede8e3] shadow-sm overflow-hidden"></div>
+
+    <!-- Empty search result -->
+    <div id="faq-empty" class="hidden text-center py-16">
+      <div class="w-16 h-16 bg-[#f7f3f0] rounded-full flex items-center justify-center mx-auto mb-4">
+        <i class="fas fa-search text-2xl text-gray-300"></i>
+      </div>
+      <p class="text-gray-500 font-bold">Không tìm thấy câu hỏi phù hợp</p>
+      <p class="text-sm text-gray-400 mt-2">Hãy liên hệ hotline <strong class="text-[#B03A2E]">0374 170 367</strong> để được hỗ trợ</p>
+    </div>
+
+    <!-- Contact Section -->
+    <div class="mt-12 grid md:grid-cols-3 gap-5">
+      <div class="bg-white rounded-3xl border border-[#ede8e3] p-6 text-center shadow-sm hover:shadow-md transition-shadow">
+        <div class="category-icon bg-blue-50 mx-auto mb-4"><i class="fas fa-phone text-blue-500 text-xl"></i></div>
+        <h3 class="font-black text-gray-800 mb-1">Hotline</h3>
+        <p class="text-xs text-gray-400 mb-3">8:00 – 21:00 mỗi ngày</p>
+        <a href="tel:0374170367" class="text-[#B03A2E] font-black text-lg">0374 170 367</a>
+      </div>
+      <div class="bg-white rounded-3xl border border-[#ede8e3] p-6 text-center shadow-sm hover:shadow-md transition-shadow">
+        <div class="category-icon bg-green-50 mx-auto mb-4"><i class="fab fa-facebook-messenger text-green-500 text-xl"></i></div>
+        <h3 class="font-black text-gray-800 mb-1">Chat Trực Tiếp</h3>
+        <p class="text-xs text-gray-400 mb-3">Phản hồi trong vài phút</p>
+        <button onclick="document.querySelector('.chat-btn')?.click()" class="text-sm font-black text-white bg-green-500 hover:bg-green-600 px-5 py-2 rounded-xl transition-all">Nhắn tin ngay</button>
+      </div>
+      <div class="bg-white rounded-3xl border border-[#ede8e3] p-6 text-center shadow-sm hover:shadow-md transition-shadow">
+        <div class="category-icon bg-orange-50 mx-auto mb-4"><i class="fas fa-envelope text-orange-500 text-xl"></i></div>
+        <h3 class="font-black text-gray-800 mb-1">Email</h3>
+        <p class="text-xs text-gray-400 mb-3">Phản hồi trong 24 giờ</p>
+        <a href="mailto:support@baostore.vn" class="text-sm font-bold text-[#B03A2E] underline">support@baostore.vn</a>
+      </div>
+    </div>
+  </main>
+
+  <div id="load-footer"></div>
+  <script src="js/loadFooter.js"></script>
+  <script src="js/loadHeader.js"></script>
+
+  <script>
+    const API = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'https://cnpm-websach-2.onrender.com';
+
+    // Static FAQ data (có thể thay bằng API /api/faq)
+    const FAQ_DATA = [
+      { id:1, cat:'order', q:'Làm thế nào để đặt hàng tại BaoStore?', a:'Bạn chọn sách → Thêm vào giỏ hàng → Tiến hành thanh toán. Bạn cần đăng nhập để hoàn tất đặt hàng. Đơn hàng sẽ được xác nhận qua email trong vòng 15 phút.' },
+      { id:2, cat:'order', q:'Tôi có thể đặt hàng mà không cần tài khoản không?', a:'Bạn cần tạo tài khoản để đặt hàng vì chúng tôi cần lưu thông tin giao hàng và lịch sử đơn hàng. Đăng ký rất nhanh, chỉ cần email và mật khẩu.' },
+      { id:3, cat:'order', q:'Làm sao để hủy đơn hàng?', a:'Bạn có thể hủy đơn hàng trong vòng 2 giờ sau khi đặt tại trang "Lịch sử đơn hàng". Nếu đơn đã được xử lý, hãy liên hệ hotline 0374 170 367.' },
+      { id:4, cat:'order', q:'Tôi có thể thay đổi địa chỉ giao hàng sau khi đặt không?', a:'Có thể thay đổi trong vòng 1 giờ sau khi đặt. Liên hệ hotline ngay để được hỗ trợ.' },
+      { id:5, cat:'payment', q:'BaoStore hỗ trợ những phương thức thanh toán nào?', a:'Chúng tôi chấp nhận: Ví MoMo, ZaloPay, VNPay (thẻ ATM/Visa/Mastercard), và Thanh toán khi nhận hàng (COD).' },
+      { id:6, cat:'payment', q:'Thanh toán của tôi bị lỗi, phải làm gì?', a:'Kiểm tra số dư tài khoản/ví và kết nối mạng. Nếu vẫn lỗi, thử phương thức thanh toán khác. Liên hệ hotline nếu cần hỗ trợ thêm.' },
+      { id:7, cat:'payment', q:'Tôi có thể dùng nhiều mã giảm giá một lúc không?', a:'Hiện tại mỗi đơn hàng chỉ áp dụng một mã giảm giá. Hệ thống sẽ tự động tính mức giảm tốt nhất nếu có nhiều mã.' },
+      { id:8, cat:'shipping', q:'Thời gian giao hàng là bao lâu?', a:'Nội thành TP.HCM & Hà Nội: 1–2 ngày. Các tỉnh khác: 3–5 ngày. Bạn sẽ nhận được thông báo khi đơn được giao cho đơn vị vận chuyển.' },
+      { id:9, cat:'shipping', q:'Phí vận chuyển được tính như thế nào?', a:'Miễn phí vận chuyển cho đơn hàng từ 300.000đ. Dưới 300.000đ: phí 25.000đ (nội thành) hoặc 35.000đ (tỉnh khác).' },
+      { id:10, cat:'shipping', q:'Tôi có thể theo dõi đơn hàng không?', a:'Có! Vào mục "Lịch sử đơn hàng" trong tài khoản để theo dõi trạng thái đơn hàng theo thời gian thực.' },
+      { id:11, cat:'refund', q:'Chính sách đổi trả của BaoStore như thế nào?', a:'Chúng tôi hỗ trợ đổi/trả sản phẩm trong 30 ngày nếu sách bị lỗi in, thiếu trang, hoặc không đúng mô tả. Sách không có dấu hiệu sử dụng.' },
+      { id:12, cat:'refund', q:'Quy trình hoàn tiền như thế nào?', a:'Sau khi xác nhận hàng trả, tiền sẽ được hoàn vào phương thức thanh toán ban đầu trong 3–7 ngày làm việc.' },
+      { id:13, cat:'refund', q:'Tôi có thể đổi sang sách khác không?', a:'Có thể! Bạn gửi yêu cầu đổi hàng trong mục "Lịch sử đơn hàng". Nếu sách đổi có giá cao hơn, bạn thanh toán thêm phần chênh lệch.' },
+      { id:14, cat:'account', q:'Làm sao để thay đổi mật khẩu?', a:'Vào Trang cá nhân → Bảo mật tài khoản → Đổi mật khẩu. Hoặc dùng tính năng "Quên mật khẩu" tại trang đăng nhập.' },
+      { id:15, cat:'account', q:'Điểm thưởng được tính như thế nào?', a:'Mỗi 1.000đ mua hàng = 1 điểm thưởng. Điểm có thể dùng để giảm giá cho đơn hàng tiếp theo (100 điểm = 1.000đ).' },
+      { id:16, cat:'account', q:'Tôi có thể liên kết tài khoản Google/Facebook không?', a:'Có! Vào Cài đặt tài khoản → Liên kết tài khoản xã hội. Sau khi liên kết, bạn có thể đăng nhập nhanh với Google hoặc Facebook.' },
+    ];
+
+    let currentCat = 'all';
+    let searchTerm = '';
+    let faqs = []; // API data
+
+    async function fetchFAQ() {
+      const list = document.getElementById('faq-list');
+      list.innerHTML = '<div class="py-20 text-center"><i class="fas fa-spinner fa-spin text-3xl text-[#B03A2E] mb-4"></i><p class="font-bold text-gray-400">Đang tải câu hỏi...</p></div>';
+      
+      try {
+        const res = await fetch(`${API}/api/faq`);
+        const data = await res.json();
+        // Structure: { success: true, data: { faqs: [...] } } or standardized by patcher
+        faqs = data.data?.faqs || data.faqs || (Array.isArray(data) ? data : []);
+        
+        // Map field names if they differ from static data
+        // API fields might be: CauHoi (q), TraLoi (a), MaLoai (cat)
+        faqs = faqs.map(f => ({
+          id: f.MaFAQ || f.id,
+          q: f.CauHoi || f.q,
+          a: f.TraLoi || f.a,
+          cat: f.MaLoai || f.cat || 'general'
+        }));
+
+        if (faqs.length === 0) faqs = FAQ_DATA; // Fallback
+      } catch (e) {
+        console.error('Fetch FAQ error:', e);
+        faqs = FAQ_DATA; // Fallback to static
+      }
+      renderFAQ();
+    }
+
+    function renderFAQ() {
+      const list = document.getElementById('faq-list');
+      const empty = document.getElementById('faq-empty');
+      const q = searchTerm.toLowerCase();
+
+      let items = faqs.filter(f => {
+        const matchCat = currentCat === 'all' || f.cat === currentCat;
+        const matchSearch = !q || (f.q && f.q.toLowerCase().includes(q)) || (f.a && f.a.toLowerCase().includes(q));
+        return matchCat && matchSearch;
+      });
+
+      if (!items.length) { 
+        list.innerHTML = ''; 
+        empty.classList.remove('hidden'); 
+        return; 
+      }
+      empty.classList.add('hidden');
+
+      list.innerHTML = items.map(f => `
+        <div class="faq-item" id="faq-${f.id}">
+          <div class="faq-question flex items-start justify-between gap-4 px-6 py-5 rounded-lg" onclick="toggleFAQ(${f.id})">
+            <span class="text-sm font-bold text-gray-800 leading-snug">${f.q}</span>
+            <i class="faq-icon fas fa-plus text-gray-400 mt-0.5 flex-shrink-0"></i>
+          </div>
+          <div class="faq-answer px-6 pb-0 text-sm text-gray-600 leading-relaxed font-medium">
+            <div class="pb-5 border-l-4 border-[#B03A2E]/20 pl-4">${f.a}</div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function toggleFAQ(id) {
+      const item = document.getElementById('faq-' + id);
+      const isOpen = item.classList.contains('open');
+      document.querySelectorAll('.faq-item.open').forEach(el => el.classList.remove('open'));
+      if (!isOpen) item.classList.add('open');
+    }
+
+    // Category tabs
+    document.getElementById('cat-tabs').addEventListener('click', e => {
+      const btn = e.target.closest('.tab-btn');
+      if (!btn) return;
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      currentCat = btn.dataset.cat;
+      renderFAQ();
+    });
+
+    // Search
+    document.getElementById('faq-search').addEventListener('input', e => {
+      searchTerm = e.target.value;
+      renderFAQ();
+    });
+
+    fetchFAQ();
+  </script>
+</body>
+</html>
