@@ -1381,9 +1381,9 @@ async function addToCart() {
 }
 
 /**
- * Mua ngay
+ * Mua ngay - Thêm vào giỏ và chỉ chọn sản phẩm này để thanh toán
  */
-function buyNow() {
+async function buyNow() {
     const addToCartBtn = document.getElementById('add-to-cart');
     if (!addToCartBtn || !addToCartBtn.dataset.product) {
         console.error('Error: add-to-cart button or dataset.product is not set');
@@ -1393,11 +1393,52 @@ function buyNow() {
 
     try {
         const productData = JSON.parse(addToCartBtn.dataset.product);
-        addToCart();
-        showAlert(`Đã thêm "${productData.name}" vào giỏ hàng. Đang chuyển đến giỏ hàng...`, 'success');
+        const qtyInput = document.getElementById('qty-input');
+        const quantity = qtyInput ? (parseInt(qtyInput.value) || 1) : 1;
+
+        // Lưu flag "mua ngay" để cart.js xử lý: bỏ tick SP cũ, chỉ tick SP này
+        localStorage.setItem('buyNow_productId', String(productData.id));
+        localStorage.setItem('buyNow_quantity', String(quantity));
+
+        if (_isLoggedIn()) {
+            // Đã đăng nhập: gọi API thêm vào giỏ
+            try {
+                const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'https://cnpm-websach-2.onrender.com';
+                const response = await fetch(`${_apiBase}/api/client/cart/add`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${_getAuthToken()}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ productId: Number(productData.id), quantity })
+                });
+                if (!response.ok) {
+                    let errBody = {};
+                    try { errBody = await response.json(); } catch(e) {}
+                    showAlert(errBody?.error || errBody?.message || 'Lỗi khi thêm vào giỏ hàng', 'error');
+                    return;
+                }
+            } catch (apiError) {
+                console.error('buyNow API error:', apiError);
+                showAlert('Lỗi kết nối. Vui lòng thử lại!', 'error');
+                return;
+            }
+        } else {
+            // Chưa đăng nhập: lưu vào localStorage
+            let cart = JSON.parse(localStorage.getItem('cart')) || [];
+            const existingItem = cart.find(item => item.id === productData.id);
+            if (existingItem) {
+                existingItem.quantity += quantity;
+            } else {
+                cart.push({...productData, quantity: quantity, selected: true});
+            }
+            localStorage.setItem('cart', JSON.stringify(cart));
+        }
+
+        showAlert(`Đang chuyển đến giỏ hàng...`, 'success');
         setTimeout(() => {
             window.location.href = 'cart.html';
-        }, 1000);
+        }, 800);
     } catch (error) {
         console.error('Error in buyNow:', error);
         showAlert('Lỗi: Không thể thêm sản phẩm vào giỏ hàng.', 'error');

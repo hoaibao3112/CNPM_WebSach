@@ -317,6 +317,35 @@ function updateCartCount() {
 
 // Render cart items
 async function renderCart() {
+  // ====== XU LY BUY NOW FLAG ======
+  const buyNowId = localStorage.getItem('buyNow_productId');
+  if (buyNowId) {
+    localStorage.removeItem('buyNow_productId');
+    localStorage.removeItem('buyNow_quantity');
+    let cartForSelection = await getCart();
+    let needsUpdate = false;
+    for (let i = 0; i < cartForSelection.length; i++) {
+      const shouldBeSelected = String(cartForSelection[i].id) === String(buyNowId);
+      if (cartForSelection[i].selected !== shouldBeSelected) {
+        needsUpdate = true;
+        if (isLoggedIn()) {
+          try {
+            const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'https://cnpm-websach-2.onrender.com';
+            await fetch(`${_apiBase}/api/client/cart/select`, {
+              method: 'PUT',
+              headers: { 'Authorization': `Bearer ${getToken()}`, 'Content-Type': 'application/json' },
+              body: JSON.stringify({ productId: cartForSelection[i].id, selected: shouldBeSelected })
+            });
+          } catch(e) {}
+        } else {
+          cartForSelection[i].selected = shouldBeSelected;
+        }
+      }
+    }
+    if (!isLoggedIn() && needsUpdate) saveLocalCart(cartForSelection);
+  }
+  // ====== HET XU LY BUY NOW ======
+
   const cart = await getCart();
   const cartItemsBody = document.getElementById('cart-items-body');
   const emptyCartMessage = document.getElementById('empty-cart');
@@ -335,16 +364,16 @@ async function renderCart() {
     emptyCartMessage.classList.remove('hidden');
     updateSummary(0);
     // Hide sections when empty
-    const mainGrid = document.querySelector('.cart-section') || document.querySelector('.grid-cols-1.lg\\:grid-cols-12');
-    if (mainGrid) mainGrid.classList.add('hidden');
+    const mainGrid = document.getElementById('cart-main-grid');
+    if (mainGrid) mainGrid.style.display = 'none';
     const promoSection = document.getElementById('saved-promos-section');
-    if (promoSection) promoSection.classList.add('hidden');
+    if (promoSection) promoSection.style.display = 'none';
     return;
   }
 
   emptyCartMessage.classList.add('hidden');
-  const mainGrid = document.querySelector('.cart-section') || document.querySelector('.grid-cols-1.lg\\:grid-cols-12');
-  if (mainGrid) mainGrid.classList.remove('hidden');
+  const mainGrid = document.getElementById('cart-main-grid');
+  if (mainGrid) mainGrid.style.display = '';
 
   let subtotal = 0;
   cart.forEach((item, index) => {
@@ -411,6 +440,8 @@ async function renderCart() {
     shippingFee = 0;
     shippingInfo = null;
   }
+
+  
 
   updateSummary(subtotal, appliedDiscountAmount, shippingFee, shippingInfo);
   attachEventListeners();
@@ -2385,13 +2416,13 @@ async function loadSavedPromos() {
       controls.style.gap = '12px';
       controls.style.marginTop = '12px';
       controls.style.width = '100%';
-      controls.innerHTML = 
+      controls.innerHTML = `
         <div style="display:flex;align-items:center;gap:10px;padding:12px 20px;justify-content:center">
           <button class="promo-prev" aria-label="Previous promos" style="width:36px;height:36px;border-radius:50%;border:2px solid #fecaca;background:#fff;color:#dc2626;font-weight:900;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s" onmouseenter="this.style.background='#dc2626';this.style.color='#fff'" onmouseleave="this.style.background='#fff';this.style.color='#dc2626'">&#8249;</button>
           <span class="promo-page-indicator" style="font-weight:700;color:#6b7280;font-size:13px;min-width:40px;text-align:center">1/</span>
           <button class="promo-next" aria-label="Next promos" style="width:36px;height:36px;border-radius:50%;border:2px solid #fecaca;background:#fff;color:#dc2626;font-weight:900;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s" onmouseenter="this.style.background='#dc2626';this.style.color='#fff'" onmouseleave="this.style.background='#fff';this.style.color='#dc2626'">&#8250;</button>
         </div>
-      ;
+      `;
       savedPromosSection.appendChild(controls);
     }
 

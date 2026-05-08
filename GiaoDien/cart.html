@@ -106,7 +106,7 @@
       </div>
     </div>
 
-    <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
+    <div id="cart-main-grid" class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
       <!-- LEFT: Cart Items & Form -->
       <div class="lg:col-span-8 space-y-12">
         <!-- Cart Table Container -->
@@ -260,28 +260,6 @@
 
       <!-- RIGHT: Order Summary & Map -->
       <div class="lg:col-span-4 space-y-8 lg:sticky lg:top-28">
-        <!-- Delivery Map Section -->
-        <div class="bg-white p-8 rounded-[32px] border border-border shadow-sm space-y-6">
-            <h3 class="text-xs font-black text-text uppercase tracking-widest flex items-center gap-3">
-                <i class="fas fa-map-marked-alt text-primary"></i> Bản đồ vận chuyển
-            </h3>
-            <div id="map" class="shadow-inner"></div>
-            <div class="flex gap-2">
-                <button type="button" id="input_button" class="flex-1 h-12 bg-text text-white rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-black transition-all shadow-md">TÌM VỊ TRÍ</button>
-                <button type="button" id="delete_button" class="w-12 h-12 bg-bg border border-border rounded-xl text-text-light hover:text-red-500 transition-all"><i class="fas fa-trash-alt"></i></button>
-            </div>
-            <div class="grid grid-cols-2 gap-4">
-                <div class="p-4 bg-primary/5 rounded-2xl text-center">
-                    <p class="text-[9px] font-black text-primary/60 uppercase mb-1">Khoảng cách</p>
-                    <p id="distance" class="text-base font-black text-primary tracking-tighter">0 km</p>
-                </div>
-                <div class="p-4 bg-primary/5 rounded-2xl text-center">
-                    <p class="text-[9px] font-black text-primary/60 uppercase mb-1">Thời gian</p>
-                    <p id="duration" class="text-base font-black text-primary tracking-tighter">0 phút</p>
-                </div>
-            </div>
-        </div>
-
         <!-- Final Summary Section -->
         <div class="bg-primary p-10 rounded-[40px] text-white shadow-2xl shadow-primary/30 relative overflow-hidden group">
             <div class="absolute -right-20 -top-20 w-64 h-64 bg-white/5 rounded-full group-hover:scale-110 transition-transform duration-700"></div>
@@ -324,6 +302,28 @@
                 <p class="text-[10px] font-bold opacity-60 flex items-center justify-center gap-2">
                     <i class="fas fa-shield-alt"></i> Thanh toán an toàn 100%
                 </p>
+            </div>
+        </div>
+
+        <!-- Delivery Map Section -->
+        <div class="bg-white p-8 rounded-[32px] border border-border shadow-sm space-y-6">
+            <h3 class="text-xs font-black text-text uppercase tracking-widest flex items-center gap-3">
+                <i class="fas fa-map-marked-alt text-primary"></i> Bản đồ vận chuyển
+            </h3>
+            <div id="map" class="shadow-inner"></div>
+            <div class="flex gap-2">
+                <button type="button" id="input_button" class="flex-1 h-12 bg-text text-white rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-black transition-all shadow-md">TÌM VỊ TRÍ</button>
+                <button type="button" id="delete_button" class="w-12 h-12 bg-bg border border-border rounded-xl text-text-light hover:text-red-500 transition-all"><i class="fas fa-trash-alt"></i></button>
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+                <div class="p-4 bg-primary/5 rounded-2xl text-center">
+                    <p class="text-[9px] font-black text-primary/60 uppercase mb-1">Khoảng cách</p>
+                    <p id="distance" class="text-base font-black text-primary tracking-tighter">0 km</p>
+                </div>
+                <div class="p-4 bg-primary/5 rounded-2xl text-center">
+                    <p class="text-[9px] font-black text-primary/60 uppercase mb-1">Thời gian</p>
+                    <p id="duration" class="text-base font-black text-primary tracking-tighter">0 phút</p>
+                </div>
             </div>
         </div>
       </div>
