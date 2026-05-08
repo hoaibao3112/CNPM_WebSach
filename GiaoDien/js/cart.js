@@ -317,36 +317,42 @@ function updateCartCount() {
 
 // Render cart items
 async function renderCart() {
-  // ====== XU LY BUY NOW FLAG ======
+  // ====== XU LY BUY NOW FLAG (OPTIMIZED) ======
+  let cart = await getCart();
   const buyNowId = localStorage.getItem('buyNow_productId');
-  if (buyNowId) {
+  if (buyNowId && cart.length > 0) {
     localStorage.removeItem('buyNow_productId');
     localStorage.removeItem('buyNow_quantity');
-    let cartForSelection = await getCart();
-    let needsUpdate = false;
-    for (let i = 0; i < cartForSelection.length; i++) {
-      const shouldBeSelected = String(cartForSelection[i].id) === String(buyNowId);
-      if (cartForSelection[i].selected !== shouldBeSelected) {
-        needsUpdate = true;
+    
+    const selectPromises = [];
+    let localChanged = false;
+    
+    for (let i = 0; i < cart.length; i++) {
+      const shouldBeSelected = String(cart[i].id) === String(buyNowId);
+      if (cart[i].selected !== shouldBeSelected) {
+        cart[i].selected = shouldBeSelected;
         if (isLoggedIn()) {
-          try {
-            const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'https://cnpm-websach-2.onrender.com';
-            await fetch(`${_apiBase}/api/client/cart/select`, {
+          const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'https://cnpm-websach-2.onrender.com';
+          selectPromises.push(
+            fetch(`${_apiBase}/api/client/cart/select`, {
               method: 'PUT',
               headers: { 'Authorization': `Bearer ${getToken()}`, 'Content-Type': 'application/json' },
-              body: JSON.stringify({ productId: cartForSelection[i].id, selected: shouldBeSelected })
-            });
-          } catch(e) {}
+              body: JSON.stringify({ productId: cart[i].id, selected: shouldBeSelected })
+            }).catch(e => console.warn('Selection sync failed', e))
+          );
         } else {
-          cartForSelection[i].selected = shouldBeSelected;
+          localChanged = true;
         }
       }
     }
-    if (!isLoggedIn() && needsUpdate) saveLocalCart(cartForSelection);
+    
+    if (selectPromises.length > 0) await Promise.all(selectPromises);
+    if (localChanged) saveLocalCart(cart);
+    
+    // Refresh cart data after batch update to ensure consistency
+    cart = await getCart();
   }
   // ====== HET XU LY BUY NOW ======
-
-  const cart = await getCart();
   const cartItemsBody = document.getElementById('cart-items-body');
   const emptyCartMessage = document.getElementById('empty-cart');
 
@@ -426,7 +432,7 @@ async function renderCart() {
   if (provinceSelect && provinceSelect.value) {
     const selectedOption = provinceSelect.options[provinceSelect.selectedIndex];
     const provinceName = selectedOption.dataset.provinceName || selectedOption.textContent;
-    const totalWeight = await getTotalWeight();
+    const totalWeight = calculateTotalWeight(cart);
     const customerTier = getCustomerTier();
     // ✅ FIX: calculateShippingFee trả về object, lấy .final cho shippingFee
     shippingInfo = calculateShippingFee(provinceName, totalWeight, customerTier);
@@ -558,17 +564,19 @@ function calculateShippingFee(province, totalWeight, customerTier = 'Đồng') {
 }
 
 // Lấy tổng trọng lượng giỏ hàng
-async function getTotalWeight() {
-  const cart = await getCart();
+// Lấy tổng trọng lượng giỏ hàng (Đã tối ưu: không fetch lại cart)
+function calculateTotalWeight(cart) {
   const selectedItems = cart.filter(item => item.selected);
-
-  // Mặc định nếu không có trọng lượng, giả định mỗi sản phẩm 300g
-  const totalWeight = selectedItems.reduce((sum, item) => {
-    const weight = item.weight || 300; // Default 300g nếu không có
+  return selectedItems.reduce((sum, item) => {
+    const weight = item.weight || 300; 
     return sum + (weight * item.quantity);
   }, 0);
+}
 
-  return totalWeight;
+// Giữ lại getTotalWeight cho tính tương thích ngược
+async function getTotalWeight() {
+  const cart = await getCart();
+  return calculateTotalWeight(cart);
 }
 
 // Lấy tier khách hàng
@@ -896,7 +904,7 @@ async function checkout() {
     if (provinceSelect && provinceSelect.value) {
       const selectedOption = provinceSelect.options[provinceSelect.selectedIndex];
       const provinceName = selectedOption.dataset.provinceName || selectedOption.textContent;
-      const totalWeight = await getTotalWeight();
+      const totalWeight = calculateTotalWeight(cart);
       const customerTier = getCustomerTier();
       const shippingInfo = calculateShippingFee(provinceName, totalWeight, customerTier);
       shippingFee = shippingInfo.final;
@@ -1544,7 +1552,7 @@ async function updateShippingFee() {
   const provinceName = selectedOption.dataset.provinceName || selectedOption.textContent;
 
   // Lấy trọng lượng tổng và tier khách hàng
-  const totalWeight = await getTotalWeight();
+  const totalWeight = calculateTotalWeight(cart);
   const customerTier = getCustomerTier();
 
   // Tính phí ship (trả về object với original, final, discount)
@@ -1921,7 +1929,7 @@ async function displayAppliedPromo(code, type, details = null) {
       // Tính phí ship gốc nếu đã chọn địa chỉ
       const selectedOption = provinceSelect.options[provinceSelect.selectedIndex];
       const provinceName = selectedOption.dataset.provinceName || selectedOption.textContent;
-      const totalWeight = await getTotalWeight();
+      const totalWeight = calculateTotalWeight(cart);
       const customerTier = getCustomerTier();
       const originalShippingFee = calculateShippingFee(provinceName, totalWeight, customerTier);
 
@@ -2015,7 +2023,7 @@ async function displayAppliedPromo(code, type, details = null) {
         if (provinceSelect && provinceSelect.value) {
           const selectedOption = provinceSelect.options[provinceSelect.selectedIndex];
           const provinceName = selectedOption.dataset.provinceName || selectedOption.textContent;
-          const totalWeight = await getTotalWeight();
+          const totalWeight = calculateTotalWeight(cart);
           const customerTier = getCustomerTier();
           shippingInfo = calculateShippingFee(provinceName, totalWeight, customerTier);
           currentShippingFee = shippingInfo.final;
@@ -2076,7 +2084,7 @@ async function removeDiscountCode() {
     if (provinceSelect && provinceSelect.value) {
       const selectedOption = provinceSelect.options[provinceSelect.selectedIndex];
       const provinceName = selectedOption.dataset.provinceName || selectedOption.textContent;
-      const totalWeight = await getTotalWeight();
+      const totalWeight = calculateTotalWeight(cart);
       const customerTier = getCustomerTier();
       shippingInfo = calculateShippingFee(provinceName, totalWeight, customerTier);
       currentShippingFee = shippingInfo.final;
@@ -2119,7 +2127,7 @@ async function removeFreeShipCode() {
   if (provinceSelect && provinceSelect.value) {
     const selectedOption = provinceSelect.options[provinceSelect.selectedIndex];
     const provinceName = selectedOption.dataset.provinceName || selectedOption.textContent;
-    const totalWeight = await getTotalWeight();
+    const totalWeight = calculateTotalWeight(cart);
     const customerTier = getCustomerTier();
     shippingInfo = calculateShippingFee(provinceName, totalWeight, customerTier);
     shippingFee = shippingInfo.final;
@@ -2887,7 +2895,7 @@ window.applyPromoFromSaved = async function (code, event) {
         // Chỉ tính ship nếu đã chọn địa chỉ VÀ chưa có Free Ship
         const selectedOption = provinceSelect.options[provinceSelect.selectedIndex];
         const provinceName = selectedOption.dataset.provinceName || selectedOption.textContent;
-        const totalWeight = await getTotalWeight();
+        const totalWeight = calculateTotalWeight(cart);
         const customerTier = getCustomerTier();
 
         // Tính phí ship (trả về object với original, final, discount, tierDiscount)
