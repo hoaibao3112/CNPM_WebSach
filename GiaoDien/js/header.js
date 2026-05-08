@@ -158,25 +158,22 @@ const renderProductSearch = (productsFond, data) => {
 
   const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || window.API_CONFIG.BASE_URL;
 
-  products.slice(0, 5).forEach((itemData) => {
+  products.slice(0, 8).forEach((itemData) => {
     const item = document.createElement("div");
-    item.className = "flex items-center gap-3 p-2 hover:bg-gray-50 rounded-xl cursor-pointer transition-all border border-transparent hover:border-gray-100 group";
+    item.className = "flex flex-col gap-2 p-2 hover:bg-gray-50 rounded-xl cursor-pointer transition-all border border-transparent hover:border-gray-100 group";
     
     const imageName = itemData.HinhAnh || itemData.Anh || '';
-    const imageUrl = imageName ? `${_apiBase}/product-images/${imageName}` : 'img/default-book.jpg';
+    const imageUrl = window.API_CONFIG ? window.API_CONFIG.resolveImageUrl(imageName) : 'img/default-book.jpg';
     
     item.innerHTML = `
-      <div class="w-12 h-16 rounded-lg overflow-hidden flex-shrink-0 bg-gray-100 shadow-sm group-hover:scale-105 transition-transform">
+      <div class="aspect-[3/4] w-full rounded-lg overflow-hidden bg-gray-100 shadow-sm group-hover:scale-105 transition-transform relative">
         <img src="${imageUrl}" class="w-full h-full object-cover" onerror="this.src='img/default-book.jpg'">
       </div>
-      <div class="flex-1 min-w-0">
-        <h4 class="text-xs font-bold text-gray-800 truncate mb-0.5 group-hover:text-primary transition-colors">${itemData.TenSP}</h4>
-        <div class="flex items-center gap-2">
+      <div class="space-y-1">
+        <h4 class="text-[10px] font-bold text-gray-800 line-clamp-2 leading-tight group-hover:text-primary transition-colors h-7 overflow-hidden" style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;">${itemData.TenSP}</h4>
+        <div class="flex items-center justify-between">
           <span class="text-[10px] font-black text-primary">${(itemData.DonGia || 0).toLocaleString('vi-VN')}đ</span>
         </div>
-      </div>
-      <div class="opacity-0 group-hover:opacity-100 transition-opacity">
-        <i class="fas fa-chevron-right text-[10px] text-gray-300"></i>
       </div>
     `;
 
