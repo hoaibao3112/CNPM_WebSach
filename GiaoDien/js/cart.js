@@ -45,38 +45,55 @@ function getUserId() {
 }
 
 // Get cart from backend or localStorage
-async function getCart() {
-  if (isLoggedIn()) {
-    try {
-      const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'https://cnpm-websach-2.onrender.com';
-      const response = await fetch(`${_apiBase}/api/client/cart`, {
-        headers: {
-          'Authorization': `Bearer ${getToken()}`,
-          'Content-Type': 'application/json'
+let cachedCart = null;
+let cartFetchPromise = null;
+
+async function getCart(forceRefresh = false) {
+  if (!forceRefresh && cachedCart) return JSON.parse(JSON.stringify(cachedCart));
+  if (!forceRefresh && cartFetchPromise) return cartFetchPromise.then(c => JSON.parse(JSON.stringify(c)));
+
+  cartFetchPromise = (async () => {
+    if (isLoggedIn()) {
+      try {
+        const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'https://cnpm-websach-2.onrender.com';
+        const response = await fetch(`${_apiBase}/api/client/cart`, {
+          headers: {
+            'Authorization': `Bearer ${getToken()}`,
+            'Content-Type': 'application/json'
+          }
+        });
+        if (response.ok) {
+          const responseData = await response.json();
+          const cartItems = responseData.data || responseData;
+          if (!Array.isArray(cartItems)) {
+            cachedCart = getLocalCart();
+            return JSON.parse(JSON.stringify(cachedCart));
+          }
+          cachedCart = cartItems.map(item => ({
+            id: item.MaSP,
+            name: item.name,
+            price: item.price,
+            image: item.image,
+            quantity: item.quantity,
+            // Default to true since giohang_chitiet table doesn't have Selected column
+            selected: item.Selected !== undefined ? Boolean(item.Selected) : true
+          }));
+          return JSON.parse(JSON.stringify(cachedCart));
         }
-      });
-      if (response.ok) {
-        const responseData = await response.json();
-        const cartItems = responseData.data || responseData;
-        if (!Array.isArray(cartItems)) return getLocalCart();
-        return cartItems.map(item => ({
-          id: item.MaSP,
-          name: item.name,
-          price: item.price,
-          image: item.image,
-          quantity: item.quantity,
-          // Default to true since giohang_chitiet table doesn't have Selected column
-          selected: item.Selected !== undefined ? Boolean(item.Selected) : true
-        }));
+        console.error('Error fetching cart from server:', await response.json());
+        cachedCart = getLocalCart();
+        return JSON.parse(JSON.stringify(cachedCart));
+      } catch (error) {
+        console.error('Cart API error:', error);
+        cachedCart = getLocalCart();
+        return JSON.parse(JSON.stringify(cachedCart));
       }
-      console.error('Error fetching cart from server:', await response.json());
-      return getLocalCart(); // Fallback to localStorage
-    } catch (error) {
-      console.error('Cart API error:', error);
-      return getLocalCart();
     }
-  }
-  return getLocalCart();
+    cachedCart = getLocalCart();
+    return JSON.parse(JSON.stringify(cachedCart));
+  })();
+
+  return cartFetchPromise;
 }
 
 // Get cart from localStorage
@@ -116,6 +133,7 @@ async function syncLocalCartToServer() {
     }
   }
   localStorage.removeItem('cart'); // Clear local cart after sync
+  cachedCart = null;
 }
 
 // Add item to cart
@@ -132,6 +150,7 @@ async function addToCart(productId, quantity = 1, productName, price, image) {
         body: JSON.stringify({ productId: Number(productId), quantity })
       });
       if (response.ok) {
+        cachedCart = null;
         await renderCart();
         showToast('Đã thêm sản phẩm vào giỏ hàng!');
         updateCartCount();
@@ -156,6 +175,7 @@ async function addToCart(productId, quantity = 1, productName, price, image) {
       cart.push({ id: productId, name: productName, price, image, quantity, selected: true });
     }
     saveLocalCart(cart);
+    cachedCart = null;
     await renderCart();
     showToast('Đã thêm sản phẩm vào giỏ hàng! (Đăng nhập để lưu vĩnh viễn)');
     updateCartCount();
@@ -181,6 +201,7 @@ async function updateQuantity(index, newQuantity) {
         body: JSON.stringify({ productId: item.id, quantity: newQuantity })
       });
       if (response.ok) {
+        cachedCart = null;
         await renderCart();
         updateCartCount();
         return true;
@@ -195,6 +216,7 @@ async function updateQuantity(index, newQuantity) {
   } else {
     item.quantity = newQuantity;
     saveLocalCart(cart);
+    cachedCart = null;
     await renderCart();
     updateCartCount();
     return true;
@@ -216,6 +238,7 @@ async function removeFromCart(index) {
         }
       });
       if (response.ok) {
+        cachedCart = null;
         await renderCart();
         showToast('Đã xóa sản phẩm khỏi giỏ hàng');
         updateCartCount();
@@ -231,6 +254,7 @@ async function removeFromCart(index) {
   } else {
     cart.splice(index, 1);
     saveLocalCart(cart);
+    cachedCart = null;
     await renderCart();
     showToast('Đã xóa sản phẩm khỏi giỏ hàng');
     updateCartCount();
@@ -253,6 +277,7 @@ async function toggleSelection(index, selected) {
         body: JSON.stringify({ productId: cart[index].id, selected })
       });
       if (response.ok) {
+        cachedCart = null;
         await renderCart();
         return true;
       }
@@ -266,6 +291,7 @@ async function toggleSelection(index, selected) {
   } else {
     cart[index].selected = selected;
     saveLocalCart(cart);
+    cachedCart = null;
     await renderCart();
     return true;
   }
@@ -283,6 +309,7 @@ async function clearCart() {
         }
       });
       if (response.ok) {
+        cachedCart = null;
         await renderCart();
         showToast('Đã xóa toàn bộ giỏ hàng');
         updateCartCount();
@@ -297,6 +324,7 @@ async function clearCart() {
     }
   } else {
     localStorage.removeItem('cart');
+    cachedCart = null;
     await renderCart();
     showToast('Đã xóa toàn bộ giỏ hàng');
     updateCartCount();
@@ -350,6 +378,7 @@ async function renderCart() {
     if (localChanged) saveLocalCart(cart);
     
     // Refresh cart data after batch update to ensure consistency
+    cachedCart = null;
     cart = await getCart();
   }
   // ====== HET XU LY BUY NOW ======
@@ -753,9 +782,29 @@ function attachEventListeners() {
   if (selectAllCheckbox) {
     selectAllCheckbox.addEventListener('change', async e => {
       const cart = await getCart();
-      for (let i = 0; i < cart.length; i++) {
-        await toggleSelection(i, e.target.checked);
+      const isLogged = isLoggedIn();
+      const checked = e.target.checked;
+      
+      if (isLogged) {
+        const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'https://cnpm-websach-2.onrender.com';
+        const promises = cart.map(item => 
+          fetch(`${_apiBase}/api/client/cart/select`, {
+            method: 'PUT',
+            headers: {
+              'Authorization': `Bearer ${getToken()}`,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ productId: item.id, selected: checked })
+          }).catch(err => console.warn('Sync select failed for', item.id, err))
+        );
+        await Promise.all(promises);
+      } else {
+        cart.forEach(item => item.selected = checked);
+        saveLocalCart(cart);
       }
+      
+      cachedCart = null;
+      await renderCart();
     });
   }
 
