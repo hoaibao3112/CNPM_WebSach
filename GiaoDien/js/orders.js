@@ -404,12 +404,8 @@ async function renderOrders(customerId, statusFilter = 'all') {
     const orderListElement = document.getElementById('order-list');
     const loadingModal = document.getElementById('loading-modal');
 
-    // Hiển thị loading
-    if (loadingModal) {
-        loadingModal.classList.add('active');
-        loadingModal.style.display = 'flex';
-    }
-    if (orderListElement) orderListElement.innerHTML = '';
+    // Hiển thị loading skeleton
+    if (orderListElement) showOrderSkeletons();
 
     try {
         let orders = await fetchOrders(customerId, statusFilter);
@@ -431,6 +427,35 @@ async function renderOrders(customerId, statusFilter = 'all') {
             const idB = parseInt(b.id) || 0;
             return idB - idA; // Mã lớn hơn (đơn mới hơn) hiện trước
         });
+
+// Hàm hiển thị skeleton cho danh sách đơn hàng
+function showOrderSkeletons() {
+    const orderListElement = document.getElementById('order-list');
+    if (!orderListElement) return;
+
+    let html = '';
+    for (let i = 0; i < 3; i++) {
+        html += `
+            <div class="bg-white rounded-[32px] border border-border p-8 animate-pulse">
+                <div class="flex justify-between mb-8 pb-8 border-b border-dashed border-border">
+                    <div class="space-y-3">
+                        <div class="h-4 bg-gray-100 rounded-full w-24 skeleton-pulse"></div>
+                        <div class="h-3 bg-gray-100 rounded-full w-32 skeleton-pulse"></div>
+                    </div>
+                    <div class="h-8 bg-gray-100 rounded-full w-24 skeleton-pulse"></div>
+                </div>
+                <div class="flex justify-between items-end">
+                    <div class="space-y-4">
+                        <div class="h-3 bg-gray-100 rounded-full w-40 skeleton-pulse"></div>
+                        <div class="h-3 bg-gray-100 rounded-full w-20 skeleton-pulse"></div>
+                    </div>
+                    <div class="h-8 bg-gray-100 rounded-full w-32 skeleton-pulse"></div>
+                </div>
+            </div>
+        `;
+    }
+    orderListElement.innerHTML = html;
+}
 
         // ✅ MAPPING TRẠNG THÁI MỚI - BAO GỒM CẢ TRẠNG THÁI HỦY
         const statusDisplay = {
@@ -1184,6 +1209,9 @@ async function submitReturnRequest(order) {
         cancelBtn.onclick = () => showCancelModal();
     }
 
+    // Hiển thị thanh tiến trình trực quan
+    renderOrderStepper(order.status || order.tinhtrang || 'pending');
+
     // Hiển thị bản đồ giao hàng
     displayDeliveryMap(order);
 
@@ -1196,6 +1224,72 @@ async function submitReturnRequest(order) {
             setTimeout(() => { if (typeof map !== 'undefined' && map) map.invalidateSize(); }, 150);
             setTimeout(() => { if (typeof map !== 'undefined' && map) map.invalidateSize(); }, 450);
         } catch (e) { /* ignore */ }
+}
+
+// Hàm hiển thị thanh tiến trình trực quan
+function renderOrderStepper(status) {
+    const container = document.getElementById('order-stepper-container');
+    if (!container) return;
+
+    const statusLower = (String(status) || '').toLowerCase();
+    
+    // Nếu đơn hàng bị hủy, ẩn stepper hoặc hiện thông báo đặc biệt
+    if (statusLower.includes('hủy') || statusLower === 'cancelled') {
+        container.innerHTML = `
+            <div class="p-8 text-center bg-red-50">
+                <p class="text-red-500 font-black text-xs uppercase tracking-[0.2em]">Đơn hàng này đã bị hủy</p>
+            </div>
+        `;
+        return;
+    }
+
+    const steps = [
+        { id: 'pending', label: 'Đã đặt hàng', icon: 'fa-box', keywords: ['pending', 'chờ xử lý', 'chờ xác nhận'] },
+        { id: 'processing', label: 'Đã xác nhận', icon: 'fa-clipboard-check', keywords: ['processing', 'đã xác nhận'] },
+        { id: 'shipping', label: 'Đang giao', icon: 'fa-truck', keywords: ['shipping', 'đang giao hàng'] },
+        { id: 'completed', label: 'Thành công', icon: 'fa-check-double', keywords: ['completed', 'đã giao hàng', 'đã hoàn thành', 'giao hàng'] }
+    ];
+
+    // Xác định step hiện tại
+    let currentStepIdx = 0;
+    steps.forEach((step, idx) => {
+        if (step.keywords.some(k => statusLower.includes(k))) {
+            currentStepIdx = idx;
+        }
+    });
+
+    // Nếu đã hoàn thành, set index là cuối cùng
+    if (statusLower.includes('giao hàng') || statusLower.includes('thành công') || statusLower.includes('đã giao')) {
+        currentStepIdx = 3;
+    }
+
+    const progressPercent = (currentStepIdx / (steps.length - 1)) * 100;
+
+    container.innerHTML = `
+        <div class="order-tracking-stepper py-12">
+            <div class="flex justify-between items-center max-w-2xl mx-auto relative px-4">
+                <!-- Connecting Line -->
+                <div class="absolute top-6 left-0 w-full h-1 bg-gray-100 -translate-y-1/2 z-0 px-8">
+                    <div class="h-full bg-primary transition-all duration-1000" style="width: ${progressPercent}%;"></div>
+                </div>
+                
+                ${steps.map((step, idx) => {
+                    let stateClass = '';
+                    if (idx < currentStepIdx) stateClass = 'completed';
+                    else if (idx === currentStepIdx) stateClass = 'active';
+                    
+                    return `
+                        <div class="step-item relative z-10 flex flex-col items-center gap-3 ${stateClass}">
+                            <div class="step-icon w-12 h-12 rounded-full bg-white border-2 border-gray-100 flex items-center justify-center text-gray-300 transition-all duration-500">
+                                <i class="fas ${step.icon}"></i>
+                            </div>
+                            <span class="text-[9px] md:text-[10px] font-black uppercase tracking-widest text-gray-400 text-center">${step.label}</span>
+                        </div>
+                    `;
+                }).join('')}
+            </div>
+        </div>
+    `;
 }
 
 // Fetch return request(s) for a given order id

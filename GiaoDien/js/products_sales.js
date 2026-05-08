@@ -315,8 +315,26 @@
 		countdownInterval = setInterval(update, 1000);
 	}
 
-	function setLoading() {
-		container.innerHTML = '<div class="loading">Đang tải khuyến mãi...</div>';
+	function setSkeletons() {
+		if (!container) return;
+		let html = '';
+		for(let i=0; i<4; i++) {
+			html += `
+				<div class="sale-item animate-pulse">
+					<div class="sale-item-image-wrapper bg-gray-100 skeleton-pulse"></div>
+					<div class="sale-item-info space-y-3">
+						<div class="h-4 bg-gray-100 rounded-full w-3/4 skeleton-pulse"></div>
+						<div class="h-3 bg-gray-100 rounded-full w-1/2 skeleton-pulse"></div>
+						<div class="h-6 bg-gray-100 rounded-full w-1/3 mt-auto skeleton-pulse"></div>
+						<div class="flex gap-2">
+							<div class="h-10 bg-gray-100 rounded-xl flex-2 skeleton-pulse"></div>
+							<div class="h-10 bg-gray-100 rounded-xl flex-1 skeleton-pulse"></div>
+						</div>
+					</div>
+				</div>
+			`;
+		}
+		container.innerHTML = html;
 	}
 
 	function setError(message, useCacheAvailable = false) {
@@ -376,7 +394,7 @@
 
 	// load(forceRefresh=false): if forceRefresh is true, always attempt fetch (used by retry)
 	async function load(forceRefresh = false) {
-		setLoading();
+		setSkeletons();
 		// If not forcing refresh and cached exists, show cached immediately while also trying to refresh in background
 		const cachedRaw = localStorage.getItem(CACHE_KEY);
 		if (!forceRefresh && cachedRaw) {

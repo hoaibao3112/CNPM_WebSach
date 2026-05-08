@@ -117,6 +117,28 @@ async function addToCart(productId, productName, price, image) {
   }
 }
 
+// Hàm hiển thị skeletons khi đang tải
+function showSkeletons(containerId, count = 5) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+
+  let skeletonHtml = "";
+  for (let i = 0; i < count; i++) {
+    skeletonHtml += `
+      <div class="skeleton-card animate-pulse">
+        <div class="aspect-[3/4] mb-4 bg-gray-100 rounded-2xl skeleton-pulse"></div>
+        <div class="h-4 bg-gray-100 rounded-full w-3/4 mb-2 skeleton-pulse"></div>
+        <div class="h-3 bg-gray-100 rounded-full w-1/2 mb-4 skeleton-pulse"></div>
+        <div class="mt-auto space-y-3">
+          <div class="h-6 bg-gray-100 rounded-full w-1/3 skeleton-pulse"></div>
+          <div class="h-8 bg-gray-100 rounded-xl w-full skeleton-pulse"></div>
+        </div>
+      </div>
+    `;
+  }
+  container.innerHTML = skeletonHtml;
+}
+
 // Hàm hiển thị danh sách sản phẩm
 function displayProducts(productsData, containerId = 'book-list', limit = null) {
   // Bulletproof unwrap for standardized API response: { success, data } or [...]
@@ -702,7 +724,7 @@ async function fetchAndDisplayProducts() {
   if (!productList) return;
 
   try {
-    productList.innerHTML = '<div class="loading">Đang tải sản phẩm...</div>';
+    showSkeletons('book-list', 10);
     const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'http://localhost:5000';
     let url = `${_apiBase}/api/product/sorted/year`;
     // Only honor saved filters when we are on the book page itself.
