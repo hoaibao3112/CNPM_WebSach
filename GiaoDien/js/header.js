@@ -163,11 +163,20 @@ const renderProductSearch = (productsFond, data) => {
     item.className = "flex flex-col gap-2 p-2 hover:bg-gray-50 rounded-xl cursor-pointer transition-all border border-transparent hover:border-gray-100 group";
     
     const imageName = itemData.HinhAnh || itemData.Anh || '';
-    const imageUrl = window.API_CONFIG ? window.API_CONFIG.resolveImageUrl(imageName) : 'img/default-book.jpg';
+    let imageUrl = 'img/default-book.jpg';
+    
+    if (imageName && imageName !== 'null' && imageName !== 'undefined') {
+      if (imageName.startsWith('http')) {
+        imageUrl = imageName;
+      } else {
+        const baseUrl = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'https://cnpm-websach-2.onrender.com';
+        imageUrl = `${baseUrl}/product-images/${imageName}`;
+      }
+    }
     
     item.innerHTML = `
       <div class="aspect-[3/4] w-full rounded-lg overflow-hidden bg-gray-100 shadow-sm group-hover:scale-105 transition-transform relative">
-        <img src="${imageUrl}" class="w-full h-full object-cover" onerror="this.src='img/default-book.jpg'">
+        <img src="${imageUrl}" class="w-full h-full object-cover" onerror="this.onerror=null; this.src='img/default-book.jpg';">
       </div>
       <div class="space-y-1">
         <h4 class="text-[10px] font-bold text-gray-800 line-clamp-2 leading-tight group-hover:text-primary transition-colors h-7 overflow-hidden" style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;">${itemData.TenSP}</h4>
