@@ -362,10 +362,7 @@ async function renderCart() {
   }
 
   cartItemsBody.innerHTML = '';
-  const cartActions = document.querySelector('.cart-actions');
-  const checkoutSection = document.querySelector('.checkout-section');
-  const customerInfoSection = document.querySelector('.customer-info-section');
-
+  
   if (cart.length === 0) {
     emptyCartMessage.classList.remove('hidden');
     updateSummary(0);
@@ -386,41 +383,59 @@ async function renderCart() {
     const itemTotal = item.price * item.quantity;
     if (item.selected) subtotal += itemTotal;
 
-    const row = document.createElement('tr');
-    row.className = 'group hover:bg-bg/20 transition-all';
+    const row = document.createElement('div');
+    row.className = 'group relative flex flex-col md:grid md:grid-cols-12 gap-4 items-center px-6 py-6 hover:bg-gray-50/80 transition-all duration-300';
     row.innerHTML = `
-      <td class="select-col px-4 py-6 align-middle">
-        <input type="checkbox" class="select-item h-5 w-5 accent-primary rounded-md cursor-pointer" data-index="${index}" ${item.selected ? 'checked' : ''}>
-      </td>
-      <td class="px-4 py-6 align-middle">
-        <div class="product-item flex items-center gap-4">
-          <div class="relative w-16 h-20 flex-shrink-0 group-hover:scale-105 transition-transform duration-500">
-            <img src="${window.API_CONFIG ? window.API_CONFIG.resolveImageUrl(item.image) : `img/product/${item.image}`}" alt="${item.name}" class="w-full h-full object-cover rounded-xl shadow-sm border border-border" onerror="this.src='img/default-book.jpg'">
+      <!-- Selection & Image -->
+      <div class="col-span-6 flex items-center gap-6 w-full">
+        <div class="flex-shrink-0 select-col">
+          <input type="checkbox" class="select-item h-6 w-6 accent-primary rounded-lg cursor-pointer transition-transform active:scale-90" data-index="${index}" ${item.selected ? 'checked' : ''}>
+        </div>
+        <div class="product-item flex items-center gap-5 flex-1 min-w-0">
+          <div class="relative w-20 h-28 flex-shrink-0 shadow-md group-hover:shadow-xl transition-all duration-500 rounded-xl overflow-hidden border border-border">
+            <img src="${window.API_CONFIG ? window.API_CONFIG.resolveImageUrl(item.image) : `img/product/${item.image}`}" alt="${item.name}" class="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700" onerror="this.src='img/default-book.jpg'">
+            <div class="absolute inset-0 bg-black/5 group-hover:bg-transparent transition-colors"></div>
           </div>
           <div class="min-w-0 flex-1">
-            <h3 class="text-xs font-black text-text mb-1 truncate leading-tight">${item.name}</h3>
-            <p class="text-[9px] font-bold text-text-light uppercase tracking-widest">ID: ${item.id}</p>
+            <h3 class="text-sm font-black text-text mb-1.5 line-clamp-2 leading-snug group-hover:text-primary transition-colors">${item.name}</h3>
+            <p class="text-[10px] font-bold text-text-light uppercase tracking-[0.2em] mb-2">ID: ${item.id}</p>
+            <div class="md:hidden flex items-center gap-3 mt-3">
+               <span class="text-xs font-black text-primary">${formatPrice(item.price)}</span>
+               <span class="text-[10px] text-text-light font-bold">x ${item.quantity}</span>
+            </div>
           </div>
         </div>
-      </td>
-      <td class="px-4 py-6 text-center align-middle">
-        <span class="text-xs font-bold text-text-light whitespace-nowrap">${formatPrice(item.price)}</span>
-      </td>
-      <td class="px-4 py-6 text-center align-middle">
-        <div class="inline-flex items-center bg-bg rounded-xl p-0.5 border border-border">
-          <button class="qty-btn minus w-7 h-7 flex items-center justify-center text-text-light hover:text-primary transition-colors" data-index="${index}"><i class="fas fa-minus text-[8px]"></i></button>
-          <input type="number" class="qty-input w-8 text-center font-black text-[11px] bg-transparent outline-none" value="${item.quantity}" min="1" data-index="${index}">
-          <button class="qty-btn plus w-7 h-7 flex items-center justify-center text-text-light hover:text-primary transition-colors" data-index="${index}"><i class="fas fa-plus text-[8px]"></i></button>
+      </div>
+
+      <!-- Price (Desktop) -->
+      <div class="hidden md:flex col-span-2 justify-center">
+        <span class="text-sm font-bold text-text-light whitespace-nowrap">${formatPrice(item.price)}</span>
+      </div>
+
+      <!-- Quantity -->
+      <div class="col-span-2 flex justify-center w-full md:w-auto mt-4 md:mt-0">
+        <div class="inline-flex items-center bg-white rounded-2xl p-1 shadow-sm border border-border/60">
+          <button class="qty-btn minus w-9 h-9 flex items-center justify-center text-text-light hover:text-red-50 hover:bg-red-50 rounded-xl transition-all" data-index="${index}">
+            <i class="fas fa-minus text-[10px]"></i>
+          </button>
+          <input type="number" class="qty-input w-12 text-center font-black text-sm bg-transparent outline-none" value="${item.quantity}" min="1" data-index="${index}">
+          <button class="qty-btn plus w-9 h-9 flex items-center justify-center text-text-light hover:text-primary hover:bg-primary/10 rounded-xl transition-all" data-index="${index}">
+            <i class="fas fa-plus text-[10px]"></i>
+          </button>
         </div>
-      </td>
-      <td class="px-4 py-4 text-right align-middle">
-        <span class="text-sm font-black text-primary tracking-tighter whitespace-nowrap">${formatPrice(itemTotal)}</span>
-      </td>
-      <td class="pl-2 pr-4 py-4 text-center align-middle">
-        <button class="remove-btn w-9 h-9 flex items-center justify-center rounded-xl bg-bg text-text-light hover:bg-red-50 hover:text-red-500 transition-all" data-index="${index}">
-          <i class="fas fa-trash-alt text-[10px]"></i>
+      </div>
+
+      <!-- Total & Remove -->
+      <div class="col-span-2 flex items-center justify-between md:justify-end gap-6 w-full md:w-auto mt-4 md:mt-0 border-t md:border-none pt-4 md:pt-0 border-dashed border-border">
+        <div class="flex flex-col items-end md:items-end">
+            <span class="text-[10px] font-bold text-text-light uppercase tracking-widest md:hidden mb-1">Thành tiền</span>
+            <span class="text-lg font-black text-primary tracking-tighter whitespace-nowrap">${formatPrice(itemTotal)}</span>
+        </div>
+        
+        <button class="remove-btn group/del w-11 h-11 flex items-center justify-center rounded-2xl bg-gray-50 text-text-light hover:bg-red-500 hover:text-white hover:rotate-12 transition-all duration-300 shadow-sm" data-index="${index}" title="Xóa sản phẩm">
+          <i class="fas fa-trash-alt text-sm group-hover/del:scale-110"></i>
         </button>
-      </td>
+      </div>
     `;
     cartItemsBody.appendChild(row);
   });
@@ -434,29 +449,22 @@ async function renderCart() {
     const provinceName = selectedOption.dataset.provinceName || selectedOption.textContent;
     const totalWeight = calculateTotalWeight(cart);
     const customerTier = getCustomerTier();
-    // ✅ FIX: calculateShippingFee trả về object, lấy .final cho shippingFee
     shippingInfo = calculateShippingFee(provinceName, totalWeight, customerTier);
     shippingFee = shippingInfo.final;
     window.currentShippingFee = shippingFee;
   }
 
-  // ✅ FIX: Sử dụng appliedDiscountAmount thay vì hardcode 0
-  // ✅ FIX: Nếu có appliedFreeShipCode, shippingFee = 0 và shippingInfo = null
   if (appliedFreeShipCode) {
     shippingFee = 0;
     shippingInfo = null;
   }
 
-  
-
   updateSummary(subtotal, appliedDiscountAmount, shippingFee, shippingInfo);
   attachEventListeners();
   updateCartCount();
-  // Emit custom event so other scripts can react (e.g., auto checkout after reorder)
-  try { window.dispatchEvent(new CustomEvent('cart:rendered', { detail: { subtotal } })); } catch (e) { /* ignore */ }
+  try { window.dispatchEvent(new CustomEvent('cart:rendered', { detail: { subtotal } })); } catch (e) { }
 }
 
-// Prefill checkout form when redirected from reorder
 window.addEventListener('cart:rendered', () => {
   try {
     const raw = localStorage.getItem('reorder_address');
