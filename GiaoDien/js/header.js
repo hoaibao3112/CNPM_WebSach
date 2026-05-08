@@ -145,44 +145,50 @@ const normalizeSearchProducts = (payload) => {
   return [];
 };
 
-const renderProductSearch = (productsFond, data) => {
+function renderProductSearch(productsFond, data) {
   if (!productsFond) return;
-
   const products = normalizeSearchProducts(data);
   productsFond.innerHTML = "";
 
   if (products.length === 0) {
-    productsFond.innerHTML = `<div class="p-4 text-center text-gray-400 text-xs italic">Không tìm thấy sản phẩm phù hợp</div>`;
+    productsFond.innerHTML = `<div class="p-8 text-center text-gray-400 text-xs italic font-medium">Không tìm thấy sản phẩm nào phù hợp</div>`;
     return;
   }
 
-  const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || window.API_CONFIG.BASE_URL;
+  const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'https://cnpm-websach-2.onrender.com';
 
-  products.slice(0, 8).forEach((itemData) => {
+  // Header Suggestion Grid Header
+  const headerHint = document.createElement('div');
+  headerHint.className = "px-5 py-3 border-b border-gray-50 flex justify-between items-center";
+  headerHint.innerHTML = `<span class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Sản phẩm gợi ý</span>`;
+  productsFond.appendChild(headerHint);
+
+  const grid = document.createElement('div');
+  grid.className = "p-3 grid grid-cols-1 gap-1";
+  productsFond.appendChild(grid);
+
+  products.slice(0, 5).forEach((itemData) => {
     const item = document.createElement("div");
-    item.className = "flex flex-col gap-2 p-2 hover:bg-gray-50 rounded-xl cursor-pointer transition-all border border-transparent hover:border-gray-100 group";
+    item.className = "flex items-center gap-4 p-3 hover:bg-primary/5 rounded-2xl cursor-pointer transition-all group border border-transparent hover:border-primary/10";
     
-    const imageName = itemData.HinhAnh || itemData.Anh || '';
     let imageUrl = 'img/default-book.jpg';
-    
-    if (imageName && imageName !== 'null' && imageName !== 'undefined') {
-      if (imageName.startsWith('http')) {
-        imageUrl = imageName;
-      } else {
-        const baseUrl = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'https://cnpm-websach-2.onrender.com';
-        imageUrl = `${baseUrl}/product-images/${imageName}`;
-      }
+    if (window.API_CONFIG && typeof window.API_CONFIG.resolveImageUrl === 'function') {
+        imageUrl = window.API_CONFIG.resolveImageUrl(itemData.HinhAnh || itemData.Anh);
     }
-    
+
     item.innerHTML = `
-      <div class="aspect-[3/4] w-full rounded-lg overflow-hidden bg-gray-100 shadow-sm group-hover:scale-105 transition-transform relative">
+      <div class="w-14 h-18 rounded-xl overflow-hidden shadow-sm group-hover:scale-105 transition-transform shrink-0 bg-gray-50">
         <img src="${imageUrl}" class="w-full h-full object-cover" onerror="this.onerror=null; this.src='img/default-book.jpg';">
       </div>
-      <div class="space-y-1">
-        <h4 class="text-[10px] font-bold text-gray-800 line-clamp-2 leading-tight group-hover:text-primary transition-colors h-7 overflow-hidden" style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;">${itemData.TenSP}</h4>
-        <div class="flex items-center justify-between">
-          <span class="text-[10px] font-black text-primary">${(itemData.DonGia || 0).toLocaleString('vi-VN')}đ</span>
+      <div class="flex-1 min-w-0">
+        <h4 class="text-xs font-bold text-gray-800 truncate group-hover:text-primary transition-colors">${itemData.TenSP}</h4>
+        <p class="text-[10px] text-gray-400 font-medium truncate">${itemData.TenTG || 'Đang cập nhật'}</p>
+        <div class="mt-1">
+          <span class="text-xs font-black text-primary">${(itemData.DonGia || 0).toLocaleString('vi-VN')}đ</span>
         </div>
+      </div>
+      <div class="opacity-0 group-hover:opacity-100 transition-opacity translate-x-2 group-hover:translate-x-0">
+        <i class="fas fa-chevron-right text-[10px] text-primary"></i>
       </div>
     `;
 
@@ -190,10 +196,35 @@ const renderProductSearch = (productsFond, data) => {
       loadProductDetailOnHeader(itemData.MaSP);
     });
     
-    productsFond.appendChild(item);
+    grid.appendChild(item);
   });
-};
+}
 
+document.addEventListener("DOMContentLoaded", () => {
+  const searchInput = document.getElementById("header-search-input");
+  const suggestionsBox = document.getElementById("header-search-suggestions");
+  if (!searchInput || !suggestionsBox) return;
+
+  searchInput.addEventListener("input", async (e) => {
+    const value = e.target.value.trim();
+    if (value.length > 0) {
+      suggestionsBox.classList.remove("invisible", "opacity-0", "translate-y-4");
+      suggestionsBox.classList.add("visible", "opacity-100", "translate-y-0");
+      const result = await searchProduct(value);
+      renderProductSearch(suggestionsBox, result);
+    } else {
+      suggestionsBox.classList.add("invisible", "opacity-0", "translate-y-4");
+      suggestionsBox.classList.remove("visible", "opacity-100", "translate-y-0");
+    }
+  });
+
+  // Close on outside click
+  document.addEventListener("click", (e) => {
+    if (!searchInput.contains(e.target) && !suggestionsBox.contains(e.target)) {
+      suggestionsBox.classList.add("invisible", "opacity-0", "translate-y-4");
+    }
+  });
+});
 
 async function useSearch(value) {
   const productsFond = document.getElementById("products-fond");

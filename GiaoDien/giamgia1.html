@@ -89,28 +89,77 @@
     <script src="js/recommend-widget.js"></script>
 
     <style>
-        /* Shared Styles for JS-rendered products */
+        :root {
+            --primary: #B03A2E;
+            --primary-light: #FADBD8;
+            --accent: #E67E22;
+            --card-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.05);
+            --card-shadow-hover: 0 20px 40px -10px rgba(176, 58, 46, 0.15);
+        }
+
+        /* Premium Flash Sale Card */
         .product-card {
-            @apply bg-white rounded-3xl border border-border shadow-sm overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-2 cursor-pointer;
+            @apply relative bg-white rounded-[2.5rem] border border-gray-100 overflow-hidden transition-all duration-500 cursor-pointer flex flex-col;
+            box-shadow: var(--card-shadow);
         }
+
+        .product-card:hover {
+            @apply -translate-y-3 border-primary/10;
+            box-shadow: var(--card-shadow-hover);
+        }
+
+        .image-container {
+            @apply relative aspect-[3/4] overflow-hidden m-3 rounded-[2rem] bg-gray-50;
+        }
+
         .product-card img {
-            @apply w-full aspect-[3/4] object-cover transition-transform duration-700;
+            @apply w-full h-full object-cover transition-transform duration-1000 ease-out;
         }
+
         .product-card:hover img {
-            @apply scale-110;
+            @apply scale-110 rotate-1;
         }
+
+        .card-overlay {
+            @apply absolute inset-0 bg-black/40 opacity-0 transition-opacity duration-300 flex items-center justify-center gap-3 backdrop-blur-[2px];
+        }
+        .product-card:hover .card-overlay { @apply opacity-100; }
+
+        .quick-action-btn {
+            @apply w-12 h-12 bg-white text-primary rounded-2xl flex items-center justify-center shadow-lg hover:bg-primary hover:text-white transition-all transform translate-y-4 duration-300;
+        }
+        .product-card:hover .quick-action-btn { @apply translate-y-0; }
+
+        .badge-sale {
+            @apply absolute top-5 left-5 z-10 px-4 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg;
+            background: linear-gradient(135deg, #FF416C, #FF4B2B);
+            color: white;
+        }
+
         .card-body {
-            @apply p-4 space-y-2;
+            @apply p-6 pt-2 space-y-3 flex-1 flex flex-col;
         }
-        .card-body h3 {
-            @apply text-sm font-black text-gray-800 uppercase tracking-tighter line-clamp-2 leading-tight;
+
+        .product-title {
+            @apply text-sm font-bold text-gray-800 line-clamp-2 leading-tight transition-colors;
         }
+
         .product-author {
-            @apply text-[10px] font-bold text-gray-400 uppercase tracking-widest truncate;
+            @apply text-[10px] font-bold text-gray-400 uppercase tracking-widest flex items-center gap-2;
         }
+
+        .price-container {
+            @apply mt-auto pt-2 flex items-center justify-between;
+        }
+
         .product-price {
             @apply text-base font-black text-primary tracking-tighter;
         }
+
+        .buy-now-icon {
+            @apply w-8 h-8 rounded-full bg-primary-light text-primary flex items-center justify-center text-xs opacity-0 transition-all;
+        }
+        .product-card:hover .buy-now-icon { @apply opacity-100; }
     </style>
 </body>
 </html>

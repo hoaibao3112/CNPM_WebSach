@@ -198,18 +198,46 @@ async function loadTopSellingProducts() {
     }
 
     const title = (p.TenSP || '').replace(/"/g, '&quot;');
-    const author = p.TenTG || '';
-    const showHot = (p.SoldQty && p.SoldQty > 0) || badge;
+    const author = p.TenTG || 'Đang cập nhật';
+    
+    // Resolve Image correctly using the global helper if exists, or fallback to robust logic
+    let img = 'img/default-book.jpg';
+    if (window.API_CONFIG && typeof window.API_CONFIG.resolveImageUrl === 'function') {
+        img = window.API_CONFIG.resolveImageUrl(p.HinhAnh);
+    } else {
+        img = p.HinhAnh ? (p.HinhAnh.startsWith('http') ? p.HinhAnh : `${baseUrl}/product-images/${p.HinhAnh.split('/').pop()}`) : img;
+    }
 
     return `
-      <div class="product-card" data-masp="${p.MaSP}">
-        ${showHot ? `<div class="badge-hot">HOT</div>` : ''}
-        <a href="product_detail.html?id=${p.MaSP}" style="text-decoration:none; color:inherit; display:block;">
-          <img src="${img}" alt="${title}" class="product-image" />
-          <div class="product-title">${title}</div>
+      <div class="product-card group" data-masp="${p.MaSP}">
+        ${badge ? `<div class="badge-premium">${badge}</div>` : (p.SoldQty > 10 ? `<div class="badge-premium">BÁN CHẠY</div>` : '')}
+        
+        <div class="image-container">
+          <img src="${img}" alt="${title}" class="product-image" 
+               onerror="this.onerror=null;this.src='img/default-book.jpg';">
+          
+          <!-- Modern Overlay -->
+          <div class="card-overlay">
+            <button class="quick-action-btn" title="Xem nhanh">
+              <i class="fas fa-expand-alt"></i>
+            </button>
+            <button class="quick-action-btn" title="Thêm vào giỏ">
+              <i class="fas fa-shopping-basket"></i>
+            </button>
+          </div>
+        </div>
+
+        <div class="card-body">
+          <h3 class="product-title">${title}</h3>
           <div class="product-author">${author}</div>
-          <div class="product-price">${price}</div>
-        </a>
+          
+          <div class="price-container">
+            <div class="product-price">${price}</div>
+            <div class="buy-now-icon">
+              <i class="fas fa-chevron-right"></i>
+            </div>
+          </div>
+        </div>
       </div>
     `;
   }).join('');

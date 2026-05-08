@@ -158,53 +158,68 @@ function displayProducts(products, containerId = 'multi-category-list', limit = 
       isOutOfStock = product.SoLuong === 0;
     }
 
-    const imageSrc = product.HinhAnh ? `${IMAGE_BASE}/${product.HinhAnh}` : 'img/product/default-book.jpg';
+    const imageSrc = product.HinhAnh ? (product.HinhAnh.startsWith('http') ? product.HinhAnh : `${IMAGE_BASE}/${product.HinhAnh.split('/').pop()}`) : 'img/default-book.jpg';
+    
     productElement.innerHTML = `
-      <div class="relative aspect-[3/4] overflow-hidden">
-        <img loading="lazy" src="${imageSrc}"
-             alt="${product.TenSP}"
-             class="w-full h-full object-contain transition-transform duration-700 group-hover:scale-110"
-             onerror="this.src='img/product/default-book.jpg'">
-        ${isOutOfStock ? '<div class="absolute inset-0 bg-black/60 flex items-center justify-center text-white font-black text-xs uppercase tracking-widest">HẾT HÀNG</div>' : ''}
-        <div class="absolute top-2 left-2 bg-primary text-white text-[8px] font-black px-2 py-0.5 rounded shadow-sm">MÃ: ${product.MaSP}</div>
-        ${product.DiscountLabel ? `<div class="absolute top-2 right-2 bg-red-500 text-white text-[10px] font-black px-2 py-1 rounded shadow-lg animate-pulse">${product.DiscountLabel}</div>` : ''}
-      </div>
-      <div class="card-body p-4 space-y-2">
-        <h3 class="text-sm font-black text-gray-800 uppercase tracking-tighter line-clamp-2 leading-tight group-hover:text-primary transition-colors">${product.TenSP}</h3>
-        <p class="product-author text-[10px] font-bold text-gray-400 uppercase tracking-widest truncate">${product.TacGia || 'Đang cập nhật'}</p>
-        <div class="product-price flex items-baseline gap-2">
-          ${product.GiaKhuyenMai ? `
-            <span class="text-base font-black text-primary tracking-tighter">${formatPrice(product.GiaKhuyenMai)}đ</span>
-            <span class="text-[10px] font-bold text-gray-300 line-through italic">${formatPrice(product.DonGia)}đ</span>
-          ` : `
-            <span class="text-base font-black text-primary tracking-tighter">${formatPrice(product.DonGia)}đ</span>
-          `}
+      <div class="product-card group" data-masp="${product.MaSP}">
+        ${product.DiscountLabel ? `<div class="badge-sale">${product.DiscountLabel}</div>` : ''}
+        
+        <div class="image-container">
+          <img src="${imageSrc}" alt="${product.TenSP}" class="product-image" 
+               onerror="this.onerror=null;this.src='img/default-book.jpg';">
+          
+          ${isOutOfStock ? '<div class="absolute inset-0 bg-black/60 flex items-center justify-center text-white font-black text-[10px] uppercase tracking-widest backdrop-blur-[2px] z-20">HẾT HÀNG</div>' : ''}
+
+          <!-- Premium Overlay -->
+          <div class="card-overlay">
+            <button class="quick-action-btn view-promo-detail" title="Xem chi tiết">
+              <i class="fas fa-expand-alt"></i>
+            </button>
+            <button class="quick-action-btn add-to-cart-btn" title="Thêm vào giỏ" ${isOutOfStock ? 'disabled' : ''}>
+              <i class="fas fa-shopping-basket"></i>
+            </button>
+          </div>
         </div>
-        <button class="view-promo-detail w-full mt-2 py-2 bg-gray-50 hover:bg-primary hover:text-white text-gray-400 font-black text-[10px] uppercase tracking-widest rounded-xl transition-all active:scale-95 border border-border hover:border-primary shadow-sm" ${isOutOfStock ? 'disabled' : ''}>
-          ${isOutOfStock ? 'Liên hệ' : 'Xem chi tiết'}
-        </button>
+
+        <div class="card-body">
+          <h3 class="product-title font-black uppercase tracking-tighter">${product.TenSP}</h3>
+          <div class="product-author">${product.TacGia || 'Đang cập nhật'}</div>
+          
+          <div class="price-container">
+            <div class="flex flex-col">
+              <span class="product-price">${formatPrice(product.GiaKhuyenMai || product.DonGia)}đ</span>
+              ${product.GiaKhuyenMai ? `<span class="text-[10px] font-bold text-gray-300 line-through">${formatPrice(product.DonGia)}đ</span>` : ''}
+            </div>
+            <div class="buy-now-icon">
+              <i class="fas fa-chevron-right"></i>
+            </div>
+          </div>
+        </div>
       </div>
     `;
 
     productList.appendChild(productElement);
     
-    // Attach view promotion detail handler (navigates to product detail page)
-    const viewBtn = productElement.querySelector('.view-promo-detail');
-    if (viewBtn) {
-      viewBtn.addEventListener('click', (e) => {
-        e.preventDefault();
-        if (viewBtn.disabled) return;
-        try {
-          // Save selected product id for product_detail page to read
-          localStorage.setItem('selectedProductId', String(product.MaSP));
-          // optional: save current product object for faster load
-          localStorage.setItem('currentProduct', JSON.stringify(product));
-          // redirect to product detail
-          window.location.href = 'product_detail.html';
-        } catch (err) {
-          console.error('Lỗi khi mở chi tiết:', err);
-          showToast('Không thể mở chi tiết sản phẩm. Vui lòng thử lại.');
-        }
+    // Quick View / Detail click handler
+    const detailBtn = productElement.querySelector('.view-promo-detail');
+    const cardItself = productElement.querySelector('.product-card');
+
+    const goToDetail = () => {
+      localStorage.setItem('selectedProductId', String(product.MaSP));
+      localStorage.setItem('currentProduct', JSON.stringify(product));
+      window.location.href = 'product_detail.html';
+    };
+
+    if (detailBtn) detailBtn.addEventListener('click', (e) => { e.stopPropagation(); goToDetail(); });
+    if (cardItself) cardItself.addEventListener('click', () => goToDetail());
+
+    // Add to cart click handler
+    const cartBtn = productElement.querySelector('.add-to-cart-btn');
+    if (cartBtn) {
+      cartBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (isOutOfStock) return;
+        addToCart(product);
       });
     }
   });
