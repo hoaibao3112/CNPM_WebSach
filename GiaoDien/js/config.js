@@ -74,12 +74,7 @@ if (!window.API_CONFIG) {
                 finalUrl = `${baseUrl}/product-images/${cleanName}`;
             }
             
-            // Add cache buster to force reload if image was just updated
-            const cacheBuster = `?t=${Date.now()}`;
-            const urlWithBuster = finalUrl + cacheBuster;
-            
-            console.log(`🖼️ Resolving image: ${filename} -> ${urlWithBuster}`);
-            return urlWithBuster;
+            return finalUrl;
         }
     };
 
