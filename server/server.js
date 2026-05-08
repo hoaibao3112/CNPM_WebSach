@@ -77,6 +77,11 @@ const isOriginAllowed = (origin) => {
   // Direct whitelist match
   if (allowedOrigins.includes(origin)) return true;
 
+  // Allow Vercel preview/branch deployments
+  if (origin.endsWith('.vercel.app') && (origin.includes('cnpm-web-sach') || origin.includes('hoaibaos-projects'))) {
+    return true;
+  }
+
   // Local development only
   if (process.env.NODE_ENV !== 'production') {
     if (origin.startsWith('http://localhost') || origin.startsWith('http://127.0.0.1')) return true;
