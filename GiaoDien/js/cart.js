@@ -2343,13 +2343,16 @@ async function loadSavedPromos() {
     savedPromosSection.style.display = 'block';
 
     // Mở rộng danh sách mặc định
-    savedPromosList.classList.add('show');
-    if (toggleBtn) toggleBtn.classList.add('active');
+    const promoWrapper = document.getElementById('saved-promos-wrapper');
+    const toggleIcon = document.getElementById('toggle-icon');
+    let isExpanded = true;
+    if (promoWrapper) promoWrapper.style.display = 'block';
 
-    // Toggle expand/collapse
+    // Toggle expand/collapse với animation
     const headerClickHandler = () => {
-      savedPromosList.classList.toggle('show');
-      if (toggleBtn) toggleBtn.classList.toggle('active');
+      isExpanded = !isExpanded;
+      if (promoWrapper) promoWrapper.style.display = isExpanded ? 'block' : 'none';
+      if (toggleIcon) toggleIcon.style.transform = isExpanded ? 'rotate(0deg)' : 'rotate(-180deg)';
     };
 
     if (toggleBtn) {
@@ -2359,9 +2362,9 @@ async function loadSavedPromos() {
       });
     }
 
-    const header = savedPromosSection.querySelector('.saved-promos-header');
-    if (header) {
-      header.addEventListener('click', headerClickHandler);
+    const promoHeader = document.getElementById('promos-header');
+    if (promoHeader) {
+      promoHeader.addEventListener('click', headerClickHandler);
     }
 
     // Render promo cards with pagination (show 6 per page) and add prev/next controls
@@ -2382,11 +2385,13 @@ async function loadSavedPromos() {
       controls.style.gap = '12px';
       controls.style.marginTop = '12px';
       controls.style.width = '100%';
-      controls.innerHTML = `
-        <button class="promo-prev" aria-label="Previous promos" style="padding:6px 10px;border-radius:6px;border:1px solid #ddd;background:#fff;cursor:pointer;">‹</button>
-        <span class="promo-page-indicator" style="font-weight:600;color:#555">1/${totalPages}</span>
-        <button class="promo-next" aria-label="Next promos" style="padding:6px 10px;border-radius:6px;border:1px solid #ddd;background:#fff;cursor:pointer;">›</button>
-      `;
+      controls.innerHTML = 
+        <div style="display:flex;align-items:center;gap:10px;padding:12px 20px;justify-content:center">
+          <button class="promo-prev" aria-label="Previous promos" style="width:36px;height:36px;border-radius:50%;border:2px solid #fecaca;background:#fff;color:#dc2626;font-weight:900;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s" onmouseenter="this.style.background='#dc2626';this.style.color='#fff'" onmouseleave="this.style.background='#fff';this.style.color='#dc2626'">&#8249;</button>
+          <span class="promo-page-indicator" style="font-weight:700;color:#6b7280;font-size:13px;min-width:40px;text-align:center">1/</span>
+          <button class="promo-next" aria-label="Next promos" style="width:36px;height:36px;border-radius:50%;border:2px solid #fecaca;background:#fff;color:#dc2626;font-weight:900;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s" onmouseenter="this.style.background='#dc2626';this.style.color='#fff'" onmouseleave="this.style.background='#fff';this.style.color='#dc2626'">&#8250;</button>
+        </div>
+      ;
       savedPromosSection.appendChild(controls);
     }
 
@@ -2400,47 +2405,69 @@ async function loadSavedPromos() {
       const isExpired = promo.NgayHetHan && new Date(promo.NgayHetHan) < new Date();
 
       let statusClass = 'available';
-      let statusText = 'Chưa sử dụng';
-      if (isUsed) {
-        statusClass = 'used';
-        statusText = 'Đã sử dụng';
-      } else if (isExpired) {
-        statusClass = 'expired';
-        statusText = 'Hết hạn';
-      }
+      let statusText = 'Chua su dung';
+      if (isUsed) { statusClass = 'used'; statusText = 'Da su dung'; }
+      else if (isExpired) { statusClass = 'expired'; statusText = 'Het han'; }
 
       const ngayNhan = promo.NgayLay ? new Date(promo.NgayLay).toLocaleDateString('vi-VN') : 'N/A';
       const ngayHetHan = promo.NgayHetHan ? new Date(promo.NgayHetHan).toLocaleDateString('vi-VN') : '';
       const buttonDisabled = isUsed || isExpired;
 
+      const bgStrip = isFreeShip ? 'linear-gradient(90deg,#60a5fa,#22d3ee)' : 'linear-gradient(90deg,#ef4444,#fb7185)';
+      const borderColor = isFreeShip ? '#bfdbfe' : '#fecaca';
+      const badgeBg = isFreeShip ? '#eff6ff' : '#fff1f2';
+      const badgeColor = isFreeShip ? '#2563eb' : '#dc2626';
+      const codeBg = isFreeShip ? '#eff6ff' : '#fff1f2';
+      const codeColor = isFreeShip ? '#1d4ed8' : '#b91c1c';
+      const statusBg = statusClass === 'available' ? '#f0fdf4' : '#f3f4f6';
+      const statusColor = statusClass === 'available' ? '#16a34a' : '#9ca3af';
+      const btnBg = buttonDisabled ? '#f3f4f6' : (isFreeShip ? 'linear-gradient(135deg,#3b82f6,#06b6d4)' : 'linear-gradient(135deg,#ef4444,#f43f5e)');
+      const btnColor = buttonDisabled ? '#9ca3af' : '#fff';
+      const btnShadow = buttonDisabled ? 'none' : (isFreeShip ? '0 4px 12px rgba(59,130,246,.25)' : '0 4px 12px rgba(239,68,68,.25)');
+      const badgeText = isFreeShip ? '\uD83D\uDE9A Free Ship' : '\uD83C\uDFF7\uFE0F Giam gia';
+      const btnText = buttonDisabled ? '\uD83D\uDEAB Khong kha dung' : '\u26A1 AP DUNG NGAY';
+      const statusDot = statusClass === 'available' ? '\u25CF Con hieu luc' : statusText;
+
       return `
-        <div class="saved-promo-card ${isFreeShip ? 'free-ship' : ''}" data-code="${promo.Code}">
-          <div class="promo-type-badge">
-            ${isFreeShip ? '🚚 Free Ship' : '💰 Giảm giá'}
-          </div>
-          <div class="promo-code-display">${promo.Code}</div>
-          <div class="promo-details">
-            <div class="promo-detail-row">
-              <span class="label">Ngày nhận:</span>
-              <span class="value">${ngayNhan}</span>
+        <div class="saved-promo-card ${isFreeShip ? 'free-ship' : ''}" data-code="${promo.Code}"
+          style="position:relative;background:#fff;border-radius:16px;border:2px dashed ${borderColor};overflow:hidden;transition:transform .3s,box-shadow .3s;${buttonDisabled ? 'opacity:0.6;' : ''}"
+          onmouseenter="if(!${buttonDisabled}){this.style.transform='translateY(-4px)';this.style.boxShadow='0 16px 40px rgba(0,0,0,.12)'}"
+          onmouseleave="this.style.transform='translateY(0)';this.style.boxShadow='none'">
+
+          <div style="height:5px;background:${bgStrip}"></div>
+
+          <div style="padding:14px 16px">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:6px">
+              <span style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:9999px;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.05em;background:${badgeBg};color:${badgeColor}">${badgeText}</span>
+              <span style="font-size:10px;font-weight:700;padding:3px 8px;border-radius:9999px;background:${statusBg};color:${statusColor}">${statusDot}</span>
             </div>
-            ${ngayHetHan ? `
-              <div class="promo-detail-row">
-                <span class="label">Hạn sử dụng:</span>
-                <span class="value">${ngayHetHan}</span>
+
+            <div style="text-align:center;margin:10px 0">
+              <div style="display:inline-block;padding:7px 18px;border-radius:12px;font-weight:900;font-size:16px;letter-spacing:.14em;user-select:all;cursor:pointer;background:${codeBg};color:${codeColor}">${promo.Code || '---'}</div>
+            </div>
+
+            <div style="border-top:1px dashed ${borderColor};margin:10px 0"></div>
+
+            <div style="display:flex;flex-direction:column;gap:5px;margin-bottom:14px">
+              <div style="display:flex;justify-content:space-between;font-size:11px">
+                <span style="color:#9ca3af">Ngay nhan:</span>
+                <span style="font-weight:700;color:#374151">${ngayNhan}</span>
               </div>
-            ` : ''}
-            <div class="promo-detail-row">
-              <span class="label">Trạng thái:</span>
-              <span class="promo-status ${statusClass}">${statusText}</span>
+              ${ngayHetHan ? `<div style="display:flex;justify-content:space-between;font-size:11px"><span style="color:#9ca3af">Het han:</span><span style="font-weight:700;color:#f97316">${ngayHetHan}</span></div>` : ''}
+              <div style="display:flex;justify-content:space-between;font-size:11px">
+                <span style="color:#9ca3af">Trang thai:</span>
+                <span style="font-weight:700;color:${statusColor}">${statusText}</span>
+              </div>
             </div>
+
+            <button class="use-promo-btn" data-promo-code="${promo.Code}" ${buttonDisabled ? 'disabled' : ''}
+              style="width:100%;padding:11px 0;border-radius:12px;border:none;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:.1em;transition:all .2s;cursor:${buttonDisabled ? 'not-allowed' : 'pointer'};pointer-events:auto;background:${btnBg};color:${btnColor};box-shadow:${btnShadow}">
+              ${btnText}
+            </button>
           </div>
-          <button class="use-promo-btn" 
-                  data-promo-code="${promo.Code}"
-                  ${buttonDisabled ? 'disabled' : ''} 
-                  style="cursor: pointer; pointer-events: auto;">
-            ${buttonDisabled ? 'Không khả dụng' : 'ÁP DỤNG NGAY'}
-          </button>
+
+          <div style="position:absolute;left:-10px;top:50%;transform:translateY(-50%);width:20px;height:20px;background:#f9fafb;border-radius:50%;border:2px solid ${borderColor}"></div>
+          <div style="position:absolute;right:-10px;top:50%;transform:translateY(-50%);width:20px;height:20px;background:#f9fafb;border-radius:50%;border:2px solid ${borderColor}"></div>
         </div>
       `;
     }

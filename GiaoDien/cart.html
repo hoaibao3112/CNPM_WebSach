@@ -81,18 +81,28 @@
       </a>
     </div>
     
-    <!-- Saved Promos Section (Floating/Drawer Style) -->
-    <div class="mb-10 bg-white rounded-3xl border border-border shadow-sm overflow-hidden transition-all duration-500" id="saved-promos-section" style="display: none;">
-      <div class="flex justify-between items-center p-6 bg-primary/5">
-        <h3 class="text-xs font-black text-primary flex items-center gap-3 tracking-[0.2em] uppercase">
-          <i class="fas fa-tags text-lg"></i> Ưu đãi dành cho bạn
-        </h3>
-        <button class="w-10 h-10 flex items-center justify-center rounded-full bg-white shadow-sm hover:scale-110 transition-transform" id="toggle-promos-btn">
-          <i class="fas fa-chevron-down text-primary"></i>
+    <!-- Saved Promos Section (Tailwind Redesigned) -->
+    <div class="mb-10 overflow-hidden transition-all duration-500 rounded-3xl border border-red-100 shadow-lg" id="saved-promos-section" style="display: none;">
+      <!-- Header với gradient đẹp -->
+      <div class="flex justify-between items-center px-6 py-5 bg-gradient-to-r from-primary to-rose-700 cursor-pointer" id="promos-header">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 bg-white/20 rounded-2xl flex items-center justify-center">
+            <i class="fas fa-gift text-white text-base"></i>
+          </div>
+          <div>
+            <h3 class="text-sm font-black text-white tracking-widest uppercase">Ưu đãi dành cho bạn</h3>
+            <p class="text-white/70 text-[10px] font-medium mt-0.5">Click để áp dụng ngay</p>
+          </div>
+        </div>
+        <button class="w-9 h-9 flex items-center justify-center rounded-full bg-white/20 hover:bg-white/30 transition-all" id="toggle-promos-btn">
+          <i class="fas fa-chevron-down text-white text-xs transition-transform duration-300" id="toggle-icon"></i>
         </button>
       </div>
-      <div class="saved-promos-list p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" id="saved-promos-list">
-        <!-- JS loads promos here -->
+      <!-- Promo cards list -->
+      <div class="bg-gradient-to-b from-red-50/60 to-white" id="saved-promos-wrapper">
+        <div class="p-4 sm:p-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4" id="saved-promos-list">
+          <!-- JS loads promos here -->
+        </div>
       </div>
     </div>
 
