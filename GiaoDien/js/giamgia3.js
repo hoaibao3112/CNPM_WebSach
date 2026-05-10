@@ -7,12 +7,45 @@ function isLoggedIn() {
 
 // Lấy danh sách khuyến mãi từ API
 async function fetchVouchers() {
+  const voucherList = document.getElementById('voucherList');
+  if (voucherList) {
+    voucherList.innerHTML = `
+      <div class="col-span-full py-20 flex flex-col items-center gap-4 opacity-50">
+        <i class="fas fa-spinner fa-spin text-4xl"></i>
+        <p class="font-bold">Đang tải danh sách ưu đãi...</p>
+      </div>
+    `;
+  }
+
   try {
-    const response = await fetch(`${window.API_CONFIG.BASE_URL}/api/khuyenmai`);
-    const data = await response.json();
-    return data.data || [];
+    const response = await fetch(`${window.API_CONFIG.BASE_URL}/api/khuyenmai?limit=100`);
+    const json = await response.json();
+    console.log('📡 Voucher API response:', json);
+    
+    // Xử lý dữ liệu trả về (hỗ trợ cả dạng array trực tiếp và dạng paginated {data: {data: []}})
+    let vouchers = [];
+    if (json.success) {
+      if (Array.isArray(json.data)) {
+        vouchers = json.data;
+      } else if (json.data && Array.isArray(json.data.data)) {
+        vouchers = json.data.data;
+      }
+    } else if (Array.isArray(json)) {
+      vouchers = json;
+    }
+    
+    return vouchers;
   } catch (error) {
     console.error('Lỗi khi tải danh sách khuyến mãi:', error);
+    if (voucherList) {
+      voucherList.innerHTML = `
+        <div class="col-span-full py-20 text-center text-red-500">
+          <i class="fas fa-exclamation-triangle text-4xl mb-4"></i>
+          <p class="font-bold">Không thể kết nối đến máy chủ: ${error.message}</p>
+          <p class="text-sm mt-2">Vui lòng kiểm tra lại kết nối mạng hoặc thử lại sau.</p>
+        </div>
+      `;
+    }
     return [];
   }
 }
@@ -22,8 +55,21 @@ function renderVouchers(vouchers) {
   const voucherList = document.getElementById('voucherList');
   if (!voucherList) return;
 
-  if (vouchers.length === 0) {
-    voucherList.innerHTML = '<div style="padding:24px;text-align:center;">Không có mã khuyến mãi nào</div>';
+  if (!vouchers || vouchers.length === 0) {
+    voucherList.innerHTML = `
+      <div class="col-span-full py-24 flex flex-col items-center gap-6 bg-white/50 rounded-[3rem] border-2 border-dashed border-gray-200">
+        <div class="w-20 h-20 rounded-full bg-gray-100 flex items-center justify-center text-gray-400 text-3xl">
+          <i class="fas fa-ticket-alt"></i>
+        </div>
+        <div class="text-center">
+          <h3 class="text-xl font-black text-text mb-2">Hiện chưa có mã giảm giá nào</h3>
+          <p class="text-text-light font-medium">Bạn hãy quay lại sau để săn thêm nhiều ưu đãi hấp dẫn nhé!</p>
+        </div>
+        <button onclick="window.location.reload()" class="px-8 py-3 bg-primary text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:scale-105 transition-transform shadow-lg shadow-primary/20">
+          TẢI LẠI TRANG
+        </button>
+      </div>
+    `;
     return;
   }
 
