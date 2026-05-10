@@ -77,7 +77,7 @@ function renderVouchers(vouchers) {
   const myPromos = JSON.parse(localStorage.getItem('myPromos') || '[]');
   const savedCodes = myPromos.map(p => p.makm);
 
-  voucherList.innerHTML = vouchers.map(voucher => {
+  voucherList.innerHTML = vouchers.map((voucher, index) => {
     const isSaved = savedCodes.includes(voucher.MaKM);
     const isActive = Number(voucher.TrangThai) === 1;
     
@@ -86,16 +86,16 @@ function renderVouchers(vouchers) {
       'giam_phan_tram': { 
         icon: '<i class="fa-solid fa-percent"></i>', 
         label: 'Giảm %', 
-        color: '#FF6B6B' 
+        color: '#B03A2E' 
       },
       'giam_tien_mat': { 
         icon: '<i class="fa-solid fa-money-bill-wave"></i>', 
         label: 'Giảm tiền', 
-        color: '#4ECDC4' 
+        color: '#10b981' 
       },
       'free_ship': {
         icon: '<i class="fa-solid fa-truck-fast"></i>',
-        label: 'Miễn phí vận chuyển',
+        label: 'Free Ship',
         color: '#1890ff'
       }
     };
@@ -106,31 +106,41 @@ function renderVouchers(vouchers) {
       color: '#ffa940'
     };
 
+    const delay = index * 100;
+
     return `
-      <div class="voucher-card" style="border-left: 6px solid ${config.color}; ${!isActive ? 'opacity: 0.6;' : ''}">
-        <div class="icon" style="color: ${config.color};">
-          ${config.icon}
-          <span style="font-size: 0.8rem;">${config.label}</span>
-        </div>
-        <div class="voucher-info">
-          <div class="voucher-title">${voucher.TenKM}</div>
-          <div class="voucher-desc">${voucher.MoTa || 'Mã khuyến mãi đặc biệt'}</div>
-          <div class="voucher-code">Mã: <strong>${voucher.Code || 'N/A'}</strong></div>
-          <div class="voucher-expiry">HSD: ${voucher.NgayKetThuc ? voucher.NgayKetThuc.slice(0, 10) : 'N/A'}</div>
-          <div class="voucher-status ${isActive ? 'active' : 'inactive'}">
-            ${isActive ? 'Đang hoạt động' : 'Ngừng hoạt động'}
+      <div class="voucher-card animate-item" style="animation-delay: ${delay}ms; ${!isActive ? 'opacity: 0.6;' : ''}">
+        <div class="voucher-left" style="background: linear-gradient(135deg, ${config.color} 0%, rgba(0,0,0,0.2) 100%); background-color: ${config.color};">
+          <div class="icon-wrapper">
+            ${config.icon}
           </div>
-          <div class="voucher-action">
-            <button 
-              class="voucher-btn ${isSaved ? 'saved' : ''}" 
-              data-makm="${voucher.MaKM}"
-              ${!isActive || isSaved ? 'disabled' : ''}
-            >
-              ${isSaved ? 'Đã lưu' : (isActive ? 'Lưu mã' : 'Hết hạn')}
-            </button>
-            <i class="fa-solid fa-circle-info detail-btn" 
-               title="Xem chi tiết" 
-               data-makm="${voucher.MaKM}"></i>
+          <span class="label">${config.label}</span>
+        </div>
+
+        <div class="voucher-right">
+          <div>
+            <div class="voucher-title">${voucher.TenKM}</div>
+            <div class="voucher-desc">${voucher.MoTa || 'Mã khuyến mãi đặc biệt từ BaoStore'}</div>
+          </div>
+
+          <div class="voucher-footer">
+            <div class="voucher-meta">
+              <span class="voucher-expiry-text">HSD: ${voucher.NgayKetThuc ? voucher.NgayKetThuc.slice(0, 10) : 'N/A'}</span>
+              <div class="voucher-code-display">${voucher.Code || 'N/A'}</div>
+            </div>
+
+            <div class="voucher-btns">
+              <button 
+                class="btn-claim ${isSaved ? 'saved' : ''}" 
+                data-makm="${voucher.MaKM}"
+                ${!isActive || isSaved ? 'disabled' : ''}
+              >
+                ${isSaved ? '<i class="fas fa-check mr-2"></i> Đã lưu' : (isActive ? 'Lưu mã' : 'Hết hạn')}
+              </button>
+              <button class="btn-detail detail-btn" data-makm="${voucher.MaKM}">
+                <i class="fa-solid fa-info text-xs"></i>
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -144,7 +154,7 @@ function renderVouchers(vouchers) {
 
 // Sự kiện lưu mã khuyến mãi
 function setupClaimEvents() {
-  document.querySelectorAll('.voucher-btn:not(.saved):not([disabled])').forEach(btn => {
+  document.querySelectorAll('.btn-claim:not(.saved):not([disabled])').forEach(btn => {
     btn.addEventListener('click', async function() {
       const maKM = this.getAttribute('data-makm');
       
