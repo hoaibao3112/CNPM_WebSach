@@ -408,6 +408,8 @@ async function renderCart() {
   if (mainGrid) mainGrid.style.display = '';
 
   let subtotal = 0;
+  const fragment = document.createDocumentFragment();
+
   cart.forEach((item, index) => {
     const itemTotal = item.price * item.quantity;
     if (item.selected) subtotal += itemTotal;
@@ -422,7 +424,7 @@ async function renderCart() {
         </div>
         <div class="product-item flex items-center gap-5 flex-1 min-w-0">
           <div class="relative w-20 h-28 flex-shrink-0 shadow-md group-hover:shadow-xl transition-all duration-500 rounded-xl overflow-hidden border border-border">
-            <img src="${window.API_CONFIG ? window.API_CONFIG.resolveImageUrl(item.image) : `img/product/${item.image}`}" alt="${item.name}" class="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700" onerror="this.src='img/default-book.jpg'">
+            <img src="${window.API_CONFIG ? window.API_CONFIG.resolveImageUrl(item.image) : `img/product/${item.image}`}" alt="${item.name}" class="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700" onerror="this.src='img/product/default-book.jpg'">
             <div class="absolute inset-0 bg-black/5 group-hover:bg-transparent transition-colors"></div>
           </div>
           <div class="min-w-0 flex-1">
@@ -466,8 +468,10 @@ async function renderCart() {
         </button>
       </div>
     `;
-    cartItemsBody.appendChild(row);
+    fragment.appendChild(row);
   });
+  
+  cartItemsBody.appendChild(fragment);
 
   // Tính phí ship nếu đã chọn địa chỉ
   let shippingFee = 0;
@@ -779,7 +783,7 @@ function updateSummary(subtotal, discount = 0, shippingFee = 0, shippingInfo = n
 // Attach event listeners
 function attachEventListeners() {
   const selectAllCheckbox = document.getElementById('select-all');
-  if (selectAllCheckbox) {
+  if (selectAllCheckbox && !selectAllCheckbox.dataset.listenerAttached) {
     selectAllCheckbox.addEventListener('change', async e => {
       const cart = await getCart();
       const isLogged = isLoggedIn();
@@ -806,23 +810,21 @@ function attachEventListeners() {
       cachedCart = null;
       await renderCart();
     });
+    selectAllCheckbox.dataset.listenerAttached = 'true';
   }
 
+  // Dynamic elements are recreated each time renderCart is called, so their listeners don't duplicate
   document.querySelectorAll('.select-item').forEach(checkbox => {
     checkbox.addEventListener('change', async e => {
       await toggleSelection(parseInt(e.target.dataset.index), e.target.checked);
     });
   });
 
-  // Improve usability: clicking the select cell toggles the checkbox as a fallback
-  // This helps when small overlays or tight spacing make the checkbox itself hard to click.
   document.querySelectorAll('.select-col').forEach(td => {
     td.addEventListener('click', (e) => {
-      // If the actual input was clicked, let the normal handler run
       if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'LABEL')) return;
       const cb = td.querySelector('.select-item');
       if (!cb) return;
-      // Toggle the checkbox and fire change event so existing handlers run
       cb.checked = !cb.checked;
       cb.dispatchEvent(new Event('change', { bubbles: true }));
     });
@@ -830,10 +832,10 @@ function attachEventListeners() {
 
   document.querySelectorAll('.qty-btn').forEach(btn => {
     btn.addEventListener('click', async e => {
-      const index = parseInt(e.target.dataset.index);
-      const input = e.target.parentElement.querySelector('.qty-input');
+      const index = parseInt(e.currentTarget.dataset.index);
+      const input = e.currentTarget.parentElement.querySelector('.qty-input');
       let newQty = parseInt(input.value);
-      newQty += e.target.classList.contains('plus') ? 1 : -1;
+      newQty += e.currentTarget.classList.contains('plus') ? 1 : -1;
       await updateQuantity(index, newQty);
     });
   });
@@ -852,17 +854,19 @@ function attachEventListeners() {
   });
 
   const clearCartBtn = document.getElementById('clear-cart');
-  if (clearCartBtn) {
+  if (clearCartBtn && !clearCartBtn.dataset.listenerAttached) {
     clearCartBtn.addEventListener('click', async () => {
       if (confirm('Bạn có chắc muốn xóa toàn bộ giỏ hàng?')) {
         await clearCart();
       }
     });
+    clearCartBtn.dataset.listenerAttached = 'true';
   }
 
   const checkoutBtn = document.getElementById('checkout-btn');
-  if (checkoutBtn) {
+  if (checkoutBtn && !checkoutBtn.dataset.listenerAttached) {
     checkoutBtn.addEventListener('click', checkout);
+    checkoutBtn.dataset.listenerAttached = 'true';
   }
 }
 
