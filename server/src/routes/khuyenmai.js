@@ -11,6 +11,7 @@ router.get('/my-promotions', authenticateToken, PromotionController.getMyCoupons
 router.get('/:makm', PromotionController.getPromotionById);
 
 router.post('/', authenticateToken, PromotionController.createPromotion);
+router.post('/apply-to-cart', authenticateToken, PromotionController.applyToCart);
 router.put('/:makm', authenticateToken, PromotionController.updatePromotion);
 router.delete('/:makm', authenticateToken, PromotionController.deletePromotion);
 

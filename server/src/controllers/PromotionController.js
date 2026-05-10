@@ -88,6 +88,95 @@ class PromotionController {
             return baseController.sendError(res, 'Lỗi khi lấy khuyến mãi của sản phẩm', 500, error.message);
         }
     }
+
+    async applyToCart(req, res) {
+        try {
+            const { code, cartItems, makh } = req.body;
+            if (!code || !cartItems || !cartItems.length) {
+                return res.status(400).json({ success: false, error: 'Thiếu thông tin mã hoặc giỏ hàng' });
+            }
+
+            // Lấy thông tin khuyến mãi dựa trên code
+            const promos = await PromotionService.getAllPromotions({ search: code, limit: 1 });
+            if (!promos || !promos.data || promos.data.length === 0) {
+                return res.status(404).json({ success: false, error: 'Mã khuyến mãi không tồn tại' });
+            }
+
+            const promoInfo = promos.data[0];
+            
+            // Lấy chi tiết thông tin áp dụng sản phẩm
+            const fullPromo = await PromotionService.getPromotionById(promoInfo.MaKM);
+            
+            // Tính toán tổng đơn
+            let total = 0;
+            let eligibleTotal = 0;
+            const appliedProducts = [];
+
+            const isSpecificProducts = fullPromo.SanPhamApDung && fullPromo.SanPhamApDung.length > 0;
+            const eligibleProductIds = isSpecificProducts ? fullPromo.SanPhamApDung.map(p => String(p.MaSP)) : [];
+
+            for (const item of cartItems) {
+                const itemTotal = item.DonGia * item.SoLuong;
+                total += itemTotal;
+                
+                // Nếu áp dụng toàn bộ HOẶC sản phẩm nằm trong danh sách áp dụng
+                if (!isSpecificProducts || eligibleProductIds.includes(String(item.MaSP))) {
+                    eligibleTotal += itemTotal;
+                    appliedProducts.push(String(item.MaSP));
+                }
+            }
+
+            // Kiểm tra điều kiện đơn tối thiểu
+            if (fullPromo.GiaTriDonToiThieu && total < fullPromo.GiaTriDonToiThieu) {
+                return res.status(403).json({ success: false, error: `Đơn hàng tối thiểu phải từ ${fullPromo.GiaTriDonToiThieu.toLocaleString()}đ để áp dụng mã` });
+            }
+
+            // Nếu không có sản phẩm nào hợp lệ
+            if (eligibleTotal === 0 && fullPromo.LoaiKM !== 'free_ship') {
+                return res.status(402).json({ success: false, error: 'Không có sản phẩm nào trong giỏ được áp dụng mã này' });
+            }
+
+            // Tính discount
+            let totalDiscount = 0;
+            if (fullPromo.LoaiKM === 'free_ship') {
+                // Free ship
+                totalDiscount = fullPromo.GiaTriGiam || 30000;
+            } else {
+                // Giảm giá % hoặc số tiền
+                if (fullPromo.GiaTriGiam <= 100) {
+                    // Phần trăm
+                    totalDiscount = eligibleTotal * (fullPromo.GiaTriGiam / 100);
+                } else {
+                    // Số tiền cố định
+                    totalDiscount = fullPromo.GiaTriGiam;
+                }
+
+                // Giới hạn giảm tối đa
+                if (fullPromo.GiamToiDa && totalDiscount > fullPromo.GiamToiDa) {
+                    totalDiscount = fullPromo.GiamToiDa;
+                }
+            }
+
+            // Đảm bảo giảm không quá tổng tiền (trừ khi free ship thì k ảnh hưởng subtotal)
+            if (fullPromo.LoaiKM !== 'free_ship' && totalDiscount > eligibleTotal) {
+                totalDiscount = eligibleTotal;
+            }
+
+            return res.json({
+                success: true,
+                discountDetails: {
+                    total,
+                    totalDiscount,
+                    discountAmount: totalDiscount,
+                    totalFinal: total - totalDiscount,
+                    appliedProducts
+                }
+            });
+
+        } catch (error) {
+            return baseController.sendError(res, 'Lỗi khi áp dụng mã khuyến mãi', 500, error.message);
+        }
+    }
 }
 
 export default new PromotionController();
