@@ -211,7 +211,7 @@ const Login = () => {
         onCancel={handleCancelForgot}
         footer={null}
         title={<span className="text-indigo-600 font-bold">Khôi phục mật khẩu</span>}
-        destroyOnClose
+        destroyOnHidden
         width={450}
         centered
         className="modern-modal"

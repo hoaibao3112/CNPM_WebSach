@@ -251,7 +251,7 @@ const NhapHang = () => {
         <Table columns={columns} dataSource={phieuNhap} rowKey="MaPN" pagination={{ pageSize: 8, className: "px-8 py-6" }} className="modern-table" scroll={{ x: 800 }} />
       </div>
 
-      <Modal open={modalVisible} title={null} onCancel={() => setModalVisible(false)} footer={null} width={1000} className="modern-modal" centered destroyOnClose>
+      <Modal open={modalVisible} title={null} onCancel={() => setModalVisible(false)} footer={null} width={1000} className="modern-modal" centered destroyOnHidden>
         <div className="mb-8 flex items-center justify-between">
           <div>
             <h2 className="text-2xl font-black text-slate-800 flex items-center gap-3"><FileTextOutlined className="text-indigo-500" /> Lập phiếu nhập kho</h2>
@@ -357,7 +357,7 @@ const NhapHang = () => {
         </Form>
       </Modal>
 
-      <Modal title={null} open={chiTietVisible} onCancel={() => setChiTietVisible(false)} footer={null} width={850} className="modern-modal" centered destroyOnClose>
+      <Modal title={null} open={chiTietVisible} onCancel={() => setChiTietVisible(false)} footer={null} width={850} className="modern-modal" centered destroyOnHidden>
         <div className="mb-8 flex items-center justify-between">
           <div>
             <h2 className="text-2xl font-black text-slate-800 flex items-center gap-3"><span className="material-icons text-indigo-500">receipt_long</span> Chi tiết phiếu nhập</h2>
