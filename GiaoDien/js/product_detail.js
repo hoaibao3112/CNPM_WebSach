@@ -903,6 +903,9 @@ function displayPromotions(promotions) {
                 discountVal = val;
             }
             discountLbl = 'GIẢM TIỀN';
+        } else if (promotion.LoaiKM === 'free_ship') {
+            discountVal = 'FREE';
+            discountLbl = 'SHIP';
         }
 
         const promoIdStr = String(promotion.MaKM || promotion.MaPhieu || '');

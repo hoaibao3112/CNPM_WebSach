@@ -46,10 +46,19 @@ function renderVouchers(vouchers) {
         icon: '<i class="fa-solid fa-money-bill-wave"></i>', 
         label: 'Giảm tiền', 
         color: '#4ECDC4' 
+      },
+      'free_ship': {
+        icon: '<i class="fa-solid fa-truck-fast"></i>',
+        label: 'Miễn phí vận chuyển',
+        color: '#1890ff'
       }
     };
 
-    const config = typeConfig[voucher.LoaiKM] || typeConfig['giam_phan_tram'];
+    const config = typeConfig[voucher.LoaiKM] || {
+      icon: '<i class="fa-solid fa-gift"></i>',
+      label: 'Ưu đãi',
+      color: '#ffa940'
+    };
 
     return `
       <div class="voucher-card" style="border-left: 6px solid ${config.color}; ${!isActive ? 'opacity: 0.6;' : ''}">

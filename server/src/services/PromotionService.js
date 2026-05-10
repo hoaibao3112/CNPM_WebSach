@@ -11,6 +11,27 @@ class PromotionService {
 
     // --- Promotion (khuyen_mai) CRUD ---
 
+    async claimPromotion(makm, makh) {
+        const [[promotion]] = await pool.query('SELECT Code FROM khuyen_mai WHERE MaKM = ?', [makm]);
+        if (!promotion) throw new Error('Không tìm thấy khuyến mãi');
+
+        const [[existing]] = await pool.query(
+            'SELECT * FROM khachhang_khuyenmai WHERE makm = ? AND makh = ?',
+            [makm, makh]
+        );
+
+        if (existing) {
+            throw new Error('Bạn đã lưu mã khuyến mãi này rồi');
+        }
+
+        await pool.query(
+            'INSERT INTO khachhang_khuyenmai (makm, makh, ngay_lay, trang_thai) VALUES (?, ?, NOW(), ?)',
+            [makm, makh, 'Con_hieu_luc']
+        );
+
+        return promotion.Code;
+    }
+
     async getAllPromotions(filters = {}) {
         const { page = 1, limit = 10, search = '', activeOnly = false, loaiKM = '' } = filters;
         const offset = (page - 1) * limit;
@@ -73,6 +94,18 @@ class PromotionService {
         );
 
         return { ...promotion, SanPhamApDung: products };
+    }
+
+    async getPromotionByCode(code) {
+        const [[promotion]] = await pool.query(
+            `SELECT k.*, CAST(k.TrangThai AS UNSIGNED) as TrangThai, 
+             ct.GiaTriGiam, ct.GiaTriDonToiThieu, ct.GiamToiDa, ct.SoLuongToiThieu
+             FROM khuyen_mai k
+             LEFT JOIN ct_khuyen_mai ct ON k.MaKM = ct.MaKM
+             WHERE k.Code = ?`,
+            [code]
+        );
+        return promotion || null;
     }
 
     async createPromotion(data) {
@@ -240,11 +273,14 @@ class PromotionService {
         const [promotions] = await pool.query(`
             SELECT km.*, ct.GiaTriGiam, ct.GiaTriDonToiThieu, ct.GiamToiDa, ct.SoLuongToiThieu
             FROM khuyen_mai km
-            JOIN sp_khuyen_mai spkm ON km.MaKM = spkm.MaKM
             JOIN ct_khuyen_mai ct ON km.MaKM = ct.MaKM
-            WHERE spkm.MaSP = ?
-              AND km.NgayBatDau <= NOW() AND km.NgayKetThuc >= NOW()
+            WHERE km.NgayBatDau <= NOW() AND km.NgayKetThuc >= NOW()
               AND CAST(km.TrangThai AS UNSIGNED) = 1
+              AND (
+                EXISTS (SELECT 1 FROM sp_khuyen_mai spkm WHERE spkm.MaKM = km.MaKM AND spkm.MaSP = ?)
+                OR 
+                NOT EXISTS (SELECT 1 FROM sp_khuyen_mai spkm WHERE spkm.MaKM = km.MaKM)
+              )
         `, [masp]);
         return promotions;
     }

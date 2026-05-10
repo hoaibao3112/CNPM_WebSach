@@ -97,12 +97,10 @@ class PromotionController {
             }
 
             // Lấy thông tin khuyến mãi dựa trên code
-            const promos = await PromotionService.getAllPromotions({ search: code, limit: 1 });
-            if (!promos || !promos.data || promos.data.length === 0) {
+            const promoInfo = await PromotionService.getPromotionByCode(code);
+            if (!promoInfo) {
                 return res.status(404).json({ success: false, error: 'Mã khuyến mãi không tồn tại' });
             }
-
-            const promoInfo = promos.data[0];
             
             // Lấy chi tiết thông tin áp dụng sản phẩm
             const fullPromo = await PromotionService.getPromotionById(promoInfo.MaKM);
@@ -175,6 +173,29 @@ class PromotionController {
 
         } catch (error) {
             return baseController.sendError(res, 'Lỗi khi áp dụng mã khuyến mãi', 500, error.message);
+        }
+    }
+
+    // API: Claim promotion
+    async claimPromotion(req, res) {
+        try {
+            const makh = req.user.makh;
+            const { makm } = req.params;
+
+            if (!makh) return res.status(401).json({ success: false, error: 'Chưa đăng nhập' });
+
+            const code = await PromotionService.claimPromotion(makm, makh);
+
+            res.json({
+                success: true,
+                message: 'Lưu mã thành công',
+                makm: makm,
+                code: code,
+                ngay_lay: new Date().toISOString().split('T')[0]
+            });
+        } catch (error) {
+            logger.error('Error claiming promotion:', error);
+            res.status(400).json({ success: false, error: error.message });
         }
     }
 }

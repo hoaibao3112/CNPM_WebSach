@@ -2339,33 +2339,6 @@ async function loadSavedPromos() {
     // If promotions API fails, continue — we'll still try to fetch coupons
     let promoList = Array.isArray(data.data) ? data.data.slice() : [];
 
-    // TẢI THÊM CÁC MÃ KHUYẾN MÃI PUBLIC (không cần lưu riêng cho từng user)
-    try {
-      const publicRes = await fetch(`${window.API_CONFIG.BASE_URL}/api/khuyenmai?activeOnly=true&limit=50`);
-      const publicData = await publicRes.json();
-      if (publicRes.ok && Array.isArray(publicData.data?.data || publicData.data)) {
-        const publicPromos = (publicData.data?.data || publicData.data).map(p => ({
-          MaKM: p.MaKM,
-          LoaiKM: p.LoaiKM,
-          Code: p.Code,
-          NgayLay: p.NgayBatDau,
-          NgayHetHan: p.NgayKetThuc,
-          trang_thai: 'Chua_su_dung',
-          __source: 'public'
-        }));
-        // Merge without duplicates (by Code)
-        const existingCodes = new Set(promoList.map(p => String(p.Code).toUpperCase()));
-        for (const pp of publicPromos) {
-          if (!existingCodes.has(String(pp.Code).toUpperCase())) {
-            promoList.push(pp);
-            existingCodes.add(String(pp.Code).toUpperCase());
-          }
-        }
-      }
-    } catch (e) {
-      console.warn('Không thể tải public promotions:', e);
-    }
-
     // ALSO fetch issued coupons (e.g., freeship issued by preference form)
     try {
       const userId = getUserId();
