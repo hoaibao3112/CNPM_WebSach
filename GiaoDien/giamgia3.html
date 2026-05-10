@@ -282,6 +282,55 @@
             to { opacity: 1; transform: translateY(0); }
         }
         .animate-item { animation: fadeInUp 0.6s cubic-bezier(0.23, 1, 0.32, 1) forwards; }
+
+        /* Responsive Adjustments */
+        @media (max-width: 640px) {
+            .voucher-card {
+                min-height: 150px;
+                border-radius: 16px;
+            }
+            .voucher-left {
+                width: 80px;
+                padding: 15px 10px;
+            }
+            .voucher-left .icon-wrapper {
+                width: 36px;
+                height: 36px;
+                font-size: 16px;
+                margin-bottom: 5px;
+            }
+            .voucher-left .label {
+                font-size: 8px;
+            }
+            .voucher-right {
+                padding: 16px 20px;
+            }
+            .voucher-title {
+                font-size: 15px;
+            }
+            .voucher-desc {
+                font-size: 11px;
+                -webkit-line-clamp: 1;
+                margin-bottom: 10px;
+            }
+            .voucher-card::before, .voucher-card::after {
+                left: 70px;
+                width: 16px;
+                height: 16px;
+            }
+            .voucher-code-display {
+                font-size: 11px;
+                padding: 2px 6px;
+            }
+            .btn-claim {
+                padding: 8px 12px;
+                font-size: 10px;
+            }
+            .btn-detail {
+                width: 32px;
+                height: 32px;
+            }
+        }
     </style>
 </body>
 </html>
