@@ -336,9 +336,9 @@ async function clearCart() {
 function updateCartCount() {
   getCart().then(cart => {
     const totalItems = cart.reduce((total, item) => total + item.quantity, 0);
-    document.querySelectorAll('.cart-count').forEach(element => {
+    document.querySelectorAll('.cart-count, #cart-count').forEach(element => {
       element.textContent = totalItems;
-      element.style.display = totalItems > 0 ? 'flex' : 'none';
+      element.style.display = totalItems > 0 ? (element.tagName === 'SPAN' && element.id === 'cart-count' ? 'inline-block' : 'flex') : 'none';
     });
   });
 }

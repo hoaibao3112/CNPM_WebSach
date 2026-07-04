@@ -286,6 +286,6 @@ document.addEventListener('DOMContentLoaded', () => {
 /* -------------------- PRODUCT DETAIL REDIRECT -------------------- */
 window.loadProductDetail = function (productId) {
   localStorage.setItem('selectedProductId', productId);
-  window.location.href = 'product_detail.html';
+  window.location.href = `product_detail.html?id=${productId}`;
 };
 

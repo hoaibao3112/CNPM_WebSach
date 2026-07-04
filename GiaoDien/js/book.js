@@ -643,7 +643,7 @@ async function viewDetail(productId) {
         console.error("Lỗi khi ghi log view:", apiError);
     }
     localStorage.setItem('selectedProductId', productId);
-    window.location.href = 'product_detail.html';
+    window.location.href = `product_detail.html?id=${productId}`;
 }
 
 // Lọc sản phẩm theo thể loại

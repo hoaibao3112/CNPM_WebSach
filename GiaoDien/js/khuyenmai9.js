@@ -134,7 +134,7 @@ function escapeHtml(unsafe) {
 function loadProductDetail(MaSP) {
   if (MaSP) {
     localStorage.setItem("selectedProductId", MaSP);
-    window.location.href = "product_detail.html";
+    window.location.href = `product_detail.html?id=${MaSP}`;
   }
 }
 async function fetchAndDisplayHoatHinh(categoryId = 1, containerId = "multi-category-list") {
@@ -183,7 +183,7 @@ function displayProducts(products, id) {
 function loadProductDetail(MaSP) {
   if (MaSP) {
     localStorage.setItem('selectedProductId', MaSP);
-    window.location.href = 'product_detail.html';
+    window.location.href = `product_detail.html?id=${MaSP}`;
   }
 }
 // ----------------------------------------------------

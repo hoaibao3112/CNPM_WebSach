@@ -15,7 +15,6 @@ export default (sequelize) => {
     HinhThuc: { type: DataTypes.STRING(50) },
     SoTrang: { type: DataTypes.INTEGER },
     TrongLuong: { type: DataTypes.INTEGER },
-    ISBN: { type: DataTypes.STRING(20) },
     TinhTrang: { type: DataTypes.BOOLEAN }
   }, {
     tableName: 'sanpham',

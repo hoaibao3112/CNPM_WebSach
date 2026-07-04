@@ -1043,7 +1043,7 @@ async function searchAndShowProductSuggestion(productInfo) {
 // Chuyển hướng đến trang chi tiết sản phẩm
 window.loadProductDetail = function(productId) {
   localStorage.setItem('selectedProductId', productId);
-  window.location.href = 'product_detail.html';
+  window.location.href = `product_detail.html?id=${productId}`;
 };
 
 // Scroll carousel

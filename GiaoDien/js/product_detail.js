@@ -471,7 +471,7 @@ async function fetchProductDetail(productId) {
         console.log('Product data from API:', product);
         localStorage.setItem('currentProduct', JSON.stringify(product));
         displayProductDetail(product);
-        fetchRelatedProducts(product.MaSP);
+        fetchRelatedProducts(product.MaSP, product.MaTL || product.matl);
         fetchRatings(product.MaSP); // Thêm gọi API đánh giá
         checkAndDisplayPromotions(product.MaSP); // THÊM: Check promotions khi fetch API
         
@@ -1217,19 +1217,24 @@ window.savePromotion = savePromotion;
 /**
  * Lấy sản phẩm liên quan
  */
-async function fetchRelatedProducts(currentProductId) {
+async function fetchRelatedProducts(currentProductId, categoryId = null) {
     try {
         const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || 'https://cnpm-websach-2.onrender.com';
-        const response = await fetch(`${_apiBase}/api/product`);
+        
+        // Fetch only related products from the same category with a limit of 6
+        const url = categoryId 
+            ? `${_apiBase}/api/product/category/${categoryId}?limit=6` 
+            : `${_apiBase}/api/product/sorted/year?limit=6`;
+            
+        const response = await fetch(url);
         if (!response.ok) throw new Error(`Lỗi API: ${response.status}`);
         
         const responseData = await response.json();
-        const allProducts = responseData.data || responseData;
-        if (!Array.isArray(allProducts)) throw new Error('Dữ liệu không phải mảng');
+        const products = responseData.data || responseData;
+        if (!Array.isArray(products)) throw new Error('Dữ liệu không phải mảng');
   
-        const relatedProducts = allProducts
+        const relatedProducts = products
             .filter(product => product.MaSP !== currentProductId)
-            .sort(() => Math.random() - 0.5)
             .slice(0, 5);
   
         if (relatedProducts.length > 0) {
