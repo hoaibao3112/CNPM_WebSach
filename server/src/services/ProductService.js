@@ -504,8 +504,9 @@ class ProductService {
     }
 
     async getRecommendations(filters = {}) {
+        const limit = filters.limit ? parseInt(filters.limit, 10) : 15;
         // Return latest products as recommendations for now
-        return this.getSortedProducts('year');
+        return this.getSortedProducts('year', limit);
     }
     async updateMinStock(id, minStock) {
         const [result] = await pool.query(

@@ -719,7 +719,7 @@ async function viewDetail(productId) {
 // }
 
 // Tải sản phẩm chính (danh sách chính)
-async function fetchAndDisplayProducts() {
+async function fetchAndDisplayProducts(limit = null) {
   const productList = document.getElementById('book-list');
   if (!productList) return;
 
@@ -735,6 +735,7 @@ async function fetchAndDisplayProducts() {
     const params = new URLSearchParams();
     if (categoryId) params.append('MaTL', categoryId);
     if (priceRange) params.append('priceRange', priceRange);
+    if (limit) params.append('limit', limit);
 
     if (params.toString()) url += `?${params.toString()}`;
 
@@ -751,7 +752,7 @@ async function fetchAndDisplayProducts() {
     productList.innerHTML = `
       <div class="error">
         <p>${error.message}</p>
-        <button onclick="fetchAndDisplayProducts()">Thử lại</button>
+        <button onclick="fetchAndDisplayProducts(10)">Thử lại</button>
       </div>
     `;
   }
@@ -869,7 +870,7 @@ function setupCategoryDropdown() {
 }
 
 // Tải sách giáo khoa
-async function fetchAndDisplayTextbooks() {
+async function fetchAndDisplayTextbooks(limit = null) {
   const productList = document.getElementById('textbook-list');
   if (!productList) return;
 
@@ -877,7 +878,9 @@ async function fetchAndDisplayTextbooks() {
     productList.innerHTML = '<div class="loading">Đang tải sách giáo khoa...</div>';
 
     const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || window.API_CONFIG.BASE_URL;
-    const response = await fetch(`${_apiBase}/api/product/category/6`);
+    let url = `${_apiBase}/api/product/category/6`;
+    if (limit) url += `?limit=${limit}`;
+    const response = await fetch(url);
 
     const responseData = await response.json();
     const products = responseData.data || responseData;
@@ -889,7 +892,7 @@ async function fetchAndDisplayTextbooks() {
     productList.innerHTML = `
       <div class="error">
         <p>${error.message}</p>
-        <button onclick="fetchAndDisplayTextbooks()">Thử lại</button>
+        <button onclick="fetchAndDisplayTextbooks(5)">Thử lại</button>
       </div>
     `;
   }
@@ -951,7 +954,7 @@ async function fetchAndDisplayPoliticsBooks() {
 }
 
 // Tải sách khoa học (MaTL = 4)
-async function fetchAndDisplayScienceBooks() {
+async function fetchAndDisplayScienceBooks(limit = null) {
   const productList = document.getElementById('science-book-list');
   if (!productList) return;
 
@@ -959,7 +962,9 @@ async function fetchAndDisplayScienceBooks() {
     productList.innerHTML = '<div class="loading">Đang tải sách khoa học...</div>';
 
     const _apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || window.API_CONFIG.BASE_URL;
-    const response = await fetch(`${_apiBase}/api/product/category/4`);
+    let url = `${_apiBase}/api/product/category/4`;
+    if (limit) url += `?limit=${limit}`;
+    const response = await fetch(url);
     if (!response.ok) throw new Error(`Lỗi HTTP: ${response.status}`);
 
     const responseData = await response.json();
@@ -972,7 +977,7 @@ async function fetchAndDisplayScienceBooks() {
     productList.innerHTML = `
       <div class="error">
         <p>${error.message}</p>
-        <button onclick="fetchAndDisplayScienceBooks()">Thử lại</button>
+        <button onclick="fetchAndDisplayScienceBooks(5)">Thử lại</button>
       </div>
     `;
   }
@@ -1630,12 +1635,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // chỉ gọi các hàm này khi ở tràng index
   if (currentPath.endsWith("index.html") || currentPath === "/") {
-    fetchAndDisplayProducts();
+    fetchAndDisplayProducts(10);
     // Flash Sale section is owned by products_sales.js
     // Keep one renderer only to avoid DOM overwrite/race conditions.
-    fetchAndDisplayTextbooks();
+    fetchAndDisplayTextbooks(5);
     // fetchAndDisplayPoliticsBooks(); // Đã loại bỏ phần Sách Chính Trị trong index.html
-    fetchAndDisplayScienceBooks();
+    fetchAndDisplayScienceBooks(5);
   }
 
   // chỉ gọi hàm này khi ở trang book.html

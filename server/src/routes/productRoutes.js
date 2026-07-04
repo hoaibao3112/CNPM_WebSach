@@ -5,6 +5,7 @@ import fs from 'fs';
 import ProductController from '../controllers/ProductController.js';
 import { authenticateToken } from '../middlewares/auth.js';
 import { authorize } from '../middlewares/rbacMiddleware.js';
+import { cacheMiddleware, clearProductCache } from '../middlewares/cacheMiddleware.js';
 
 import AuthorController from '../controllers/AuthorController.js';
 import CategoryController from '../controllers/CategoryController.js';
@@ -12,20 +13,20 @@ import CategoryController from '../controllers/CategoryController.js';
 const router = express.Router();
 
 // Public routes
-router.get('/', ProductController.getAll);
-router.get('/new', ProductController.getNew); // Get new products
-router.get('/promotion', ProductController.getPromotionProducts); // Get promotion products
+router.get('/', cacheMiddleware(120), ProductController.getAll);
+router.get('/new', cacheMiddleware(120), ProductController.getNew); // Get new products
+router.get('/promotion', cacheMiddleware(120), ProductController.getPromotionProducts); // Get promotion products
 
 // Aliases for Product Management
-router.get('/authors', AuthorController.getAll);
-router.get('/categories', CategoryController.getAll);
+router.get('/authors', cacheMiddleware(300), AuthorController.getAll);
+router.get('/categories', cacheMiddleware(300), CategoryController.getAll);
 router.get('/suppliers', (req, res) => res.redirect('/api/company')); // Redirect to company API
 
-router.get('/sorted/:type', ProductController.getSorted);
-router.get('/category/:id', ProductController.getByCategory);
-router.get('/recommendations', ProductController.getRecommendations);
+router.get('/sorted/:type', cacheMiddleware(120), ProductController.getSorted);
+router.get('/category/:id', cacheMiddleware(120), ProductController.getByCategory);
+router.get('/recommendations', cacheMiddleware(120), ProductController.getRecommendations);
 router.get('/low-stock', authenticateToken, authorize('PRODUCT_READ'), ProductController.getLowStock);
-router.get('/:id', ProductController.getById);
+router.get('/:id', cacheMiddleware(120), ProductController.getById);
 
 // Multer setup for product images using Cloudinary
 import { storage as cloudinaryStorage } from '../config/cloudinary.js';
@@ -53,9 +54,9 @@ const processFiles = (req, res, next) => {
 };
 
 // Admin routes
-router.post('/', authenticateToken, authorize('PRODUCT_CREATE'), handleProductUploads, processFiles, ProductController.create);
-router.put('/:id', authenticateToken, authorize('PRODUCT_UPDATE'), handleProductUploads, processFiles, ProductController.update);
-router.patch('/:id/min-stock', authenticateToken, authorize('PRODUCT_UPDATE'), ProductController.updateMinStock);
-router.delete('/:id', authenticateToken, authorize('PRODUCT_DELETE'), ProductController.delete);
+router.post('/', authenticateToken, authorize('PRODUCT_CREATE'), clearProductCache, handleProductUploads, processFiles, ProductController.create);
+router.put('/:id', authenticateToken, authorize('PRODUCT_UPDATE'), clearProductCache, handleProductUploads, processFiles, ProductController.update);
+router.patch('/:id/min-stock', authenticateToken, authorize('PRODUCT_UPDATE'), clearProductCache, ProductController.updateMinStock);
+router.delete('/:id', authenticateToken, authorize('PRODUCT_DELETE'), clearProductCache, ProductController.delete);
 
 export default router;

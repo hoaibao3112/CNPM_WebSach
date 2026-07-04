@@ -79,7 +79,8 @@ class ProductController {
     async getSorted(req, res) {
         try {
             const { type } = req.params;
-            const products = await ProductService.getSortedProducts(type);
+            const limit = req.query.limit ? parseInt(req.query.limit, 10) : null;
+            const products = await ProductService.getSortedProducts(type, limit);
             return baseController.sendSuccess(res, products);
         } catch (error) {
             return baseController.sendError(res, 'Lỗi khi lấy sản phẩm sắp xếp', 500, error.message);
@@ -99,7 +100,8 @@ class ProductController {
 
     async getRecommendations(req, res) {
         try {
-            const products = await ProductService.getRecommendations(req.query);
+            const limit = req.query.limit ? parseInt(req.query.limit, 10) : 15;
+            const products = await ProductService.getRecommendations({ ...req.query, limit });
             return baseController.sendSuccess(res, products);
         } catch (error) {
             return baseController.sendError(res, 'Lỗi khi lấy gợi ý sản phẩm', 500, error.message);

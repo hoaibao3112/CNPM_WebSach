@@ -157,7 +157,7 @@
     async function getRecommendations(customerId) {
         // customerId may be 'public' to fetch popular products
         try {
-            const response = await fetch(`${API_URL}?makh=${customerId}`);
+            const response = await fetch(`${API_URL}?makh=${customerId}&limit=15`);
             if (!response.ok) {
                 console.error(`Lỗi API: ${response.statusText}`);
                 return [];
