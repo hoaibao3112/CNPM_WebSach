@@ -35,12 +35,19 @@ export const CartProvider = ({ children }) => {
 
     const addToCart = (product, quantity = 1) => {
         setCartItems((prevItems) => {
-            const existingItem = prevItems.find(item => item.masp === product.masp || item.MaSP === product.MaSP);
+            const getProductId = (p) => p.MaSP || p.masp;
+            const targetId = getProductId(product);
+
+            if (!targetId) {
+                return [...prevItems, { ...product, quantity, selected: true }];
+            }
+
+            const existingItem = prevItems.find(item => getProductId(item) === targetId);
 
             if (existingItem) {
                 // Update quantity if item already exists
                 return prevItems.map(item =>
-                    (item.masp === product.masp || item.MaSP === product.MaSP)
+                    getProductId(item) === targetId
                         ? { ...item, quantity: item.quantity + quantity }
                         : item
                 );
