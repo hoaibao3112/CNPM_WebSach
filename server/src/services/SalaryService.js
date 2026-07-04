@@ -29,15 +29,29 @@ class SalaryService {
        WHERE tk.TinhTrang = 1`
     );
 
+    if (employees.length === 0) return [];
+
+    // Fetch all attendance for the given month & year in one query
+    const [allAttendance] = await pool.query(
+      `SELECT MaTK, trang_thai, ghi_chu
+       FROM cham_cong
+       WHERE MONTH(ngay) = ? AND YEAR(ngay) = ?`,
+      [Number(month), Number(year)]
+    );
+
+    // Group attendance by employee: MaTK -> Array of attendance records
+    const attendanceMap = new Map();
+    allAttendance.forEach(record => {
+      if (!attendanceMap.has(record.MaTK)) {
+        attendanceMap.set(record.MaTK, []);
+      }
+      attendanceMap.get(record.MaTK).push(record);
+    });
+
     const results = [];
 
     for (const emp of employees) {
-      const [attendance] = await pool.query(
-        `SELECT trang_thai, ghi_chu
-         FROM cham_cong
-         WHERE MaTK = ? AND MONTH(ngay) = ? AND YEAR(ngay) = ?`,
-        [emp.MaNV, Number(month), Number(year)]
-      );
+      const attendance = attendanceMap.get(emp.MaNV) || [];
 
       // Calculate salary based on attendance
       const baseSalary = 10000000; // Base salary

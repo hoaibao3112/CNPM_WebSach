@@ -35,7 +35,7 @@ const ProductDetailPage = () => {
 
             // Load related products by category
             if (data.MaTL) {
-                const related = await productService.getProductsByCategory(data.MaTL);
+                const related = await productService.getProductsByCategory(data.MaTL, { limit: 6 });
                 setRelatedProducts(related.filter(p => (p.MaSP || p.masp) !== parseInt(id)).slice(0, 5));
             }
 

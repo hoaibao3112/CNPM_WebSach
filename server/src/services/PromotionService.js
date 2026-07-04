@@ -132,10 +132,9 @@ class PromotionService {
                 [makm, giaTriGiam, data.GiaTriDonToiThieu || null, data.GiamToiDa || null, data.SoLuongToiThieu || 1]
             );
 
-            if (data.SanPhamApDung && Array.isArray(data.SanPhamApDung)) {
-                for (const masp of data.SanPhamApDung) {
-                    await connection.query(`INSERT INTO sp_khuyen_mai (MaKM, MaSP) VALUES (?, ?)`, [makm, masp]);
-                }
+            if (data.SanPhamApDung && Array.isArray(data.SanPhamApDung) && data.SanPhamApDung.length > 0) {
+                const values = data.SanPhamApDung.map(masp => [makm, masp]);
+                await connection.query(`INSERT INTO sp_khuyen_mai (MaKM, MaSP) VALUES ?`, [values]);
             }
 
             await connection.commit();
@@ -174,10 +173,9 @@ class PromotionService {
             );
 
             await connection.query(`DELETE FROM sp_khuyen_mai WHERE MaKM = ?`, [makm]);
-            if (data.SanPhamApDung && Array.isArray(data.SanPhamApDung)) {
-                for (const masp of data.SanPhamApDung) {
-                    await connection.query(`INSERT INTO sp_khuyen_mai (MaKM, MaSP) VALUES (?, ?)`, [makm, masp]);
-                }
+            if (data.SanPhamApDung && Array.isArray(data.SanPhamApDung) && data.SanPhamApDung.length > 0) {
+                const values = data.SanPhamApDung.map(masp => [makm, masp]);
+                await connection.query(`INSERT INTO sp_khuyen_mai (MaKM, MaSP) VALUES ?`, [values]);
             }
 
             await connection.commit();

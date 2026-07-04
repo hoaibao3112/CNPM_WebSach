@@ -432,7 +432,7 @@ class ProductService {
         return products;
     }
 
-    async getSortedProducts(type) {
+    async getSortedProducts(type, limit = null) {
         let orderBy = 'sp.MaSP DESC'; // Default: newest first (higher ID = newer)
 
         switch (type) {
@@ -463,7 +463,7 @@ class ProductService {
                 orderBy = 'sp.MaSP DESC';
         }
 
-        const query = `
+        let query = `
             SELECT sp.*, ncc.TenNCC, tl.TenTL, tg.TenTG, sp.DonGia as GiaBan
             FROM sanpham sp
             LEFT JOIN nhacungcap ncc ON sp.MaNCC = ncc.MaNCC
@@ -473,12 +473,18 @@ class ProductService {
             ORDER BY ${orderBy}
         `;
 
-        const [products] = await pool.query(query);
+        const params = [];
+        if (limit !== null) {
+            query += ' LIMIT ?';
+            params.push(parseInt(limit, 10));
+        }
+
+        const [products] = await pool.query(query, params);
         return products;
     }
 
-    async getProductsByCategory(categoryId) {
-        const [products] = await pool.query(`
+    async getProductsByCategory(categoryId, limit = null) {
+        let query = `
             SELECT sp.*, ncc.TenNCC, tl.TenTL, tg.TenTG, sp.DonGia as GiaBan
             FROM sanpham sp
             LEFT JOIN nhacungcap ncc ON sp.MaNCC = ncc.MaNCC
@@ -486,7 +492,14 @@ class ProductService {
             LEFT JOIN tacgia tg ON sp.MaTG = tg.MaTG
             WHERE sp.MaTL = ? AND CAST(sp.TinhTrang AS UNSIGNED) = 1
             ORDER BY sp.MaSP DESC
-        `, [categoryId]);
+        `;
+        const params = [categoryId];
+        if (limit !== null) {
+            query += ' LIMIT ?';
+            params.push(parseInt(limit, 10));
+        }
+
+        const [products] = await pool.query(query, params);
         return products;
     }
 

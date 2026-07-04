@@ -91,10 +91,44 @@ router.put('/update', async (req, res, next) => {
 
 // 3. POST /sync-leave - Đồng bộ nghỉ phép vào chấm công
 router.post('/sync-leave', async (req, res, next) => {
+  const connection = await pool.getConnection();
   try {
-    const [leaveRequests] = await pool.query(
+    await connection.beginTransaction();
+
+    const [leaveRequests] = await connection.query(
       "SELECT MaTK, ngay_bat_dau, ngay_ket_thuc FROM xin_nghi_phep WHERE trang_thai = 'Da_duyet'"
     );
+
+    if (leaveRequests.length === 0) {
+      await connection.commit();
+      return res.json({ message: 'Leave requests synced successfully', inserted: 0, updated: 0 });
+    }
+
+    // Find overall date range
+    let minDate = null;
+    let maxDate = null;
+    for (const request of leaveRequests) {
+      const start = new Date(request.ngay_bat_dau);
+      const end = new Date(request.ngay_ket_thuc);
+      if (!minDate || start < minDate) minDate = start;
+      if (!maxDate || end > maxDate) maxDate = end;
+    }
+
+    // Fetch all existing cham_cong in this range
+    const [existingRows] = await connection.query(
+      'SELECT id, MaTK, ngay FROM cham_cong WHERE ngay BETWEEN ? AND ?',
+      [minDate, maxDate]
+    );
+
+    // Map existing records: "MaTK_YYYY-MM-DD" -> id
+    const existingMap = new Map();
+    existingRows.forEach(row => {
+      const dateStr = toDateString(row.ngay);
+      existingMap.set(`${row.MaTK}_${dateStr}`, row.id);
+    });
+
+    const inserts = [];
+    const updates = [];
 
     for (const request of leaveRequests) {
       const startDate = new Date(request.ngay_bat_dau);
@@ -102,28 +136,50 @@ router.post('/sync-leave', async (req, res, next) => {
       let currentDate = new Date(startDate);
 
       while (currentDate <= endDate) {
-        const [existing] = await pool.query(
-          'SELECT id FROM cham_cong WHERE MaTK = ? AND ngay = ?',
-          [request.MaTK, currentDate]
-        );
+        const dateStr = toDateString(currentDate);
+        const key = `${request.MaTK}_${dateStr}`;
 
-        if (existing.length > 0) {
-          await pool.query(
-            "UPDATE cham_cong SET trang_thai = 'Nghi_phep' WHERE MaTK = ? AND ngay = ?",
-            [request.MaTK, currentDate]
-          );
+        if (existingMap.has(key)) {
+          updates.push(existingMap.get(key));
         } else {
-          await pool.query(
-            "INSERT INTO cham_cong (MaTK, ngay, trang_thai) VALUES (?, ?, 'Nghi_phep')",
-            [request.MaTK, currentDate]
-          );
+          inserts.push([
+            request.MaTK,
+            new Date(currentDate),
+            'Nghi_phep'
+          ]);
         }
         currentDate.setDate(currentDate.getDate() + 1);
       }
     }
 
-    res.json({ message: 'Leave requests synced successfully' });
-  } catch (error) { next(error); }
+    // Bulk insert new records
+    if (inserts.length > 0) {
+      await connection.query(
+        'INSERT INTO cham_cong (MaTK, ngay, trang_thai) VALUES ?',
+        [inserts]
+      );
+    }
+
+    // Bulk update existing records using their IDs
+    if (updates.length > 0) {
+      await connection.query(
+        "UPDATE cham_cong SET trang_thai = 'Nghi_phep' WHERE id IN (?)",
+        [updates]
+      );
+    }
+
+    await connection.commit();
+    res.json({
+      message: 'Leave requests synced successfully',
+      inserted: inserts.length,
+      updated: updates.length
+    });
+  } catch (error) {
+    await connection.rollback();
+    next(error);
+  } finally {
+    connection.release();
+  }
 });
 
 // 4. POST /sync-missed - Đồng bộ ngày chưa chấm công
@@ -142,33 +198,69 @@ router.post('/sync-missed', async (req, res, next) => {
 export const syncMissedAttendancesForDate = async (dateParam) => {
   const targetDate = dateParam ? toDateString(dateParam) : toDateString(new Date(Date.now() - 24 * 60 * 60 * 1000));
 
-  const [accounts] = await pool.query('SELECT MaTK FROM taikhoan WHERE TinhTrang = 1');
+  const connection = await pool.getConnection();
+  try {
+    await connection.beginTransaction();
 
-  let synced = 0;
-  for (const acc of accounts) {
-    const [existing] = await pool.query(
-      'SELECT id FROM cham_cong WHERE MaTK = ? AND DATE(ngay) = ?',
-      [acc.MaTK, targetDate]
+    // 1. Get all active accounts
+    const [accounts] = await connection.query('SELECT MaTK FROM taikhoan WHERE TinhTrang = 1');
+    if (accounts.length === 0) {
+      await connection.commit();
+      return;
+    }
+
+    // 2. Get all existing cham_cong for target date
+    const [existingRows] = await connection.query(
+      'SELECT MaTK FROM cham_cong WHERE DATE(ngay) = ?',
+      [targetDate]
     );
+    const existingMaTKs = new Set(existingRows.map(r => r.MaTK));
 
-    if (existing.length > 0) continue;
+    // Filter accounts that do not have attendance records yet
+    const missingAccounts = accounts.filter(acc => !existingMaTKs.has(acc.MaTK));
+    if (missingAccounts.length === 0) {
+      await connection.commit();
+      logger.info(`Synced missed attendance for ${targetDate}: 0 records (all active accounts have attendance)`);
+      return;
+    }
 
-    const [leaveRows] = await pool.query(
-      "SELECT id FROM xin_nghi_phep WHERE MaTK = ? AND trang_thai = 'Da_duyet' AND DATE(?) BETWEEN DATE(ngay_bat_dau) AND DATE(ngay_ket_thuc)",
-      [acc.MaTK, targetDate]
+    // 3. Get all approved leave requests covering target date
+    const [leaveRows] = await connection.query(
+      "SELECT MaTK FROM xin_nghi_phep WHERE trang_thai = 'Da_duyet' AND DATE(?) BETWEEN DATE(ngay_bat_dau) AND DATE(ngay_ket_thuc)",
+      [targetDate]
     );
+    const leaveMaTKs = new Set(leaveRows.map(r => r.MaTK));
 
-    const status = leaveRows.length > 0 ? 'Nghi_phep' : 'Nghi_khong_phep';
-    const note = status === 'Nghi_phep' ? 'Tự động đồng bộ nghỉ phép' : 'Tự động đánh dấu nghỉ không phép';
+    // Prepare bulk inserts
+    const inserts = [];
+    for (const acc of missingAccounts) {
+      const hasLeave = leaveMaTKs.has(acc.MaTK);
+      const status = hasLeave ? 'Nghi_phep' : 'Nghi_khong_phep';
+      const note = hasLeave ? 'Tự động đồng bộ nghỉ phép' : 'Tự động đánh dấu nghỉ không phép';
+      inserts.push([
+        acc.MaTK,
+        new Date(targetDate),
+        status,
+        note
+      ]);
+    }
 
-    await pool.query(
-      'INSERT INTO cham_cong (MaTK, ngay, trang_thai, ghi_chu) VALUES (?, ?, ?, ?)',
-      [acc.MaTK, targetDate, status, note]
-    );
-    synced++;
+    if (inserts.length > 0) {
+      await connection.query(
+        'INSERT INTO cham_cong (MaTK, ngay, trang_thai, ghi_chu) VALUES ?',
+        [inserts]
+      );
+    }
+
+    await connection.commit();
+    logger.info(`Synced missed attendance for ${targetDate}: ${inserts.length} records (Optimized bulk insert)`);
+  } catch (error) {
+    await connection.rollback();
+    logger.error(`Error during missed attendance sync for ${targetDate}:`, error);
+    throw error;
+  } finally {
+    connection.release();
   }
-
-  logger.info(`Synced missed attendance for ${targetDate}: ${synced} records`);
 };
 
 export default router;

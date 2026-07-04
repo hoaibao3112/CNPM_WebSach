@@ -257,13 +257,13 @@ class CouponService {
       }
 
       let issued = 0;
-      for (const customer of customers) {
-        try {
-          await connection.query('INSERT IGNORE INTO phieugiamgia_phathanh (makh, MaPhieu) VALUES (?, ?)', [customer.makh, code]);
-          issued++;
-        } catch (err) {
-          logger.error(`Failed to issue for makh=${customer.makh}`, { error: err.message });
-        }
+      if (customers.length > 0) {
+        const values = customers.map(customer => [customer.makh, code]);
+        const [result] = await connection.query(
+          'INSERT IGNORE INTO phieugiamgia_phathanh (makh, MaPhieu) VALUES ?',
+          [values]
+        );
+        issued = result.affectedRows;
       }
 
       await connection.commit();

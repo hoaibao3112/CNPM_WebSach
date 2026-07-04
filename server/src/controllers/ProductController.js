@@ -89,7 +89,8 @@ class ProductController {
     async getByCategory(req, res) {
         try {
             const { id } = req.params;
-            const products = await ProductService.getProductsByCategory(id);
+            const limit = req.query.limit ? parseInt(req.query.limit, 10) : null;
+            const products = await ProductService.getProductsByCategory(id, limit);
             return baseController.sendSuccess(res, products);
         } catch (error) {
             return baseController.sendError(res, 'Lỗi khi lấy sản phẩm theo danh mục', 500, error.message);
@@ -118,9 +119,8 @@ class ProductController {
     async getNew(req, res) {
         try {
             const limit = parseInt(req.query.limit) || 12;
-            const products = await ProductService.getSortedProducts('new');
-            const limitedProducts = products.slice(0, limit);
-            return baseController.sendSuccess(res, limitedProducts);
+            const products = await ProductService.getSortedProducts('new', limit);
+            return baseController.sendSuccess(res, products);
         } catch (error) {
             return baseController.sendError(res, 'Lỗi khi lấy sản phẩm mới', 500, error.message);
         }
@@ -130,9 +130,8 @@ class ProductController {
     async getPromotionProducts(req, res) {
         try {
             const limit = parseInt(req.query.limit) || 12;
-            const products = await ProductService.getSortedProducts('promotion');
-            const limitedProducts = products.slice(0, limit);
-            return baseController.sendSuccess(res, limitedProducts);
+            const products = await ProductService.getSortedProducts('promotion', limit);
+            return baseController.sendSuccess(res, products);
         } catch (error) {
             return baseController.sendError(res, 'Lỗi khi lấy sản phẩm khuyến mãi', 500, error.message);
         }

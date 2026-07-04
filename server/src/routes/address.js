@@ -10,12 +10,21 @@ const router = express.Router();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Helper function to read JSON files
+// Cache object to store loaded files in memory
+const jsonCache = {};
+
+// Helper function to read JSON files (cached in memory to avoid repetitive disk I/O)
 const readJSONFile = async (filename) => {
+  if (jsonCache[filename]) {
+    return jsonCache[filename];
+  }
   try {
     const filePath = path.join(__dirname, '../../migrations', filename);
     const data = await fs.readFile(filePath, 'utf-8');
-    return JSON.parse(data);
+    const parsed = JSON.parse(data);
+    jsonCache[filename] = parsed;
+    logger.info(`✅ Loaded and cached ${filename} in memory (${data.length} bytes)`);
+    return parsed;
   } catch (error) {
     logger.error(`Error reading ${filename}:`, error);
     throw error;
